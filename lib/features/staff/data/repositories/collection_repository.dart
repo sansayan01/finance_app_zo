@@ -1,0 +1,565 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/collection_model.dart';
+
+class CollectionRepository {
+  final SupabaseClient _client;
+
+  CollectionRepository(this._client);
+
+  /// Get today's due EMIs for a staff member
+  Future<List<Map<String, dynamic>>> getTodayDueEmis(String staffId) async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    final response = await _client
+        .from('loans')
+        .select('''
+          id,
+          member_id,
+          member_name,
+          outstanding_amount,
+          loan_number,
+          members(
+            id,
+            full_name,
+            phone,
+            area,
+            gps_lat,
+            gps_lng,
+            gps_address
+          ),
+          loan_schedules(
+            id,
+            period,
+            due_date,
+            emi,
+            principal,
+            interest,
+            balance,
+            is_paid,
+            is_overdue,
+            penalty
+          )
+        ''')
+        .eq('agent_id', staffId)
+        .eq('status', 'active');
+
+    // Filter schedules for today
+    final result = <Map<String, dynamic>>[];
+    for (final loan in response) {
+      final schedules = loan['loan_schedules'] as List?;
+      if (schedules != null) {
+        for (final schedule in schedules) {
+          if (schedule['due_date']?.toString().startsWith(today) == true &&
+              schedule['is_paid'] == false) {
+            result.add({
+              ...loan,
+              'current_schedule': schedule,
+            });
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  /// Get overdue EMIs for a staff member
+  Future<List<Map<String, dynamic>>> getOverdueEmis(String staffId) async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    final response = await _client
+        .from('overdue_loans_view')
+        .select()
+        .eq('staff_id', staffId)
+        .order('days_overdue', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Record a new collection
+  Future<CollectionModel> recordCollection({
+    required String staffId,
+    String? loanId,
+    String? loanScheduleId,
+    String? memberId,
+    required String memberName,
+    String? memberPhone,
+    String? loanNumber,
+    required double amountExpected,
+    required double amountCollected,
+    bool isPartial = false,
+    bool isAdvance = false,
+    required PaymentMode paymentMode,
+    String? referenceNumber,
+    required double gpsLat,
+    required double gpsLng,
+    double? gpsAccuracy,
+    String? gpsAddress,
+    String? remarks,
+  }) async {
+    final now = DateTime.now();
+
+    final payload = {
+      'loan_id': loanId,
+      'loan_schedule_id': loanScheduleId,
+      'member_id': memberId,
+      'staff_id': staffId,
+      'member_name': memberName,
+      'member_phone': memberPhone,
+      'loan_number': loanNumber,
+      'amount_expected': amountExpected,
+      'amount_collected': amountCollected,
+      'is_partial': isPartial,
+      'is_advance': isAdvance,
+      'payment_mode': paymentMode.name,
+      'reference_number': referenceNumber,
+      'gps_lat': gpsLat,
+      'gps_lng': gpsLng,
+      'gps_accuracy': gpsAccuracy,
+      'gps_address': gpsAddress,
+      'collection_date': now.toIso8601String().split('T').first,
+      'collection_time': now.toIso8601String(),
+      'sync_status': 'synced',
+      'remarks': remarks,
+    };
+
+    final response = await _client
+        .from('collections')
+        .insert(payload)
+        .select()
+        .single();
+
+    return CollectionModel.fromJson(response);
+  }
+
+  /// Get today's collections
+  Future<List<CollectionModel>> getTodayCollections(String staffId) async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    final response = await _client
+        .from('collections')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('collection_date', today)
+        .order('collection_time', ascending: false);
+
+    return response
+        .map<CollectionModel>((json) => CollectionModel.fromJson(json))
+        .toList();
+  }
+
+  /// Get collection history
+  Future<List<CollectionModel>> getCollectionHistory(
+    String staffId, {
+    DateTime? startDate,
+    DateTime? endDate,
+    int limit = 50,
+  }) async {
+    var query = _client
+        .from('collections')
+        .select()
+        .eq('staff_id', staffId)
+        .order('collection_time', ascending: false)
+        .limit(limit);
+
+    if (startDate != null) {
+      query = query.gte(
+          'collection_date', startDate.toIso8601String().split('T').first);
+    }
+    if (endDate != null) {
+      query = query.lte(
+          'collection_date', endDate.toIso8601String().split('T').first);
+    }
+
+    final response = await query;
+
+    return response
+        .map<CollectionModel>((json) => CollectionModel.fromJson(json))
+        .toList();
+  }
+
+  /// Get today's stats
+  Future<Map<String, dynamic>> getTodayStats(String staffId) async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    final response = await _client
+        .from('collections')
+        .select('amount_collected, payment_mode')
+        .eq('staff_id', staffId)
+        .eq('collection_date', today);
+
+    double totalCollected = 0;
+    double cashCollected = 0;
+    double digitalCollected = 0;
+    int count = response.length;
+
+    for (final item in response) {
+      final amount = (item['amount_collected'] as num?)?.toDouble() ?? 0;
+      totalCollected += amount;
+      
+      if (item['payment_mode'] == 'cash') {
+        cashCollected += amount;
+      } else {
+        digitalCollected += amount;
+      }
+    }
+
+    return {
+      'total_collected': totalCollected,
+      'cash_collected': cashCollected,
+      'digital_collected': digitalCollected,
+      'collection_count': count,
+    };
+  }
+
+  // =====================================================
+  // NEW METHODS FOR PHASE 2
+  // =====================================================
+
+  /// Search customers by name, phone, or loan number
+  Future<List<Map<String, dynamic>>> searchCustomers(String query) async {
+    if (query.isEmpty) return [];
+
+    final searchTerm = query.toLowerCase();
+    
+    final response = await _client
+        .from('members')
+        .select('''
+          id,
+          full_name,
+          phone,
+          area,
+          address,
+          member_id,
+          kyc_status,
+          active_loans,
+          total_savings,
+          loans(
+            id,
+            loan_number,
+            principal,
+            outstanding_balance,
+            status
+          )
+        ''')
+        .or('full_name.ilike.%$searchTerm%,phone.ilike.%$searchTerm%,member_id.ilike.%$searchTerm%')
+        .limit(20);
+
+    // Calculate outstanding for each member
+    final result = <Map<String, dynamic>>[];
+    for (final member in response) {
+      final loans = member['loans'] as List? ?? [];
+      double outstanding = 0;
+      String? loanNumber;
+      
+      for (final loan in loans) {
+        if (loan['status'] == 'active') {
+          outstanding += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
+          loanNumber ??= loan['loan_number'];
+        }
+      }
+
+      result.add({
+        ...member,
+        'outstanding_amount': outstanding,
+        'loan_number': loanNumber,
+      });
+    }
+
+    return result;
+  }
+
+  /// Get customer detail with all info
+  Future<Map<String, dynamic>> getCustomerDetail(String customerId) async {
+    final response = await _client
+        .from('members')
+        .select('''
+          *,
+          loans(
+            id,
+            loan_number,
+            principal,
+            interest_rate,
+            tenure,
+            emi,
+            outstanding_balance,
+            status,
+            start_date,
+            paid_emis,
+            total_emis,
+            loan_schedules(
+              id,
+              period,
+              due_date,
+              emi,
+              is_paid,
+              is_overdue
+            )
+          ),
+          savings(
+            id,
+            plan_name,
+            balance,
+            target_amount,
+            monthly_deposit,
+            status
+          )
+        ''')
+        .eq('id', customerId)
+        .single();
+
+    // Calculate stats
+    double outstandingAmount = 0;
+    double overdueAmount = 0;
+    double nextDueAmount = 0;
+    DateTime? nextDueDate;
+    double collectionRate = 100;
+    int paidEmis = 0;
+    int totalEmis = 0;
+
+    final loans = response['loans'] as List? ?? [];
+    for (final loan in loans) {
+      if (loan['status'] == 'active') {
+        outstandingAmount += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
+        paidEmis += (loan['paid_emis'] as num?)?.toInt() ?? 0;
+        totalEmis += (loan['total_emis'] as num?)?.toInt() ?? 
+                     (loan['tenure'] as num?)?.toInt() ?? 0;
+
+        final schedules = loan['loan_schedules'] as List? ?? [];
+        for (final schedule in schedules) {
+          if (schedule['is_overdue'] == true) {
+            overdueAmount += (schedule['emi'] as num?)?.toDouble() ?? 0;
+          }
+          if (schedule['is_paid'] == false && nextDueDate == null) {
+            final dueDate = DateTime.tryParse(schedule['due_date'] ?? '');
+            if (dueDate != null) {
+              nextDueDate = dueDate;
+              nextDueAmount = (schedule['emi'] as num?)?.toDouble() ?? 0;
+            }
+          }
+        }
+      }
+    }
+
+    if (totalEmis > 0) {
+      collectionRate = (paidEmis / totalEmis) * 100;
+    }
+
+    return {
+      ...response,
+      'outstanding_amount': outstandingAmount,
+      'overdue_amount': overdueAmount,
+      'next_due_amount': nextDueAmount,
+      'next_due_date': nextDueDate?.toIso8601String(),
+      'collection_rate': collectionRate,
+    };
+  }
+
+  /// Get customer loans
+  Future<List<Map<String, dynamic>>> getCustomerLoans(String customerId) async {
+    final response = await _client
+        .from('loans')
+        .select('''
+          id,
+          loan_number,
+          principal,
+          interest_rate,
+          tenure,
+          emi,
+          outstanding_balance,
+          status,
+          start_date,
+          paid_emis,
+          total_emis,
+          loan_schedules(
+            id,
+            period,
+            due_date,
+            emi,
+            principal,
+            interest,
+            balance,
+            is_paid,
+            is_overdue,
+            paid_date,
+            penalty
+          )
+        ''')
+        .eq('member_id', customerId)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get customer savings
+  Future<List<Map<String, dynamic>>> getCustomerSavings(String customerId) async {
+    final response = await _client
+        .from('savings')
+        .select('''
+          id,
+          plan_name,
+          balance,
+          target_amount,
+          monthly_deposit,
+          status,
+          created_at,
+          maturity_date,
+          savings_deposits(
+            id,
+            amount,
+            deposit_date,
+            deposit_mode
+          )
+        ''')
+        .eq('member_id', customerId)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get customer collection history
+  Future<List<Map<String, dynamic>>> getCustomerCollectionHistory(
+    String customerId, {
+    int limit = 50,
+  }) async {
+    final response = await _client
+        .from('collections')
+        .select('''
+          id,
+          amount_collected,
+          amount_expected,
+          payment_mode,
+          collection_date,
+          collection_time,
+          receipt_number,
+          loan_number,
+          loan_id,
+          type,
+          is_partial,
+          is_offline,
+          sync_status,
+          staff_profiles(name)
+        ''')
+        .eq('member_id', customerId)
+        .order('collection_time', ascending: false)
+        .limit(limit);
+
+    // Flatten staff name
+    return response.map((item) {
+      final staff = item['staff_profiles'] as Map<String, dynamic>?;
+      return {
+        ...item,
+        'staff_name': staff?['name'],
+      };
+    }).toList();
+  }
+
+  /// Get recent collections (for dashboard)
+  Future<List<Map<String, dynamic>>> getRecentCollections(
+    String staffId, {
+    int limit = 20,
+  }) async {
+    final response = await _client
+        .from('collections')
+        .select('''
+          id,
+          member_id,
+          member_name,
+          member_phone,
+          loan_number,
+          amount_collected,
+          payment_mode,
+          collection_date,
+          collection_time,
+          receipt_number,
+          is_offline,
+          sync_status
+        ''')
+        .eq('staff_id', staffId)
+        .order('collection_time', ascending: false)
+        .limit(limit);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get frequent customers (top by collection count)
+  Future<List<Map<String, dynamic>>> getFrequentCustomers(
+    String staffId, {
+    int limit = 10,
+  }) async {
+    final response = await _client
+        .rpc('get_frequent_customers', params: {
+          'p_staff_id': staffId,
+          'p_limit': limit,
+        });
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get collection history with parameters (enhanced version)
+  Future<List<Map<String, dynamic>>> getCollectionHistoryEnhanced(
+    String staffId, {
+    String? customerId,
+    int? year,
+    int? month,
+    String? type,
+    String? paymentMode,
+    int limit = 100,
+  }) async {
+    var query = _client
+        .from('collections')
+        .select('''
+          id,
+          member_id,
+          member_name,
+          member_phone,
+          loan_number,
+          loan_id,
+          amount_collected,
+          amount_expected,
+          payment_mode,
+          collection_date,
+          collection_time,
+          receipt_number,
+          type,
+          collection_type,
+          is_partial,
+          is_offline,
+          sync_status,
+          staff_profiles(name)
+        ''')
+        .eq('staff_id', staffId);
+
+    if (customerId != null) {
+      query = query.eq('member_id', customerId);
+    }
+
+    if (year != null && month != null) {
+      final startDate = DateTime(year, month, 1);
+      final endDate = DateTime(year, month + 1, 0);
+      query = query
+          .gte('collection_date', startDate.toIso8601String().split('T').first)
+          .lte('collection_date', endDate.toIso8601String().split('T').first);
+    }
+
+    if (type != null && type != 'all') {
+      query = query.eq('type', type);
+    }
+
+    if (paymentMode != null && paymentMode != 'all') {
+      query = query.eq('payment_mode', paymentMode);
+    }
+
+    final response = await query
+        .order('collection_time', ascending: false)
+        .limit(limit);
+
+    // Flatten staff name
+    return response.map((item) {
+      final staff = item['staff_profiles'] as Map<String, dynamic>?;
+      return {
+        ...item,
+        'staff_name': staff?['name'],
+      };
+    }).toList();
+  }
+}

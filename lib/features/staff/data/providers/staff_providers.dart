@@ -1,0 +1,91 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../providers/supabase_provider.dart';
+import '../models/staff_profile_model.dart';
+import '../models/wallet_model.dart';
+import '../models/streak_model.dart';
+import '../models/target_model.dart';
+import '../repositories/staff_repository.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+
+// Repository provider
+final staffRepositoryProvider = Provider<StaffRepository>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return StaffRepository(client);
+});
+
+// Current staff profile
+final staffProfileProvider =
+    FutureProvider<StaffProfileModel?>((ref) async {
+  final authState = ref.watch(authStateProvider);
+  final user = authState.when(
+    data: (user) => user,
+    loading: () => null,
+    error: (_, __) => null,
+  );
+
+  if (user == null) return null;
+
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getStaffProfile(user.id);
+});
+
+// Staff profile by ID (for supervisors viewing other staff)
+final staffByIdProvider =
+    FutureProvider.family<StaffProfileModel?, String>((ref, staffId) async {
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getStaffById(staffId);
+});
+
+// Staff wallet
+final staffWalletProvider = FutureProvider<WalletModel?>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return null;
+
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getWallet(profile.id);
+});
+
+// Staff streak
+final staffStreakProvider = FutureProvider<StreakModel?>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return null;
+
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getStreak(profile.id);
+});
+
+// Today's target
+final todayTargetProvider = FutureProvider<TargetModel?>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return null;
+
+  final repository = ref.watch(staffRepositoryProvider);
+  
+  // Ensure target exists
+  await repository.ensureTodayTarget(
+    profile.id,
+    profile.dailyCollectionTarget,
+  );
+  
+  return repository.getTodayTarget(profile.id);
+});
+
+// Today's summary
+final todaySummaryProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return null;
+
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getTodaySummary(profile.id);
+});
+
+// Refresh all staff data
+final refreshStaffDataProvider = Provider<Future<void> Function()>((ref) {
+  return () async {
+    ref.invalidate(staffProfileProvider);
+    ref.invalidate(staffWalletProvider);
+    ref.invalidate(staffStreakProvider);
+    ref.invalidate(todayTargetProvider);
+    ref.invalidate(todaySummaryProvider);
+  };
+});

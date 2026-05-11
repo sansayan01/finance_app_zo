@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/providers/storage_providers.dart';
+import 'core/config/env_config.dart';
 import 'app.dart';
 
 void main() async {
@@ -19,12 +20,11 @@ void main() async {
     overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
   );
 
-  // Initialize Supabase with production credentials
+  // Initialize Supabase with environment variables
   try {
     await Supabase.initialize(
-      url: 'https://tccwdpsnuudzfyxfoohk.supabase.co',
-      anonKey:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjY3dkcHNudXVkemZ5eGZvb2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDQ1MTgsImV4cCI6MjA5MzkyMDUxOH0.I3B-A6YIrC2XlFlbf1eyTVqmcVJUOOcOUBYstpYE9_Y',
+      url: EnvConfig.supabaseUrl,
+      anonKey: EnvConfig.supabaseAnonKey,
     );
   } catch (e) {
     debugPrint('Supabase initialization skipped: $e');

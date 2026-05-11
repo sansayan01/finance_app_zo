@@ -1,12 +1,34 @@
 # Staff Portal Setup Checklist
 
-## 1. Supabase Setup
+## 1. Environment Configuration (CRITICAL)
+
+### Option A: Using .env file (Recommended for development)
+1. Copy `.env.example` to `.env`
+2. Fill in your Supabase credentials:
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+```
+
+### Option B: Using --dart-define (Recommended for production)
+```bash
+flutter run --dart-define=SUPABASE_URL=https://... --dart-define=SUPABASE_ANON_KEY=...
+```
+
+### Option C: Using CI/CD environment variables
+Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` in your CI/CD pipeline.
+
+**⚠️ NEVER commit .env files to version control!**
+
+---
+
+## 2. Supabase Setup
 
 Run these SQL files in your Supabase SQL Editor (in order):
 1. `supabase_schema.sql` - Original schema (if not done)
 2. `supabase_staff_schema.sql` - Staff portal schema
 
-## 2. main.dart Updates
+## 3. main.dart Updates
 
 Add Hive initialization before `runApp()`:
 
@@ -27,7 +49,7 @@ Future<void> main() async {
 }
 ```
 
-## 3. GoRouter Updates
+## 4. GoRouter Updates
 
 Add these routes to your router configuration:
 
@@ -96,7 +118,7 @@ GoRoute(
 ),
 ```
 
-## 4. Run Flutter Commands
+## 5. Run Flutter Commands
 
 ```bash
 # Get dependencies
@@ -112,7 +134,7 @@ flutter analyze
 flutter run
 ```
 
-## 5. Test Checklist
+## 6. Test Checklist
 
 - [ ] Staff can log in
 - [ ] Dashboard shows wallet, target, streak
@@ -124,7 +146,7 @@ flutter run
 - [ ] Visit check-in captures location
 - [ ] Gamification shows streak & achievements
 
-## 6. Known Issues to Fix
+## 7. Known Issues to Fix
 
 ### Missing Imports
 Some files may need these imports added:
@@ -146,7 +168,7 @@ If queries fail:
 - Check RLS policies are correct
 - Verify your user has the right permissions
 
-## 7. Quick Fixes
+## 8. Quick Fixes
 
 ### If "Hive not initialized":
 ```dart
@@ -176,7 +198,7 @@ Add to `ios/Runner/Info.plist`:
 <string>This app needs location to record collection points</string>
 ```
 
-## 8. Architecture Notes
+## 9. Architecture Notes
 
 - All state uses Riverpod
 - All navigation uses GoRouter

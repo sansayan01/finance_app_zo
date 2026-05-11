@@ -54,10 +54,14 @@ app.*.map.json
 *.ipa
 *.app
 
-# Environment files
+# Environment files - IMPORTANT: Never commit .env files with secrets!
 .env
 .env.local
+.env.production
 .env.*.local
+
+# Keep the example file
+!.env.example
 
 # Supabase credentials (never commit)
 supabase/.env

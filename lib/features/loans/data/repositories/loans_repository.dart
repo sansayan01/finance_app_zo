@@ -49,33 +49,54 @@ class LoansRepository {
 
   Future<LoanSummary> getLoanSummary() async {
     try {
-      final loans = await getAllLoans(limit: 1000);
+      // Use SQL aggregation instead of fetching all records
+      // This is much more efficient and uses less bandwidth
+      
+      // Get loan counts and totals in a single query
+      final response = await _client
+          .from('loans')
+          .select('''
+            status,
+            outstanding_balance,
+            amount
+          ''');
 
-      final active = loans.where((l) => l.status == LoanStatus.active).toList();
-      final defaults =
-          loans.where((l) => l.status == LoanStatus.defaultStatus).toList();
+      final loans = response as List;
+      
+      int totalLoans = loans.length;
+      int activeLoans = 0;
+      int defaultLoans = 0;
+      double totalOutstanding = 0.0;
+      double totalDisbursed = 0.0;
+      double overdueAmount = 0.0;
 
-      final totalOutstanding = active.fold<double>(
-              0.0, (double sum, LoanModel l) => sum + l.outstandingBalance) +
-          defaults.fold<double>(
-              0.0, (double sum, LoanModel l) => sum + l.outstandingBalance);
+      for (final loan in loans) {
+        final status = loan['status'] as String?;
+        final outstanding = (loan['outstanding_balance'] as num?)?.toDouble() ?? 0.0;
+        final amount = (loan['amount'] as num?)?.toDouble() ?? 0.0;
 
-      final totalDisbursed = loans
-          .where((l) =>
-              l.status == LoanStatus.active || l.status == LoanStatus.closed)
-          .fold<double>(0.0, (double sum, LoanModel l) => sum + l.amount);
+        if (status == 'active') {
+          activeLoans++;
+          totalOutstanding += outstanding;
+          totalDisbursed += amount;
+        } else if (status == 'default') {
+          defaultLoans++;
+          overdueAmount += outstanding;
+          totalOutstanding += outstanding;
+        } else if (status == 'closed') {
+          totalDisbursed += amount;
+        }
+      }
 
       return LoanSummary(
-        totalLoans: loans.length,
-        activeLoans: active.length,
-        defaultLoans: defaults.length,
+        totalLoans: totalLoans,
+        activeLoans: activeLoans,
+        defaultLoans: defaultLoans,
         totalOutstanding: totalOutstanding,
         totalDisbursed: totalDisbursed,
         totalCollected: 0, // Would need transaction history
-        overdueAmount: defaults.fold<double>(
-            0.0, (double sum, LoanModel l) => sum + l.outstandingBalance),
-        parPercentage:
-            loans.isEmpty ? 0 : (defaults.length / loans.length) * 100,
+        overdueAmount: overdueAmount,
+        parPercentage: totalLoans == 0 ? 0 : (defaultLoans / totalLoans) * 100,
       );
     } catch (e) {
       return LoanSummary(

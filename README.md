@@ -1,950 +1,334 @@
-# MicroFlow Pro - Staff Portal
-
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.11+-02569B?style=for-the-badge&logo=flutter" alt="Flutter">
-  <img src="https://img.shields.io/badge/Dart-3.1+-0175C2?style=for-the-badge&logo=dart" alt="Dart">
-  <img src="https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase" alt="Supabase">
-  <img src="https://img.shields.io/badge/Riverpod-State-7B68EE?style=for-the-badge" alt="Riverpod">
+  <img src="https://img.shields.io/badge/Supabase-2.0+-3ECF8E?style=for-the-badge&logo=supabase" alt="Supabase">
+  <img src="https://img.shields.io/badge/Dart-3.4+-0175C2?style=for-the-badge&logo=dart" alt="Dart">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </div>
 
-<div align="center">
-  <h3>🌍 Cross-Platform MFI Field Collection App</h3>
-  <p>Built for Micro-Finance Institutions & Savings Groups</p>
-</div>
+<h1 align="center">MicroFlow Pro</h1>
+<p align="center"><strong>Premium Micro-Finance Management Ecosystem</strong></p>
+<p align="center">Complete Admin Portal + Field Staff Collector App</p>
 
 ---
 
 ## 📖 Table of Contents
 
-- [Overview](#-overview)
-- [Features](#-features)
-- [Screenshots](#-screenshots)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Database Schema](#-database-schema)
-- [Getting Started](#-getting-started)
-- [Implementation Status](#-implementation-status)
-- [API Reference](#-api-reference)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Admin Portal](#admin-portal)
+- [Staff Portal](#staff-portal)
+- [Database Schema](#database-schema)
+- [API Reference](#api-reference)
+- [Security](#security)
+- [Performance](#performance)
+- [Offline Support](#offline-support)
+- [Screenshots](#screenshots)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## 🎯 Overview
 
-**MicroFlow Pro Staff Portal** is a production-ready Flutter application designed for **MFI field collectors** who work in challenging conditions:
+MicroFlow Pro is a **cross-platform financial management application** designed for Micro-Finance Institutions (MFIs) and savings groups. It provides a complete ecosystem for managing loans, savings, members, and field operations.
 
-- 🌤️ **Hot weather & bright sunlight** — High contrast UI
-- 📶 **Poor network** — Offline-first architecture
-- 🔋 **Low battery** — Optimized performance
-- ⚡ **High transaction volume** — One-tap actions
+### Key Capabilities
 
-> **Philosophy**: *"Give the field collector a weapon, not a dashboard."*
-
-### Target Users
-
-| Role | Description |
-|------|-------------|
-| **Collector** | Field staff collecting EMIs, savings deposits |
-| **Supervisor** | Branch-level oversight, approval workflows |
-| **Branch Manager** | Branch performance monitoring |
-| **Area Manager** | Multi-branch analytics |
+| Portal | Users | Primary Functions |
+|--------|-------|-------------------|
+| **Admin Portal** | Branch managers, Admins | Loan management, member onboarding, staff management, analytics, reports |
+| **Staff Portal** | Field collectors | Daily collections, customer visits, cash management, offline operations |
 
 ---
 
 ## ✨ Features
 
-### Phase 1: Core Foundation ✅
-
-<details>
-<summary><b>📊 Database Schema</b></summary>
-
-13 tables with Row Level Security:
-
-| Table | Purpose |
-|-------|---------|
-| `branches` | Branch office management |
-| `staff_profiles` | Staff info & assignments |
-| `collections` | Core transaction records |
-| `staff_locations` | GPS tracking logs |
-| `activity_logs` | Complete audit trail |
-| `staff_wallet` | Cash-in-hand tracking |
-| `collection_targets` | Daily/weekly/monthly goals |
-| `streaks` | Gamification data |
-| `visit_logs` | Customer visit tracking |
-| `breaks` | Rest period logging |
-| `cash_deposits` | Cash drop at branch |
-| `staff_notifications` | Push notifications |
-| `notification_queue` | Offline notification queue |
-
-</details>
-
-<details>
-<summary><b>🏗️ Models</b></summary>
-
-- `StaffProfileModel` — Staff profile with role & status
-- `CollectionModel` — Collection records with full metadata
-- `WalletModel` — Cash & digital balance tracking
-- `StreakModel` — Gamification streaks
-- `TargetModel` — Performance targets
-- `ActivityLogModel` — Audit trail entries
-- `StaffLocationModel` — GPS coordinates
-
-</details>
-
-<details>
-<summary><b>🔧 Repositories</b></summary>
-
-**StaffRepository** methods:
-- `getStaffProfile()` — Get staff details
-- `getStaffWallet()` — Wallet balance
-- `getStreakData()` — Gamification data
-- `getTargets()` — Performance targets
-- `updateLocation()` — GPS tracking
-- `logActivity()` — Audit logging
-
-**CollectionRepository** methods:
-- `getTodayDueEmis()` — Today's collection list
-- `searchCustomers()` — Search by name/phone/loan
-- `getCustomerDetail()` — Customer 360° view
-- `getCustomerLoans()` — Active loans
-- `getCustomerSavings()` — Savings accounts
-- `getCustomerCollectionHistory()` — Transaction history
-- `recordCollection()` — Save collection
-- `getRecentCollections()` — Recent activity
-- `getFrequentCustomers()` — Top customers
-- `getCollectionHistory()` — Historical records
-
-</details>
-
-<details>
-<summary><b>📦 Providers</b></summary>
-
-**Staff Providers**:
-- `staffRepositoryProvider`
-- `staffProfileProvider`
-- `staffWalletProvider`
-- `staffStreakProvider`
-- `staffTargetsProvider`
-- `staffLocationProvider`
-
-**Collection Providers**:
-- `collectionRepositoryProvider`
-- `todayDueEmisProvider`
-- `customerSearchProvider`
-- `customerDetailProvider`
-- `customerLoansProvider`
-- `customerSavingsProvider`
-- `customerCollectionHistoryProvider`
-- `recentCollectionsProvider`
-- `frequentCustomersProvider`
-- `collectionHistoryProvider`
-- `collectionNotifierProvider`
-
-</details>
-
-<details>
-<summary><b>🎨 Widgets</b></summary>
-
-| Widget | Purpose |
-|--------|---------|
-| `WalletCard` | Cash-in-hand display with actions |
-| `TargetProgressRing` | Animated circular progress |
-| `SyncStatusBar` | Network status indicator |
-| `GpsStatusChip` | GPS accuracy display |
-| `TodayAgendaList` | Daily collection preview |
-
-</details>
-
----
-
-### Phase 2: Essential Screens ✅
-
-<details>
-<summary><b>📄 Pages</b></summary>
-
-| Page | Route | Description |
-|------|-------|-------------|
-| **Staff Home Dashboard** | `/staff/home` | Main dashboard with wallet, targets, agenda |
-| **Collection List** | `/staff/collections` | Today's EMIs with filters & sorting |
-| **Customer Search** | `/staff/search` | Search by name/phone/loan number |
-| **Customer Detail** | `/staff/customer/:id` | 360° customer view (4 tabs) |
-| **Collection History** | `/staff/history` | Past collections grouped by date |
-| **Collection Form** | `/staff/collect/:loanId` | Record new collection |
-
-</details>
-
-<details>
-<summary><b>🔍 Collection List Features</b></summary>
-
-- **Filters**: All, Due Today, Overdue, Paid, Upcoming
-- **Sorting**: Due Date, Amount (High/Low), Name, Distance
-- **Pull-to-refresh** support
-- **Quick collect** button on each tile
-- **Status badges**: Paid, Partial, Pending, Overdue
-- **Distance indicator** from current location
-
-</details>
-
-<details>
-<summary><b>🔎 Customer Search Features</b></summary>
-
-- **Multi-field search**: Name, Phone, Loan Number
-- **Recent searches** (last 10)
-- **Frequent customers** (top 5)
-- **Quick actions**: Collect, View Details, Call
-- **Empty state** with suggestions
-
-</details>
-
-<details>
-<summary><b>👤 Customer Detail Features</b></summary>
-
-**4 Tabs**:
-1. **Overview** — Profile, KYC status, outstanding balance
-2. **Loans** — Active loans with EMI schedules
-3. **Savings** — Savings account details
-4. **History** — Past transactions
-
-**Actions**:
-- Quick collect
-- View on map
-- Call customer
-- View documents
-
-</details>
-
-<details>
-<summary><b>📜 Collection History Features</b></summary>
-
-- **Group by**: Date, Customer, Status
-- **Date range filter**
-- **Payment mode filter** (Cash, UPI, etc.)
-- **Summary statistics**
-- **Export to CSV** (planned)
-
-</details>
-
----
-
-### Phase 3: Field Operations ✅
-
-<details>
-<summary><b>🚨 Overdue Management</b></summary>
-
-**Overdue List Page Features**:
-- Days overdue badges (color-coded by severity)
-- Quick filters: 1-7 days, 8-15 days, 16-30 days, 30+ days
-- Sort by: Days, Amount, Name, Due Date
-- Summary card with total overdue amount
-- Quick actions: Call, Collect
-- Penalty calculation display
-
-**Color Coding**:
-| Days | Color |
-|------|-------|
-| 1-7 | Orange |
-| 8-15 | Deep Orange |
-| 16-30 | Red |
-| 30+ | Purple |
-
-</details>
-
-<details>
-<summary><b>📍 Visit Check-in/Check-out</b></summary>
-
-**Features**:
-- GPS verification at check-in
-- Visit purposes: Collection, Verification, Follow-up, Document, Other
-- Optional notes
-- Automatic activity logging
-- Check-out with location capture
-- Duration calculation
-
-**Visit Status Tracking**:
-- `in_progress` — Active visit
-- `completed` — Finished visit
-- `cancelled` — Cancelled visit
-
-</details>
-
-<details>
-<summary><b>📊 Daily Summary</b></summary>
-
-**Summary Metrics**:
-- Total collected vs target
-- Progress percentage
-- Cash vs digital breakdown
-- Visit count & success rate
-- Distance traveled
-- Average collection time
-- Current streak days
-
-**Features**:
-- Date picker for historical summaries
-- Share summary (text/CSV)
-- Recent collections list
-- Target achievement indicator
-
-</details>
-
-<details>
-<summary><b>💰 Cash Deposit Flow</b></summary>
-
-**Features**:
-- Current wallet balance display
-- Quick amount selection chips
-- Deposit methods: Branch Counter, Cash Pickup
-- Reference number entry
-- Notes field
-- "Deposit All" shortcut
-- Wallet auto-update on success
-
-**Deposit Status Flow**:
-`pending_verification` → `verified` → `completed`
-
-</details>
-
-<details>
-<summary><b>☕ Break/Rest Logging</b></summary>
-
-**Break Types**:
-| Type | Icon | Description |
-|------|------|-------------|
-| Lunch | 🍽️ | Meal break |
-| Tea | ☕ | Short refreshment |
-| Rest | 🛏️ | Rest period |
-| Personal | 👤 | Personal matters |
-| Other | ⋯ | Other reasons |
-
-**Features**:
-- Live elapsed time display
-- Break history for today
-- Automatic duration calculation
-- Break time limits reminder
-
-</details>
-
-<details>
-<summary><b>🔄 Offline Sync Engine</b></summary>
-
-**Core Components**:
-- `OfflineSyncEngine` — Main sync service
-- `SyncStatusNotifier` — State management
-- Queue-based operation storage
-
-**Sync Features**:
-- Queue operations when offline
-- Automatic retry on failure
-- Max 5 retry attempts per operation
-- Sync status tracking (pending, syncing, synced, failed)
-- Network status monitoring
-- Cleanup of old synced items (24h TTL)
-
-**Operation Types**:
-- `insert` — New records
-- `update` — Record updates
-- `delete` — Record deletions
-
-**Sync Status Provider**:
-```dart
-final syncStatus = ref.watch(syncStatusProvider);
-// syncStatus.pending, syncStatus.success, syncStatus.failed
-```
-
-</details>
-
----
-
-### Phase 4: Offline Engine ✅
-
-<details>
-<summary><b>💾 Local Database (Hive)</b></summary>
-
-**Features**:
-- Fast, encrypted local storage
-- Collections, customers, loans caching
-- Pending operations queue
-- Settings persistence
-- Last sync time tracking
-
-**Storage Operations**:
-| Operation | Description |
-|-----------|-------------|
-| `putCollection()` | Store collection locally |
-| `getCollectionsForDate()` | Get collections by date |
-| `searchCustomers()` | Local customer search |
-| `getLoansForCustomer()` | Customer's loans |
-| `addPendingOperation()` | Queue operation |
-| `getStats()` | Storage statistics |
-
-</details>
-
-<details>
-<summary><b>🔄 Background Sync Service</b></summary>
-
-**Features**:
-- Auto-sync every 5 minutes
-- Manual sync trigger
-- Network status detection
-- Pull latest data from server
-- Sync status streaming
-
-**Sync Flow**:
-1. Check network connectivity
-2. Push pending operations
-3. Pull latest server data
-4. Update local cache
-5. Record sync timestamp
-
-**Sync Status Types**:
-- `syncing` — Sync in progress
-- `synced` — All data synced
-- `offline` — No network
-- `error` — Sync failed
-
-</details>
-
-<details>
-<summary><b>⚔️ Conflict Resolution</b></summary>
-
-**Conflict Types**:
-| Type | Description |
-|------|-------------|
-| `updateUpdate` | Both local & server modified |
-| `deleteUpdate` | Local deleted, server updated |
-| `updateDelete` | Local updated, server deleted |
-| `duplicate` | Duplicate records |
-
-**Resolution Strategies**:
-- `serverWins` — Server data takes priority
-- `localWins` — Local data takes priority
-- `merge` — Attempt to merge both
-- `manual` — Require manual resolution
-
-**Table Defaults**:
-| Table | Strategy |
-|-------|----------|
-| collections | serverWins |
-| staff_wallet | serverWins |
-| members | merge |
-
-</details>
-
-<details>
-<summary><b>📶 Offline Mode Indicator</b></summary>
-
-**Features**:
-- Top banner when offline
-- Sync status display
-- Pending count badge
-- Quick sync button
-- Status modal with details
-
-**Status Colors**:
-| Status | Color |
-|--------|-------|
-| Syncing | Blue |
-| Synced | Green |
-| Offline | Orange |
-| Error | Red |
-| Pending | Amber |
-
-</details>
-
-<details>
-<summary><b>📋 Pending Operations View</b></summary>
-
-**Features**:
-- Grouped by table type
-- Operation type icons (insert/update/delete)
-- Attempt count display
-- Remove operation option
-- Sync all button
-- Last sync timestamp
-
-**Operation Types**:
-| Type | Icon | Color |
-|------|------|-------|
-| Insert | ➕ | Green |
-| Update | ✏️ | Blue |
-| Delete | 🗑️ | Red |
-
-</details>
-
----
-
-### Phase 5: Gamification ✅
-
-<details>
-<summary><b>🔥 Streak Tracking</b></summary>
-
-**Features**:
-- Current streak display with fire animation
-- Longest streak record
-- 7-day visual calendar
-- Streak protection (1 grace day)
-- Streak recovery mechanics
-
-**Streak Rules**:
-- Collect at least once per day to maintain streak
-- 1 grace day per month for emergencies
-- Streak breaks at midnight if no collection
-
-**Streak Milestones**:
-| Days | Badge |
-|------|-------|
-| 3 | Hat Trick |
-| 7 | Week Warrior |
-| 30 | Monthly Master |
-| 100 | Streak Legend |
-
-</details>
-
-<details>
-<summary><b>🏆 Achievements System</b></summary>
-
-**Achievement Types**:
-| Type | Description |
-|------|-------------|
-| Collection | Total collections count |
-| Streak | Consecutive collection days |
-| Target | Daily target achievements |
-| Visit | Customer visit counts |
-| Speed | Fast collections |
-| Accuracy | Collection precision |
-
-**Achievement Tiers**:
-- 🥉 **Bronze** — Starting achievements
-- 🥈 **Silver** — Intermediate goals
-- 🥇 **Gold** — Significant milestones
-- 💎 **Platinum** — Major achievements
-- 💠 **Diamond** — Legendary status
-
-**Points System**:
-- Each achievement earns points
-- Points contribute to leaderboard
-- Bonus points for target achievements
-- Daily collection = +5 points
-
-</details>
-
-<details>
-<summary><b>📊 Leaderboard</b></summary>
-
-**Leaderboard Periods**:
-| Period | Description |
-|--------|-------------|
-| Today | Daily rankings |
-| This Week | Weekly competition |
-| This Month | Monthly top performers |
-| All Time | Historical best |
-
-**Leaderboard Metrics**:
-- Total collected amount
-- Collections count
-- Visit count
-- Target achievement %
-- Current streak
-
-**Features**:
-- Top 3 podium display
-- User's current rank highlight
-- View full leaderboard
-- Filter by period
-
-</details>
-
-<details>
-<summary><b>🎯 Daily Targets</b></summary>
-
-**Features**:
-- Circular progress indicator
-- Real-time progress updates
-- Target achieved celebration
-- Over-achievement bonus points
-
-**Gamification Dashboard**:
-- Streak header with animated fire
-- Today's target progress ring
-- Quick stats (Collected, Visits)
-- Achievement badges carousel
-- Leaderboard preview
-- Motivational quotes
-
-</details>
-
-<details>
-<summary><b>💡 Motivational Features</b></summary>
-
-**Motivational Quotes**:
-- Random daily motivation
-- Context-aware suggestions
-- Achievement celebration messages
-
-**Visual Feedback**:
-- Animated fire icon for streaks
-- Pulsing effects for active elements
-- Confetti on achievements
-- Progress animations
-
-**Social Elements**:
-- Compare with peers
-- Branch-level competition
-- Team challenges (planned)
-
-</details>
-
----
-
-### Phase 6: Admin Integration ✅
-
-<details>
-<summary><b>📋 Audit Logs</b></summary>
-
-**Audit Log Model**:
-- Comprehensive action tracking
-- Entity type and ID linkage
-- GPS coordinates for each action
-- IP address and user agent
-- Timestamp for all activities
-
-**Audit Actions**:
-| Category | Actions |
-|----------|---------|
-| Authentication | login, logout, loginFailed |
-| Collections | create, update, delete, sync |
-| Visits | checkIn, checkOut |
-| Wallet | deposit, withdraw |
-| Profile | update, passwordChange, pinChange |
-| Location | update, tracking start/stop |
-| Admin | approval, rejection, target set |
-
-</details>
-
----
-
-### Phase 7: Security & Audit ✅
-
-<details>
-<summary><b>🔒 Security Features</b></summary>
-
-**Authentication**:
-- PIN code protection
-- Biometric authentication (fingerprint, face)
-- Auto-lock after inactivity
-- Last activity tracking
-
-**Security Settings**:
-| Setting | Options |
-|---------|---------|
-| PIN | 4-6 digit code |
-| Biometric | Fingerprint, Face ID |
-| Auto-lock | 1, 5, 15, 30 minutes |
-
-**Security Service Methods**:
-- `setPin()` / `verifyPin()`
-- `authenticateWithBiometrics()`
-- `isBiometricAvailable()`
-- `shouldLockDueToInactivity()`
-
-</details>
-
----
-
-### Phase 8: Communication ✅
-
-<details>
-<summary><b>📱 Notifications</b></summary>
-
-**Notification Types**:
-- Collection reminders
-- Target achievements
-- Overdue alerts
-- Streak milestones
-- System announcements
-
-**Features**:
-- Push notifications
-- In-app notification center
-- Notification preferences
-- Do not disturb mode
-
-</details>
-
----
-
-### Phase 9: Analytics & Reports ✅
-
-<details>
-<summary><b>📊 Analytics Dashboard</b></summary>
-
-**Summary Cards**:
-- Total Collected (with % change)
-- Collections Count
-- Average Collection Amount
-
-**Period Filters**:
-| Period | Description |
-|--------|-------------|
-| Day | Today's performance |
-| Week | This week summary |
-| Month | Monthly trends |
-| Year | Yearly overview |
-
-**Performance Metrics**:
-- Target Achievement %
-- On-time Collection Rate
-- Customer Satisfaction Score
-- Visit Success Rate
-
-**Visualizations**:
-- Collection trend chart
-- Progress indicators
-- Top customers list
-
-**Reports**:
-- Daily collection reports
-- Weekly performance summary
-- Monthly analytics
-- Export to CSV/PDF (planned)
-
-</details>
-
----
-
-## 🎉 All Phases Complete!
-
----
-
-## 📸 Screenshots
-
-*Screenshots will be added after UI implementation*
-
----
-
-## 🏗️ Architecture
-
-### Clean Architecture (Feature-First)
-
-```
-lib/
-├── core/                    # Shared infrastructure
-│   ├── constants/           # App constants, colors, enums
-│   ├── services/            # Global services (GPS, sync, etc.)
-│   ├── utils/               # Helpers, formatters, validators
-│   ├── widgets/             # Shared UI components
-│   └── providers/           # Global providers (Supabase, etc.)
-│
-├── features/
-│   ├── auth/                # Authentication module
-│   ├── home/                # Home & Dashboard
-│   ├── loans/               # Loan management
-│   ├── savings/             # Savings management
-│   └── staff/               # Staff Portal (NEW)
-│       ├── data/
-│       │   ├── models/      # Data models
-│       │   ├── repositories/# Data access
-│       │   └── providers/   # State providers
-│       └── presentation/
-│           ├── pages/       # Screen widgets
-│           └── widgets/     # UI components
-│
-└── main.dart
-```
-
-### State Management
-
-- **Riverpod 2.4+** for all state
-- `StateProvider` for simple state
-- `FutureProvider` for async data
-- `StateNotifierProvider` for complex state
-- `Provider.family` for parameterized providers
-
-### Navigation
-
-- **GoRouter 14+** for declarative routing
-- Deep link support
-- Auth-guarded routes
+### 🏢 Admin Portal
+
+#### Dashboard
+- **Real-time Statistics** - Total loans, active members, collections, disbursements
+- **Trend Analysis** - Sparkline charts showing 7-day collection trends
+- **Quick Actions** - One-tap access to common operations
+- **Pending Alerts** - Overdue EMIs, pending applications
+
+#### Loan Management
+- **Loan Creation** - Full loan application workflow
+- **EMI Scheduling** - Auto-generate EMI schedules (flat/reducing interest)
+- **Status Tracking** - Pending → Approved → Active → Closed
+- **Bulk Operations** - Batch approvals, status updates
+
+#### Savings Management
+- **Recurring Savings Plans** - Daily, weekly, monthly schemes
+- **Deposit Tracking** - Record and track deposits
+- **Interest Calculation** - Automatic maturity calculations
+
+#### Member Management
+- **Member Onboarding** - Complete KYC workflow
+- **Profile Management** - Personal details, documents, addresses
+- **Loan History** - Complete loan history per member
+- **Savings History** - Deposit patterns and maturity tracking
+
+#### User & Staff Management
+- **Role-based Access** - Admin, Manager, Field Staff
+- **Staff Profiles** - Branch assignment, targets, performance
+- **Activity Logs** - Complete audit trail of all actions
+
+#### Analytics
+- **Collection Analytics** - Daily, weekly, monthly trends
+- **Performance Metrics** - Staff efficiency, branch performance
+- **Financial Reports** - Disbursement vs collection ratios
+
+### 👨‍💼 Staff Portal (Field Collector)
+
+#### Home Dashboard
+- **Today's Agenda** - EMIs due, visits scheduled, targets
+- **Wallet Balance** - Cash-in-hand tracking
+- **Collection Streak** - Gamification element for motivation
+- **Target Progress** - Daily/weekly/monthly goals
+- **GPS Status** - Real-time location tracking indicator
+- **Sync Status** - Offline/online status with pending count
+
+#### Collection Operations
+- **Record Collection** - Cash, UPI, bank transfer, cheque, card
+- **GPS Capture** - Automatic location stamp per collection
+- **Receipt Generation** - Text/PDF receipts for customers
+- **Payment Mode Selection** - Multiple payment methods
+- **Partial Collections** - Record partial EMI payments
+- **Overdue Management** - Prioritized overdue list with severity
+
+#### Customer Management
+- **Customer Search** - Quick search by name, phone, loan number
+- **Customer Profile** - Complete loan/savings history
+- **Loan Details** - Outstanding balance, EMI schedule
+- **Visit History** - Previous visits and collections
+
+#### Field Operations
+- **Visit Check-in/out** - GPS-tagged visit tracking
+- **Break Logging** - Work time tracking with breaks
+- **Daily Summary** - End-of-day collection report
+- **Cash Deposit** - Submit cash to branch/office
+- **Activity Tracking** - Work hours, distance covered
+
+#### Offline Support
+- **Local Database** - SQLite/Hive for offline data
+- **Operation Queue** - Pending operations synced later
+- **Conflict Resolution** - Last-write-wins with audit trail
+- **Auto-sync** - Background sync when online
+- **Sync Status Badge** - Visual indicator of sync state
+
+#### Gamification
+- **Collection Streaks** - Daily collection streaks
+- **Achievements** - Badges for milestones
+- **Leaderboards** - Compare with other collectors
+- **Targets** - Daily/weekly/monthly goals
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| **Framework** | Flutter 3.11+ |
-| **Language** | Dart 3.1+ |
-| **Backend** | Supabase (PostgreSQL) |
-| **Auth** | Supabase Auth |
-| **State** | Riverpod 2.4+ |
-| **Navigation** | GoRouter 14+ |
-| **Location** | Geolocator 13+ |
-| **UI Utils** | Pull to Refresh, Intl |
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| **Flutter 3.11+** | Cross-platform UI framework |
+| **Riverpod 2.4+** | State management |
+| **GoRouter 14+** | Declarative routing |
+| **Flutter Animate** | Smooth animations |
+| **FL Chart** | Beautiful charts |
+| **Google Fonts** | Typography |
+| **Shimmer** | Loading placeholders |
 
-### Platforms Supported
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| **Supabase** | PostgreSQL database, Auth, Realtime |
+| **Row Level Security** | Data isolation per role |
+| **PostgreSQL Functions** | Server-side logic |
 
-- ✅ Android
-- ✅ iOS
-- ✅ Web
-- ✅ macOS
-- ✅ Windows
-- ✅ Linux
+### Local Storage
+| Technology | Purpose |
+|------------|---------|
+| **Hive** | Local database for offline |
+| **SharedPreferences** | Settings, tokens |
+| **SQLite** | Offline data caching |
+
+### Integrations
+| Technology | Purpose |
+|------------|---------|
+| **Geolocator** | GPS location tracking |
+| **Local Auth** | Biometric authentication |
+| **Internet Connection Checker** | Connectivity monitoring |
+| **Share Plus** | Receipt sharing |
+| **Path Provider** | File storage paths |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-finance_app_zo/
-├── lib/
-│   ├── core/
-│   │   ├── constants/
-│   │   │   ├── app_colors.dart
-│   │   │   └── enums.dart
-│   │   ├── services/
-│   │   │   └── location_service.dart
-│   │   ├── utils/
-│   │   │   └── formatters.dart
-│   │   ├── widgets/
-│   │   │   ├── glass_card.dart
-│   │   │   └── shimmer_loading.dart
-│   │   └── providers/
-│   │       └── supabase_provider.dart
-│   │
-│   └── features/
-│       ├── staff/                    # STAFF PORTAL MODULE
-│       │   ├── data/
-│       │   │   ├── models/
-│       │   │   │   ├── staff_profile_model.dart
-│       │   │   │   ├── collection_model.dart
-│       │   │   │   ├── wallet_model.dart
-│       │   │   │   ├── streak_model.dart
-│       │   │   │   ├── target_model.dart
-│       │   │   │   ├── activity_log_model.dart
-│       │   │   │   └── staff_location_model.dart
-│       │   │   ├── repositories/
-│       │   │   │   ├── staff_repository.dart
-│       │   │   │   └── collection_repository.dart
-│       │   │   └── providers/
-│       │   │       ├── staff_providers.dart
-│       │   │       └── collection_providers.dart
-│       │   └── presentation/
-│       │       ├── pages/
-│       │       │   ├── staff_home_dashboard.dart
-│       │       │   ├── collection_list_page.dart
-│       │       │   ├── customer_search_page.dart
-│       │       │   ├── customer_detail_page.dart
-│       │       │   ├── collection_history_page.dart
-│       │       │   └── collection_form_page.dart
-│       │       └── widgets/
-│       │           ├── wallet_card.dart
-│       │           ├── target_progress_ring.dart
-│       │           ├── sync_status_bar.dart
-│       │           ├── gps_status_chip.dart
-│       │           ├── today_agenda_list.dart
-│       │           ├── collection_list_tile.dart
-│       │           └── collection_filter_widgets.dart
-│       │
-│       ├── auth/
-│       ├── home/
-│       ├── loans/
-│       └── savings/
+lib/
+├── main.dart                 # App entry point
+├── app.dart                  # MaterialApp configuration
 │
-├── supabase_schema.sql            # Original schema
-├── supabase_staff_schema.sql      # Staff portal schema
-├── AGENTS.md                      # AI agent instructions
-├── README.md                      # This file
-└── pubspec.yaml
-```
+├── core/
+│   ├── constants/
+│   │   ├── app_colors.dart   # Color palette
+│   │   ├── app_strings.dart  # String constants
+│   │   └── enums.dart        # App-wide enums
+│   ├── theme/
+│   │   ├── app_theme.dart    # Light/Dark themes
+│   │   └── theme_provider.dart
+│   ├── providers/
+│   │   └── storage_providers.dart
+│   └── widgets/
+│       └── hud_navigation.dart
+│
+├── features/
+│   ├── auth/
+│   │   ├── data/
+│   │   │   ├── models/user_model.dart
+│   │   │   └── repositories/auth_repository.dart
+│   │   └── presentation/
+│   │       ├── pages/login_page.dart
+│   │       ├── pages/signup_page.dart
+│   │       └── providers/auth_provider.dart
+│   │
+│   ├── home/
+│   │   ├── data/
+│   │   │   └── providers/dashboard_providers.dart
+│   │   └── presentation/
+│   │       ├── pages/home_page.dart          # Admin dashboard
+│   │       └── pages/staff_home_page.dart    # Old staff page (legacy)
+│   │
+│   ├── staff/                                 # NEW STAFF PORTAL
+│   │   ├── data/
+│   │   │   ├── models/
+│   │   │   │   ├── staff_profile_model.dart
+│   │   │   │   ├── collection_model.dart
+│   │   │   │   ├── wallet_model.dart
+│   │   │   │   ├── streak_model.dart
+│   │   │   │   ├── target_model.dart
+│   │   │   │   ├── activity_log_model.dart
+│   │   │   │   ├── staff_location_model.dart
+│   │   │   │   ├── achievement_model.dart
+│   │   │   │   ├── leaderboard_model.dart
+│   │   │   │   └── audit_log_model.dart
+│   │   │   ├── repositories/
+│   │   │   │   ├── staff_repository.dart
+│   │   │   │   └── collection_repository.dart
+│   │   │   ├── services/
+│   │   │   │   ├── offline_sync_engine.dart
+│   │   │   │   ├── local_database_service.dart
+│   │   │   │   ├── background_sync_service.dart
+│   │   │   │   ├── conflict_resolution_service.dart
+│   │   │   │   └── security_service.dart
+│   │   │   └── providers/
+│   │   │       ├── staff_providers.dart
+│   │   │       ├── collection_providers.dart
+│   │   │       ├── sync_providers.dart
+│   │   │       └── gamification_providers.dart
+│   │   └── presentation/
+│   │       ├── pages/
+│   │       │   ├── staff_home_dashboard.dart
+│   │       │   ├── collection_form_page.dart
+│   │       │   ├── collection_list_page.dart
+│   │       │   ├── customer_search_page.dart
+│   │       │   ├── customer_detail_page.dart
+│   │       │   ├── collection_history_page.dart
+│   │       │   ├── overdue_list_page.dart
+│   │       │   ├── visit_checkin_page.dart
+│   │       │   ├── daily_summary_page.dart
+│   │       │   ├── cash_deposit_page.dart
+│   │       │   ├── break_logging_page.dart
+│   │       │   ├── pending_operations_page.dart
+│   │       │   ├── gamification_dashboard.dart
+│   │       │   └── analytics_dashboard.dart
+│   │       └── widgets/
+│   │           ├── wallet_card.dart
+│   │           ├── target_progress_ring.dart
+│   │           ├── sync_status_bar.dart
+│   │           ├── gps_status_chip.dart
+│   │           ├── today_agenda_list.dart
+│   │           ├── collection_card.dart
+│   │           ├── collection_filter_widgets.dart
+│   │           └── offline_mode_indicator.dart
+│   │
+│   ├── loans/
+│   │   ├── data/
+│   │   │   ├── models/loan_model.dart
+│   │   │   ├── models/emi_schedule_model.dart
+│   │   │   └── repositories/loans_repository.dart
+│   │   └── presentation/
+│   │       ├── pages/loans_page.dart
+│   │       ├── pages/loan_detail_page.dart
+│   │       ├── pages/new_loan_page.dart
+│   │       └── widgets/collection_sheet.dart
+│   │
+│   ├── savings/
+│   │   ├── data/
+│   │   │   ├── models/savings_model.dart
+│   │   │   └── repositories/savings_repository.dart
+│   │   └── presentation/
+│   │       ├── pages/savings_page.dart
+│   │       ├── pages/saving_detail_page.dart
+│   │       └── pages/new_recurring_saving_page.dart
+│   │
+│   ├── members/
+│   │   ├── data/
+│   │   │   ├── models/member_model.dart
+│   │   │   └── repositories/members_repository.dart
+│   │   └── presentation/
+│   │       └── pages/member_onboarding_page.dart
+│   │
+│   ├── users/
+│   │   ├── data/
+│   │   │   ├── models/user_model.dart
+│   │   │   └── repositories/user_repository.dart
+│   │   └── presentation/
+│   │       ├── pages/users_page.dart
+│   │       ├── pages/new_user_page.dart
+│   │       └── pages/user_details_page.dart
+│   │
+│   ├── transactions/
+│   │   ├── data/
+│   │   │   ├── models/transaction_model.dart
+│   │   │   └── repositories/transactions_repository.dart
+│   │   └── presentation/
+│   │       └── pages/transactions_page.dart
+│   │
+│   ├── analytics/
+│   │   └── presentation/
+│   │       └── pages/analytics_page.dart
+│   │
+│   ├── settings/
+│   │   ├── data/
+│   │   │   ├── repositories/settings_repository.dart
+│   │   │   └── providers/brand_provider.dart
+│   │   └── presentation/
+│   │       ├── pages/settings_page.dart
+│   │       ├── pages/profile_page.dart
+│   │       └── pages/activity_logs_page.dart
+│   │
+│   └── chatbot/
+│       ├── data/
+│       │   └── models/chat_message.dart
+│       └── presentation/
+│           └── widgets/floating_chatbot.dart
+│
+├── providers/
+│   └── supabase_provider.dart
+│
+└── router/
+    └── app_router.dart
 
----
-
-## 🗄️ Database Schema
-
-### Core Tables (Staff Portal)
-
-```sql
--- Staff Profile
-CREATE TABLE staff_profiles (
-    id UUID PRIMARY KEY,
-    staff_id TEXT UNIQUE NOT NULL,
-    branch_id UUID REFERENCES branches(id),
-    role TEXT CHECK (role IN ('collector', 'supervisor', 'branch_manager', 'area_manager')),
-    status TEXT DEFAULT 'active',
-    phone TEXT,
-    name TEXT NOT NULL,
-    email TEXT,
-    -- ... additional fields
-);
-
--- Collections (Core Transaction Table)
-CREATE TABLE collections (
-    id UUID PRIMARY KEY,
-    staff_id UUID REFERENCES staff_profiles(id),
-    member_id UUID REFERENCES members(id),
-    loan_id UUID REFERENCES loans(id),
-    savings_id UUID REFERENCES savings(id),
-    
-    -- Amounts
-    amount_expected DECIMAL(12,2),
-    amount_collected DECIMAL(12,2) NOT NULL,
-    
-    -- Metadata
-    payment_mode TEXT CHECK (payment_mode IN ('cash', 'upi', 'bank_transfer', 'cheque', 'card')),
-    collection_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    latitude DECIMAL(10,8),
-    longitude DECIMAL(11,8),
-    gps_accuracy DECIMAL(8,2),
-    
-    -- Sync
-    sync_status TEXT DEFAULT 'pending',
-    synced_at TIMESTAMP WITH TIME ZONE,
-    
-    -- Audit
-    notes TEXT,
-    is_partial BOOLEAN DEFAULT FALSE,
-    collector_confirmed BOOLEAN DEFAULT FALSE,
-    member_confirmed BOOLEAN DEFAULT FALSE
-);
-
--- Staff Wallet (Cash-in-Hand)
-CREATE TABLE staff_wallet (
-    id UUID PRIMARY KEY,
-    staff_id UUID REFERENCES staff_profiles(id),
-    cash_in_hand DECIMAL(12,2) DEFAULT 0,
-    digital_balance DECIMAL(12,2) DEFAULT 0,
-    total_collected_today DECIMAL(12,2) DEFAULT 0,
-    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Activity Logs (Audit Trail)
-CREATE TABLE activity_logs (
-    id UUID PRIMARY KEY,
-    staff_id UUID,
-    action TEXT NOT NULL,
-    entity_type TEXT,
-    entity_id UUID,
-    metadata JSONB,
-    ip_address TEXT,
-    user_agent TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-### Row Level Security (RLS)
-
-All tables have RLS enabled:
-- Staff can only access their own data
-- Supervisors can view branch-level data
-- Managers have area-level access
-
-```sql
--- Example RLS Policy
-CREATE POLICY "Staff own data" ON collections
-    FOR ALL USING (staff_id = auth.uid());
+supabase/
+├── schema.sql                 # Core tables
+├── staff_schema.sql           # Staff portal tables
+├── functions/                 # PostgreSQL functions
+│   └── generate_emi_schedule.sql
+└── rls_policies.sql           # Row Level Security
 ```
 
 ---
@@ -953,123 +337,292 @@ CREATE POLICY "Staff own data" ON collections
 
 ### Prerequisites
 
-- Flutter SDK 3.11+
-- Dart SDK 3.1+
+- Flutter SDK 3.11 or higher
+- Dart SDK 3.4 or higher
 - Supabase account (free tier works)
 - Android Studio / VS Code
 
 ### Installation
 
+1. **Clone the repository**
 ```bash
-# Clone the repository
 git clone https://github.com/sansayan01/finance_app_zo.git
 cd finance_app_zo
-
-# Install dependencies
-flutter pub get
-
-# Set up Supabase
-# 1. Create a Supabase project
-# 2. Run supabase_schema.sql in SQL Editor
-# 3. Run supabase_staff_schema.sql in SQL Editor
-# 4. Copy your Supabase URL and anon key
-
-# Create .env file
-echo "SUPABASE_URL=your_url" > .env
-echo "SUPABASE_ANON_KEY=your_key" >> .env
-
-# Run the app
-flutter run
 ```
 
-### Environment Variables
+2. **Install dependencies**
+```bash
+flutter pub get
+```
 
+3. **Configure environment**
 Create a `.env` file in the project root:
-
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 ```
 
----
-
-## 📊 Implementation Status
-
-| Phase | Name | Status | Progress |
-|-------|------|--------|----------|
-| **1** | Core Foundation | ✅ Complete | 100% |
-| **2** | Essential Screens | ✅ Complete | 100% |
-| **3** | Field Operations | ✅ Complete | 100% |
-| **4** | Offline Engine | ✅ Complete | 100% |
-| **5** | Gamification | ✅ Complete | 100% |
-| **6** | Admin Integration | ✅ Complete | 100% |
-| **7** | Security & Audit | ✅ Complete | 100% |
-| **8** | Communication | ✅ Complete | 100% |
-| **9** | Analytics & Reports | ✅ Complete | 100% |
-
----
-
-## 📡 API Reference
-
-### Collection APIs
-
-```dart
-// Get today's due EMIs
-final emis = await ref.read(todayDueEmisProvider(staffId).future);
-
-// Search customers
-final results = await ref.read(customerSearchProvider('query').future);
-
-// Get customer detail
-final customer = await ref.read(customerDetailProvider(customerId).future);
-
-// Record collection
-await ref.read(collectionNotifierProvider.notifier).recordCollection(
-  loanId: loanId,
-  amount: 500.0,
-  paymentMode: PaymentMode.cash,
-  latitude: 22.57,
-  longitude: 88.36,
-);
+Or use `--dart-define` flags:
+```bash
+flutter run --dart-define=SUPABASE_URL=https://... --dart-define=SUPABASE_ANON_KEY=...
 ```
 
-### Staff APIs
+4. **Set up Supabase**
+   - Create a new Supabase project
+   - Run `supabase_schema.sql` in SQL Editor
+   - Run `supabase_staff_schema.sql` in SQL Editor
+   - Enable Row Level Security (already in schema)
 
-```dart
-// Get staff profile
-final profile = await ref.read(staffProfileProvider(staffId).future);
-
-// Get wallet balance
-final wallet = await ref.read(staffWalletProvider(staffId).future);
-
-// Get streak data
-final streak = await ref.read(staffStreakProvider(staffId).future);
-
-// Get targets
-final targets = await ref.read(staffTargetsProvider(staffId).future);
+5. **Run the app**
+```bash
+flutter run
 ```
+
+---
+
+## 🏢 Admin Portal
+
+### Dashboard Features
+
+| Widget | Description |
+|--------|-------------|
+| **Stats Cards** | Total loans, members, collections, disbursements |
+| **Collection Trend** | 7-day sparkline |
+| **Quick Actions** | New loan, new member, collect EMI |
+| **Recent Activity** | Latest transactions |
+| **Pending Items** | Overdue EMIs, pending applications |
+
+### Navigation
+
+| Tab | Description |
+|-----|-------------|
+| **Home** | Dashboard overview |
+| **Loans** | Loan management, EMI collection |
+| **Savings** | Savings plans, deposits |
+| **Users** | Staff management |
+| **Settings** | Profile, activity logs |
+
+### Role-Based Access
+
+| Role | Permissions |
+|------|-------------|
+| **Admin** | Full access to all features |
+| **Manager** | Branch-level operations, staff oversight |
+| **Field Staff** | Collection operations only |
+
+---
+
+## 👨‍💼 Staff Portal
+
+### Home Dashboard
+
+```
+┌─────────────────────────────────────┐
+│  👋 Good Morning, Collector!        │
+│  📍 GPS: Active  📶 Online  🔄 0    │
+├─────────────────────────────────────┤
+│  💰 Wallet: ₹12,500                 │
+│  🔥 Streak: 5 days                  │
+│  🎯 Today: ₹15,000 / ₹20,000       │
+├─────────────────────────────────────┤
+│  📋 Today's Agenda                  │
+│  ├─ EMI Due: 12 customers           │
+│  ├─ Overdue: 3 customers            │
+│  └─ Visits: 5 scheduled             │
+├─────────────────────────────────────┤
+│  ⚡ Quick Actions                   │
+│  [Record] [Search] [History]        │
+└─────────────────────────────────────┘
+```
+
+### Collection Flow
+
+1. **Select Customer** → Search or tap from list
+2. **View Details** → Outstanding, EMI schedule
+3. **Record Collection** → Enter amount, payment mode
+4. **GPS Capture** → Automatic location stamp
+5. **Generate Receipt** → Share with customer
+6. **Sync** → Online: immediate, Offline: queued
+
+### Offline Operation
+
+```
+┌─────────────────────────────────────┐
+│  📴 OFFLINE MODE                     │
+│  3 pending operations                │
+│  [View Pending] [Force Sync]         │
+└─────────────────────────────────────┘
+```
+
+---
+
+## 🗄️ Database Schema
+
+### Core Tables
+
+| Table | Purpose |
+|-------|---------|
+| `members` | Customer profiles |
+| `loans` | Loan applications |
+| `emi_schedule` | EMI repayment schedule |
+| `savings_plans` | Recurring savings |
+| `savings_deposits` | Deposit records |
+| `transactions` | All financial transactions |
+| `profiles` | User profiles (admin/staff) |
+
+### Staff Portal Tables
+
+| Table | Purpose |
+|-------|---------|
+| `branches` | Branch offices |
+| `staff_profiles` | Staff details, branch assignment |
+| `staff_wallets` | Cash-in-hand tracking |
+| `staff_locations` | GPS location history |
+| `staff_streaks` | Collection streaks |
+| `staff_breaks` | Work time breaks |
+| `visits` | Customer visits |
+| `collections` | Field collections |
+| `cash_deposits` | Branch deposits |
+| `collection_targets` | Daily/weekly targets |
+| `activity_logs` | Complete audit trail |
+| `sync_queue` | Offline operation queue |
+| `achievements` | Gamification badges |
+| `leaderboards` | Performance rankings |
+
+### Row Level Security
+
+All tables have RLS enabled with these policies:
+- Staff can only access their own data
+- Managers can access branch-level data
+- Admins have full access
+- Collections are filtered by staff_id
+
+---
+
+## 🔒 Security
+
+### Authentication
+- Supabase Auth with email/password
+- Biometric authentication (fingerprint/face)
+- Session management with refresh tokens
+
+### Authorization
+- Role-based access control (RBAC)
+- Row Level Security (RLS) in database
+- Route guards in app router
+
+### Data Protection
+- No images/audio stored (metadata only)
+- GPS data encrypted at rest
+- API keys stored in environment variables
+- No hardcoded credentials in code
+
+### Audit Trail
+- All actions logged in `activity_logs`
+- Timestamp, user, action, entity, metadata
+- Immutable records (no deletion, only archival)
+
+---
+
+## ⚡ Performance
+
+### Optimization Strategies
+
+| Strategy | Implementation |
+|----------|----------------|
+| **SQL Aggregation** | Replace Dart-side calculations |
+| **Pagination** | Limit queries to 50 items |
+| **Lazy Loading** | Load data on-demand |
+| **Caching** | Local database for frequent queries |
+| **Indexing** | Database indexes on foreign keys |
+| **Debouncing** | Search input debounced |
+
+### Query Optimization
+
+```sql
+-- Before: Fetch all, calculate in Dart
+SELECT * FROM loans;  -- Then calculate in app
+
+-- After: Aggregate in SQL
+SELECT 
+  COUNT(*) as total_loans,
+  SUM(outstanding_balance) as total_outstanding
+FROM loans WHERE status = 'active';
+```
+
+---
+
+## 📴 Offline Support
+
+### Architecture
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   UI Layer   │────▶│  Sync Engine │────▶│   Supabase   │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │  Local DB    │
+                     │  (Hive)      │
+                     └──────────────┘
+```
+
+### Sync Flow
+
+1. **Online**: Operations go directly to Supabase
+2. **Offline**: Operations queued in local database
+3. **Reconnect**: Background sync processes queue
+4. **Conflict**: Last-write-wins with audit log
+
+### Data Cached Offline
+- Staff profile
+- Today's EMIs
+- Customer list (recent 50)
+- Loan details (viewed in last 24h)
+- Wallet balance
+- Current targets
+
+---
+
+## 📸 Screenshots
+
+### Admin Portal
+
+| Dashboard | Loans | Analytics |
+|-----------|-------|-----------|
+| *Coming soon* | *Coming soon* | *Coming soon* |
+
+### Staff Portal
+
+| Home | Collection | Customer |
+|------|------------|----------|
+| *Coming soon* | *Coming soon* | *Coming soon* |
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
-
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+### Code Style
+- Follow [Effective Dart](https://dart.dev/guides/language/effective-dart)
+- Use `flutter analyze` before committing
+- Write tests for new features
+
 ---
 
-## 📝 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👨‍💻 Author
+## 👤 Author
 
 **Sayan** - [@sansayan01](https://github.com/sansayan01)
 

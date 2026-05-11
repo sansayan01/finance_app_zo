@@ -241,3 +241,6 @@ final collectionNotifierProvider =
   final repository = ref.watch(collectionRepositoryProvider);
   return CollectionNotifier(repository, ref);
 });
+
+// Overdue collections (alias for compatibility)
+final overdueCollectionsProvider = overdueEmisProvider;

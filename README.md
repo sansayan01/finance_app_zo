@@ -229,17 +229,138 @@
 
 ---
 
-### Phase 3: Field Operations 🚧
+### Phase 3: Field Operations ✅
+
+<details>
+<summary><b>🚨 Overdue Management</b></summary>
+
+**Overdue List Page Features**:
+- Days overdue badges (color-coded by severity)
+- Quick filters: 1-7 days, 8-15 days, 16-30 days, 30+ days
+- Sort by: Days, Amount, Name, Due Date
+- Summary card with total overdue amount
+- Quick actions: Call, Collect
+- Penalty calculation display
+
+**Color Coding**:
+| Days | Color |
+|------|-------|
+| 1-7 | Orange |
+| 8-15 | Deep Orange |
+| 16-30 | Red |
+| 30+ | Purple |
+
+</details>
+
+<details>
+<summary><b>📍 Visit Check-in/Check-out</b></summary>
+
+**Features**:
+- GPS verification at check-in
+- Visit purposes: Collection, Verification, Follow-up, Document, Other
+- Optional notes
+- Automatic activity logging
+- Check-out with location capture
+- Duration calculation
+
+**Visit Status Tracking**:
+- `in_progress` — Active visit
+- `completed` — Finished visit
+- `cancelled` — Cancelled visit
+
+</details>
+
+<details>
+<summary><b>📊 Daily Summary</b></summary>
+
+**Summary Metrics**:
+- Total collected vs target
+- Progress percentage
+- Cash vs digital breakdown
+- Visit count & success rate
+- Distance traveled
+- Average collection time
+- Current streak days
+
+**Features**:
+- Date picker for historical summaries
+- Share summary (text/CSV)
+- Recent collections list
+- Target achievement indicator
+
+</details>
+
+<details>
+<summary><b>💰 Cash Deposit Flow</b></summary>
+
+**Features**:
+- Current wallet balance display
+- Quick amount selection chips
+- Deposit methods: Branch Counter, Cash Pickup
+- Reference number entry
+- Notes field
+- "Deposit All" shortcut
+- Wallet auto-update on success
+
+**Deposit Status Flow**:
+`pending_verification` → `verified` → `completed`
+
+</details>
+
+<details>
+<summary><b>☕ Break/Rest Logging</b></summary>
+
+**Break Types**:
+| Type | Icon | Description |
+|------|------|-------------|
+| Lunch | 🍽️ | Meal break |
+| Tea | ☕ | Short refreshment |
+| Rest | 🛏️ | Rest period |
+| Personal | 👤 | Personal matters |
+| Other | ⋯ | Other reasons |
+
+**Features**:
+- Live elapsed time display
+- Break history for today
+- Automatic duration calculation
+- Break time limits reminder
+
+</details>
+
+<details>
+<summary><b>🔄 Offline Sync Engine</b></summary>
+
+**Core Components**:
+- `OfflineSyncEngine` — Main sync service
+- `SyncStatusNotifier` — State management
+- Queue-based operation storage
+
+**Sync Features**:
+- Queue operations when offline
+- Automatic retry on failure
+- Max 5 retry attempts per operation
+- Sync status tracking (pending, syncing, synced, failed)
+- Network status monitoring
+- Cleanup of old synced items (24h TTL)
+
+**Operation Types**:
+- `insert` — New records
+- `update` — Record updates
+- `delete` — Record deletions
+
+**Sync Status Provider**:
+```dart
+final syncStatus = ref.watch(syncStatusProvider);
+// syncStatus.pending, syncStatus.success, syncStatus.failed
+```
+
+</details>
+
+---
+
+### Phase 4: Offline Engine 🚧
 
 *In Progress...*
-
-Planned features:
-- Overdue Management
-- Visit Check-in/Check-out
-- Daily Summary
-- Offline Sync Engine
-- Cash Deposit Flow
-- Break/Rest Logging
 
 ---
 
@@ -523,8 +644,8 @@ SUPABASE_ANON_KEY=your-anon-key
 |-------|------|--------|----------|
 | **1** | Core Foundation | ✅ Complete | 100% |
 | **2** | Essential Screens | ✅ Complete | 100% |
-| **3** | Field Operations | 🚧 In Progress | 0% |
-| **4** | Offline Engine | ⏳ Pending | 0% |
+| **3** | Field Operations | ✅ Complete | 100% |
+| **4** | Offline Engine | 🚧 In Progress | 0% |
 | **5** | Gamification | ⏳ Pending | 0% |
 | **6** | Admin Integration | ⏳ Pending | 0% |
 | **7** | Security & Audit | ⏳ Pending | 0% |

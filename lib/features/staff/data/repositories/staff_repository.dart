@@ -235,4 +235,283 @@ class StaffRepository {
       'sync_status': 'synced',
     });
   }
+
+  /// Log a visit (check-in)
+  Future<void> logVisit({
+    required String staffId,
+    String? customerId,
+    required String purpose,
+    required double checkInLat,
+    required double checkInLng,
+    String? notes,
+  }) async {
+    await _client.from('visit_logs').insert({
+      'staff_id': staffId,
+      'customer_id': customerId,
+      'purpose': purpose,
+      'check_in_time': DateTime.now().toIso8601String(),
+      'check_in_lat': checkInLat,
+      'check_in_lng': checkInLng,
+      'notes': notes,
+      'status': 'in_progress',
+      'sync_status': 'synced',
+    });
+
+    // Log activity
+    await logActivity(
+      staffId: staffId,
+      action: 'visit_check_in',
+      entityType: 'customer',
+      entityId: customerId,
+      metadata: {'purpose': purpose},
+      gpsLat: checkInLat,
+      gpsLng: checkInLng,
+    );
+  }
+
+  /// Complete a visit (check-out)
+  Future<void> completeVisit({
+    required String staffId,
+    required double checkOutLat,
+    required double checkOutLng,
+  }) async {
+    final now = DateTime.now();
+
+    // Find active visit
+    final activeVisit = await _client
+        .from('visit_logs')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('status', 'in_progress')
+        .order('check_in_time', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (activeVisit == null) throw Exception('No active visit found');
+
+    await _client.from('visit_logs').update({
+      'check_out_time': now.toIso8601String(),
+      'check_out_lat': checkOutLat,
+      'check_out_lng': checkOutLng,
+      'status': 'completed',
+      'sync_status': 'synced',
+    }).eq('id', activeVisit['id']);
+
+    // Log activity
+    await logActivity(
+      staffId: staffId,
+      action: 'visit_check_out',
+      entityType: 'visit',
+      entityId: activeVisit['id'],
+      gpsLat: checkOutLat,
+      gpsLng: checkOutLng,
+    );
+  }
+
+  /// Record cash deposit
+  Future<void> recordCashDeposit({
+    required String staffId,
+    required double amount,
+    required String method,
+    String? reference,
+    String? notes,
+  }) async {
+    final now = DateTime.now();
+
+    // Create cash deposit record
+    await _client.from('cash_deposits').insert({
+      'staff_id': staffId,
+      'amount': amount,
+      'deposit_method': method,
+      'reference_number': reference,
+      'notes': notes,
+      'deposit_time': now.toIso8601String(),
+      'status': 'pending_verification',
+      'sync_status': 'synced',
+    });
+
+    // Update wallet
+    final wallet = await getWallet(staffId);
+    if (wallet != null) {
+      await _client.from('staff_wallet').update({
+        'cash_in_hand': wallet.cashInHand - amount,
+        'total_deposited_today': wallet.totalDepositedToday + amount,
+        'last_deposit_amount': amount,
+        'last_deposit_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+      }).eq('staff_id', staffId);
+    }
+
+    // Log activity
+    await logActivity(
+      staffId: staffId,
+      action: 'cash_deposit',
+      entityType: 'deposit',
+      metadata: {'amount': amount, 'method': method},
+    );
+  }
+
+  /// Start a break
+  Future<void> startBreak({
+    required String staffId,
+    required String breakType,
+    String? notes,
+  }) async {
+    await _client.from('staff_breaks').insert({
+      'staff_id': staffId,
+      'break_type': breakType,
+      'start_time': DateTime.now().toIso8601String(),
+      'notes': notes,
+      'status': 'in_progress',
+      'sync_status': 'synced',
+    });
+
+    // Log activity
+    await logActivity(
+      staffId: staffId,
+      action: 'break_start',
+      metadata: {'break_type': breakType},
+    );
+  }
+
+  /// End a break
+  Future<void> endBreak(String staffId) async {
+    final now = DateTime.now();
+
+    // Find active break
+    final activeBreak = await _client
+        .from('staff_breaks')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('status', 'in_progress')
+        .order('start_time', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (activeBreak == null) throw Exception('No active break found');
+
+    await _client.from('staff_breaks').update({
+      'end_time': now.toIso8601String(),
+      'status': 'completed',
+      'sync_status': 'synced',
+    }).eq('id', activeBreak['id']);
+
+    // Log activity
+    await logActivity(
+      staffId: staffId,
+      action: 'break_end',
+      entityType: 'break',
+      entityId: activeBreak['id'],
+    );
+  }
+
+  /// Get current break
+  Future<Map<String, dynamic>?> getCurrentBreak(String staffId) async {
+    return await _client
+        .from('staff_breaks')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('status', 'in_progress')
+        .order('start_time', ascending: false)
+        .limit(1)
+        .maybeSingle();
+  }
+
+  /// Get today's breaks
+  Future<List<Map<String, dynamic>>> getTodayBreaks(String staffId) async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    return await _client
+        .from('staff_breaks')
+        .select()
+        .eq('staff_id', staffId)
+        .gte('start_time', today)
+        .order('start_time', ascending: false);
+  }
+
+  /// Get daily summary for a specific date
+  Future<Map<String, dynamic>> getDailySummary(String staffId, DateTime date) async {
+    final dateStr = date.toIso8601String().split('T').first;
+
+    // Get collections for the date
+    final collections = await _client
+        .from('collections')
+        .select()
+        .eq('staff_id', staffId)
+        .gte('collection_time', dateStr)
+        .lt('collection_time', '${dateStr}T23:59:59');
+
+    // Get visits for the date
+    final visits = await _client
+        .from('visit_logs')
+        .select()
+        .eq('staff_id', staffId)
+        .gte('check_in_time', dateStr)
+        .lt('check_in_time', '${dateStr}T23:59:59');
+
+    // Calculate summary
+    double totalCollected = 0;
+    double cashCollected = 0;
+    double digitalCollected = 0;
+    int successfulVisits = 0;
+
+    for (var c in collections) {
+      final amount = (c['amount_collected'] as num?)?.toDouble() ?? 0;
+      totalCollected += amount;
+      if (c['payment_mode'] == 'cash') {
+        cashCollected += amount;
+      } else {
+        digitalCollected += amount;
+      }
+    }
+
+    for (var v in visits) {
+      if (v['status'] == 'completed') {
+        successfulVisits++;
+      }
+    }
+
+    // Get target for the date
+    final target = await _client
+        .from('collection_targets')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('period_type', 'daily')
+        .eq('target_date', dateStr)
+        .maybeSingle();
+
+    // Get streak
+    final streak = await getStreak(staffId);
+
+    return {
+      'total_collected': totalCollected,
+      'cash_collected': cashCollected,
+      'digital_collected': digitalCollected,
+      'collection_count': collections.length,
+      'total_visits': visits.length,
+      'successful_visits': successfulVisits,
+      'target_amount': target?['target_amount'] ?? 0,
+      'streak_days': streak?.currentStreak ?? 0,
+      'recent_collections': collections.take(5).toList(),
+    };
+  }
+
+  /// Get current activity status
+  Future<String?> getCurrentActivity(String staffId) async {
+    // Check if on break
+    final activeBreak = await getCurrentBreak(staffId);
+    if (activeBreak != null) return 'break';
+
+    // Check if on visit
+    final activeVisit = await _client
+        .from('visit_logs')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('status', 'in_progress')
+        .maybeSingle();
+
+    if (activeVisit != null) return 'collecting';
+
+    return 'idle';
+  }
 }

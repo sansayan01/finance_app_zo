@@ -79,6 +79,24 @@ final todaySummaryProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   return repository.getTodaySummary(profile.id);
 });
 
+// Daily summary for a specific date
+final dailySummaryProvider = FutureProvider.family<Map<String, dynamic>, ({String staffId, DateTime date})>((ref, params) async {
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getDailySummary(params.staffId, params.date);
+});
+
+// Today's breaks
+final todayBreaksProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, staffId) async {
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getTodayBreaks(staffId);
+});
+
+// Current activity status
+final currentActivityProvider = FutureProvider.family<String?, String>((ref, staffId) async {
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getCurrentActivity(staffId);
+});
+
 // Refresh all staff data
 final refreshStaffDataProvider = Provider<Future<void> Function()>((ref) {
   return () async {

@@ -2,13 +2,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// Auth
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/data/models/user_model.dart';
 
+// Admin Portal
 import '../features/home/presentation/pages/home_page.dart';
-import '../features/home/presentation/pages/staff_home_page.dart';
 import '../features/loans/presentation/pages/loans_page.dart';
 import '../features/savings/presentation/pages/savings_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
@@ -28,6 +30,25 @@ import '../features/home/presentation/pages/notifications_page.dart';
 import '../features/transactions/presentation/pages/transactions_page.dart';
 import '../features/members/presentation/pages/member_onboarding_page.dart';
 
+// Staff Portal - NEW
+import '../features/staff/presentation/pages/staff_home_dashboard.dart';
+import '../features/staff/presentation/pages/collection_form_page.dart';
+import '../features/staff/presentation/pages/collection_list_page.dart';
+import '../features/staff/presentation/pages/customer_search_page.dart';
+import '../features/staff/presentation/pages/customer_detail_page.dart';
+import '../features/staff/presentation/pages/collection_history_page.dart';
+import '../features/staff/presentation/pages/overdue_list_page.dart';
+import '../features/staff/presentation/pages/visit_checkin_page.dart';
+import '../features/staff/presentation/pages/daily_summary_page.dart';
+import '../features/staff/presentation/pages/cash_deposit_page.dart';
+import '../features/staff/presentation/pages/break_logging_page.dart';
+import '../features/staff/presentation/pages/pending_operations_page.dart';
+import '../features/staff/presentation/pages/gamification_dashboard.dart';
+import '../features/staff/presentation/providers/sync_status_provider.dart';
+
+// =====================================================
+// AUTH REDIRECT LISTENER
+// =====================================================
 class AuthRedirectListener extends ChangeNotifier {
   final Ref ref;
 
@@ -45,11 +66,14 @@ final authRedirectListenerProvider = Provider<AuthRedirectListener>((ref) {
   return AuthRedirectListener(ref);
 });
 
+// =====================================================
+// ROUTER PROVIDER
+// =====================================================
 final routerProvider = Provider<GoRouter>((ref) {
   final authListener = ref.watch(authRedirectListenerProvider);
 
   return GoRouter(
-    initialLocation: '/loans',
+    initialLocation: '/',
     refreshListenable: authListener,
     redirect: (context, state) {
       final authStatus = ref.read(authProvider).status;
@@ -67,13 +91,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // Auth Shell
       GoRoute(
         path: '/auth',
         builder: (context, state) => const AuthShell(),
       ),
+
+      // Admin Shell (for admins/managers)
       ShellRoute(
         builder: (context, state, child) {
-          return MainShell(child: child);
+          return AdminShell(child: child);
         },
         routes: [
           GoRoute(
@@ -161,10 +188,84 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+
+      // Staff Shell (for field collectors) - NEW
+      ShellRoute(
+        builder: (context, state, child) {
+          return StaffShell(child: child);
+        },
+        routes: [
+          GoRoute(
+            path: '/staff',
+            builder: (context, state) => const StaffHomeDashboard(),
+          ),
+          GoRoute(
+            path: '/staff/collections',
+            builder: (context, state) => const CollectionListPage(),
+          ),
+          GoRoute(
+            path: '/staff/collection/:loanId',
+            builder: (context, state) {
+              final loanId = state.pathParameters['loanId']!;
+              final customerId = state.uri.queryParameters['customerId'];
+              return CollectionFormPage(
+                loanId: loanId,
+                customerId: customerId,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/staff/customers',
+            builder: (context, state) => const CustomerSearchPage(),
+          ),
+          GoRoute(
+            path: '/staff/customers/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CustomerDetailPage(customerId: id);
+            },
+          ),
+          GoRoute(
+            path: '/staff/history',
+            builder: (context, state) => const CollectionHistoryPage(),
+          ),
+          GoRoute(
+            path: '/staff/overdue',
+            builder: (context, state) => const OverdueListPage(),
+          ),
+          GoRoute(
+            path: '/staff/visit',
+            builder: (context, state) => const VisitCheckinPage(),
+          ),
+          GoRoute(
+            path: '/staff/summary',
+            builder: (context, state) => const DailySummaryPage(),
+          ),
+          GoRoute(
+            path: '/staff/deposit',
+            builder: (context, state) => const CashDepositPage(),
+          ),
+          GoRoute(
+            path: '/staff/break',
+            builder: (context, state) => const BreakLoggingPage(),
+          ),
+          GoRoute(
+            path: '/staff/pending',
+            builder: (context, state) => const PendingOperationsPage(),
+          ),
+          GoRoute(
+            path: '/staff/gamification',
+            builder: (context, state) => const GamificationDashboard(),
+          ),
+        ],
+      ),
     ],
   );
 });
 
+// =====================================================
+// AUTH SHELL
+// =====================================================
 class AuthShell extends StatefulWidget {
   const AuthShell({super.key});
 
@@ -189,10 +290,41 @@ class _AuthShellState extends State<AuthShell> {
   }
 }
 
-class MainShell extends StatelessWidget {
+// =====================================================
+// HOME PAGE CONTENT - ROLE-BASED REDIRECT
+// =====================================================
+class HomePageContent extends ConsumerWidget {
+  const HomePageContent({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+
+    // Redirect staff to their dashboard
+    if (user?.role == UserRole.fieldStaff) {
+      // Use WidgetsBinding to avoid navigation during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/staff');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Admin/Manager dashboard
+    return HomePage(
+      onViewAllLoans: () => context.go('/loans'),
+      onViewAllSavings: () => context.go('/savings'),
+      onQuickAction: () {},
+    );
+  }
+}
+
+// =====================================================
+// ADMIN SHELL
+// =====================================================
+class AdminShell extends StatelessWidget {
   final Widget child;
 
-  const MainShell({super.key, required this.child});
+  const AdminShell({super.key, required this.child});
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
@@ -280,6 +412,273 @@ class MainShell extends StatelessWidget {
   }
 }
 
+// =====================================================
+// STAFF SHELL - NEW
+// =====================================================
+class StaffShell extends ConsumerWidget {
+  final Widget child;
+
+  const StaffShell({super.key, required this.child});
+
+  int _calculateSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/staff/collections') ||
+        location.startsWith('/staff/collection')) return 1;
+    if (location.startsWith('/staff/customers')) return 2;
+    if (location.startsWith('/staff/history')) return 3;
+    if (location.startsWith('/staff/pending')) return 4;
+    return 0;
+  }
+
+  void _onItemTapped(int index, BuildContext context) {
+    switch (index) {
+      case 0:
+        context.go('/staff');
+        break;
+      case 1:
+        context.go('/staff/collections');
+        break;
+      case 2:
+        context.go('/staff/customers');
+        break;
+      case 3:
+        context.go('/staff/history');
+        break;
+      case 4:
+        context.go('/staff/pending');
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentIndex = _calculateSelectedIndex(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    // Get pending operations count
+    final syncStatus = ref.watch(syncStatusProvider);
+    final pendingCount = syncStatus.pending;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBody: true,
+      body: child,
+      bottomNavigationBar: StaffBottomBar(
+        currentIndex: currentIndex,
+        onTap: (index) => _onItemTapped(index, context),
+        pendingCount: pendingCount,
+        isDark: isDark,
+        primary: primary,
+      ),
+    );
+  }
+}
+
+// =====================================================
+// STAFF BOTTOM BAR - NEW
+// =====================================================
+class StaffBottomBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final int pendingCount;
+  final bool isDark;
+  final Color primary;
+
+  const StaffBottomBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    required this.pendingCount,
+    required this.isDark,
+    required this.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF1E1E2A).withOpacity(0.95)
+                : Colors.white.withOpacity(0.95),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.black.withOpacity(0.05),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _StaffNavItem(
+                index: 0,
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home_rounded,
+                label: 'Home',
+                currentIndex: currentIndex,
+                primary: primary,
+                isDark: isDark,
+                onTap: onTap,
+              ),
+              _StaffNavItem(
+                index: 1,
+                icon: Icons.playlist_add_check_outlined,
+                activeIcon: Icons.playlist_add_check_rounded,
+                label: 'Today',
+                currentIndex: currentIndex,
+                primary: primary,
+                isDark: isDark,
+                onTap: onTap,
+              ),
+              _StaffNavItem(
+                index: 2,
+                icon: Icons.person_search_outlined,
+                activeIcon: Icons.person_search_rounded,
+                label: 'Customers',
+                currentIndex: currentIndex,
+                primary: primary,
+                isDark: isDark,
+                onTap: onTap,
+              ),
+              _StaffNavItem(
+                index: 3,
+                icon: Icons.history_outlined,
+                activeIcon: Icons.history_rounded,
+                label: 'History',
+                currentIndex: currentIndex,
+                primary: primary,
+                isDark: isDark,
+                onTap: onTap,
+              ),
+              _StaffNavItem(
+                index: 4,
+                icon: Icons.sync_problem_outlined,
+                activeIcon: Icons.sync_rounded,
+                label: 'Sync',
+                currentIndex: currentIndex,
+                primary: primary,
+                isDark: isDark,
+                onTap: onTap,
+                badge: pendingCount > 0 ? pendingCount.toString() : null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StaffNavItem extends StatelessWidget {
+  final int index;
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final int currentIndex;
+  final Color primary;
+  final bool isDark;
+  final ValueChanged<int> onTap;
+  final String? badge;
+
+  const _StaffNavItem({
+    required this.index,
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.currentIndex,
+    required this.primary,
+    required this.isDark,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = currentIndex == index;
+    final inactiveColor = isDark
+        ? Colors.white.withOpacity(0.4)
+        : Colors.black.withOpacity(0.4);
+
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 60,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? primary.withOpacity(isDark ? 0.2 : 0.1)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isSelected ? activeIcon : icon,
+                    color: isSelected ? primary : inactiveColor,
+                    size: 22,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected ? primary : inactiveColor,
+                      fontSize: 10,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (badge != null)
+              Positioned(
+                right: 8,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =====================================================
+// PREMIUM BOTTOM BAR (Admin)
+// =====================================================
 class _PremiumBottomBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -303,32 +702,32 @@ class _PremiumBottomBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF3E3E4A).withValues(alpha: 0.85)
-                    : Colors.white.withValues(alpha: 0.9),
+                    ? const Color(0xFF3E3E4A).withOpacity(0.85)
+                    : Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(28),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withValues(alpha: isDark ? 0.15 : 0.4),
+                    Colors.white.withOpacity(isDark ? 0.15 : 0.4),
                     Colors.transparent,
                   ],
                 ),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withValues(alpha: 0.25)
-                      : Colors.white.withValues(alpha: 0.5),
+                      ? Colors.white.withOpacity(0.25)
+                      : Colors.white.withOpacity(0.5),
                   width: 0.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.6 : 0.1),
+                    color: Colors.black.withOpacity(isDark ? 0.6 : 0.1),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                     spreadRadius: -2,
                   ),
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+                    color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -402,22 +801,23 @@ class _NavItem extends StatelessWidget {
   final bool isDark;
   final ValueChanged<int> onTap;
 
-  const _NavItem(
-      {required this.index,
-      required this.icon,
-      required this.activeIcon,
-      required this.label,
-      required this.currentIndex,
-      required this.primary,
-      required this.isDark,
-      required this.onTap});
+  const _NavItem({
+    required this.index,
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.currentIndex,
+    required this.primary,
+    required this.isDark,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isSelected = currentIndex == index;
     final inactiveColor = isDark
-        ? Colors.white.withValues(alpha: 0.35)
-        : Colors.black.withValues(alpha: 0.28);
+        ? Colors.white.withOpacity(0.35)
+        : Colors.black.withOpacity(0.28);
 
     return GestureDetector(
       onTap: () => onTap(index),
@@ -428,7 +828,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? primary.withValues(alpha: isDark ? 0.15 : 0.1)
+              ? primary.withOpacity(isDark ? 0.15 : 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
@@ -457,23 +857,6 @@ class _NavItem extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class HomePageContent extends ConsumerWidget {
-  const HomePageContent({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
-    if (user?.role == UserRole.fieldStaff) {
-      return const StaffHomePage();
-    }
-    return HomePage(
-      onViewAllLoans: () => context.go('/loans'),
-      onViewAllSavings: () => context.go('/savings'),
-      onQuickAction: () {},
     );
   }
 }

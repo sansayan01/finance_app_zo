@@ -358,7 +358,125 @@ final syncStatus = ref.watch(syncStatusProvider);
 
 ---
 
-### Phase 4: Offline Engine 🚧
+### Phase 4: Offline Engine ✅
+
+<details>
+<summary><b>💾 Local Database (Hive)</b></summary>
+
+**Features**:
+- Fast, encrypted local storage
+- Collections, customers, loans caching
+- Pending operations queue
+- Settings persistence
+- Last sync time tracking
+
+**Storage Operations**:
+| Operation | Description |
+|-----------|-------------|
+| `putCollection()` | Store collection locally |
+| `getCollectionsForDate()` | Get collections by date |
+| `searchCustomers()` | Local customer search |
+| `getLoansForCustomer()` | Customer's loans |
+| `addPendingOperation()` | Queue operation |
+| `getStats()` | Storage statistics |
+
+</details>
+
+<details>
+<summary><b>🔄 Background Sync Service</b></summary>
+
+**Features**:
+- Auto-sync every 5 minutes
+- Manual sync trigger
+- Network status detection
+- Pull latest data from server
+- Sync status streaming
+
+**Sync Flow**:
+1. Check network connectivity
+2. Push pending operations
+3. Pull latest server data
+4. Update local cache
+5. Record sync timestamp
+
+**Sync Status Types**:
+- `syncing` — Sync in progress
+- `synced` — All data synced
+- `offline` — No network
+- `error` — Sync failed
+
+</details>
+
+<details>
+<summary><b>⚔️ Conflict Resolution</b></summary>
+
+**Conflict Types**:
+| Type | Description |
+|------|-------------|
+| `updateUpdate` | Both local & server modified |
+| `deleteUpdate` | Local deleted, server updated |
+| `updateDelete` | Local updated, server deleted |
+| `duplicate` | Duplicate records |
+
+**Resolution Strategies**:
+- `serverWins` — Server data takes priority
+- `localWins` — Local data takes priority
+- `merge` — Attempt to merge both
+- `manual` — Require manual resolution
+
+**Table Defaults**:
+| Table | Strategy |
+|-------|----------|
+| collections | serverWins |
+| staff_wallet | serverWins |
+| members | merge |
+
+</details>
+
+<details>
+<summary><b>📶 Offline Mode Indicator</b></summary>
+
+**Features**:
+- Top banner when offline
+- Sync status display
+- Pending count badge
+- Quick sync button
+- Status modal with details
+
+**Status Colors**:
+| Status | Color |
+|--------|-------|
+| Syncing | Blue |
+| Synced | Green |
+| Offline | Orange |
+| Error | Red |
+| Pending | Amber |
+
+</details>
+
+<details>
+<summary><b>📋 Pending Operations View</b></summary>
+
+**Features**:
+- Grouped by table type
+- Operation type icons (insert/update/delete)
+- Attempt count display
+- Remove operation option
+- Sync all button
+- Last sync timestamp
+
+**Operation Types**:
+| Type | Icon | Color |
+|------|------|-------|
+| Insert | ➕ | Green |
+| Update | ✏️ | Blue |
+| Delete | 🗑️ | Red |
+
+</details>
+
+---
+
+### Phase 5: Gamification 🚧
 
 *In Progress...*
 
@@ -645,7 +763,7 @@ SUPABASE_ANON_KEY=your-anon-key
 | **1** | Core Foundation | ✅ Complete | 100% |
 | **2** | Essential Screens | ✅ Complete | 100% |
 | **3** | Field Operations | ✅ Complete | 100% |
-| **4** | Offline Engine | 🚧 In Progress | 0% |
+| **4** | Offline Engine | ✅ Complete | 100% |
 | **5** | Gamification | ⏳ Pending | 0% |
 | **6** | Admin Integration | ⏳ Pending | 0% |
 | **7** | Security & Audit | ⏳ Pending | 0% |

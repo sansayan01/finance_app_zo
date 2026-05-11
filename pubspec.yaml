@@ -21,11 +21,18 @@ dependencies:
   # Backend
   supabase_flutter: ^2.8.0
 
+  # Local Database (Offline Storage)
+  hive_flutter: ^1.1.0
+
+  # Network
+  internet_connection_checker: ^1.0.0
+
   # UI/Design
   google_fonts: ^6.2.1
   fl_chart: ^0.70.2
   shimmer: ^3.0.0
   flutter_animate: ^4.5.2
+  pull_to_refresh: ^2.0.0
 
   # Utilities
   intl: ^0.20.2

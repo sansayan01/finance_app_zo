@@ -1,50 +1,53 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
-import '../models/achievement_model.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../models/leaderboard_model.dart';
 import '../repositories/gamification_repository.dart';
 import 'staff_providers.dart';
 
-// Gamification repository provider
 final gamificationRepositoryProvider = Provider<GamificationRepository>((ref) {
-  final client = ref.watch(supabaseClientProvider);
-  return GamificationRepository(client);
+  return GamificationRepository(ref.watch(supabaseClientProvider));
 });
 
-// User achievements
-final userAchievementsProvider = FutureProvider<List<AchievementModel>>((ref) async {
-  final profile = await ref.watch(staffProfileProvider.future);
-  if (profile == null) return [];
-
-  final repository = ref.watch(gamificationRepositoryProvider);
-  return repository.getUserAchievements(profile.id);
-});
-
-// Leaderboard by period
-final leaderboardProvider = FutureProvider.family<LeaderboardModel, LeaderboardPeriod>((ref, period) async {
+final staffLeaderboardProvider = FutureProvider<LeaderboardModel>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   final repository = ref.watch(gamificationRepositoryProvider);
 
   return repository.getLeaderboard(
-    period: period,
+    period: LeaderboardPeriod.today,
     currentUserStaffId: profile?.id,
   );
 });
 
-// User rank
-final userRankProvider = FutureProvider<int?>((ref) async {
+final weeklyLeaderboardProvider = FutureProvider<LeaderboardModel>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
-  if (profile == null) return null;
-
   final repository = ref.watch(gamificationRepositoryProvider);
-  return repository.getUserRank(profile.id);
+
+  return repository.getLeaderboard(
+    period: LeaderboardPeriod.thisWeek,
+    currentUserStaffId: profile?.id,
+  );
 });
 
-// User points
-final userPointsProvider = FutureProvider<int>((ref) async {
+final monthlyLeaderboardProvider = FutureProvider<LeaderboardModel>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  final repository = ref.watch(gamificationRepositoryProvider);
+
+  return repository.getLeaderboard(
+    period: LeaderboardPeriod.thisMonth,
+    currentUserStaffId: profile?.id,
+  );
+});
+
+final staffPointsProvider = FutureProvider<int>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return 0;
-
   final repository = ref.watch(gamificationRepositoryProvider);
   return repository.getUserPoints(profile.id);
+});
+
+final staffRankProvider = FutureProvider<int?>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return null;
+  final repository = ref.watch(gamificationRepositoryProvider);
+  return repository.getUserRank(profile.id);
 });

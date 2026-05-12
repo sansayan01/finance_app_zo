@@ -110,3 +110,71 @@ final refreshStaffDataProvider = Provider<Future<void> Function()>((ref) {
     ref.invalidate(todaySummaryProvider);
   };
 });
+
+// ─── Notifications ───
+
+final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return 0;
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getUnreadNotificationCount(profile.id);
+});
+
+final recentNotificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return [];
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getRecentNotifications(profile.id);
+});
+
+// ─── Visit / Check-In ───
+
+final activeVisitProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return null;
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getActiveVisit(profile.id);
+});
+
+// ─── Recent Activities ───
+
+final recentActivitiesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return [];
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getRecentActivities(profile.id);
+});
+
+// ─── Savings Stats ───
+
+final todaySavingsStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) {
+    return {
+      'total_savings': 0.0,
+      'cash_savings': 0.0,
+      'digital_savings': 0.0,
+      'savings_count': 0,
+    };
+  }
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getTodaySavingsStats(profile.id);
+});
+
+// ─── Weekly Trend ───
+
+final weeklyTrendProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return [];
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getWeeklyTrend(profile.id);
+});
+
+// ─── Nearby Overdue Count ───
+
+final nearbyOverdueCountProvider = FutureProvider<int>((ref) async {
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null) return 0;
+  final repository = ref.watch(staffRepositoryProvider);
+  return repository.getNearbyOverdueCount(profile.id);
+});

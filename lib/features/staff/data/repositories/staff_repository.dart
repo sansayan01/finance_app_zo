@@ -592,4 +592,159 @@ class StaffRepository {
 
     return 'idle';
   }
+
+  /// Get unread notifications count
+  Future<int> getUnreadNotificationCount(String staffId) async {
+    try {
+      final response = await _client
+          .from('staff_notifications')
+          .select('id')
+          .eq('staff_id', staffId)
+          .eq('is_read', false);
+      return response.length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Get recent notifications
+  Future<List<Map<String, dynamic>>> getRecentNotifications(
+    String staffId, {
+    int limit = 5,
+  }) async {
+    try {
+      final response = await _client
+          .from('staff_notifications')
+          .select()
+          .eq('staff_id', staffId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Get active visit
+  Future<Map<String, dynamic>?> getActiveVisit(String staffId) async {
+    try {
+      return await _client
+          .from('visit_logs')
+          .select()
+          .eq('staff_id', staffId)
+          .eq('status', 'in_progress')
+          .order('check_in_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Get recent activities for staff
+  Future<List<Map<String, dynamic>>> getRecentActivities(
+    String staffId, {
+    int limit = 10,
+  }) async {
+    try {
+      final response = await _client
+          .from('activity_logs')
+          .select()
+          .eq('staff_id', staffId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Get today's savings collection stats
+  Future<Map<String, dynamic>> getTodaySavingsStats(String staffId) async {
+    try {
+      final today = DateTime.now().toIso8601String().split('T').first;
+      final response = await _client
+          .from('savings_collections')
+          .select('amount, payment_mode')
+          .eq('staff_id', staffId)
+          .filter('collection_date', 'gte', today);
+
+      double totalSavings = 0;
+      double cashSavings = 0;
+      double digitalSavings = 0;
+
+      for (final item in response) {
+        final amount = (item['amount'] as num?)?.toDouble() ?? 0;
+        totalSavings += amount;
+        if (item['payment_mode'] == 'cash') {
+          cashSavings += amount;
+        } else {
+          digitalSavings += amount;
+        }
+      }
+
+      return {
+        'total_savings': totalSavings,
+        'cash_savings': cashSavings,
+        'digital_savings': digitalSavings,
+        'savings_count': response.length,
+      };
+    } catch (_) {
+      return {
+        'total_savings': 0.0,
+        'cash_savings': 0.0,
+        'digital_savings': 0.0,
+        'savings_count': 0,
+      };
+    }
+  }
+
+  /// Get weekly trend data for performance pulse
+  Future<List<Map<String, dynamic>>> getWeeklyTrend(String staffId) async {
+    try {
+      final today = DateTime.now();
+      final weekAgo = today.subtract(const Duration(days: 6));
+      final response = await _client
+          .from('collections')
+          .select('amount_collected, collection_date')
+          .eq('staff_id', staffId)
+          .filter('collection_date', 'gte', weekAgo.toIso8601String().split('T').first)
+          .order('collection_date', ascending: true);
+
+      // Group by date and sum amounts
+      final Map<String, double> dailyTotals = {};
+      for (final item in response) {
+        final date = item['collection_date'] as String? ?? '';
+        final amount = (item['amount_collected'] as num?)?.toDouble() ?? 0;
+        dailyTotals[date] = (dailyTotals[date] ?? 0) + amount;
+      }
+
+      final result = <Map<String, dynamic>>[];
+      for (int i = 0; i < 7; i++) {
+        final date = today.subtract(Duration(days: 6 - i));
+        final dateStr = date.toIso8601String().split('T').first;
+        result.add({
+          'date': dateStr,
+          'amount': dailyTotals[dateStr] ?? 0,
+          'dayLabel': ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.weekday - 1],
+        });
+      }
+      return result;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Get overdue collection count nearby (within staff's area)
+  Future<int> getNearbyOverdueCount(String staffId) async {
+    try {
+      final response = await _client
+          .from('overdue_loans_view')
+          .select('id')
+          .eq('staff_id', staffId);
+      return response.length;
+    } catch (_) {
+      return 0;
+    }
+  }
 }

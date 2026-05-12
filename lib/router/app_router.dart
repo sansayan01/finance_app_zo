@@ -44,6 +44,7 @@ import '../features/staff/presentation/pages/cash_deposit_page.dart';
 import '../features/staff/presentation/pages/break_logging_page.dart';
 import '../features/staff/presentation/pages/pending_operations_page.dart';
 import '../features/staff/presentation/pages/gamification_dashboard.dart';
+import '../features/staff/presentation/pages/staff_settings_page.dart';
 import '../features/staff/presentation/providers/sync_status_provider.dart';
 
 // =====================================================
@@ -257,6 +258,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/staff/gamification',
             builder: (context, state) => const GamificationDashboard(),
           ),
+          GoRoute(
+            path: '/staff/settings',
+            builder: (context, state) => const StaffSettingsPage(),
+          ),
         ],
       ),
     ],
@@ -428,7 +433,7 @@ class StaffShell extends ConsumerWidget {
     }
     if (location.startsWith('/staff/customers')) return 2;
     if (location.startsWith('/staff/history')) return 3;
-    if (location.startsWith('/staff/pending')) return 4;
+    if (location.startsWith('/staff/settings')) return 4;
     return 0;
   }
 
@@ -447,7 +452,7 @@ class StaffShell extends ConsumerWidget {
         context.go('/staff/history');
         break;
       case 4:
-        context.go('/staff/pending');
+        context.go('/staff/settings');
         break;
     }
   }
@@ -534,6 +539,7 @@ class StaffBottomBar extends StatelessWidget {
                 primary: primary,
                 isDark: isDark,
                 onTap: onTap,
+                badge: pendingCount > 0 ? pendingCount.toString() : null,
               ),
               _StaffNavItem(
                 index: 1,
@@ -567,14 +573,13 @@ class StaffBottomBar extends StatelessWidget {
               ),
               _StaffNavItem(
                 index: 4,
-                icon: Icons.sync_problem_outlined,
-                activeIcon: Icons.sync_rounded,
-                label: 'Sync',
+                icon: Icons.settings_outlined,
+                activeIcon: Icons.settings_rounded,
+                label: 'Settings',
                 currentIndex: currentIndex,
                 primary: primary,
                 isDark: isDark,
                 onTap: onTap,
-                badge: pendingCount > 0 ? pendingCount.toString() : null,
               ),
             ],
           ),

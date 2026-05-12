@@ -1,12 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/storage_providers.dart';
 import '../services/offline_sync_engine.dart';
-
-// SharedPreferences provider
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('sharedPreferencesProvider must be overridden');
-});
 
 // Sync engine provider
 final syncEngineProvider = Provider<OfflineSyncEngine>((ref) {

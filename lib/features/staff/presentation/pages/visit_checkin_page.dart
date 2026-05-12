@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/services/location_service.dart';
 import '../../data/providers/staff_providers.dart';
 
 class VisitCheckInPage extends ConsumerStatefulWidget {
   final String? customerId;
-
   const VisitCheckInPage({super.key, this.customerId});
 
   @override
@@ -21,6 +23,7 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
   String? _currentActivity;
   String? _visitPurpose;
   final _notesController = TextEditingController();
+  int _elapsedSeconds = 0;
 
   @override
   void initState() {
@@ -29,389 +32,478 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
     _getCurrentVisitStatus();
   }
 
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
   Future<void> _getCurrentLocation() async {
     try {
       final locationService = LocationService();
       final position = await locationService.getCurrentLocation();
-      setState(() => _currentPosition = position);
-    } catch (e) {
-      _showError('Failed to get location: $e');
-    }
+      if (mounted) setState(() => _currentPosition = position);
+    } catch (_) {}
   }
 
   Future<void> _getCurrentVisitStatus() async {
-    final user = ref.read(authStateProvider).value;
-    if (user == null) return;
-
+    final profile = await ref.read(staffProfileProvider.future);
+    if (profile == null) return;
     try {
       final repository = ref.read(staffRepositoryProvider);
-      final status = await repository.getCurrentActivity(user.id);
-      setState(() => _currentActivity = status);
-    } catch (e) {
-      // No active visit
-    }
+      final status = await repository.getCurrentActivity(profile.id);
+      if (mounted) setState(() => _currentActivity = status);
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isActive = _currentActivity == 'collecting';
 
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
       appBar: AppBar(
-        title: Text(isActive ? 'Check Out' : 'Check In'),
-        actions: [
-          if (isActive)
-            TextButton.icon(
-              onPressed: _isLoading ? null : _checkOut,
-              icon: const Icon(Icons.logout, color: Colors.white),
-              label: const Text('Check Out', style: TextStyle(color: Colors.white)),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildLocationCard(theme),
-            const SizedBox(height: 16),
-            if (isActive) _buildActiveVisitCard(theme),
-            if (!isActive) ...[
-              _buildPurposeSelector(theme),
-              const SizedBox(height: 16),
-              _buildNotesField(theme),
-              const SizedBox(height: 24),
-              _buildCheckInButton(theme),
-            ],
-          ],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87),
         ),
+        title: Text(isActive ? 'Active Visit' : 'Check In', style: const TextStyle(fontWeight: FontWeight.w800)),
+        centerTitle: false,
       ),
-    );
-  }
-
-  Widget _buildLocationCard(ThemeData theme) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      body: RefreshIndicator(
+        onRefresh: () async { ref.invalidate(activeVisitProvider); ref.invalidate(recentActivitiesProvider); await Future.delayed(const Duration(milliseconds: 500)); },
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  _currentPosition != null ? Icons.gps_fixed : Icons.gps_not_fixed,
-                  color: _currentPosition != null ? Colors.green : Colors.orange,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Current Location',
-                  style: theme.textTheme.titleMedium,
-                ),
+                if (!isActive) _buildCheckInView(theme, isDark),
+                if (isActive) _buildActiveVisitView(theme, isDark),
               ],
             ),
-            const SizedBox(height: 12),
-            if (_currentPosition != null) ...[
-              _buildLocationRow('Lat', _currentPosition!.latitude.toStringAsFixed(6)),
-              _buildLocationRow('Long', _currentPosition!.longitude.toStringAsFixed(6)),
-              _buildLocationRow('Accuracy', '${_currentPosition!.accuracy.toStringAsFixed(1)}m'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.verified,
-                    color: Colors.green,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'GPS Active',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-            ] else ...[
-              Text(
-                'Acquiring GPS signal...',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.orange,
-                ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _getCurrentLocation,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Refresh Location'),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLocationRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 60,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActiveVisitCard(ThemeData theme) {
-    return Card(
-      color: theme.colorScheme.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.access_time, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  'Visit in Progress',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow('Purpose', _visitPurpose ?? 'Collection'),
-            const SizedBox(height: 8),
-            _buildInfoRow('Customer', widget.customerId ?? 'N/A'),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _isLoading ? null : _checkOut,
-              icon: const Icon(Icons.stop),
-              label: const Text('Complete Visit'),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.red,
-                minimumSize: const Size(double.infinity, 48),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      children: [
-        Text(
-          '$label: ',
-          style: const TextStyle(
-            color: Colors.white70,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPurposeSelector(ThemeData theme) {
-    final purposes = [
-      {'id': 'collection', 'icon': Icons.payments, 'label': 'Collection'},
-      {'id': 'verification', 'icon': Icons.verified_user, 'label': 'Verification'},
-      {'id': 'follow_up', 'icon': Icons.follow_the_signs, 'label': 'Follow Up'},
-      {'id': 'document', 'icon': Icons.description, 'label': 'Document Collection'},
-      {'id': 'other', 'icon': Icons.more_horiz, 'label': 'Other'},
-    ];
-
+  Widget _buildCheckInView(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Visit Purpose',
-          style: theme.textTheme.titleMedium,
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: purposes.map((p) {
-            final isSelected = _visitPurpose == p['id'];
-            return ChoiceChip(
-              avatar: Icon(
-                p['icon'] as IconData,
-                size: 18,
-                color: isSelected ? Colors.white : null,
-              ),
-              label: Text(p['label'] as String),
-              selected: isSelected,
-              selectedColor: theme.colorScheme.primary,
-              onSelected: (selected) {
-                setState(() => _visitPurpose = selected ? p['id'] as String : null);
-              },
-            );
-          }).toList(),
-        ),
-      ],
+        _buildHeaderCard(theme, isDark, false),
+        const SizedBox(height: 20),
+        _buildLocationStatus(theme, isDark),
+        const SizedBox(height: 20),
+        _buildPurposeSelector(theme, isDark),
+        const SizedBox(height: 20),
+        _buildNotesField(theme, isDark),
+        const SizedBox(height: 28),
+        _buildActionButton(theme, false),
+      ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
     );
   }
 
-  Widget _buildNotesField(ThemeData theme) {
-    return TextField(
-      controller: _notesController,
-      maxLines: 3,
-      decoration: InputDecoration(
-        labelText: 'Notes (Optional)',
-        hintText: 'Add any relevant notes for this visit...',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+  Widget _buildActiveVisitView(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeaderCard(theme, isDark, true),
+        const SizedBox(height: 20),
+        _buildActiveVisitCard(theme, isDark),
+        const SizedBox(height: 20),
+        _buildLocationStatus(theme, isDark),
+        const SizedBox(height: 20),
+        _buildNotesField(theme, isDark),
+        const SizedBox(height: 28),
+        _buildActionButton(theme, true),
+      ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
+    );
+  }
+
+  Widget _buildHeaderCard(ThemeData theme, bool isDark, bool isActive) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isActive
+              ? [Colors.green.shade600, Colors.teal.shade700]
+              : [AppColors.primary, AppColors.accent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: (isActive ? Colors.green : AppColors.primary).withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(16)),
+                child: Icon(
+                  isActive ? Icons.check_circle_rounded : Icons.login_rounded,
+                  color: Colors.white, size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(isActive ? 'Visit in Progress' : 'Ready to Start', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                    Text(isActive ? 'You are currently on a visit' : 'Check in to begin your visit', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (isActive) ...[
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(16)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.access_time_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text('Elapsed: ${_formatElapsed()}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildCheckInButton(ThemeData theme) {
-    final canCheckIn = _currentPosition != null && _visitPurpose != null;
-
-    return Column(
-      children: [
-        FilledButton.icon(
-          onPressed: (_isLoading || !canCheckIn) ? null : _checkIn,
-          icon: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              : const Icon(Icons.login),
-          label: Text(_isLoading ? 'Checking In...' : 'Check In'),
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildLocationStatus(ThemeData theme, bool isDark) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: (_currentPosition != null ? Colors.greenAccent : Colors.orangeAccent).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              _currentPosition != null ? Icons.gps_fixed_rounded : Icons.gps_not_fixed_rounded,
+              color: _currentPosition != null ? Colors.greenAccent : Colors.orangeAccent,
+              size: 22,
             ),
           ),
-        ),
-        if (!canCheckIn) ...[
-          const SizedBox(height: 8),
-          Text(
-            _currentPosition == null ? 'Waiting for GPS...' : 'Select a visit purpose',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.error,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Location Status', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(
+                  _currentPosition != null
+                      ? 'Lat ${_currentPosition!.latitude.toStringAsFixed(4)}, Lng ${_currentPosition!.longitude.toStringAsFixed(4)}'
+                      : 'Acquiring GPS signal...',
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (_currentPosition != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+              child: Text('${_currentPosition!.accuracy.toStringAsFixed(0)}m', style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.w700)),
+            )
+          else
+            IconButton(
+              onPressed: _getCurrentLocation,
+              icon: Icon(Icons.refresh_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPurposeSelector(ThemeData theme, bool isDark) {
+    final purposes = [
+      {'id': 'collection', 'icon': Icons.payments_rounded, 'label': 'Collection', 'color': AppColors.primary},
+      {'id': 'verification', 'icon': Icons.verified_user_rounded, 'label': 'Verification', 'color': Colors.greenAccent},
+      {'id': 'follow_up', 'icon': Icons.follow_the_signs_rounded, 'label': 'Follow Up', 'color': Colors.orangeAccent},
+      {'id': 'document', 'icon': Icons.description_rounded, 'label': 'Document', 'color': AppColors.indigo},
+      {'id': 'other', 'icon': Icons.more_horiz_rounded, 'label': 'Other', 'color': Colors.grey},
+    ];
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.flag_outlined, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('Visit Purpose', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10, runSpacing: 10,
+            children: purposes.map((p) {
+              final isSelected = _visitPurpose == p['id'];
+              final color = p['color'] as Color;
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _visitPurpose = isSelected ? null : p['id'] as String);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color.withValues(alpha: 0.15) : (isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: isSelected ? color.withValues(alpha: 0.5) : Colors.transparent, width: 1.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(p['icon'] as IconData, size: 18, color: isSelected ? color : theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                      const SizedBox(width: 8),
+                      Text(p['label'] as String, style: TextStyle(fontWeight: FontWeight.w600, color: isSelected ? color : null)),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesField(ThemeData theme, bool isDark) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('Notes', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            style: theme.textTheme.bodyMedium,
+            decoration: InputDecoration(
+              hintText: 'Add any relevant notes...',
+              hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+              filled: true,
+              fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface,
+              contentPadding: const EdgeInsets.all(16),
             ),
           ),
         ],
-      ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(ThemeData theme, bool isActive) {
+    final canCheckIn = _currentPosition != null && _visitPurpose != null;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: (_isLoading || (!isActive && !canCheckIn)) ? null : (isActive ? _checkOut : _checkIn),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isActive ? Colors.redAccent : AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 0,
+        ),
+        child: _isLoading
+            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(isActive ? Icons.logout_rounded : Icons.login_rounded, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    _isLoading ? 'Processing...' : (isActive ? 'Complete Visit & Check Out' : 'Check In Now'),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 
   Future<void> _checkIn() async {
     if (_currentPosition == null || _visitPurpose == null) return;
-
     setState(() => _isLoading = true);
-
     try {
-      final user = ref.read(authStateProvider).value;
-      if (user == null) throw Exception('Not authenticated');
-
-      final repository = ref.read(staffRepositoryProvider);
-      await repository.logVisit(
-        staffId: user.id,
+      final profile = await ref.read(staffProfileProvider.future);
+      if (profile == null) throw Exception('No profile');
+      final repo = ref.read(staffRepositoryProvider);
+      await repo.logVisit(
+        staffId: profile.id,
         customerId: widget.customerId,
         purpose: _visitPurpose!,
         checkInLat: _currentPosition!.latitude,
         checkInLng: _currentPosition!.longitude,
         notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       );
-
-      setState(() => _currentActivity = 'collecting');
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Checked in successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        setState(() { _currentActivity = 'collecting'; _elapsedSeconds = 0; });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Checked in successfully!'), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating));
       }
+      ref.invalidate(activeVisitProvider);
+      ref.invalidate(recentActivitiesProvider);
     } catch (e) {
-      _showError('Failed to check in: $e');
+      if (mounted) _showError('Failed to check in: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _checkOut() async {
     if (_currentPosition == null) return;
-
     setState(() => _isLoading = true);
-
     try {
-      final user = ref.read(authStateProvider).value;
-      if (user == null) throw Exception('Not authenticated');
-
-      final repository = ref.read(staffRepositoryProvider);
-      await repository.completeVisit(
-        staffId: user.id,
+      final profile = await ref.read(staffProfileProvider.future);
+      if (profile == null) throw Exception('No profile');
+      final repo = ref.read(staffRepositoryProvider);
+      await repo.completeVisit(
+        staffId: profile.id,
         checkOutLat: _currentPosition!.latitude,
         checkOutLng: _currentPosition!.longitude,
       );
-
-      setState(() => _currentActivity = null);
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Checked out successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Checked out successfully!'), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating));
         context.pop();
       }
+      ref.invalidate(activeVisitProvider);
+      ref.invalidate(recentActivitiesProvider);
     } catch (e) {
-      _showError('Failed to check out: $e');
+      if (mounted) _showError('Failed to check out: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Widget _buildActiveVisitCard(ThemeData theme, bool isDark) {
+    final activeVisitAsync = ref.watch(activeVisitProvider);
+
+    return activeVisitAsync.when(
+      data: (visit) {
+        if (visit == null) return const SizedBox.shrink();
+        final member = visit['members'] as Map? ?? {};
+        final name = member['full_name'] ?? 'Unknown Customer';
+        final purpose = visit['purpose']?.toString().toUpperCase() ?? 'VISIT';
+        
+        return GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(Icons.person_pin_circle_rounded, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                          child: Text(purpose, style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.w800)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildVisitStat(theme, 'Started At', _formatTime(visit['check_in_time'])),
+                  _buildVisitStat(theme, 'Duration', _formatElapsed()),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildVisitStat(ThemeData theme, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+        const SizedBox(height: 4),
+        Text(value, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+      ],
+    );
+  }
+
+  String _formatTime(dynamic time) {
+    if (time == null) return '--:--';
+    try {
+      final dt = DateTime.parse(time.toString()).toLocal();
+      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '--:--';
+    }
+  }
+
+  String _formatElapsed() {
+    final h = _elapsedSeconds ~/ 3600;
+    final m = (_elapsedSeconds % 3600) ~/ 60;
+    final s = _elapsedSeconds % 60;
+    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   void _showError(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating));
   }
 }

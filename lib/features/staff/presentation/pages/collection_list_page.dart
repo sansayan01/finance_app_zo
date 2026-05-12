@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/widgets/shimmer_loading.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/collection_providers.dart';
-import '../widgets/collection_list_tile.dart';
-import '../widgets/collection_filter_widgets.dart';
+
+enum CollectionTab { all, today, overdue, collected }
 
 class CollectionListPage extends ConsumerStatefulWidget {
   const CollectionListPage({super.key});
@@ -17,458 +16,393 @@ class CollectionListPage extends ConsumerStatefulWidget {
   ConsumerState<CollectionListPage> createState() => _CollectionListPageState();
 }
 
-class _CollectionListPageState extends ConsumerState<CollectionListPage>
-    with SingleTickerProviderStateMixin {
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
-  
-  late TabController _tabController;
-  
-  CollectionFilter _selectedFilter = CollectionFilter.all;
-  CollectionSort _selectedSort = CollectionSort.dueDate;
-  final TextEditingController _searchController = TextEditingController();
-  bool _isSearchExpanded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(_onTabChanged);
-  }
+class _CollectionListPageState extends ConsumerState<CollectionListPage> {
+  CollectionTab _selectedTab = CollectionTab.all;
+  final _searchController = TextEditingController();
+  bool _isSearchOpen = false;
 
   @override
   void dispose() {
-    _refreshController.dispose();
-    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) {
-      setState(() {
-        switch (_tabController.index) {
-          case 0:
-            _selectedFilter = CollectionFilter.all;
-            break;
-          case 1:
-            _selectedFilter = CollectionFilter.dueToday;
-            break;
-          case 2:
-            _selectedFilter = CollectionFilter.overdue;
-            break;
-          case 3:
-            _selectedFilter = CollectionFilter.paid;
-            break;
-        }
-      });
-    }
-  }
-
-  Future<void> _onRefresh() async {
-    // Refresh all providers
-    ref.invalidate(todayEmisProvider);
-    ref.invalidate(overdueEmisProvider);
-    ref.invalidate(recentCollectionsProvider);
-    
-    await Future.delayed(const Duration(milliseconds: 500));
-    _refreshController.refreshCompleted();
-  }
-
-  void _onQuickCollect(Map<String, dynamic> emi) {
-    HapticFeedback.mediumImpact();
-    // Navigate to collection form with EMI data
-    context.push('/staff/collect', extra: {
-      'emi': emi,
-      'mode': 'quick',
-    });
-  }
-
-  void _onEmiTap(Map<String, dynamic> emi) {
-    HapticFeedback.selectionClick();
-    // Navigate to EMI detail
-    context.push('/staff/emi/${emi['id']}', extra: emi);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    // Get EMIs based on filter
-    final emisAsync = ref.watch(todayEmisProvider);
-    final overdueAsync = ref.watch(overdueEmisProvider);
-    final recentCollectionsAsync = ref.watch(recentCollectionsProvider);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          // App bar with search
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            pinned: true,
-            expandedHeight: 120,
-            title: _isSearchExpanded ? null : const Text('Collections'),
-            actions: [
-              // Search toggle
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _isSearchExpanded = !_isSearchExpanded;
-                    if (!_isSearchExpanded) {
-                      _searchController.clear();
-                    }
-                  });
-                },
-                icon: Icon(
-                  _isSearchExpanded ? Icons.close : Icons.search,
+      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87),
+        ),
+        title: _isSearchOpen
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: theme.textTheme.bodyMedium,
+                decoration: InputDecoration(hintText: 'Search members...', border: InputBorder.none, filled: false),
+                onChanged: (v) => setState(() {}),
+              )
+            : const Text('Collections', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+        centerTitle: false,
+        actions: [
+          IconButton(
+            icon: Icon(_isSearchOpen ? Icons.close_rounded : Icons.search_rounded, color: isDark ? Colors.white70 : Colors.black87),
+            onPressed: () => setState(() { _isSearchOpen = !_isSearchOpen; if (!_isSearchOpen) { _searchController.clear(); } }),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          _buildStatsBar(theme, isDark),
+          _buildTabBar(theme, isDark),
+          Expanded(child: _buildContent(theme, isDark)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsBar(ThemeData theme, bool isDark) {
+    final emisAsync = ref.watch(todayDueEmisProvider);
+    final overdueAsync = ref.watch(overdueEmisProvider);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [AppColors.primary.withValues(alpha: 0.08), AppColors.accent.withValues(alpha: 0.04)]),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        children: [
+          emisAsync.when(data: (d) => _statItem(theme, '${d.length}', 'Due'), loading: () => _statItem(theme, '...', 'Due'), error: (_, __) => _statItem(theme, '0', 'Due')),
+          Container(width: 1, height: 28, margin: const EdgeInsets.symmetric(horizontal: 12), color: theme.dividerColor.withValues(alpha: 0.3)),
+          overdueAsync.when(data: (d) => _statItem(theme, '${d.length}', 'Overdue', AppColors.error), loading: () => _statItem(theme, '...', 'Overdue'), error: (_, __) => _statItem(theme, '0', 'Overdue')),
+          Container(width: 1, height: 28, margin: const EdgeInsets.symmetric(horizontal: 12), color: theme.dividerColor.withValues(alpha: 0.3)),
+          const _CollectedStat(),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(ThemeData theme, String value, String label, [Color? color]) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color ?? AppColors.primary, height: 1.1)),
+          Text(label, style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), height: 1.2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar(ThemeData theme, bool isDark) {
+    final tabs = [
+      {'tab': CollectionTab.all, 'label': 'All', 'icon': Icons.all_inclusive_rounded},
+      {'tab': CollectionTab.today, 'label': 'Today', 'icon': Icons.today_rounded},
+      {'tab': CollectionTab.overdue, 'label': 'Overdue', 'icon': Icons.warning_amber_rounded},
+      {'tab': CollectionTab.collected, 'label': 'Done', 'icon': Icons.check_circle_rounded},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Row(
+        children: tabs.map((t) {
+          final tab = t['tab'] as CollectionTab;
+          final isSelected = _selectedTab == tab;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () { HapticFeedback.selectionClick(); setState(() => _selectedTab = tab); },
+              child: AnimatedContainer(
+                duration: 200.ms,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: isSelected ? AppColors.primary : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06)))),
+                child: Column(
+                  children: [
+                    Icon(t['icon'] as IconData, size: 16, color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.35)),
+                    const SizedBox(height: 2),
+                    Text(t['label'] as String, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: isSelected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.45))),
+                  ],
                 ),
               ),
-              // Sort button
-              CollectionSortButton(
-                currentSort: _selectedSort,
-                onSortChanged: (sort) {
-                  setState(() => _selectedSort = sort);
-                },
-              ),
-              const SizedBox(width: 8),
-            ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(60),
-              child: Column(
-                children: [
-                  // Search bar (when expanded)
-                  if (_isSearchExpanded)
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                      child: TextField(
-                        controller: _searchController,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: 'Search by name, phone, loan number...',
-                          prefixIcon: const Icon(Icons.search, size: 20),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          filled: true,
-                          fillColor: theme.colorScheme.surface,
-                        ),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
-                  
-                  // Filter chips
-                  SizedBox(
-                    height: 48,
-                    child: TabBar(
-                      controller: _tabController,
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      labelPadding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                      tabs: [
-                        Tab(
-                          child: CollectionFilterChip(
-                            filter: CollectionFilter.all,
-                            isSelected: _selectedFilter == CollectionFilter.all,
-                            count: emisAsync.maybeWhen(
-                              data: (data) => data.length,
-                              orElse: () => null,
-                            ),
-                          ),
-                        ),
-                        Tab(
-                          child: CollectionFilterChip(
-                            filter: CollectionFilter.dueToday,
-                            isSelected: _selectedFilter == CollectionFilter.dueToday,
-                            count: emisAsync.maybeWhen(
-                              data: (data) => data.where((e) => 
-                                  e['is_due_today'] == true || 
-                                  e['status'] == 'due').length,
-                              orElse: () => null,
-                            ),
-                          ),
-                        ),
-                        Tab(
-                          child: CollectionFilterChip(
-                            filter: CollectionFilter.overdue,
-                            isSelected: _selectedFilter == CollectionFilter.overdue,
-                            count: overdueAsync.maybeWhen(
-                              data: (data) => data.length,
-                              orElse: () => null,
-                            ),
-                          ),
-                        ),
-                        Tab(
-                          child: CollectionFilterChip(
-                            filter: CollectionFilter.paid,
-                            isSelected: _selectedFilter == CollectionFilter.paid,
-                            count: recentCollectionsAsync.maybeWhen(
-                              data: (data) => data.length,
-                              orElse: () => null,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
-        ],
-        body: SmartRefresher(
-          controller: _refreshController,
-          onRefresh: _onRefresh,
-          child: emisAsync.when(
-            data: (emis) {
-              // Apply filters
-              List<Map<String, dynamic>> filteredEmis = _filterEmis(emis);
-              
-              // Apply search
-              if (_searchController.text.isNotEmpty) {
-                final query = _searchController.text.toLowerCase();
-                filteredEmis = filteredEmis.where((e) {
-                  final name = (e['member_name'] ?? '').toString().toLowerCase();
-                  final phone = (e['member_phone'] ?? '').toString();
-                  final loan = (e['loan_number'] ?? '').toString().toLowerCase();
-                  return name.contains(query) || 
-                         phone.contains(query) || 
-                         loan.contains(query);
-                }).toList();
-              }
-              
-              // Apply sort
-              filteredEmis = _sortEmis(filteredEmis);
-              
-              if (filteredEmis.isEmpty) {
-                return _buildEmptyState(context);
-              }
-              
-              return ListView.builder(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                itemCount: filteredEmis.length,
-                itemBuilder: (context, index) {
-                  final emi = filteredEmis[index];
-                  return CollectionListTile(
-                    emi: emi,
-                    isOverdue: emi['is_overdue'] == true,
-                    isPaid: emi['is_paid'] == true,
-                    onTap: () => _onEmiTap(emi),
-                    onQuickCollect: () => _onQuickCollect(emi),
-                  );
-                },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildContent(ThemeData theme, bool isDark) {
+    switch (_selectedTab) {
+      case CollectionTab.all: return _buildList(theme, isDark);
+      case CollectionTab.today: return _buildTodayList(theme, isDark);
+      case CollectionTab.overdue: return _buildOverdueList(theme, isDark);
+      case CollectionTab.collected: return _buildCollectedList(theme, isDark);
+    }
+  }
+
+  Widget _buildList(ThemeData theme, bool isDark) {
+    return _baseList(theme, isDark, ref.watch(todayDueEmisProvider), (item) {
+      final schedule = item['current_schedule'] ?? {};
+      return schedule['is_overdue'] != true;
+    });
+  }
+
+  Widget _buildTodayList(ThemeData theme, bool isDark) {
+    return _baseList(theme, isDark, ref.watch(todayDueEmisProvider), (item) {
+      return (item['current_schedule']?['is_overdue'] != true);
+    }, emptyMsg: 'All dues cleared today!');
+  }
+
+  Widget _buildOverdueList(ThemeData theme, bool isDark) {
+    final async = ref.watch(overdueEmisProvider);
+    return RefreshIndicator(
+      onRefresh: () async { ref.invalidate(overdueEmisProvider); await Future.delayed(500.ms); },
+      child: async.when(
+        data: (items) => items.isEmpty ? _empty(theme, Icons.check_circle_outline_rounded, 'No Overdue', 'Great job!') : ListView.builder(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+          itemCount: items.length,
+          itemBuilder: (ctx, i) => _buildOverdueCard(theme, isDark, items[i], i),
+        ),
+        loading: () => _shimmerList(),
+        error: (_, __) => Center(child: Text('Failed', style: TextStyle(color: theme.colorScheme.error))),
+      ),
+    );
+  }
+
+  Widget _buildCollectedList(ThemeData theme, bool isDark) {
+    final async = ref.watch(recentCollectionsProvider);
+    return RefreshIndicator(
+      onRefresh: () async { ref.invalidate(recentCollectionsProvider); await Future.delayed(500.ms); },
+      child: async.when(
+        data: (items) => items.isEmpty ? _empty(theme, Icons.payments_outlined, 'No collections', 'Start collecting!') : ListView.builder(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+          itemCount: items.length,
+          itemBuilder: (ctx, i) => _buildCollectedCard(theme, isDark, items[i], i),
+        ),
+        loading: () => _shimmerList(),
+        error: (_, __) => const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  Widget _baseList(ThemeData theme, bool isDark, AsyncValue<List<Map<String, dynamic>>> async, bool Function(Map<String, dynamic>) filter, {String emptyMsg = 'All dues are cleared!'}) {
+    return RefreshIndicator(
+      onRefresh: () async { ref.invalidate(todayDueEmisProvider); await Future.delayed(500.ms); },
+      child: async.when(
+        data: (items) {
+          final filtered = items.where(filter).toList();
+          if (filtered.isEmpty) return _empty(theme, Icons.check_circle_outline_rounded, 'No collections', emptyMsg);
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+            itemCount: filtered.length,
+            itemBuilder: (ctx, i) {
+              final item = filtered[i];
+              final s = item['current_schedule'] ?? {};
+              final m = item['members'] ?? {};
+              return _buildCard(theme, isDark,
+                name: m['full_name'] ?? item['member_name'] ?? 'Unknown',
+                amount: (s['emi'] as num?)?.toDouble() ?? 0,
+                area: m['area']?.toString() ?? '',
+                isOverdue: s['is_overdue'] == true,
+                index: i,
+                onTap: () => context.push('/staff/collection/${item['id']}', extra: item),
               );
             },
-            loading: () => _buildLoadingSkeleton(),
-            error: (err, _) => _buildErrorState(context, err.toString()),
-          ),
-        ),
-      ),
-      
-      // Quick action FAB
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          HapticFeedback.mediumImpact();
-          context.push('/staff/collect');
+          );
         },
-        icon: const Icon(Icons.add),
-        label: const Text('New Collection'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        loading: () => _shimmerList(),
+        error: (_, __) => Center(child: Text('Failed', style: TextStyle(color: theme.colorScheme.error))),
       ),
     );
   }
 
-  List<Map<String, dynamic>> _filterEmis(List<Map<String, dynamic>> emis) {
-    switch (_selectedFilter) {
-      case CollectionFilter.all:
-        return emis;
-      case CollectionFilter.dueToday:
-        return emis.where((e) => 
-            e['is_due_today'] == true || e['status'] == 'due').toList();
-      case CollectionFilter.overdue:
-        return emis.where((e) => e['is_overdue'] == true).toList();
-      case CollectionFilter.paid:
-        return emis.where((e) => e['is_paid'] == true).toList();
-      case CollectionFilter.upcoming:
-        return emis.where((e) => 
-            e['is_upcoming'] == true || e['status'] == 'upcoming').toList();
-    }
-  }
-
-  List<Map<String, dynamic>> _sortEmis(List<Map<String, dynamic>> emis) {
-    final sorted = List<Map<String, dynamic>>.from(emis);
-    
-    switch (_selectedSort) {
-      case CollectionSort.dueDate:
-        sorted.sort((a, b) {
-          final dateA = DateTime.tryParse(a['due_date'] ?? '');
-          final dateB = DateTime.tryParse(b['due_date'] ?? '');
-          if (dateA == null || dateB == null) return 0;
-          return dateA.compareTo(dateB);
-        });
-        break;
-      case CollectionSort.amountHighToLow:
-        sorted.sort((a, b) => 
-            ((b['emi'] ?? b['amount'] ?? 0).toDouble())
-            .compareTo((a['emi'] ?? a['amount'] ?? 0).toDouble()));
-        break;
-      case CollectionSort.amountLowToHigh:
-        sorted.sort((a, b) => 
-            ((a['emi'] ?? a['amount'] ?? 0).toDouble())
-            .compareTo((b['emi'] ?? b['amount'] ?? 0).toDouble()));
-        break;
-      case CollectionSort.nameAZ:
-        sorted.sort((a, b) => 
-            (a['member_name'] ?? '').toString()
-            .compareTo((b['member_name'] ?? '').toString()));
-        break;
-      case CollectionSort.nameZA:
-        sorted.sort((a, b) => 
-            (b['member_name'] ?? '').toString()
-            .compareTo((a['member_name'] ?? '').toString()));
-        break;
-      case CollectionSort.area:
-        sorted.sort((a, b) => 
-            (a['area'] ?? '').toString()
-            .compareTo((b['area'] ?? '').toString()));
-        break;
-    }
-    
-    return sorted;
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.inbox_outlined,
-            size: 80,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          SizedBox(height: AppSpacing.lg),
-          Text(
-            'No Collections Found',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          SizedBox(height: AppSpacing.sm),
-          Text(
-            'There are no EMIs matching your filter',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          SizedBox(height: AppSpacing.xl),
-          FilledButton.icon(
-            onPressed: () => context.push('/staff/collect'),
-            icon: const Icon(Icons.add),
-            label: const Text('Add Collection'),
-          ),
-        ],
+  Widget _buildCard(ThemeData theme, bool isDark, {required String name, required double amount, required String area, bool isOverdue = false, required int index, required VoidCallback onTap}) {
+    final severityColor = isOverdue ? AppColors.error : AppColors.primary;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF181C24) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: isOverdue ? AppColors.error.withValues(alpha: 0.15) : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04))),
       ),
-    );
-  }
-
-  Widget _buildLoadingSkeleton() {
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      itemCount: 8,
-      itemBuilder: (context, index) => ShimmerLoading(
-        child: Card(
-          margin: EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () { HapticFeedback.lightImpact(); onTap(); },
           child: Padding(
-            padding: EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 44, height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(colors: isOverdue ? [AppColors.error, AppColors.warning] : [AppColors.primary, AppColors.accent]),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: Center(child: Text(_getInitials(name), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15))),
                 ),
-                SizedBox(width: AppSpacing.md),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
+                      Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      if (area.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Row(
+                            children: [
+                              Icon(Icons.location_on_outlined, size: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                              const SizedBox(width: 2),
+                              Flexible(child: Text(area, style: TextStyle(fontSize: 9, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
                         ),
-                      ),
-                      SizedBox(height: AppSpacing.sm),
-                      Container(
-                        width: 150,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
                     ],
                   ),
                 ),
-                Container(
-                  width: 60,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('₹${amount.toStringAsFixed(0)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: severityColor, height: 1.1)),
+                    const SizedBox(height: 3),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(color: severityColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                      child: Text(isOverdue ? 'Overdue' : 'Collect', style: TextStyle(color: severityColor, fontSize: 8, fontWeight: FontWeight.w800)),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
       ),
+    ).animate().fadeIn(duration: 250.ms, delay: (index * 40).ms).slideX(begin: 0.02, end: 0);
+  }
+
+  Widget _buildOverdueCard(ThemeData theme, bool isDark, Map<String, dynamic> item, int index) {
+    final name = item['member_name'] as String? ?? 'Unknown';
+    final amount = (item['emi'] as num?)?.toDouble() ?? 0;
+    final days = item['days_overdue'] as int? ?? 0;
+    final severity = days > 30 ? AppColors.error : (days > 15 ? AppColors.warning : AppColors.orange);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF181C24) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: severity.withValues(alpha: 0.2)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () { HapticFeedback.lightImpact(); context.push('/staff/collection/${item['loan_id']}', extra: item); },
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(color: severity.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text('$days', style: TextStyle(color: severity, fontWeight: FontWeight.w900, fontSize: 16, height: 1)),
+                Text('d', style: TextStyle(color: severity, fontSize: 9, fontWeight: FontWeight.w700, height: 1)),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600), maxLines: 1),
+                Text('$days days overdue', style: TextStyle(color: severity, fontSize: 10, fontWeight: FontWeight.w600)),
+              ]),
+            ),
+            Text('₹${amount.toStringAsFixed(0)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: severity, height: 1.1)),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 250.ms, delay: (index * 40).ms);
+  }
+
+  Widget _buildCollectedCard(ThemeData theme, bool isDark, Map<String, dynamic> item, int index) {
+    final name = item['member_name'] as String? ?? 'Unknown';
+    final amount = (item['amount_collected'] as num?)?.toDouble() ?? 0;
+    final mode = item['payment_mode'] as String? ?? 'cash';
+    final isDigital = mode != 'cash';
+    final color = isDigital ? AppColors.info : AppColors.success;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF181C24) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
+            child: Icon(isDigital ? Icons.phone_android_rounded : Icons.payments_rounded, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600), maxLines: 1),
+              Text(mode.toUpperCase(), style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w700)),
+            ]),
+          ),
+          Text('₹${amount.toStringAsFixed(0)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary, height: 1.1)),
+        ],
+      ),
+    ).animate().fadeIn(duration: 250.ms, delay: (index * 40).ms);
+  }
+
+  Widget _empty(ThemeData theme, IconData icon, String title, String sub) {
+    return Center(
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), shape: BoxShape.circle),
+          child: Icon(icon, size: 48, color: AppColors.primary.withValues(alpha: 0.25))),
+        const SizedBox(height: 16),
+        Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+        const SizedBox(height: 4),
+        Text(sub, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.25))),
+      ]),
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 80,
-            color: AppColors.error.withValues(alpha: 0.5),
-          ),
-          SizedBox(height: AppSpacing.lg),
-          Text(
-            'Something went wrong',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          SizedBox(height: AppSpacing.sm),
-          Text(
-            error,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: AppSpacing.xl),
-          FilledButton.icon(
-            onPressed: _onRefresh,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
+  Widget _shimmerList() => ListView.builder(itemCount: 5, itemBuilder: (_, __) => const Padding(padding: EdgeInsets.fromLTRB(20, 6, 20, 0), child: ShimmerCard(height: 80)));
+
+  String _getInitials(String n) {
+    final p = n.trim().split(' '); return p.length >= 2 ? '${p[0][0]}${p[1][0]}'.toUpperCase() : n.isNotEmpty ? n[0].toUpperCase() : '?';
+  }
+}
+
+class _CollectedStat extends ConsumerWidget {
+  const _CollectedStat();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return ref.watch(recentCollectionsProvider).when(
+      data: (d) => Expanded(child: Column(children: [
+        Text('${d.length}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.success, height: 1.1)),
+        Text('Collected', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), height: 1.2)),
+      ])),
+      loading: () => Expanded(child: Column(children: [
+        Text('...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.success, height: 1.1)),
+        Text('Collected', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), height: 1.2)),
+      ])),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

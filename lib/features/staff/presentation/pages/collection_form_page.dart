@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -84,37 +85,25 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
       backgroundColor: isDark ? const Color(0xFF0A0A14) : const Color(0xFFF5F5F5),
       appBar: _buildAppBar(theme),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Member card
               _buildMemberCard(theme, isDark),
               const SizedBox(height: 20),
-
-              // Amount section
               _buildAmountSection(theme, isDark),
               const SizedBox(height: 20),
-
-              // Payment mode section
               _buildPaymentModeSection(theme, isDark),
               const SizedBox(height: 20),
-
-              // Reference section (for digital payments)
               if (_selectedPaymentMode != cm.PaymentMode.cash) ...[
                 _buildReferenceSection(theme, isDark),
                 const SizedBox(height: 20),
               ],
-
-              // Remarks section
               _buildRemarksSection(theme, isDark),
               const SizedBox(height: 24),
-
-              // Submit button
               _buildSubmitButton(theme, collectionState),
-            ],
+            ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
           ),
         ),
       ),
@@ -238,20 +227,28 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Collection Amount',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.payments_rounded, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              Text('Collection Amount', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ],
           ),
           const SizedBox(height: 16),
 
@@ -379,20 +376,28 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Payment Mode',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.credit_card_rounded, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              Text('Payment Mode', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ],
           ),
           const SizedBox(height: 16),
           Row(
@@ -503,20 +508,28 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Reference Number',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.tag_rounded, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              Text('Reference Number', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ],
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -546,20 +559,28 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Remarks (Optional)',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              Text('Remarks', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ],
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -616,51 +637,60 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
 
         return SizedBox(
           width: double.infinity,
+          height: 60,
           child: ElevatedButton(
             onPressed: _isSubmitting ? null : _submitCollection,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
               ),
+              elevation: 0,
             ),
             child: _isSubmitting
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: 22,
+                    height: 22,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                      strokeWidth: 2.5,
                       color: Colors.white,
                     ),
                   )
-                : const Text(
-                    'Record Collection',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                : const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 22),
+                      SizedBox(width: 10),
+                      Text(
+                        'Record Collection',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         );
       },
       loading: () => SizedBox(
         width: double.infinity,
+        height: 60,
         child: ElevatedButton(
           onPressed: null,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
-            padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
             ),
+            elevation: 0,
           ),
           child: const SizedBox(
-            width: 20,
-            height: 20,
+            width: 22,
+            height: 22,
             child: CircularProgressIndicator(
-              strokeWidth: 2,
+              strokeWidth: 2.5,
               color: Colors.white,
             ),
           ),
@@ -692,17 +722,25 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
+            height: 60,
             child: ElevatedButton(
               onPressed: _isSubmitting ? null : _submitCollection,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                 ),
+                elevation: 0,
               ),
-              child: const Text('Retry'),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.refresh_rounded, size: 22),
+                  SizedBox(width: 10),
+                  Text('Retry', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                ],
+              ),
             ),
           ),
         ],

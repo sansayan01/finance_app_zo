@@ -1,17 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import '../../../../core/widgets/glass_card.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/staff_providers.dart';
-import '../../../../providers/supabase_provider.dart';
 
-enum BreakType {
-  lunch,
-  tea,
-  rest,
-  personal,
-  other,
-}
+enum BreakType { lunch, tea, rest, personal, other }
 
 class BreakLoggingPage extends ConsumerStatefulWidget {
   const BreakLoggingPage({super.key});
@@ -26,6 +21,8 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
   DateTime? _breakStartTime;
   final _notesController = TextEditingController();
   bool _isLoading = false;
+  Timer? _timer;
+  int _elapsedSeconds = 0;
 
   @override
   void initState() {
@@ -33,110 +30,144 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
     _checkCurrentBreakStatus();
   }
 
-  Future<void> _checkCurrentBreakStatus() async {
-    final user = ref.read(authStateProvider).value;
-    if (user == null) return;
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
 
+  Future<void> _checkCurrentBreakStatus() async {
+    final profile = await ref.read(staffProfileProvider.future);
+    if (profile == null) return;
     try {
-      final currentBreak = await ref.read(staffRepositoryProvider).getCurrentBreak(user.id);
-      if (currentBreak != null) {
+      final currentBreak = await ref.read(staffRepositoryProvider).getCurrentBreak(profile.id);
+      if (currentBreak != null && mounted) {
         setState(() {
           _isOnBreak = true;
           _breakStartTime = DateTime.parse(currentBreak['start_time']);
-          _selectedBreakType = BreakType.values.firstWhere(
-            (t) => t.name == currentBreak['break_type'],
-            orElse: () => BreakType.other,
-          );
+          _selectedBreakType = BreakType.values.firstWhere((t) => t.name == currentBreak['break_type'], orElse: () => BreakType.other);
         });
+        _startTimer();
       }
+    } catch (_) {}
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_breakStartTime != null && mounted) {
+        setState(() => _elapsedSeconds = DateTime.now().difference(_breakStartTime!).inSeconds);
+      }
+    });
+  }
+
+  Future<void> _handleBreakAction() async {
+    HapticFeedback.mediumImpact();
+    final profile = await ref.read(staffProfileProvider.future);
+    if (profile == null) return;
+    final repo = ref.read(staffRepositoryProvider);
+    setState(() => _isLoading = true);
+    try {
+      if (_isOnBreak) {
+        await repo.endBreak(profile.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Break ended'), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating));
+        }
+        _timer?.cancel();
+        setState(() { _isOnBreak = false; _breakStartTime = null; _elapsedSeconds = 0; });
+      } else {
+        await repo.startBreak(staffId: profile.id, breakType: _selectedBreakType.name, notes: _notesController.text.isNotEmpty ? _notesController.text : null);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Break started'), backgroundColor: Colors.blue, behavior: SnackBarBehavior.floating));
+        }
+        setState(() { _isOnBreak = true; _breakStartTime = DateTime.now(); });
+        _startTimer();
+      }
+      ref.invalidate(currentActivityProvider(profile.id));
+      ref.invalidate(recentActivitiesProvider);
     } catch (e) {
-      // No active break
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
       appBar: AppBar(
-        title: Text(_isOnBreak ? 'On Break' : 'Start Break'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87),
+        ),
+        title: Text(_isOnBreak ? 'On Break' : 'Take a Break', style: const TextStyle(fontWeight: FontWeight.w800)),
+        centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_isOnBreak) _buildActiveBreakCard(theme),
-            if (!_isOnBreak) ...[
-              _buildBreakTypeSelector(theme),
-              const SizedBox(height: 24),
-              _buildNotesSection(theme),
-              const SizedBox(height: 32),
-              _buildStartBreakButton(theme),
-            ],
-            const SizedBox(height: 24),
-            _buildBreakHistory(theme),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () async { await _checkCurrentBreakStatus(); ref.invalidate(recentActivitiesProvider); await Future.delayed(const Duration(milliseconds: 500)); },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              if (_isOnBreak) _buildActiveBreakCard(theme, isDark) else _buildBreakSetup(theme, isDark),
+            ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildActiveBreakCard(ThemeData theme) {
-    final elapsed = _breakStartTime != null
-        ? DateTime.now().difference(_breakStartTime!)
-        : Duration.zero;
-
+  Widget _buildActiveBreakCard(ThemeData theme, bool isDark) {
     return Container(
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primaryContainer,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(colors: [Colors.orange.shade600, Colors.deepOrange.shade700], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: Colors.orange.withValues(alpha: 0.3), blurRadius: 24, offset: const Offset(0, 10))],
       ),
-      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          Icon(
-            Icons.coffee,
-            color: Colors.white,
-            size: 48,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
+            child: const Icon(Icons.free_breakfast_rounded, color: Colors.white, size: 48),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+          Text('Break in Progress', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+          const SizedBox(height: 4),
           Text(
-            'On Break',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            '${_elapsedSeconds ~/ 60}:${(_elapsedSeconds % 60).toString().padLeft(2, '0')}',
+            style: const TextStyle(color: Colors.white, fontSize: 56, fontWeight: FontWeight.w900, letterSpacing: 2),
           ),
-          Text(
-            'Take your time',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.8),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildElapsedTimeCard(elapsed, theme),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _isLoading ? null : _endBreak,
-            icon: _isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.stop),
-            label: const Text('End Break'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: theme.colorScheme.primary,
-              minimumSize: const Size(double.infinity, 48),
+          const SizedBox(height: 4),
+          Text(_selectedBreakType.name.toUpperCase(), style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: double.infinity, height: 56,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _handleBreakAction,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                elevation: 0,
+              ),
+              child: _isLoading
+                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [Icon(Icons.play_arrow_rounded, size: 22), SizedBox(width: 8), Text('Resume Work', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))],
+                    ),
             ),
           ),
         ],
@@ -144,351 +175,167 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
     );
   }
 
-  Widget _buildElapsedTimeCard(Duration elapsed, ThemeData theme) {
-    final hours = elapsed.inHours;
-    final minutes = elapsed.inMinutes.remainder(60);
-    final seconds = elapsed.inSeconds.remainder(60);
+  Widget _buildBreakSetup(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeaderCard(theme, isDark),
+        const SizedBox(height: 20),
+        _buildBreakTypeSelector(theme, isDark),
+        const SizedBox(height: 20),
+        _buildNotesSection(theme, isDark),
+        const SizedBox(height: 28),
+        _buildStartButton(theme),
+      ],
+    );
+  }
 
+  Widget _buildHeaderCard(ThemeData theme, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(colors: [AppColors.primary, AppColors.accent], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 24, offset: const Offset(0, 10))],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildTimeUnit(hours.toString().padLeft(2, '0'), 'HRS'),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(16)),
+            child: const Icon(Icons.coffee_outlined, color: Colors.white, size: 28),
+          ),
           const SizedBox(width: 16),
-          _buildTimeUnit(minutes.toString().padLeft(2, '0'), 'MIN'),
-          const SizedBox(width: 16),
-          _buildTimeUnit(seconds.toString().padLeft(2, '0'), 'SEC'),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Take a Break', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                Text('Select your break type below', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTimeUnit(String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.7),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBreakTypeSelector(ThemeData theme) {
+  Widget _buildBreakTypeSelector(ThemeData theme, bool isDark) {
     final breakTypes = [
-      BreakType.lunch,
-      BreakType.tea,
-      BreakType.rest,
-      BreakType.personal,
-      BreakType.other,
+      {'type': BreakType.lunch, 'icon': Icons.restaurant_rounded, 'label': 'Lunch', 'color': Colors.orangeAccent},
+      {'type': BreakType.tea, 'icon': Icons.coffee_rounded, 'label': 'Tea Break', 'color': AppColors.primary},
+      {'type': BreakType.rest, 'icon': Icons.nights_stay_rounded, 'label': 'Rest', 'color': AppColors.info},
+      {'type': BreakType.personal, 'icon': Icons.person_rounded, 'label': 'Personal', 'color': AppColors.indigo},
+      {'type': BreakType.other, 'icon': Icons.more_horiz_rounded, 'label': 'Other', 'color': Colors.grey},
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Break Type',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: breakTypes.map((type) {
-            return _buildBreakTypeCard(type, theme);
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBreakTypeCard(BreakType type, ThemeData theme) {
-    final isSelected = _selectedBreakType == type;
-    final icon = _getBreakIcon(type);
-    final label = _getBreakLabel(type);
-
-    return InkWell(
-      onTap: () {
-        setState(() => _selectedBreakType = type);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: (MediaQuery.of(context).size.width - 56) / 3,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? theme.colorScheme.primary : null,
-              size: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.bold : null,
-              ),
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10))],
       ),
-    );
-  }
-
-  IconData _getBreakIcon(BreakType type) {
-    switch (type) {
-      case BreakType.lunch:
-        return Icons.restaurant;
-      case BreakType.tea:
-        return Icons.coffee;
-      case BreakType.rest:
-        return Icons.bed;
-      case BreakType.personal:
-        return Icons.person;
-      case BreakType.other:
-        return Icons.more_horiz;
-    }
-  }
-
-  String _getBreakLabel(BreakType type) {
-    switch (type) {
-      case BreakType.lunch:
-        return 'Lunch';
-      case BreakType.tea:
-        return 'Tea Break';
-      case BreakType.rest:
-        return 'Rest';
-      case BreakType.personal:
-        return 'Personal';
-      case BreakType.other:
-        return 'Other';
-    }
-  }
-
-  Widget _buildNotesSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Notes (Optional)',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _notesController,
-          maxLines: 2,
-          decoration: InputDecoration(
-            hintText: 'Add any notes...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStartBreakButton(ThemeData theme) {
-    return FilledButton.icon(
-      onPressed: _isLoading ? null : _startBreak,
-      icon: _isLoading
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-            )
-          : const Icon(Icons.play_arrow),
-      label: Text(_isLoading ? 'Starting...' : 'Start Break'),
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBreakHistory(ThemeData theme) {
-    final user = ref.watch(authStateProvider).value;
-    if (user == null) return const SizedBox.shrink();
-
-    final breaksAsync = ref.watch(todayBreaksProvider(user.id));
-
-    return breaksAsync.when(
-      data: (breaks) {
-        if (breaks.isEmpty) return const SizedBox.shrink();
-
-        return GlassCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Text(
-                'Today\'s Breaks',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ...breaks.map((b) => _buildBreakHistoryItem(b, theme)),
+              Icon(Icons.category_outlined, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('Break Type', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
             ],
           ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Text('Error: $err'),
-    );
-  }
-
-  Widget _buildBreakHistoryItem(Map<String, dynamic> breakItem, ThemeData theme) {
-    final startTime = DateTime.parse(breakItem['start_time']);
-    final endTime = breakItem['end_time'] != null
-        ? DateTime.parse(breakItem['end_time'])
-        : null;
-    final duration = endTime != null
-        ? endTime.difference(startTime)
-        : Duration.zero;
-
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          _getBreakIcon(BreakType.values.firstWhere(
-            (t) => t.name == breakItem['break_type'],
-            orElse: () => BreakType.other,
-          )),
-          color: theme.colorScheme.primary,
-        ),
-      ),
-      title: Text(_getBreakLabel(BreakType.values.firstWhere(
-        (t) => t.name == breakItem['break_type'],
-        orElse: () => BreakType.other,
-      ))),
-      subtitle: Text(
-        '${DateFormat.jm().format(startTime)} - ${endTime != null ? DateFormat.jm().format(endTime) : 'Ongoing'}',
-      ),
-      trailing: Text(
-        '${duration.inMinutes} min',
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10, runSpacing: 10,
+            children: breakTypes.map((b) {
+              final type = b['type'] as BreakType;
+              final isSelected = _selectedBreakType == type;
+              final color = b['color'] as Color;
+              return GestureDetector(
+                onTap: () { HapticFeedback.selectionClick(); setState(() => _selectedBreakType = type); },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color.withValues(alpha: 0.15) : (isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isSelected ? color.withValues(alpha: 0.5) : Colors.transparent, width: 1.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(b['icon'] as IconData, size: 18, color: isSelected ? color : theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                      const SizedBox(width: 8),
+                      Text(b['label'] as String, style: TextStyle(fontWeight: FontWeight.w600, color: isSelected ? color : null)),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
 
-  Future<void> _startBreak() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final user = ref.read(authStateProvider).value;
-      if (user == null) throw Exception('Not authenticated');
-
-      await ref.read(staffRepositoryProvider).startBreak(
-        staffId: user.id,
-        breakType: _selectedBreakType.name,
-        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      );
-
-      setState(() {
-        _isOnBreak = true;
-        _breakStartTime = DateTime.now();
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Break started!'),
-            backgroundColor: Colors.green,
+  Widget _buildNotesSection(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('Notes', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            ],
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to start break: $e'),
-            backgroundColor: Colors.red,
+          const SizedBox(height: 12),
+          TextField(
+            controller: _notesController,
+            maxLines: 2,
+            style: theme.textTheme.bodyMedium,
+            decoration: InputDecoration(
+              hintText: 'Optional notes...',
+              hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+              filled: true,
+              fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface,
+              contentPadding: const EdgeInsets.all(16),
+            ),
           ),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
-    }
+        ],
+      ),
+    );
   }
 
-  Future<void> _endBreak() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final user = ref.read(authStateProvider).value;
-      if (user == null) throw Exception('Not authenticated');
-
-      await ref.read(staffRepositoryProvider).endBreak(user.id);
-
-      setState(() {
-        _isOnBreak = false;
-        _breakStartTime = null;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Break ended!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to end break: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
+  Widget _buildStartButton(ThemeData theme) {
+    return SizedBox(
+      width: double.infinity, height: 60,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleBreakAction,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 0,
+        ),
+        child: _isLoading
+            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [Icon(Icons.free_breakfast_rounded, size: 22), SizedBox(width: 10), Text('Start Break', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))],
+              ),
+      ),
+    );
   }
 }

@@ -561,9 +561,9 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: _buildActionCard(icon: Icons.login_rounded, label: 'Check In', color: const Color(0xFF06B6D4), onTap: () => context.push('/staff/visit-checkin'), isDark: isDark)),
+            Expanded(child: _buildActionCard(icon: Icons.login_rounded, label: 'Check In', color: const Color(0xFF06B6D4), onTap: () => context.push('/staff/visit'), isDark: isDark)),
             const SizedBox(width: 8),
-            Expanded(child: _buildActionCard(icon: Icons.coffee_outlined, label: 'Break', color: const Color(0xFFF97316), onTap: () => context.push('/staff/break-logging'), isDark: isDark)),
+            Expanded(child: _buildActionCard(icon: Icons.coffee_outlined, label: 'Break', color: const Color(0xFFF97316), onTap: () => context.push('/staff/break'), isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(child: _buildActionCard(icon: Icons.analytics_outlined, label: 'Analytics', color: AppColors.accent, onTap: () => context.push('/staff/analytics'), isDark: isDark)),
             const SizedBox(width: 8),

@@ -45,6 +45,9 @@ import '../features/staff/presentation/pages/break_logging_page.dart';
 import '../features/staff/presentation/pages/pending_operations_page.dart';
 import '../features/staff/presentation/pages/gamification_dashboard.dart';
 import '../features/staff/presentation/pages/staff_settings_page.dart';
+import '../features/staff/presentation/pages/staff_targets_page.dart';
+import '../features/staff/presentation/pages/staff_map_page.dart';
+import '../features/staff/presentation/pages/analytics_dashboard.dart';
 import '../features/staff/presentation/providers/sync_status_provider.dart';
 
 // =====================================================
@@ -261,6 +264,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/staff/settings',
             builder: (context, state) => const StaffSettingsPage(),
+          ),
+          GoRoute(
+            path: '/staff/targets',
+            builder: (context, state) => const StaffTargetsPage(),
+          ),
+          GoRoute(
+            path: '/staff/map',
+            builder: (context, state) => const StaffMapPage(),
+          ),
+          GoRoute(
+            path: '/staff/analytics',
+            builder: (context, state) => const AnalyticsDashboard(),
           ),
         ],
       ),

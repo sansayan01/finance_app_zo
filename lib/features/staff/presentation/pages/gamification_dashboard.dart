@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/staff_providers.dart';
-import '../../../../providers/supabase_provider.dart';
+import '../../data/providers/gamification_providers.dart';
 
 class GamificationDashboard extends ConsumerStatefulWidget {
   const GamificationDashboard({super.key});
@@ -14,594 +16,525 @@ class GamificationDashboard extends ConsumerStatefulWidget {
 
 class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
     with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late AnimationController _confettiController;
+  late AnimationController _pulseCtrl;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _confettiController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    );
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
-    _confettiController.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = ref.watch(authStateProvider).value;
+    final isDark = theme.brightness == Brightness.dark;
 
-    if (user == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87)),
+        title: const Text('Gamification', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+        centerTitle: false,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async { ref.invalidate(staffStreakProvider); ref.invalidate(staffPointsProvider); ref.invalidate(staffRankProvider); ref.invalidate(todayTargetProvider); ref.invalidate(staffLeaderboardProvider); await Future.delayed(const Duration(milliseconds: 500)); },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+          children: [
+            _streakCard(theme),
+            const SizedBox(height: 24),
+            _statsRow(theme, isDark),
+            const SizedBox(height: 24),
+            _targetRing(theme, isDark),
+            const SizedBox(height: 24),
+            _achievements(theme, isDark),
+            const SizedBox(height: 24),
+            _milestones(theme, isDark),
+            const SizedBox(height: 24),
+            _leaderboard(theme, isDark),
+            const SizedBox(height: 32),
+            _motivation(theme),
+          ].animate(interval: 80.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
+          ),
+        ),
+      ),
+    );
+  }
 
-    final streakAsync = ref.watch(staffStreakProvider);
-    final walletAsync = ref.watch(staffWalletProvider);
-    final targetsAsync = ref.watch(todayTargetProvider);
+  Widget _streakCard(ThemeData theme) {
+    return ref.watch(staffStreakProvider).when(
+      data: (s) {
+        final cur = s?.currentStreak ?? 0;
+        final best = s?.longestStreak ?? 0;
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(36),
+            boxShadow: [
+              BoxShadow(color: Colors.orange.withValues(alpha: 0.4), blurRadius: 40, offset: const Offset(0, 20)),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // Mesh Gradient Simulation
+              Container(
+                height: 320,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange.shade600, Colors.deepOrange.shade800],
+                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: -100, right: -100,
+                child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.yellow.withValues(alpha: 0.15))),
+              ),
+              Positioned(
+                bottom: -50, left: -50,
+                child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.red.withValues(alpha: 0.2))),
+              ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  children: [
+                    const Text('CURRENT STREAK', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 2.5)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AnimatedBuilder(
+                          animation: _pulseCtrl,
+                          builder: (_, ch) => Transform.scale(scale: 1.0 + _pulseCtrl.value * 0.1, child: ch),
+                          child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 48),
+                        ),
+                        Text('$cur', style: const TextStyle(color: Colors.white, fontSize: 110, fontWeight: FontWeight.w900, height: 0.9, letterSpacing: -5)),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Text('days', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 18, fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withValues(alpha: 0.2))),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.emoji_events_rounded, color: Colors.yellow.shade400, size: 20),
+                          const SizedBox(width: 10),
+                          Text('Personal Best: $best days', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(7, (i) {
+                        final d = DateTime.now().subtract(Duration(days: 6 - i));
+                        final labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                        final active = i >= 3;
+                        return Column(
+                          children: [
+                            Text(labels[d.weekday - 1], style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            Container(
+                              width: 38, height: 38,
+                              decoration: BoxDecoration(
+                                color: active ? Colors.white : Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: active ? null : Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                boxShadow: active ? [BoxShadow(color: Colors.white.withValues(alpha: 0.3), blurRadius: 10)] : null,
+                              ),
+                              child: Center(
+                                child: active
+                                  ? Icon(Icons.check_rounded, color: Colors.deepOrange.shade800, size: 20, weight: 800)
+                                  : Text('${d.day}', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => _skeleton(theme, 320),
+      error: (_, __) => _skeleton(theme, 320),
+    );
+  }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+  Widget _statsRow(ThemeData theme, bool isDark) {
+    final points = ref.watch(staffPointsProvider).valueOrNull ?? 0;
+    final rank = ref.watch(staffRankProvider).valueOrNull;
+    final streak = ref.watch(staffStreakProvider).valueOrNull;
+    final totalCollections = streak?.totalCollections ?? 0;
+
+    return Row(
+      children: [
+        Expanded(child: _statCard(theme, Icons.auto_awesome_rounded, '$points', 'Points', AppColors.accent, isDark)),
+        const SizedBox(width: 10),
+        Expanded(child: _statCard(theme, Icons.leaderboard_rounded, rank != null ? '#$rank' : '-', 'Rank', AppColors.primary, isDark)),
+        const SizedBox(width: 10),
+        Expanded(child: _statCard(theme, Icons.payments_rounded, '$totalCollections', 'Colls', AppColors.info, isDark)),
+      ],
+    );
+  }
+
+  Widget _statCard(ThemeData theme, IconData icon, String value, String label, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        color: isDark ? color.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: isDark ? 0.05 : 0.03), blurRadius: 20, offset: const Offset(0, 8)),
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStreakHeader(streakAsync, theme),
-          const SizedBox(height: 20),
-          _buildProgressSection(targetsAsync, walletAsync, theme),
-          const SizedBox(height: 20),
-          _buildAchievementsSection(theme),
-          const SizedBox(height: 20),
-          _buildLeaderboardSection(theme),
-          const SizedBox(height: 20),
-          _buildMotivationCard(theme),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 12),
+          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color, height: 1.1, letterSpacing: -0.5)),
+          const SizedBox(height: 2),
+          Text(label.toUpperCase(), style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface.withValues(alpha: 0.35), letterSpacing: 1)),
         ],
       ),
     );
   }
 
-  Widget _buildStreakHeader(AsyncValue streakAsync, ThemeData theme) {
-    return streakAsync.when(
-      data: (streak) {
-        final currentStreak = streak?.currentStreak ?? 0;
-        final longestStreak = streak?.longestStreak ?? 0;
+  Widget _targetRing(ThemeData theme, bool isDark) {
+    return ref.watch(todayTargetProvider).when(
+      data: (t) {
+        final pct = t?.progress ?? 0.0;
+        final achieved = t?.achievedAmount ?? 0.0;
+        final goal = t?.targetAmount ?? 1.0;
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF181C24) : Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04), blurRadius: 24, offset: const Offset(0, 10))],
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 90, height: 90,
+                child: Stack(alignment: Alignment.center, children: [
+                  SizedBox(width: 90, height: 90, child: CircularProgressIndicator(value: pct.clamp(0, 1), strokeWidth: 7,
+                    backgroundColor: isDark ? Colors.white.withValues(alpha: 0.06) : theme.colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(pct >= 1 ? AppColors.success : AppColors.primary))),
+                  Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text('${(pct * 100).toStringAsFixed(0)}%', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: pct >= 1 ? AppColors.success : AppColors.primary, height: 1.1)),
+                    Text('Today', style: TextStyle(fontSize: 9, color: theme.colorScheme.onSurface.withValues(alpha: 0.35))),
+                  ]),
+                ]),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Daily Target', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? Colors.white : Colors.black87)),
+                  const SizedBox(height: 4),
+                  Text('₹${achieved.toStringAsFixed(0)} of ₹${goal.toStringAsFixed(0)}', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                  if (pct >= 1)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(Icons.celebration, color: AppColors.success, size: 14),
+                          const SizedBox(width: 4),
+                          Text('Completed!', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 11)),
+                        ]),
+                      ),
+                    ),
+                ]),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => _skeleton(theme, 100),
+      error: (_, __) => _skeleton(theme, 100),
+    );
+  }
+
+  Widget _achievements(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('ACHIEVEMENTS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), letterSpacing: 1.5)),
+              Text('8 OF 12', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 140,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            children: [
+              _achievementCard(theme, Icons.workspace_premium_rounded, 'Early Bird', 'First 10 collections before 10 AM', AppColors.primary, true, isDark),
+              _achievementCard(theme, Icons.auto_awesome_rounded, 'Streak King', 'Maintain a 14-day streak', Colors.orange, true, isDark),
+              _achievementCard(theme, Icons.shield_rounded, 'Trust Shield', 'Zero overdue in your portfolio', AppColors.success, false, isDark),
+              _achievementCard(theme, Icons.diamond_rounded, 'Elite Agent', 'Collect over ₹1L in a single day', Colors.cyan, false, isDark),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _achievementCard(ThemeData theme, IconData icon, String title, String desc, Color color, bool unlocked, bool isDark) {
+    return Container(
+      width: 160,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF181C24) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: unlocked ? color.withValues(alpha: 0.3) : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05))),
+        boxShadow: [BoxShadow(color: (unlocked ? color : Colors.black).withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: (unlocked ? color : Colors.grey).withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: unlocked ? color : Colors.grey, size: 18),
+          ),
+          const SizedBox(height: 12),
+          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black87)),
+          const SizedBox(height: 4),
+          Text(desc, style: TextStyle(fontSize: 9, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), height: 1.2), maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
+
+  Widget _milestones(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF181C24) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('MILESTONE PATH', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), letterSpacing: 1.5)),
+          const SizedBox(height: 24),
+          _milestoneItem(theme, '50 Collections', 'Unlocked a new badge!', true, true),
+          _milestoneItem(theme, '75 Collections', '₹500 Bonus Reward', false, true),
+          _milestoneItem(theme, '100 Collections', 'Elite Tier Status', false, false),
+        ],
+      ),
+    );
+  }
+
+  Widget _milestoneItem(ThemeData theme, String title, String sub, bool done, bool current) {
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 24, height: 24,
+                decoration: BoxDecoration(
+                  color: done ? AppColors.success : (current ? AppColors.primary : Colors.grey.withValues(alpha: 0.2)),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                  boxShadow: [BoxShadow(color: (done ? AppColors.success : AppColors.primary).withValues(alpha: 0.3), blurRadius: 8)],
+                ),
+                child: done ? const Icon(Icons.check, color: Colors.white, size: 12) : null,
+              ),
+              Expanded(child: Container(width: 2, color: done ? AppColors.success.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.1))),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface.withValues(alpha: done || current ? 1.0 : 0.4))),
+                  const SizedBox(height: 2),
+                  Text(sub, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _leaderboard(ThemeData theme, bool isDark) {
+    return ref.watch(staffLeaderboardProvider).when(
+      data: (lb) {
+        final entries = lb.entries.take(5).toList();
+        if (entries.isEmpty) return const SizedBox.shrink();
+
+        final top3 = entries.take(3).toList();
+        final others = entries.skip(3).toList();
 
         return Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.orange.shade400,
-                Colors.orange.shade700,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.orange.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            color: isDark ? const Color(0xFF181C24) : Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03), blurRadius: 20)],
           ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildFireIcon(),
-                  const SizedBox(width: 12),
-                  Text(
-                    '$currentStreak',
-                    style: theme.textTheme.displayLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 64,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'DAY',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'STREAK',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.emoji_events,
-                    color: Colors.yellow.shade200,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Best: $longestStreak days',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _buildStreakCalendar(theme),
-            ],
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => _buildErrorCard('Failed to load streak', theme),
-    );
-  }
-
-  Widget _buildFireIcon() {
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: 1.0 + (_pulseController.value * 0.1),
-          child: child,
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.local_fire_department,
-          color: Colors.white,
-          size: 48,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStreakCalendar(ThemeData theme) {
-    // Show last 7 days
-    final days = List.generate(7, (index) {
-      final date = DateTime.now().subtract(Duration(days: 6 - index));
-      final isActive = index >= 3; // Simulated active days
-      return {'date': date, 'isActive': isActive};
-    });
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: days.map((day) {
-        final date = day['date'] as DateTime;
-        final isActive = day['isActive'] as bool;
-        final dayName = ['M', 'T', 'W', 'T', 'F', 'S', 'S'][date.weekday - 1];
-
-        return Column(
-          children: [
-            Text(
-              dayName,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: isActive
-                    ? Icon(Icons.check, color: Colors.orange.shade700, size: 18)
-                    : Text(
-                        '${date.day}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildProgressSection(
-    AsyncValue targetsAsync,
-    AsyncValue walletAsync,
-    ThemeData theme,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: _buildTargetProgress(targetsAsync, theme),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildQuickStats(walletAsync, theme),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTargetProgress(AsyncValue targetsAsync, ThemeData theme) {
-    return targetsAsync.when(
-      data: (target) {
-        final progress = (target?.progress ?? 0.0).clamp(0.0, 1.0);
-        final achieved = target?.achievedAmount ?? 0.0;
-        final goal = target?.targetAmount ?? 1.0;
-
-        return GlassCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Today\'s Target',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(children: [
+                    Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                      child: Icon(Icons.leaderboard_rounded, size: 20, color: AppColors.primary)),
+                    const SizedBox(width: 12),
+                    Text('Elite Performers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+                  ]),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
+                    child: Text('DAILY', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1))),
+                ],
               ),
-              const SizedBox(height: 20),
-              _buildCircularProgress(progress, theme),
+              const SizedBox(height: 32),
+              // Podium
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (top3.length >= 2) _podiumItem(theme, top3[1], 2, Colors.grey.shade400, 70, isDark),
+                  if (top3.isNotEmpty) _podiumItem(theme, top3[0], 1, Colors.amber.shade600, 95, isDark),
+                  if (top3.length >= 3) _podiumItem(theme, top3[2], 3, Colors.brown.shade400, 60, isDark),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Divider(height: 1),
               const SizedBox(height: 16),
-              Text(
-                '₹${achieved.toStringAsFixed(0)} / ₹${goal.toStringAsFixed(0)}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (progress >= 1.0) ...[
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.celebration, color: Colors.green, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Target Achieved!',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+              ...others.asMap().entries.map((e) {
+                final entry = e.value;
+                final isMe = entry.staffId == lb.currentUserStaffId;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32, height: 32,
+                        decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), shape: BoxShape.circle),
+                        child: Center(child: Text('${e.key + 4}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)))),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(entry.staffName, style: TextStyle(fontWeight: isMe ? FontWeight.w800 : FontWeight.w600, color: isMe ? AppColors.primary : (isDark ? Colors.white70 : Colors.black87))),
+                      ),
+                      Text('₹${entry.totalCollected.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87, fontSize: 14)),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton(
+                  onPressed: () => context.push('/staff/gamification'),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('View Full Leaderboard', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 12),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ],
           ),
         );
       },
-      loading: () => const GlassCard(child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => _buildErrorCard('Failed to load target', theme),
+      loading: () => _skeleton(theme, 300),
+      error: (_, __) => _skeleton(theme, 300),
     );
   }
 
-  Widget _buildCircularProgress(double progress, ThemeData theme) {
-    return Center(
-      child: SizedBox(
-        width: 120,
-        height: 120,
-        child: CustomPaint(
-          painter: _ProgressPainter(
-            progress: progress,
-            color: progress >= 1.0
-                ? Colors.green
-                : theme.colorScheme.primary,
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-          ),
-          child: Center(
-            child: Text(
-              '${(progress * 100).toStringAsFixed(0)}%',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStats(AsyncValue walletAsync, ThemeData theme) {
-    return walletAsync.when(
-      data: (wallet) {
-        return Column(
-          children: [
-            _buildStatCard(
-              'Collected',
-              '₹${wallet?.totalCollectedToday.toStringAsFixed(0) ?? '0'}',
-              Icons.payments,
-              Colors.green,
-              theme,
-            ),
-            const SizedBox(height: 12),
-            _buildStatCard(
-              'Visits',
-              '${wallet?.totalVisitsToday ?? 0}',
-              Icons.place,
-              Colors.blue,
-              theme,
-            ),
-          ],
-        );
-      },
-      loading: () => const CircularProgressIndicator(),
-      error: (_, __) => _buildErrorCard('Error', theme),
-    );
-  }
-
-  Widget _buildStatCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-    ThemeData theme,
-  ) {
+  Widget _podiumItem(ThemeData theme, dynamic entry, int rank, Color color, double height, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
+      width: 85,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAchievementsSection(ThemeData theme) {
-    final achievements = [
-      {'icon': Icons.star, 'title': 'First Collection', 'unlocked': true},
-      {'icon': Icons.speed, 'title': 'Speed Star', 'unlocked': true},
-      {'icon': Icons.local_fire_department, 'title': '7 Day Streak', 'unlocked': true},
-      {'icon': Icons.emoji_events, 'title': 'Top Collector', 'unlocked': false},
-      {'icon': Icons.workspace_premium, 'title': '100% Target', 'unlocked': false},
-      {'icon': Icons.diamond, 'title': 'Diamond Club', 'unlocked': false},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Achievements',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: const Text('View All'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: achievements.length,
-            itemBuilder: (context, index) {
-              final a = achievements[index];
-              return _buildAchievementBadge(
-                a['icon'] as IconData,
-                a['title'] as String,
-                a['unlocked'] as bool,
-                theme,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAchievementBadge(
-    IconData icon,
-    String title,
-    bool unlocked,
-    ThemeData theme,
-  ) {
-    return Container(
-      width: 80,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: unlocked
-                  ? LinearGradient(
-                      colors: [
-                        Colors.amber.shade300,
-                        Colors.amber.shade600,
-                      ],
-                    )
-                  : null,
-              color: unlocked ? null : theme.colorScheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
-              border: unlocked
-                  ? null
-                  : Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
-            ),
-            child: Icon(
-              icon,
-              color: unlocked ? Colors.white : theme.colorScheme.outline,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: unlocked ? FontWeight.bold : null,
-              color: unlocked ? null : theme.colorScheme.outline,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeaderboardSection(ThemeData theme) {
-    final leaders = [
-      {'rank': 1, 'name': 'Rahul K.', 'amount': 45000, 'avatar': Colors.red},
-      {'rank': 2, 'name': 'Priya S.', 'amount': 42000, 'avatar': Colors.blue},
-      {'rank': 3, 'name': 'Amit T.', 'amount': 38000, 'avatar': Colors.green},
-    ];
-
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Stack(
+            alignment: Alignment.center,
             children: [
-              Text(
-                'Leaderboard',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                width: 54, height: 54,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: color, width: 2),
+                  boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 12)],
                 ),
-                child: Text(
-                  'This Week',
-                  style: theme.textTheme.bodySmall,
+                child: Center(child: Icon(Icons.person_rounded, color: color.withValues(alpha: 0.5), size: 30)),
+              ),
+              Positioned(
+                bottom: 0, right: 0,
+                child: Container(
+                  width: 22, height: 22,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle, border: Border.all(color: isDark ? const Color(0xFF181C24) : Colors.white, width: 2)),
+                  child: Center(child: Text('$rank', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900))),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ...leaders.map((l) => _buildLeaderItem(l, theme)),
           const SizedBox(height: 12),
-          Center(
-            child: TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.leaderboard, size: 18),
-              label: const Text('View Full Leaderboard'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeaderItem(Map<String, dynamic> leader, ThemeData theme) {
-    final rank = leader['rank'] as int;
-    final name = leader['name'] as String;
-    final amount = leader['amount'] as int;
-    final avatarColor = leader['avatar'] as Color;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
+          Text(entry.staffName, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black87), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Text('₹${entry.totalCollected.toStringAsFixed(0)}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: color)),
+          const SizedBox(height: 8),
           Container(
-            width: 28,
-            height: 28,
+            height: height,
+            width: double.infinity,
             decoration: BoxDecoration(
-              color: rank == 1
-                  ? Colors.amber
-                  : rank == 2
-                      ? Colors.grey.shade400
-                      : Colors.brown.shade300,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '$rank',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: avatarColor.withValues(alpha: 0.2),
-            child: Text(
-              name[0],
-              style: TextStyle(
-                color: avatarColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              name,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            '₹$amount',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
+              gradient: LinearGradient(colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.05)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
           ),
         ],
@@ -609,115 +542,42 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
     );
   }
 
-  Widget _buildMotivationCard(ThemeData theme) {
+  Widget _motivation(ThemeData theme) {
     final quotes = [
-      'Every collection counts! Keep going! 💪',
-      'You\'re making a difference in people\'s lives! 🌟',
-      'Consistency is key. Great work today! 🎯',
-      'Your dedication is inspiring! 🚀',
-      'Small steps lead to big achievements! 🏆',
+      'Every collection counts. Keep going!',
+      'You\'re making a real difference.',
+      'Consistency is the key to success.',
+      'Your dedication is truly inspiring.',
+      'Small wins add up to big results.',
     ];
-
-    final random = math.Random();
-    final quote = quotes[random.nextInt(quotes.length)];
+    final q = quotes[math.Random().nextInt(quotes.length)];
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primaryContainer,
-            theme.colorScheme.secondaryContainer,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(colors: [AppColors.primary.withValues(alpha: 0.06), AppColors.accent.withValues(alpha: 0.03)]),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.06)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.lightbulb,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
+            decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(Icons.lightbulb_outline_rounded, color: Colors.amber.shade600, size: 26),
           ),
           const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              quote,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
+          Expanded(child: Text(q, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)))),
         ],
       ),
     );
   }
 
-  Widget _buildErrorCard(String message, ThemeData theme) {
-    return GlassCard(
-      child: Center(
-        child: Text(
-          message,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.error,
-          ),
-        ),
-      ),
+  Widget _skeleton(ThemeData theme, double h) {
+    return Container(
+      height: h,
+      decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(28)),
+      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
     );
-  }
-}
-
-class _ProgressPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  final Color backgroundColor;
-
-  _ProgressPainter({
-    required this.progress,
-    required this.color,
-    required this.backgroundColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 8;
-
-    // Background circle
-    final bgPaint = Paint()
-      ..color = backgroundColor
-      ..strokeWidth = 10
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, bgPaint);
-
-    // Progress arc
-    final progressPaint = Paint()
-      ..color = color
-      ..strokeWidth = 10
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final sweepAngle = 2 * math.pi * progress;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2,
-      sweepAngle,
-      false,
-      progressPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _ProgressPainter oldDelegate) {
-    return progress != oldDelegate.progress || color != oldDelegate.color;
   }
 }

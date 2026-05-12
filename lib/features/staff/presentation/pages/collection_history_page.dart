@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -54,14 +53,8 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
     _refreshController.refreshCompleted();
   }
 
-  void _onDateChanged(DateTime date) {
-    setState(() => _selectedDate = date);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Collection History'),
@@ -237,14 +230,14 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
 
   Widget _buildHistoryList(BuildContext context, String type) {
     final historyAsync = ref.watch(
-      collectionHistoryProvider(
+      collectionHistoryProvider((
         staffId: widget.staffId,
         customerId: widget.customerId,
         year: _selectedDate.year,
         month: _selectedDate.month,
         type: type,
         paymentMode: _selectedFilter,
-      ),
+      )),
     );
 
     return SmartRefresher(
@@ -274,7 +267,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
     final dateFormat = DateFormat('yyyy-MM-dd');
     
     for (final item in history) {
-      final dateStr = item['collected_at'] ?? item['created_at'] ?? '';
+      final dateStr = item['collection_date'] ?? item['created_at'] ?? '';
       final date = DateTime.tryParse(dateStr) ?? DateTime.now();
       final key = dateFormat.format(date);
       
@@ -314,7 +307,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
         final entry = items[groupIndex];
         final groupTotal = entry.value.fold<double>(
           0,
-          (sum, item) => sum + (item['amount'] ?? 0).toDouble(),
+          (sum, item) => sum + (item['amount_collected'] ?? 0).toDouble(),
         );
         
         return Column(
@@ -354,7 +347,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
                   ),
                   SizedBox(width: AppSpacing.sm),
                   Text(
-                    '${entry.value.length} collections',
+                    '${entry.value.length} items',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -373,14 +366,13 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
 
   Widget _buildHistoryItem(BuildContext context, Map<String, dynamic> item) {
     final theme = Theme.of(context);
-    final amount = (item['amount'] ?? 0).toDouble();
+    final amount = (item['amount_collected'] ?? 0).toDouble();
     final memberName = item['member_name'] ?? 'Unknown';
     final loanNumber = item['loan_number'] ?? '';
-    final type = item['type'] ?? item['collection_type'] ?? 'emi';
+    final type = item['type'] ?? 'emi';
     final paymentMode = item['payment_mode'] ?? 'cash';
-    final time = item['collected_at'] ?? item['created_at'] ?? '';
+    final time = item['collection_time'] ?? item['created_at'] ?? '';
     final receiptNumber = item['receipt_number'] ?? '';
-    final staffName = item['staff_name'] ?? '';
     final isOffline = item['is_offline'] == true || item['sync_status'] == 'pending';
 
     return ListTile(
@@ -388,7 +380,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.success.withOpacity(0.1),
+          color: AppColors.success.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -409,7 +401,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
           _buildPaymentModeChip(paymentMode),
           if (isOffline) ...[
             SizedBox(width: AppSpacing.xs),
-            Icon(
+            const Icon(
               Icons.cloud_off,
               size: 16,
               color: Colors.orange,
@@ -450,7 +442,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
         ],
       ),
       onTap: () {
-        context.push('/staff/collection/${item['id']}', extra: item);
+        context.push('/staff/collection-detail', extra: item);
       },
     );
   }
@@ -478,16 +470,16 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: color),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Text(
             mode.toUpperCase(),
             style: TextStyle(
@@ -509,7 +501,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
           Icon(
             Icons.history,
             size: 80,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           SizedBox(height: AppSpacing.lg),
           Text(
@@ -572,7 +564,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage>
           Icon(
             Icons.error_outline,
             size: 80,
-            color: AppColors.error.withOpacity(0.5),
+            color: AppColors.error.withValues(alpha: 0.5),
           ),
           SizedBox(height: AppSpacing.lg),
           Text(

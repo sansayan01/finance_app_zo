@@ -5,11 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/shimmer_loading.dart';
-import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../members/data/models/member_model.dart';
+import '../../../../core/constants/enums.dart';
+import '../../../../core/widgets/shimmer_card.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/aurora_background.dart';
 import '../providers/analytics_providers.dart';
 
 class AnalyticsPage extends ConsumerWidget {
@@ -1008,8 +1008,8 @@ class AnalyticsPage extends ConsumerWidget {
   }
 
   Widget _buildDelinquencyAnalysis(AnalyticsStats stats, ThemeData theme) {
-    const successColor = AppColors.success;
-    const errorColor = AppColors.error;
+    final successColor = AppColors.success;
+    final errorColor = AppColors.error;
 
     return GlassCard(
       padding: const EdgeInsets.all(24),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/constants/app_colors.dart';
 import 'package:geolocator/geolocator.dart';
 
 enum GpsStatus {
@@ -75,7 +74,7 @@ class GpsStatusChip extends StatelessWidget {
           color: _getBackgroundColor(isDark),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _getColor().withOpacity(0.3),
+            color: _getColor().withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -108,7 +107,7 @@ class GpsStatusChip extends StatelessWidget {
               Text(
                 '±${accuracy!.toStringAsFixed(0)}m',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: _getColor().withOpacity(0.7),
+                  color: _getColor().withValues(alpha: 0.7),
                   fontSize: 10,
                 ),
               ),
@@ -134,7 +133,7 @@ class GpsStatusChip extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.greenAccent.withOpacity(0.5 * value),
+                  color: Colors.greenAccent.withValues(alpha: 0.5 * value),
                   blurRadius: 4 * value,
                   spreadRadius: 2 * value,
                 ),
@@ -148,8 +147,8 @@ class GpsStatusChip extends StatelessWidget {
 
   Color _getBackgroundColor(bool isDark) {
     final color = _getColor();
-    if (isDark) return color.withOpacity(0.1);
-    return color.withOpacity(0.08);
+    if (isDark) return color.withValues(alpha: 0.1);
+    return color.withValues(alpha: 0.08);
   }
 
   Color _getColor() {

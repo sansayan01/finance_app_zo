@@ -1,7 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
 
 /// Receipt Generator
 /// 
@@ -118,9 +118,11 @@ class ReceiptGenerator {
 
   /// Share receipt via system share sheet
   static Future<void> shareReceipt(String receiptText) async {
-    await Share.share(
-      receiptText,
-      subject: 'Collection Receipt - MicroFlow Pro',
+    await SharePlus.instance.share(
+      ShareParams(
+        text: receiptText,
+        subject: 'Collection Receipt - MicroFlow Pro',
+      ),
     );
   }
 }
@@ -148,11 +150,11 @@ class ReceiptPreview extends StatelessWidget {
         color: isDark ? const Color(0xFF1E1E2A) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[300]!,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]!,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -169,7 +171,9 @@ class ReceiptPreview extends StatelessWidget {
               color: isDark ? Colors.grey[900] : Colors.grey[50],
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200]!,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey[200]!,
                 style: BorderStyle.solid,
               ),
             ),
@@ -261,7 +265,7 @@ class CollectionSuccessDialog extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

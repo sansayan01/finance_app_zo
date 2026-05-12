@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../data/providers/collection_providers.dart';
-import '../../data/providers/staff_providers.dart';
+import '../../../../providers/supabase_provider.dart';
 
 class AnalyticsDashboard extends ConsumerStatefulWidget {
   const AnalyticsDashboard({super.key});
@@ -115,7 +112,7 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -192,7 +189,7 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
                   Icon(
                     Icons.bar_chart,
                     size: 48,
-                    color: theme.colorScheme.primary.withOpacity(0.5),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 8),
                   Text(

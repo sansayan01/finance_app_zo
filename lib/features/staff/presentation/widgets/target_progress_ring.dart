@@ -64,12 +64,12 @@ class _TargetProgressRingState extends State<TargetProgressRing>
         height: widget.size,
         decoration: BoxDecoration(
           color: isDark
-              ? const Color(0xFF1A1A2E).withOpacity(0.5)
-              : Colors.white.withOpacity(0.9),
+              ? const Color(0xFF1A1A2E).withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -88,7 +88,7 @@ class _TargetProgressRingState extends State<TargetProgressRing>
                     progress: _animation.value,
                     color: _getProgressColor(progress),
                     backgroundColor:
-                        isDark ? Colors.white.withOpacity(0.1) : Colors.grey[200]!,
+                        isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]!,
                     strokeWidth: 12,
                   ),
                 );
@@ -125,7 +125,7 @@ class _TargetProgressRingState extends State<TargetProgressRing>
                 Text(
                   'of ₹${AppFormatters.formatCompactCurrency(widget.target.targetAmount)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
 
@@ -140,8 +140,8 @@ class _TargetProgressRingState extends State<TargetProgressRing>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.orangeAccent.withOpacity(0.8),
-                          Colors.deepOrange.withOpacity(0.8),
+                          Colors.orangeAccent.withValues(alpha: 0.8),
+                          Colors.deepOrange.withValues(alpha: 0.8),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),

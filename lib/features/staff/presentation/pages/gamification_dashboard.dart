@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../../providers/supabase_provider.dart';
 
 class GamificationDashboard extends ConsumerStatefulWidget {
   const GamificationDashboard({super.key});
@@ -91,7 +90,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withOpacity(0.3),
+                color: Colors.orange.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -126,7 +125,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
                       Text(
                         'STREAK',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -146,7 +145,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
                   Text(
                     'Best: $longestStreak days',
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
@@ -174,7 +173,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           shape: BoxShape.circle,
         ),
         child: const Icon(
@@ -206,7 +205,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
             Text(
               dayName,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 4),
@@ -214,7 +213,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: isActive ? Colors.white : Colors.white.withOpacity(0.2),
+                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -223,7 +222,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
                     : Text(
                         '${date.day}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
               ),
@@ -371,7 +370,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -472,7 +471,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
               border: unlocked
                   ? null
                   : Border.all(
-                      color: theme.colorScheme.outline.withOpacity(0.3),
+                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
                       width: 2,
                     ),
             ),
@@ -580,7 +579,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
           const SizedBox(width: 12),
           CircleAvatar(
             radius: 18,
-            backgroundColor: avatarColor.withOpacity(0.2),
+            backgroundColor: avatarColor.withValues(alpha: 0.2),
             child: Text(
               name[0],
               style: TextStyle(
@@ -638,7 +637,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(

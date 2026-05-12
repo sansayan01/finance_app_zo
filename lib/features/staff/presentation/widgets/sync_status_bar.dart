@@ -40,7 +40,7 @@ class SyncStatusBar extends StatelessWidget {
           color: _getBackgroundColor(isDark),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _getBorderColor().withOpacity(0.3),
+            color: _getBorderColor().withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -66,7 +66,7 @@ class SyncStatusBar extends StatelessWidget {
                     Text(
                       'Last sync: ${_formatTime(lastSyncAt!)}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 10,
                       ),
                     ),
@@ -79,7 +79,7 @@ class SyncStatusBar extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.orangeAccent.withOpacity(0.2),
+                  color: Colors.orangeAccent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -94,7 +94,7 @@ class SyncStatusBar extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.greenAccent.withOpacity(0.2),
+                  color: Colors.greenAccent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -127,7 +127,7 @@ class SyncStatusBar extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.greenAccent.withOpacity(0.2),
+            color: Colors.greenAccent.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -149,7 +149,7 @@ class SyncStatusBar extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.orangeAccent.withOpacity(0.2),
+            color: Colors.orangeAccent.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -162,7 +162,7 @@ class SyncStatusBar extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.redAccent.withOpacity(0.2),
+            color: Colors.redAccent.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -175,7 +175,7 @@ class SyncStatusBar extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.redAccent.withOpacity(0.2),
+            color: Colors.redAccent.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -188,8 +188,8 @@ class SyncStatusBar extends StatelessWidget {
   }
 
   Color _getBackgroundColor(bool isDark) {
-    if (isDark) return const Color(0xFF1A1A2E).withOpacity(0.5);
-    return Colors.white.withOpacity(0.9);
+    if (isDark) return const Color(0xFF1A1A2E).withValues(alpha: 0.5);
+    return Colors.white.withValues(alpha: 0.9);
   }
 
   Color _getBorderColor() {

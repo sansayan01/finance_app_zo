@@ -3,13 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/services/location_service.dart';
+import 'package:microflow_pro/core/constants/enums.dart' as cm;
 import '../../data/models/collection_model.dart';
-import '../../data/providers/staff_providers.dart';
 import '../../data/providers/collection_providers.dart';
-import '../../data/models/collection_model.dart' as cm;
+import '../../../../core/services/location_service.dart';
+import '../../data/providers/staff_providers.dart';
 
 class CollectionFormPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -143,12 +142,12 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
           end: Alignment.bottomRight,
           colors: isDark
               ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
-              : [AppColors.primary.withOpacity(0.9), AppColors.primaryDark.withOpacity(0.9)],
+              : [AppColors.primary.withValues(alpha: 0.9), AppColors.primaryDark.withValues(alpha: 0.9)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -163,7 +162,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Center(
@@ -194,14 +193,14 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
                       children: [
                         Icon(
                           Icons.phone_rounded,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           size: 14,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _memberPhone,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -217,7 +216,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
                 Text(
                   'Expected',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
                 Text(
@@ -242,7 +241,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -272,7 +271,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               ),
               hintText: '0',
               hintStyle: theme.textTheme.headlineMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.2),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -280,7 +279,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               ),
               filled: true,
               fillColor: isDark
-                  ? Colors.white.withOpacity(0.05)
+                  ? Colors.white.withValues(alpha: 0.05)
                   : theme.colorScheme.surface,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
@@ -326,7 +325,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.orangeAccent.withOpacity(0.15),
+                color: Colors.orangeAccent.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -364,7 +363,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
       ),
       backgroundColor: theme.colorScheme.surface,
       side: BorderSide(
-        color: AppColors.primary.withOpacity(0.3),
+        color: AppColors.primary.withValues(alpha: 0.3),
       ),
       onPressed: () {
         HapticFeedback.selectionClick();
@@ -383,7 +382,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -441,8 +440,8 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.15)
-              : (isDark ? Colors.white.withOpacity(0.05) : theme.colorScheme.surface),
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : (isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -507,7 +506,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -530,7 +529,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               ),
               filled: true,
               fillColor: isDark
-                  ? Colors.white.withOpacity(0.05)
+                  ? Colors.white.withValues(alpha: 0.05)
                   : theme.colorScheme.surface,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -550,7 +549,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -574,7 +573,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               ),
               filled: true,
               fillColor: isDark
-                  ? Colors.white.withOpacity(0.05)
+                  ? Colors.white.withValues(alpha: 0.05)
                   : theme.colorScheme.surface,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -587,7 +586,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     );
   }
 
-  Widget _buildSubmitButton(ThemeData theme, AsyncValue<cm.CollectionModel?> state) {
+  Widget _buildSubmitButton(ThemeData theme, AsyncValue<CollectionModel?> state) {
     return state.when(
       data: (collection) {
         if (collection != null && !_isSubmitting) {
@@ -672,7 +671,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.1),
+              color: Colors.redAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -732,10 +731,12 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
 
     try {
       final locationService = LocationService();
-      final position = await locationService.getCurrentPosition();
-      gpsLat = position.latitude;
-      gpsLng = position.longitude;
-      gpsAccuracy = position.accuracy;
+      final position = await locationService.getCurrentLocation();
+      if (position != null) {
+        gpsLat = position.latitude;
+        gpsLng = position.longitude;
+        gpsAccuracy = position.accuracy;
+      }
     } catch (e) {
       // GPS failed - show warning but continue
       if (mounted) {

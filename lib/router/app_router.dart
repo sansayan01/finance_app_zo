@@ -207,10 +207,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/staff/collection/:loanId',
             builder: (context, state) {
               final loanId = state.pathParameters['loanId']!;
-              final customerId = state.uri.queryParameters['customerId'];
+              final loanData = state.extra as Map<String, dynamic>?;
               return CollectionFormPage(
                 loanId: loanId,
-                customerId: customerId,
+                loanData: loanData,
               );
             },
           ),
@@ -235,7 +235,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/staff/visit',
-            builder: (context, state) => const VisitCheckinPage(),
+            builder: (context, state) => const VisitCheckInPage(),
           ),
           GoRoute(
             path: '/staff/summary',
@@ -423,7 +423,9 @@ class StaffShell extends ConsumerWidget {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/staff/collections') ||
-        location.startsWith('/staff/collection')) return 1;
+        location.startsWith('/staff/collection')) {
+      return 1;
+    }
     if (location.startsWith('/staff/customers')) return 2;
     if (location.startsWith('/staff/history')) return 3;
     if (location.startsWith('/staff/pending')) return 4;
@@ -504,17 +506,17 @@ class StaffBottomBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isDark
-                ? const Color(0xFF1E1E2A).withOpacity(0.95)
-                : Colors.white.withOpacity(0.95),
+                ? const Color(0xFF1E1E2A).withValues(alpha: 0.95)
+                : Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -609,8 +611,8 @@ class _StaffNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSelected = currentIndex == index;
     final inactiveColor = isDark
-        ? Colors.white.withOpacity(0.4)
-        : Colors.black.withOpacity(0.4);
+        ? Colors.white.withValues(alpha: 0.4)
+        : Colors.black.withValues(alpha: 0.4);
 
     return GestureDetector(
       onTap: () => onTap(index),
@@ -625,7 +627,7 @@ class _StaffNavItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? primary.withOpacity(isDark ? 0.2 : 0.1)
+                    ? primary.withValues(alpha: isDark ? 0.2 : 0.1)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -702,32 +704,32 @@ class _PremiumBottomBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF3E3E4A).withOpacity(0.85)
-                    : Colors.white.withOpacity(0.9),
+                    ? const Color(0xFF3E3E4A).withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(28),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(isDark ? 0.15 : 0.4),
+                    Colors.white.withValues(alpha: isDark ? 0.15 : 0.4),
                     Colors.transparent,
                   ],
                 ),
                 border: Border.all(
                   color: isDark
-                      ? Colors.white.withOpacity(0.25)
-                      : Colors.white.withOpacity(0.5),
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : Colors.white.withValues(alpha: 0.5),
                   width: 0.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.6 : 0.1),
+                    color: Colors.black.withValues(alpha: isDark ? 0.6 : 0.1),
                     blurRadius: 30,
                     offset: const Offset(0, 10),
                     spreadRadius: -2,
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -816,8 +818,8 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSelected = currentIndex == index;
     final inactiveColor = isDark
-        ? Colors.white.withOpacity(0.35)
-        : Colors.black.withOpacity(0.28);
+        ? Colors.white.withValues(alpha: 0.35)
+        : Colors.black.withValues(alpha: 0.28);
 
     return GestureDetector(
       onTap: () => onTap(index),
@@ -828,7 +830,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? primary.withOpacity(isDark ? 0.15 : 0.1)
+              ? primary.withValues(alpha: isDark ? 0.15 : 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),

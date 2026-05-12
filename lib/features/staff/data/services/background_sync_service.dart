@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'local_database.dart';
 import 'offline_sync_engine.dart';
+import '../../../../core/providers/storage_providers.dart';
 
 /// Background sync service that handles automatic synchronization
 /// between local database and Supabase
@@ -148,8 +149,8 @@ class BackgroundSyncService {
   }
 
   /// Get current sync state
-  SyncState getCurrentState() {
-    return SyncState(
+  BackgroundSyncState getCurrentState() {
+    return BackgroundSyncState(
       isSyncing: _isSyncing,
       lastSyncTime: _localDb.getLastSyncTime(),
       pendingOperations: _localDb.getPendingOperations().length,
@@ -184,12 +185,12 @@ class SyncResult {
   bool get isComplete => pending == 0;
 }
 
-class SyncState {
+class BackgroundSyncState {
   final bool isSyncing;
   final DateTime? lastSyncTime;
   final int pendingOperations;
 
-  SyncState({
+  BackgroundSyncState({
     required this.isSyncing,
     this.lastSyncTime,
     required this.pendingOperations,

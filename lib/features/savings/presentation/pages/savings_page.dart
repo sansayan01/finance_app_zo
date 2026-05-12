@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:ui';
+import '../../../../core/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';

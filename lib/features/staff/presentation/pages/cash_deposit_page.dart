@@ -3,11 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../data/models/wallet_model.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../../providers/supabase_provider.dart';
 
 class CashDepositPage extends ConsumerStatefulWidget {
   const CashDepositPage({super.key});
@@ -49,7 +48,7 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
   }
 
   Widget _buildDepositForm(String staffId, ThemeData theme) {
-    final walletAsync = ref.watch(staffWalletProvider(staffId));
+     final walletAsync = ref.watch(staffWalletProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -85,7 +84,7 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.account_balance_wallet, color: Colors.green, size: 32),
@@ -373,7 +372,7 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
       );
 
       // Invalidate wallet provider to refresh
-      ref.invalidate(staffWalletProvider(user.id));
+       ref.invalidate(staffWalletProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

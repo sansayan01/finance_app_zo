@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../settings/data/repositories/activity_log_repository.dart';
 import '../../../settings/data/models/activity_log_model.dart';
 import '../models/loan_model.dart';
-import '../../../../core/constants/enums.dart';
 
 class LoansRepository {
   final SupabaseClient _client;

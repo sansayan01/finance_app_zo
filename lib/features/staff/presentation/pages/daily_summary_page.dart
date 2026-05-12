@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../data/providers/collection_providers.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../../providers/supabase_provider.dart';
 
 class DailySummaryPage extends ConsumerStatefulWidget {
   final DateTime? date;
@@ -257,7 +254,7 @@ class _DailySummaryPageState extends ConsumerState<DailySummaryPage> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -449,7 +446,7 @@ class _DailySummaryPageState extends ConsumerState<DailySummaryPage> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: Colors.green.withOpacity(0.1),
+        backgroundColor: Colors.green.withValues(alpha: 0.1),
         child: const Icon(Icons.payments, color: Colors.green, size: 20),
       ),
       title: Text(collection['member_name'] ?? 'Unknown'),

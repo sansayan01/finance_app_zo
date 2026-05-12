@@ -3,14 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/staff_providers.dart';
 import '../../data/providers/collection_providers.dart';
 import '../widgets/wallet_card.dart';
 import '../widgets/target_progress_ring.dart';
-import '../widgets/sync_status_bar.dart';
 import '../widgets/gps_status_chip.dart';
 import '../widgets/today_agenda_list.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 class StaffHomeDashboard extends ConsumerStatefulWidget {
   const StaffHomeDashboard({super.key});
@@ -27,7 +26,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
     final profileAsync = ref.watch(staffProfileProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0A14) : const Color(0xFFF5F5F5),
+      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(staffProfileProvider);
@@ -36,45 +35,45 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
           ref.invalidate(todayTargetProvider);
           ref.invalidate(todayDueEmisProvider);
           ref.invalidate(todayCollectionsProvider);
+          ref.invalidate(todayCollectionStatsProvider);
+          await Future.delayed(const Duration(seconds: 1));
         },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              _buildHeader(theme, profileAsync),
-              const SizedBox(height: 20),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // Premium Header
+            _buildSliverHeader(theme, profileAsync, isDark),
 
-              // Sync status
-              SyncStatusBar(
-                status: SyncStatus.synced,
-                lastSyncAt: DateTime.now().subtract(const Duration(minutes: 5)),
-                onSyncTap: () => _manualSync(),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // Performance Pulse
+                  _buildPerformancePulse(theme, isDark),
+                  const SizedBox(height: 24),
+
+                  // Smart Insights
+                  _buildSmartInsights(theme, isDark),
+                  const SizedBox(height: 24),
+
+                  // Wallet & Target Grid
+                  _buildFinancialOverview(theme, isDark),
+                  const SizedBox(height: 24),
+
+                  // Quick Actions
+                  _buildQuickActions(theme, isDark),
+                  const SizedBox(height: 28),
+
+                  // Today's Agenda
+                  _buildAgendaSection(theme),
+                  const SizedBox(height: 24),
+
+                  // Stats summary
+                  _buildStatsSummary(theme, isDark),
+                ]),
               ),
-              const SizedBox(height: 24),
-
-              // Target progress ring + streak
-              _buildTargetSection(theme),
-              const SizedBox(height: 24),
-
-              // Wallet card
-              _buildWalletSection(theme),
-              const SizedBox(height: 24),
-
-              // Today's agenda
-              _buildAgendaSection(theme),
-              const SizedBox(height: 24),
-
-              // Quick actions
-              _buildQuickActions(theme),
-              const SizedBox(height: 24),
-
-              // Stats summary
-              _buildStatsSummary(theme),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
 
@@ -95,202 +94,334 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
     );
   }
 
-  Widget _buildHeader(ThemeData theme, AsyncValue profileAsync) {
+  Widget _buildSliverHeader(ThemeData theme, AsyncValue profileAsync, bool isDark) {
     final hour = DateTime.now().hour;
-    String greeting;
-    if (hour < 12) {
-      greeting = 'Good morning';
-    } else if (hour < 17) {
-      greeting = 'Good afternoon';
-    } else {
-      greeting = 'Good evening';
-    }
-
-    return Row(
-      children: [
-        // Avatar and greeting
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.primary.withOpacity(0.8),
-                AppColors.primaryDark.withOpacity(0.8),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Center(
-            child: Text(
-              profileAsync.when(
-                data: (profile) => _getInitials(profile?.fullName ?? 'A'),
-                loading: () => 'A',
-                error: (_, __) => 'A',
-              ),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
+    String greeting = hour < 12 ? 'Good Morning' : (hour < 17 ? 'Good Afternoon' : 'Good Evening');
+    
+    return SliverAppBar(
+      expandedHeight: 180,
+      collapsedHeight: 80,
+      pinned: true,
+      stretch: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
+        background: Stack(
+          children: [
+            // Aurora Background
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark 
+                    ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+                    : [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+                ),
               ),
             ),
-          ),
+            // Decorative circles
+            Positioned(
+              right: -50,
+              top: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            
+            // Content
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    profileAsync.when(
+                      data: (profile) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                greeting,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Spacer(),
+                              const GpsStatusChip(status: GpsStatus.active, accuracy: 5),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            profile?.fullName ?? 'Agent',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.0,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              profile?.staffCode ?? 'S-001',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      loading: () => const ShimmerCard(height: 60),
+                      error: (_, __) => const Text('Field Commander', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+    );
+  }
+
+  Widget _buildPerformancePulse(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                greeting,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
-                ),
+                'Performance Pulse',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
-              profileAsync.when(
-                data: (profile) => Text(
-                  profile?.fullName ?? 'Agent',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                loading: () => Text(
-                  'Loading...',
-                  style: theme.textTheme.titleMedium,
-                ),
-                error: (_, __) => Text(
-                  'Agent',
-                  style: theme.textTheme.titleLarge,
+                child: const Text(
+                  '+12% Today',
+                  style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.w800),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 20),
+          // Mini Sparkline simulation
+          SizedBox(
+            height: 40,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(12, (index) {
+                final height = 10.0 + (index % 4 * 10);
+                return Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    height: height,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: index == 11 ? 1.0 : 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmartInsights(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Smart Insights',
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
-        // GPS chip
-        const GpsStatusChip(status: GpsStatus.active, accuracy: 15),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 100,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            children: [
+              _buildInsightCard(
+                theme,
+                isDark,
+                Icons.lightbulb_outline_rounded,
+                'Peak Collection Time',
+                'Best results between 10 AM - 12 PM',
+                const Color(0xFF3B82F6),
+              ),
+              const SizedBox(width: 12),
+              _buildInsightCard(
+                theme,
+                isDark,
+                Icons.location_on_outlined,
+                'Nearby Priority',
+                '3 overdue collections within 500m',
+                const Color(0xFFEF4444),
+              ),
+              const SizedBox(width: 12),
+              _buildInsightCard(
+                theme,
+                isDark,
+                Icons.emoji_events_outlined,
+                'Streak Bonus',
+                'Finish today to unlock "Elite" badge',
+                const Color(0xFFF59E0B),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildTargetSection(ThemeData theme) {
+  Widget _buildInsightCard(ThemeData theme, bool isDark, IconData icon, String title, String subtitle, Color color) {
+    return Container(
+      width: 240,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w800, color: color),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 10,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinancialOverview(ThemeData theme, bool isDark) {
+    return Row(
+      children: [
+        Expanded(child: _buildWalletSection(theme)),
+        const SizedBox(width: 16),
+        _buildTargetRingCompact(theme, isDark),
+      ],
+    );
+  }
+
+  Widget _buildTargetRingCompact(ThemeData theme, bool isDark) {
     final targetAsync = ref.watch(todayTargetProvider);
     final streakAsync = ref.watch(staffStreakProvider);
 
     return targetAsync.when(
       data: (target) {
         if (target == null) return const SizedBox.shrink();
-
         return streakAsync.when(
-          data: (streak) => Row(
-            children: [
-              // Progress ring
-              TargetProgressRing(
-                target: target,
-                streak: streak,
-                size: 160,
-                onTap: () => context.push('/staff/targets'),
-              ),
-              const SizedBox(width: 20),
-              // Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Today\'s Target',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildStatRow(
-                      theme,
-                      'Collected',
-                      '₹${(target.achievedAmount / 1000).toStringAsFixed(1)}K',
-                      Colors.greenAccent,
-                    ),
-                    const SizedBox(height: 6),
-                    _buildStatRow(
-                      theme,
-                      'Remaining',
-                      '₹${(target.remainingAmount / 1000).toStringAsFixed(1)}K',
-                      AppColors.primary,
-                    ),
-                    const SizedBox(height: 6),
-                    _buildStatRow(
-                      theme,
-                      'Collections',
-                      '${target.achievedCount}',
-                      AppColors.primary,
-                    ),
-                    if (streak?.hasActiveStreak == true) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.orange.withOpacity(0.8),
-                              Colors.deepOrange.withOpacity(0.8),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              streak!.streakEmoji,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${streak.currentStreak} days',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
+          data: (streak) => Container(
+            width: 140,
+            height: 180,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: TargetProgressRing(
+                    target: target,
+                    streak: streak,
+                    size: 80,
+                    onTap: () => context.push('/staff/targets'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${(target.progress * 100).toStringAsFixed(0)}%',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                ),
+                Text(
+                  'Target',
+                  style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                ),
+              ],
+            ),
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const ShimmerCard(width: 140, height: 180),
           error: (_, __) => const SizedBox.shrink(),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ShimmerCard(width: 140, height: 180),
       error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildStatRow(ThemeData theme, String label, String value, Color color) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 
@@ -305,15 +436,130 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
           onDeposit: () => _showDepositSheet(wallet.cashInHand),
         );
       },
-      loading: () => Container(
-        height: 150,
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const ShimmerCard(height: 180),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildQuickActions(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Operations',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: Text('View All', style: TextStyle(color: AppColors.primary, fontSize: 12)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionCard(
+                icon: Icons.history_rounded,
+                label: 'Logbook',
+                color: const Color(0xFF6366F1),
+                onTap: () => context.push('/staff/history'),
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
+                icon: Icons.warning_amber_rounded,
+                label: 'Overdue',
+                color: const Color(0xFFF59E0B),
+                onTap: () => context.push('/staff/overdue'),
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
+                icon: Icons.map_outlined,
+                label: 'Router',
+                color: const Color(0xFF10B981),
+                onTap: () => context.push('/staff/map'),
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
+                icon: Icons.shield_outlined,
+                label: 'Security',
+                color: const Color(0xFF8B5CF6),
+                onTap: () => context.push('/staff/profile'),
+                isDark: isDark,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white70 : Colors.black87,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -331,132 +577,45 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
               ref.invalidate(todayDueEmisProvider);
             },
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const ShimmerCard(height: 200),
           error: (_, __) => const SizedBox.shrink(),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ShimmerCard(height: 200),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildQuickActions(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.history_rounded,
-                label: 'History',
-                color: AppColors.primary,
-                onTap: () => context.push('/staff/history'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.warning_amber_rounded,
-                label: 'Overdue',
-                color: Colors.orangeAccent,
-                onTap: () => context.push('/staff/overdue'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.map_outlined,
-                label: 'Map',
-                color: Colors.greenAccent,
-                onTap: () => context.push('/staff/map'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.person_outline_rounded,
-                label: 'Profile',
-                color: Colors.purpleAccent,
-                onTap: () => context.push('/staff/profile'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionCard({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isDark
-              ? const Color(0xFF1A1A2E)
-              : Colors.white.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsSummary(ThemeData theme) {
+  Widget _buildStatsSummary(ThemeData theme, bool isDark) {
     final statsAsync = ref.watch(todayCollectionStatsProvider);
 
     return statsAsync.when(
       data: (stats) {
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(20),
+            color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Today\'s Summary',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Daily Analytics',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Icon(Icons.insights_rounded, size: 20, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -470,7 +629,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                   Container(
                     width: 1,
                     height: 40,
-                    color: theme.dividerColor.withOpacity(0.2),
+                    color: theme.dividerColor.withValues(alpha: 0.2),
                   ),
                   Expanded(
                     child: _buildSummaryItem(
@@ -483,7 +642,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                   Container(
                     width: 1,
                     height: 40,
-                    color: theme.dividerColor.withOpacity(0.2),
+                    color: theme.dividerColor.withValues(alpha: 0.2),
                   ),
                   Expanded(
                     child: _buildSummaryItem(
@@ -496,7 +655,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                   Container(
                     width: 1,
                     height: 40,
-                    color: theme.dividerColor.withOpacity(0.2),
+                    color: theme.dividerColor.withValues(alpha: 0.2),
                   ),
                   Expanded(
                     child: _buildSummaryItem(
@@ -512,14 +671,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
           ),
         );
       },
-      loading: () => Container(
-        height: 100,
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const ShimmerCard(height: 120),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -538,30 +690,10 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.5),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ],
-    );
-  }
-
-  void _manualSync() {
-    // Force refresh all data
-    ref.invalidate(staffProfileProvider);
-    ref.invalidate(staffWalletProvider);
-    ref.invalidate(todayTargetProvider);
-    ref.invalidate(todayDueEmisProvider);
-    ref.invalidate(todayCollectionsProvider);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Syncing data...'),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
     );
   }
 
@@ -590,7 +722,6 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle
               Center(
                 child: Container(
                   width: 40,
@@ -612,7 +743,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
               Text(
                 'Available: ₹${cashInHand.toStringAsFixed(0)}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 20),
@@ -690,7 +821,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                       return;
                     }
 
-                    // Record deposit
+                    final messenger = ScaffoldMessenger.of(context);
                     final profile = await ref.read(staffProfileProvider.future);
                     if (profile != null) {
                       final repo = ref.read(staffRepositoryProvider);
@@ -701,18 +832,18 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                       );
                     }
 
-                    if (mounted) {
-                      Navigator.pop(ctx);
-                      ref.invalidate(staffWalletProvider);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '₹${amount.toStringAsFixed(0)} deposited successfully',
-                          ),
-                          backgroundColor: Colors.green,
+                    if (!context.mounted) return;
+                    
+                    Navigator.pop(ctx);
+                    ref.invalidate(staffWalletProvider);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '₹${amount.toStringAsFixed(0)} deposited successfully',
                         ),
-                      );
-                    }
+                        backgroundColor: Colors.green,
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -733,13 +864,5 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
         ),
       ),
     );
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 }

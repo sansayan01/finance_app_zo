@@ -28,12 +28,12 @@ final lastSyncTimeProvider = Provider<DateTime?>((ref) {
 });
 
 // Sync status
-final syncStatusProvider = StateNotifierProvider<SyncStatusNotifier, SyncState>((ref) {
+final syncStatusProvider = StateNotifierProvider<SyncStatusNotifier, SyncUIState>((ref) {
   final engine = ref.watch(syncEngineProvider);
   return SyncStatusNotifier(engine);
 });
 
-class SyncState {
+class SyncUIState {
   final bool isSyncing;
   final int pending;
   final int success;
@@ -41,7 +41,7 @@ class SyncState {
   final String? error;
   final DateTime? lastSync;
 
-  SyncState({
+  SyncUIState({
     this.isSyncing = false,
     this.pending = 0,
     this.success = 0,
@@ -50,7 +50,7 @@ class SyncState {
     this.lastSync,
   });
 
-  SyncState copyWith({
+  SyncUIState copyWith({
     bool? isSyncing,
     int? pending,
     int? success,
@@ -58,7 +58,7 @@ class SyncState {
     String? error,
     DateTime? lastSync,
   }) {
-    return SyncState(
+    return SyncUIState(
       isSyncing: isSyncing ?? this.isSyncing,
       pending: pending ?? this.pending,
       success: success ?? this.success,
@@ -69,10 +69,10 @@ class SyncState {
   }
 }
 
-class SyncStatusNotifier extends StateNotifier<SyncState> {
+class SyncStatusNotifier extends StateNotifier<SyncUIState> {
   final OfflineSyncEngine _engine;
 
-  SyncStatusNotifier(this._engine) : super(SyncState()) {
+  SyncStatusNotifier(this._engine) : super(SyncUIState()) {
     _init();
   }
 

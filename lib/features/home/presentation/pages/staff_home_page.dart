@@ -1,3 +1,4 @@
+import '../../../../core/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +7,6 @@ import '../../../../core/constants/app_colors.dart';
 
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/services/offline_queue_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -137,7 +137,7 @@ class StaffHomePage extends ConsumerWidget {
           ],
         ),
       ),
-      loading: () => const ShimmerCard(height: 90),
+      loading: () => ShimmerCard(height: 90),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -365,7 +365,7 @@ class StaffHomePage extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const ShimmerCard(height: 200),
+      loading: () => ShimmerCard(height: 200),
       error: (_, __) => GlassCard(
         padding: const EdgeInsets.all(24),
         child: Center(
@@ -1061,10 +1061,10 @@ class StaffHomePage extends ConsumerWidget {
               }).toList(),
             );
           },
-          loading: () => const Column(
+          loading: () => Column(
             children: [
               ShimmerCard(height: 60),
-              SizedBox(height: 10),
+              SizedBox(width: 8),
               ShimmerCard(height: 60),
             ],
           ),

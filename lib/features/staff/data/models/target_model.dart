@@ -133,6 +133,12 @@ class TargetModel extends Equatable {
     return remaining > 0 ? remaining : 0;
   }
 
+  double get progress {
+    if (targetAmount <= 0) return 0;
+    final val = achievedAmount / targetAmount;
+    return val > 1.0 ? 1.0 : val;
+  }
+
   double get progressPercentage {
     if (targetAmount <= 0) return 0;
     final percentage = (achievedAmount / targetAmount) * 100;

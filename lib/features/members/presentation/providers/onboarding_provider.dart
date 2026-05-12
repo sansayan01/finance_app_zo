@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:microflow_pro/core/constants/enums.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/member_model.dart';
 import '../../data/repositories/members_repository.dart';

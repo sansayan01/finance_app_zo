@@ -1,3 +1,4 @@
+import '../../../../core/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
-import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/sparkline_chart.dart';
@@ -305,7 +305,7 @@ class HomePage extends ConsumerWidget {
               }).toList(),
             );
           },
-          loading: () => const ShimmerCard(height: 150),
+          loading: () => ShimmerCard(height: 150),
           error: (_, __) => const SizedBox.shrink(),
         ),
       ],
@@ -522,7 +522,7 @@ class HomePage extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const ShimmerCard(height: 220),
+          loading: () => ShimmerCard(height: 220),
           error: (_, __) => GlassCard(
             padding: const EdgeInsets.all(24),
             child: Center(
@@ -792,7 +792,7 @@ class HomePage extends ConsumerWidget {
               ],
             ),
           ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.05, end: 0),
-          loading: () => const ShimmerCard(height: 100),
+          loading: () => ShimmerCard(height: 100),
           error: (_, __) => const SizedBox.shrink(),
         ),
 
@@ -1027,7 +1027,7 @@ class HomePage extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const ShimmerCard(height: 200),
+          loading: () => ShimmerCard(height: 200),
           error: (_, __) => GlassCard(
             padding: const EdgeInsets.all(32),
             child: Center(

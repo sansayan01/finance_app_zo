@@ -72,3 +72,10 @@ enum CollectionFrequency {
   monthly,
   yearly,
 }
+
+enum KYCStatus {
+  pending,
+  verified,
+  rejected,
+  notSubmitted,
+}

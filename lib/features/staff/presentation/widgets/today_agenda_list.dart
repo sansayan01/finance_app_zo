@@ -46,7 +46,7 @@ class TodayAgendaList extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -114,10 +114,10 @@ class TodayAgendaList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.5),
+        color: theme.colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -125,7 +125,7 @@ class TodayAgendaList extends StatelessWidget {
           Icon(
             Icons.check_circle_outline_rounded,
             size: 48,
-            color: Colors.greenAccent.withOpacity(0.5),
+            color: Colors.greenAccent.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 12),
           Text(
@@ -138,7 +138,7 @@ class TodayAgendaList extends StatelessWidget {
           Text(
             'No collections due today',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -154,22 +154,21 @@ class TodayAgendaList extends StatelessWidget {
     final member = emi['members'] ?? {};
     final amount = (schedule['emi'] as num?)?.toDouble() ?? 0;
     final memberName = member['full_name'] ?? emi['member_name'] ?? 'Unknown';
-    final memberPhone = member['phone']?.toString() ?? '';
     final area = member['area']?.toString() ?? '';
     final period = schedule['period']?.toString() ?? '';
 
     return Container(
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF1A1A2E).withOpacity(0.5)
-            : Colors.white.withOpacity(0.9),
+            ? const Color(0xFF1A1A2E).withValues(alpha: 0.5)
+            : Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -197,8 +196,8 @@ class TodayAgendaList extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppColors.primary.withOpacity(0.8),
-                        AppColors.primaryDark.withOpacity(0.8),
+                        AppColors.primary.withValues(alpha: 0.8),
+                        AppColors.primaryDark.withValues(alpha: 0.8),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
@@ -246,7 +245,7 @@ class TodayAgendaList extends StatelessWidget {
                             child: Text(
                               'EMI #$period',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -260,14 +259,14 @@ class TodayAgendaList extends StatelessWidget {
                           Icon(
                             Icons.location_on_outlined,
                             size: 12,
-                            color: theme.colorScheme.onSurface.withOpacity(0.5),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 2),
                           Expanded(
                             child: Text(
                               area.isNotEmpty ? area : 'No area',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -299,7 +298,7 @@ class TodayAgendaList extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.greenAccent.withOpacity(0.15),
+                        color: Colors.greenAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -318,7 +317,7 @@ class TodayAgendaList extends StatelessWidget {
                 // Arrow
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: theme.colorScheme.onSurface.withOpacity(0.3),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                 ),
               ],
             ),

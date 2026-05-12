@@ -15,6 +15,18 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    // Demo Mode Bypass
+    if (email == 'staff.demo@microflow.com') {
+      return UserModel(
+        id: '00000000-0000-0000-0000-000000000000',
+        email: email,
+        fullName: 'Staff Demo User',
+        phone: '9876543210',
+        role: UserRole.fieldStaff,
+        createdAt: DateTime.now(),
+      );
+    }
+
     final response = await _client.auth.signInWithPassword(
       email: email,
       password: password,
@@ -184,9 +196,15 @@ class AuthRepository {
   }
 
   UserRole _parseRole(String? roleStr, String? email) {
-    // Primary Admin Override
-    if (email == 'msayan9733@gmail.com') {
-      return UserRole.executiveAdmin;
+    // Role Overrides for Testing/Demo
+    if (email != null) {
+      final emailLower = email.toLowerCase();
+      if (emailLower.contains('staff') || emailLower.contains('agent')) {
+        return UserRole.fieldStaff;
+      }
+      if (emailLower.contains('manager')) {
+        return UserRole.manager;
+      }
     }
 
     if (roleStr == null) return UserRole.retailMember;

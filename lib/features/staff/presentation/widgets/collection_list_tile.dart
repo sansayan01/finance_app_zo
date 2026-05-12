@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../data/models/collection_model.dart';
 
 class CollectionListTile extends StatelessWidget {
   final Map<String, dynamic> emi;
@@ -31,7 +30,6 @@ class CollectionListTile extends StatelessWidget {
     final memberPhone = emi['member_phone'] ?? emi['memberPhone'] ?? '';
     final loanNumber = emi['loan_number'] ?? emi['loanNumber'] ?? '';
     final amount = (emi['emi'] ?? emi['amount'] ?? 0).toDouble();
-    final dueDate = emi['due_date'] ?? emi['dueDate'];
     final area = emi['area'] ?? emi['member_area'] ?? '';
     final period = emi['period'] ?? 0;
     
@@ -64,8 +62,8 @@ class CollectionListTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: isOverdue 
-              ? statusColor.withOpacity(0.3) 
-              : theme.colorScheme.outline.withOpacity(0.2),
+              ? statusColor.withValues(alpha: 0.3) 
+              : theme.colorScheme.outline.withValues(alpha: 0.2),
           width: isOverdue ? 1.5 : 1,
         ),
       ),
@@ -84,7 +82,7 @@ class CollectionListTile extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -197,9 +195,12 @@ class CollectionListTile extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: memberPhone.isNotEmpty
-                            ? () {
-                                // TODO: Launch phone
+                            ? () async {
                                 HapticFeedback.selectionClick();
+                                final uri = Uri.parse('tel:$memberPhone');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri);
+                                }
                               }
                             : null,
                         icon: const Icon(Icons.phone_outlined, size: 18),

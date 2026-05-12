@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../providers/sync_providers.dart';
+import '../../data/providers/sync_providers.dart';
 
 /// Offline mode indicator widget that shows sync status
 /// Displays at the top of the screen when offline or syncing
@@ -36,17 +35,17 @@ class OfflineModeIndicator extends ConsumerWidget {
     BuildContext context,
     ThemeData theme,
     bool isOnline,
-    SyncState syncStatus,
+    SyncUIState syncStatus,
   ) {
     final (color, icon, message) = _getStatusInfo(isOnline, syncStatus);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
+        color: color.withValues(alpha: 0.9),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -81,7 +80,7 @@ class OfflineModeIndicator extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -107,7 +106,7 @@ class OfflineModeIndicator extends ConsumerWidget {
     );
   }
 
-  (Color, IconData, String) _getStatusInfo(bool isOnline, SyncState syncStatus) {
+  (Color, IconData, String) _getStatusInfo(bool isOnline, SyncUIState syncStatus) {
     if (syncStatus.isSyncing) {
       return (Colors.blue, Icons.sync, 'Syncing data...');
     }
@@ -151,8 +150,8 @@ class OfflineModeIndicator extends ConsumerWidget {
                     context,
                     Icons.cloud,
                     'Last Sync',
-                    syncStatus.lastSyncTime != null
-                        ? _formatTime(syncStatus.lastSyncTime!)
+                    syncStatus.lastSync != null
+                        ? _formatTime(syncStatus.lastSync!)
                         : 'Never',
                   ),
                   const SizedBox(height: 12),

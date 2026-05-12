@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../models/staff_profile_model.dart';
 import '../models/wallet_model.dart';
 import '../models/streak_model.dart';
 import '../models/target_model.dart';
 import '../repositories/staff_repository.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 // Repository provider
 final staffRepositoryProvider = Provider<StaffRepository>((ref) {
@@ -26,7 +25,11 @@ final staffProfileProvider =
   if (user == null) return null;
 
   final repository = ref.watch(staffRepositoryProvider);
-  return repository.getStaffProfile(user.id);
+  return repository.getStaffProfile(
+    user.id,
+    user.userMetadata?['full_name'] as String?,
+    user.email,
+  );
 });
 
 // Staff profile by ID (for supervisors viewing other staff)

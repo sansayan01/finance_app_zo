@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/services/location_service.dart';
-import '../../data/models/staff_location_model.dart';
 import '../../data/providers/staff_providers.dart';
 
 class VisitCheckInPage extends ConsumerStatefulWidget {
@@ -33,7 +31,8 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
 
   Future<void> _getCurrentLocation() async {
     try {
-      final position = await LocationService.getCurrentPosition();
+      final locationService = LocationService();
+      final position = await locationService.getCurrentLocation();
       setState(() => _currentPosition = position);
     } catch (e) {
       _showError('Failed to get location: $e');
@@ -45,7 +44,8 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
     if (user == null) return;
 
     try {
-      final status = await ref.read(staffRepositoryProvider).getCurrentActivity(user.id);
+      final repository = ref.read(staffRepositoryProvider);
+      final status = await repository.getCurrentActivity(user.id);
       setState(() => _currentActivity = status);
     } catch (e) {
       // No active visit
@@ -112,13 +112,13 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
             ),
             const SizedBox(height: 12),
             if (_currentPosition != null) ...[
-              _buildLocationRow('Lat', '${_currentPosition!.latitude.toStringAsFixed(6)}'),
-              _buildLocationRow('Long', '${_currentPosition!.longitude.toStringAsFixed(6)}'),
+              _buildLocationRow('Lat', _currentPosition!.latitude.toStringAsFixed(6)),
+              _buildLocationRow('Long', _currentPosition!.longitude.toStringAsFixed(6)),
               _buildLocationRow('Accuracy', '${_currentPosition!.accuracy.toStringAsFixed(1)}m'),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.verified,
                     color: Colors.green,
                     size: 16,
@@ -337,7 +337,8 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
       final user = ref.read(authStateProvider).value;
       if (user == null) throw Exception('Not authenticated');
 
-      await ref.read(staffRepositoryProvider).logVisit(
+      final repository = ref.read(staffRepositoryProvider);
+      await repository.logVisit(
         staffId: user.id,
         customerId: widget.customerId,
         purpose: _visitPurpose!,
@@ -372,7 +373,8 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
       final user = ref.read(authStateProvider).value;
       if (user == null) throw Exception('Not authenticated');
 
-      await ref.read(staffRepositoryProvider).completeVisit(
+      final repository = ref.read(staffRepositoryProvider);
+      await repository.completeVisit(
         staffId: user.id,
         checkOutLat: _currentPosition!.latitude,
         checkOutLng: _currentPosition!.longitude,

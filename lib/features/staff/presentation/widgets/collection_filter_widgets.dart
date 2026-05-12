@@ -97,7 +97,7 @@ class CollectionFilterChip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: isSelected 
-                    ? _color.withOpacity(0.2)
+                    ? _color.withValues(alpha: 0.2)
                     : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -114,10 +114,10 @@ class CollectionFilterChip extends StatelessWidget {
       ),
       selected: isSelected,
       onSelected: (_) => onTap?.call(),
-      selectedColor: _color.withOpacity(0.15),
+      selectedColor: _color.withValues(alpha: 0.15),
       checkmarkColor: _color,
       side: BorderSide(
-        color: isSelected ? _color : theme.colorScheme.outline.withOpacity(0.3),
+        color: isSelected ? _color : theme.colorScheme.outline.withValues(alpha: 0.3),
       ),
       labelStyle: TextStyle(
         color: isSelected ? _color : null,
@@ -258,7 +258,7 @@ class AreaFilterDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String?>(
-      value: selectedArea,
+      initialValue: selectedArea,
       decoration: InputDecoration(
         labelText: 'Area',
         prefixIcon: const Icon(Icons.location_on_outlined, size: 20),

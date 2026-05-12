@@ -56,6 +56,7 @@ class LeaderboardEntry extends Equatable {
       'target_achieved': targetAchieved,
       'streak_days': streakDays,
     };
+  }
 
   @override
   List<Object?> get props => [

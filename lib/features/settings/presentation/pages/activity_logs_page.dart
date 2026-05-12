@@ -1,3 +1,4 @@
+import '../../../../core/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +7,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/shimmer_loading.dart';
 import '../../data/models/activity_log_model.dart';
 import '../../data/providers/activity_logs_provider.dart';
 

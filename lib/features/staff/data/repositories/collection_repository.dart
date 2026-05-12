@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:microflow_pro/core/constants/enums.dart';
 import '../models/collection_model.dart';
 
 class CollectionRepository {
@@ -9,7 +10,6 @@ class CollectionRepository {
   /// Get today's due EMIs for a staff member
   Future<List<Map<String, dynamic>>> getTodayDueEmis(String staffId) async {
     final today = DateTime.now().toIso8601String().split('T').first;
-
     final response = await _client
         .from('loans')
         .select('''
@@ -64,8 +64,6 @@ class CollectionRepository {
 
   /// Get overdue EMIs for a staff member
   Future<List<Map<String, dynamic>>> getOverdueEmis(String staffId) async {
-    final today = DateTime.now().toIso8601String().split('T').first;
-
     final response = await _client
         .from('overdue_loans_view')
         .select()
@@ -147,34 +145,72 @@ class CollectionRepository {
         .toList();
   }
 
-  /// Get collection history
-  Future<List<CollectionModel>> getCollectionHistory(
+  /// Get collection history with parameters
+  Future<List<Map<String, dynamic>>> getCollectionHistory(
     String staffId, {
-    DateTime? startDate,
-    DateTime? endDate,
-    int limit = 50,
+    String? customerId,
+    int? year,
+    int? month,
+    String? type,
+    String? paymentMode,
+    int limit = 100,
   }) async {
     var query = _client
         .from('collections')
-        .select()
-        .eq('staff_id', staffId)
+        .select('''
+          id,
+          member_id,
+          member_name,
+          member_phone,
+          loan_number,
+          loan_id,
+          amount_collected,
+          amount_expected,
+          payment_mode,
+          collection_date,
+          collection_time,
+          receipt_number,
+          type,
+          is_partial,
+          is_offline,
+          sync_status,
+          staff_profiles(name)
+        ''')
+        .eq('staff_id', staffId);
+
+    if (customerId != null) {
+      query = query.eq('member_id', customerId);
+    }
+
+    if (year != null && month != null) {
+      final startDate = DateTime(year, month, 1);
+      final endDate = DateTime(year, month + 1, 0);
+      query = query
+          .filter('collection_date', 'gte', startDate.toIso8601String().split('T').first)
+          .filter('collection_date', 'lte', endDate.toIso8601String().split('T').first);
+    }
+
+    if (type != null && type != 'all') {
+      query = query.eq('type', type);
+    }
+
+    if (paymentMode != null && paymentMode != 'all') {
+      query = query.eq('payment_mode', paymentMode);
+    }
+
+    final response = await query
         .order('collection_time', ascending: false)
         .limit(limit);
 
-    if (startDate != null) {
-      query = query.gte(
-          'collection_date', startDate.toIso8601String().split('T').first);
-    }
-    if (endDate != null) {
-      query = query.lte(
-          'collection_date', endDate.toIso8601String().split('T').first);
-    }
-
-    final response = await query;
-
-    return response
-        .map<CollectionModel>((json) => CollectionModel.fromJson(json))
-        .toList();
+    // Flatten staff name
+    return response.map((item) {
+      final staff = item['staff_profiles'] as Map<String, dynamic>?;
+      return {
+        ...Map<String, dynamic>.from(item),
+        'staff_name': staff?['name'],
+        'amount': item['amount_collected'], // Add alias for convenience
+      };
+    }).toList();
   }
 
   /// Get today's stats
@@ -210,10 +246,6 @@ class CollectionRepository {
       'collection_count': count,
     };
   }
-
-  // =====================================================
-  // NEW METHODS FOR PHASE 2
-  // =====================================================
 
   /// Search customers by name, phone, or loan number
   Future<List<Map<String, dynamic>>> searchCustomers(String query) async {
@@ -447,7 +479,7 @@ class CollectionRepository {
     return response.map((item) {
       final staff = item['staff_profiles'] as Map<String, dynamic>?;
       return {
-        ...item,
+        ...Map<String, dynamic>.from(item),
         'staff_name': staff?['name'],
       };
     }).toList();
@@ -493,73 +525,5 @@ class CollectionRepository {
         });
 
     return List<Map<String, dynamic>>.from(response);
-  }
-
-  /// Get collection history with parameters (enhanced version)
-  Future<List<Map<String, dynamic>>> getCollectionHistoryEnhanced(
-    String staffId, {
-    String? customerId,
-    int? year,
-    int? month,
-    String? type,
-    String? paymentMode,
-    int limit = 100,
-  }) async {
-    var query = _client
-        .from('collections')
-        .select('''
-          id,
-          member_id,
-          member_name,
-          member_phone,
-          loan_number,
-          loan_id,
-          amount_collected,
-          amount_expected,
-          payment_mode,
-          collection_date,
-          collection_time,
-          receipt_number,
-          type,
-          collection_type,
-          is_partial,
-          is_offline,
-          sync_status,
-          staff_profiles(name)
-        ''')
-        .eq('staff_id', staffId);
-
-    if (customerId != null) {
-      query = query.eq('member_id', customerId);
-    }
-
-    if (year != null && month != null) {
-      final startDate = DateTime(year, month, 1);
-      final endDate = DateTime(year, month + 1, 0);
-      query = query
-          .gte('collection_date', startDate.toIso8601String().split('T').first)
-          .lte('collection_date', endDate.toIso8601String().split('T').first);
-    }
-
-    if (type != null && type != 'all') {
-      query = query.eq('type', type);
-    }
-
-    if (paymentMode != null && paymentMode != 'all') {
-      query = query.eq('payment_mode', paymentMode);
-    }
-
-    final response = await query
-        .order('collection_time', ascending: false)
-        .limit(limit);
-
-    // Flatten staff name
-    return response.map((item) {
-      final staff = item['staff_profiles'] as Map<String, dynamic>?;
-      return {
-        ...item,
-        'staff_name': staff?['name'],
-      };
-    }).toList();
   }
 }

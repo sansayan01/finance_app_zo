@@ -1,4 +1,4 @@
-enum KYCStatus { verified, pending, rejected }
+import 'package:microflow_pro/core/constants/enums.dart';
 
 class MemberModel {
   final String id;

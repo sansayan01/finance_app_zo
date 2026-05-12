@@ -170,9 +170,9 @@ class OfflineSyncEngine {
   }
 
   /// Check if device is online
-  Future<bool> isOnline() async {
-    return await InternetConnectionChecker.instance.hasConnection;
-  }
+   Future<bool> isOnline() async {
+     return await InternetConnectionChecker().hasConnection;
+   }
 }
 
 /// Result of a sync operation

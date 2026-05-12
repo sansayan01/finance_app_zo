@@ -107,7 +107,7 @@ class GpsStatusCard extends StatelessWidget {
         color: isDark ? const Color(0xFF1E1E2A) : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey[300]!,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]!,
         ),
       ),
       child: Column(

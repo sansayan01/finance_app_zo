@@ -26,7 +26,6 @@ class _CollectionListPageState extends ConsumerState<CollectionListPage>
   
   CollectionFilter _selectedFilter = CollectionFilter.all;
   CollectionSort _selectedSort = CollectionSort.dueDate;
-  String? _selectedArea;
   final TextEditingController _searchController = TextEditingController();
   bool _isSearchExpanded = false;
 
@@ -351,7 +350,7 @@ class _CollectionListPageState extends ConsumerState<CollectionListPage>
           Icon(
             Icons.inbox_outlined,
             size: 80,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           SizedBox(height: AppSpacing.lg),
           Text(
@@ -447,7 +446,7 @@ class _CollectionListPageState extends ConsumerState<CollectionListPage>
           Icon(
             Icons.error_outline,
             size: 80,
-            color: AppColors.error.withOpacity(0.5),
+            color: AppColors.error.withValues(alpha: 0.5),
           ),
           SizedBox(height: AppSpacing.lg),
           Text(

@@ -67,7 +67,6 @@ class ConflictResolutionService {
 
     // Create lookup maps
     final serverMap = {for (var r in serverRecords) r['id']: r};
-    final localMap = {for (var r in localRecords) r['id']: r};
 
     // Check for update-update conflicts
     for (final local in localRecords) {
@@ -165,6 +164,7 @@ class ConflictResolutionService {
     Map<String, dynamic> server,
     String table,
   ) async {
+    // Merge logic: local wins for specific fields, server wins for others
     final merged = Map<String, dynamic>.from(server);
 
     // Table-specific merge logic

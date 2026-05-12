@@ -29,13 +29,13 @@ class TransactionsRepository {
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final response = await _client
-        .from('transactions')
-        .select()
-        .gte('created_at', startOfDay.toIso8601String())
-        .lt('created_at', endOfDay.toIso8601String())
-        .order('created_at', ascending: false)
-        .limit(limit);
+     final response = await _client
+         .from('transactions')
+         .select()
+         .filter('created_at', 'gte', startOfDay.toIso8601String())
+         .filter('created_at', 'lt', endOfDay.toIso8601String())
+         .order('created_at', ascending: false)
+         .limit(limit);
 
     return (response as List)
         .map((json) => TransactionModel.fromJson(json))
@@ -91,11 +91,11 @@ class TransactionsRepository {
       final startOfDay = DateTime(today.year, today.month, today.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      final response = await _client
-          .from('transactions')
-          .select()
-          .gte('created_at', startOfDay.toIso8601String())
-          .lt('created_at', endOfDay.toIso8601String());
+       final response = await _client
+           .from('transactions')
+           .select()
+           .filter('created_at', 'gte', startOfDay.toIso8601String())
+           .filter('created_at', 'lt', endOfDay.toIso8601String());
 
       final transactions = response as List;
 

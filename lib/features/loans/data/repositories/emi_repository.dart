@@ -128,12 +128,12 @@ class EMIRepository {
       final startOfDay = DateTime(today.year, today.month, today.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      final response = await _client
-          .from('emi_schedule')
-          .select()
-          .gte('due_date', startOfDay.toIso8601String())
-          .lt('due_date', endOfDay.toIso8601String())
-          .inFilter('status', ['upcoming', 'overdue', 'pendingPayment']);
+       final response = await _client
+           .from('emi_schedule')
+           .select()
+           .filter('due_date', 'gte', startOfDay.toIso8601String())
+           .filter('due_date', 'lt', endOfDay.toIso8601String())
+           .inFilter('status', ['upcoming', 'overdue', 'pendingPayment']);
 
       return (response as List)
           .map((json) => EMIScheduleModel.fromJson(json))

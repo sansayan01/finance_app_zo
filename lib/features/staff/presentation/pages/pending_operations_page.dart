@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../providers/sync_providers.dart';
+import '../../data/providers/sync_providers.dart';
 
 class PendingOperationsPage extends ConsumerStatefulWidget {
   const PendingOperationsPage({super.key});
@@ -50,7 +47,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
     );
   }
 
-  Widget _buildSummaryCard(SyncState syncStatus, ThemeData theme) {
+  Widget _buildSummaryCard(SyncUIState syncStatus, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -85,12 +82,12 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
               ),
             ],
           ),
-          if (syncStatus.lastSyncTime != null) ...[
+          if (syncStatus.lastSync != null) ...[
             const SizedBox(height: 16),
             Text(
-              'Last sync: ${_formatTime(syncStatus.lastSyncTime!)}',
+              'Last sync: ${_formatTime(syncStatus.lastSync!)}',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -116,7 +113,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -225,7 +222,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: _getOperationColor(operation).withOpacity(0.1),
+          color: _getOperationColor(operation).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -253,7 +250,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: attempts >= 3 ? Colors.red.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                color: attempts >= 3 ? Colors.red.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

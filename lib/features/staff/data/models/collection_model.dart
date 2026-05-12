@@ -1,14 +1,7 @@
 import 'package:equatable/equatable.dart';
+import 'package:microflow_pro/core/constants/enums.dart';
 
-enum PaymentMode {
-  cash,
-  upi,
-  bankTransfer,
-  cheque,
-  card,
-}
-
-enum SyncStatus {
+enum SyncState {
   pending,
   synced,
   failed,
@@ -29,7 +22,7 @@ class CollectionModel extends Equatable {
   // Collection details
   final double amountExpected;
   final double amountCollected;
-  final double get variance => amountExpected - amountCollected;
+  double get variance => amountExpected - amountCollected;
   final bool isPartial;
   final bool isAdvance;
   
@@ -48,7 +41,7 @@ class CollectionModel extends Equatable {
   final DateTime collectionTime;
   
   // Sync status (for offline-first)
-  final SyncStatus syncStatus;
+  final SyncState syncStatus;
   final String? localId;
   final int syncAttempts;
   final DateTime? lastSyncAt;
@@ -79,7 +72,7 @@ class CollectionModel extends Equatable {
     this.gpsAddress,
     required this.collectionDate,
     required this.collectionTime,
-    this.syncStatus = SyncStatus.synced,
+      this.syncStatus = SyncState.synced,
     this.localId,
     this.syncAttempts = 0,
     this.lastSyncAt,
@@ -110,7 +103,7 @@ class CollectionModel extends Equatable {
       gpsAddress: json['gps_address'] as String?,
       collectionDate: DateTime.parse(json['collection_date'] as String),
       collectionTime: DateTime.parse(json['collection_time'] as String),
-      syncStatus: _parseSyncStatus(json['sync_status'] as String?),
+       syncStatus: _parseSyncState(json['sync_status'] as String?),
       localId: json['local_id'] as String?,
       syncAttempts: json['sync_attempts'] as int? ?? 0,
       lastSyncAt: json['last_sync_at'] != null
@@ -198,22 +191,22 @@ class CollectionModel extends Equatable {
     }
   }
 
-  static SyncStatus _parseSyncStatus(String? value) {
+  static SyncState _parseSyncState(String? value) {
     switch (value) {
       case 'pending':
-        return SyncStatus.pending;
+        return SyncState.pending;
       case 'synced':
-        return SyncStatus.synced;
+        return SyncState.synced;
       case 'failed':
-        return SyncStatus.failed;
+        return SyncState.failed;
       default:
-        return SyncStatus.synced;
+        return SyncState.synced;
     }
   }
 
   bool get isFullyCollected => amountCollected >= amountExpected;
-  bool get isPendingSync => syncStatus == SyncStatus.pending;
-  bool get isSyncFailed => syncStatus == SyncStatus.failed;
+  bool get isPendingSync => syncStatus == SyncState.pending;
+  bool get isSyncFailed => syncStatus == SyncState.failed;
   bool get isCashPayment => paymentMode == PaymentMode.cash;
   bool get isDigitalPayment => !isCashPayment;
 
@@ -238,7 +231,7 @@ class CollectionModel extends Equatable {
     String? gpsAddress,
     DateTime? collectionDate,
     DateTime? collectionTime,
-    SyncStatus? syncStatus,
+      SyncState? syncStatus,
     String? localId,
     int? syncAttempts,
     DateTime? lastSyncAt,

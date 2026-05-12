@@ -53,6 +53,8 @@ MicroFlow Pro is a **cross-platform financial management application** designed 
 - **Trend Analysis** - Sparkline charts showing 7-day collection trends
 - **Quick Actions** - One-tap access to common operations
 - **Pending Alerts** - Overdue EMIs, pending applications
+- **Search** - Global search for members, loans, transactions
+- **Notifications** - Real-time alerts for important events
 
 #### Loan Management
 - **Loan Creation** - Full loan application workflow
@@ -80,6 +82,12 @@ MicroFlow Pro is a **cross-platform financial management application** designed 
 - **Collection Analytics** - Daily, weekly, monthly trends
 - **Performance Metrics** - Staff efficiency, branch performance
 - **Financial Reports** - Disbursement vs collection ratios
+
+#### Smart Assistant
+- **Floating Chatbot** - AI-powered assistance
+- **Quick Queries** - Ask about loans, members, collections
+- **Voice Input** - Hands-free operation
+- **Contextual Help** - Screen-specific guidance
 
 ### 👨‍💼 Staff Portal (Field Collector)
 
@@ -598,6 +606,70 @@ FROM loans WHERE status = 'active';
 | Home | Collection | Customer |
 |------|------------|----------|
 | *Coming soon* | *Coming soon* | *Coming soon* |
+
+---
+
+## 📊 Code Statistics
+
+### Files Count
+
+| Category | Count |
+|----------|-------|
+| **Admin Portal Files** | 59 |
+| **Staff Portal Files** | 46 |
+| **Total Dart Files** | ~105 |
+
+### Pages Count
+
+| Portal | Pages |
+|--------|-------|
+| **Admin Portal** | 20 pages |
+| **Staff Portal** | 14 pages |
+| **Total** | 34 pages |
+
+### Admin Portal Pages
+
+| Page | Purpose |
+|------|---------|
+| `home_page.dart` | Dashboard |
+| `login_page.dart` | Authentication |
+| `signup_page.dart` | Registration |
+| `loans_page.dart` | Loan list |
+| `loan_detail_page.dart` | Loan details |
+| `new_loan_page.dart` | Create loan |
+| `savings_page.dart` | Savings list |
+| `saving_detail_page.dart` | Savings details |
+| `new_recurring_saving_page.dart` | Create savings |
+| `users_page.dart` | Staff list |
+| `user_details_page.dart` | Staff details |
+| `new_user_page.dart` | Create staff |
+| `member_onboarding_page.dart` | Onboard member |
+| `transactions_page.dart` | Transaction history |
+| `analytics_page.dart` | Analytics dashboard |
+| `settings_page.dart` | Settings |
+| `profile_page.dart` | User profile |
+| `activity_logs_page.dart` | Audit logs |
+| `notifications_page.dart` | Notifications |
+| `search_page.dart` | Global search |
+
+### Staff Portal Pages
+
+| Page | Purpose |
+|------|---------|
+| `staff_home_dashboard.dart` | Staff home |
+| `collection_list_page.dart` | Today's EMIs |
+| `collection_form_page.dart` | Record collection |
+| `customer_search_page.dart` | Find customers |
+| `customer_detail_page.dart` | Customer info |
+| `collection_history_page.dart` | Past collections |
+| `overdue_list_page.dart` | Overdue EMIs |
+| `visit_checkin_page.dart` | Visit tracking |
+| `daily_summary_page.dart` | Day summary |
+| `cash_deposit_page.dart` | Submit cash |
+| `break_logging_page.dart` | Work breaks |
+| `pending_operations_page.dart` | Offline queue |
+| `gamification_dashboard.dart` | Achievements |
+| `analytics_dashboard.dart` | Performance |
 
 ---
 

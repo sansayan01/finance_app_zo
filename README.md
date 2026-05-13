@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </div>
 
-<h1 align="center">MicroFlow Pro</h1>
+<h1 align="center">MicroFlow Pro - Micro-Finance</h1>
 <p align="center"><strong>Premium Micro-Finance Management Ecosystem</strong></p>
 <p align="center">Complete Admin Portal + Field Staff Collector App</p>
 

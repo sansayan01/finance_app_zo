@@ -9,6 +9,8 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/new_user_provider.dart';
+import '../../../branches/data/providers/branch_providers.dart';
+import '../../../branches/models/branch_model.dart';
 
 class NewUserPage extends ConsumerStatefulWidget {
   final String? initialBranchId;
@@ -49,6 +51,13 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
       _aadharController.text = state.aadharNumber;
       _panController.text = state.panNumber;
       _passwordController.text = state.password;
+      
+      final currentUser = ref.read(currentUserProvider);
+      if (widget.initialBranchId != null) {
+        ref.read(newUserProvider.notifier).updateBranchId(widget.initialBranchId);
+      } else if (currentUser?.role == UserRole.manager && currentUser?.branchId != null) {
+        ref.read(newUserProvider.notifier).updateBranchId(currentUser!.branchId);
+      }
     });
 
     _panFocusNode.addListener(() {
@@ -148,7 +157,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       children: [
                         Expanded(
                             flex: 3,
-                            child: _buildFormDetails(state, theme, isDark,
+                            child: _buildFormDetails(state, currentUser, theme, isDark,
                                 primary, false, availableRoles)),
                         const SizedBox(width: 24),
                         Expanded(
@@ -162,7 +171,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       children: [
                         _buildSummary(state, theme, isDark, primary),
                         const SizedBox(height: 20),
-                        _buildFormDetails(state, theme, isDark, primary,
+                        _buildFormDetails(state, currentUser, theme, isDark, primary,
                             isNarrow, availableRoles),
                       ],
                     );
@@ -226,6 +235,16 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
               onPressed: state.isLoading
                   ? null
                   : () async {
+                      if (state.branchId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Please select a branch first.'),
+                            backgroundColor: theme.colorScheme.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
                       try {
                         await ref.read(newUserProvider.notifier).createUser();
 
@@ -324,10 +343,59 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   // ═══════════════════════════════════════════════════
   //  FORM DETAILS
   // ═══════════════════════════════════════════════════
-  Widget _buildFormDetails(NewUserState state, ThemeData theme, bool isDark,
-      Color primary, bool isNarrow, List<UserRole> availableRoles) {
+  Widget _buildFormDetails(
+      NewUserState state,
+      UserModel? currentUser,
+      ThemeData theme,
+      bool isDark,
+      Color primary,
+      bool isNarrow,
+      List<UserRole> availableRoles) {
+    final branchesAsync = ref.watch(activeBranchesProvider);
+    final branches = branchesAsync.value ?? [];
+    
+    // Only show branch selection if user is admin or super admin
+    final showBranchSelection = currentUser?.role == UserRole.executiveAdmin || 
+                               currentUser?.role == UserRole.superAdmin;
+    
     return Column(
       children: [
+        // ── Branch Assignment Card (if admin) ──
+        if (showBranchSelection) ...[
+          GlassCard(
+            padding: EdgeInsets.all(isNarrow ? 18 : 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader('Branch Assignment',
+                    Icons.account_tree_outlined, theme, primary),
+                const SizedBox(height: 24),
+                _buildLabel('ASSIGN TO BRANCH', theme),
+                const SizedBox(height: 10),
+                _buildBranchDropdown(
+                  value: state.branchId,
+                  hint: 'Select target branch',
+                  branches: branches,
+                  onChanged: (val) => ref.read(newUserProvider.notifier).updateBranchId(val),
+                  theme: theme,
+                  isDark: isDark,
+                ),
+                if (state.branchId == null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please select a branch for this user.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04, end: 0),
+          const SizedBox(height: 20),
+        ],
+
         // ── Account Details Card ──
         GlassCard(
           padding: EdgeInsets.all(isNarrow ? 18 : 24),
@@ -784,6 +852,64 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
               theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
+    );
+  }
+
+  Widget _buildBranchDropdown({
+    required String? value,
+    required String hint,
+    required List<BranchModel> branches,
+    required Function(String?) onChanged,
+    required ThemeData theme,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.fillDark : AppColors.fillLight,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: branches.any((b) => b.id == value) ? value : null,
+          hint: Text(hint, style: theme.textTheme.bodySmall),
+          isExpanded: true,
+          icon: Icon(Icons.keyboard_arrow_down_rounded,
+              color: theme.textTheme.bodySmall?.color, size: 22),
+          dropdownColor: isDark ? AppColors.elevatedDark : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          items: branches.map((BranchModel branch) {
+            return DropdownMenuItem<String>(
+              value: branch.id,
+              child: Row(
+                children: [
+                  Icon(Icons.location_city_rounded,
+                      color: theme.textTheme.bodySmall?.color, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          branch.name,
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          'Code: ${branch.code}',
+                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
     );
   }
 

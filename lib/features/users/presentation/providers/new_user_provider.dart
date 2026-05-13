@@ -14,6 +14,7 @@ class NewUserState {
   final String password;
   final String aadharNumber;
   final String panNumber;
+  final String? branchId;
   final bool isLoading;
 
   NewUserState({
@@ -26,6 +27,7 @@ class NewUserState {
     this.password = '',
     this.aadharNumber = '',
     this.panNumber = '',
+    this.branchId,
     this.isLoading = false,
   });
 
@@ -39,6 +41,7 @@ class NewUserState {
     String? password,
     String? aadharNumber,
     String? panNumber,
+    String? branchId,
     bool? isLoading,
   }) {
     return NewUserState(
@@ -51,6 +54,7 @@ class NewUserState {
       password: password ?? this.password,
       aadharNumber: aadharNumber ?? this.aadharNumber,
       panNumber: panNumber ?? this.panNumber,
+      branchId: branchId ?? this.branchId,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -80,6 +84,8 @@ class NewUserNotifier extends StateNotifier<NewUserState> {
       state = state.copyWith(aadharNumber: value);
   void updatePanNumber(String value) =>
       state = state.copyWith(panNumber: value);
+  void updateBranchId(String? value) =>
+      state = state.copyWith(branchId: value);
 
   Future<void> createUser() async {
     state = state.copyWith(isLoading: true);
@@ -93,6 +99,7 @@ class NewUserNotifier extends StateNotifier<NewUserState> {
         pan: state.panNumber,
         employeeId: state.employeeId,
         assignedZone: state.assignedZone,
+        branchId: state.branchId,
         password: state.password,
       );
       state = state.copyWith(isLoading: false);

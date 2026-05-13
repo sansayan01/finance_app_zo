@@ -84,6 +84,7 @@ class AuthRepository {
           user.phone ?? (profile != null ? profile['phone'] as String? : null),
       role: role,
       orgId: profile?['org_id'] as String?,
+      branchId: profile?['branch_id'] as String?,
       createdAt: parsedDate ?? DateTime.now(),
     );
 
@@ -258,6 +259,7 @@ class AuthRepository {
           user.phone ?? (profile != null ? profile['phone'] as String? : null),
       role: role,
       orgId: profile?['org_id'] as String?,
+      branchId: profile?['branch_id'] as String?,
       createdAt: parsedDate ?? DateTime.now(),
     );
   }

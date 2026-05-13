@@ -57,18 +57,16 @@ class InvitationRepository {
     String? status,
     int limit = 50,
   }) async {
-    var query = _client
-        .from('org_invitations')
-        .select()
-        .eq('org_id', orgId)
-        .order('created_at', ascending: false)
-        .limit(limit);
+    var query = _client.from('org_invitations').select().eq('org_id', orgId);
 
     if (status != null) {
       query = query.eq('status', status);
     }
 
-    final response = await query;
+    final response = await query
+        .order('created_at', ascending: false)
+        .limit(limit);
+
     return response
         .map<OrgInvitationModel>((json) => OrgInvitationModel.fromJson(json))
         .toList();
@@ -82,7 +80,7 @@ class InvitationRepository {
         .eq('org_id', orgId)
         .eq('status', 'pending');
 
-    return response.length;
+    return (response as List).length;
   }
 
   /// Accept invitation

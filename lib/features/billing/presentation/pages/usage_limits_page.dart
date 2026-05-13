@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/providers/billing_providers.dart';
+import '../../data/providers/billing_providers.dart';
 
 class UsageLimitsPage extends ConsumerWidget {
   const UsageLimitsPage({super.key});
@@ -172,7 +172,7 @@ class _PlanInfoCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.8),
+            theme.colorScheme.primary.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -186,7 +186,7 @@ class _PlanInfoCard extends StatelessWidget {
                 Text(
                   'Current Plan',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -203,7 +203,7 @@ class _PlanInfoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(

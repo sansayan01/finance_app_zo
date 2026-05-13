@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../data/providers/billing_providers.dart';
-import '../data/models/invoice_model.dart';
+import '../../data/providers/billing_providers.dart';
+import '../../data/models/invoice_model.dart';
 
 class InvoicesPage extends ConsumerWidget {
   const InvoicesPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final invoicesAsync = ref.watch(orgInvoicesProvider);
 
     return Scaffold(
@@ -100,7 +99,7 @@ class _InvoiceCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        dateFormat.format(invoice.dueDate ?? DateTime.now()),
+                        dateFormat.format(invoice.dueDate),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),
@@ -221,14 +220,12 @@ class _InvoiceCard extends StatelessWidget {
               const SizedBox(height: 24),
               
               // Invoice info
-              _DetailRow('Invoice Number', invoice.invoiceNumber ?? '-'),
-              _DetailRow('Status', invoice.statusDisplay),
-              _DetailRow('Amount', invoice.formattedAmount),
-              _DetailRow('Due Date', invoice.dueDate != null 
-                  ? DateFormat('MMMM d, yyyy').format(invoice.dueDate!) 
-                  : '-'),
+              _detailRow('Invoice Number', invoice.invoiceNumber ?? '-'),
+              _detailRow('Status', invoice.statusDisplay),
+              _detailRow('Amount', invoice.formattedAmount),
+              _detailRow('Due Date', DateFormat('MMMM d, yyyy').format(invoice.dueDate)),
               if (invoice.paidAt != null)
-                _DetailRow('Paid On', DateFormat('MMMM d, yyyy').format(invoice.paidAt!)),
+                _detailRow('Paid On', DateFormat('MMMM d, yyyy').format(invoice.paidAt!)),
               
               const Divider(height: 32),
               
@@ -299,7 +296,7 @@ class _InvoiceCard extends StatelessWidget {
     );
   }
 
-  Widget _DetailRow(String label, String value) {
+  Widget _detailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -332,7 +329,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

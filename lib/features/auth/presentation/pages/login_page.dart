@@ -238,6 +238,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 _buildActionButton(isLoading, primary),
                 const SizedBox(height: 20),
                 _buildDemoButton(isDark, primary),
+                const SizedBox(height: 20),
+                _buildSignUpLink(primary),
               ],
             ),
           ),
@@ -377,6 +379,50 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           side: BorderSide(color: primary.withValues(alpha: 0.3)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignUpLink(Color primary) {
+    return GestureDetector(
+      onTap: widget.onSignUpTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            AppColors.success.withValues(alpha: 0.06),
+            AppColors.primary.withValues(alpha: 0.03),
+          ]),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.success.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.free_breakfast_rounded,
+                  color: AppColors.success, size: 16),
+            ),
+            const SizedBox(width: 10),
+            Text('New here? ',
+                style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500)),
+            Text('Start 14-Day Free Trial',
+                style: TextStyle(
+                    color: primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700)),
+            const Icon(Icons.arrow_forward_rounded,
+                size: 16, color: AppColors.success),
+          ],
         ),
       ),
     );

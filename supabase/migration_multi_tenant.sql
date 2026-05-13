@@ -61,15 +61,15 @@ ON CONFLICT (slug) DO NOTHING;
 
 UPDATE public.profiles SET org_id = '00000000-0000-0000-0000-000000000001'::uuid WHERE org_id IS NULL;
 
--- 4. RLS HELPER FUNCTIONS
+-- 4. RLS HELPER FUNCTIONS (SECURITY DEFINER to bypass RLS and avoid recursion)
 CREATE OR REPLACE FUNCTION public.get_user_org_id() RETURNS UUID
-LANGUAGE sql STABLE AS $$
+LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT COALESCE(profiles.org_id, '00000000-0000-0000-0000-000000000001'::uuid)
   FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_user_role() RETURNS TEXT
-LANGUAGE sql STABLE AS $$
+LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT role FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
 $$;
 

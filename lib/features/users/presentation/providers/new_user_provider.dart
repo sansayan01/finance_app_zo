@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
 
@@ -56,7 +57,8 @@ class NewUserState {
 }
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return UserRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return UserRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 class NewUserNotifier extends StateNotifier<NewUserState> {

@@ -5,14 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Setup Wizard
 import '../features/setup/presentation/pages/setup_wizard_page.dart';
+import '../features/setup/presentation/pages/branch_management_page.dart';
 
 // Super Admin
 import '../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../features/admin/presentation/pages/admin_org_detail_page.dart';
+import '../features/admin/presentation/pages/admin_org_dashboard_page.dart';
+import '../features/admin/presentation/pages/admin_org_settings_page.dart';
 
 // Auth
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
+import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/data/models/user_model.dart';
 
@@ -87,12 +91,19 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: authListener,
     redirect: (context, state) {
-      final authStatus = ref.read(authProvider).status;
+      final authState = ref.read(authProvider);
+      final authStatus = authState.status;
       final isAuthenticated = authStatus == AuthStatus.authenticated;
+      final isEmailVerification = authStatus == AuthStatus.emailVerification;
       final isAuthPath = state.matchedLocation.startsWith('/auth');
+      final isVerifyPath = state.matchedLocation == '/auth/verify-email';
 
-      if (!isAuthenticated && !isAuthPath) {
+      if (!isAuthenticated && !isAuthPath && !isEmailVerification) {
         return '/auth';
+      }
+
+      if (isEmailVerification && !isVerifyPath) {
+        return '/auth/verify-email';
       }
 
       if (isAuthenticated && isAuthPath) {
@@ -110,6 +121,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         builder: (context, state) => const AuthShell(),
+        routes: [
+          GoRoute(
+            path: 'verify-email',
+            builder: (context, state) => const VerifyEmailPage(),
+          ),
+        ],
       ),
 
       // Setup Wizard (for new organizations)
@@ -129,6 +146,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           return const AdminDashboardPage();
         },
         routes: [
+          GoRoute(
+            path: 'my-org',
+            builder: (context, state) {
+              final user = ref.read(currentUserProvider);
+              if (user?.role != UserRole.superAdmin) {
+                return const Scaffold(body: Center(child: Text('Access denied')));
+              }
+              return const AdminOrgDashboardPage();
+            },
+          ),
+          GoRoute(
+            path: 'org/settings',
+            builder: (context, state) {
+              final user = ref.read(currentUserProvider);
+              if (user?.role != UserRole.superAdmin) {
+                return const Scaffold(body: Center(child: Text('Access denied')));
+              }
+              return const AdminOrgSettingsPage();
+            },
+          ),
           GoRoute(
             path: 'org/:id',
             builder: (context, state) {
@@ -227,6 +264,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/members/onboarding',
             builder: (context, state) => const MemberOnboardingPage(),
+          ),
+          GoRoute(
+            path: '/branches',
+            builder: (context, state) => const BranchManagementPage(),
           ),
         ],
       ),

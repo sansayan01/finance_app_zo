@@ -62,7 +62,12 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         );
 
     if (success && mounted) {
-      context.go('/setup');
+      final updatedState = ref.read(auth.authProvider);
+      if (updatedState.status == AuthStatus.emailVerification) {
+        context.go('/auth/verify-email');
+      } else {
+        context.go('/setup');
+      }
     } else if (mounted) {
       final error = ref.read(auth.authProvider).errorMessage;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,6 +83,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(auth.authProvider);
     final isLoading = authState.status == AuthStatus.loading;
+
+    // Redirect to verify email if needed
+    if (authState.status == AuthStatus.emailVerification && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/auth/verify-email');
+      });
+    }
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
@@ -148,9 +161,19 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.3, end: 0),
         const SizedBox(height: 6),
         Text(
-          'Join $brandName today',
+          'Start your 14-day free trial',
           style: theme.textTheme.bodySmall?.copyWith(fontSize: 15),
         ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.3, end: 0),
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppColors.success.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text('No credit card required',
+            style: TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600)),
+        ).animate().fadeIn(delay: 350.ms),
       ],
     );
   }
@@ -335,7 +358,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 height: 24,
                 child: CircularProgressIndicator(
                     strokeWidth: 2.5, color: Colors.white))
-            : const Text('Create Account',
+            : const Text('Start 14-Day Free Trial',
                 style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,

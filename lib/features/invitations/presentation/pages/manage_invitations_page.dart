@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../data/providers/invitation_providers.dart';
-import '../data/models/org_invitation_model.dart';
+import '../../../../core/constants/enums.dart';
+import '../../data/providers/invitation_providers.dart';
+import '../../data/models/org_invitation_model.dart';
 
 class ManageInvitationsPage extends ConsumerWidget {
   const ManageInvitationsPage({super.key});
@@ -162,7 +162,7 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -226,7 +226,7 @@ class _InvitationCard extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: _getRoleColor(invitation.role).withOpacity(0.1),
+                              color: _getRoleColor(invitation.role).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -289,12 +289,13 @@ class _InvitationCard extends ConsumerWidget {
     );
   }
 
-  Color _getRoleColor(InvitationRole role) {
+  Color _getRoleColor(UserRole role) {
     return switch (role) {
-      InvitationRole.admin => Colors.purple,
-      InvitationRole.manager => Colors.blue,
-      InvitationRole.fieldStaff => Colors.green,
-      InvitationRole.accountant => Colors.orange,
+      UserRole.superAdmin => Colors.deepPurple,
+      UserRole.executiveAdmin => Colors.purple,
+      UserRole.manager => Colors.blue,
+      UserRole.fieldStaff => Colors.green,
+      UserRole.retailMember => Colors.orange,
     };
   }
 
@@ -336,23 +337,24 @@ class _InvitationCard extends ConsumerWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final InvitationStatus status;
+  final String status;
 
   const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
     final (color, text) = switch (status) {
-      InvitationStatus.pending => (Colors.orange, 'Pending'),
-      InvitationStatus.accepted => (Colors.green, 'Accepted'),
-      InvitationStatus.expired => (Colors.grey, 'Expired'),
-      InvitationStatus.revoked => (Colors.red, 'Revoked'),
+      'pending' => (Colors.orange, 'Pending'),
+      'accepted' => (Colors.green, 'Accepted'),
+      'expired' => (Colors.grey, 'Expired'),
+      'revoked' => (Colors.red, 'Revoked'),
+      _ => (Colors.grey, status),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -377,7 +379,7 @@ class _InviteMemberSheet extends ConsumerStatefulWidget {
 class _InviteMemberSheetState extends ConsumerState<_InviteMemberSheet> {
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
-  String _selectedRole = 'fieldStaff';
+  UserRole _selectedRole = UserRole.fieldStaff;
   bool _isLoading = false;
 
   @override
@@ -432,20 +434,20 @@ class _InviteMemberSheetState extends ConsumerState<_InviteMemberSheet> {
           const SizedBox(height: 16),
 
           // Role
-          DropdownButtonFormField<String>(
-            value: _selectedRole,
+          DropdownButtonFormField<UserRole>(
+            initialValue: _selectedRole,
             decoration: const InputDecoration(
               labelText: 'Role',
               prefixIcon: Icon(Icons.badge_outlined),
               border: OutlineInputBorder(),
             ),
-            items: const [
-              DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              DropdownMenuItem(value: 'manager', child: Text('Manager')),
-              DropdownMenuItem(value: 'fieldStaff', child: Text('Field Staff')),
-              DropdownMenuItem(value: 'accountant', child: Text('Accountant')),
-            ],
-            onChanged: (value) => setState(() => _selectedRole = value ?? 'fieldStaff'),
+            items: UserRole.values.where((r) => r != UserRole.superAdmin).map((role) {
+              return DropdownMenuItem(
+                value: role,
+                child: Text(role.name[0].toUpperCase() + role.name.substring(1)),
+              );
+            }).toList(),
+            onChanged: (value) => setState(() => _selectedRole = value ?? UserRole.fieldStaff),
           ),
           const SizedBox(height: 16),
 
@@ -494,7 +496,7 @@ class _InviteMemberSheetState extends ConsumerState<_InviteMemberSheet> {
     final notifier = ref.read(invitationNotifierProvider.notifier);
     final invitation = await notifier.createInvitation(
       email: _emailController.text.trim(),
-      role: _selectedRole,
+      role: _selectedRole.name,
       message: _messageController.text.trim().isEmpty ? null : _messageController.text.trim(),
     );
 

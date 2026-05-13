@@ -24,6 +24,7 @@ enum AuthStatus {
   authenticated,
   unauthenticated,
   error,
+  emailVerification,
 }
 
 class AuthState {
@@ -162,6 +163,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
         phone: phone,
         orgName: orgName,
       );
+      // If no orgId, email verification is needed
+      if (user.orgId == null) {
+        state = state.copyWith(
+          status: AuthStatus.emailVerification,
+          user: user,
+          errorMessage: 'Please check your email to verify your account.',
+        );
+        return true;
+      }
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
       return true;
     } catch (e) {

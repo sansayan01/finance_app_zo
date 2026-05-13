@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../data/providers/invitation_providers.dart';
-import '../data/models/org_invitation_model.dart';
+import '../../data/providers/invitation_providers.dart';
+import '../../data/models/org_invitation_model.dart';
 
 class AcceptInvitationPage extends ConsumerStatefulWidget {
   final String token;
@@ -28,7 +28,6 @@ class _AcceptInvitationPageState extends ConsumerState<AcceptInvitationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final invitationAsync = ref.watch(invitationByTokenProvider(widget.token));
 
     return Scaffold(

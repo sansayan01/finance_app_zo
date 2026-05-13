@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../data/providers/billing_providers.dart';
-import '../data/models/subscription_plan_model.dart';
-import '../data/models/org_subscription_model.dart';
+import '../../data/providers/billing_providers.dart';
+import '../../data/models/subscription_plan_model.dart';
+import '../../data/models/org_subscription_model.dart';
 
 class BillingPage extends ConsumerWidget {
   const BillingPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final subscriptionAsync = ref.watch(currentSubscriptionProvider);
     final plansAsync = ref.watch(subscriptionPlansProvider);
 
@@ -68,7 +67,6 @@ class _BillingContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final billingNotifier = ref.read(billingNotifierProvider.notifier);
-    final billingState = ref.watch(billingNotifierProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -118,7 +116,7 @@ class _BillingContent extends ConsumerWidget {
               return _PlanCard(
                 plan: plan,
                 isCurrentPlan: isCurrentPlan,
-                isTrial: subscription?.isTrial ?? false,
+                isTrial: subscription?.status == 'trialing',
                 onSelect: () async {
                   if (plan.isEnterprise) {
                     // Show contact sales dialog
@@ -195,7 +193,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.8),
+            theme.colorScheme.primary.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -203,7 +201,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.3),
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -221,7 +219,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                   Text(
                     'Current Plan',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -243,7 +241,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -268,7 +266,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.8),
+                color: Colors.red.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Row(
@@ -392,7 +390,7 @@ class _ToggleButton extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

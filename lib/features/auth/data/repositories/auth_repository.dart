@@ -111,13 +111,16 @@ class AuthRepository {
     String? phone,
     String? orgName,
   }) async {
+    final metadata = <String, dynamic>{
+      'full_name': fullName,
+      'phone': phone,
+      if (orgName != null && orgName.isNotEmpty) 'org_name': orgName,
+    };
+
     final response = await _client.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'full_name': fullName,
-        'phone': phone,
-      },
+      data: metadata,
     );
 
     final user = response.user;
@@ -125,16 +128,42 @@ class AuthRepository {
       throw Exception('Sign up failed');
     }
 
-    String orgId;
+    // If email confirmation is disabled and we have a session, create org + profile now
+    if (response.session != null) {
+      return _createOrgAndProfile(user, fullName, email, phone, orgName);
+    }
+
+    // Email confirmation required - return user without org/profile
+    // They'll be created on first login via getCurrentUser()
+    final parsedDate = DateTime.tryParse(user.createdAt);
+    return UserModel(
+      id: user.id,
+      email: user.email ?? '',
+      fullName: fullName,
+      phone: phone,
+      role: UserRole.executiveAdmin,
+      createdAt: parsedDate ?? DateTime.now(),
+    );
+  }
+
+  Future<UserModel> _createOrgAndProfile(
+    User user, String fullName, String email, String? phone, String? orgName,
+  ) async {
+    String orgId = '00000000-0000-0000-0000-000000000001';
     if (orgName != null && orgName.isNotEmpty) {
       final slug = orgName
           .toLowerCase()
           .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
           .replaceAll(RegExp(r'^-|-$'), '');
+      final trialEnd = DateTime.now().add(const Duration(days: 14)).toIso8601String();
       final orgResponse = await _client.from('organizations').insert({
         'name': orgName,
         'slug': slug,
-        'status': 'active',
+        'status': 'trial',
+        'trial_ends_at': trialEnd,
+        'max_branches': 2,
+        'max_staff': 5,
+        'max_members': 100,
       }).select('id').single();
       orgId = orgResponse['id'].toString();
 
@@ -146,12 +175,9 @@ class AuthRepository {
         'role': 'executiveAdmin',
         'org_id': orgId,
       });
-    } else {
-      orgId = '00000000-0000-0000-0000-000000000001';
     }
 
     final parsedDate = DateTime.tryParse(user.createdAt);
-
     return UserModel(
       id: user.id,
       email: user.email ?? '',
@@ -177,18 +203,15 @@ class AuthRepository {
 
     final parsedDate = DateTime.tryParse(user.createdAt);
 
-    // Fail-safe role fetching & linking
     UserRole role = _parseRole(null, user.email);
     Map<String, dynamic>? profile;
     try {
-      // 1. Try finding by user_id
       profile = await _client
           .from('profiles')
           .select()
           .eq('user_id', user.id)
           .maybeSingle();
 
-      // 2. If not found, try finding by email
       if (profile == null && user.email != null) {
         profile = await _client
             .from('profiles')
@@ -197,10 +220,24 @@ class AuthRepository {
             .maybeSingle();
 
         if (profile != null) {
-          // Link the user_id
           await _client
               .from('profiles')
               .update({'user_id': user.id}).eq('id', profile['id']);
+        }
+      }
+
+      // Auto-create org + profile for users who signed up with email verification
+      if (profile == null) {
+        final orgName = user.userMetadata?['org_name'] as String?;
+        if (orgName != null && orgName.isNotEmpty) {
+          final created = await _createOrgAndProfile(
+            user,
+            user.userMetadata?['full_name'] as String? ?? '',
+            user.email ?? '',
+            user.userMetadata?['phone'] as String?,
+            orgName,
+          );
+          return created;
         }
       }
 

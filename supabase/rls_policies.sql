@@ -6,15 +6,15 @@
 -- Run AFTER migration_multi_tenant.sql
 -- =====================================================
 
--- Helper functions
+-- Helper functions (SECURITY DEFINER to bypass RLS and avoid recursion)
 CREATE OR REPLACE FUNCTION public.get_user_org_id() RETURNS UUID
-LANGUAGE sql STABLE AS $$
+LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT COALESCE(profiles.org_id, '00000000-0000-0000-0000-000000000001'::uuid)
   FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_user_role() RETURNS TEXT
-LANGUAGE sql STABLE AS $$
+LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT role FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
 $$;
 

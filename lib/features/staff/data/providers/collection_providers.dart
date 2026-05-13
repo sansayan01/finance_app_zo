@@ -213,7 +213,7 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
           },
         );
         
-        // Return a mock model for the UI
+        // Return a local model for the offline queued collection
         final now = DateTime.now();
         state = AsyncValue.data(CollectionModel(
           id: 'offline_${now.millisecondsSinceEpoch}',

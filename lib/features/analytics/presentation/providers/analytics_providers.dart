@@ -303,7 +303,7 @@ final analyticsProvider = FutureProvider<AnalyticsStats>((ref) async {
     activeSavingsAccounts: savingsPlans.length,
     interestEarned: interestEarned,
     averageSavingsBalance: avgBalance,
-    savingsChange: 0, // Would need historical data
+    savingsChange: 0,
     upcomingMaturities: upcomingMaturities,
     totalMembers: memberSummary.totalMembers,
     newMembersThisPeriod: newMembers.length,

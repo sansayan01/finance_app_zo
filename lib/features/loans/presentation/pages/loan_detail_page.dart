@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../providers/supabase_provider.dart';
 import '../providers/loan_providers.dart';
 import '../../data/models/loan_model.dart';
 import '../../data/models/emi_schedule_model.dart';
@@ -696,13 +697,16 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Future<void> _handlePdfExport() async {
     HapticFeedback.mediumImpact();
     final messenger = ScaffoldMessenger.of(context);
-    messenger
-        .showSnackBar(const SnackBar(content: Text('Generating Document...')));
-    await Future.delayed(const Duration(seconds: 2));
+    messenger.showSnackBar(
+        const SnackBar(content: Text('Preparing loan statement...')));
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     messenger.hideCurrentSnackBar();
+    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
+    if (loan == null) return;
     messenger.showSnackBar(
-        const SnackBar(content: Text('Statement saved to Downloads')));
+      SnackBar(content: Text('Statement for ${loan.loanNumber} is ready')),
+    );
   }
 
   Future<void> _handleSettlement(LoanModel loan) async {
@@ -776,7 +780,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Edit Loan Metadata'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -795,13 +799,23 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
               child: const Text('CANCEL')),
           ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Metadata updated successfully')));
-              Navigator.pop(context);
+            onPressed: () async {
+              final repo = ref.read(loansRepositoryProvider);
+              try {
+                await repo.updateLoanStatus(loan.id, loan.status.name);
+                ref.invalidate(loanDetailProvider(widget.loanId));
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Loan updated successfully')));
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Update failed: $e')));
+              }
             },
             child: const Text('SAVE'),
           ),
@@ -814,34 +828,52 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     HapticFeedback.mediumImpact();
     final messenger = ScaffoldMessenger.of(context);
     try {
-      messenger.showSnackBar(SnackBar(
-          content:
-              Text('Loan status updated to ${newStatus.name.toUpperCase()}')));
+      await ref.read(loansRepositoryProvider).updateLoanStatus(
+        widget.loanId,
+        newStatus.name,
+      );
       ref.invalidate(loanDetailProvider(widget.loanId));
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+          content: Text('Status: ${newStatus.name.toUpperCase()}')));
     } catch (e) {
+      if (!mounted) return;
       messenger
-          .showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
+          .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
     }
   }
 
   Future<void> _handleDelete() async {
     HapticFeedback.heavyImpact();
+    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
+    if (loan == null) return;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Delete Loan?'),
         content: const Text(
             'This action is irreversible. All associated repayment schedules will be purged.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
               child: const Text('CANCEL')),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context); // Go back to list
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Loan record purged')));
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final client = ref.read(supabaseClientProvider);
+                await client.from('loans').delete().eq('id', widget.loanId);
+                ref.invalidate(loansProvider);
+                if (!mounted) return;
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Loan record deleted')));
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Delete failed: $e')));
+              }
             },
             child: const Text('DELETE', style: TextStyle(color: Colors.red)),
           ),

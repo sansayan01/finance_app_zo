@@ -12,24 +12,6 @@ class StaffRepository {
   /// Get current staff profile from user ID
   Future<StaffProfileModel?> getStaffProfile(String userId,
       [String? fullName, String? email]) async {
-    // Demo Mode Bypass
-    if (userId == '00000000-0000-0000-0000-000000000000') {
-      return StaffProfileModel(
-        id: 'demo-staff-id',
-        userId: userId,
-        fullName: 'Staff Demo User',
-        email: 'staff.demo@microflow.com',
-        phone: '9876543210',
-        staffCode: 'DEMO-001',
-        role: StaffRole.collector,
-        branchId: 'demo-branch',
-        branchName: 'Main Demo Branch',
-        dailyCollectionTarget: 25000.0,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-    }
-
     try {
       final response = await _client
           .from('staff_profiles')
@@ -43,31 +25,6 @@ class StaffRepository {
 
       if (response != null) {
         return StaffProfileModel.fromJson(response);
-      }
-
-      // If no profile exists, and we have name/email, auto-create for testing/demo
-      if (fullName != null) {
-        // Get first branch as default
-        final branch =
-            await _client.from('branches').select().limit(1).maybeSingle();
-        final branchId = branch?['id'];
-
-        final newProfile = await _client.from('staff_profiles').insert({
-          'user_id': userId,
-          'full_name': fullName,
-          'email': email,
-          'phone': '9876543210',
-          'staff_code': 'S-${userId.substring(0, 5).toUpperCase()}',
-          'role': 'collector',
-          'branch_id': branchId,
-          'daily_collection_target': 25000.0,
-        }).select('''
-            *,
-            branches(name),
-            supervisor:staff_profiles!supervisor_id(full_name)
-          ''').single();
-
-        return StaffProfileModel.fromJson(newProfile);
       }
 
       return null;
@@ -97,22 +54,6 @@ class StaffRepository {
 
   /// Get staff wallet
   Future<WalletModel?> getWallet(String staffId) async {
-    // Demo Mode Bypass
-    if (staffId == 'demo-staff-id') {
-      return WalletModel(
-        id: 'demo-wallet',
-        staffId: staffId,
-        cashInHand: 12500.0,
-        digitalBalance: 8400.0,
-        totalCollectedToday: 5400.0,
-        totalDepositedToday: 0.0,
-        safeLimit: 50000.0,
-        isOverLimit: false,
-        updatedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-      );
-    }
-
     try {
       final response = await _client
           .from('staff_wallet')
@@ -128,20 +69,6 @@ class StaffRepository {
 
   /// Get staff streak
   Future<StreakModel?> getStreak(String staffId) async {
-    // Demo Mode Bypass
-    if (staffId == 'demo-staff-id') {
-      return StreakModel(
-        id: 'demo-streak',
-        staffId: staffId,
-        currentStreak: 5,
-        longestStreak: 12,
-        totalCollections: 145,
-        totalAmountCollected: 350000.0,
-        updatedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-      );
-    }
-
     try {
       final response = await _client
           .from('staff_streaks')

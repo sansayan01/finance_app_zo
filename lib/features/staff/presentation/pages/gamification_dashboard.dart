@@ -147,7 +147,8 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
                       children: List.generate(7, (i) {
                         final d = DateTime.now().subtract(Duration(days: 6 - i));
                         final labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                        final active = i >= 3;
+                        final lastD = s?.lastCollectionDate;
+                        final active = lastD != null && !d.isAfter(DateTime(lastD.year, lastD.month, lastD.day));
                         return Column(
                           children: [
                             Text(labels[d.weekday - 1], style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11, fontWeight: FontWeight.bold)),

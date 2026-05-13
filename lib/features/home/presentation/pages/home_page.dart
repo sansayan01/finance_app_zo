@@ -338,7 +338,7 @@ class HomePage extends ConsumerWidget {
     // Get first name
     final firstName = user != null && user.fullName.trim().isNotEmpty
         ? user.fullName.trim().split(RegExp(r'\s+')).first
-        : 'Sayan'; // Default for development/bypass mode
+        : 'User';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1190,11 +1190,6 @@ class _HeroStat extends StatelessWidget {
             const SizedBox(height: 2),
             Text(label,
                 style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
-            const SizedBox(height: 8),
-            SparklineChart(
-              data: const [10, 15, 8, 22, 18, 25, 20], // Mock trend data
-              color: color,
-            ),
           ],
         ),
       ),

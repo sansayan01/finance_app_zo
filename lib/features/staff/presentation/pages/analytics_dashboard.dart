@@ -96,20 +96,25 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
 
   Widget _buildSummaryCards(ThemeData theme, bool isDark) {
     final statsAsync = ref.watch(todayCollectionStatsProvider);
+    final trendAsync = ref.watch(weeklyTrendProvider);
 
     return statsAsync.when(
       data: (stats) {
         final total = (stats['total_collected'] as num?)?.toDouble() ?? 0;
         final count = stats['collection_count'] as int? ?? 0;
         final avg = count > 0 ? total / count : 0.0;
+        final yesterdayTotal = trendAsync.valueOrNull != null && trendAsync.valueOrNull!.length >= 2
+            ? (trendAsync.valueOrNull![trendAsync.valueOrNull!.length - 2]['amount'] as num?)?.toDouble() ?? 0.0
+            : 0.0;
+        final chg = yesterdayTotal > 0 ? ((total - yesterdayTotal) / yesterdayTotal * 100) : 0.0;
 
         return Row(
           children: [
-            Expanded(child: _buildSummaryCard(theme, 'Collected', '₹${_fmt(total)}', '+12%', AppColors.success, Icons.trending_up_rounded, isDark)),
+            Expanded(child: _buildSummaryCard(theme, 'Collected', '₹${_fmt(total)}', chg, AppColors.success, Icons.trending_up_rounded, isDark)),
             const SizedBox(width: 10),
-            Expanded(child: _buildSummaryCard(theme, 'Count', '$count', '+8%', AppColors.info, Icons.receipt_long_rounded, isDark)),
+            Expanded(child: _buildSummaryCard(theme, 'Count', '$count', 0.0, AppColors.info, Icons.receipt_long_rounded, isDark)),
             const SizedBox(width: 10),
-            Expanded(child: _buildSummaryCard(theme, 'Average', '₹${_fmt(avg)}', '+5%', AppColors.accent, Icons.payments_rounded, isDark)),
+            Expanded(child: _buildSummaryCard(theme, 'Average', '₹${_fmt(avg)}', 0.0, AppColors.accent, Icons.payments_rounded, isDark)),
           ],
         );
       },
@@ -144,8 +149,8 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
     );
   }
 
-  Widget _buildSummaryCard(ThemeData theme, String title, String value, String change, Color color, IconData icon, bool isDark) {
-    final isPositive = change.startsWith('+');
+  Widget _buildSummaryCard(ThemeData theme, String title, String value, double change, Color color, IconData icon, bool isDark) {
+    final isPositive = change >= 0;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -161,14 +166,16 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
           Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color, height: 1.1)),
           const SizedBox(height: 2),
           Text(title, style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(isPositive ? Icons.arrow_upward : Icons.arrow_downward, color: isPositive ? AppColors.success : AppColors.error, size: 12),
-              const SizedBox(width: 2),
-              Text(change, style: TextStyle(color: isPositive ? AppColors.success : AppColors.error, fontSize: 10, fontWeight: FontWeight.w700)),
-            ],
-          ),
+          if (change != 0) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(isPositive ? Icons.arrow_upward : Icons.arrow_downward, color: isPositive ? AppColors.success : AppColors.error, size: 12),
+                const SizedBox(width: 2),
+                Text('${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)}%', style: TextStyle(color: isPositive ? AppColors.success : AppColors.error, fontSize: 10, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -296,8 +303,6 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
     final metrics = [
       {'label': 'Target Achievement', 'value': '${(targetProgress * 100).toStringAsFixed(0)}%', 'progress': targetProgress.clamp(0.0, 1.0)},
       {'label': 'Collection Streak', 'value': '$streakDays days', 'progress': (streakDays / 30).clamp(0.0, 1.0)},
-      {'label': 'On-time Rate', 'value': '92%', 'progress': 0.92},
-      {'label': 'Visit Success', 'value': '78%', 'progress': 0.78},
     ];
 
     return Container(
@@ -357,6 +362,8 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
   }
 
   Widget _buildTopCustomers(ThemeData theme, bool isDark) {
+    final frequentAsync = ref.watch(frequentCustomersProvider);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -385,33 +392,52 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
             ],
           ),
           const SizedBox(height: 12),
-          ...[
-            {'name': 'Ramesh Kumar', 'amount': '₹12,500', 'collections': 8, 'color': Colors.amber},
-            {'name': 'Priya Sharma', 'amount': '₹10,200', 'collections': 6, 'color': Colors.grey},
-            {'name': 'Amit Patel', 'amount': '₹8,900', 'collections': 5, 'color': Colors.brown},
-          ].asMap().entries.map((entry) {
-            final i = entry.key; final c = entry.value;
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                children: [
-                  Container(
-                    width: 26, height: 26,
-                    decoration: BoxDecoration(color: (c['color'] as Color).withValues(alpha: 0.2), shape: BoxShape.circle),
-                    child: Center(child: Text('${i + 1}', style: TextStyle(color: c['color'] as Color, fontWeight: FontWeight.w800, fontSize: 11))),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(c['name'] as String, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text('${c['collections']} collections', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
-                    ]),
-                  ),
-                  Text(c['amount'] as String, style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
-                ],
-              ),
-            );
-          }),
+          frequentAsync.when(
+            data: (customers) {
+              if (customers.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(child: Text('No customer data yet', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3)))),
+                );
+              }
+              return Column(
+                children: customers.take(5).toList().asMap().entries.map((entry) {
+                  final i = entry.key; final c = entry.value;
+                  final name = c['full_name'] as String? ?? 'Unknown';
+                  final outstanding = (c['outstanding_amount'] as num?)?.toDouble() ?? 0;
+                  final rankColors = [Colors.amber, Colors.grey, Colors.brown, AppColors.primary, AppColors.primary];
+                  return Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 26, height: 26,
+                          decoration: BoxDecoration(color: rankColors[i].withValues(alpha: 0.2), shape: BoxShape.circle),
+                          child: Center(child: Text('${i + 1}', style: TextStyle(color: rankColors[i], fontWeight: FontWeight.w800, fontSize: 11))),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(name, style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            if (outstanding > 0)
+                              Text('₹${outstanding.toStringAsFixed(0)} outstanding', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                          ]),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            error: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: Text('Could not load', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3)))),
+            ),
+          ),
         ],
       ),
     );

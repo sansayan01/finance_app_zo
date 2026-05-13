@@ -317,7 +317,6 @@ class _LoansPageState extends ConsumerState<LoansPage>
             value: AppFormatters.formatCompactCurrency(summary.totalDisbursed),
             icon: Icons.account_balance_wallet_rounded,
             color: primary,
-            trend: '+12%',
             isDark: isDark,
           ),
           const SizedBox(width: 16),
@@ -531,7 +530,6 @@ class _AnalyticsCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
-  final String? trend;
   final String? subtitle;
   final bool isDark;
 
@@ -540,7 +538,6 @@ class _AnalyticsCard extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
-    this.trend,
     this.subtitle,
     required this.isDark,
   });
@@ -586,27 +583,6 @@ class _AnalyticsCard extends StatelessWidget {
                       ),
                       child: Icon(icon, size: 18, color: color),
                     ),
-                    if (trend != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.trending_up_rounded,
-                                size: 12, color: AppColors.success),
-                            const SizedBox(width: 4),
-                            Text(trend!,
-                                style: const TextStyle(
-                                    color: AppColors.success,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800)),
-                          ],
-                        ),
-                      ),
                   ],
                 ),
                 const Spacer(),

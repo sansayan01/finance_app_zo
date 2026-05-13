@@ -374,6 +374,8 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
   }
 
   Widget _buildTargetHistory(ThemeData theme, bool isDark) {
+    final trendAsync = ref.watch(weeklyTrendProvider);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -395,13 +397,36 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
             ],
           ),
           const SizedBox(height: 16),
-          _buildHistoryRow(theme, 'Today', '₹12,500', '₹25,000', 0.50),
-          const Divider(height: 20),
-          _buildHistoryRow(theme, 'Yesterday', '₹18,200', '₹25,000', 0.73),
-          const Divider(height: 20),
-          _buildHistoryRow(theme, 'Day Before', '₹24,800', '₹25,000', 0.99),
-          const Divider(height: 20),
-          _buildHistoryRow(theme, '3 Days Ago', '₹25,000', '₹25,000', 1.0),
+          trendAsync.when(
+            data: (trend) {
+              if (trend.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: Text('No data yet', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4)))),
+                );
+              }
+              final dailyTarget = trend.fold<double>(0, (s, e) => s + ((e['amount'] as num?)?.toDouble() ?? 0.0)) / trend.length.clamp(1, 7);
+              return Column(
+                children: trend.reversed.take(4).toList().asMap().entries.map((entry) {
+                  final i = entry.key; final day = entry.value;
+                  final amount = (day['amount'] as num?)?.toDouble() ?? 0;
+                  final label = i == 0 ? 'Today' : (i == 1 ? 'Yesterday' : '$i days ago');
+                  final pct = dailyTarget > 0 ? (amount / dailyTarget).clamp(0.0, 1.0) : 0.0;
+                  return Column(
+                    children: [
+                      if (i > 0) const Divider(height: 20),
+                      _buildHistoryRow(theme, label, '₹${amount.toStringAsFixed(0)}', '₹${dailyTarget.toStringAsFixed(0)}', pct),
+                    ],
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+            error: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('Could not load', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4)))),
+            ),
+          ),
         ],
       ),
     );
@@ -484,7 +509,8 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
                 children: List.generate(7, (i) {
                   final date = DateTime.now().subtract(Duration(days: 6 - i));
                   final dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                  final isActive = i >= 3;
+                  final lastDate = streak.lastCollectionDate;
+                  final isActive = lastDate != null && !date.isAfter(DateTime(lastDate.year, lastDate.month, lastDate.day));
                   return Column(
                     children: [
                       Text(dayNames[date.weekday - 1], style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 10)),

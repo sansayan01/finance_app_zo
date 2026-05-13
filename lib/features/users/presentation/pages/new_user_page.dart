@@ -8,10 +8,13 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../branches/data/providers/branch_providers.dart';
 import '../providers/new_user_provider.dart';
 
 class NewUserPage extends ConsumerStatefulWidget {
-  const NewUserPage({super.key});
+  final String? initialBranchId;
+
+  const NewUserPage({super.key, this.initialBranchId});
 
   @override
   ConsumerState<NewUserPage> createState() => _NewUserPageState();
@@ -27,6 +30,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _panController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  
+  String? _selectedBranchId;
   bool _obscurePassword = true;
 
   TextInputType _panKeyboardType = TextInputType.text;
@@ -35,6 +40,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   @override
   void initState() {
     super.initState();
+    _selectedBranchId = widget.initialBranchId;
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(newUserProvider);
       _fullNameController.text = state.fullName;

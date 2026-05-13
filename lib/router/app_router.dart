@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Setup Wizard
 import '../features/setup/presentation/pages/setup_wizard_page.dart';
-import '../features/setup/presentation/pages/branch_management_page.dart';
+
+// Branches
+import '../features/branches/presentation/pages/branch_management_page.dart';
 
 // Super Admin
 import '../features/admin/presentation/pages/admin_dashboard_page.dart';

@@ -72,6 +72,10 @@ class ProfileModel {
   final String? pincode;
   final UserRole? role;
   final String? orgId;
+  final String? branchId;
+  final String? branchName;
+  final String? employeeId;
+  final String? assignedZone;
   final DateTime? dateOfBirth;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -89,6 +93,10 @@ class ProfileModel {
     this.pincode,
     this.role,
     this.orgId,
+    this.branchId,
+    this.branchName,
+    this.employeeId,
+    this.assignedZone,
     this.dateOfBirth,
     this.createdAt,
     this.updatedAt,
@@ -109,10 +117,14 @@ class ProfileModel {
       role: json['role'] != null
           ? UserRole.values.firstWhere(
               (e) => e.name == json['role'],
-              orElse: () => UserRole.retailMember,
+              orElse: () => UserRole.customer,
             )
           : null,
       orgId: json['org_id'] as String?,
+      branchId: json['branch_id'] as String?,
+      branchName: json['branch']?['name'] as String?,
+      employeeId: json['employee_id'] as String?,
+      assignedZone: json['assigned_zone'] as String?,
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.parse(json['date_of_birth'] as String)
           : null,
@@ -139,6 +151,9 @@ class ProfileModel {
       'pincode': pincode,
       'role': role?.name,
       'org_id': orgId,
+      'branch_id': branchId,
+      'employee_id': employeeId,
+      'assigned_zone': assignedZone,
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

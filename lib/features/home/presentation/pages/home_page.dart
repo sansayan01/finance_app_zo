@@ -10,6 +10,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/sparkline_chart.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../branches/presentation/pages/branch_management_page.dart';
 import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../transactions/data/models/transaction_model.dart';
@@ -549,44 +550,61 @@ class HomePage extends ConsumerWidget {
               ?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 16),
-        Row(
+        Column(
           children: [
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.request_quote_rounded,
-                label: 'New Loan',
-                color: theme.colorScheme.primary,
-                onTap: () => context.push('/loans/new'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.request_quote_rounded,
+                    label: 'New Loan',
+                    color: theme.colorScheme.primary,
+                    onTap: () => context.push('/loans/new'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.savings_rounded,
+                    label: 'Savings',
+                    color: theme.colorScheme.secondary,
+                    onTap: () => context.push('/savings/new'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.person_add_alt_1_rounded,
+                    label: 'Add User',
+                    color: isDark ? AppColors.accentDark : AppColors.accentLight,
+                    onTap: () => context.push('/users/new'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.history_rounded,
+                    label: 'Timeline',
+                    color: isDark
+                        ? AppColors.orange.withValues(alpha: 0.8)
+                        : AppColors.orange,
+                    onTap: () => context.push('/transactions'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.savings_rounded,
-                label: 'Savings',
-                color: theme.colorScheme.secondary,
-                onTap: () => context.push('/savings/new'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.person_add_alt_1_rounded,
-                label: 'Add User',
-                color: isDark ? AppColors.accentDark : AppColors.accentLight,
-                onTap: () => context.push('/users/new'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.history_rounded,
-                label: 'Timeline',
-                color: isDark
-                    ? AppColors.orange.withValues(alpha: 0.8)
-                    : AppColors.orange,
-                onTap: () => context.push('/transactions'),
-              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.business_rounded,
+                    label: 'Branches',
+                    color: AppColors.pink,
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage())),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

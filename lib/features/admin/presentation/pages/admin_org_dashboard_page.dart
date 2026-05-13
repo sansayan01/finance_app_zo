@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../branches/presentation/pages/branch_management_page.dart';
 
 final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final client = ref.read(supabaseClientProvider);
@@ -244,6 +245,7 @@ class AdminOrgDashboardPage extends ConsumerWidget {
       _QuickAction(Icons.person_add_rounded, 'New Member', AppColors.success, () => context.go('/members/onboarding')),
       _QuickAction(Icons.add_circle_rounded, 'New Loan', AppColors.warning, () => context.go('/loans/new')),
       _QuickAction(Icons.savings_rounded, 'New Savings', AppColors.cyan, () => context.go('/savings/new')),
+      _QuickAction(Icons.business_rounded, 'Branches', AppColors.pink, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage()))),
     ];
 
     return Column(
@@ -259,13 +261,37 @@ class AdminOrgDashboardPage extends ConsumerWidget {
             ],
           ),
         ),
-        Row(
-          children: actions.map((a) => Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(left: actions.indexOf(a) == 0 ? 0 : 8),
-              child: _ActionTile(action: a, isDark: isDark),
+        Column(
+          children: [
+            Row(
+              children: actions.take(4).toList().asMap().entries.map((e) {
+                final i = e.key;
+                final a = e.value;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
+                    child: _ActionTile(action: a, isDark: isDark),
+                  ),
+                );
+              }).toList(),
             ),
-          )).toList(),
+            if (actions.length > 4)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(
+                  children: actions.skip(4).toList().asMap().entries.map((e) {
+                    final i = e.key;
+                    final a = e.value;
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
+                        child: _ActionTile(action: a, isDark: isDark),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
         ),
       ],
     );

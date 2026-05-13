@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SetupWizardPage extends ConsumerStatefulWidget {
   const SetupWizardPage({super.key});
@@ -49,11 +50,50 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   }
 
   Future<void> _createBranch() async {
-    final orgId = ref.read(currentOrgIdProvider);
-    if (orgId == null) return;
     setState(() => _isLoading = true);
     try {
+      debugPrint('Starting branch creation...');
       final client = ref.read(supabaseClientProvider);
+      final authUser = client.auth.currentUser;
+      String? orgId = ref.read(currentOrgIdProvider);
+
+      if (orgId == null) {
+        debugPrint('No orgId found, creating new organization...');
+        final orgName = authUser?.userMetadata?['org_name'] as String? ?? 'My Organization';
+        final slug = orgName
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+            .replaceAll(RegExp(r'^-|-$'), '');
+        final trialEnd = DateTime.now().add(const Duration(days: 14)).toIso8601String();
+
+        final orgResponse = await client.from('organizations').insert({
+          'name': orgName,
+          'slug': slug,
+          'status': 'trial',
+          'trial_ends_at': trialEnd,
+          'max_branches': 2,
+          'max_staff': 5,
+          'max_members': 100,
+          'created_by': authUser?.id,
+        }).select('id').single();
+        orgId = orgResponse['id'].toString();
+        debugPrint('Organization created: $orgId');
+
+        if (authUser != null) {
+          debugPrint('Updating user profile with org_id...');
+          final fullName = authUser.userMetadata?['full_name'] as String? ?? '';
+          final email = authUser.email ?? '';
+          await client.from('profiles').upsert({
+            'user_id': authUser.id,
+            'full_name': fullName,
+            'email': email,
+            'role': 'executiveAdmin',
+            'org_id': orgId,
+          });
+        }
+      }
+
+      debugPrint('Inserting branch for org $orgId...');
       final res = await client.from('branches').insert({
         'org_id': orgId,
         'name': _branchNameCtrl.text.trim(),
@@ -63,8 +103,14 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         'status': 'active',
       }).select('id').single();
       _createdBranchId = res['id'].toString();
+      debugPrint('Branch created: $_createdBranchId');
+
+      debugPrint('Refreshing user session...');
+      await ref.read(authProvider.notifier).refreshCurrentUser();
+
       setState(() => _currentStep = 1);
     } catch (e) {
+      debugPrint('Setup error in _createBranch: $e');
       _showError(e);
     } finally {
       setState(() => _isLoading = false);
@@ -76,6 +122,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     if (orgId == null || _createdBranchId == null) return;
     setState(() => _isLoading = true);
     try {
+      debugPrint('Starting staff creation for org $orgId and branch $_createdBranchId...');
       final client = ref.read(supabaseClientProvider);
       final staffCode = 'STF${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10)}';
       final res = await client.from('staff_profiles').insert({
@@ -89,8 +136,10 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         'status': 'active',
       }).select('id').single();
       _createdStaffId = res['id'].toString();
+      debugPrint('Staff profile created: $_createdStaffId');
       setState(() => _currentStep = 2);
     } catch (e) {
+      debugPrint('Setup error in _createStaff: $e');
       _showError(e);
     } finally {
       setState(() => _isLoading = false);
@@ -102,6 +151,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     if (orgId == null) return;
     setState(() => _isLoading = true);
     try {
+      debugPrint('Starting member onboarding for org $orgId...');
       final client = ref.read(supabaseClientProvider);
       final memberId = 'M${DateTime.now().millisecondsSinceEpoch.toString().substring(4, 10)}';
       final res = await client.from('members').insert({
@@ -113,8 +163,10 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         'area': _branchZoneCtrl.text.trim(),
       }).select('id').single();
       _createdMemberId = res['id'].toString();
+      debugPrint('Member created: $_createdMemberId');
       setState(() => _currentStep = 3);
     } catch (e) {
+      debugPrint('Setup error in _createMember: $e');
       _showError(e);
     } finally {
       setState(() => _isLoading = false);

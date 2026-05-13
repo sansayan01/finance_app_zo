@@ -11,6 +11,7 @@
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.branches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     code TEXT UNIQUE NOT NULL,
     zone TEXT NOT NULL,
@@ -33,6 +34,7 @@ CREATE INDEX IF NOT EXISTS idx_branches_status ON public.branches(status);
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.staff_profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,  -- Links to Supabase Auth
     staff_code TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,

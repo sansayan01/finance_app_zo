@@ -105,6 +105,8 @@ cp .env.example .env
 3. **Run Supabase SQL**
    - Run `supabase_schema.sql` in Supabase SQL Editor
    - Run `supabase_staff_schema.sql` in Supabase SQL Editor
+   - Run `fix_staff_multi_tenancy.sql` in Supabase SQL Editor (Critical for multi-tenancy)
+   - Run `fix_rls_final.sql` in Supabase SQL Editor (Critical for Wizard RLS)
 
 4. **Run app**
 ```bash

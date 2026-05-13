@@ -18,18 +18,20 @@ LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT role FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
 $$;
 
--- Organizations (users can only read their own org)
+-- Organizations (users can read their own org and create new orgs)
 CREATE POLICY org_select ON public.organizations FOR SELECT
-  USING (id = public.get_user_org_id());
+  USING (id = public.get_user_org_id() OR created_by = auth.uid());
+CREATE POLICY org_insert ON public.organizations FOR INSERT
+  WITH CHECK (created_by = auth.uid());
 
 -- Profiles
 CREATE POLICY org_select_own ON public.profiles FOR SELECT
-  USING (org_id = public.get_user_org_id());
+  USING (org_id = public.get_user_org_id() OR user_id = auth.uid());
 CREATE POLICY org_insert_own ON public.profiles FOR INSERT
-  WITH CHECK (user_id = auth.uid() AND org_id = public.get_user_org_id());
+  WITH CHECK (user_id = auth.uid());
 CREATE POLICY org_update_own ON public.profiles FOR UPDATE
   USING (user_id = auth.uid() OR public.get_user_role() IN ('executiveAdmin', 'manager'))
-  WITH CHECK (org_id = public.get_user_org_id());
+  WITH CHECK (user_id = auth.uid() OR org_id = public.get_user_org_id());
 CREATE POLICY org_delete_admin ON public.profiles FOR DELETE
   USING (public.get_user_role() = 'executiveAdmin');
 

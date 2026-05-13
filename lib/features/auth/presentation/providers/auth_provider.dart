@@ -189,6 +189,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
+  // Exposed for setup wizard to refresh user after org creation
+  Future<void> refreshCurrentUser() async {
+    if (_repository == null) return;
+    try {
+      final user = await _repository.getCurrentUser();
+      if (user != null) {
+        state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
   Future<bool> resetPassword(String email) async {
     if (_repository == null) return false;
     try {

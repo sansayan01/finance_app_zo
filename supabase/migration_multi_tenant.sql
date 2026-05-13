@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.organizations (
     max_staff INTEGER DEFAULT 20,
     max_members INTEGER DEFAULT 500,
     settings JSONB DEFAULT '{}'::jsonb,
+    created_by UUID REFERENCES auth.users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

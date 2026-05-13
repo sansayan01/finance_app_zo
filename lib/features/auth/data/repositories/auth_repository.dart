@@ -22,7 +22,7 @@ class AuthRepository {
         email: email,
         fullName: 'Staff Demo User',
         phone: '9876543210',
-        role: UserRole.fieldStaff,
+        role: UserRole.collectionAgent,
         orgId: '00000000-0000-0000-0000-000000000001',
         createdAt: DateTime.now(),
       );
@@ -267,14 +267,14 @@ class AuthRepository {
     if (email != null) {
       final emailLower = email.toLowerCase();
       if (emailLower.contains('staff') || emailLower.contains('agent')) {
-        return UserRole.fieldStaff;
+        return UserRole.collectionAgent;
       }
       if (emailLower.contains('manager')) {
         return UserRole.manager;
       }
     }
 
-    if (roleStr == null) return UserRole.retailMember;
+    if (roleStr == null) return UserRole.customer;
 
     // Handle legacy or simplified role names from DB
     final normalizedRole = roleStr.toLowerCase();
@@ -282,7 +282,7 @@ class AuthRepository {
       return UserRole.superAdmin;
     }
     if (normalizedRole == 'staff' || normalizedRole == 'fieldstaff') {
-      return UserRole.fieldStaff;
+      return UserRole.collectionAgent;
     }
     if (normalizedRole == 'admin' || normalizedRole == 'executiveadmin') {
       return UserRole.executiveAdmin;
@@ -291,12 +291,12 @@ class AuthRepository {
       return UserRole.manager;
     }
     if (normalizedRole == 'customer' || normalizedRole == 'retailmember') {
-      return UserRole.retailMember;
+      return UserRole.customer;
     }
 
     return UserRole.values.firstWhere(
       (e) => e.name == roleStr,
-      orElse: () => UserRole.retailMember,
+      orElse: () => UserRole.customer,
     );
   }
 

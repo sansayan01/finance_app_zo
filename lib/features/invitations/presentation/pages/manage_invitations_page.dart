@@ -294,8 +294,8 @@ class _InvitationCard extends ConsumerWidget {
       UserRole.superAdmin => Colors.deepPurple,
       UserRole.executiveAdmin => Colors.purple,
       UserRole.manager => Colors.blue,
-      UserRole.fieldStaff => Colors.green,
-      UserRole.retailMember => Colors.orange,
+      UserRole.collectionAgent => Colors.green,
+      UserRole.customer => Colors.orange,
     };
   }
 
@@ -379,7 +379,7 @@ class _InviteMemberSheet extends ConsumerStatefulWidget {
 class _InviteMemberSheetState extends ConsumerState<_InviteMemberSheet> {
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
-  UserRole _selectedRole = UserRole.fieldStaff;
+  UserRole _selectedRole = UserRole.collectionAgent;
   bool _isLoading = false;
 
   @override
@@ -447,7 +447,7 @@ class _InviteMemberSheetState extends ConsumerState<_InviteMemberSheet> {
                 child: Text(role.name[0].toUpperCase() + role.name.substring(1)),
               );
             }).toList(),
-            onChanged: (value) => setState(() => _selectedRole = value ?? UserRole.fieldStaff),
+            onChanged: (value) => setState(() => _selectedRole = value ?? UserRole.collectionAgent),
           ),
           const SizedBox(height: 16),
 

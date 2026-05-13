@@ -20,7 +20,7 @@ class NewUserState {
     this.fullName = '',
     this.email = '',
     this.mobileNumber = '',
-    this.role = UserRole.fieldStaff,
+    this.role = UserRole.collectionAgent,
     this.employeeId = '',
     this.assignedZone = '',
     this.password = '',

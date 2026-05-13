@@ -1,12 +1,9 @@
 enum UserRole {
   superAdmin,      // Platform super admin - manages all organizations
-  executiveAdmin,  // Organization admin - manages their organization
-  admin,           // Branch admin - can create users for their branch
-  manager,         // Branch manager - manages specific branch
-  fieldStaff,      // Field staff - general operations
-  collectionAgent, // Collection agent - collects payments from customers
-  customer,        // Customer - end user with loans/savings
-  retailMember,    // Legacy alias for customer
+  executiveAdmin,  // Organization admin - manages their organization, creates branches
+  manager,         // Branch admin - manages their branch, creates staff/customers
+  collectionAgent, // Field staff - collects payments from customers
+  customer,        // End user - has loans/savings
 }
 
 enum LoanStatus {

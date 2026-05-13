@@ -101,11 +101,19 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
 
     // Filter roles based on hierarchy
     final List<UserRole> availableRoles;
-    if (currentUser?.role == UserRole.executiveAdmin) {
+    if (currentUser?.role == UserRole.superAdmin) {
+      // Super Admin can create anyone
       availableRoles = UserRole.values;
+    } else if (currentUser?.role == UserRole.executiveAdmin) {
+      // Executive Admin can create manager, collectionAgent, customer
+      availableRoles = [
+        UserRole.manager,
+        UserRole.collectionAgent,
+        UserRole.customer,
+      ];
     } else {
-      // Manager can only create Staff and Retailers
-      availableRoles = [UserRole.fieldStaff, UserRole.retailMember];
+      // Manager can only create collectionAgent and customer for their branch
+      availableRoles = [UserRole.collectionAgent, UserRole.customer];
     }
 
     return Scaffold(
@@ -417,7 +425,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
         ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04, end: 0),
 
         // ── Field Operations Card (conditional) ──
-        if (state.role != UserRole.retailMember) ...[
+        if (state.role != UserRole.customer) ...[
           const SizedBox(height: 20),
           GlassCard(
             padding: EdgeInsets.all(isNarrow ? 18 : 24),
@@ -840,26 +848,26 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
       case UserRole.executiveAdmin:
         return 'Executive Admin';
       case UserRole.manager:
-        return 'Operations Manager';
-      case UserRole.fieldStaff:
-        return 'Field Staff (Operations)';
-      case UserRole.retailMember:
-        return 'Retail Member';
+        return 'Branch Manager';
+      case UserRole.collectionAgent:
+        return 'Collection Agent (Field Staff)';
+      case UserRole.customer:
+        return 'Customer';
     }
   }
 
   String _getRoleDescription(UserRole role) {
     switch (role) {
       case UserRole.superAdmin:
-        return 'System-wide administrator with access to all organizations and global infrastructure.';
+        return 'Platform-level administrator with access to all organizations and global infrastructure.';
       case UserRole.executiveAdmin:
-        return 'Administrators have full system access, can manage all users, system configurations, and view all global reporting.';
+        return 'Organization admin with full access to their organization. Can create branches, managers, and manage all organization settings.';
       case UserRole.manager:
-        return 'Operations Managers oversee field staff, approve loan applications, and manage regional reporting.';
-      case UserRole.fieldStaff:
-        return 'Field Staff can manage loans, collect payments, and register new members in their assigned zones.';
-      case UserRole.retailMember:
-        return 'Retail Members can only view their personal savings, loans, and transaction history.';
+        return 'Branch admin who manages their assigned branch. Can create collection agents and customers for their branch.';
+      case UserRole.collectionAgent:
+        return 'Field staff who collects payments from customers in assigned areas. Can view and collect loans, manage customer interactions.';
+      case UserRole.customer:
+        return 'End user who has loans and savings. Can view their personal data, payment schedules, and transaction history.';
     }
   }
 }

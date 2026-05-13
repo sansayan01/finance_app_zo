@@ -281,9 +281,9 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                   value: stats['staff'].toString(),
                   icon: Icons.support_agent_rounded,
                   color: isDark ? AppColors.warningDark : AppColors.orange,
-                  isSelected: _filterRole == UserRole.fieldStaff,
+                  isSelected: _filterRole == UserRole.collectionAgent,
                   onTap: () =>
-                      setState(() => _filterRole = UserRole.fieldStaff),
+                      setState(() => _filterRole = UserRole.collectionAgent),
                 ),
                 const SizedBox(width: 12),
                 _StatCard(
@@ -291,9 +291,9 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                   value: stats['members'].toString(),
                   icon: Icons.groups_rounded,
                   color: isDark ? AppColors.successDark : AppColors.success,
-                  isSelected: _filterRole == UserRole.retailMember,
+                  isSelected: _filterRole == UserRole.customer,
                   onTap: () =>
-                      setState(() => _filterRole = UserRole.retailMember),
+                      setState(() => _filterRole = UserRole.customer),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -506,7 +506,7 @@ class _UserListItem extends ConsumerWidget {
                                 fontSize: 18),
                           ),
                         ),
-                        if (user.role == UserRole.retailMember)
+                        if (user.role == UserRole.customer)
                           Positioned(
                             right: 0,
                             bottom: 0,

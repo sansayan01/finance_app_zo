@@ -42,9 +42,9 @@ class OrgInvitationModel {
     return switch (role) {
       UserRole.superAdmin => 'Super Admin',
       UserRole.executiveAdmin => 'Executive Admin',
-      UserRole.manager => 'Manager',
-      UserRole.fieldStaff => 'Field Staff',
-      UserRole.retailMember => 'Retail Member',
+      UserRole.manager => 'Branch Manager',
+      UserRole.collectionAgent => 'Collection Agent',
+      UserRole.customer => 'Customer',
     };
   }
 
@@ -74,9 +74,13 @@ class OrgInvitationModel {
       case 'superadmin': return UserRole.superAdmin;
       case 'executiveadmin': return UserRole.executiveAdmin;
       case 'manager': return UserRole.manager;
-      case 'fieldstaff': return UserRole.fieldStaff;
-      case 'retailmember': return UserRole.retailMember;
-      default: return UserRole.fieldStaff;
+      case 'collectionagent':
+      case 'fieldstaff': 
+        return UserRole.collectionAgent;
+      case 'customer':
+      case 'retailmember': 
+        return UserRole.customer;
+      default: return UserRole.collectionAgent;
     }
   }
 }

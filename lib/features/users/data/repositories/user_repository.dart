@@ -86,7 +86,7 @@ class UserRepository {
       'admins':
           roles.where((r) => r == 'admin' || r == 'executiveAdmin').length,
       'managers': roles.where((r) => r == 'manager').length,
-      'staff': roles.where((r) => r == 'staff' || r == 'fieldStaff').length,
+      'staff': roles.where((r) => r == 'staff' || r == 'collectionAgent').length,
       'members':
           roles.where((r) => r == 'customer' || r == 'retailMember').length,
     };

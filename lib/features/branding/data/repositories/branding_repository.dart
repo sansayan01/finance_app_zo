@@ -1,5 +1,6 @@
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/org_branding_model.dart';
+import '../../models/org_branding_model.dart';
 
 class BrandingRepository {
   final SupabaseClient _client;
@@ -55,7 +56,7 @@ class BrandingRepository {
 
     await _client.storage
         .from('organization-assets')
-        .uploadBinary(storagePath, bytes, fileOptions: const FileOptions(upsert: true));
+        .uploadBinary(storagePath, Uint8List.fromList(bytes), fileOptions: const FileOptions(upsert: true));
 
     final publicUrl = _client.storage
         .from('organization-assets')
@@ -166,7 +167,7 @@ class BrandingRepository {
       final defaultTemplate = await _client
           .from('email_templates')
           .select()
-          .is_('org_id', null)
+          .filter('org_id', 'is', null)
           .eq('template_type', templateType)
           .maybeSingle();
 

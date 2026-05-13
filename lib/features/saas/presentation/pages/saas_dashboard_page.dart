@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-import '../../../providers/supabase_provider.dart';
-import '../data/providers/saas_providers.dart';
-import '../models/enterprise_models.dart';
-import '../models/analytics_models.dart';
 
 /// SaaS Super Admin Dashboard
 class SaaSDashboardPage extends ConsumerStatefulWidget {
@@ -252,7 +247,7 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -392,7 +387,7 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withOpacity(0.5),
+                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(org.$3, style: theme.textTheme.labelSmall),
@@ -504,9 +499,9 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/supabase_provider.dart';
-import '../models/org_branding_model.dart';
+import '../../models/org_branding_model.dart';
 import '../repositories/branding_repository.dart';
 
 /// Branding repository provider

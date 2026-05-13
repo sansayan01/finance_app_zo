@@ -410,7 +410,7 @@ class HomePageContent extends ConsumerWidget {
     }
 
     // Redirect staff to their dashboard
-    if (user?.role == UserRole.fieldStaff) {
+    if (user?.role == UserRole.collectionAgent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/staff');
       });

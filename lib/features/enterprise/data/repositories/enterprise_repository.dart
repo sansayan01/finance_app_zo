@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/audit_log_model.dart';
+import '../../models/audit_log_model.dart';
 
 class EnterpriseRepository {
   final SupabaseClient _client;
@@ -21,9 +21,7 @@ class EnterpriseRepository {
       var query = _client
           .from('audit_logs')
           .select()
-          .eq('org_id', orgId)
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+          .eq('org_id', orgId);
 
       if (action != null) query = query.eq('action', action);
       if (entityType != null) query = query.eq('entity_type', entityType);
@@ -35,7 +33,9 @@ class EnterpriseRepository {
         query = query.lte('created_at', endDate.toIso8601String());
       }
 
-      final response = await query;
+      final response = await query
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
       return response.map((e) => AuditLogModel.fromJson(e)).toList();
     } catch (e) {
       rethrow;

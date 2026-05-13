@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../providers/supabase_provider.dart';
-import '../models/enterprise_models.dart';
-import '../models/analytics_models.dart';
-import '../models/operations_models.dart';
-import '../models/growth_models.dart';
+import '../../../../providers/supabase_provider.dart';
+import '../../../enterprise/models/enterprise_models.dart';
+import '../../../analytics/models/analytics_models.dart';
+import '../../../operations/models/operations_models.dart';
+import '../../../growth/models/growth_models.dart';
 
 // ============================================
 // ENTERPRISE PROVIDERS
@@ -74,7 +74,7 @@ final systemStatusProvider = FutureProvider<List<SystemStatusModel>>((ref) async
   final response = await client
       .from('system_status')
       .select()
-      .in('status', ['investigating', 'identified', 'monitoring'])
+      .inFilter('status', ['investigating', 'identified', 'monitoring'])
       .order('created_at', ascending: false);
   
   return response.map<SystemStatusModel>((json) => SystemStatusModel.fromJson(json)).toList();
@@ -86,14 +86,13 @@ final helpArticlesProvider = FutureProvider.family<List<HelpArticleModel>, Strin
   var query = client
       .from('help_articles')
       .select()
-      .eq('status', 'published')
-      .order('view_count', ascending: false);
+      .eq('status', 'published');
   
   if (category != null) {
     query = query.eq('category', category);
   }
   
-  final response = await query;
+  final response = await query.order('view_count', ascending: false);
   return response.map<HelpArticleModel>((json) => HelpArticleModel.fromJson(json)).toList();
 });
 
@@ -103,14 +102,13 @@ final videoTutorialsProvider = FutureProvider.family<List<VideoTutorialModel>, S
   var query = client
       .from('video_tutorials')
       .select()
-      .eq('status', 'published')
-      .order('view_count', ascending: false);
+      .eq('status', 'published');
   
   if (category != null) {
     query = query.eq('category', category);
   }
   
-  final response = await query;
+  final response = await query.order('view_count', ascending: false);
   return response.map<VideoTutorialModel>((json) => VideoTutorialModel.fromJson(json)).toList();
 });
 

@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/branch_model.dart';
+import '../../models/branch_model.dart';
 
 class BranchRepository {
   final SupabaseClient _client;
@@ -179,7 +179,7 @@ class BranchRepository {
         .from('profiles')
         .select('id, full_name, email')
         .eq('org_id', _orgId)
-        .in('role', ['admin', 'executiveAdmin', 'manager'])
+        .inFilter('role', ['admin', 'executiveAdmin', 'manager'])
         .order('full_name');
 
     return List<Map<String, dynamic>>.from(response);

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:typed_data';
-import '../data/providers/branding_providers.dart';
-import '../data/models/org_branding_model.dart';
+import '../../data/providers/branding_providers.dart';
+import '../../models/org_branding_model.dart';
 
 class BrandingSettingsPage extends ConsumerStatefulWidget {
   final String orgId;

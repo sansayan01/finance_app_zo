@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/supabase_provider.dart';
-import '../models/audit_log_model.dart';
+import '../../models/audit_log_model.dart';
 import '../repositories/enterprise_repository.dart';
 
 final enterpriseRepositoryProvider = Provider<EnterpriseRepository>((ref) {

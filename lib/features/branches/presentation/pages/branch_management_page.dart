@@ -424,7 +424,7 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
               code: data['code'],
               address: data['address'],
               city: data['city'],
-              state: data['state'],
+              addressState: data['state'],
               pincode: data['pincode'],
               phone: data['phone'],
               email: data['email'],
@@ -673,7 +673,7 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
           error: (_, __) => const SizedBox.shrink(),
           data: (managers) {
             return DropdownButtonFormField<String>(
-              value: _selectedManagerId,
+              initialValue: _selectedManagerId,
               decoration: InputDecoration(
                 labelText: 'Branch Manager',
                 prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),

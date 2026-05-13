@@ -63,6 +63,25 @@ import '../features/staff/presentation/pages/staff_map_page.dart';
 import '../features/staff/presentation/pages/analytics_dashboard.dart';
 import '../features/staff/presentation/providers/sync_status_provider.dart';
 
+// Super Admin Portal - NEW
+import '../features/super_admin/presentation/pages/super_admin_shell.dart';
+import '../features/super_admin/presentation/pages/super_admin_dashboard_page.dart';
+import '../features/super_admin/presentation/pages/organizations_page.dart';
+import '../features/super_admin/presentation/pages/users_management_page.dart';
+import '../features/super_admin/presentation/pages/audit_logs_page.dart';
+import '../features/super_admin/presentation/pages/support_tickets_page.dart';
+import '../features/super_admin/presentation/pages/feature_flags_page.dart';
+import '../features/super_admin/presentation/pages/platform_announcements_page.dart';
+import '../features/super_admin/presentation/pages/platform_analytics_page.dart';
+
+// Branch Manager Portal - NEW
+import '../features/branch_manager/presentation/pages/branch_manager_shell.dart';
+import '../features/branch_manager/presentation/pages/branch_dashboard_page.dart';
+import '../features/branch_manager/presentation/pages/branch_staff_page.dart';
+import '../features/branch_manager/presentation/pages/branch_collections_page.dart';
+import '../features/branch_manager/presentation/pages/branch_approvals_page.dart';
+import '../features/branch_manager/presentation/pages/branch_cash_page.dart';
+
 // =====================================================
 // AUTH REDIRECT LISTENER
 // =====================================================

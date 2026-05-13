@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../data/models/member_model.dart';
 
 final membersRepositoryProvider = Provider<MembersRepository>((ref) {
-  return MembersRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return MembersRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final membersSearchQueryProvider = StateProvider<String>((ref) => '');

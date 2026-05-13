@@ -3,6 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// Setup Wizard
+import '../features/setup/presentation/pages/setup_wizard_page.dart';
+
+// Super Admin
+import '../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../features/admin/presentation/pages/admin_org_detail_page.dart';
+
 // Auth
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
@@ -89,6 +96,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (isAuthenticated && isAuthPath) {
+        final user = ref.read(currentUserProvider);
+        final isNewUser = user != null && user.orgId == null;
+        if (isNewUser) return '/setup';
+        if (user?.role == UserRole.superAdmin) return '/admin';
         return '/';
       }
 
@@ -99,6 +110,33 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         builder: (context, state) => const AuthShell(),
+      ),
+
+      // Setup Wizard (for new organizations)
+      GoRoute(
+        path: '/setup',
+        builder: (context, state) => const SetupWizardPage(),
+      ),
+
+      // Super Admin Panel
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) {
+          final user = ref.read(currentUserProvider);
+          if (user?.role != UserRole.superAdmin) {
+            return const Scaffold(body: Center(child: Text('Access denied')));
+          }
+          return const AdminDashboardPage();
+        },
+        routes: [
+          GoRoute(
+            path: 'org/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return AdminOrgDetailPage(orgId: id);
+            },
+          ),
+        ],
       ),
 
       // Admin Shell (for admins/managers)
@@ -320,9 +358,16 @@ class HomePageContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
 
+    // Redirect super admin to admin panel
+    if (user?.role == UserRole.superAdmin) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/admin');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     // Redirect staff to their dashboard
     if (user?.role == UserRole.fieldStaff) {
-      // Use WidgetsBinding to avoid navigation during build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/staff');
       });

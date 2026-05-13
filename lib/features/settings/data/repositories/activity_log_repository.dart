@@ -3,8 +3,9 @@ import '../models/activity_log_model.dart';
 
 class ActivityLogRepository {
   final SupabaseClient _client;
+  final String _orgId;
 
-  ActivityLogRepository(this._client);
+  ActivityLogRepository(this._client, [this._orgId = '00000000-0000-0000-0000-000000000001']);
 
   Future<void> log({
     required String action,
@@ -22,6 +23,7 @@ class ActivityLogRepository {
         'action': action,
         'details': details,
         'type': type.name,
+        'org_id': _orgId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -33,6 +35,7 @@ class ActivityLogRepository {
     final response = await _client
         .from('activity_logs')
         .select()
+        .eq('org_id', _orgId)
         .order('timestamp', ascending: false)
         .limit(100);
 

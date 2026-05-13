@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../loans/data/repositories/loans_repository.dart';
 import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
@@ -10,11 +11,13 @@ import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../../core/constants/enums.dart';
 
 final loansRepositoryProvider = Provider<LoansRepository>((ref) {
-  return LoansRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return LoansRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
-  return TransactionsRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return TransactionsRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final activeLoansProvider = FutureProvider<List<LoanModel>>((ref) async {

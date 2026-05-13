@@ -9,6 +9,7 @@ class MemberModel {
   final int activeLoans;
   final double totalSavings;
   final DateTime createdAt;
+  final String? orgId;
   final String? shopName;
   final String? businessType;
   final double? latitude;
@@ -24,6 +25,7 @@ class MemberModel {
     this.activeLoans = 0,
     this.totalSavings = 0,
     required this.createdAt,
+    this.orgId,
     this.shopName,
     this.businessType,
     this.latitude,
@@ -46,6 +48,7 @@ class MemberModel {
       activeLoans: json['active_loans'] as int? ?? 0,
       totalSavings: (json['total_savings'] as num?)?.toDouble() ?? 0.0,
       createdAt: DateTime.parse(json['created_at'] as String),
+      orgId: json['org_id'] as String?,
       shopName: json['shop_name'] as String?,
       businessType: json['business_type'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
@@ -63,6 +66,7 @@ class MemberModel {
       'kyc_status': kycStatus.name,
       'active_loans': activeLoans,
       'total_savings': totalSavings,
+      'org_id': orgId,
       'created_at': createdAt.toIso8601String(),
       'shop_name': shopName,
       'business_type': businessType,

@@ -828,6 +828,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
 
   String _getRoleDisplayName(UserRole role) {
     switch (role) {
+      case UserRole.superAdmin:
+        return 'Super Administrator';
       case UserRole.executiveAdmin:
         return 'Executive Admin';
       case UserRole.manager:
@@ -841,6 +843,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
 
   String _getRoleDescription(UserRole role) {
     switch (role) {
+      case UserRole.superAdmin:
+        return 'System-wide administrator with access to all organizations and global infrastructure.';
       case UserRole.executiveAdmin:
         return 'Administrators have full system access, can manage all users, system configurations, and view all global reporting.';
       case UserRole.manager:

@@ -6,8 +6,9 @@ import '../models/target_model.dart';
 
 class StaffRepository {
   final SupabaseClient _client;
+  final String _orgId;
 
-  StaffRepository(this._client);
+  StaffRepository(this._client, this._orgId);
 
   /// Get current staff profile from user ID
   Future<StaffProfileModel?> getStaffProfile(String userId,
@@ -21,6 +22,7 @@ class StaffRepository {
             supervisor:staff_profiles!supervisor_id(full_name)
           ''')
           .eq('user_id', userId)
+          .eq('org_id', _orgId)
           .maybeSingle();
 
       if (response != null) {
@@ -122,6 +124,7 @@ class StaffRepository {
       'period_end': todayStr,
       'target_amount': dailyTarget,
       'status': 'active',
+      'org_id': _orgId,
     };
 
     final response = await _client

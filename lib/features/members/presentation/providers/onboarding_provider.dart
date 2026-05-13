@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:microflow_pro/core/constants/enums.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/member_model.dart';
 import '../../data/repositories/members_repository.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/providers/org_provider.dart';
+import '../../../../providers/supabase_provider.dart';
 
 class OnboardingState {
   final String fullName;
@@ -110,9 +110,9 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 }
 
 final membersRepositoryProvider = Provider<MembersRepository>((ref) {
-  final authRepo = ref.watch(authRepositoryProvider);
-  final client = authRepo?.client ?? Supabase.instance.client;
-  return MembersRepository(client);
+  final client = ref.watch(supabaseClientProvider);
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return MembersRepository(client, orgId);
 });
 
 final locationServiceProvider = Provider<LocationService>((ref) {

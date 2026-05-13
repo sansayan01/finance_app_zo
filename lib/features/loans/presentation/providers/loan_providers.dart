@@ -2,17 +2,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/loan_model.dart';
 import '../../data/repositories/loans_repository.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../../core/constants/enums.dart';
 
 import '../../data/repositories/emi_repository.dart';
 import '../../data/models/emi_schedule_model.dart';
 
 final loansRepositoryProvider = Provider<LoansRepository>((ref) {
-  return LoansRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return LoansRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final emiRepositoryProvider = Provider<EMIRepository>((ref) {
-  return EMIRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return EMIRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final allLoansProvider = FutureProvider<List<LoanModel>>((ref) async {

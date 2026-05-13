@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroFlow Pro - Micro-Finance Management Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1E293B; line-height: 1.6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        
+        nav { padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #00D9FF, #6366F1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links a { margin-left: 24px; text-decoration: none; color: #64748B; font-weight: 500; }
+        .nav-links a:hover { color: #6366F1; }
+        .btn { display: inline-block; padding: 12px 28px; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+        .btn-outline { border: 2px solid #6366F1; color: #6366F1; }
+        .btn-outline:hover { background: #6366F1; color: white; }
+
+        .hero { padding: 80px 0; text-align: center; }
+        .hero h1 { font-size: 48px; font-weight: 800; line-height: 1.2; max-width: 700px; margin: 0 auto 20px; }
+        .hero h1 span { background: linear-gradient(135deg, #00D9FF, #6366F1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 18px; color: #64748B; max-width: 550px; margin: 0 auto 32px; }
+        .hero .btn { margin: 0 8px; }
+
+        .features { padding: 80px 0; }
+        .features h2 { text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 48px; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+        .feature-card { padding: 32px; border-radius: 16px; border: 1px solid #E2E8F0; transition: all 0.2s; }
+        .feature-card:hover { border-color: #6366F1; box-shadow: 0 4px 20px rgba(99,102,241,0.1); }
+        .feature-card h3 { margin: 16px 0 8px; }
+        .feature-card p { color: #64748B; font-size: 14px; }
+        .feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+        .pricing { padding: 80px 0; background: #F8FAFC; }
+        .pricing h2 { text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 48px; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .pricing-card { padding: 32px; border-radius: 16px; background: white; border: 1px solid #E2E8F0; text-align: center; position: relative; }
+        .pricing-card.featured { border-color: #6366F1; box-shadow: 0 8px 32px rgba(99,102,241,0.15); }
+        .pricing-card .price { font-size: 48px; font-weight: 800; margin: 16px 0; }
+        .pricing-card .price span { font-size: 16px; font-weight: 400; color: #64748B; }
+        .pricing-card ul { list-style: none; text-align: left; margin: 24px 0; }
+        .pricing-card ul li { padding: 8px 0; }
+        .pricing-card ul li::before { content: '✓ '; color: #6366F1; font-weight: 700; }
+        .badge { background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); }
+
+        .footer { padding: 40px 0; text-align: center; color: #64748B; border-top: 1px solid #E2E8F0; }
+        @media (max-width: 600px) { .hero h1 { font-size: 32px; } .nav-links { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo">MicroFlow Pro</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#contact">Contact</a>
+                <a href="#" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Sign In</a>
+            </div>
+        </nav>
+    </div>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Manage Your <span>Micro-Finance</span> Operations Like a Pro</h1>
+            <p>Complete admin portal + field staff app for MFIs. Loans, savings, collections, GPS tracking, offline mode, and more.</p>
+            <a href="#" class="btn btn-primary">Start Free Trial</a>
+            <a href="#features" class="btn btn-outline">See Features</a>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <h2>Everything You Need</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#EEF2FF;color:#6366F1;">🏦</div>
+                    <h3>Loan Management</h3>
+                    <p>Create loans, auto-generate EMI schedules, track repayments, and manage collections.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#F0FDF4;color:#22C55E;">💰</div>
+                    <h3>Savings Mobilization</h3>
+                    <p>Recurring savings plans with maturity tracking, interest calculation, and deposit ledger.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#FFF7ED;color:#F97316;">📍</div>
+                    <h3>GPS-Tracked Collections</h3>
+                    <p>Field collectors can record collections with GPS stamps, generate receipts, and work offline.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#FEF2F2;color:#EF4444;">📊</div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Real-time KPIs, collection trends, disbursement vs collection charts, delinquency tracking.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#F5F3FF;color:#8B5CF6;">📴</div>
+                    <h3>Offline First</h3>
+                    <p>Collect data offline, auto-sync when connected. Perfect for field operations in remote areas.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#ECFEFF;color:#06B6D4;">👥</div>
+                    <h3>Member Management</h3>
+                    <p>KYC verification, member profiles, loan history, savings history - complete 360 view.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2>Simple Pricing</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Starter</h3>
+                    <div class="price">₹999<span>/mo</span></div>
+                    <p>For small savings groups</p>
+                    <ul>
+                        <li>Up to 100 members</li>
+                        <li>1 branch</li>
+                        <li>3 staff accounts</li>
+                        <li>Basic analytics</li>
+                        <li>Email support</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width:100%;">Get Started</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="badge">Popular</div>
+                    <h3>Professional</h3>
+                    <div class="price">₹2,999<span>/mo</span></div>
+                    <p>For growing MFIs</p>
+                    <ul>
+                        <li>Up to 1,000 members</li>
+                        <li>Up to 5 branches</li>
+                        <li>20 staff accounts</li>
+                        <li>Advanced analytics</li>
+                        <li>GPS tracking</li>
+                        <li>Offline mode</li>
+                        <li>Priority support</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary" style="width:100%;">Get Started</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">₹7,999<span>/mo</span></div>
+                    <p>For large institutions</p>
+                    <ul>
+                        <li>Unlimited members</li>
+                        <li>Unlimited branches</li>
+                        <li>Unlimited staff</li>
+                        <li>Custom branding</li>
+                        <li>API access</li>
+                        <li>Dedicated support</li>
+                        <li>On-premise option</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width:100%;">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <footer class="footer">
+            <p>&copy; 2025-2026 MicroFlow Pro. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

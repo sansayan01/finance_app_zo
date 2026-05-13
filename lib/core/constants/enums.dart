@@ -1,4 +1,5 @@
 enum UserRole {
+  superAdmin,
   executiveAdmin,
   manager,
   fieldStaff,

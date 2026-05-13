@@ -3,8 +3,9 @@ import '../models/emi_schedule_model.dart';
 
 class EMIRepository {
   final SupabaseClient _client;
+  final String _orgId;
 
-  EMIRepository(this._client);
+  EMIRepository(this._client, this._orgId);
 
   Future<List<EMIScheduleModel>> getByLoanId(String loanId) async {
     try {
@@ -46,6 +47,7 @@ class EMIRepository {
         'payment_mode': paymentMode,
         'notes': notes,
         'agent_id': agentId,
+        'org_id': _orgId,
         'entered_at': DateTime.now().toIso8601String(),
       });
 
@@ -97,6 +99,7 @@ class EMIRepository {
 
           schedule.add({
             'loan_id': loanId,
+            'org_id': _orgId,
             'emi_number': i,
             'due_date': DateTime(
                     startDate.year, startDate.month + (i - 1), startDate.day)

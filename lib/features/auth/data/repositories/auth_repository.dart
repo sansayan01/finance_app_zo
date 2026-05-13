@@ -23,6 +23,7 @@ class AuthRepository {
         fullName: 'Staff Demo User',
         phone: '9876543210',
         role: UserRole.fieldStaff,
+        orgId: '00000000-0000-0000-0000-000000000001',
         createdAt: DateTime.now(),
       );
     }
@@ -82,6 +83,7 @@ class AuthRepository {
       phone:
           user.phone ?? (profile != null ? profile['phone'] as String? : null),
       role: role,
+      orgId: profile?['org_id'] as String?,
       createdAt: parsedDate ?? DateTime.now(),
     );
 
@@ -107,6 +109,7 @@ class AuthRepository {
     required String password,
     required String fullName,
     String? phone,
+    String? orgName,
   }) async {
     final response = await _client.auth.signUp(
       email: email,
@@ -122,6 +125,31 @@ class AuthRepository {
       throw Exception('Sign up failed');
     }
 
+    String orgId;
+    if (orgName != null && orgName.isNotEmpty) {
+      final slug = orgName
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+          .replaceAll(RegExp(r'^-|-$'), '');
+      final orgResponse = await _client.from('organizations').insert({
+        'name': orgName,
+        'slug': slug,
+        'status': 'active',
+      }).select('id').single();
+      orgId = orgResponse['id'].toString();
+
+      await _client.from('profiles').insert({
+        'user_id': user.id,
+        'full_name': fullName,
+        'email': email,
+        'phone': phone,
+        'role': 'executiveAdmin',
+        'org_id': orgId,
+      });
+    } else {
+      orgId = '00000000-0000-0000-0000-000000000001';
+    }
+
     final parsedDate = DateTime.tryParse(user.createdAt);
 
     return UserModel(
@@ -129,7 +157,8 @@ class AuthRepository {
       email: user.email ?? '',
       fullName: fullName,
       phone: phone,
-      role: _parseRole(null, user.email),
+      role: UserRole.executiveAdmin,
+      orgId: orgId,
       createdAt: parsedDate ?? DateTime.now(),
     );
   }
@@ -191,6 +220,7 @@ class AuthRepository {
       phone:
           user.phone ?? (profile != null ? profile['phone'] as String? : null),
       role: role,
+      orgId: profile?['org_id'] as String?,
       createdAt: parsedDate ?? DateTime.now(),
     );
   }
@@ -211,6 +241,9 @@ class AuthRepository {
 
     // Handle legacy or simplified role names from DB
     final normalizedRole = roleStr.toLowerCase();
+    if (normalizedRole == 'superadmin' || normalizedRole == 'super_admin') {
+      return UserRole.superAdmin;
+    }
     if (normalizedRole == 'staff' || normalizedRole == 'fieldstaff') {
       return UserRole.fieldStaff;
     }

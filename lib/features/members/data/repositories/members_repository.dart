@@ -3,12 +3,13 @@ import '../models/member_model.dart';
 
 class MembersRepository {
   final SupabaseClient _client;
+  final String _orgId;
 
-  MembersRepository(this._client);
+  MembersRepository(this._client, this._orgId);
 
   Future<List<MemberModel>> getMembers({int limit = 50, String? query}) async {
     try {
-      var request = _client.from('members').select();
+      var request = _client.from('members').select().eq('org_id', _orgId);
 
       if (query != null && query.isNotEmpty) {
         request = request.or(
@@ -22,14 +23,16 @@ class MembersRepository {
           .map((json) => MemberModel.fromJson(json))
           .toList();
     } catch (e) {
-      // If table is missing, return empty list instead of crashing
       return [];
     }
   }
 
   Future<MemberSummary> getMemberSummary() async {
     try {
-      final response = await _client.from('members').select('id, kyc_status');
+      final response = await _client
+          .from('members')
+          .select('id, kyc_status')
+          .eq('org_id', _orgId);
       final members = response as List;
 
       return MemberSummary(
@@ -44,9 +47,11 @@ class MembersRepository {
   }
 
   Future<MemberModel> createMember(MemberModel member) async {
+    final json = member.toJson();
+    json['org_id'] = _orgId;
     final response = await _client
         .from('members')
-        .insert(member.toJson())
+        .insert(json)
         .select()
         .single();
     return MemberModel.fromJson(response);

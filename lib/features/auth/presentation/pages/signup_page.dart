@@ -19,6 +19,7 @@ class SignUpPage extends ConsumerStatefulWidget {
 
 class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
+  final _orgController = TextEditingController();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -30,6 +31,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
 
   @override
   void dispose() {
+    _orgController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -56,10 +58,11 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           password: _passwordController.text,
           fullName: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
+          orgName: _orgController.text.trim(),
         );
 
     if (success && mounted) {
-      context.go('/');
+      context.go('/setup');
     } else if (mounted) {
       final error = ref.read(auth.authProvider).errorMessage;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -172,6 +175,20 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         key: _formKey,
         child: Column(
           children: [
+            TextFormField(
+              controller: _orgController,
+              decoration: const InputDecoration(
+                labelText: 'Organization Name',
+                prefixIcon: Icon(Icons.business_outlined, size: 22),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Organization name is required';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(

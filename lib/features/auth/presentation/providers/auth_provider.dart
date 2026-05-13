@@ -7,7 +7,7 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../../settings/data/providers/activity_log_repository_provider.dart';
 
-final authRepositoryProvider = Provider<AuthRepository?>((ref) {
+final Provider<AuthRepository?> authRepositoryProvider = Provider<AuthRepository?>((ref) {
   try {
     final client = Supabase.instance.client;
     final logRepo = ref.read(activityLogRepositoryProvider);
@@ -142,6 +142,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
     required String fullName,
     String? phone,
+    String? orgName,
   }) async {
     if (_repository == null) {
       state = state.copyWith(
@@ -159,6 +160,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
         fullName: fullName,
         phone: phone,
+        orgName: orgName,
       );
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
       return true;
@@ -260,7 +262,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final StateNotifierProvider<AuthNotifier, AuthState> authProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return AuthNotifier(repository);
 });
@@ -270,7 +273,7 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
   return authState.status == AuthStatus.authenticated;
 });
 
-final currentUserProvider = Provider<UserModel?>((ref) {
+final Provider<UserModel?> currentUserProvider = Provider<UserModel?>((ref) {
   final authState = ref.watch(authProvider);
   return authState.user;
 });

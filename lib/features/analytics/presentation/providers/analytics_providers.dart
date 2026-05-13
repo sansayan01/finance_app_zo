@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../loans/data/repositories/loans_repository.dart';
 import '../../../savings/data/repositories/savings_repository.dart';
 import '../../../members/data/repositories/members_repository.dart';
@@ -118,10 +119,12 @@ final analyticsPeriodProvider =
 final analyticsProvider = FutureProvider<AnalyticsStats>((ref) async {
   final period = ref.watch(analyticsPeriodProvider);
   final supabase = ref.watch(supabaseClientProvider);
-  final loansRepo = LoansRepository(supabase);
-  final savingsRepo = SavingsRepository(supabase);
-  final membersRepo = MembersRepository(supabase);
-  final transactionsRepo = TransactionsRepository(supabase);
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+
+  final loansRepo = LoansRepository(supabase, orgId);
+  final savingsRepo = SavingsRepository(supabase, orgId);
+  final membersRepo = MembersRepository(supabase, orgId);
+  final transactionsRepo = TransactionsRepository(supabase, orgId);
 
   // Fetch all data in parallel
   final results = await Future.wait([

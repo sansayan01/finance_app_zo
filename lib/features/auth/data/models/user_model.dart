@@ -8,6 +8,7 @@ class UserModel {
   final String? phone;
   final UserRole? role;
   final String? avatarUrl;
+  final String? orgId;
   final DateTime? createdAt;
   final bool is2FAEnabled;
   final bool isActive;
@@ -19,6 +20,7 @@ class UserModel {
     this.phone,
     this.role,
     this.avatarUrl,
+    this.orgId,
     this.createdAt,
     this.is2FAEnabled = false,
     this.isActive = true,
@@ -32,6 +34,7 @@ class UserModel {
           json['full_name'] as String? ?? json['fullName'] as String? ?? '',
       phone: json['phone'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      orgId: json['org_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -48,6 +51,7 @@ class UserModel {
       'phone': phone,
       'role': role?.name,
       'avatar_url': avatarUrl,
+      'org_id': orgId,
       'created_at': createdAt?.toIso8601String(),
       'is_2fa_enabled': is2FAEnabled,
       'is_active': isActive,
@@ -67,6 +71,7 @@ class ProfileModel {
   final String? state;
   final String? pincode;
   final UserRole? role;
+  final String? orgId;
   final DateTime? dateOfBirth;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -83,6 +88,7 @@ class ProfileModel {
     this.state,
     this.pincode,
     this.role,
+    this.orgId,
     this.dateOfBirth,
     this.createdAt,
     this.updatedAt,
@@ -106,6 +112,7 @@ class ProfileModel {
               orElse: () => UserRole.retailMember,
             )
           : null,
+      orgId: json['org_id'] as String?,
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.parse(json['date_of_birth'] as String)
           : null,
@@ -131,6 +138,7 @@ class ProfileModel {
       'state': state,
       'pincode': pincode,
       'role': role?.name,
+      'org_id': orgId,
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

@@ -2,15 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/savings_model.dart';
 import '../repositories/savings_repository.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../transactions/data/repositories/transactions_repository.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 
 final savingsRepositoryProvider = Provider<SavingsRepository>((ref) {
-  return SavingsRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return SavingsRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
-  return TransactionsRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return TransactionsRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final allSavingsProvider = FutureProvider<List<SavingsModel>>((ref) async {

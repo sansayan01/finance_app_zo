@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/loan_model.dart';
 import '../repositories/loans_repository.dart';
 import '../../../../providers/supabase_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 
 final loansRepositoryProvider = Provider<LoansRepository>((ref) {
-  return LoansRepository(ref.watch(supabaseClientProvider));
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return LoansRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 // Providers for loan metrics and lists

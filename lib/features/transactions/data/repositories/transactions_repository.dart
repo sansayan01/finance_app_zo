@@ -3,14 +3,16 @@ import '../models/transaction_model.dart';
 
 class TransactionsRepository {
   final SupabaseClient _client;
+  final String _orgId;
 
-  TransactionsRepository(this._client);
+  TransactionsRepository(this._client, this._orgId);
 
   Future<List<TransactionModel>> getRecentTransactions({int limit = 10}) async {
     try {
       final response = await _client
           .from('transactions')
           .select()
+          .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
 
@@ -30,12 +32,13 @@ class TransactionsRepository {
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
      final response = await _client
-         .from('transactions')
-         .select()
-         .filter('created_at', 'gte', startOfDay.toIso8601String())
-         .filter('created_at', 'lt', endOfDay.toIso8601String())
-         .order('created_at', ascending: false)
-         .limit(limit);
+          .from('transactions')
+          .select()
+          .eq('org_id', _orgId)
+          .filter('created_at', 'gte', startOfDay.toIso8601String())
+          .filter('created_at', 'lt', endOfDay.toIso8601String())
+          .order('created_at', ascending: false)
+          .limit(limit);
 
     return (response as List)
         .map((json) => TransactionModel.fromJson(json))
@@ -50,6 +53,7 @@ class TransactionsRepository {
       final response = await _client
           .from('transactions')
           .select()
+          .eq('org_id', _orgId)
           .eq('savings_id', savingsId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -81,6 +85,7 @@ class TransactionsRepository {
       'savings_id': savingsId,
       'payment_mode': paymentMode,
       'description': description,
+      'org_id': _orgId,
       'created_at': DateTime.now().toIso8601String(),
     });
   }
@@ -94,6 +99,7 @@ class TransactionsRepository {
        final response = await _client
            .from('transactions')
            .select()
+           .eq('org_id', _orgId)
            .filter('created_at', 'gte', startOfDay.toIso8601String())
            .filter('created_at', 'lt', endOfDay.toIso8601String());
 

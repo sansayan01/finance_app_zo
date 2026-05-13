@@ -6,10 +6,13 @@ import '../repositories/collection_repository.dart';
 import 'staff_providers.dart';
 import 'sync_providers.dart';
 
+import '../../../../core/providers/org_provider.dart';
+
 // Collection repository provider
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
-  return CollectionRepository(client);
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return CollectionRepository(client, orgId);
 });
 
 // Today's due EMIs

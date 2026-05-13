@@ -4,8 +4,9 @@ import '../models/collection_model.dart';
 
 class CollectionRepository {
   final SupabaseClient _client;
+  final String _orgId;
 
-  CollectionRepository(this._client);
+  CollectionRepository(this._client, this._orgId);
 
   /// Get today's due EMIs for a staff member
   Future<List<Map<String, dynamic>>> getTodayDueEmis(String staffId) async {
@@ -41,6 +42,7 @@ class CollectionRepository {
           )
         ''')
         .eq('agent_id', staffId)
+        .eq('org_id', _orgId)
         .eq('status', 'active');
 
     // Filter schedules for today
@@ -118,6 +120,7 @@ class CollectionRepository {
       'collection_time': now.toIso8601String(),
       'sync_status': 'synced',
       'remarks': remarks,
+      'org_id': _orgId,
     };
 
     final response = await _client

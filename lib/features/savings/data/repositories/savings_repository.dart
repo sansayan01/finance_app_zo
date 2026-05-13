@@ -3,7 +3,8 @@ import '../models/savings_model.dart';
 
 class SavingsRepository {
   final SupabaseClient _client;
-  SavingsRepository(this._client);
+  final String _orgId;
+  SavingsRepository(this._client, this._orgId);
 
   Future<String> createSavingsPlan({
     required String memberId,
@@ -18,6 +19,7 @@ class SavingsRepository {
         .from('savings_plans')
         .insert({
           'member_id': memberId,
+          'org_id': _orgId,
           'monthly_deposit': installmentAmount,
           'maturity_amount': maturityAmount,
           'maturity_date': maturityDate.toIso8601String().split('T')[0],
@@ -38,6 +40,7 @@ class SavingsRepository {
       final response = await _client
           .from('savings_plans')
           .select('*, profiles:member_id(full_name)')
+          .eq('org_id', _orgId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
           .limit(limit);
@@ -53,6 +56,7 @@ class SavingsRepository {
       final response = await _client
           .from('savings_plans')
           .select('*, profiles:member_id(full_name)')
+          .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
 
@@ -140,6 +144,7 @@ class SavingsRepository {
       'savings_id': savingId,
       'amount': amount,
       'type': 'savingsDeposit',
+      'org_id': _orgId,
       'description': 'Deposit into Savings Vault',
       'created_at': DateTime.now().toIso8601String(),
     });

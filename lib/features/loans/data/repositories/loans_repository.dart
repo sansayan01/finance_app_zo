@@ -7,9 +7,10 @@ import '../models/loan_model.dart';
 
 class LoansRepository {
   final SupabaseClient _client;
+  final String _orgId;
   final ActivityLogRepository? _logRepo;
 
-  LoansRepository(this._client, [this._logRepo]);
+  LoansRepository(this._client, this._orgId, [this._logRepo]);
 
   Future<List<LoanModel>> getAllLoans({int limit = 100}) async {
     try {
@@ -17,6 +18,7 @@ class LoansRepository {
           .from('loans')
           .select(
               '*, profiles:customer_id(full_name, phone), staff:staff_id(full_name)')
+          .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
 
@@ -34,6 +36,7 @@ class LoansRepository {
           .from('loans')
           .select(
               '*, profiles:customer_id(full_name, phone), staff:staff_id(full_name)')
+          .eq('org_id', _orgId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
           .limit(limit);
@@ -58,7 +61,8 @@ class LoansRepository {
             status,
             outstanding_balance,
             amount
-          ''');
+          ''')
+          .eq('org_id', _orgId);
 
       final loans = response as List;
       
@@ -167,10 +171,12 @@ class LoansRepository {
       'interest_type': interestLogic,
       'status': 'active',
       'first_installment_date': firstInstallmentDate.toIso8601String(),
+      'org_id': _orgId,
     });
   }
 
   Future<void> createLoanFromMap(Map<String, dynamic> data) async {
+    data['org_id'] = _orgId;
     await _client.from('loans').insert(data);
   }
 

@@ -2,7 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoanRepository {
   final SupabaseClient _client;
-  LoanRepository(this._client);
+  final String _orgId;
+  LoanRepository(this._client, this._orgId);
 
   Future<void> createLoan({
     required String borrowerId,
@@ -29,6 +30,7 @@ class LoanRepository {
       'outstanding_balance': totalExposure,
       'total_repayable': totalExposure,
       'status': 'active',
+      'org_id': _orgId,
     });
   }
 
@@ -36,6 +38,7 @@ class LoanRepository {
     final response = await _client
         .from('loans')
         .select('*, profiles:customer_id(full_name)')
+        .eq('org_id', _orgId)
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(response);
   }

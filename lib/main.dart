@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/providers/storage_providers.dart';
 import 'core/config/env_config.dart';
 import 'app.dart';
@@ -33,6 +34,21 @@ void main() async {
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
 
+  if (EnvConfig.sentryDsn.isNotEmpty) {
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = EnvConfig.sentryDsn;
+        options.tracesSampleRate = 1.0;
+        options.attachScreenshot = true;
+      },
+      appRunner: () => _runMicroFlowApp(prefs),
+    );
+  } else {
+    _runMicroFlowApp(prefs);
+  }
+}
+
+void _runMicroFlowApp(SharedPreferences prefs) {
   runApp(
     ProviderScope(
       overrides: [

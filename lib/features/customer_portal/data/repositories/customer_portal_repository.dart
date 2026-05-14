@@ -215,7 +215,7 @@ class CustomerPortalRepository {
            message,
            created_at,
            attachments,
-           sender:profiles!customer_ticket_messages_sender_id_fkey(id, full_name as name, phone, role)
+           sender:profiles!fk_ticket_msgs_sender(id, full_name as name, phone, role)
          ''')
          .eq('ticket_id', ticketId)
          .order('created_at', ascending: true);

@@ -43,19 +43,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final emailLower = email.toLowerCase();
     var success = await ref.read(authProvider.notifier).signIn(
-          email: email,
+          email: emailLower,
           password: password,
         );
-
-    // Auto-provisioning for demo account if sign-in fails
-    if (!success && emailLower.contains('staff.demo@microflow.com') && mounted) {
-      success = await ref.read(authProvider.notifier).signUp(
-            email: email,
-            password: password,
-            fullName: 'Staff Demo User',
-            phone: '9876543210',
-          );
-    }
 
     if (success && mounted) {
       context.go('/');
@@ -237,8 +227,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 32),
                 _buildActionButton(isLoading, primary),
                 const SizedBox(height: 20),
-                _buildDemoButton(isDark, primary),
-                const SizedBox(height: 20),
                 _buildSignUpLink(primary),
               ],
             ),
@@ -357,28 +345,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         color: Colors.white,
                         letterSpacing: 0.5)),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDemoButton(bool isDark, Color primary) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: () {
-          _emailController.text = 'staff.demo@microflow.com';
-          _passwordController.text = 'password123';
-          HapticFeedback.mediumImpact();
-        },
-        icon: const Icon(Icons.bolt_rounded, size: 18),
-        label: const Text('QUICK ACCESS: FIELD STAFF'),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          foregroundColor: primary,
-          side: BorderSide(color: primary.withValues(alpha: 0.3)),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

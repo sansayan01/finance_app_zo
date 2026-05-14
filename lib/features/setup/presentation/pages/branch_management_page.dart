@@ -7,7 +7,7 @@ import '../../../../providers/supabase_provider.dart';
 final branchListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.read(supabaseClientProvider);
   final orgId = ref.read(currentOrgIdOrThrowProvider);
-  final branches = await client.from('branches').select('id, name, code, zone, district, status, created_at, manager_id, staff_profiles!branches_manager_id_fkey(full_name)').eq('org_id', orgId).order('created_at', ascending: false);
+  final branches = await client.from('branches').select('id, name, code, zone, district, status, created_at, manager_id, staff_profiles!fk_branches_manager(full_name)').eq('org_id', orgId).order('created_at', ascending: false);
   final staff = await client.from('staff_profiles').select('id, full_name, role').eq('org_id', orgId).inFilter('role', ['branch_manager', 'manager']).eq('status', 'active');
   return {
     'branches': List<Map<String, dynamic>>.from(branches),

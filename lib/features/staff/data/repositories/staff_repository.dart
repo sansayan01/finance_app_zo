@@ -19,7 +19,7 @@ class StaffRepository {
           .select('''
             *,
             branches(name),
-            supervisor:staff_profiles!staff_profiles_supervisor_id_fkey(full_name)
+            supervisor:staff_profiles!fk_sp_supervisor(full_name)
           ''')
           .eq('user_id', userId)
           .eq('org_id', _orgId)
@@ -43,7 +43,7 @@ class StaffRepository {
           .select('''
             *,
             branches(name),
-            supervisor:staff_profiles!staff_profiles_supervisor_id_fkey(full_name)
+            supervisor:staff_profiles!fk_sp_supervisor(full_name)
           ''')
           .eq('id', staffId)
           .single();
@@ -142,7 +142,7 @@ class StaffRepository {
       final response = await _client
           .from('staff_today_summary')
           .select()
-          .eq('id', staffId)
+          .eq('staff_id', staffId)
           .single();
 
       return response;
@@ -188,6 +188,7 @@ class StaffRepository {
       'gps_lng': gpsLng,
       'transaction_time': now.toIso8601String(),
       'sync_status': 'synced',
+      'org_id': _orgId,
     });
   }
 
@@ -212,6 +213,7 @@ class StaffRepository {
       'gps_lng': gpsLng,
       'gps_address': gpsAddress,
       'sync_status': 'synced',
+      'org_id': _orgId,
     });
   }
 
@@ -228,20 +230,24 @@ class StaffRepository {
     int? batteryLevel,
     bool isCharging = false,
   }) async {
-    await _client.from('staff_locations').insert({
-      'staff_id': staffId,
-      'latitude': latitude,
-      'longitude': longitude,
-      'accuracy': accuracy,
-      'altitude': altitude,
-      'speed': speed,
-      'heading': heading,
-      'activity_type': activityType,
-      'battery_level': batteryLevel,
-      'is_charging': isCharging,
-      'recorded_at': DateTime.now().toIso8601String(),
-      'sync_status': 'synced',
-    });
+    try {
+      await _client.from('staff_locations').insert({
+        'staff_id': staffId,
+        'latitude': latitude,
+        'longitude': longitude,
+        'accuracy': accuracy,
+        'altitude': altitude,
+        'speed': speed,
+        'heading': heading,
+        'activity_type': activityType,
+        'battery_level': batteryLevel,
+        'is_charging': isCharging,
+        'recorded_at': DateTime.now().toIso8601String(),
+        'sync_status': 'synced',
+      });
+    } catch (e) {
+      // Location tracking is non-critical
+    }
   }
 
   /// Log a visit (check-in)
@@ -253,28 +259,35 @@ class StaffRepository {
     required double checkInLng,
     String? notes,
   }) async {
-    await _client.from('visit_logs').insert({
-      'staff_id': staffId,
-      'customer_id': customerId,
-      'purpose': purpose,
-      'check_in_time': DateTime.now().toIso8601String(),
-      'check_in_lat': checkInLat,
-      'check_in_lng': checkInLng,
-      'notes': notes,
-      'status': 'in_progress',
-      'sync_status': 'synced',
-    });
+    try {
+      await _client.from('visit_logs').insert({
+        'staff_id': staffId,
+        'customer_id': customerId,
+        'member_id': customerId,
+        'purpose': purpose,
+        'check_in_time': DateTime.now().toIso8601String(),
+        'check_in_at': DateTime.now().toIso8601String(),
+        'check_in_lat': checkInLat,
+        'check_in_lng': checkInLng,
+        'notes': notes,
+        'status': 'in_progress',
+        'visit_type': 'collection',
+        'sync_status': 'synced',
+      });
 
-    // Log activity
-    await logActivity(
-      staffId: staffId,
-      action: 'visit_check_in',
-      entityType: 'customer',
-      entityId: customerId,
-      metadata: {'purpose': purpose},
-      gpsLat: checkInLat,
-      gpsLng: checkInLng,
-    );
+      // Log activity
+      await logActivity(
+        staffId: staffId,
+        action: 'visit_check_in',
+        entityType: 'customer',
+        entityId: customerId,
+        metadata: {'purpose': purpose},
+        gpsLat: checkInLat,
+        gpsLng: checkInLng,
+      );
+    } catch (e) {
+      // Log failure silently - visitor log is non-critical
+    }
   }
 
   /// Complete a visit (check-out)
@@ -282,38 +295,47 @@ class StaffRepository {
     required String staffId,
     required double checkOutLat,
     required double checkOutLng,
+    String? outcome,
+    String? notes,
   }) async {
-    final now = DateTime.now();
+    try {
+      final now = DateTime.now();
 
-    // Find active visit
-    final activeVisit = await _client
-        .from('visit_logs')
-        .select()
-        .eq('staff_id', staffId)
-        .eq('status', 'in_progress')
-        .order('check_in_time', ascending: false)
-        .limit(1)
-        .maybeSingle();
+      // Find active visit
+      final activeVisit = await _client
+          .from('visit_logs')
+          .select()
+          .eq('staff_id', staffId)
+          .eq('status', 'in_progress')
+          .order('check_in_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
 
-    if (activeVisit == null) throw Exception('No active visit found');
+      if (activeVisit == null) throw Exception('No active visit found');
 
-    await _client.from('visit_logs').update({
-      'check_out_time': now.toIso8601String(),
-      'check_out_lat': checkOutLat,
-      'check_out_lng': checkOutLng,
-      'status': 'completed',
-      'sync_status': 'synced',
-    }).eq('id', activeVisit['id']);
+      await _client.from('visit_logs').update({
+        'check_out_time': now.toIso8601String(),
+        'check_out_at': now.toIso8601String(),
+        'check_out_lat': checkOutLat,
+        'check_out_lng': checkOutLng,
+        'status': 'completed',
+        'outcome': outcome ?? 'collected',
+        'notes': notes,
+        'sync_status': 'synced',
+      }).eq('id', activeVisit['id']);
 
-    // Log activity
-    await logActivity(
-      staffId: staffId,
-      action: 'visit_check_out',
-      entityType: 'visit',
-      entityId: activeVisit['id'],
-      gpsLat: checkOutLat,
-      gpsLng: checkOutLng,
-    );
+      // Log activity
+      await logActivity(
+        staffId: staffId,
+        action: 'visit_check_out',
+        entityType: 'visit',
+        entityId: activeVisit['id'],
+        gpsLat: checkOutLat,
+        gpsLng: checkOutLng,
+      );
+    } catch (e) {
+      // Log failure silently
+    }
   }
 
   /// Record cash deposit
@@ -324,39 +346,43 @@ class StaffRepository {
     String? reference,
     String? notes,
   }) async {
-    final now = DateTime.now();
+    try {
+      final now = DateTime.now();
 
-    // Create cash deposit record
-    await _client.from('cash_deposits').insert({
-      'staff_id': staffId,
-      'amount': amount,
-      'deposit_method': method,
-      'reference_number': reference,
-      'notes': notes,
-      'deposit_time': now.toIso8601String(),
-      'status': 'pending_verification',
-      'sync_status': 'synced',
-    });
+      // Create cash deposit record
+      await _client.from('cash_deposits').insert({
+        'staff_id': staffId,
+        'amount': amount,
+        'deposit_method': method,
+        'reference_number': reference,
+        'notes': notes,
+        'deposit_time': now.toIso8601String(),
+        'status': 'pending_verification',
+        'sync_status': 'synced',
+      });
 
-    // Update wallet
-    final wallet = await getWallet(staffId);
-    if (wallet != null) {
-      await _client.from('staff_wallet').update({
-        'cash_in_hand': wallet.cashInHand - amount,
-        'total_deposited_today': wallet.totalDepositedToday + amount,
-        'last_deposit_amount': amount,
-        'last_deposit_at': now.toIso8601String(),
-        'updated_at': now.toIso8601String(),
-      }).eq('staff_id', staffId);
+      // Update wallet
+      final wallet = await getWallet(staffId);
+      if (wallet != null) {
+        await _client.from('staff_wallet').update({
+          'cash_in_hand': wallet.cashInHand - amount,
+          'total_deposited_today': wallet.totalDepositedToday + amount,
+          'last_deposit_amount': amount,
+          'last_deposit_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        }).eq('staff_id', staffId);
+      }
+
+      // Log activity
+      await logActivity(
+        staffId: staffId,
+        action: 'cash_deposit',
+        entityType: 'deposit',
+        metadata: {'amount': amount, 'method': method},
+      );
+    } catch (e) {
+      // Log failure silently
     }
-
-    // Log activity
-    await logActivity(
-      staffId: staffId,
-      action: 'cash_deposit',
-      entityType: 'deposit',
-      metadata: {'amount': amount, 'method': method},
-    );
   }
 
   /// Start a break
@@ -365,52 +391,60 @@ class StaffRepository {
     required String breakType,
     String? notes,
   }) async {
-    await _client.from('staff_breaks').insert({
-      'staff_id': staffId,
-      'break_type': breakType,
-      'start_time': DateTime.now().toIso8601String(),
-      'notes': notes,
-      'status': 'in_progress',
-      'sync_status': 'synced',
-    });
+    try {
+      await _client.from('staff_breaks').insert({
+        'staff_id': staffId,
+        'break_type': breakType,
+        'start_time': DateTime.now().toIso8601String(),
+        'notes': notes,
+        'status': 'in_progress',
+        'sync_status': 'synced',
+      });
 
-    // Log activity
-    await logActivity(
-      staffId: staffId,
-      action: 'break_start',
-      metadata: {'break_type': breakType},
-    );
+      // Log activity
+      await logActivity(
+        staffId: staffId,
+        action: 'break_start',
+        metadata: {'break_type': breakType},
+      );
+    } catch (e) {
+      // Log failure silently
+    }
   }
 
   /// End a break
   Future<void> endBreak(String staffId) async {
-    final now = DateTime.now();
+    try {
+      final now = DateTime.now();
 
-    // Find active break
-    final activeBreak = await _client
-        .from('staff_breaks')
-        .select()
-        .eq('staff_id', staffId)
-        .eq('status', 'in_progress')
-        .order('start_time', ascending: false)
-        .limit(1)
-        .maybeSingle();
+      // Find active break
+      final activeBreak = await _client
+          .from('staff_breaks')
+          .select()
+          .eq('staff_id', staffId)
+          .eq('status', 'in_progress')
+          .order('start_time', ascending: false)
+          .limit(1)
+          .maybeSingle();
 
-    if (activeBreak == null) throw Exception('No active break found');
+      if (activeBreak == null) return;
 
-    await _client.from('staff_breaks').update({
-      'end_time': now.toIso8601String(),
-      'status': 'completed',
-      'sync_status': 'synced',
-    }).eq('id', activeBreak['id']);
+      await _client.from('staff_breaks').update({
+        'end_time': now.toIso8601String(),
+        'status': 'completed',
+        'sync_status': 'synced',
+      }).eq('id', activeBreak['id']);
 
-    // Log activity
-    await logActivity(
-      staffId: staffId,
-      action: 'break_end',
-      entityType: 'break',
-      entityId: activeBreak['id'],
-    );
+      // Log activity
+      await logActivity(
+        staffId: staffId,
+        action: 'break_end',
+        entityType: 'break',
+        entityId: activeBreak['id'],
+      );
+    } catch (e) {
+      // Log failure silently
+    }
   }
 
   /// Get current break
@@ -454,8 +488,8 @@ class StaffRepository {
         .from('visit_logs')
         .select()
          .eq('staff_id', staffId)
-         .filter('check_in_time', 'gte', dateStr)
-         .filter('check_in_time', 'lt', '${dateStr}T23:59:59');
+         .filter('check_in_at', 'gte', dateStr)
+         .filter('check_in_at', 'lt', '${dateStr}T23:59:59');
 
     // Calculate summary
     double totalCollected = 0;

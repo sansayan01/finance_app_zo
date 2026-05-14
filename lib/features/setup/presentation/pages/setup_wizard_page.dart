@@ -1,10 +1,11 @@
-import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -48,7 +49,6 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   final _orgGstCtrl = TextEditingController();
   final _orgPhoneCtrl = TextEditingController();
   final _orgEmailCtrl = TextEditingController();
-  String? _orgLogoPath;
   Uint8List? _orgLogoBytes;
   bool _logoChanged = false;
 
@@ -67,6 +67,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   final _managerNameCtrl = TextEditingController();
   final _managerPhoneCtrl = TextEditingController();
   final _managerEmailCtrl = TextEditingController();
+  final _managerEmployeeIdCtrl = TextEditingController();
+  final _managerZoneCtrl = TextEditingController();
+  final _managerAddressCtrl = TextEditingController();
   String? _selectedManagerBranchId;
 
   // ============================================
@@ -75,6 +78,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   final _agentNameCtrl = TextEditingController();
   final _agentPhoneCtrl = TextEditingController();
   final _agentEmailCtrl = TextEditingController();
+  final _agentEmployeeIdCtrl = TextEditingController();
+  final _agentZoneCtrl = TextEditingController();
+  final _agentAddressCtrl = TextEditingController();
   String? _selectedAgentBranchId;
 
   // ============================================
@@ -82,6 +88,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   // ============================================
   final _customerNameCtrl = TextEditingController();
   final _customerPhoneCtrl = TextEditingController();
+  final _customerAadharCtrl = TextEditingController();
+  final _customerPanCtrl = TextEditingController();
   String? _selectedCustomerBranchId;
 
   @override
@@ -115,11 +123,19 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     _managerNameCtrl.dispose();
     _managerPhoneCtrl.dispose();
     _managerEmailCtrl.dispose();
+    _managerEmployeeIdCtrl.dispose();
+    _managerZoneCtrl.dispose();
+    _managerAddressCtrl.dispose();
     _agentNameCtrl.dispose();
     _agentPhoneCtrl.dispose();
     _agentEmailCtrl.dispose();
+    _agentEmployeeIdCtrl.dispose();
+    _agentZoneCtrl.dispose();
+    _agentAddressCtrl.dispose();
     _customerNameCtrl.dispose();
     _customerPhoneCtrl.dispose();
+    _customerAadharCtrl.dispose();
+    _customerPanCtrl.dispose();
     super.dispose();
   }
 
@@ -199,23 +215,25 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       }
 
       // Upload logo if selected
-      if (_orgLogoBytes != null && orgId != null) {
-        final logoFileName = 'org_$orgId/logo.png';
+      if (_orgLogoBytes != null) {
+        final isPng = _orgLogoBytes!.length > 4 &&
+            _orgLogoBytes![0] == 0x89 && _orgLogoBytes![1] == 0x50 &&
+            _orgLogoBytes![2] == 0x4E && _orgLogoBytes![3] == 0x47;
+        final ext = isPng ? 'png' : 'jpg';
+        final mime = isPng ? 'image/png' : 'image/jpeg';
+        final logoFileName = 'org_$orgId/logo.$ext';
+
         await client.storage.from('brand-assets').uploadBinary(
           logoFileName,
           _orgLogoBytes!,
-          fileOptions: const FileOptions(
-            contentType: 'image/png',
-            upsert: true,
-          ),
+          fileOptions: FileOptions(contentType: mime, upsert: true),
         );
-        
-        // Get public URL and update organization
+
         final logoUrl = client.storage.from('brand-assets').getPublicUrl(logoFileName);
         await client.from('organizations').update({
           'logo_url': logoUrl,
         }).eq('id', orgId);
-        
+
         setState(() => _logoChanged = true);
       }
 
@@ -251,22 +269,38 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       final orgId = ref.read(currentOrgIdProvider);
       if (orgId == null) throw Exception('Organization not found');
 
-      final res = await client.from('branches').insert({
-        'org_id': orgId,
-        'name': _branchNameCtrl.text.trim(),
-        'code': _branchCodeCtrl.text.trim().toUpperCase(),
-        'zone': _branchZoneCtrl.text.trim(),
-        'district': _branchDistrictCtrl.text.trim(),
-        'address': _branchAddressCtrl.text.trim(),
-        'status': 'active',
-      }).select('id, name').single();
-      
-      _createdBranchId = res['id'].toString();
+      final code = _branchCodeCtrl.text.trim().toUpperCase();
+
+      // Check if branch with this code already exists (from a partial run)
+      final existing = await client.from('branches')
+          .select('id, name')
+          .eq('org_id', orgId)
+          .eq('code', code)
+          .maybeSingle();
+
+      String branchName;
+      if (existing != null) {
+        _createdBranchId = existing['id'].toString();
+        branchName = existing['name'] as String;
+      } else {
+        final res = await client.from('branches').insert({
+          'org_id': orgId,
+          'name': _branchNameCtrl.text.trim(),
+          'code': code,
+          'city': _branchZoneCtrl.text.trim(),
+          'state': _branchDistrictCtrl.text.trim(),
+          'address': _branchAddressCtrl.text.trim(),
+          'status': 'active',
+        }).select('id, name').single();
+        
+        _createdBranchId = res['id'].toString();
+        branchName = res['name'] as String;
+      }
       
       // Add to branches list for selection
       setState(() {
         _branches = [
-          {'id': _createdBranchId, 'name': res['name']},
+          {'id': _createdBranchId, 'name': branchName},
         ];
         _selectedManagerBranchId = _createdBranchId;
         _selectedAgentBranchId = _createdBranchId;
@@ -319,6 +353,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         'branch_id': _selectedManagerBranchId,
         'status': 'active',
         'staff_code': managerCode,
+        'employee_id': _managerEmployeeIdCtrl.text.trim().isNotEmpty ? _managerEmployeeIdCtrl.text.trim() : null,
+        'assigned_zone': _managerZoneCtrl.text.trim().isNotEmpty ? _managerZoneCtrl.text.trim() : null,
       }).select('id').single();
       
       _createdBranchManagerId = res['id'].toString();
@@ -368,6 +404,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         'branch_id': _selectedAgentBranchId,
         'status': 'active',
         'staff_code': agentCode,
+        'employee_id': _agentEmployeeIdCtrl.text.trim().isNotEmpty ? _agentEmployeeIdCtrl.text.trim() : null,
+        'assigned_zone': _agentZoneCtrl.text.trim().isNotEmpty ? _agentZoneCtrl.text.trim() : null,
       }).select('id').single();
       
       _createdCollectionAgentId = res['id'].toString();
@@ -416,6 +454,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         'branch_id': _selectedCustomerBranchId,
         'kyc_status': 'pending',
         'status': 'active',
+        'pan': _customerPanCtrl.text.trim().isNotEmpty ? _customerPanCtrl.text.trim().toUpperCase() : null,
+        'aadhar': _customerAadharCtrl.text.trim().isNotEmpty ? _customerAadharCtrl.text.trim() : null,
       }).select('id').single();
       
       _createdCustomerId = res['id'].toString();
@@ -428,7 +468,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   }
 
   // ============================================
-  // HELPER: Pick Logo Image
+  // HELPER: Pick & Compress Logo Image
+  // Auto-compresses to ~5KB, max upload 1MB
   // ============================================
   Future<void> _pickLogo() async {
     final picker = ImagePicker();
@@ -436,15 +477,40 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       source: ImageSource.gallery,
       maxWidth: 512,
       maxHeight: 512,
-      imageQuality: 85,
+      imageQuality: 30,
     );
-    
-    if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
-      setState(() {
-        _orgLogoPath = pickedFile.path;
-        _orgLogoBytes = bytes;
-      });
+
+    if (pickedFile == null) return;
+
+    final rawBytes = await pickedFile.readAsBytes();
+
+    final compressed = await _compressLogo(rawBytes);
+
+    if (mounted) {
+      setState(() => _orgLogoBytes = compressed);
+      final originalKb = (rawBytes.length / 1024).toStringAsFixed(1);
+      final compressedKb = (compressed.length / 1024).toStringAsFixed(1);
+      final pct = rawBytes.isNotEmpty ? ((1 - compressed.length / rawBytes.length) * 100).toStringAsFixed(0) : '0';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$originalKb KB → $compressedKb KB ($pct% reduction)'), backgroundColor: Colors.green, duration: const Duration(seconds: 2)),
+      );
+    }
+  }
+
+  Future<Uint8List> _compressLogo(Uint8List raw) async {
+    try {
+      final codec = await ui.instantiateImageCodec(raw, targetWidth: 256, targetHeight: 256);
+      final frame = await codec.getNextFrame();
+      final resized = frame.image;
+
+      final pngData = await resized.toByteData(format: ui.ImageByteFormat.png);
+      
+      resized.dispose();
+      codec.dispose();
+      
+      return pngData?.buffer.asUint8List() ?? raw;
+    } catch (_) {
+      return raw;
     }
   }
 
@@ -456,6 +522,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   }
 
   void _finish() {
+    ref.invalidate(setupCompleteProvider);
     context.go('/');
   }
 
@@ -469,13 +536,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       appBar: AppBar(
         title: const Text('Setup Wizard'),
         leading: Container(), // Remove back button
-        actions: [
-          if (_currentStep < totalSteps)
-            TextButton(
-              onPressed: _finish,
-              child: const Text('Skip All'),
-            ),
-        ],
+        actions: [],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -897,15 +958,15 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _branchZoneCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Zone/Area',
-                  hintText: 'North Zone',
+              Expanded(
+                child: TextField(
+                  controller: _branchZoneCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'City',
+                    hintText: 'Mumbai',
+                  ),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -1010,9 +1071,42 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           ],
         ),
         const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _managerEmployeeIdCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Employee ID',
+                  hintText: 'Internal reference #',
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _managerZoneCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Assigned Zone / Area',
+                  hintText: 'e.g. North Sector',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _managerAddressCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Residential Address',
+            hintText: 'Enter complete address',
+          ),
+          maxLines: 2,
+        ),
+        const SizedBox(height: 16),
         // Branch Selection
         DropdownButtonFormField<String>(
-          value: _selectedManagerBranchId,
+          initialValue: _selectedManagerBranchId,
           decoration: const InputDecoration(
             labelText: 'Assign to Branch *',
           ),
@@ -1109,9 +1203,42 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           ],
         ),
         const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _agentEmployeeIdCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Employee ID',
+                  hintText: 'Internal reference #',
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _agentZoneCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Assigned Zone / Area',
+                  hintText: 'e.g. North Sector',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _agentAddressCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Residential Address',
+            hintText: 'Enter complete address',
+          ),
+          maxLines: 2,
+        ),
+        const SizedBox(height: 16),
         // Branch Selection
         DropdownButtonFormField<String>(
-          value: _selectedAgentBranchId,
+          initialValue: _selectedAgentBranchId,
           decoration: const InputDecoration(
             labelText: 'Assign to Branch',
           ),
@@ -1193,9 +1320,35 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           ),
         ),
         const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _customerAadharCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Aadhar Number',
+                  hintText: 'XXXX XXXX XXXX',
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _customerPanCtrl,
+                textCapitalization: TextCapitalization.characters,
+                decoration: const InputDecoration(
+                  labelText: 'PAN Number',
+                  hintText: 'ABCDE1234F',
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         // Branch Selection
         DropdownButtonFormField<String>(
-          value: _selectedCustomerBranchId,
+          initialValue: _selectedCustomerBranchId,
           decoration: const InputDecoration(
             labelText: 'Assign to Branch',
           ),

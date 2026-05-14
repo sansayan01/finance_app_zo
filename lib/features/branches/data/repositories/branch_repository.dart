@@ -11,10 +11,7 @@ class BranchRepository {
   Future<List<BranchModel>> getBranches() async {
     final response = await _client
         .from('branches')
-        .select('''
-          *,
-          manager:staff_profiles!branches_manager_id_fkey(full_name)
-        ''')
+        .select()
         .eq('org_id', _orgId)
         .order('created_at', ascending: false);
 
@@ -25,10 +22,7 @@ class BranchRepository {
   Future<List<BranchModel>> getActiveBranches() async {
     final response = await _client
         .from('branches')
-        .select('''
-          *,
-          manager:staff_profiles!branches_manager_id_fkey(full_name)
-        ''')
+        .select()
         .eq('org_id', _orgId)
         .eq('status', 'active')
         .order('name');
@@ -40,10 +34,7 @@ class BranchRepository {
   Future<BranchModel?> getBranch(String id) async {
     final response = await _client
         .from('branches')
-        .select('''
-          *,
-          manager:staff_profiles!branches_manager_id_fkey(full_name)
-        ''')
+        .select()
         .eq('id', id)
         .eq('org_id', _orgId)
         .maybeSingle();
@@ -119,10 +110,7 @@ class BranchRepository {
         .update(data)
         .eq('id', id)
         .eq('org_id', _orgId)
-        .select('''
-          *,
-          manager:staff_profiles!branches_manager_id_fkey(full_name)
-        ''')
+        .select()
         .single();
 
     return BranchModel.fromJson(response);

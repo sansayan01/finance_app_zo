@@ -15,19 +15,6 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    // Demo Mode Bypass
-    if (email == 'staff.demo@microflow.com') {
-      return UserModel(
-        id: '00000000-0000-0000-0000-000000000000',
-        email: email,
-        fullName: 'Staff Demo User',
-        phone: '9876543210',
-        role: UserRole.collectionAgent,
-        orgId: '00000000-0000-0000-0000-000000000001',
-        createdAt: DateTime.now(),
-      );
-    }
-
     final response = await _client.auth.signInWithPassword(
       email: email,
       password: password,
@@ -38,56 +25,11 @@ class AuthRepository {
       throw Exception('Authentication failed');
     }
 
-    final parsedDate = DateTime.tryParse(user.createdAt);
-
-    // Fail-safe role fetching & linking
-    UserRole role = _parseRole(null, user.email);
-    Map<String, dynamic>? profile;
-    try {
-      // 1. Try finding by user_id
-      profile = await _client
-          .from('profiles')
-          .select()
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-      // 2. If not found, try finding by email (for users pre-created by admin)
-      if (profile == null && user.email != null) {
-        profile = await _client
-            .from('profiles')
-            .select()
-            .eq('email', user.email!)
-            .maybeSingle();
-
-        if (profile != null) {
-          // Link the user_id for future logins
-          await _client
-              .from('profiles')
-              .update({'user_id': user.id}).eq('id', profile['id']);
-        }
-      }
-
-      if (profile != null) {
-        role = _parseRole(profile['role'] as String?, user.email);
-      }
-    } catch (e) {
-      // Fallback to default/email override
+    // Use getCurrentUser to handle profile fetching and auto-creation
+    final userModel = await getCurrentUser();
+    if (userModel == null) {
+      throw Exception('Failed to load user profile');
     }
-
-    final userModel = UserModel(
-      id: user.id,
-      email: user.email ?? '',
-      fullName: user.userMetadata?['full_name'] as String? ??
-          (profile != null ? profile['full_name'] as String? : null) ??
-          '',
-      phone:
-          user.phone ?? (profile != null ? profile['phone'] as String? : null),
-      role: role,
-      orgId: profile?['org_id'] as String?,
-      branchId: profile?['branch_id'] as String?,
-      memberId: profile?['member_id'] as String?,
-      createdAt: parsedDate ?? DateTime.now(),
-    );
 
     // Audit the login action (Fail-safe)
     try {
@@ -205,7 +147,7 @@ class AuthRepository {
 
     final parsedDate = DateTime.tryParse(user.createdAt);
 
-    UserRole role = _parseRole(null, user.email);
+    UserRole role = _parseRole(null, user.email, user.userMetadata);
     Map<String, dynamic>? profile;
     try {
       profile = await _client
@@ -244,10 +186,12 @@ class AuthRepository {
       }
 
       if (profile != null) {
-        role = _parseRole(profile['role'] as String?, user.email);
+        role = _parseRole(profile['role'] as String?, user.email, user.userMetadata);
+      } else {
+        role = _parseRole(null, user.email, user.userMetadata);
       }
     } catch (e) {
-      // Fallback
+      // Fallback already handled by initial role assignment
     }
 
     return UserModel(
@@ -266,40 +210,44 @@ class AuthRepository {
     );
   }
 
-  UserRole _parseRole(String? roleStr, String? email) {
-    // Role Overrides for Testing/Demo
-    if (email != null) {
-      final emailLower = email.toLowerCase();
-      if (emailLower.contains('staff') || emailLower.contains('agent')) {
-        return UserRole.collectionAgent;
-      }
-      if (emailLower.contains('manager')) {
-        return UserRole.manager;
-      }
-    }
-
-    if (roleStr == null) return UserRole.customer;
-
-    // Handle legacy or simplified role names from DB
-    final normalizedRole = roleStr.toLowerCase();
-    if (normalizedRole == 'superadmin' || normalizedRole == 'super_admin') {
+  UserRole _parseRole(String? roleStr, String? email, Map<String, dynamic>? metadata) {
+    // 1. Explicit super admin override
+    if (email != null && email.toLowerCase() == 'msayan9733@gmail.com') {
       return UserRole.superAdmin;
     }
-    if (normalizedRole == 'staff' || normalizedRole == 'fieldstaff') {
-      return UserRole.collectionAgent;
+
+    // 2. Check metadata role (set during signup)
+    final metadataRole = metadata?['role'] as String?;
+    final effectiveRole = roleStr ?? metadataRole;
+
+    if (effectiveRole == null) {
+      // 3. Fallback for new signups with org name (they are always executiveAdmins)
+      if (metadata?['org_name'] != null) {
+        return UserRole.executiveAdmin;
+      }
+      return UserRole.customer;
     }
-    if (normalizedRole == 'admin' || normalizedRole == 'executiveadmin') {
+
+    final normalized = effectiveRole.toLowerCase();
+    
+    if (normalized == 'superadmin' || normalized == 'super_admin') {
+      return UserRole.superAdmin;
+    }
+    if (normalized == 'executiveadmin' || normalized == 'admin') {
       return UserRole.executiveAdmin;
     }
-    if (normalizedRole == 'manager') {
+    if (normalized == 'manager') {
       return UserRole.manager;
     }
-    if (normalizedRole == 'customer' || normalizedRole == 'retailmember') {
+    if (normalized == 'collectionagent' || normalized == 'staff' || normalized == 'fieldstaff') {
+      return UserRole.collectionAgent;
+    }
+    if (normalized == 'customer' || normalized == 'retailmember') {
       return UserRole.customer;
     }
 
     return UserRole.values.firstWhere(
-      (e) => e.name == roleStr,
+      (e) => e.name.toLowerCase() == normalized,
       orElse: () => UserRole.customer,
     );
   }

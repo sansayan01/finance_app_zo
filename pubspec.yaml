@@ -51,6 +51,10 @@ dependencies:
   image_picker: ^1.1.2
   file_picker: ^8.1.2
 
+  # Telemetry & Analytics
+  sentry_flutter: ^8.12.1
+  posthog_flutter: ^4.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -64,7 +68,7 @@ dev_dependencies:
 
   # Code Generation
   build_runner: ^2.4.13
-  freezed: ^2.5.7
+  freezed: ^3.2.5
   json_serializable: ^6.8.0
 
   # Integration Testing

@@ -173,11 +173,11 @@ class CollectionRepository {
           collection_date,
           collection_time,
           receipt_number,
-          type,
+          collection_type,
           is_partial,
           is_offline,
           sync_status,
-          staff_profiles(name)
+          staff_profiles!inner(full_name)
         ''')
         .eq('staff_id', staffId);
 
@@ -194,7 +194,7 @@ class CollectionRepository {
     }
 
     if (type != null && type != 'all') {
-      query = query.eq('type', type);
+      query = query.eq('collection_type', type);
     }
 
     if (paymentMode != null && paymentMode != 'all') {
@@ -210,8 +210,9 @@ class CollectionRepository {
       final staff = item['staff_profiles'] as Map<String, dynamic>?;
       return {
         ...Map<String, dynamic>.from(item),
-        'staff_name': staff?['name'],
-        'amount': item['amount_collected'], // Add alias for convenience
+        'staff_name': staff?['full_name'],
+        'type': item['collection_type'],
+        'amount': item['amount_collected'],
       };
     }).toList();
   }
@@ -263,7 +264,7 @@ class CollectionRepository {
           full_name,
           phone,
           area,
-          address,
+          gps_address,
           member_id,
           kyc_status,
           active_loans,
@@ -272,7 +273,7 @@ class CollectionRepository {
             id,
             loan_number,
             principal,
-            outstanding_balance,
+            outstanding_amount,
             status
           )
         ''')
@@ -288,7 +289,7 @@ class CollectionRepository {
       
       for (final loan in loans) {
         if (loan['status'] == 'active') {
-          outstanding += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
+          outstanding += (loan['outstanding_amount'] as num?)?.toDouble() ?? 0;
           loanNumber ??= loan['loan_number'];
         }
       }
@@ -314,9 +315,9 @@ class CollectionRepository {
             loan_number,
             principal,
             interest_rate,
-            tenure,
+            tenure_months,
             emi,
-            outstanding_balance,
+            outstanding_amount,
             status,
             start_date,
             paid_emis,
@@ -333,7 +334,7 @@ class CollectionRepository {
           savings(
             id,
             plan_name,
-            balance,
+            current_amount,
             target_amount,
             monthly_deposit,
             status
@@ -398,9 +399,9 @@ class CollectionRepository {
           loan_number,
           principal,
           interest_rate,
-          tenure,
+          tenure_months,
           emi,
-          outstanding_balance,
+          outstanding_amount,
           status,
           start_date,
           paid_emis,
@@ -432,23 +433,23 @@ class CollectionRepository {
         .select('''
           id,
           plan_name,
-          balance,
+          current_amount,
           target_amount,
           monthly_deposit,
           status,
           created_at,
-          maturity_date,
-          savings_deposits(
-            id,
-            amount,
-            deposit_date,
-            deposit_mode
-          )
+          maturity_date
         ''')
         .eq('member_id', customerId)
         .order('created_at', ascending: false);
 
-    return List<Map<String, dynamic>>.from(response);
+    // Map current_amount → balance for backward compatibility
+    return response.map((item) {
+      return {
+        ...Map<String, dynamic>.from(item),
+        'balance': item['current_amount'],
+      };
+    }).toList();
   }
 
   /// Get customer collection history
@@ -468,11 +469,11 @@ class CollectionRepository {
           receipt_number,
           loan_number,
           loan_id,
-          type,
+          collection_type,
           is_partial,
           is_offline,
           sync_status,
-          staff_profiles(name)
+          staff_profiles!inner(full_name)
         ''')
         .eq('member_id', customerId)
         .order('collection_time', ascending: false)
@@ -483,7 +484,8 @@ class CollectionRepository {
       final staff = item['staff_profiles'] as Map<String, dynamic>?;
       return {
         ...Map<String, dynamic>.from(item),
-        'staff_name': staff?['name'],
+        'staff_name': staff?['full_name'],
+        'type': item['collection_type'],
       };
     }).toList();
   }

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'local_database.dart';
 import 'offline_sync_engine.dart';
 import '../../../../core/providers/storage_providers.dart';
+import '../../../../providers/supabase_provider.dart';
 
 /// Background sync service that handles automatic synchronization
 /// between local database and Supabase
@@ -109,8 +110,8 @@ class BackgroundSyncService {
             principal,
             interest_rate,
             status,
-            outstanding_balance,
-            emi_schedules(
+            outstanding_amount,
+            loan_schedules(
               id,
               due_date,
               emi,
@@ -120,7 +121,7 @@ class BackgroundSyncService {
           savings(
             id,
             account_number,
-            balance
+            current_amount
           )
         ''')
         .limit(500);
@@ -204,8 +205,4 @@ final backgroundSyncServiceProvider = Provider<BackgroundSyncService>((ref) {
   final syncEngine = OfflineSyncEngine(client, ref.watch(sharedPreferencesProvider));
 
   return BackgroundSyncService(client, localDb, syncEngine);
-});
-
-final supabaseClientProvider = Provider<SupabaseClient>((ref) {
-  return Supabase.instance.client;
 });

@@ -170,9 +170,9 @@ class ConflictResolutionService {
     // Table-specific merge logic
     switch (table) {
       case 'collections':
-        // For collections, prefer server amounts but keep local notes
-        if (local['notes'] != null && local['notes'].toString().isNotEmpty) {
-          merged['notes'] = local['notes'];
+        // For collections, prefer server amounts but keep local remarks
+        if (local['remarks'] != null && local['remarks'].toString().isNotEmpty) {
+          merged['remarks'] = local['remarks'];
         }
         break;
 
@@ -195,7 +195,7 @@ class ConflictResolutionService {
     }
 
     merged['updated_at'] = DateTime.now().toIso8601String();
-    merged['conflict_resolved'] = true;
+    merged['sync_status'] = 'synced';
 
     return merged;
   }

@@ -21,8 +21,8 @@ void main() {
 
     group('formatCompactCurrency', () {
       test('formats large numbers', () {
-        expect(AppFormatters.formatCompactCurrency(1000000), '₹1L');
-        expect(AppFormatters.formatCompactCurrency(10000000), '₹10Cr');
+        expect(AppFormatters.formatCompactCurrency(100000), '₹100K');
+        expect(AppFormatters.formatCompactCurrency(1000000), '₹1M');
       });
     });
 

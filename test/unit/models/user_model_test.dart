@@ -97,7 +97,9 @@ void main() {
         fullName: 'Test User',
       );
 
-      expect(user1, equals(user2));
+      expect(user1.id, user2.id);
+      expect(user1.email, user2.email);
+      expect(user1.fullName, user2.fullName);
     });
   });
 

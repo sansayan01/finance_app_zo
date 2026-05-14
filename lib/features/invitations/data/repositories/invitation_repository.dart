@@ -42,7 +42,7 @@ class InvitationRepository {
         .select('''
           *,
           org:organizations(name),
-          inviter:profiles!org_invitations_invited_by_fkey(full_name)
+          inviter:profiles!fk_inv_invited(full_name)
         ''')
         .eq('token', token)
         .maybeSingle();

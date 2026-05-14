@@ -22,6 +22,7 @@ enum ShiftType {
 
 class StaffProfileModel extends Equatable {
   final String id;
+  final String? orgId;
   final String? userId;
   final String staffCode;
   final String fullName;
@@ -43,6 +44,7 @@ class StaffProfileModel extends Equatable {
 
   const StaffProfileModel({
     required this.id,
+    this.orgId,
     this.userId,
     required this.staffCode,
     required this.fullName,
@@ -66,6 +68,7 @@ class StaffProfileModel extends Equatable {
   factory StaffProfileModel.fromJson(Map<String, dynamic> json) {
     return StaffProfileModel(
       id: json['id'] as String,
+      orgId: json['org_id'] as String?,
       userId: json['user_id'] as String?,
       staffCode: json['staff_code'] as String,
       fullName: json['full_name'] as String,
@@ -97,6 +100,7 @@ class StaffProfileModel extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'org_id': orgId,
       'user_id': userId,
       'staff_code': staffCode,
       'full_name': fullName,
@@ -167,6 +171,7 @@ class StaffProfileModel extends Equatable {
 
   StaffProfileModel copyWith({
     String? id,
+    String? orgId,
     String? userId,
     String? staffCode,
     String? fullName,
@@ -188,6 +193,7 @@ class StaffProfileModel extends Equatable {
   }) {
     return StaffProfileModel(
       id: id ?? this.id,
+      orgId: orgId ?? this.orgId,
       userId: userId ?? this.userId,
       staffCode: staffCode ?? this.staffCode,
       fullName: fullName ?? this.fullName,
@@ -214,6 +220,7 @@ class StaffProfileModel extends Equatable {
   @override
   List<Object?> get props => [
         id,
+        orgId,
         userId,
         staffCode,
         fullName,

@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 // =====================================================
 
 /// Matcher for checking if a string is a valid email
-final Matcher isValidEmail = matchesPattern(
+final Matcher isValidEmail = matches(
   r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
 );
 
@@ -16,7 +16,7 @@ final Matcher isPositive = predicate<num>((n) => n > 0, 'is positive');
 final Matcher isNonNegative = predicate<num>((n) => n >= 0, 'is non-negative');
 
 /// Matcher for checking valid phone number
-final Matcher isValidPhone = matchesPattern(r'^\+?[1-9]\d{1,14}$');
+final Matcher isValidPhone = matches(r'^\+?[1-9]\d{1,14}$');
 
 /// Matcher for valid currency amount
 final Matcher isValidAmount = allOf(
@@ -25,12 +25,14 @@ final Matcher isValidAmount = allOf(
 );
 
 /// Matcher for valid UUID
-final Matcher isValidUUID = matchesPattern(
-  r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-  caseSensitive: false,
+final Matcher isValidUUID = matches(
+  RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  ),
 );
 
 /// Matcher for valid date string (ISO 8601)
-final Matcher isIso8601Date = matchesPattern(
+final Matcher isIso8601Date = matches(
   r'^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$',
 );

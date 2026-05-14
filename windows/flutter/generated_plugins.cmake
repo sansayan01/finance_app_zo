@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_tts
   geolocator_windows
   local_auth_windows
+  sentry_flutter
   share_plus
   speech_to_text_windows
   url_launcher_windows

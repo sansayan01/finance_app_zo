@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../providers/branding_provider.dart';
+import '../providers/branding_provider.dart';
 
 /// Branded Loading Widget
 /// Shows organization logo during loading instead of Flutter logo

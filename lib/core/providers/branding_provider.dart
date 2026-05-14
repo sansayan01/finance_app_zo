@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/supabase_provider.dart';
-import '../../providers/org_provider.dart';
+import 'org_provider.dart';
 
 /// Organization Branding Configuration
 class BrandingConfig {
@@ -317,4 +317,6 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
 }
 
 /// Branding Provider
-final brandingProvider = StateNotifierProvider<Bra
+final brandingProvider = StateNotifierProvider<BrandingNotifier, AsyncValue<BrandingConfig>>((ref) {
+  return BrandingNotifier(ref);
+});

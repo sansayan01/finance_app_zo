@@ -1,0 +1,68 @@
+name: Production Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.x'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter test
+
+  deploy-web:
+    name: Deploy Admin Portal (Web)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.x'
+      - run: flutter pub get
+      - run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL=${{ secrets.PROD_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.PROD_SUPABASE_ANON_KEY }}
+      
+      # Example for Firebase Hosting
+      # - uses: FirebaseExtended/action-hosting-deploy@v0
+      #   with:
+          # repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          # firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}"
+          # channelId: live
+          # projectId: microflow-pro-prod
+
+  release-android:
+    name: Release Staff Portal (Android)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.x'
+      
+      # Decode Keystore
+      # - name: Decode Keystore
+      #   run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - run: flutter pub get
+      - run: |
+          flutter build appbundle --release \
+            --dart-define=SUPABASE_URL=${{ secrets.PROD_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.PROD_SUPABASE_ANON_KEY }}
+            
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-appbundle
+          path: build/app/outputs/bundle/release/app-release.aab

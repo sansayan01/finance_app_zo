@@ -92,24 +92,54 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
-    // Hierarchy check: Only Admin and Manager can create users
-    final canCreate = currentUser?.role == UserRole.executiveAdmin ||
-        currentUser?.role == UserRole.manager;
+    // Hierarchy check: Only Admin, Manager, and Super Admin can create users
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final canCreate = currentUser.role == UserRole.superAdmin ||
+        currentUser.role == UserRole.executiveAdmin ||
+        currentUser.role == UserRole.manager;
 
     if (!canCreate) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Access Denied')),
-        body: const Center(
-            child: Text('You do not have permission to create users.')),
+        appBar: AppBar(
+          title: const Text('Access Denied'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_person_rounded, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                'You do not have permission to create users.\nYour current role: ${currentUser.role?.name ?? 'None'}',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     // Filter roles based on hierarchy
     final List<UserRole> availableRoles;
-    if (currentUser?.role == UserRole.superAdmin) {
+    if (currentUser.role == UserRole.superAdmin) {
       // Super Admin can create anyone
       availableRoles = UserRole.values;
-    } else if (currentUser?.role == UserRole.executiveAdmin) {
+    } else if (currentUser.role == UserRole.executiveAdmin) {
       // Executive Admin can create manager, collectionAgent, customer
       availableRoles = [
         UserRole.manager,

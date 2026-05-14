@@ -2,6 +2,7 @@
 /// 
 /// These values can be overridden via --dart-define flags:
 /// flutter run --dart-define=SUPABASE_URL=https://... --dart-define=SUPABASE_ANON_KEY=...
+/// The defaults below are safe - anon keys are public-facing.
 class EnvConfig {
   // Supabase Configuration
   static const String supabaseUrl = String.fromEnvironment(
@@ -23,6 +24,14 @@ class EnvConfig {
   static const String appVersion = String.fromEnvironment(
     'APP_VERSION',
     defaultValue: '1.0.0',
+  );
+  
+  // Telemetry (Sentry & PostHog)
+  static const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
+  static const String posthogApiKey = String.fromEnvironment('POSTHOG_API_KEY');
+  static const String posthogHost = String.fromEnvironment(
+    'POSTHOG_HOST',
+    defaultValue: 'https://app.posthog.com',
   );
   
   // Validate configuration

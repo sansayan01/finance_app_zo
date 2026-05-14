@@ -20,8 +20,8 @@ Widget createTestableWidget({
   );
 }
 
-/// Creates a mock class for any type
-class MockClass<T> extends Mock implements T {}
+/// Mock classes should be defined specifically for each type in tests
+// class MockClass<T> extends Mock implements T {}
 
 /// Callback for testing async operations
 typedef AsyncCallback = Future<void> Function();

@@ -21,7 +21,7 @@ class BranchManagerRepository {
         .from('staff_profiles')
         .select('''
           *,
-          branch:branches!staff_profiles_branch_id_fkey(name, id)
+          branch:branches!fk_sp_branch(name, id)
         ''')
         .eq('branch_id', branchId)
         .order('full_name');
@@ -38,7 +38,7 @@ class BranchManagerRepository {
         .from('collections')
         .select('''
           *,
-          collector:staff_profiles!collections_staff_id_fkey(full_name, id),
+          collector:staff_profiles!fk_collections_staff(full_name, id),
           loan:loans(
             id,
             loan_amount,
@@ -59,7 +59,7 @@ class BranchManagerRepository {
         .from('pending_approvals')
         .select('''
           *,
-          requested_by_user:profiles!pending_approvals_requested_by_fkey(full_name as name, role),
+          requested_by_user:profiles!fk_approvals_requested(full_name as name, role),
           member:members(name, id, phone)
         ''')
         .eq('branch_id', branchId)

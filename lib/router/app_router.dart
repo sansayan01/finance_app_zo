@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Setup Wizard
 import '../features/setup/presentation/pages/setup_wizard_page.dart';
 
+// Org / Setup completion
+import '../core/providers/org_provider.dart';
+
 // Branches
 import '../features/branches/presentation/pages/branch_management_page.dart';
 
@@ -89,8 +92,16 @@ class AuthRedirectListener extends ChangeNotifier {
   final Ref ref;
 
   AuthRedirectListener(this.ref) {
+    // Listen to Auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
       notifyListeners();
+    });
+
+    // Listen to Setup completion status changes
+    ref.listen<AsyncValue<bool>>(setupCompleteProvider, (previous, next) {
+      if (next.hasValue) {
+        notifyListeners();
+      }
     });
   }
 
@@ -127,12 +138,56 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/auth/verify-email';
       }
 
-      if (isAuthenticated && isAuthPath) {
+      if (isAuthenticated) {
         final user = ref.read(currentUserProvider);
-        final isNewUser = user != null && user.orgId == null;
-        if (isNewUser) return '/setup';
-        if (user?.role == UserRole.superAdmin) return '/admin';
-        return '/';
+        final role = user?.role;
+        final isSetupPath = state.matchedLocation == '/setup';
+        final isAdminPath = state.matchedLocation == '/' || state.matchedLocation.startsWith('/loans') || state.matchedLocation.startsWith('/savings') || state.matchedLocation.startsWith('/users') || state.matchedLocation.startsWith('/settings') || state.matchedLocation.startsWith('/analytics') || state.matchedLocation.startsWith('/transactions') || state.matchedLocation.startsWith('/search') || state.matchedLocation.startsWith('/notifications') || state.matchedLocation.startsWith('/members');
+        final isStaffPath = state.matchedLocation.startsWith('/staff');
+
+        // After login, route to correct portal based on role
+        if (isAuthPath) {
+          switch (role) {
+            case UserRole.superAdmin:
+              return '/admin';
+            case UserRole.executiveAdmin:
+              if (user?.orgId == null) return '/setup';
+              final setupVal = ref.read(setupCompleteProvider);
+              if (setupVal.valueOrNull == false) return '/setup';
+              return '/';
+            case UserRole.manager:
+            case UserRole.collectionAgent:
+              return '/staff';
+            case UserRole.customer:
+              return '/';
+            default:
+              return '/';
+          }
+        }
+
+        // Enforce Setup Wizard for Executive Admins (mandatory - immediate redirect)
+        if (role == UserRole.executiveAdmin && !isSetupPath) {
+          if (user?.orgId == null) return '/setup';
+          
+          if (user?.orgId != null) {
+            final setupVal = ref.read(setupCompleteProvider);
+            if (setupVal.valueOrNull == false) {
+              return '/setup';
+            }
+          }
+        }
+
+        // Staff role trying to access admin pages → redirect to staff
+        if ((role == UserRole.manager || role == UserRole.collectionAgent) && isAdminPath) {
+          return '/staff';
+        }
+
+        // Admin role trying to access staff pages → redirect to admin
+        if (role == UserRole.executiveAdmin && isStaffPath) {
+          return '/';
+        }
+
+        return null;
       }
 
       return null;
@@ -428,15 +483,40 @@ class HomePageContent extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Handle Executive Admin setup check
+    if (user?.role == UserRole.executiveAdmin) {
+      final setupAsync = ref.watch(setupCompleteProvider);
+      
+      return setupAsync.when(
+        data: (isComplete) {
+          if (!isComplete) {
+            // Router redirect will handle the navigation to /setup
+            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          }
+          return HomePage(
+            onViewAllLoans: () => context.go('/loans'),
+            onViewAllSavings: () => context.go('/savings'),
+            onQuickAction: () {},
+          );
+        },
+        loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+        error: (err, stack) => HomePage(
+          onViewAllLoans: () => context.go('/loans'),
+          onViewAllSavings: () => context.go('/savings'),
+          onQuickAction: () {},
+        ),
+      );
+    }
+
     // Redirect staff to their dashboard
-    if (user?.role == UserRole.collectionAgent) {
+    if (user?.role == UserRole.collectionAgent || user?.role == UserRole.manager) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/staff');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Admin/Manager dashboard
+    // Default dashboard
     return HomePage(
       onViewAllLoans: () => context.go('/loans'),
       onViewAllSavings: () => context.go('/savings'),

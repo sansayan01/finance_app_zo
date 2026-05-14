@@ -11,6 +11,7 @@ import '../../data/providers/collection_providers.dart';
 import '../../../../core/services/location_service.dart';
 import '../../data/providers/staff_providers.dart';
 import '../../../../core/providers/branding_provider.dart';
+import '../../../../core/services/haptic_service.dart';
 import '../widgets/receipt_generator.dart';
 
 class CollectionFormPage extends ConsumerStatefulWidget {
@@ -615,6 +616,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         if (collection != null && !_isSubmitting) {
           // Show success dialog and navigate back
           WidgetsBinding.instance.addPostFrameCallback((_) async {
+            HapticService.success();
             final branding = ref.read(brandingProvider).valueOrNull;
             final orgName = branding?.displayName;
 

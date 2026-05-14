@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'core/providers/storage_providers.dart';
 import 'core/config/env_config.dart';
 import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await FlutterDownloader.initialize(ignoreSsl: true);
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

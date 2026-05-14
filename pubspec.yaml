@@ -50,10 +50,13 @@ dependencies:
   share_plus: ^12.0.2
   image_picker: ^1.1.2
   file_picker: ^8.1.2
+  flutter_downloader: ^1.11.8
+  open_filex: ^4.5.0
+  path_provider: ^2.1.5
 
   # Telemetry & Analytics
   sentry_flutter: ^8.12.1
-  posthog_flutter: ^4.1.0
+  posthog_flutter: ^4.11.0
   package_info_plus: ^9.0.1
 
 dev_dependencies:

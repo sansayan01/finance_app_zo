@@ -32,6 +32,7 @@ import '../features/savings/presentation/pages/savings_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/settings/presentation/pages/profile_page.dart';
 import '../features/settings/presentation/pages/activity_logs_page.dart';
+import '../features/settings/presentation/pages/app_update_page.dart';
 import '../core/widgets/hud_navigation.dart';
 import '../features/loans/presentation/pages/loan_detail_page.dart';
 import '../features/loans/presentation/pages/new_loan_page.dart';
@@ -65,6 +66,7 @@ import '../features/staff/presentation/pages/staff_targets_page.dart';
 import '../features/staff/presentation/pages/staff_map_page.dart';
 import '../features/staff/presentation/pages/analytics_dashboard.dart';
 import '../features/staff/presentation/providers/sync_status_provider.dart';
+import '../core/services/haptic_service.dart';
 
 // Super Admin Portal - NEW
 // import '../features/super_admin/presentation/pages/super_admin_shell.dart';
@@ -314,6 +316,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'logs',
                 builder: (context, state) => const ActivityLogsPage(),
+              ),
+              GoRoute(
+                path: 'app-update',
+                builder: (context, state) => const AppUpdatePage(),
               ),
             ],
           ),
@@ -793,7 +799,10 @@ class _StaffNavItem extends StatelessWidget {
         : Colors.black.withValues(alpha: 0.4);
 
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () {
+        HapticService.selection();
+        onTap(index);
+      },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 60,

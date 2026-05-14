@@ -19,6 +19,7 @@ import '../widgets/activity_feed_timeline.dart';
 import '../widgets/weekly_performance_chart.dart';
 import '../widgets/leaderboard_snapshot.dart';
 import '../../../../core/widgets/branded_loading.dart';
+import '../../../../core/services/haptic_service.dart';
 
 class StaffHomeDashboard extends ConsumerStatefulWidget {
   const StaffHomeDashboard({super.key});
@@ -38,6 +39,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
       backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
       body: RefreshIndicator(
         onRefresh: () async {
+          HapticService.light();
           ref.invalidate(staffProfileProvider);
           ref.invalidate(staffWalletProvider);
           ref.invalidate(staffStreakProvider);

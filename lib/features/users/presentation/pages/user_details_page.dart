@@ -14,6 +14,7 @@ import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
 
 import '../providers/user_list_provider.dart';
+import '../../../../core/services/haptic_service.dart';
 import '../providers/new_user_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/data/providers/branch_providers.dart';
@@ -221,6 +222,7 @@ class UserDetailsPage extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () async {
+              HapticService.heavy();
               try {
                 await ref
                     .read(userListNotifierProvider.notifier)

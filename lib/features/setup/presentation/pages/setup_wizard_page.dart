@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/services/haptic_service.dart';
 
 /// Setup Wizard for new organizations
 /// Steps:
@@ -1587,7 +1588,10 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: _isLoading ? null : onPressed,
+            onPressed: _isLoading ? null : () {
+              HapticService.medium();
+              onPressed();
+            },
             child: _isLoading
                 ? const SizedBox(
                     width: 20,

@@ -106,6 +106,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, end: 0),
               const SizedBox(height: 16),
               _SectionCard(
+                title: 'App Updates',
+                icon: Icons.system_update_rounded,
+                children: [
+                  _ActionRow(
+                    title: 'Publish New Version',
+                    subtitle: 'Upload APK, set version, auto-replaces old file',
+                    icon: Icons.publish_rounded,
+                    color: Colors.indigo,
+                    onTap: () => context.push('/settings/app-update'),
+                  ),
+                ],
+              ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.04, end: 0),
+              const SizedBox(height: 16),
+              _SectionCard(
                 title: 'Security & Notifications',
                 icon: Icons.shield_outlined,
                 children: [

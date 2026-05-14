@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_provider.dart';
 
 import '../../../../core/providers/branding_provider.dart';
+import '../../../../core/services/haptic_service.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   final VoidCallback onSignUpTap;
@@ -34,9 +34,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      HapticService.error();
+      return;
+    }
 
-    HapticFeedback.lightImpact();
+    HapticService.medium();
 
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -48,8 +51,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         );
 
     if (success && mounted) {
+      HapticService.success();
       context.go('/');
     } else if (mounted) {
+      HapticService.error();
       final error = ref.read(authProvider).errorMessage;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(error ?? 'Authentication failed'),
@@ -227,8 +232,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ? Icons.visibility_off
                             : Icons.visibility,
                         size: 18),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () {
+                      HapticService.selection();
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
                     color: isDark ? Colors.white38 : Colors.black38,
                   ),
                 ),
@@ -334,7 +341,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ],
           ),
           child: ElevatedButton(
-            onPressed: isLoading ? null : _handleLogin,
+            onPressed: () {
+              HapticService.light();
+              if (!isLoading) _handleLogin();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
@@ -360,7 +370,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Widget _buildSignUpLink(Color primary) {
     return GestureDetector(
-      onTap: widget.onSignUpTap,
+      onTap: () {
+        HapticService.selection();
+        widget.onSignUpTap();
+      },
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

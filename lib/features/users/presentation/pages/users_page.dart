@@ -9,6 +9,7 @@ import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../loans/presentation/providers/loan_providers.dart';
 import '../providers/user_list_provider.dart';
+import '../../../../core/services/haptic_service.dart';
 
 class UsersPage extends ConsumerStatefulWidget {
   const UsersPage({super.key});
@@ -133,12 +134,14 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                                   isSelected: _selectedUsers.contains(user.id),
                                   onLongPress: () {
                                     if (currentUser?.role != UserRole.executiveAdmin) return;
+                                    HapticService.medium();
                                     setState(() {
                                       _isSelectionMode = true;
                                       _selectedUsers.add(user.id);
                                     });
                                   },
                                   onTap: () {
+                                    HapticService.selection();
                                     if (_isSelectionMode) {
                                       setState(() {
                                         if (_selectedUsers.contains(user.id)) {
@@ -351,7 +354,10 @@ class _UsersPageState extends ConsumerState<UsersPage> {
           _FilterChip(
             label: 'All Roles',
             isSelected: _filterRole == null,
-            onTap: () => setState(() => _filterRole = null),
+            onTap: () {
+              HapticService.selection();
+              setState(() => _filterRole = null);
+            },
             primary: primary,
           ),
           const SizedBox(width: 8),
@@ -360,7 +366,10 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                 child: _FilterChip(
                   label: role.name[0].toUpperCase() + role.name.substring(1),
                   isSelected: _filterRole == role,
-                  onTap: () => setState(() => _filterRole = role),
+                  onTap: () {
+                    HapticService.selection();
+                    setState(() => _filterRole = role);
+                  },
                   primary: primary,
                 ),
               )),
@@ -413,6 +422,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
           ),
           TextButton(
             onPressed: () async {
+              HapticService.heavy();
               Navigator.pop(ctx);
               await ref.read(userListNotifierProvider.notifier).deleteUsers(_selectedUsers.toList());
               ref.invalidate(userListProvider);

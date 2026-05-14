@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class SystemConfig extends Equatable {
+  final String? id;
   final String currentVersionAndroid;
   final String minVersionAndroid;
   final String currentVersionIos;
@@ -12,6 +13,7 @@ class SystemConfig extends Equatable {
   final String maintenanceMessage;
 
   const SystemConfig({
+    this.id,
     required this.currentVersionAndroid,
     required this.minVersionAndroid,
     required this.currentVersionIos,
@@ -25,6 +27,7 @@ class SystemConfig extends Equatable {
 
   factory SystemConfig.fromJson(Map<String, dynamic> json) {
     return SystemConfig(
+      id: json['id']?.toString(),
       currentVersionAndroid: json['current_version_android'] ?? '1.0.0',
       minVersionAndroid: json['min_version_android'] ?? '1.0.0',
       currentVersionIos: json['current_version_ios'] ?? '1.0.0',
@@ -39,6 +42,7 @@ class SystemConfig extends Equatable {
 
   @override
   List<Object?> get props => [
+        id,
         currentVersionAndroid,
         minVersionAndroid,
         currentVersionIos,

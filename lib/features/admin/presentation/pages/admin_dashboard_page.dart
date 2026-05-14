@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/services/haptic_service.dart';
 
 final adminOrgListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.read(supabaseClientProvider);
@@ -44,7 +45,10 @@ class AdminDashboardPage extends ConsumerWidget {
               final suspended = orgs.where((o) => o['status'] == 'suspended').length;
 
               return RefreshIndicator(
-                onRefresh: () async => ref.invalidate(adminOrgListProvider),
+                onRefresh: () async {
+                  HapticService.light();
+                  return ref.invalidate(adminOrgListProvider);
+                },
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
                   children: [
@@ -94,7 +98,10 @@ class AdminDashboardPage extends ConsumerWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
-                  onTap: () => context.go('/admin/my-org'),
+                  onTap: () {
+                    HapticService.selection();
+                    context.go('/admin/my-org');
+                  },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     child: Row(
@@ -121,6 +128,7 @@ class AdminDashboardPage extends ConsumerWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
                   onTap: () async {
+                    HapticService.light();
                     await ref.read(authProvider.notifier).signOut();
                     if (context.mounted) context.go('/auth');
                   },
@@ -192,7 +200,10 @@ class AdminDashboardPage extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassmorphicCard(
-        onTap: () => context.go('/admin/org/${org['id']}'),
+        onTap: () {
+          HapticService.selection();
+          context.go('/admin/org/${org['id']}');
+        },
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../services/haptic_service.dart';
 
 /// A premium iOS-style floating top navigation bar for desktop.
 class HUDNavigation extends StatelessWidget {
@@ -74,7 +75,10 @@ class HUDNavigation extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () {
+        HapticService.selection();
+        onTap(index);
+      },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),

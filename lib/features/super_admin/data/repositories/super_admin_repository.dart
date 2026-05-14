@@ -66,9 +66,7 @@ class SuperAdminRepository {
             profiles:profiles(count),
             branches:branches(count),
             members:members(count)
-          ''')
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+          ''');
 
       if (search != null && search.isNotEmpty) {
         query = query.ilike('name', '%$search%');
@@ -78,7 +76,10 @@ class SuperAdminRepository {
         query = query.eq('status', status);
       }
 
-      final response = await query;
+      final response = await query
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];
@@ -112,6 +113,26 @@ class SuperAdminRepository {
           .from('organizations')
           .update({'status': status, 'updated_at': DateTime.now().toIso8601String()})
           .eq('id', orgId);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Create organization
+  Future<bool> createOrganization({
+    required String name,
+    required String slug,
+    String plan = 'free',
+    String status = 'active',
+  }) async {
+    try {
+      await _client.from('organizations').insert({
+        'name': name,
+        'slug': slug,
+        'plan': plan,
+        'status': status,
+      });
       return true;
     } catch (e) {
       return false;
@@ -159,9 +180,7 @@ class SuperAdminRepository {
             created_at,
             last_login,
             organizations:org_id(id, name)
-          ''')
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+          ''');
 
       if (search != null && search.isNotEmpty) {
         query = query.or('name.ilike.%$search%,email.ilike.%$search%');
@@ -171,7 +190,10 @@ class SuperAdminRepository {
         query = query.eq('role', role);
       }
 
-      final response = await query;
+      final response = await query
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];
@@ -267,14 +289,13 @@ class SuperAdminRepository {
     try {
       var query = _client
           .from('platform_announcements')
-          .select()
-          .order('created_at', ascending: false);
+          .select();
 
       if (activeOnly) {
         query = query.eq('is_active', true);
       }
 
-      final response = await query;
+      final response = await query.order('created_at', ascending: false);
       return response.map<PlatformAnnouncement>((json) => PlatformAnnouncement.fromJson(json)).toList();
     } catch (e) {
       return [];
@@ -301,6 +322,54 @@ class SuperAdminRepository {
         'show_from': showFrom?.toIso8601String(),
         'show_until': showUntil?.toIso8601String(),
       });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Update announcement
+  Future<bool> updateAnnouncement({
+    required String id,
+    String? title,
+    String? message,
+    String? type,
+    String? targetAudience,
+    List<String>? targetOrgs,
+    DateTime? showFrom,
+    DateTime? showUntil,
+    bool? isActive,
+  }) async {
+    try {
+      final updates = <String, dynamic>{
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      if (title != null) updates['title'] = title;
+      if (message != null) updates['message'] = message;
+      if (type != null) updates['type'] = type;
+      if (targetAudience != null) updates['target_audience'] = targetAudience;
+      if (targetOrgs != null) updates['target_orgs'] = targetOrgs;
+      if (showFrom != null) updates['show_from'] = showFrom.toIso8601String();
+      if (showUntil != null) updates['show_until'] = showUntil.toIso8601String();
+      if (isActive != null) updates['is_active'] = isActive;
+
+      await _client
+          .from('platform_announcements')
+          .update(updates)
+          .eq('id', id);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Delete announcement
+  Future<bool> deleteAnnouncement(String id) async {
+    try {
+      await _client
+          .from('platform_announcements')
+          .delete()
+          .eq('id', id);
       return true;
     } catch (e) {
       return false;
@@ -339,9 +408,7 @@ class SuperAdminRepository {
     try {
       var query = _client
           .from('system_audit_logs')
-          .select()
-          .order('created_at', ascending: false)
-          .limit(limit);
+          .select();
 
       if (action != null) {
         query = query.eq('action', action);
@@ -359,7 +426,9 @@ class SuperAdminRepository {
         query = query.lte('created_at', endDate.toIso8601String());
       }
 
-      final response = await query;
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(limit);
       return response.map<SystemAuditLog>((json) => SystemAuditLog.fromJson(json)).toList();
     } catch (e) {
       return [];
@@ -403,9 +472,7 @@ class SuperAdminRepository {
     try {
       var query = _client
           .from('support_tickets')
-          .select()
-          .order('created_at', ascending: false)
-          .limit(limit);
+          .select();
 
       if (status != null) {
         query = query.eq('status', status);
@@ -414,7 +481,9 @@ class SuperAdminRepository {
         query = query.eq('priority', priority);
       }
 
-      final response = await query;
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(limit);
       return response.map<SupportTicket>((json) => SupportTicket.fromJson(json)).toList();
     } catch (e) {
       return [];
@@ -488,14 +557,13 @@ class SuperAdminRepository {
     try {
       var query = _client
           .from('maintenance_windows')
-          .select()
-          .order('scheduled_start', ascending: false);
+          .select();
 
       if (activeOnly) {
         query = query.eq('is_active', true);
       }
 
-      final response = await query;
+      final response = await query.order('scheduled_start', ascending: false);
       return response.map<MaintenanceWindow>((json) => MaintenanceWindow.fromJson(json)).toList();
     } catch (e) {
       return [];
@@ -551,9 +619,7 @@ class SuperAdminRepository {
     try {
       var query = _client
           .from('platform_revenue')
-          .select()
-          .order('created_at', ascending: false)
-          .limit(limit);
+          .select();
 
       if (startDate != null) {
         query = query.gte('created_at', startDate.toIso8601String());
@@ -565,7 +631,9 @@ class SuperAdminRepository {
         query = query.eq('status', status);
       }
 
-      final response = await query;
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(limit);
       return response.map<PlatformRevenue>((json) => PlatformRevenue.fromJson(json)).toList();
     } catch (e) {
       return [];
@@ -651,15 +719,15 @@ class SuperAdminRepository {
     try {
       var query = _client
           .from('system_error_logs')
-          .select()
-          .order('created_at', ascending: false)
-          .limit(limit);
+          .select();
 
       if (resolved != null) {
         query = query.eq('resolved', resolved);
       }
 
-      final response = await query;
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(limit);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];

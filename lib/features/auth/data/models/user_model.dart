@@ -10,6 +10,7 @@ class UserModel {
   final String? avatarUrl;
   final String? orgId;
   final String? branchId;
+  final String? memberId;
   final DateTime? createdAt;
   final bool is2FAEnabled;
   final bool isActive;
@@ -23,6 +24,7 @@ class UserModel {
     this.avatarUrl,
     this.orgId,
     this.branchId,
+    this.memberId,
     this.createdAt,
     this.is2FAEnabled = false,
     this.isActive = true,
@@ -38,6 +40,7 @@ class UserModel {
       avatarUrl: json['avatar_url'] as String?,
       orgId: json['org_id'] as String?,
       branchId: json['branch_id'] as String?,
+      memberId: json['member_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -56,6 +59,7 @@ class UserModel {
       'avatar_url': avatarUrl,
       'org_id': orgId,
       'branch_id': branchId,
+      'member_id': memberId,
       'created_at': createdAt?.toIso8601String(),
       'is_2fa_enabled': is2FAEnabled,
       'is_active': isActive,

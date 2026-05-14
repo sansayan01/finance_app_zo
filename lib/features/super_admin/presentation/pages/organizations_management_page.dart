@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../data/providers/super_admin_providers.dart';
+import '../../../../core/widgets/async_value_widget.dart';
 
 /// Organizations Management Page
 class OrganizationsManagementPage extends ConsumerStatefulWidget {
@@ -115,7 +116,7 @@ class _OrganizationsManagementPageState extends ConsumerState<OrganizationsManag
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(Icons.business, color: statusColor),
@@ -141,7 +142,7 @@ class _OrganizationsManagementPageState extends ConsumerState<OrganizationsManag
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -206,28 +207,37 @@ class _OrganizationsManagementPageState extends ConsumerState<OrganizationsManag
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // ignore: deprecated_member_use
             RadioListTile<String>(
               title: const Text('All'),
               value: '',
+              // ignore: deprecated_member_use
               groupValue: _statusFilter,
+              // ignore: deprecated_member_use
               onChanged: (v) => setState(() {
                 _statusFilter = v ?? '';
                 Navigator.pop(context);
               }),
             ),
+            // ignore: deprecated_member_use
             RadioListTile<String>(
               title: const Text('Active'),
               value: 'active',
+              // ignore: deprecated_member_use
               groupValue: _statusFilter,
+              // ignore: deprecated_member_use
               onChanged: (v) => setState(() {
                 _statusFilter = v ?? '';
                 Navigator.pop(context);
               }),
             ),
+            // ignore: deprecated_member_use
             RadioListTile<String>(
               title: const Text('Suspended'),
               value: 'suspended',
+              // ignore: deprecated_member_use
               groupValue: _statusFilter,
+              // ignore: deprecated_member_use
               onChanged: (v) => setState(() {
                 _statusFilter = v ?? '';
                 Navigator.pop(context);
@@ -240,34 +250,88 @@ class _OrganizationsManagementPageState extends ConsumerState<OrganizationsManag
   }
 
   void _showCreateOrgDialog() {
-    // TODO: Implement create organization dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Create organization feature coming soon')),
+    final nameController = TextEditingController();
+    final slugController = TextEditingController();
+    String plan = 'free';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Create Organization'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Organization Name',
+                  hintText: 'e.g. MicroFlow Global',
+                ),
+                onChanged: (v) {
+                  // Auto-generate slug
+                  setState(() {
+                    slugController.text = v.toLowerCase().replaceAll(' ', '-').replaceAll(RegExp(r'[^a-z0-9-]'), '');
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: slugController,
+                decoration: const InputDecoration(
+                  labelText: 'Slug (URL Identifier)',
+                  hintText: 'e.g. microflow-global',
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: plan,
+                decoration: const InputDecoration(
+                  labelText: 'Plan',
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'free', child: Text('Free')),
+                  DropdownMenuItem(value: 'pro', child: Text('Pro')),
+                  DropdownMenuItem(value: 'enterprise', child: Text('Enterprise')),
+                ],
+                onChanged: (v) => setState(() => plan = v ?? 'free'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isEmpty || slugController.text.isEmpty) {
+                  return;
+                }
+
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+                
+                final success = await ref.read(superAdminActionsProvider.notifier).createOrganization(
+                  name: nameController.text,
+                  slug: slugController.text,
+                  plan: plan,
+                );
+
+                if (!mounted) return;
+                
+                if (success) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Organization created')));
+                }
+              },
+              child: const Text('Create'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-/// AsyncValueSliver widget helper
-class AsyncValueSliver<T> extends StatelessWidget {
-  final AsyncValue<T> value;
-  final Widget Function(T data) builder;
 
-  const AsyncValueSliver({
-    required this.value,
-    required this.builder,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return value.when(
-      data: builder,
-      loading: () => const SliverToBoxAdapter(
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => SliverToBoxAdapter(
-        child: Center(child: Text('Error: $e')),
-      ),
-    );
-  }
-}

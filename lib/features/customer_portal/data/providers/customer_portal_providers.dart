@@ -17,19 +17,19 @@ final customerDashboardProvider = FutureProvider.family<Map<String, dynamic>, St
 });
 
 /// Customer Loans Provider
-final customerLoansProvider = FutureProvider.family<List<CustomerLoan>, String>((ref, memberId) async {
+final customerLoansProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, memberId) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getCustomerLoans(memberId);
 });
 
 /// Customer Savings Provider
-final customerSavingsProvider = FutureProvider.family<List<CustomerSaving>, String>((ref, memberId) async {
+final customerSavingsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, memberId) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getCustomerSavings(memberId);
 });
 
 /// Customer Transactions Provider
-final customerTransactionsProvider = FutureProvider.family<List<CustomerTransaction>, (String, int?)>((ref, params) async {
+final customerTransactionsProvider = FutureProvider.family<List<Map<String, dynamic>>, (String, int?)>((ref, params) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getCustomerTransactions(params.$1, limit: params.$2);
 });
@@ -37,7 +37,7 @@ final customerTransactionsProvider = FutureProvider.family<List<CustomerTransact
 /// Customer Notifications Provider
 final customerNotificationsProvider = FutureProvider.family<List<CustomerNotification>, String>((ref, memberId) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
-  return repository.getCustomerNotifications(memberId);
+  return repository.getNotifications(memberId);
 });
 
 /// Current Member ID Provider
@@ -118,10 +118,14 @@ class SupportTicketNotifier extends StateNotifier<AsyncValue<void>> {
 
   SupportTicketNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
 
-  Future<bool> createTicket(String subject, String message, {String? category}) async {
+  Future<bool> createTicket(String customerId, String subject, String message, {String? category}) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.createSupportTicket(subject, message, category: category);
+      await _repository.createSupportTicket(
+        customerId: customerId,
+        subject: subject,
+        message: message,
+      );
       _ref.invalidate(customerNotificationsProvider);
       state = const AsyncValue.data(null);
       return true;
@@ -146,7 +150,7 @@ class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<void> markAsRead(String notificationId) async {
     try {
-      await _repository.markNotificationAsRead(notificationId);
+      await _repository.markNotificationRead(notificationId);
       _ref.invalidate(customerNotificationsProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -156,7 +160,7 @@ class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> markAllAsRead(String memberId) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.markAllNotificationsAsRead(memberId);
+      await _repository.markAllNotificationsRead(memberId);
       _ref.invalidate(customerNotificationsProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {

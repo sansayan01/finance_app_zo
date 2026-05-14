@@ -85,6 +85,7 @@ class AuthRepository {
       role: role,
       orgId: profile?['org_id'] as String?,
       branchId: profile?['branch_id'] as String?,
+      memberId: profile?['member_id'] as String?,
       createdAt: parsedDate ?? DateTime.now(),
     );
 
@@ -260,6 +261,7 @@ class AuthRepository {
       role: role,
       orgId: profile?['org_id'] as String?,
       branchId: profile?['branch_id'] as String?,
+      memberId: profile?['member_id'] as String?,
       createdAt: parsedDate ?? DateTime.now(),
     );
   }

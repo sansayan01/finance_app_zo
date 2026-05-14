@@ -272,7 +272,7 @@ class SuperAdminDashboard extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.trending_up, color: Colors.green),
@@ -339,7 +339,7 @@ class SuperAdminDashboard extends ConsumerWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+            color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
           ),
         ),
         const SizedBox(height: 8),
@@ -406,7 +406,7 @@ class SuperAdminDashboard extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, size: 20, color: color),
@@ -418,7 +418,7 @@ class SuperAdminDashboard extends ConsumerWidget {
       subtitle: Text(
         timeAgo,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+          color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -554,7 +554,7 @@ class _MetricCard extends StatelessWidget {
                   child: Text(
                     item.label,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                      color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -574,7 +574,7 @@ class _MetricCard extends StatelessWidget {
               Text(
                 item.subtext!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -629,7 +629,7 @@ class _QuickActionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: action.color.withOpacity(0.1),
+                    color: action.color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(action.icon, size: 24, color: action.color),

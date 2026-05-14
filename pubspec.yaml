@@ -58,5 +58,18 @@ dev_dependencies:
   flutter_driver:
     sdk: flutter
 
+  # Testing Utilities
+  mocktail: ^1.0.4
+  bloc_test: ^9.1.7
+
+  # Code Generation
+  build_runner: ^2.4.13
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+
+  # Integration Testing
+  integration_test:
+    sdk: flutter
+
 flutter:
   uses-material-design: true

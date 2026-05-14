@@ -89,7 +89,7 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: typeColor.withOpacity(0.1),
+                    color: typeColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(typeIcon, color: typeColor, size: 20),
@@ -107,7 +107,7 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(
@@ -209,7 +209,7 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: type,
+                  initialValue: type,
                   decoration: const InputDecoration(
                     labelText: 'Type',
                   ),
@@ -223,7 +223,7 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: audience,
+                  initialValue: audience,
                   decoration: const InputDecoration(
                     labelText: 'Target Audience',
                   ),
@@ -249,6 +249,9 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
                   return;
                 }
 
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+                
                 final success = await ref.read(superAdminActionsProvider.notifier).createAnnouncement(
                   title: titleController.text,
                   message: messageController.text,
@@ -256,16 +259,16 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
                   targetAudience: audience,
                 );
 
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (!mounted) return;
+                
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text(success 
                           ? 'Announcement created' 
                           : 'Failed to create announcement'),
                     ),
                   );
-                }
               },
               child: const Text('Create'),
             ),
@@ -276,9 +279,145 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
   }
 
   void _editAnnouncement(dynamic announcement) {
-    // TODO: Implement edit announcement
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit feature coming soon')),
+    final titleController = TextEditingController(text: announcement.title);
+    final messageController = TextEditingController(text: announcement.message);
+    String type = announcement.type ?? 'info';
+    String audience = announcement.targetAudience ?? 'all';
+    bool isActive = announcement.isActive;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Edit Announcement'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: messageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Message',
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: type,
+                  decoration: const InputDecoration(
+                    labelText: 'Type',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'info', child: Text('Info')),
+                    DropdownMenuItem(value: 'warning', child: Text('Warning')),
+                    DropdownMenuItem(value: 'critical', child: Text('Critical')),
+                    DropdownMenuItem(value: 'maintenance', child: Text('Maintenance')),
+                  ],
+                  onChanged: (v) => setState(() => type = v ?? 'info'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: audience,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Audience',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'all', child: Text('All Users')),
+                    DropdownMenuItem(value: 'admins', child: Text('Admins Only')),
+                    DropdownMenuItem(value: 'managers', child: Text('Managers Only')),
+                    DropdownMenuItem(value: 'agents', child: Text('Agents Only')),
+                  ],
+                  onChanged: (v) => setState(() => audience = v ?? 'all'),
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Active'),
+                  value: isActive,
+                  onChanged: (v) => setState(() => isActive = v),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete Announcement?'),
+                    content: const Text('This action cannot be undone.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  final success = await ref.read(superAdminActionsProvider.notifier).deleteAnnouncement(announcement.id);
+                  
+                  if (!mounted) return;
+                  if (success) {
+                    navigator.pop(); // Close edit dialog
+                    scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Announcement deleted')));
+                  }
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (titleController.text.isEmpty || messageController.text.isEmpty) {
+                  return;
+                }
+
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+                
+                final success = await ref.read(superAdminActionsProvider.notifier).updateAnnouncement(
+                  id: announcement.id,
+                  title: titleController.text,
+                  message: messageController.text,
+                  type: type,
+                  targetAudience: audience,
+                  isActive: isActive,
+                );
+
+                if (!mounted) return;
+                
+                if (success) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Announcement updated')));
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

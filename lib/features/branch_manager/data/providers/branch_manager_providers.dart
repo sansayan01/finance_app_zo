@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../repositories/branch_manager_repository.dart';
 import '../models/branch_stats_model.dart';
-import '../../../auth/data/models/profile_model.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Branch Manager Repository Provider

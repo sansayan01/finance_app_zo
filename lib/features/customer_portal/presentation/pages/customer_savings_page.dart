@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/providers/customer_portal_providers.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+// import '../../../auth/presentation/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class CustomerSavingsPage extends ConsumerWidget {
   const CustomerSavingsPage({super.key});
@@ -27,14 +28,14 @@ class CustomerSavingsPage extends ConsumerWidget {
             onPressed: () => context.push('/customer/transactions'),
           ),
         ],
-      },
+      ),
       body: savingsAsync == null
           ? const Center(child: Text('Please login to continue'))
           : savingsAsync.when(
               data: (savings) {
                 final totalBalance = savings.fold<double>(
                   0.0,
-                  (sum, s) => sum + (s.balance ?? 0).toDouble(),
+                  (sum, s) => sum + ((s['balance'] as num?)?.toDouble() ?? 0.0),
                 );
 
                 return SingleChildScrollView(
@@ -47,7 +48,7 @@ class CustomerSavingsPage extends ConsumerWidget {
                       const SizedBox(height: 16),
 
                       // Quick Actions
-                      _buildQuickActionsCard(context, theme),
+                      _buildQuickActionsCard(context, ref, theme),
                       const SizedBox(height: 16),
 
                       // Savings Accounts
@@ -111,7 +112,7 @@ class CustomerSavingsPage extends ConsumerWidget {
             Text(
               'Total Savings',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
               ),
             ),
             Text(
@@ -127,7 +128,7 @@ class CustomerSavingsPage extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildQuickActionsCard(BuildContext context, ThemeData theme) {
+  Widget _buildQuickActionsCard(BuildContext context, WidgetRef ref, ThemeData theme) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -183,7 +184,7 @@ class CustomerSavingsPage extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color),
@@ -203,9 +204,9 @@ class CustomerSavingsPage extends ConsumerWidget {
     NumberFormat currencyFormat,
   ) {
     final theme = Theme.of(context);
-    final accountType = account.accountType ?? 'Regular Savings';
-    final balance = account.balance ?? 0;
-    final interestRate = account.interestRate ?? 5.0;
+    final accountType = account['savings_plan']?['name'] ?? 'Regular Savings';
+    final balance = (account['balance'] as num?)?.toDouble() ?? 0.0;
+    final interestRate = (account['interest_rate'] as num?)?.toDouble() ?? 5.0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -232,7 +233,7 @@ class CustomerSavingsPage extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      'Account #${account.id?.substring(0, 8) ?? ''}',
+                      'Account #${(account['id'] as String?)?.substring(0, 8) ?? ''}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -242,11 +243,11 @@ class CustomerSavingsPage extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${interestRate}% p.a.',
+                    '$interestRate% p.a.',
                     style: const TextStyle(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,
@@ -284,14 +285,14 @@ class CustomerSavingsPage extends ConsumerWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => _showWithdrawDialog(context, ref, accountId: account.id),
+                    onPressed: () => _showWithdrawDialog(context, ref, accountId: account['id']),
                     child: const Text('Withdraw'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _showDepositDialog(context, ref, accountId: account.id),
+                    onPressed: () => _showDepositDialog(context, ref, accountId: account['id']),
                     child: const Text('Deposit'),
                   ),
                 ),

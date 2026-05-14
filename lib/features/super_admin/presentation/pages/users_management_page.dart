@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
-import '../../../../core/constants/enums.dart';
+import '../../../../core/widgets/async_value_widget.dart';
 import '../../data/providers/super_admin_providers.dart';
 
 /// Users Management Page
@@ -95,9 +93,6 @@ class _UsersManagementPageState extends ConsumerState<UsersManagementPage> {
   Widget _buildUserCard(BuildContext context, Map<String, dynamic> user, bool isDark) {
     final role = user['role'] as String? ?? 'customer';
     final isActive = user['is_active'] as bool? ?? true;
-    final lastLogin = user['last_login'] != null 
-        ? DateTime.tryParse(user['last_login']) 
-        : null;
     final orgName = user['organizations']?['name'];
 
     return Card(
@@ -110,7 +105,7 @@ class _UsersManagementPageState extends ConsumerState<UsersManagementPage> {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getRoleColor(role).withOpacity(0.1),
+          backgroundColor: _getRoleColor(role).withValues(alpha: 0.1),
           child: Text(
             (user['name'] as String?)?.isNotEmpty == true 
                 ? user['name'][0].toUpperCase() 
@@ -146,7 +141,7 @@ class _UsersManagementPageState extends ConsumerState<UsersManagementPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _getRoleColor(role).withOpacity(0.1),
+                color: _getRoleColor(role).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

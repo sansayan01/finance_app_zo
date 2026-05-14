@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\finance_app_zo\\\\lib\\\\features\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

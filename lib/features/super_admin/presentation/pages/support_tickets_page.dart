@@ -54,7 +54,7 @@ class _SupportTicketsPageState extends ConsumerState<SupportTicketsPage> {
                     child: _buildStatCard(
                       context,
                       'Open',
-                      ticketsAsync.when(
+                      ticketsAsync.maybeWhen(
                         data: (t) => t.where((t) => t.status == 'open').length,
                         orElse: () => 0,
                       ),
@@ -66,7 +66,7 @@ class _SupportTicketsPageState extends ConsumerState<SupportTicketsPage> {
                     child: _buildStatCard(
                       context,
                       'In Progress',
-                      ticketsAsync.when(
+                      ticketsAsync.maybeWhen(
                         data: (t) => t.where((t) => t.status == 'in_progress').length,
                         orElse: () => 0,
                       ),
@@ -78,7 +78,7 @@ class _SupportTicketsPageState extends ConsumerState<SupportTicketsPage> {
                     child: _buildStatCard(
                       context,
                       'Resolved',
-                      ticketsAsync.when(
+                      ticketsAsync.maybeWhen(
                         data: (t) => t.where((t) => t.status == 'resolved').length,
                         orElse: () => 0,
                       ),
@@ -116,7 +116,7 @@ class _SupportTicketsPageState extends ConsumerState<SupportTicketsPage> {
   Widget _buildStatCard(BuildContext context, String label, int count, Color color) {
     return Card(
       elevation: 0,
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -167,7 +167,7 @@ class _SupportTicketsPageState extends ConsumerState<SupportTicketsPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getPriorityColor(priority).withOpacity(0.1),
+                      color: _getPriorityColor(priority).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -183,7 +183,7 @@ class _SupportTicketsPageState extends ConsumerState<SupportTicketsPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(status).withOpacity(0.1),
+                      color: _getStatusColor(status).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

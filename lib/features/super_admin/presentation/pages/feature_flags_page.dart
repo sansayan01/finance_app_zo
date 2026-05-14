@@ -36,7 +36,7 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             sliver: SliverToBoxAdapter(
               child: Card(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 child: const Padding(
                   padding: EdgeInsets.all(16),
                   child: Row(
@@ -121,7 +121,7 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
                 Switch(
                   value: flag.isEnabled,
                   onChanged: (value) => _toggleFlag(flag.id, value),
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),
@@ -138,19 +138,19 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
               children: [
                 Chip(
                   label: Text('${flag.rolloutPercentage}% rollout'),
-                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
                   labelStyle: const TextStyle(fontSize: 12),
                 ),
                 if (flag.targetOrgs.isNotEmpty)
                   Chip(
                     label: Text('${flag.targetOrgs.length} orgs'),
-                    backgroundColor: Colors.orange.withOpacity(0.1),
+                    backgroundColor: Colors.orange.withValues(alpha: 0.1),
                     labelStyle: const TextStyle(fontSize: 12),
                   ),
                 if (flag.targetRoles.isNotEmpty)
                   Chip(
                     label: Text('${flag.targetRoles.length} roles'),
-                    backgroundColor: Colors.purple.withOpacity(0.1),
+                    backgroundColor: Colors.purple.withValues(alpha: 0.1),
                     labelStyle: const TextStyle(fontSize: 12),
                   ),
               ],
@@ -231,20 +231,23 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
                 updatedAt: DateTime.now(),
               );
 
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final navigator = Navigator.of(context);
+              
               final repo = ref.read(superAdminRepositoryProvider);
               final success = await repo.upsertFeatureFlag(flag);
 
-              if (mounted) {
-                Navigator.pop(context);
-                ref.invalidate(featureFlagsProvider);
-                ScaffoldMessenger.of(context).showSnackBar(
+              if (!mounted) return;
+
+              navigator.pop();
+              ref.invalidate(featureFlagsProvider);
+              scaffoldMessenger.showSnackBar(
                   SnackBar(
                     content: Text(success 
                         ? 'Feature flag created' 
                         : 'Failed to create feature flag'),
                   ),
                 );
-              }
             },
             child: const Text('Create'),
           ),

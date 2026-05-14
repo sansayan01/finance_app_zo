@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/providers/branch_manager_providers.dart';
@@ -30,7 +29,7 @@ class BranchManagerDashboard extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${user?.name ?? 'Manager'} - Dashboard'),
+        title: Text('${user?.fullName ?? 'Manager'} - Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -80,7 +79,7 @@ class BranchManagerDashboard extends ConsumerWidget {
                   const SizedBox(height: 16),
 
                   // Staff Performance
-                  _buildStaffPerformanceCard(context, theme, branchId),
+                  _buildStaffPerformanceCard(context, theme, branchId, stats),
                   const SizedBox(height: 16),
 
                   // Overdue Alert
@@ -210,7 +209,7 @@ class BranchManagerDashboard extends ConsumerWidget {
                     Text(
                       '$count requests awaiting your review',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onErrorContainer.withOpacity(0.8),
+                        color: theme.colorScheme.onErrorContainer.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -289,7 +288,7 @@ class BranchManagerDashboard extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color),
@@ -378,7 +377,7 @@ class BranchManagerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
 
-  Widget _buildStaffPerformanceCard(BuildContext context, ThemeData theme, String branchId) {
+  Widget _buildStaffPerformanceCard(BuildContext context, ThemeData theme, String branchId, BranchStats stats) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -411,7 +410,7 @@ class BranchManagerDashboard extends ConsumerWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _buildStaffStat(theme, Icons.person_outline, '${branchId.length}', 'Active Staff'),
+                  _buildStaffStat(theme, Icons.person_outline, '${stats.totalStaff}', 'Active Staff'),
                   const SizedBox(width: 24),
                   _buildStaffStat(theme, Icons.trending_up, '85%', 'Avg. Efficiency'),
                 ],
@@ -451,7 +450,7 @@ class BranchManagerDashboard extends ConsumerWidget {
 
   Widget _buildOverdueAlertCard(BuildContext context, ThemeData theme, BranchStats stats) {
     return Card(
-      color: Colors.orange.withOpacity(0.1),
+      color: Colors.orange.withValues(alpha: 0.1),
       child: InkWell(
         onTap: () => context.push('/branch-manager/overdue'),
         borderRadius: BorderRadius.circular(12),

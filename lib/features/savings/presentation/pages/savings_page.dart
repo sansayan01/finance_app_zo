@@ -105,7 +105,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 )
@@ -146,7 +146,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                   gradient: AppColors.primaryGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 24,
                       offset: const Offset(0, 12),
                     )
@@ -164,7 +164,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                         height: 200,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.12),
                         ),
                       ),
                     ),
@@ -176,7 +176,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                         height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.12),
                         ),
                       ),
                     ),
@@ -203,7 +203,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                                               letterSpacing: 2,
                                               fontWeight: FontWeight.w900,
                                               color: Colors.white
-                                                  .withOpacity(0.7))),
+                                                  .withValues(alpha: 0.7))),
                                   const SizedBox(height: 8),
                                   Text(
                                     AppFormatters.formatCurrency(totalSaved),
@@ -220,10 +220,10 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: Colors.white.withOpacity(0.2)),
+                                      color: Colors.white.withValues(alpha: 0.2)),
                                 ),
                                 child: const Icon(Icons.shield_rounded,
                                     color: Colors.white, size: 28),
@@ -240,16 +240,16 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                                       totalTarget),
                                   theme,
                                   color: Colors.white,
-                                  labelColor: Colors.white.withOpacity(0.7)),
+                                  labelColor: Colors.white.withValues(alpha: 0.7)),
                               _buildGlobalMetric(
                                   'AVG YIELD', '${avgRate.toStringAsFixed(1)}%',
                                   theme,
                                   color: Colors.white,
-                                  labelColor: Colors.white.withOpacity(0.7)),
+                                  labelColor: Colors.white.withValues(alpha: 0.7)),
                               _buildGlobalMetric('PLANS',
                                   savings.length.toString(), theme,
                                   color: Colors.white,
-                                  labelColor: Colors.white.withOpacity(0.7)),
+                                  labelColor: Colors.white.withValues(alpha: 0.7)),
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -267,7 +267,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                                 child: LinearProgressIndicator(
                                   value: progress,
                                   minHeight: 8,
-                                  backgroundColor: Colors.white.withOpacity(0.2),
+                                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                                   valueColor:
                                       const AlwaysStoppedAnimation<Color>(
                                           Colors.white),
@@ -300,7 +300,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
         Text(label,
             style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: labelColor ?? theme.colorScheme.onSurface.withOpacity(0.4))),
+                color: labelColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.4))),
         const SizedBox(height: 4),
         Text(value,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -317,7 +317,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: theme.scaffoldBackgroundColor.withOpacity(0.8),
+              color: theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -328,17 +328,17 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.white.withOpacity(0.03)
-                            : Colors.white.withOpacity(0.8),
+                            ? Colors.white.withValues(alpha: 0.03)
+                            : Colors.white.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                             color: isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.03)),
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.black.withValues(alpha: 0.03)),
                         boxShadow: [
                           if (!isDark)
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
+                              color: Colors.black.withValues(alpha: 0.02),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             )
@@ -349,7 +349,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                           Icon(Icons.search_rounded,
                               size: 20,
                               color: theme.colorScheme.onSurface
-                                  .withOpacity(0.4)),
+                                  .withValues(alpha: 0.4)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextField(
@@ -359,7 +359,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                                 hintText: 'Search by member name...',
                                 hintStyle: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.onSurface
-                                        .withOpacity(0.3)),
+                                        .withValues(alpha: 0.3)),
                                 border: InputBorder.none,
                                 isDense: true,
                                 contentPadding:
@@ -410,18 +410,18 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
           gradient: isSelected ? AppColors.primaryGradient : null,
           color: !isSelected
               ? (isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.03))
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.03))
               : null,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
               color: isSelected
                   ? Colors.transparent
-                  : theme.dividerColor.withOpacity(0.1)),
+                  : theme.dividerColor.withValues(alpha: 0.1)),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4))
                 ]
@@ -432,7 +432,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
           style: TextStyle(
             color: isSelected
                 ? Colors.white
-                : theme.colorScheme.onSurface.withOpacity(0.7),
+                : theme.colorScheme.onSurface.withValues(alpha: 0.7),
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
             fontSize: 13,
             letterSpacing: 0.3,
@@ -507,14 +507,14 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: theme.colorScheme.primary.withOpacity(0.05),
+              color: theme.colorScheme.primary.withValues(alpha: 0.05),
               border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   blurRadius: 32,
                   spreadRadius: 8,
                 )
@@ -530,7 +530,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
           const SizedBox(height: 8),
           Text('Your financial future starts with a single deposit.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.5))),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
         ],
       ),
     );
@@ -563,7 +563,7 @@ class _PremiumSavingCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     )
@@ -587,7 +587,7 @@ class _PremiumSavingCard extends StatelessWidget {
                           letterSpacing: 1,
                           fontWeight: FontWeight.w800,
                           color: theme.colorScheme.onSurface
-                              .withOpacity(0.4)),
+                              .withValues(alpha: 0.4)),
                     ),
                   ],
                 ),
@@ -621,7 +621,7 @@ class _PremiumSavingCard extends StatelessWidget {
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
                           color: theme.colorScheme.onSurface
-                              .withOpacity(0.3))),
+                              .withValues(alpha: 0.3))),
                   Text('${(progress * 100).toInt()}%',
                       style: theme.textTheme.labelSmall?.copyWith(
                           fontSize: 10,
@@ -635,7 +635,7 @@ class _PremiumSavingCard extends StatelessWidget {
                 child: Container(
                   height: 6,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withOpacity(0.05),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
                   ),
                   child: FractionallySizedBox(
                     alignment: Alignment.centerLeft,
@@ -656,18 +656,18 @@ class _PremiumSavingCard extends StatelessWidget {
             children: [
               Icon(Icons.event_available_rounded,
                   size: 14,
-                  color: theme.colorScheme.onSurface.withOpacity(0.4)),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
               const SizedBox(width: 6),
               Text(
                 'Maturity: ${AppFormatters.formatDate(saving.maturityDate)}',
                 style: theme.textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
               ),
               const Spacer(),
               Icon(Icons.arrow_forward_ios_rounded,
                   size: 12,
-                  color: theme.colorScheme.onSurface.withOpacity(0.3)),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
             ],
           ),
         ],
@@ -682,7 +682,7 @@ class _PremiumSavingCard extends StatelessWidget {
       children: [
         Text(label,
             style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.4))),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
         Text(value,
             style: theme.textTheme.bodyMedium
                 ?.copyWith(fontWeight: FontWeight.w800, color: color)),
@@ -699,7 +699,7 @@ class _PremiumSavingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: (isMatured ? AppColors.success : AppColors.primary).withOpacity(0.3),
+            color: (isMatured ? AppColors.success : AppColors.primary).withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           )

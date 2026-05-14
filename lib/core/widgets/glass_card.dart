@@ -63,13 +63,13 @@ class _GlassCardState extends State<GlassCard>
     final shadows = widget.elevated
         ? [
             BoxShadow(
-              color: shadowColor.withOpacity(isDark ? 0.5 : 0.06),
+              color: shadowColor.withValues(alpha: isDark ? 0.5 : 0.06),
               blurRadius: 32,
               offset: const Offset(0, 8),
               spreadRadius: -6,
             ),
             BoxShadow(
-              color: shadowColor.withOpacity(isDark ? 0.3 : 0.04),
+              color: shadowColor.withValues(alpha: isDark ? 0.3 : 0.04),
               blurRadius: 12,
               offset: const Offset(0, 3),
               spreadRadius: -2,
@@ -77,13 +77,13 @@ class _GlassCardState extends State<GlassCard>
           ]
         : [
             BoxShadow(
-              color: shadowColor.withOpacity(isDark ? 0.4 : 0.04),
+              color: shadowColor.withValues(alpha: isDark ? 0.4 : 0.04),
               blurRadius: 16,
               offset: const Offset(0, 4),
               spreadRadius: -4,
             ),
             BoxShadow(
-              color: shadowColor.withOpacity(isDark ? 0.2 : 0.02),
+              color: shadowColor.withValues(alpha: isDark ? 0.2 : 0.02),
               blurRadius: 6,
               offset: const Offset(0, 1),
             ),
@@ -98,15 +98,15 @@ class _GlassCardState extends State<GlassCard>
         decoration: BoxDecoration(
           color: _isPressed
               ? (isDark
-                  ? bgColor.withOpacity(0.9)
-                  : bgColor.withOpacity(0.95))
+                  ? bgColor.withValues(alpha: 0.9)
+                  : bgColor.withValues(alpha: 0.95))
               : bgColor,
           borderRadius: BorderRadius.circular(widget.borderRadius),
           border: Border.all(
             color: widget.borderColor ??
                 (isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.03)),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.03)),
             width: widget.borderColor != null ? 1.5 : 0.5,
           ),
           boxShadow: shadows,

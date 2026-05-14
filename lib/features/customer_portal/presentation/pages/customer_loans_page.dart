@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/providers/customer_portal_providers.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+// import '../../../auth/presentation/providers/auth_provider.dart';
 
 class CustomerLoansPage extends ConsumerWidget {
   const CustomerLoansPage({super.key});
@@ -16,7 +16,7 @@ class CustomerLoansPage extends ConsumerWidget {
         ? ref.watch(customerLoansProvider(memberId))
         : null;
 
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context);
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
 
     return Scaffold(
@@ -65,8 +65,9 @@ class CustomerLoansPage extends ConsumerWidget {
 
   Widget _buildLoanCard(BuildContext context, WidgetRef ref, dynamic loan, NumberFormat currencyFormat) {
     final theme = Theme.of(context);
-    final progress = (loan.paidAmount ?? 0) / (loan.totalAmount ?? 1);
-    final isOverdue = loan.nextDueDate?.isBefore(DateTime.now()) ?? false;
+    final progress = ((loan['paid_amount'] as num?)?.toDouble() ?? 0.0) / ((loan['principal_amount'] as num?)?.toDouble() ?? 1.0);
+    final nextDueDate = DateTime.tryParse(loan['next_emi_date'] ?? '');
+    final isOverdue = nextDueDate?.isBefore(DateTime.now()) ?? false;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -74,11 +75,11 @@ class CustomerLoansPage extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isOverdue ? Colors.red.withOpacity(0.5) : theme.colorScheme.outlineVariant,
+          color: isOverdue ? Colors.red.withValues(alpha: 0.5) : theme.colorScheme.outlineVariant,
         ),
       ),
       child: InkWell(
-        onTap: () => context.push('/customer/loans/${loan.id}'),
+        onTap: () => context.push('/customer/loans/${loan['id']}'),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -91,20 +92,20 @@ class CustomerLoansPage extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getLoanStatusColor(loan.status ?? 'active').withOpacity(0.1),
+                      color: _getLoanStatusColor(loan['status'] ?? 'active').withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      (loan.status ?? 'Active').toUpperCase(),
+                      (loan['status'] ?? 'Active').toUpperCase(),
                       style: TextStyle(
-                        color: _getLoanStatusColor(loan.status ?? 'active'),
+                        color: _getLoanStatusColor(loan['status'] ?? 'active'),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
                   ),
                   Text(
-                    'Loan #${loan.id?.substring(0, 8) ?? ''}',
+                    'Loan #${(loan['loan_id'] as String?)?.substring(0, 8) ?? ''}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -119,7 +120,7 @@ class CustomerLoansPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        currencyFormat.format(loan.totalAmount ?? 0),
+                        currencyFormat.format(loan['principal_amount'] ?? 0),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -142,7 +143,7 @@ class CustomerLoansPage extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '₹${loan.emiAmount ?? 0}/month',
+                        '₹${loan['emi_amount'] ?? 0}/month',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -168,11 +169,11 @@ class CustomerLoansPage extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Paid: ${currencyFormat.format(loan.paidAmount ?? 0)}',
+                    'Paid: ${currencyFormat.format(loan['collected_amount'] ?? 0)}',
                     style: theme.textTheme.bodySmall,
                   ),
                   Text(
-                    'Outstanding: ${currencyFormat.format(loan.outstandingAmount ?? 0)}',
+                    'Outstanding: ${currencyFormat.format(loan['outstanding_balance'] ?? 0)}',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -182,7 +183,7 @@ class CustomerLoansPage extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -204,7 +205,7 @@ class CustomerLoansPage extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => context.push('/customer/loans/${loan.id}/schedule'),
+                      onPressed: () => context.push('/customer/loans/${loan['id']}/schedule'),
                       icon: const Icon(Icons.calendar_today, size: 18),
                       label: const Text('Schedule'),
                     ),
@@ -250,7 +251,7 @@ class CustomerLoansPage extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('EMI Amount: ₹${loan.emiAmount ?? 0}'),
+            Text('EMI Amount: ₹${loan['emi_amount'] ?? 0}'),
             const SizedBox(height: 16),
             const Text('Select Payment Mode:'),
             const SizedBox(height: 8),
@@ -285,8 +286,8 @@ class CustomerLoansPage extends ConsumerWidget {
             onPressed: () async {
               Navigator.pop(context);
               final success = await ref.read(emiPaymentProvider.notifier).payEMI(
-                loan.id ?? '',
-                (loan.emiAmount ?? 0).toDouble(),
+                loan['id'] ?? '',
+                (loan['emi_amount'] ?? 0).toDouble(),
                 'upi',
               );
               if (success && context.mounted) {

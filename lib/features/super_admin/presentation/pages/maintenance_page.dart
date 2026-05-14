@@ -36,7 +36,7 @@ class _MaintenancePageState extends ConsumerState<MaintenancePage> {
             padding: const EdgeInsets.all(16),
             sliver: SliverToBoxAdapter(
               child: Card(
-                color: Colors.purple.withOpacity(0.1),
+                color: Colors.purple.withValues(alpha: 0.1),
                 child: const Padding(
                   padding: EdgeInsets.all(16),
                   child: Row(
@@ -131,7 +131,7 @@ class _MaintenancePageState extends ConsumerState<MaintenancePage> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: (isActive ? Colors.orange : Colors.grey).withOpacity(0.1),
+                    color: (isActive ? Colors.orange : Colors.grey).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -172,7 +172,7 @@ class _MaintenancePageState extends ConsumerState<MaintenancePage> {
                 Switch(
                   value: isActive,
                   onChanged: (value) => _toggleMaintenance(window.id, value),
-                  activeColor: Colors.orange,
+                  activeThumbColor: Colors.orange,
                 ),
               ],
             ),
@@ -225,7 +225,7 @@ class _MaintenancePageState extends ConsumerState<MaintenancePage> {
                 children: window.affectedServices.map<Widget>((service) {
                   return Chip(
                     label: Text(service),
-                    backgroundColor: Colors.purple.withOpacity(0.1),
+                    backgroundColor: Colors.purple.withValues(alpha: 0.1),
                     labelStyle: const TextStyle(fontSize: 12),
                   );
                 }).toList(),
@@ -318,7 +318,7 @@ class _MaintenancePageState extends ConsumerState<MaintenancePage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  value: durationHours,
+                  initialValue: durationHours,
                   decoration: const InputDecoration(
                     labelText: 'Duration',
                   ),
@@ -351,6 +351,9 @@ class _MaintenancePageState extends ConsumerState<MaintenancePage> {
                 );
                 final scheduledEnd = scheduledStart.add(Duration(hours: durationHours));
 
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+                
                 final success = await ref.read(superAdminActionsProvider.notifier).createMaintenanceWindow(
                   title: titleController.text,
                   description: descController.text.isEmpty ? null : descController.text,
@@ -359,16 +362,16 @@ class _MaintenancePageState extends ConsumerState<MaintenancePage> {
                   affectedServices: affectedServices.isEmpty ? null : affectedServices,
                 );
 
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (!mounted) return;
+
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text(success 
                           ? 'Maintenance scheduled' 
                           : 'Failed to schedule maintenance'),
                     ),
                   );
-                }
               },
               child: const Text('Schedule'),
             ),

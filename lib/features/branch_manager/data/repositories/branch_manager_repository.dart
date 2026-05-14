@@ -1,8 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/branch_stats_model.dart';
-import '../../../auth/data/models/profile_model.dart';
-import '../../../staff/data/models/collection_model.dart';
-import '../../../loans/data/models/loan_model.dart';
+import '../../../auth/data/models/user_model.dart';
 
 /// Branch Manager Repository
 /// Handles all data operations for branch managers
@@ -20,16 +18,16 @@ class BranchManagerRepository {
   /// Get branch staff
   Future<List<ProfileModel>> getBranchStaff(String branchId) async {
     final response = await _client
-        .from('profiles')
+        .from('staff_profiles')
         .select('''
           *,
-          branch:branches!profiles_branch_id_fkey(*)
+          branch:branches!staff_profiles_branch_id_fkey(name, id)
         ''')
         .eq('branch_id', branchId)
-        .in('role', ['manager', 'collectionAgent'])
-        .eq('is_active', true);
+        .order('full_name');
 
-    return response.map<ProfileModel>((json) => ProfileModel.fromJson(json)).toList();
+    final List<dynamic> list = response as List<dynamic>;
+    return list.map((item) => ProfileModel.fromJson(item as Map<String, dynamic>)).toList();
   }
 
   /// Get branch collections
@@ -40,7 +38,7 @@ class BranchManagerRepository {
         .from('collections')
         .select('''
           *,
-          collector:profiles!collections_collected_by_fkey(name, id),
+          collector:staff_profiles!collections_staff_id_fkey(full_name, id),
           loan:loans(
             id,
             loan_amount,
@@ -61,7 +59,7 @@ class BranchManagerRepository {
         .from('pending_approvals')
         .select('''
           *,
-          requested_by_user:profiles!pending_approvals_requested_by_fkey(name, role),
+          requested_by_user:profiles!pending_approvals_requested_by_fkey(full_name as name, role),
           member:members(name, id, phone)
         ''')
         .eq('branch_id', branchId)

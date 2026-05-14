@@ -160,6 +160,32 @@ class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
+  /// Create organization
+  Future<bool> createOrganization({
+    required String name,
+    required String slug,
+    String plan = 'free',
+    String status = 'active',
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final success = await _repository.createOrganization(
+        name: name,
+        slug: slug,
+        plan: plan,
+        status: status,
+      );
+      if (success) {
+        _ref.invalidate(allOrganizationsProvider);
+      }
+      state = const AsyncValue.data(null);
+      return success;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
   /// Update user status
   Future<bool> updateUserStatus(String userId, bool isActive) async {
     state = const AsyncValue.loading();
@@ -218,6 +244,58 @@ class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
         showFrom: showFrom,
         showUntil: showUntil,
       );
+      if (success) {
+        _ref.invalidate(platformAnnouncementsProvider);
+      }
+      state = const AsyncValue.data(null);
+      return success;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  /// Update announcement
+  Future<bool> updateAnnouncement({
+    required String id,
+    String? title,
+    String? message,
+    String? type,
+    String? targetAudience,
+    List<String>? targetOrgs,
+    DateTime? showFrom,
+    DateTime? showUntil,
+    bool? isActive,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final success = await _repository.updateAnnouncement(
+        id: id,
+        title: title,
+        message: message,
+        type: type,
+        targetAudience: targetAudience,
+        targetOrgs: targetOrgs,
+        showFrom: showFrom,
+        showUntil: showUntil,
+        isActive: isActive,
+      );
+      if (success) {
+        _ref.invalidate(platformAnnouncementsProvider);
+      }
+      state = const AsyncValue.data(null);
+      return success;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  /// Delete announcement
+  Future<bool> deleteAnnouncement(String id) async {
+    state = const AsyncValue.loading();
+    try {
+      final success = await _repository.deleteAnnouncement(id);
       if (success) {
         _ref.invalidate(platformAnnouncementsProvider);
       }

@@ -19,7 +19,7 @@ class StaffRepository {
           .select('''
             *,
             branches(name),
-            supervisor:staff_profiles!supervisor_id(full_name)
+            supervisor:staff_profiles!staff_profiles_supervisor_id_fkey(full_name)
           ''')
           .eq('user_id', userId)
           .eq('org_id', _orgId)
@@ -43,7 +43,7 @@ class StaffRepository {
           .select('''
             *,
             branches(name),
-            supervisor:staff_profiles!supervisor_id(full_name)
+            supervisor:staff_profiles!staff_profiles_supervisor_id_fkey(full_name)
           ''')
           .eq('id', staffId)
           .single();

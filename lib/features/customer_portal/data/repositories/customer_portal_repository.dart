@@ -21,6 +21,50 @@ class CustomerPortalRepository {
         .toList();
   }
 
+  /// Get customer dashboard data
+  Future<Map<String, dynamic>> getCustomerDashboard(String customerId) async {
+    final loans = await getCustomerLoans(customerId);
+    final savings = await getCustomerSavings(customerId);
+    final unreadCount = await getUnreadNotificationCount(customerId);
+
+    double totalOutstanding = 0;
+    for (var loan in loans) {
+      totalOutstanding += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
+    }
+
+    double totalSavings = 0;
+    for (var account in savings) {
+      totalSavings += (account['balance'] as num?)?.toDouble() ?? 0;
+    }
+
+    return {
+      'loans': loans,
+      'savings': savings,
+      'unread_notifications': unreadCount,
+      'total_outstanding': totalOutstanding,
+      'total_savings': totalSavings,
+    };
+  }
+
+  /// Get customer transactions
+  Future<List<Map<String, dynamic>>> getCustomerTransactions(String customerId, {int? limit}) async {
+    var query = _client
+        .from('transactions')
+        .select('''
+          *,
+          savings_account:savings_accounts(account_number)
+        ''')
+        .eq('customer_id', customerId)
+        .order('transaction_date', ascending: false);
+    
+    if (limit != null) {
+      query = query.limit(limit);
+    }
+
+    final response = await query;
+    return List<Map<String, dynamic>>.from(response);
+  }
+
   /// Mark notification as read
   Future<void> markNotificationRead(String notificationId) async {
     await _client.from('customer_notifications').update({
@@ -163,21 +207,21 @@ class CustomerPortalRepository {
   }
 
   /// Get messages for a ticket
-  Future<List<Map<String, dynamic>>> getTicketMessages(String ticketId) async {
-    final response = await _client
-        .from('customer_ticket_messages')
-        .select('''
-          id,
-          message,
-          created_at,
-          attachments,
-          sender:profiles!customer_ticket_messages_sender_id_fkey(id, name, phone, role)
-        ''')
-        .eq('ticket_id', ticketId)
-        .order('created_at', ascending: true);
+   Future<List<Map<String, dynamic>>> getTicketMessages(String ticketId) async {
+     final response = await _client
+         .from('customer_ticket_messages')
+         .select('''
+           id,
+           message,
+           created_at,
+           attachments,
+           sender:profiles!customer_ticket_messages_sender_id_fkey(id, full_name as name, phone, role)
+         ''')
+         .eq('ticket_id', ticketId)
+         .order('created_at', ascending: true);
 
-    return response;
-  }
+     return response;
+   }
 
   // ================== FEEDBACK ==================
 
@@ -215,6 +259,34 @@ class CustomerPortalRepository {
     return response
         .map<CustomerFeedback>((json) => CustomerFeedback.fromJson(json))
         .toList();
+  }
+
+  // ================== TRANSACTIONS & PAYMENTS ==================
+
+  /// Process EMI Payment
+  Future<void> processEMIPayment(String loanId, double amount, String paymentMode) async {
+    await _client.rpc('process_customer_emi_payment', params: {
+      'p_loan_id': loanId,
+      'p_amount': amount,
+      'p_payment_mode': paymentMode,
+    });
+  }
+
+  /// Process Savings Deposit
+  Future<void> processSavingsDeposit(String accountId, double amount) async {
+    await _client.rpc('process_customer_savings_deposit', params: {
+      'p_account_id': accountId,
+      'p_amount': amount,
+    });
+  }
+
+  /// Process Savings Withdrawal
+  Future<void> processSavingsWithdrawal(String accountId, double amount, String reason) async {
+    await _client.rpc('process_customer_savings_withdrawal', params: {
+      'p_account_id': accountId,
+      'p_amount': amount,
+      'p_reason': reason,
+    });
   }
 
   // ================== LOANS & SAVINGS ==================

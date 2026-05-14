@@ -109,7 +109,7 @@ class _AuditLogsPageState extends ConsumerState<AuditLogsPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: actionColor.withOpacity(0.1),
+                color: actionColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -128,7 +128,7 @@ class _AuditLogsPageState extends ConsumerState<AuditLogsPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: actionColor.withOpacity(0.1),
+                          color: actionColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(

@@ -13,7 +13,7 @@ class BranchRepository {
         .from('branches')
         .select('''
           *,
-          manager:profiles!branches_manager_id_fkey(full_name)
+          manager:staff_profiles!branches_manager_id_fkey(full_name)
         ''')
         .eq('org_id', _orgId)
         .order('created_at', ascending: false);
@@ -27,7 +27,7 @@ class BranchRepository {
         .from('branches')
         .select('''
           *,
-          manager:profiles!branches_manager_id_fkey(full_name)
+          manager:staff_profiles!branches_manager_id_fkey(full_name)
         ''')
         .eq('org_id', _orgId)
         .eq('status', 'active')
@@ -42,7 +42,7 @@ class BranchRepository {
         .from('branches')
         .select('''
           *,
-          manager:profiles!branches_manager_id_fkey(full_name)
+          manager:staff_profiles!branches_manager_id_fkey(full_name)
         ''')
         .eq('id', id)
         .eq('org_id', _orgId)
@@ -121,7 +121,7 @@ class BranchRepository {
         .eq('org_id', _orgId)
         .select('''
           *,
-          manager:profiles!branches_manager_id_fkey(full_name)
+          manager:staff_profiles!branches_manager_id_fkey(full_name)
         ''')
         .single();
 
@@ -130,9 +130,9 @@ class BranchRepository {
 
   /// Delete a branch
   Future<void> deleteBranch(String id) async {
-    // First, unassign all users from this branch
+    // First, unassign all staff from this branch
     await _client
-        .from('profiles')
+        .from('staff_profiles')
         .update({'branch_id': null})
         .eq('branch_id', id);
 
@@ -176,10 +176,10 @@ class BranchRepository {
   /// Get potential managers (staff with manager role)
   Future<List<Map<String, dynamic>>> getPotentialManagers() async {
     final response = await _client
-        .from('profiles')
+        .from('staff_profiles')
         .select('id, full_name, email')
         .eq('org_id', _orgId)
-        .inFilter('role', ['admin', 'executiveAdmin', 'manager'])
+        .inFilter('role', ['branch_manager', 'manager', 'supervisor'])
         .order('full_name');
 
     return List<Map<String, dynamic>>.from(response);
@@ -188,7 +188,7 @@ class BranchRepository {
   /// Get staff for a branch
   Future<List<Map<String, dynamic>>> getBranchStaff(String branchId) async {
     final response = await _client
-        .from('profiles')
+        .from('staff_profiles')
         .select('id, full_name, email, role, phone')
         .eq('branch_id', branchId)
         .order('full_name');

@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/providers/customer_portal_providers.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 class CustomerDashboard extends ConsumerWidget {
   const CustomerDashboard({super.key});
@@ -106,7 +104,7 @@ class CustomerDashboard extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.onPrimaryContainer.withOpacity(0.2),
+                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -123,7 +121,7 @@ class CustomerDashboard extends ConsumerWidget {
                   Text(
                     'Welcome back,',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+                      color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                     ),
                   ),
                   Text(
@@ -216,7 +214,7 @@ class CustomerDashboard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -247,7 +245,7 @@ class CustomerDashboard extends ConsumerWidget {
     final isOverdue = dueDate.isBefore(DateTime.now());
 
     return Card(
-      color: isOverdue ? Colors.red.withOpacity(0.1) : theme.colorScheme.tertiaryContainer,
+      color: isOverdue ? Colors.red.withValues(alpha: 0.1) : theme.colorScheme.tertiaryContainer,
       child: InkWell(
         onTap: () => context.push('/customer/loans'),
         borderRadius: BorderRadius.circular(12),
@@ -273,9 +271,9 @@ class CustomerDashboard extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '${currencyFormat.format(nextEmi['amount'] ?? 0)} • Due: ${Intl('en_US').date('MMM d').format(dueDate)}',
+                      '${currencyFormat.format(nextEmi['amount'] ?? 0)} • Due: ${DateFormat('MMM d').format(dueDate)}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isOverdue ? Colors.red.withOpacity(0.8) : theme.colorScheme.onTertiaryContainer.withOpacity(0.8),
+                        color: isOverdue ? Colors.red.withValues(alpha: 0.8) : theme.colorScheme.onTertiaryContainer.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -406,7 +404,7 @@ class CustomerDashboard extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isCredit ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+          color: isCredit ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -417,7 +415,7 @@ class CustomerDashboard extends ConsumerWidget {
       title: Text(tx['description'] ?? 'Transaction'),
       subtitle: Text(tx['date'] ?? ''),
       trailing: Text(
-        '${isCredit ? '+' : '-'}₹${amount}',
+        '${isCredit ? '+' : '-'}₹$amount',
         style: theme.textTheme.titleSmall?.copyWith(
           color: isCredit ? Colors.green : Colors.red,
           fontWeight: FontWeight.bold,

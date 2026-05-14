@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/providers/branch_manager_providers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class PendingApprovalsPage extends ConsumerWidget {
   const PendingApprovalsPage({super.key});
@@ -68,7 +68,7 @@ class PendingApprovalsPage extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _getTypeColor(type).withOpacity(0.1),
+                    color: _getTypeColor(type).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -179,13 +179,17 @@ class PendingApprovalsPage extends ConsumerWidget {
         approvalId,
         user?.id ?? '',
       );
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(content: Text('Request approved successfully')),
-      );
+      if (context.mounted) {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(content: Text('Request approved successfully')),
+        );
+      }
     } catch (e) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (context.mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -224,14 +228,18 @@ class PendingApprovalsPage extends ConsumerWidget {
                   user?.id ?? '',
                   controller.text,
                 );
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Request rejected')),
-                );
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Request rejected')),
+                  );
+                }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
               }
             },
             child: const Text('Reject'),

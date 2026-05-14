@@ -142,8 +142,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         final user = ref.read(currentUserProvider);
         final role = user?.role;
         final isSetupPath = state.matchedLocation == '/setup';
-        final isAdminPath = state.matchedLocation == '/' || state.matchedLocation.startsWith('/loans') || state.matchedLocation.startsWith('/savings') || state.matchedLocation.startsWith('/users') || state.matchedLocation.startsWith('/settings') || state.matchedLocation.startsWith('/analytics') || state.matchedLocation.startsWith('/transactions') || state.matchedLocation.startsWith('/search') || state.matchedLocation.startsWith('/notifications') || state.matchedLocation.startsWith('/members');
+        final isAdminPath = state.matchedLocation == '/' || state.matchedLocation.startsWith('/loans') || state.matchedLocation.startsWith('/savings') || state.matchedLocation.startsWith('/users') || state.matchedLocation.startsWith('/settings') || state.matchedLocation.startsWith('/analytics') || state.matchedLocation.startsWith('/transactions') || state.matchedLocation.startsWith('/search') || state.matchedLocation.startsWith('/notifications') || state.matchedLocation.startsWith('/members') || state.matchedLocation.startsWith('/branches');
         final isStaffPath = state.matchedLocation.startsWith('/staff');
+
+        // Force setup for executive admins if setup is not complete
+        if (role == UserRole.executiveAdmin) {
+          final setupStatus = ref.read(setupCompleteProvider).valueOrNull ?? false;
+          if (!setupStatus && !isSetupPath) {
+            return '/setup';
+          }
+          if (setupStatus && isSetupPath) {
+            return '/';
+          }
+        }
 
         // After login, route to correct portal based on role
         if (isAuthPath) {
@@ -151,9 +162,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             case UserRole.superAdmin:
               return '/admin';
             case UserRole.executiveAdmin:
-              if (user?.orgId == null) return '/setup';
-              final setupVal = ref.read(setupCompleteProvider);
-              if (setupVal.valueOrNull == false) return '/setup';
               return '/';
             case UserRole.manager:
             case UserRole.collectionAgent:
@@ -162,18 +170,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               return '/';
             default:
               return '/';
-          }
-        }
-
-        // Enforce Setup Wizard for Executive Admins (mandatory - immediate redirect)
-        if (role == UserRole.executiveAdmin && !isSetupPath) {
-          if (user?.orgId == null) return '/setup';
-          
-          if (user?.orgId != null) {
-            final setupVal = ref.read(setupCompleteProvider);
-            if (setupVal.valueOrNull == false) {
-              return '/setup';
-            }
           }
         }
 
@@ -481,31 +477,6 @@ class HomePageContent extends ConsumerWidget {
         context.go('/admin');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    // Handle Executive Admin setup check
-    if (user?.role == UserRole.executiveAdmin) {
-      final setupAsync = ref.watch(setupCompleteProvider);
-      
-      return setupAsync.when(
-        data: (isComplete) {
-          if (!isComplete) {
-            // Router redirect will handle the navigation to /setup
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-          return HomePage(
-            onViewAllLoans: () => context.go('/loans'),
-            onViewAllSavings: () => context.go('/savings'),
-            onQuickAction: () {},
-          );
-        },
-        loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-        error: (err, stack) => HomePage(
-          onViewAllLoans: () => context.go('/loans'),
-          onViewAllSavings: () => context.go('/savings'),
-          onQuickAction: () {},
-        ),
-      );
     }
 
     // Redirect staff to their dashboard

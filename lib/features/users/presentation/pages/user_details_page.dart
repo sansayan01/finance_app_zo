@@ -179,6 +179,7 @@ class UserDetailsPage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _EditProfileSheet(user: user),
     );
@@ -946,6 +947,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late TextEditingController _phoneController;
   late TextEditingController _aadharController;
   late TextEditingController _panController;
+  late TextEditingController _employeeIdController;
+  late TextEditingController _zoneController;
+  late TextEditingController _addressController;
   bool _isLoading = false;
 
   @override
@@ -955,6 +959,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     _phoneController = TextEditingController(text: widget.user.phone);
     _aadharController = TextEditingController(text: widget.user.aadhar);
     _panController = TextEditingController(text: widget.user.pan);
+    _employeeIdController =
+        TextEditingController(text: widget.user.employeeId ?? '');
+    _zoneController =
+        TextEditingController(text: widget.user.assignedZone ?? '');
+    _addressController = TextEditingController(text: widget.user.address ?? '');
   }
 
   @override
@@ -963,6 +972,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     _phoneController.dispose();
     _aadharController.dispose();
     _panController.dispose();
+    _employeeIdController.dispose();
+    _zoneController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -975,6 +987,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         'phone': _phoneController.text,
         'aadhar': _aadharController.text,
         'pan': _panController.text,
+        'employee_id': _employeeIdController.text,
+        'assigned_zone': _zoneController.text,
+        'address': _addressController.text,
       });
 
       ref.invalidate(userListProvider);
@@ -984,15 +999,25 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Profile updated successfully'),
-              backgroundColor: AppColors.success),
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle_rounded,
+                      color: Colors.white, size: 20),
+                  SizedBox(width: 12),
+                  Text('Profile updated successfully'),
+                ],
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Update failed: $e'), backgroundColor: Colors.red),
+              content: Text('Update failed: $e'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating),
         );
       }
     } finally {
@@ -1003,114 +1028,395 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrow = screenWidth < 600;
 
     return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom +
-            MediaQuery.of(context).padding.bottom +
-            42,
-        top: 24,
-        left: 24,
-        right: 24,
-      ),
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: isDark ? AppColors.elevatedDark : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: primary.withValues(alpha: 0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 40,
+            offset: const Offset(0, -10),
+          ),
+        ],
       ),
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.dividerColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
+      child: Column(
+        children: [
+          // Header Indicator
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: theme.dividerColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Title Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Edit Profile',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900, letterSpacing: -1),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Update member details and KYC records.',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.dividerColor.withValues(alpha: 0.05),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Scrollable Form Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // Summary / Role Info (Glass Card)
+                  _buildRoleSummaryCard(theme, primary, isDark),
+                  const SizedBox(height: 20),
+
+                  // Account Details
+                  GlassCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('Account Details',
+                            Icons.person_outline_rounded, theme, primary),
+                        const SizedBox(height: 24),
+                        _buildTwoColumn(
+                          isNarrow: isNarrow,
+                          first: _buildInputField(
+                            label: 'FULL NAME',
+                            hint: 'Enter legal name',
+                            controller: _nameController,
+                            theme: theme,
+                            isDark: isDark,
+                            primary: primary,
+                          ),
+                          second: _buildInputField(
+                            label: 'MOBILE NUMBER',
+                            hint: '+91 XXXXXXXXXX',
+                            icon: Icons.phone_android_outlined,
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            theme: theme,
+                            isDark: isDark,
+                            primary: primary,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildInputField(
+                          label: 'RESIDENTIAL ADDRESS',
+                          hint: 'Enter complete home address',
+                          icon: Icons.home_outlined,
+                          controller: _addressController,
+                          theme: theme,
+                          isDark: isDark,
+                          primary: primary,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Operational Details (Employee ID / Zone)
+                  if (widget.user.role != UserRole.customer) ...[
+                    GlassCard(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionHeader(
+                              'Field Operations',
+                              Icons.corporate_fare_outlined,
+                              theme,
+                              isDark ? AppColors.warningDark : AppColors.orange),
+                          const SizedBox(height: 24),
+                          _buildTwoColumn(
+                            isNarrow: isNarrow,
+                            first: _buildInputField(
+                              label: 'EMPLOYEE ID',
+                              hint: 'Internal reference #',
+                              controller: _employeeIdController,
+                              theme: theme,
+                              isDark: isDark,
+                              primary: primary,
+                            ),
+                            second: _buildInputField(
+                              label: 'ASSIGNED ZONE',
+                              hint: 'e.g. North Sector',
+                              icon: Icons.location_on_outlined,
+                              controller: _zoneController,
+                              theme: theme,
+                              isDark: isDark,
+                              primary: primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Identity Details
+                  GlassCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader(
+                            'Identity Verification',
+                            Icons.badge_outlined,
+                            theme,
+                            isDark ? AppColors.successDark : AppColors.success),
+                        const SizedBox(height: 24),
+                        _buildTwoColumn(
+                          isNarrow: isNarrow,
+                          first: _buildInputField(
+                            label: 'AADHAR NUMBER',
+                            hint: 'XXXX XXXX XXXX',
+                            icon: Icons.fingerprint_outlined,
+                            controller: _aadharController,
+                            keyboardType: TextInputType.number,
+                            theme: theme,
+                            isDark: isDark,
+                            primary: primary,
+                          ),
+                          second: _buildInputField(
+                            label: 'PAN NUMBER',
+                            hint: 'ABCDE 1234 F',
+                            icon: Icons.credit_card_outlined,
+                            controller: _panController,
+                            textCapitalization: TextCapitalization.characters,
+                            theme: theme,
+                            isDark: isDark,
+                            primary: primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Edit Profile',
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -1),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Update member details and KYC records.',
-              style: theme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 32),
-            _buildTextField(
-                'Full Name', _nameController, Icons.person_rounded, theme),
-            const SizedBox(height: 16),
-            _buildTextField(
-                'Mobile Number', _phoneController, Icons.phone_rounded, theme),
-            const SizedBox(height: 16),
-            _buildTextField(
-                'Aadhar Number', _aadharController, Icons.badge_rounded, theme),
-            const SizedBox(height: 16),
-            _buildTextField(
-                'PAN Card', _panController, Icons.credit_card_rounded, theme),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _handleUpdate,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Text('Save Changes',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w900, fontSize: 16)),
+          ),
+
+          // Bottom Actions
+          Container(
+            padding: EdgeInsets.fromLTRB(24, 16, 24,
+                MediaQuery.of(context).padding.bottom > 0 ? 32 : 24),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.elevatedDark : Colors.white,
+              border: Border(
+                top: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.1)),
               ),
             ),
-          ],
-        ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Discard',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handleUpdate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Save Changes',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w900, fontSize: 15)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      IconData icon, ThemeData theme) {
+  Widget _buildRoleSummaryCard(ThemeData theme, Color primary, bool isDark) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primary, primary.withValues(alpha: 0.6)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.shield_outlined, color: Colors.white),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.user.role?.name.toUpperCase() ?? 'MEMBER',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                    color: primary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Permission Matrix Active',
+                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(
+      String title, IconData icon, ThemeData theme, Color accent) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: accent),
+        ),
+        const SizedBox(width: 12),
+        Text(title,
+            style: theme.textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.2)),
+      ],
+    );
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    required ThemeData theme,
+    required bool isDark,
+    required Color primary,
+    IconData? icon,
+    TextInputType? keyboardType,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.5)),
+            style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                fontSize: 10,
+                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7))),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
+          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, size: 20, color: theme.colorScheme.primary),
+            hintText: hint,
+            prefixIcon: icon != null ? Icon(icon, size: 18) : null,
             filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.3),
+            fillColor: isDark ? AppColors.fillDark : AppColors.fillLight,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.all(16),
+                borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: primary, width: 1.5)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildTwoColumn({
+    required bool isNarrow,
+    required Widget first,
+    required Widget second,
+  }) {
+    if (isNarrow) {
+      return Column(
+        children: [
+          first,
+          const SizedBox(height: 16),
+          second,
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: first),
+        const SizedBox(width: 16),
+        Expanded(child: second),
       ],
     );
   }

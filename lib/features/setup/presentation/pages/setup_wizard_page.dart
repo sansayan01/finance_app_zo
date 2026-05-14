@@ -98,6 +98,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final authUser = ref.read(supabaseClientProvider).auth.currentUser;
       final orgName = authUser?.userMetadata?['org_name'] as String?;
       if (orgName != null && orgName.isNotEmpty) {
@@ -106,7 +107,12 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
 
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
-      
+
+      if (prefs.getBool('wizard_completed') == true) {
+        setState(() => _currentStep = 5);
+        return;
+      }
+
       final savedStep = prefs.getInt(_stepKey);
       if (savedStep != null && savedStep > 0 && savedStep < 5) {
         final resume = await showDialog<bool>(
@@ -126,6 +132,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
             ],
           ),
         );
+        if (!mounted) return;
         if (resume == true) {
           setState(() => _currentStep = savedStep);
         } else {
@@ -264,16 +271,19 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           'logo_url': logoUrl,
         }).eq('id', orgId);
 
+        if (!mounted) return;
         setState(() => _logoChanged = true);
       }
 
       await ref.read(authProvider.notifier).refreshCurrentUser();
       await _saveStep(1);
+      if (!mounted) return;
       setState(() => _currentStep = 1);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = 'Error: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -329,6 +339,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       }
       
       // Add to branches list for selection
+      if (!mounted) return;
       setState(() {
         _branches = [
           {'id': _createdBranchId, 'name': branchName},
@@ -339,11 +350,13 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       });
       
       await _saveStep(2);
+      if (!mounted) return;
       setState(() => _currentStep = 2);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = 'Error: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -383,6 +396,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       if (existing != null) {
         _createdBranchManagerId = existing['id'].toString();
         await _saveStep(3);
+        if (!mounted) return;
         setState(() => _currentStep = 3);
         return;
       }
@@ -404,11 +418,13 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       
       _createdBranchManagerId = res['id'].toString();
       await _saveStep(3);
+      if (!mounted) return;
       setState(() => _currentStep = 3);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = 'Error: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -448,6 +464,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       if (existing != null) {
         _createdCollectionAgentId = existing['id'].toString();
         await _saveStep(4);
+        if (!mounted) return;
         setState(() => _currentStep = 4);
         return;
       }
@@ -469,11 +486,13 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       
       _createdCollectionAgentId = res['id'].toString();
       await _saveStep(4);
+      if (!mounted) return;
       setState(() => _currentStep = 4);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = 'Error: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -513,6 +532,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       if (existing != null) {
         _createdCustomerId = existing['id'].toString();
         await _saveStep(5);
+        if (!mounted) return;
         setState(() => _currentStep = 5);
         return;
       }
@@ -533,11 +553,13 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       
       _createdCustomerId = res['id'].toString();
       await _saveStep(5);
+      if (!mounted) return;
       setState(() => _currentStep = 5);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = 'Error: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -603,7 +625,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   void _finish() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_stepKey);
+    await prefs.setBool('wizard_completed', true);
     ref.invalidate(setupCompleteProvider);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
     context.go('/');
   }

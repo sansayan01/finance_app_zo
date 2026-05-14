@@ -15,6 +15,7 @@ import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../data/providers/dashboard_providers.dart';
 
 class HomePage extends ConsumerWidget {
@@ -62,7 +63,7 @@ class HomePage extends ConsumerWidget {
                   const SizedBox(height: 16),
                   _buildFinancialSummaryStrip(context, ref),
                   const SizedBox(height: 28),
-                  _buildQuickActions(context),
+                  _buildQuickActions(context, ref),
                   const SizedBox(height: 28),
                   _buildTodayAgenda(context, ref),
                   const SizedBox(height: 28),
@@ -537,9 +538,10 @@ class HomePage extends ConsumerWidget {
         .slideY(begin: 0.06, end: 0);
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final hasManager = ref.watch(hasBranchManagerProvider).valueOrNull ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,6 +606,17 @@ class HomePage extends ConsumerWidget {
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage())),
                   ),
                 ),
+                if (!hasManager) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickActionBtn(
+                      icon: Icons.rocket_launch_rounded,
+                      label: 'Quick Setup',
+                      color: Colors.green,
+                      onTap: () => context.push('/setup'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

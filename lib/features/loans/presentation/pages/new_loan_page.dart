@@ -57,7 +57,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
-    final usersAsync = ref.watch(userListProvider);
+    final usersAsync = ref.watch(customerListProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,

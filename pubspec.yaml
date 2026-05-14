@@ -54,6 +54,7 @@ dependencies:
   # Telemetry & Analytics
   sentry_flutter: ^8.12.1
   posthog_flutter: ^4.1.0
+  package_info_plus: ^9.0.1
 
 dev_dependencies:
   flutter_test:

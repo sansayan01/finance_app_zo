@@ -220,12 +220,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String fullName,
     String? phone,
     String? email,
+    String? address,
+    String? pan,
+    String? aadhar,
+    String? employeeId,
+    String? assignedZone,
   }) async {
     if (_repository == null) return false;
     try {
       await _repository.updateProfile(
-          fullName: fullName, phone: phone, email: email);
-      await _checkSession(); // Refresh local user state
+        fullName: fullName,
+        phone: phone,
+        email: email,
+        address: address,
+        pan: pan,
+        aadhar: aadhar,
+        employeeId: employeeId,
+        assignedZone: assignedZone,
+      );
+      await _checkSession();
       return true;
     } catch (e) {
       state = state.copyWith(

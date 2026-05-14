@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -28,6 +29,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   int _currentStep = 0;
   bool _isLoading = false;
   String? _error;
+  static const String _stepKey = 'wizard_current_step';
   
   // Created IDs for reference
   String? _createdBranchId;
@@ -95,12 +97,40 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill organization name from signup
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authUser = ref.read(supabaseClientProvider).auth.currentUser;
       final orgName = authUser?.userMetadata?['org_name'] as String?;
       if (orgName != null && orgName.isNotEmpty) {
         _orgDisplayNameCtrl.text = orgName;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      
+      final savedStep = prefs.getInt(_stepKey);
+      if (savedStep != null && savedStep > 0 && savedStep < 5) {
+        final resume = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Resume Setup?'),
+            content: Text('You left off at step ${savedStep + 1}. Would you like to resume from where you stopped?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Start Over'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Resume'),
+              ),
+            ],
+          ),
+        );
+        if (resume == true) {
+          setState(() => _currentStep = savedStep);
+        } else {
+          await prefs.remove(_stepKey);
+        }
       }
     });
   }
@@ -238,6 +268,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       }
 
       await ref.read(authProvider.notifier).refreshCurrentUser();
+      await _saveStep(1);
       setState(() => _currentStep = 1);
     } catch (e) {
       setState(() => _error = 'Error: $e');
@@ -307,6 +338,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         _selectedCustomerBranchId = _createdBranchId;
       });
       
+      await _saveStep(2);
       setState(() => _currentStep = 2);
     } catch (e) {
       setState(() => _error = 'Error: $e');
@@ -342,6 +374,19 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       final orgId = ref.read(currentOrgIdProvider);
       if (orgId == null) throw Exception('Organization not found');
 
+      // Check if manager already exists (reuse on retry)
+      final existing = await client.from('profiles')
+          .select('id')
+          .eq('org_id', orgId)
+          .eq('role', 'manager')
+          .maybeSingle();
+      if (existing != null) {
+        _createdBranchManagerId = existing['id'].toString();
+        await _saveStep(3);
+        setState(() => _currentStep = 3);
+        return;
+      }
+
       final managerCode = 'BM${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10)}';
       
       final res = await client.from('profiles').insert({
@@ -358,6 +403,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       }).select('id').single();
       
       _createdBranchManagerId = res['id'].toString();
+      await _saveStep(3);
       setState(() => _currentStep = 3);
     } catch (e) {
       setState(() => _error = 'Error: $e');
@@ -393,6 +439,19 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       final orgId = ref.read(currentOrgIdProvider);
       if (orgId == null) throw Exception('Organization not found');
 
+      // Check if agent already exists (reuse on retry)
+      final existing = await client.from('profiles')
+          .select('id')
+          .eq('org_id', orgId)
+          .eq('role', 'collectionAgent')
+          .maybeSingle();
+      if (existing != null) {
+        _createdCollectionAgentId = existing['id'].toString();
+        await _saveStep(4);
+        setState(() => _currentStep = 4);
+        return;
+      }
+
       final agentCode = 'CA${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10)}';
       
       final res = await client.from('profiles').insert({
@@ -409,6 +468,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       }).select('id').single();
       
       _createdCollectionAgentId = res['id'].toString();
+      await _saveStep(4);
       setState(() => _currentStep = 4);
     } catch (e) {
       setState(() => _error = 'Error: $e');
@@ -444,6 +504,19 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       final orgId = ref.read(currentOrgIdProvider);
       if (orgId == null) throw Exception('Organization not found');
 
+      // Check if customer already exists (reuse on retry)
+      final existing = await client.from('members')
+          .select('id')
+          .eq('org_id', orgId)
+          .eq('full_name', _customerNameCtrl.text.trim())
+          .maybeSingle();
+      if (existing != null) {
+        _createdCustomerId = existing['id'].toString();
+        await _saveStep(5);
+        setState(() => _currentStep = 5);
+        return;
+      }
+
       final customerId = 'C${DateTime.now().millisecondsSinceEpoch.toString().substring(4, 10)}';
       
       final res = await client.from('members').insert({
@@ -459,6 +532,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       }).select('id').single();
       
       _createdCustomerId = res['id'].toString();
+      await _saveStep(5);
       setState(() => _currentStep = 5);
     } catch (e) {
       setState(() => _error = 'Error: $e');
@@ -514,6 +588,11 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     }
   }
 
+  Future<void> _saveStep(int step) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_stepKey, step);
+  }
+
   void _skipStep() {
     setState(() {
       _error = null;
@@ -521,8 +600,11 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     });
   }
 
-  void _finish() {
+  void _finish() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_stepKey);
     ref.invalidate(setupCompleteProvider);
+    if (!mounted) return;
     context.go('/');
   }
 

@@ -8,6 +8,12 @@ final userListProvider = FutureProvider<List<ProfileModel>>((ref) async {
   return repository.getUsers();
 });
 
+final customerListProvider = FutureProvider<List<ProfileModel>>((ref) async {
+  final repository = ref.watch(userRepositoryProvider);
+  final allUsers = await repository.getUsers();
+  return allUsers.where((u) => u.role == UserRole.customer).toList();
+});
+
 final userDetailsProvider =
     FutureProvider.family<ProfileModel?, String>((ref, id) async {
   final users = await ref.watch(userListProvider.future);

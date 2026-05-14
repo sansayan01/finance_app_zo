@@ -6,6 +6,7 @@ import 'core/theme/theme_provider.dart';
 import 'core/providers/branding_provider.dart';
 import 'features/settings/data/providers/brand_provider.dart';
 import 'router/app_router.dart';
+import 'core/widgets/update_wrapper.dart';
 
 class MicroFlowApp extends ConsumerStatefulWidget {
   const MicroFlowApp({super.key});
@@ -54,7 +55,7 @@ class _MicroFlowAppState extends ConsumerState<MicroFlowApp> {
       themeMode: themeMode,
       routerConfig: router,
       builder: (context, child) {
-        return child ?? const SizedBox.shrink();
+        return UpdateWrapper(child: child ?? const SizedBox.shrink());
       },
     );
   }

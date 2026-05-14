@@ -21,7 +21,7 @@ final currentOrgProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 });
 
 /// Checks if mandatory setup steps are complete:
-/// org has at least one branch AND one branch manager.
+/// org has at least one branch OR at least one staff profile (manager/agent).
 /// Used by router redirect to keep showing wizard until done.
 final setupCompleteProvider = FutureProvider<bool>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
@@ -29,9 +29,9 @@ final setupCompleteProvider = FutureProvider<bool>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   try {
     final branches = await client.from('branches').select('id').eq('org_id', orgId).limit(1);
-    if (branches.isEmpty) return false;
-    final managers = await client.from('profiles').select('id').eq('org_id', orgId).eq('role', 'manager').limit(1);
-    return managers.isNotEmpty;
+    if (branches.isNotEmpty) return true;
+    final staff = await client.from('profiles').select('id').eq('org_id', orgId).inFilter('role', ['manager', 'collectionAgent']).limit(1);
+    return staff.isNotEmpty;
   } catch (_) {
     return false;
   }

@@ -256,6 +256,11 @@ class AuthRepository {
     required String fullName,
     String? phone,
     String? email,
+    String? address,
+    String? pan,
+    String? aadhar,
+    String? employeeId,
+    String? assignedZone,
   }) async {
     final attributes = UserAttributes(
       email: email,
@@ -266,16 +271,22 @@ class AuthRepository {
     );
     await _client.auth.updateUser(attributes);
 
-    // Update profiles table if it exists
     try {
-      await _client.from('profiles').update({
+      final updates = <String, dynamic>{
         'full_name': fullName,
         'phone': phone,
-      }).eq('user_id', _client.auth.currentUser!.id);
+      };
+      if (address != null) updates['address'] = address;
+      if (pan != null) updates['pan'] = pan;
+      if (aadhar != null) updates['aadhar'] = aadhar;
+      if (employeeId != null) updates['employee_id'] = employeeId;
+      if (assignedZone != null) updates['assigned_zone'] = assignedZone;
+
+      await _client.from('profiles').update(updates).eq('user_id', _client.auth.currentUser!.id);
 
       await _logRepo?.log(
         action: 'Profile Updated',
-        details: 'User updated their personal information (Name/Phone)',
+        details: 'User updated their personal information',
         type: ActivityType.userAction,
       );
     } catch (e) {

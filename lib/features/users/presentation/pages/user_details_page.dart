@@ -130,6 +130,8 @@ class UserDetailsPage extends ConsumerWidget {
           onSelected: (value) {
             if (value == 'edit') {
               _showEditSheet(context, ref, user);
+            } else if (value == 'delete') {
+              _showDeleteDialog(context, ref, user);
             }
           },
           shape:
@@ -158,19 +160,35 @@ class UserDetailsPage extends ConsumerWidget {
               ),
             ),
             const PopupMenuDivider(),
-            PopupMenuItem(
-              value: 'deactivate',
-              child: Row(
-                children: [
-                  Icon(Icons.no_accounts_rounded,
-                      size: 20, color: Colors.red[400]),
-                  const SizedBox(width: 12),
-                  Text('Deactivate Member',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, color: Colors.red[400])),
-                ],
+            if (ref.watch(currentUserProvider)?.role == UserRole.executiveAdmin) ...[
+              PopupMenuItem(
+                value: 'deactivate',
+                child: Row(
+                  children: [
+                    Icon(Icons.no_accounts_rounded,
+                        size: 20, color: Colors.orange[400]),
+                    const SizedBox(width: 12),
+                    Text('Deactivate Member',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600, color: Colors.orange[400])),
+                  ],
+                ),
               ),
-            ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_forever_rounded,
+                        size: 20, color: Colors.red),
+                    SizedBox(width: 12),
+                    Text('Delete Permanently',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700, color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
         const SizedBox(width: 12),
@@ -185,6 +203,48 @@ class UserDetailsPage extends ConsumerWidget {
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _EditProfileSheet(user: user),
+    );
+  }
+
+  void _showDeleteDialog(
+      BuildContext context, WidgetRef ref, ProfileModel user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete User?'),
+        content: Text(
+            'Are you sure you want to delete ${user.fullName}? This action is permanent and will remove all records.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await ref
+                    .read(userListNotifierProvider.notifier)
+                    .deleteUsers([user.id]);
+                if (context.mounted) {
+                  Navigator.pop(context); // Close dialog
+                  context.pop(); // Go back to list
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('User deleted successfully')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete user: $e')),
+                  );
+                }
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('DELETE'),
+          ),
+        ],
+      ),
     );
   }
 

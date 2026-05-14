@@ -132,6 +132,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                                   isSelectionMode: _isSelectionMode,
                                   isSelected: _selectedUsers.contains(user.id),
                                   onLongPress: () {
+                                    if (currentUser?.role != UserRole.executiveAdmin) return;
                                     setState(() {
                                       _isSelectionMode = true;
                                       _selectedUsers.add(user.id);

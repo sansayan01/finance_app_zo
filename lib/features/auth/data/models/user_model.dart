@@ -102,6 +102,7 @@ class ProfileModel {
   final String? phone;
   final String? pan;
   final String? aadhar;
+  final String? email;
   final String? address;
   final String? city;
   final String? state;
@@ -133,6 +134,7 @@ class ProfileModel {
     this.branchName,
     this.employeeId,
     this.assignedZone,
+    this.email,
     this.dateOfBirth,
     this.createdAt,
     this.updatedAt,
@@ -161,6 +163,7 @@ class ProfileModel {
       branchName: json['branch']?['name'] as String?,
       employeeId: json['employee_id'] as String?,
       assignedZone: json['assigned_zone'] as String?,
+      email: json['email'] as String?,
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.parse(json['date_of_birth'] as String)
           : null,
@@ -190,6 +193,7 @@ class ProfileModel {
       'branch_id': branchId,
       'employee_id': employeeId,
       'assigned_zone': assignedZone,
+      'email': email,
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

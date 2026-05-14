@@ -8,7 +8,7 @@ import 'dart:math' as math;
 import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_provider.dart';
 
-import '../../../settings/data/providers/brand_provider.dart';
+import '../../../../core/providers/branding_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   final VoidCallback onSignUpTap;
@@ -67,7 +67,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
-    final brand = ref.watch(brandProvider);
+    final brandingAsync = ref.watch(brandingProvider);
+    final brandName = brandingAsync.maybeWhen(
+      data: (config) => config.displayName,
+      orElse: () => null,
+    ) ?? 'MicroFlow Pro';
 
     return Scaffold(
       backgroundColor:
@@ -95,7 +99,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                       // Modern Header
                       Text(
-                        brand.name,
+                        brandName,
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: -1.0,
@@ -146,17 +150,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Widget _buildLogo(Color primary, WidgetRef ref) {
-    final brand = ref.watch(brandProvider);
+    final brandingAsync = ref.watch(brandingProvider);
+    final logoUrl = brandingAsync.maybeWhen(
+      data: (config) => config.logoUrl,
+      orElse: () => null,
+    );
 
     return Container(
       width: 64,
       height: 64,
       decoration: BoxDecoration(
-        color: brand.logoUrl != null ? Colors.transparent : primary,
+        color: logoUrl != null ? Colors.transparent : primary,
         borderRadius: BorderRadius.circular(20),
-        image: brand.logoUrl != null
+        image: logoUrl != null
             ? DecorationImage(
-                image: NetworkImage(brand.logoUrl!), fit: BoxFit.contain)
+                image: NetworkImage(logoUrl), fit: BoxFit.contain)
             : null,
         boxShadow: [
           BoxShadow(
@@ -166,7 +174,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ],
       ),
-      child: brand.logoUrl == null
+      child: logoUrl == null
           ? const Icon(Icons.account_balance_rounded,
               color: Colors.white, size: 32)
           : null,

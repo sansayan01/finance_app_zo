@@ -15,6 +15,9 @@ import '../../../savings/data/models/savings_model.dart';
 
 import '../providers/user_list_provider.dart';
 import '../providers/new_user_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../branches/data/providers/branch_providers.dart';
+import '../../../branches/models/branch_model.dart';
 
 class UserDetailsPage extends ConsumerWidget {
   final String userId;
@@ -950,7 +953,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late TextEditingController _employeeIdController;
   late TextEditingController _zoneController;
   late TextEditingController _addressController;
+  late TextEditingController _emailController;
+  String? _selectedBranchId;
   bool _isLoading = false;
+  bool _isResetting = false;
 
   @override
   void initState() {
@@ -959,11 +965,13 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     _phoneController = TextEditingController(text: widget.user.phone);
     _aadharController = TextEditingController(text: widget.user.aadhar);
     _panController = TextEditingController(text: widget.user.pan);
+    _emailController = TextEditingController(text: widget.user.email ?? '');
     _employeeIdController =
         TextEditingController(text: widget.user.employeeId ?? '');
     _zoneController =
         TextEditingController(text: widget.user.assignedZone ?? '');
     _addressController = TextEditingController(text: widget.user.address ?? '');
+    _selectedBranchId = widget.user.branchId;
   }
 
   @override
@@ -972,6 +980,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     _phoneController.dispose();
     _aadharController.dispose();
     _panController.dispose();
+    _emailController.dispose();
     _employeeIdController.dispose();
     _zoneController.dispose();
     _addressController.dispose();
@@ -987,9 +996,11 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         'phone': _phoneController.text,
         'aadhar': _aadharController.text,
         'pan': _panController.text,
+        'email': _emailController.text,
         'employee_id': _employeeIdController.text,
         'assigned_zone': _zoneController.text,
         'address': _addressController.text,
+        'branch_id': _selectedBranchId,
       });
 
       ref.invalidate(userListProvider);
@@ -1022,6 +1033,45 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handlePasswordReset() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Email address is required for password reset'),
+            backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    setState(() => _isResetting = true);
+    try {
+      final success = await ref
+          .read(authProvider.notifier)
+          .resetPassword(_emailController.text);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Password reset instructions sent to email'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating),
+          );
+        } else {
+          final error = ref.read(authProvider).errorMessage;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(error ?? 'Failed to trigger password reset'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating),
+          );
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _isResetting = false);
     }
   }
 
@@ -1105,6 +1155,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   _buildRoleSummaryCard(theme, primary, isDark),
                   const SizedBox(height: 20),
 
+                  // Branch Assignment Section
+                  _buildBranchAssignmentSection(theme, primary, isDark, isNarrow),
+                  const SizedBox(height: 20),
+
                   // Account Details
                   GlassCard(
                     padding: const EdgeInsets.all(20),
@@ -1134,6 +1188,17 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                             isDark: isDark,
                             primary: primary,
                           ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildInputField(
+                          label: 'EMAIL ADDRESS',
+                          hint: 'example@domain.com',
+                          icon: Icons.alternate_email_rounded,
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          theme: theme,
+                          isDark: isDark,
+                          primary: primary,
                         ),
                         const SizedBox(height: 20),
                         _buildInputField(
@@ -1189,7 +1254,45 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                     const SizedBox(height: 20),
                   ],
 
-                  // Identity Details
+                  // Security & Access
+                  GlassCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('Security & Access', Icons.lock_outline_rounded,
+                            theme, isDark ? Colors.redAccent : Colors.red),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Send a secure password reset link to the registered email address.',
+                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _isResetting ? null : _handlePasswordReset,
+                            icon: _isResetting
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.red))
+                                : const Icon(Icons.send_rounded, size: 18),
+                            label: Text(_isResetting ? 'Sending...' : 'Reset User Password'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: isDark ? Colors.redAccent : Colors.red,
+                              side: BorderSide(color: isDark ? Colors.redAccent : Colors.red),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40),
                   GlassCard(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -1418,6 +1521,97 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         const SizedBox(width: 16),
         Expanded(child: second),
       ],
+    );
+  }
+
+  Widget _buildBranchAssignmentSection(
+      ThemeData theme, Color primary, bool isDark, bool isNarrow) {
+    final branchesAsync = ref.watch(activeBranchesProvider);
+    final branches = branchesAsync.value ?? [];
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+              'Branch Assignment', Icons.account_tree_outlined, theme, primary),
+          const SizedBox(height: 24),
+          _buildLabel('ASSIGN TO BRANCH', theme),
+          const SizedBox(height: 10),
+          _buildBranchDropdown(
+            value: _selectedBranchId,
+            hint: 'Select target branch',
+            branches: branches,
+            onChanged: (val) => setState(() => _selectedBranchId = val),
+            theme: theme,
+            isDark: isDark,
+            primary: primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabel(String label, ThemeData theme) {
+    return Text(label,
+        style: theme.textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            fontSize: 10,
+            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)));
+  }
+
+  Widget _buildBranchDropdown({
+    required String? value,
+    required String hint,
+    required List<BranchModel> branches,
+    required ValueChanged<String?> onChanged,
+    required ThemeData theme,
+    required bool isDark,
+    required Color primary,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.fillDark : AppColors.fillLight,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: DropdownButtonFormField<String>(
+        initialValue: value,
+        hint: Text(hint, style: theme.textTheme.bodyMedium),
+        decoration: InputDecoration(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: primary, width: 1.5)),
+        ),
+        items: branches.map((branch) {
+          return DropdownMenuItem<String>(
+            value: branch.id,
+            child: Row(
+              children: [
+                Icon(Icons.location_city_rounded,
+                    size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Text(branch.name,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: onChanged,
+        icon: const Icon(Icons.keyboard_arrow_down_rounded),
+        dropdownColor: isDark ? AppColors.elevatedDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
     );
   }
 }

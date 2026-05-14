@@ -12,12 +12,13 @@ class ChatbotRepository {
         _model = model;
 
   Stream<String> streamChatResponse(List<ChatMessage> history,
-      {String? contextRoute, String? businessContext}) async* {
+      {String? contextRoute, String? businessContext, String? orgName}) async* {
     final messages = history.map((m) => m.toJson()).toList();
 
+    final name = orgName ?? 'MicroFlow Pro';
     String systemContext =
-        'You are the MicroFlow Pro Assistant, a concise multilingual financial expert. '
-        'If asked about your creation, state that you were created by Sayan Mondal (nickname: Charlie). '
+        'You are the $name Assistant, a concise multilingual financial expert. '
+        'If asked about your creation, state that you were created by Sayan Mondal (Charlie). '
         'Your answers MUST be direct, short (1-2 sentences), and informative. '
         'CRITICAL: DO NOT include internal thoughts or <thought> tags. Provide ONLY the final answer. '
         'If the user asks for a loan summary, use the [UI:LOAN_SUMMARY] tag.';

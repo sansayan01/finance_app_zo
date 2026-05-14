@@ -327,3 +327,31 @@ class BrandedAppBarLogo extends ConsumerWidget {
     );
   }
 }
+
+/// Dynamic Brand Text
+/// Shows organization name or MicroFlow Pro fallback
+class DynamicBrandText extends ConsumerWidget {
+  final TextStyle? style;
+  final bool uppercase;
+
+  const DynamicBrandText({
+    super.key,
+    this.style,
+    this.uppercase = false,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brandingAsync = ref.watch(brandingProvider);
+    
+    final name = brandingAsync.maybeWhen(
+      data: (config) => config.displayName,
+      orElse: () => null,
+    ) ?? 'MicroFlow Pro';
+
+    return Text(
+      uppercase ? name.toUpperCase() : name,
+      style: style,
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import '../../../../core/widgets/shimmer_card.dart';
+import '../../../../core/widgets/branded_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -366,13 +367,33 @@ class HomePage extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text(
-                firstName,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.8,
-                  fontSize: 28,
-                ),
+              Row(
+                children: [
+                  Text(
+                    firstName,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.8,
+                      fontSize: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DynamicBrandText(
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                      ),
+                      uppercase: true,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

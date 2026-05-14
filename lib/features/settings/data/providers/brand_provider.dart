@@ -25,12 +25,12 @@ class BrandNotifier extends StateNotifier<BrandModel> {
         if (profile != null && profile['org_id'] != null) {
           final org = await client
               .from('organizations')
-              .select('name, logo_url, primary_color, settings')
+              .select('display_name, name, logo_url, primary_color')
               .eq('id', profile['org_id'])
               .maybeSingle();
           if (org != null) {
             state = BrandModel(
-              name: org['name'] as String? ?? 'MicroFlow Pro',
+              name: org['display_name'] as String? ?? org['name'] as String? ?? 'MicroFlow Pro',
               logoUrl: org['logo_url'] as String?,
               primaryColor: org['primary_color'] as String?,
             );

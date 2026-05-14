@@ -30,11 +30,12 @@ class ReceiptGenerator {
     required DateTime collectionTime,
     required String? remarks,
     String? branchName,
+    String? orgName,
   }) {
     final buffer = StringBuffer();
 
     buffer.writeln('══════════════════════════════════════');
-    buffer.writeln('          MICROFLOW PRO');
+    buffer.writeln('          ${(orgName ?? 'MICROFLOW PRO').toUpperCase()}');
     buffer.writeln('       Collection Receipt');
     buffer.writeln('══════════════════════════════════════');
     buffer.writeln();
@@ -96,8 +97,9 @@ class ReceiptGenerator {
     required double amountCollected,
     required String paymentMode,
     required DateTime collectionTime,
+    String? orgName,
   }) {
-    return 'MicroFlow Pro: Receipt #$receiptNumber\n'
+    return '${orgName ?? 'MicroFlow Pro'}: Receipt #$receiptNumber\n'
         'Customer: $customerName\n'
         'Amount: ${_currencyFormat.format(amountCollected)}\n'
         'Mode: $paymentMode\n'
@@ -117,11 +119,11 @@ class ReceiptGenerator {
   }
 
   /// Share receipt via system share sheet
-  static Future<void> shareReceipt(String receiptText) async {
+  static Future<void> shareReceipt(String receiptText, {String? orgName}) async {
     await SharePlus.instance.share(
       ShareParams(
         text: receiptText,
-        subject: 'Collection Receipt - MicroFlow Pro',
+        subject: 'Collection Receipt - ${orgName ?? 'MicroFlow Pro'}',
       ),
     );
   }

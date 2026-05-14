@@ -10,6 +10,8 @@ import '../../data/models/collection_model.dart';
 import '../../data/providers/collection_providers.dart';
 import '../../../../core/services/location_service.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../../core/providers/branding_provider.dart';
+import '../widgets/receipt_generator.dart';
 
 class CollectionFormPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -611,27 +613,50 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     return state.when(
       data: (collection) {
         if (collection != null && !_isSubmitting) {
-          // Show success and navigate back
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Collection of ₹${AppFormatters.formatCompactCurrency(collection.amountCollected)} recorded successfully!',
-                    ),
-                  ],
+          // Show success dialog and navigate back
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            final branding = ref.read(brandingProvider).valueOrNull;
+            final orgName = branding?.displayName;
+
+            final profile = ref.read(staffProfileProvider).valueOrNull;
+
+            final receiptText = ReceiptGenerator.generateTextReceipt(
+              receiptNumber: ReceiptGenerator.generateReceiptNumber(
+                staffId: collection.staffId,
+                timestamp: collection.collectionTime,
+              ),
+              collectorName: profile?.fullName ?? 'Agent',
+              collectorId: profile?.staffCode ?? collection.staffId,
+              customerName: collection.memberName,
+              customerPhone: collection.memberPhone,
+              loanNumber: collection.loanNumber,
+              amountCollected: collection.amountCollected,
+              amountExpected: collection.amountExpected,
+              paymentMode: collection.paymentMode.name.toUpperCase(),
+              collectionTime: collection.collectionTime,
+              remarks: collection.remarks,
+              orgName: orgName,
+            );
+
+            if (!context.mounted) return;
+
+            await showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (ctx) => CollectionSuccessDialog(
+                receiptText: receiptText,
+                receiptNumber: ReceiptGenerator.generateReceiptNumber(
+                  staffId: collection.staffId,
+                  timestamp: collection.collectionTime,
                 ),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                amountCollected: collection.amountCollected,
+                customerName: collection.memberName,
+                onDone: () {
+                  Navigator.pop(ctx);
+                  context.pop(true);
+                },
               ),
             );
-            context.pop(true);
           });
         }
 

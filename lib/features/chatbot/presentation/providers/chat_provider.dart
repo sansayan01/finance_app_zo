@@ -6,6 +6,7 @@ import '../../data/repositories/chatbot_repository.dart';
 import 'chat_config_provider.dart';
 import '../../../loans/data/providers/loan_providers.dart';
 import '../../../../router/app_router.dart';
+import '../../../../core/providers/branding_provider.dart';
 
 final chatbotRepositoryProvider = Provider<ChatbotRepository>((ref) {
   final config = ref.watch(chatConfigProvider);
@@ -163,10 +164,14 @@ PAR (Portfolio at Risk): ${loanSummary.parPercentage.toStringAsFixed(1)}%
       );
       state = state.copyWith(messages: [...state.messages, assistantMessage]);
 
+      final branding = _ref.read(brandingProvider).valueOrNull;
+      final orgName = branding?.displayName;
+
       final responseStream = repository.streamChatResponse(
         state.messages.sublist(0, state.messages.length - 1),
         contextRoute: currentRoute,
         businessContext: businessContext,
+        orgName: orgName,
       );
 
       int lastSpokenIndex = 0;

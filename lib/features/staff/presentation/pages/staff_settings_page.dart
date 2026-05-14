@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../../core/widgets/branded_loading.dart';
 
 class StaffSettingsPage extends ConsumerStatefulWidget {
   const StaffSettingsPage({super.key});
@@ -145,7 +146,18 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                     const SizedBox(height: 2),
                     Text(profile.staffCode, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
                     const SizedBox(height: 2),
-                    Text(profile.branchName ?? 'No Branch', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11)),
+                    Row(
+                      children: [
+                        Text(profile.branchName ?? 'No Branch', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11)),
+                        const SizedBox(width: 8),
+                        Container(width: 1, height: 10, color: Colors.white.withValues(alpha: 0.2)),
+                        const SizedBox(width: 8),
+                        DynamicBrandText(
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 10, fontWeight: FontWeight.w800),
+                          uppercase: true,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

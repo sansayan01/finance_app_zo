@@ -18,6 +18,7 @@ import '../widgets/sync_status_card.dart';
 import '../widgets/activity_feed_timeline.dart';
 import '../widgets/weekly_performance_chart.dart';
 import '../widgets/leaderboard_snapshot.dart';
+import '../../../../core/widgets/branded_loading.dart';
 
 class StaffHomeDashboard extends ConsumerStatefulWidget {
   const StaffHomeDashboard({super.key});
@@ -192,12 +193,26 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(
-                                  profile?.fullName ?? 'Agent',
-                                  style: const TextStyle(
-                                    color: Colors.white, fontSize: 28,
-                                    fontWeight: FontWeight.w900, letterSpacing: -1.0,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      profile?.fullName ?? 'Agent',
+                                      style: const TextStyle(
+                                        color: Colors.white, fontSize: 28,
+                                        fontWeight: FontWeight.w900, letterSpacing: -1.0,
+                                      ),
+                                    ),
+                                    DynamicBrandText(
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.6),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5,
+                                      ),
+                                      uppercase: true,
+                                    ),
+                                  ],
                                 ),
                               ),
                               const GpsStatusChip(status: GpsStatus.active, accuracy: 5),

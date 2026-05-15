@@ -35,8 +35,12 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(newLoanProvider);
       _principalController.text = state.principalAmount.toInt().toString();
-      _rateController.text = state.interestRate.toString();
-      _tenureController.text = state.tenureMonths.toString();
+      if (state.interestMode == InterestMode.rate) {
+        _rateController.text = state.interestRate.toString();
+      } else {
+        _rateController.text = state.interestAmount.toString();
+      }
+      _tenureController.text = state.tenureValue.toString();
     });
   }
 
@@ -397,93 +401,191 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
 
           _buildDivider(theme),
 
-          // ── Rate ──
-          _buildLabel('INTEREST RATE (%)', theme),
+          // ── Interest Mode Toggle ──
+          _buildLabel('INTEREST TYPE', theme),
           const SizedBox(height: 10),
-          _buildTextField(
-            controller: _rateController,
-            suffix: '% APR',
-            onChanged: (val) {
-              final parsed = double.tryParse(val) ?? 0;
-              ref.read(newLoanProvider.notifier).updateInterestRate(parsed);
-            },
-            theme: theme,
-            isDark: isDark,
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.fillDark : AppColors.fillLight,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildInterestModeTab(
+                    label: 'Interest Rate',
+                    subtitle: 'APR %',
+                    isSelected: state.interestMode == InterestMode.rate,
+                    onTap: () => ref.read(newLoanProvider.notifier).updateInterestMode(InterestMode.rate),
+                    theme: theme,
+                    primary: primary,
+                  ),
+                ),
+                Expanded(
+                  child: _buildInterestModeTab(
+                    label: 'Interest Amount',
+                    subtitle: 'Fixed ₹',
+                    isSelected: state.interestMode == InterestMode.amount,
+                    onTap: () => ref.read(newLoanProvider.notifier).updateInterestMode(InterestMode.amount),
+                    theme: theme,
+                    primary: primary,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildSlider(
-            value: state.interestRate.clamp(0, 50),
-            min: 0,
-            max: 50,
-            displayValue: '${state.interestRate.toStringAsFixed(1)}%',
-            minLabel: '0%',
-            maxLabel: '50%',
-            onChanged: (val) {
-              _rateController.text = val.toStringAsFixed(1);
-              ref.read(newLoanProvider.notifier).updateInterestRate(val);
-            },
-            theme: theme,
-            primary: primary,
-          ),
+          const SizedBox(height: 16),
+
+          if (state.interestMode == InterestMode.rate) ...[
+            // Rate mode
+            _buildTextField(
+              controller: _rateController,
+              suffix: '% APR',
+              onChanged: (val) {
+                final parsed = double.tryParse(val) ?? 0;
+                ref.read(newLoanProvider.notifier).updateInterestRate(parsed);
+              },
+              theme: theme,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildSlider(
+              value: state.interestRate.clamp(0, 50),
+              min: 0,
+              max: 50,
+              displayValue: '${state.interestRate.toStringAsFixed(1)}%',
+              minLabel: '0%',
+              maxLabel: '50%',
+              onChanged: (val) {
+                _rateController.text = val.toStringAsFixed(1);
+                ref.read(newLoanProvider.notifier).updateInterestRate(val);
+              },
+              theme: theme,
+              primary: primary,
+            ),
+          ] else ...[
+            // Amount mode
+            _buildDropdown(
+              value: state.interestBasis.name,
+              hint: 'Interest basis',
+              items: InterestBasis.values.map((e) => e.name).toList(),
+              itemLabels: ['Per Day', 'Per Week', 'Per Month', 'Per Year', '% of Principal'],
+              onChanged: (val) {
+                if (val != null) {
+                  ref.read(newLoanProvider.notifier).updateInterestBasis(
+                        InterestBasis.values.firstWhere((e) => e.name == val),
+                      );
+                }
+              },
+              theme: theme,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildTextField(
+              controller: _rateController,
+              suffix: state.interestBasis == InterestBasis.onPrincipal ? '%' : '₹',
+              onChanged: (val) {
+                final parsed = double.tryParse(val) ?? 0;
+                ref.read(newLoanProvider.notifier).updateInterestAmount(parsed);
+              },
+              theme: theme,
+              isDark: isDark,
+            ),
+            if (state.interestBasis != InterestBasis.onPrincipal) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Total interest: ${currencyFormat.format(state.totalInterest)}',
+                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
 
           _buildDivider(theme),
 
-          // ── Tenure & Collection Type ──
-          _buildTwoColumn(
-            isNarrow: isNarrow,
-            first: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildLabel('TENURE (MONTHS)', theme),
-                const SizedBox(height: 10),
-                _buildTextField(
+          // ── Tenure ──
+          _buildLabel('LOAN TENURE', theme),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: _buildTextField(
                   controller: _tenureController,
-                  suffix: 'Mo',
                   onChanged: (val) {
                     final parsed = int.tryParse(val) ?? 1;
-                    ref.read(newLoanProvider.notifier).updateTenure(parsed);
+                    ref.read(newLoanProvider.notifier).updateTenureValue(parsed);
                   },
                   theme: theme,
                   isDark: isDark,
                 ),
-                const SizedBox(height: 12),
-                _buildSlider(
-                  value: state.tenureMonths.toDouble().clamp(1, 120),
-                  min: 1,
-                  max: 120,
-                  displayValue: '${state.tenureMonths} Mo',
-                  minLabel: '1',
-                  maxLabel: '120',
-                  onChanged: (val) {
-                    _tenureController.text = val.toInt().toString();
-                    ref
-                        .read(newLoanProvider.notifier)
-                        .updateTenure(val.toInt());
-                  },
-                  theme: theme,
-                  primary: primary,
-                ),
-              ],
-            ),
-            second: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildLabel('COLLECTION TYPE', theme),
-                const SizedBox(height: 10),
-                _buildDropdown(
-                  value: state.collectionType.name,
-                  hint: 'Select',
-                  items: CollectionType.values.map((e) => e.name).toList(),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: _buildDropdown(
+                  value: state.tenureUnit.name,
+                  hint: 'Unit',
+                  items: TenureUnit.values.map((e) => e.name).toList(),
+                  itemLabels: ['Days', 'Weeks', 'Months', 'Years'],
                   onChanged: (val) {
                     if (val != null) {
-                      ref.read(newLoanProvider.notifier).updateCollectionType(
-                            CollectionType.values
-                                .firstWhere((e) => e.name == val),
+                      ref.read(newLoanProvider.notifier).updateTenureUnit(
+                            TenureUnit.values.firstWhere((e) => e.name == val),
                           );
                     }
                   },
                   theme: theme,
                   isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildTenureSlider(state, theme, primary),
+
+          _buildDivider(theme),
+
+          // ── Collection Type ──
+          _buildLabel('COLLECTION TYPE', theme),
+          const SizedBox(height: 10),
+          _buildDropdown(
+            value: state.collectionType.name,
+            hint: 'Select frequency',
+            items: CollectionType.values.map((e) => e.name).toList(),
+            itemLabels: ['Daily', 'Weekly', 'Monthly', 'Yearly'],
+            onChanged: (val) {
+              if (val != null) {
+                ref.read(newLoanProvider.notifier).updateCollectionType(
+                      CollectionType.values.firstWhere((e) => e.name == val),
+                    );
+              }
+            },
+            theme: theme,
+            isDark: isDark,
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${state.numberOfInstallments} installments over ${_formatTenure(state)}',
+                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                  ),
                 ),
               ],
             ),
@@ -598,8 +700,13 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
                   'Capital Outlay',
                   currencyFormatNoDecimals.format(state.principalAmount),
                   theme),
-              _buildKV('Yield Rate', '${state.interestRate}% APR', theme),
-              _buildKV('Tenure', '${state.tenureMonths} Months', theme),
+              _buildKV(
+                  'Interest',
+                  state.interestMode == InterestMode.rate
+                      ? '${state.interestRate}% APR'
+                      : '${currencyFormat.format(state.interestAmount)} ${_interestBasisLabel(state.interestBasis)}',
+                  theme),
+              _buildKV('Tenure', _formatTenure(state), theme),
               Divider(
                   height: 32, color: theme.dividerColor.withValues(alpha: 0.1)),
               _buildKV('Interest Burden',
@@ -613,42 +720,59 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
           ),
         ).animate().fadeIn(delay: 150.ms).slideX(begin: 0.08, end: 0),
         const SizedBox(height: 16),
-        GlassCard(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.successDark.withValues(alpha: 0.12)
-                      : AppColors.success.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.info_outline_rounded,
-                    size: 18,
-                    color: isDark ? AppColors.successDark : AppColors.success),
+        // Amortization Preview Button
+        InkWell(
+          onTap: () => _showAmortizationPreview(context, state, theme, isDark, primary),
+          borderRadius: BorderRadius.circular(20),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  primary.withValues(alpha: 0.08),
+                  primary.withValues(alpha: 0.02)
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Amortization',
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
-                    Text(
-                      'A full ${state.interestLogic == InterestLogic.reducingBalance ? 'reducing balance' : 'flat rate'} schedule will be generated upon approval.',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(fontSize: 13, height: 1.5),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: primary.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        primary.withValues(alpha: 0.2),
+                        primary.withValues(alpha: 0.05)
+                      ],
                     ),
-                  ],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.table_chart_rounded, size: 22, color: primary),
                 ),
-              ),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Amortization Preview',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: primary)),
+                      const SizedBox(height: 2),
+                      Text('View full EMI schedule breakdown',
+                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: primary.withValues(alpha: 0.5)),
+              ],
+            ),
           ),
         ).animate().fadeIn(delay: 250.ms).slideX(begin: 0.08, end: 0),
       ],
@@ -901,5 +1025,586 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
+  }
+
+  Widget _buildInterestModeTab({
+    required String label,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required ThemeData theme,
+    required Color primary,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? primary.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? primary : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: isSelected ? primary : theme.textTheme.bodySmall?.color)),
+            const SizedBox(height: 2),
+            Text(subtitle,
+                style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    color: isSelected ? primary.withValues(alpha: 0.7) : theme.textTheme.bodySmall?.color)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTenureSlider(NewLoanState state, ThemeData theme, Color primary) {
+    final unit = state.tenureUnit;
+    double min, max, value;
+    String minLabel, maxLabel, displayValue;
+
+    switch (unit) {
+      case TenureUnit.days:
+        min = 1;
+        max = 3650;
+        value = state.tenureValue.toDouble().clamp(1, 3650);
+        minLabel = '1d';
+        maxLabel = '10y';
+        displayValue = '${state.tenureValue} Days';
+        break;
+      case TenureUnit.weeks:
+        min = 1;
+        max = 520;
+        value = state.tenureValue.toDouble().clamp(1, 520);
+        minLabel = '1w';
+        maxLabel = '10y';
+        displayValue = '${state.tenureValue} Weeks';
+        break;
+      case TenureUnit.months:
+        min = 1;
+        max = 120;
+        value = state.tenureValue.toDouble().clamp(1, 120);
+        minLabel = '1m';
+        maxLabel = '10y';
+        displayValue = '${state.tenureValue} Months';
+        break;
+      case TenureUnit.years:
+        min = 1;
+        max = 30;
+        value = state.tenureValue.toDouble().clamp(1, 30);
+        minLabel = '1y';
+        maxLabel = '30y';
+        displayValue = '${state.tenureValue} Years';
+        break;
+    }
+
+    return Column(
+      children: [
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: primary.withValues(alpha: 0.35),
+            inactiveTrackColor: theme.dividerColor.withValues(alpha: 0.12),
+            thumbColor: primary,
+            overlayColor: primary.withValues(alpha: 0.08),
+            trackHeight: 4,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+          ),
+          child: Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: (max - min).toInt() > 100 ? 100 : (max - min).toInt(),
+            onChanged: (val) {
+              _tenureController.text = val.toInt().toString();
+              ref.read(newLoanProvider.notifier).updateTenureValue(val.toInt());
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(minLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 10, color: theme.textTheme.bodySmall?.color)),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(displayValue,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: primary)),
+              ),
+              Text(maxLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 10, color: theme.textTheme.bodySmall?.color)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatTenure(NewLoanState state) {
+    switch (state.tenureUnit) {
+      case TenureUnit.days:
+        return '${state.tenureValue} day${state.tenureValue != 1 ? 's' : ''}';
+      case TenureUnit.weeks:
+        return '${state.tenureValue} week${state.tenureValue != 1 ? 's' : ''}';
+      case TenureUnit.months:
+        return '${state.tenureValue} month${state.tenureValue != 1 ? 's' : ''}';
+      case TenureUnit.years:
+        return '${state.tenureValue} year${state.tenureValue != 1 ? 's' : ''}';
+    }
+  }
+
+  String _interestBasisLabel(InterestBasis basis) {
+    switch (basis) {
+      case InterestBasis.daily:
+        return '/day';
+      case InterestBasis.weekly:
+        return '/week';
+      case InterestBasis.monthly:
+        return '/month';
+      case InterestBasis.yearly:
+        return '/year';
+      case InterestBasis.onPrincipal:
+        return '% of principal';
+    }
+  }
+
+  void _showAmortizationPreview(
+      BuildContext context,
+      NewLoanState state,
+      ThemeData theme,
+      bool isDark,
+      Color primary) {
+    final schedule = state.generateAmortizationSchedule();
+    if (schedule.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in loan details first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _AmortizationPreviewSheet(
+        schedule: schedule,
+        state: state,
+        theme: theme,
+        isDark: isDark,
+        primary: primary,
+        currencyFormat: currencyFormat,
+        currencyFormatNoDecimals: currencyFormatNoDecimals,
+        tenureLabel: _formatTenure(state),
+      ),
+    );
+  }
+}
+
+class _AmortizationPreviewSheet extends StatelessWidget {
+  final List<AmortizationRow> schedule;
+  final NewLoanState state;
+  final ThemeData theme;
+  final bool isDark;
+  final Color primary;
+  final NumberFormat currencyFormat;
+  final NumberFormat currencyFormatNoDecimals;
+  final String tenureLabel;
+
+  const _AmortizationPreviewSheet({
+    required this.schedule,
+    required this.state,
+    required this.theme,
+    required this.isDark,
+    required this.primary,
+    required this.currencyFormat,
+    required this.currencyFormatNoDecimals,
+    required this.tenureLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final totalPrincipal = schedule.fold<double>(0, (sum, r) => sum + r.principal);
+    final totalInterest = schedule.fold<double>(0, (sum, r) => sum + r.interest);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            primary.withValues(alpha: 0.2),
+                            primary.withValues(alpha: 0.05)
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.table_chart_rounded, size: 20, color: primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Amortization Schedule',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+                          Text('${schedule.length} installments · $tenureLabel · ${state.interestLogic == InterestLogic.reducingBalance ? "Reducing Balance" : "Flat Rate"}',
+                              style: theme.textTheme.bodySmall?.copyWith(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              // Summary Cards
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryCard(
+                        label: 'Principal',
+                        value: currencyFormatNoDecimals.format(totalPrincipal),
+                        icon: Icons.account_balance_wallet_rounded,
+                        color: primary,
+                        theme: theme,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _SummaryCard(
+                        label: 'Interest',
+                        value: currencyFormat.format(totalInterest),
+                        icon: Icons.trending_up_rounded,
+                        color: isDark ? AppColors.warningDark : AppColors.orange,
+                        theme: theme,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _SummaryCard(
+                        label: 'Total',
+                        value: currencyFormat.format(totalPrincipal + totalInterest),
+                        icon: Icons.summarize_rounded,
+                        color: theme.colorScheme.error,
+                        theme: theme,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Chart Preview
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _buildMiniChart(theme),
+              ),
+              const SizedBox(height: 16),
+              // Table Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    _buildHeaderCell('#', 40, theme),
+                    _buildHeaderCell('Due Date', 90, theme),
+                    _buildHeaderCell('EMI', 85, theme),
+                    _buildHeaderCell('Principal', 85, theme),
+                    _buildHeaderCell('Interest', 80, theme),
+                    _buildHeaderCell('Balance', 90, theme),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Table Rows
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: schedule.length,
+                  itemBuilder: (context, index) {
+                    final row = schedule[index];
+                    return _buildRow(row, index, theme, isDark, primary);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMiniChart(ThemeData theme) {
+    final totalPrincipal = schedule.fold<double>(0, (sum, r) => sum + r.principal);
+    final totalInterest = schedule.fold<double>(0, (sum, r) => sum + r.interest);
+    final total = totalPrincipal + totalInterest;
+
+    if (total == 0) return const SizedBox.shrink();
+
+    final principalPct = (totalPrincipal / total * 100).toStringAsFixed(1);
+    final interestPct = (totalInterest / total * 100).toStringAsFixed(1);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          // Stacked bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: (totalPrincipal / total * 100).round(),
+                  child: Container(
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: primary,
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: (totalInterest / total * 100).round(),
+                  child: Container(
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.warningDark : AppColors.orange,
+                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: primary,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text('Principal ($principalPct%)', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                ],
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.warningDark : AppColors.orange,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text('Interest ($interestPct%)', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderCell(String label, double width, ThemeData theme) {
+    return SizedBox(
+      width: width,
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: 10,
+          letterSpacing: 0.5,
+          color: theme.textTheme.bodySmall?.color,
+        ),
+        textAlign: label == '#' ? TextAlign.center : TextAlign.left,
+      ),
+    );
+  }
+
+  Widget _buildRow(AmortizationRow row, int index, ThemeData theme, bool isDark, Color primary) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.08)),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Text(
+              '${row.emiNumber}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: 90,
+            child: Text(
+              DateFormat('dd MMM').format(row.dueDate),
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+            ),
+          ),
+          SizedBox(
+            width: 85,
+            child: Text(
+              currencyFormat.format(row.emiAmount),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: primary,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 85,
+            child: Text(
+              currencyFormat.format(row.principal),
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              currencyFormat.format(row.interest),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 11,
+                color: isDark ? AppColors.warningDark : AppColors.orange,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 90,
+            child: Text(
+              currencyFormat.format(row.balanceAfter),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: (index * 15).ms, duration: 100.ms);
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final ThemeData theme;
+
+  const _SummaryCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(height: 8),
+          Text(label, style: theme.textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 10,
+            color: theme.textTheme.bodySmall?.color,
+          )),
+          const SizedBox(height: 2),
+          Text(value, style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            color: color,
+          )),
+        ],
+      ),
+    );
   }
 }

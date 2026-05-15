@@ -151,27 +151,41 @@ class LoansRepository {
     required DateTime firstInstallmentDate,
     required double estimatedInstallment,
     required double totalExposure,
+    String? interestMode,
+    double? interestAmount,
+    String? interestBasis,
+    int? tenureValue,
+    String? tenureUnit,
   }) async {
     final now = DateTime.now();
-    // Generate a unique loan number: L-YYYYMMDD-XXXX
     final loanNumber =
         'L-${DateFormat('yyyyMMdd').format(now)}-${math.Random().nextInt(9999).toString().padLeft(4, '0')}';
+
+    double totalInterest = totalExposure - principal;
 
     await _client.from('loans').insert({
       'customer_id': borrowerId,
       'loan_number': loanNumber,
       'amount': principal,
+      'principal': principal,
+      'interest': totalInterest,
       'interest_rate': interestRate,
       'tenure_months': tenureMonths,
       'frequency': frequency,
       'collection_type': collectionType,
       'emi_amount': estimatedInstallment,
-      'outstanding_balance': totalExposure,
+      'outstanding_amount': totalExposure,
       'total_repayable': totalExposure,
       'interest_type': interestLogic,
       'status': 'active',
       'first_installment_date': firstInstallmentDate.toIso8601String(),
+      'start_date': now.toIso8601String(),
       'org_id': _orgId,
+      if (interestMode != null) 'interest_mode': interestMode,
+      if (interestAmount != null) 'interest_amount': interestAmount,
+      if (interestBasis != null) 'interest_basis': interestBasis,
+      if (tenureValue != null) 'tenure_value': tenureValue,
+      if (tenureUnit != null) 'tenure_unit': tenureUnit,
     });
   }
 

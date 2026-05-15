@@ -438,9 +438,25 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
 
           if (state.interestMode == InterestMode.rate) ...[
             // Rate mode
+            _buildDropdown(
+              value: state.interestRateBasis.name,
+              hint: 'Rate basis',
+              items: InterestBasis.values.map((e) => e.name).toList(),
+              itemLabels: ['Per Day', 'Per Week', 'Per Month', 'Per Year', '% of Principal'],
+              onChanged: (val) {
+                if (val != null) {
+                  ref.read(newLoanProvider.notifier).updateInterestRateBasis(
+                        InterestBasis.values.firstWhere((e) => e.name == val),
+                      );
+                }
+              },
+              theme: theme,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 12),
             _buildTextField(
               controller: _rateController,
-              suffix: '% APR',
+              suffix: state.interestRateBasis == InterestBasis.onPrincipal ? '%' : '%',
               onChanged: (val) {
                 final parsed = double.tryParse(val) ?? 0;
                 ref.read(newLoanProvider.notifier).updateInterestRate(parsed);
@@ -450,18 +466,34 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
             ),
             const SizedBox(height: 12),
             _buildSlider(
-              value: state.interestRate.clamp(0, 50),
+              value: state.interestRate.clamp(0, state.interestRateBasis == InterestBasis.onPrincipal ? 100 : 50),
               min: 0,
-              max: 50,
+              max: state.interestRateBasis == InterestBasis.onPrincipal ? 100 : 50,
               displayValue: '${state.interestRate.toStringAsFixed(1)}%',
               minLabel: '0%',
-              maxLabel: '50%',
+              maxLabel: state.interestRateBasis == InterestBasis.onPrincipal ? '100%' : '50%',
               onChanged: (val) {
                 _rateController.text = val.toStringAsFixed(1);
                 ref.read(newLoanProvider.notifier).updateInterestRate(val);
               },
               theme: theme,
               primary: primary,
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Equivalent APR: ${(state.annualizedRate * 100).toStringAsFixed(1)}%',
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ] else ...[
             // Amount mode
@@ -703,7 +735,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
               _buildKV(
                   'Interest',
                   state.interestMode == InterestMode.rate
-                      ? '${state.interestRate}% APR'
+                      ? '${state.interestRate}% ${_interestBasisLabel(state.interestRateBasis)}'
                       : '${currencyFormat.format(state.interestAmount)} ${_interestBasisLabel(state.interestBasis)}',
                   theme),
               _buildKV('Tenure', _formatTenure(state), theme),
@@ -1320,7 +1352,7 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                     Expanded(
                       child: _SummaryCard(
                         label: 'Principal',
-                        value: currencyFormatNoDecimals.format(totalPrincipal),
+                        value: currencyFormat.format(totalPrincipal),
                         icon: Icons.account_balance_wallet_rounded,
                         color: primary,
                         theme: theme,
@@ -1356,31 +1388,45 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                 child: _buildMiniChart(theme),
               ),
               const SizedBox(height: 16),
-              // Table Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    _buildHeaderCell('#', 40, theme),
-                    _buildHeaderCell('Due Date', 90, theme),
-                    _buildHeaderCell('EMI', 85, theme),
-                    _buildHeaderCell('Principal', 85, theme),
-                    _buildHeaderCell('Interest', 80, theme),
-                    _buildHeaderCell('Balance', 90, theme),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              // Table Rows
+              // Table Section (Scrollable horizontally)
               Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: schedule.length,
-                  itemBuilder: (context, index) {
-                    final row = schedule[index];
-                    return _buildRow(row, index, theme, isDark, primary);
-                  },
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: SizedBox(
+                    width: 518, // Total width of columns (470) + horizontal padding (48)
+                    child: Column(
+                      children: [
+                        // Table Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Row(
+                            children: [
+                              _buildHeaderCell('#', 40, theme),
+                              _buildHeaderCell('Due Date', 90, theme),
+                              _buildHeaderCell('EMI', 85, theme),
+                              _buildHeaderCell('Principal', 85, theme),
+                              _buildHeaderCell('Interest', 80, theme),
+                              _buildHeaderCell('Balance', 90, theme),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        // Table Rows
+                        Expanded(
+                          child: ListView.builder(
+                            controller: scrollController,
+                            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                            itemCount: schedule.length,
+                            itemBuilder: (context, index) {
+                              final row = schedule[index];
+                              return _buildRow(row, index, theme, isDark, primary);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1598,11 +1644,15 @@ class _SummaryCard extends StatelessWidget {
             color: theme.textTheme.bodySmall?.color,
           )),
           const SizedBox(height: 2),
-          Text(value, style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-            color: color,
-          )),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              color: color,
+            )),
+          ),
         ],
       ),
     );

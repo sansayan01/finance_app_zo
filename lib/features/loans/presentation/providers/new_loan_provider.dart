@@ -36,6 +36,7 @@ class NewLoanState {
   final double principalAmount;
   final InterestMode interestMode;
   final double interestRate;
+  final InterestBasis interestRateBasis;
   final double interestAmount;
   final InterestBasis interestBasis;
   final int tenureValue;
@@ -49,7 +50,8 @@ class NewLoanState {
     this.borrowerId,
     this.principalAmount = 50000,
     this.interestMode = InterestMode.rate,
-    this.interestRate = 24,
+    this.interestRate = 2,
+    this.interestRateBasis = InterestBasis.monthly,
     this.interestAmount = 0,
     this.interestBasis = InterestBasis.monthly,
     this.tenureValue = 12,
@@ -65,6 +67,7 @@ class NewLoanState {
     double? principalAmount,
     InterestMode? interestMode,
     double? interestRate,
+    InterestBasis? interestRateBasis,
     double? interestAmount,
     InterestBasis? interestBasis,
     int? tenureValue,
@@ -79,6 +82,7 @@ class NewLoanState {
       principalAmount: principalAmount ?? this.principalAmount,
       interestMode: interestMode ?? this.interestMode,
       interestRate: interestRate ?? this.interestRate,
+      interestRateBasis: interestRateBasis ?? this.interestRateBasis,
       interestAmount: interestAmount ?? this.interestAmount,
       interestBasis: interestBasis ?? this.interestBasis,
       tenureValue: tenureValue ?? this.tenureValue,
@@ -136,9 +140,24 @@ class NewLoanState {
     }
   }
 
+  double get annualizedRate {
+    double rate = interestRate / 100;
+    switch (interestRateBasis) {
+      case InterestBasis.daily:
+        return rate * 365;
+      case InterestBasis.weekly:
+        return rate * 52;
+      case InterestBasis.monthly:
+        return rate * 12;
+      case InterestBasis.yearly:
+        return rate;
+      case InterestBasis.onPrincipal:
+        return rate * (365 / tenureInDays);
+    }
+  }
+
   double get _ratePerPeriod {
-    double annualRate = interestRate / 100;
-    return annualRate / _periodsPerYear;
+    return annualizedRate / _periodsPerYear;
   }
 
   double get _totalInterestAmount {
@@ -166,7 +185,7 @@ class NewLoanState {
     }
 
     if (interestLogic == InterestLogic.flat) {
-      return principalAmount * (interestRate / 100) * tenureInYears;
+      return principalAmount * annualizedRate * tenureInYears;
     }
 
     int n = numberOfInstallments;
@@ -200,7 +219,7 @@ class NewLoanState {
     if (interestLogic == InterestLogic.reducingBalance) {
       return (p * r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
     } else {
-      double totalInterest = principalAmount * (interestRate / 100) * tenureInYears;
+      double totalInterest = principalAmount * annualizedRate * tenureInYears;
       return (p + totalInterest) / n;
     }
   }
@@ -238,7 +257,7 @@ class NewLoanState {
       } else if (interestLogic == InterestLogic.reducingBalance) {
         emi = (principalAmount * r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
       } else {
-        double totalInterest = principalAmount * (interestRate / 100) * tenureInYears;
+        double totalInterest = principalAmount * annualizedRate * tenureInYears;
         emi = (principalAmount + totalInterest) / n;
       }
     }
@@ -257,7 +276,7 @@ class NewLoanState {
         interestPart = balance * r;
         principalPart = emi - interestPart;
       } else {
-        double totalInterest = principalAmount * (interestRate / 100) * tenureInYears;
+        double totalInterest = principalAmount * annualizedRate * tenureInYears;
         interestPart = totalInterest / n;
         principalPart = emi - interestPart;
       }
@@ -314,6 +333,8 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
       state = state.copyWith(interestMode: mode);
   void updateInterestRate(double rate) =>
       state = state.copyWith(interestRate: rate);
+  void updateInterestRateBasis(InterestBasis basis) =>
+      state = state.copyWith(interestRateBasis: basis);
   void updateInterestAmount(double amount) =>
       state = state.copyWith(interestAmount: amount);
   void updateInterestBasis(InterestBasis basis) =>
@@ -347,6 +368,9 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
         estimatedInstallment: state.estimatedInstallment,
         totalExposure: state.totalExposure,
         interestMode: state.interestMode.name,
+        interestRateBasis: state.interestMode == InterestMode.rate
+            ? state.interestRateBasis.name
+            : null,
         interestAmount: state.interestMode == InterestMode.amount
             ? state.interestAmount
             : 0,

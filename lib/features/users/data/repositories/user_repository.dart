@@ -112,7 +112,7 @@ class UserRepository {
         }
 
         final fullName = (map['full_name'] ?? map['name'] ?? 'Unknown').toString();
-        debugPrint('Adding member: id=$mid, name=$fullName, phone=${map['phone']}, org_id=${map['org_id']}');
+        debugPrint('Adding member: id=$mid, name=$fullName, phone=${map['phone']}, email=${map['email']}, org_id=${map['org_id']}');
         seenIds.add(mid);
         addedCount++;
         users.add(ProfileModel(
@@ -128,6 +128,8 @@ class UserRepository {
           city: map['city']?.toString(),
           state: map['state']?.toString(),
           pincode: map['pincode']?.toString(),
+          aadhar: map['aadhar']?.toString(),
+          pan: map['pan']?.toString(),
           createdAt: DateTime.tryParse(map['created_at']?.toString() ?? ''),
         ));
       }
@@ -160,6 +162,7 @@ class UserRepository {
     if (role == UserRole.customer) {
       debugPrint('Creating customer in members table');
       try {
+        final memberId = 'CUST-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
         await _client.from('members').insert({
           'org_id': _orgId,
           'full_name': fullName,
@@ -167,8 +170,7 @@ class UserRepository {
           'email': email.isNotEmpty ? email : null,
           'branch_id': branchId,
           'kyc_status': 'pending',
-          'aadhar': aadhar.isNotEmpty ? aadhar : null,
-          'pan': pan.isNotEmpty ? pan : null,
+          'member_id': memberId,
         });
         debugPrint('Customer created successfully in members table');
         return;

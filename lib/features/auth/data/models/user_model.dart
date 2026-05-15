@@ -2,28 +2,27 @@ import '../../../../core/constants/enums.dart';
 export '../../../../core/constants/enums.dart';
 
 UserRole parseRole(String roleStr) {
-  final normalized = roleStr.toLowerCase();
-  
-  if (normalized == 'superadmin' || normalized == 'super_admin') {
+  final normalized = roleStr.toLowerCase().trim();
+
+  if (normalized.contains('superadmin') || normalized == 'owner') {
     return UserRole.superAdmin;
   }
-  if (normalized == 'executiveadmin' || normalized == 'admin') {
+  if (normalized.contains('admin') || normalized == 'executive') {
     return UserRole.executiveAdmin;
   }
-  if (normalized == 'manager') {
+  if (normalized.contains('manager') || normalized == 'supervisor') {
     return UserRole.manager;
   }
-  if (normalized == 'collectionagent' || normalized == 'staff' || normalized == 'fieldstaff') {
+  if (normalized.contains('agent') ||
+      normalized == 'staff' ||
+      normalized == 'collector' ||
+      normalized == 'fieldstaff' ||
+      normalized == 'collectionagent') {
     return UserRole.collectionAgent;
   }
-  if (normalized == 'customer' || normalized == 'retailmember') {
-    return UserRole.customer;
-  }
-
-  return UserRole.values.firstWhere(
-    (e) => e.name.toLowerCase() == normalized,
-    orElse: () => UserRole.customer,
-  );
+  
+  // Default to customer for everything else
+  return UserRole.customer;
 }
 
 class UserModel {
@@ -69,9 +68,7 @@ class UserModel {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
-      role: json['role'] != null
-          ? parseRole(json['role'].toString())
-          : null,
+      role: parseRole(json['role']?.toString() ?? 'customer'),
       is2FAEnabled: json['is_2fa_enabled'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
     );
@@ -144,31 +141,29 @@ class ProfileModel {
     return ProfileModel(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString(),
-      fullName: json['full_name'] as String?,
-      phone: json['phone'] as String?,
-      pan: json['pan'] as String?,
-      aadhar: json['aadhar'] as String?,
-      address: json['address'] as String?,
-      city: json['city'] as String?,
-      state: json['state'] as String?,
-      pincode: json['pincode'] as String?,
-      role: json['role'] != null
-          ? parseRole(json['role'].toString())
-          : null,
-      orgId: json['org_id'] as String?,
-      branchId: json['branch_id'] as String?,
-      branchName: json['branch']?['name'] as String?,
-      employeeId: json['employee_id'] as String?,
-      assignedZone: json['assigned_zone'] as String?,
-      email: json['email'] as String?,
+      fullName: (json['full_name'] ?? json['fullName'])?.toString(),
+      phone: json['phone']?.toString(),
+      pan: json['pan']?.toString(),
+      aadhar: json['aadhar']?.toString(),
+      address: json['address']?.toString(),
+      city: json['city']?.toString(),
+      state: json['state']?.toString(),
+      pincode: json['pincode']?.toString(),
+      role: parseRole(json['role']?.toString() ?? 'customer'),
+      orgId: json['org_id']?.toString(),
+      branchId: json['branch_id']?.toString(),
+      branchName: json['branch'] is Map ? json['branch']['name']?.toString() : null,
+      employeeId: json['employee_id']?.toString(),
+      assignedZone: json['assigned_zone']?.toString(),
+      email: json['email']?.toString(),
       dateOfBirth: json['date_of_birth'] != null
-          ? DateTime.parse(json['date_of_birth'] as String)
+          ? DateTime.tryParse(json['date_of_birth'].toString())
           : null,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.tryParse(json['created_at'].toString())
           : null,
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.tryParse(json['updated_at'].toString())
           : null,
     );
   }

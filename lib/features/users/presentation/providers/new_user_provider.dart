@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
@@ -116,3 +116,4 @@ final newUserProvider =
     StateNotifierProvider<NewUserNotifier, NewUserState>((ref) {
   return NewUserNotifier(ref.watch(userRepositoryProvider));
 });
+

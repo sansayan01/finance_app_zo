@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../data/providers/super_admin_providers.dart';
 
-/// Platform Announcements Page
 class AnnouncementsPage extends ConsumerStatefulWidget {
   const AnnouncementsPage({super.key});
-
   @override
   ConsumerState<AnnouncementsPage> createState() => _AnnouncementsPageState();
 }
@@ -16,408 +14,155 @@ class _AnnouncementsPageState extends ConsumerState<AnnouncementsPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final announcementsAsync = ref.watch(platformAnnouncementsProvider);
+    final bg = D.bg(context);
+    final cardBg = D.surface(context);
+    final announcements = ref.watch(platformAnnouncementsProvider);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: const Text('Announcements'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: _showCreateAnnouncementDialog,
+      backgroundColor: bg,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: D.bodyPad,
+              sliver: SliverToBoxAdapter(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    D.header('Announcements', 'Broadcast to platform users', isDark),
+                    FloatingActionButton.small(onPressed: _create, backgroundColor: D.accent, foregroundColor: Colors.white, child: const Icon(Icons.add)),
+                  ]),
+                  const SizedBox(height: 20),
+                ]),
               ),
+            ),
+            announcements.when(
+              data: (a) => SliverPadding(
+                padding: D.bodyBottomPad,
+                sliver: a.isEmpty
+                    ? SliverToBoxAdapter(child: Center(child: Padding(padding: const EdgeInsets.all(48), child: Column(children: [Icon(Icons.campaign_outlined, size: 48, color: D.dim(context)), const SizedBox(height: 12), Text('No announcements', style: D.subtitleStyle(isDark))]))))
+                    : SliverList(delegate: SliverChildBuilderDelegate((_, i) => _card(a[i], isDark, cardBg), childCount: a.length)),
+              ),
+              loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
+              error: (e, _) => SliverToBoxAdapter(child: Center(child: Text('Error: $e'))),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _card(dynamic a, bool isDark, Color cardBg) {
+    final tc = a.type == 'warning' ? Colors.orange : a.type == 'critical' ? Colors.red : a.type == 'maintenance' ? Colors.purple : Colors.blue;
+    final ti = a.type == 'warning' ? Icons.warning_amber : a.type == 'critical' ? Icons.error_outline : a.type == 'maintenance' ? Icons.build_outlined : Icons.info_outline;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: D.card(context),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: tc.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(ti, color: tc, size: 18)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(a.title, style: D.titleStyle(isDark)),
+            Text(DateFormat('MMM d, y').format(a.createdAt), style: D.subtitleStyle(isDark)),
+          ])),
+          if (!a.isActive) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: D.dim(context), borderRadius: BorderRadius.circular(6)), child: Text('DRAFT', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: D.mutedColor(isDark)))),
+        ]),
+        const SizedBox(height: 12),
+        Text(a.message, style: D.valueStyle(isDark)),
+        const SizedBox(height: 10),
+        Row(children: [
+          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: tc.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: Text(a.type, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: tc))),
+          const Spacer(),
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'edit') _edit(a);
+              if (v == 'toggle') _toggle(a.id, !a.isActive);
+              if (v == 'delete') _delete(a.id);
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit, size: 18), title: Text('Edit'), dense: true)),
+              PopupMenuItem(value: 'toggle', child: ListTile(leading: Icon(a.isActive ? Icons.visibility_off : Icons.visibility, size: 18), title: Text(a.isActive ? 'Deactivate' : 'Activate'), dense: true)),
+              const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete, size: 18, color: Colors.red), title: Text('Delete', style: TextStyle(color: Colors.red)), dense: true)),
             ],
           ),
-
-          announcementsAsync.when(
-            data: (announcements) => SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: announcements.isEmpty
-                  ? const SliverToBoxAdapter(
-                      child: Center(
-                        child: Text('No announcements yet'),
-                      ),
-                    )
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildAnnouncementCard(
-                          context,
-                          announcements[index],
-                          isDark,
-                        ),
-                        childCount: announcements.length,
-                      ),
-                    ),
-            ),
-            loading: () => const SliverToBoxAdapter(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => SliverToBoxAdapter(
-              child: Center(child: Text('Error: $e')),
-            ),
-          ),
-        ],
-      ),
+        ]),
+      ]),
     );
   }
 
-  Widget _buildAnnouncementCard(BuildContext context, dynamic announcement, bool isDark) {
-    final type = announcement.type as String? ?? 'info';
-    final createdAt = announcement.createdAt;
-    final typeColor = _getTypeColor(type);
-    final typeIcon = _getTypeIcon(type);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      color: isDark ? Colors.grey[900] : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: typeColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(typeIcon, color: typeColor, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    announcement.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                if (!announcement.isActive)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'INACTIVE',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              announcement.message,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  DateFormat('MMM d, y • h:mm a').format(createdAt),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => _editAnnouncement(announcement),
-                  child: const Text('Edit'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn().slideY(begin: 0.1);
-  }
-
-  Color _getTypeColor(String type) {
-    switch (type) {
-      case 'info':
-        return Colors.blue;
-      case 'warning':
-        return Colors.orange;
-      case 'critical':
-        return Colors.red;
-      case 'maintenance':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getTypeIcon(String type) {
-    switch (type) {
-      case 'info':
-        return Icons.info_outline;
-      case 'warning':
-        return Icons.warning_amber;
-      case 'critical':
-        return Icons.error_outline;
-      case 'maintenance':
-        return Icons.build_outlined;
-      default:
-        return Icons.campaign;
-    }
-  }
-
-  void _showCreateAnnouncementDialog() {
-    final titleController = TextEditingController();
-    final messageController = TextEditingController();
+  void _create() {
+    final titleC = TextEditingController();
+    final msgC = TextEditingController();
     String type = 'info';
     String audience = 'all';
-
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Create Announcement'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: messageController,
-                  decoration: const InputDecoration(
-                    labelText: 'Message',
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: type,
-                  decoration: const InputDecoration(
-                    labelText: 'Type',
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'info', child: Text('Info')),
-                    DropdownMenuItem(value: 'warning', child: Text('Warning')),
-                    DropdownMenuItem(value: 'critical', child: Text('Critical')),
-                    DropdownMenuItem(value: 'maintenance', child: Text('Maintenance')),
-                  ],
-                  onChanged: (v) => setState(() => type = v ?? 'info'),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: audience,
-                  decoration: const InputDecoration(
-                    labelText: 'Target Audience',
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'all', child: Text('All Users')),
-                    DropdownMenuItem(value: 'admins', child: Text('Admins Only')),
-                    DropdownMenuItem(value: 'managers', child: Text('Managers Only')),
-                    DropdownMenuItem(value: 'agents', child: Text('Agents Only')),
-                  ],
-                  onChanged: (v) => setState(() => audience = v ?? 'all'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (titleController.text.isEmpty || messageController.text.isEmpty) {
-                  return;
-                }
-
-                final scaffoldMessenger = ScaffoldMessenger.of(context);
-                final navigator = Navigator.of(context);
-                
-                final success = await ref.read(superAdminActionsProvider.notifier).createAnnouncement(
-                  title: titleController.text,
-                  message: messageController.text,
-                  type: type,
-                  targetAudience: audience,
-                );
-
-                if (!mounted) return;
-                
-                navigator.pop();
-                scaffoldMessenger.showSnackBar(
-                    SnackBar(
-                      content: Text(success 
-                          ? 'Announcement created' 
-                          : 'Failed to create announcement'),
-                    ),
-                  );
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('New Announcement', style: TextStyle(fontWeight: FontWeight.w600)),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: titleC, decoration: const InputDecoration(labelText: 'Title', prefixIcon: Icon(Icons.title), border: OutlineInputBorder())),
+          const SizedBox(height: 14),
+          TextField(controller: msgC, decoration: const InputDecoration(labelText: 'Message', prefixIcon: Icon(Icons.message), border: OutlineInputBorder()), maxLines: 3),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()), items: ['info', 'warning', 'critical', 'maintenance'].map((t) => DropdownMenuItem(value: t, child: Text(t[0].toUpperCase() + t.substring(1)))).toList(), onChanged: (v) => setS(() => type = v ?? 'info')),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(initialValue: audience, decoration: const InputDecoration(labelText: 'Audience', border: OutlineInputBorder()), items: ['all', 'admins', 'managers', 'agents'].map((a) => DropdownMenuItem(value: a, child: Text(a[0].toUpperCase() + a.substring(1)))).toList(), onChanged: (v) => setS(() => audience = v ?? 'all')),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () async {
+            if (titleC.text.isEmpty || msgC.text.isEmpty) return;
+            await ref.read(superAdminActionsProvider.notifier).createAnnouncement(title: titleC.text, message: msgC.text, type: type, targetAudience: audience);
+            if (!ctx.mounted) return;
+            Navigator.pop(ctx);
+          }, style: ElevatedButton.styleFrom(backgroundColor: D.accent, foregroundColor: Colors.white), child: const Text('Create')),
+        ],
+      )),
     );
   }
 
-  void _editAnnouncement(dynamic announcement) {
-    final titleController = TextEditingController(text: announcement.title);
-    final messageController = TextEditingController(text: announcement.message);
-    String type = announcement.type ?? 'info';
-    String audience = announcement.targetAudience ?? 'all';
-    bool isActive = announcement.isActive;
-
+  void _edit(dynamic a) {
+    final titleC = TextEditingController(text: a.title);
+    final msgC = TextEditingController(text: a.message);
+    String type = a.type ?? 'info';
+    String audience = a.targetAudience ?? 'all';
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Edit Announcement'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: messageController,
-                  decoration: const InputDecoration(
-                    labelText: 'Message',
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: type,
-                  decoration: const InputDecoration(
-                    labelText: 'Type',
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'info', child: Text('Info')),
-                    DropdownMenuItem(value: 'warning', child: Text('Warning')),
-                    DropdownMenuItem(value: 'critical', child: Text('Critical')),
-                    DropdownMenuItem(value: 'maintenance', child: Text('Maintenance')),
-                  ],
-                  onChanged: (v) => setState(() => type = v ?? 'info'),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: audience,
-                  decoration: const InputDecoration(
-                    labelText: 'Target Audience',
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'all', child: Text('All Users')),
-                    DropdownMenuItem(value: 'admins', child: Text('Admins Only')),
-                    DropdownMenuItem(value: 'managers', child: Text('Managers Only')),
-                    DropdownMenuItem(value: 'agents', child: Text('Agents Only')),
-                  ],
-                  onChanged: (v) => setState(() => audience = v ?? 'all'),
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  title: const Text('Active'),
-                  value: isActive,
-                  onChanged: (v) => setState(() => isActive = v),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                final scaffoldMessenger = ScaffoldMessenger.of(context);
-                final navigator = Navigator.of(context);
-
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Delete Announcement?'),
-                    content: const Text('This action cannot be undone.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
-                  final success = await ref.read(superAdminActionsProvider.notifier).deleteAnnouncement(announcement.id);
-                  
-                  if (!mounted) return;
-                  if (success) {
-                    navigator.pop(); // Close edit dialog
-                    scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Announcement deleted')));
-                  }
-                }
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (titleController.text.isEmpty || messageController.text.isEmpty) {
-                  return;
-                }
-
-                final scaffoldMessenger = ScaffoldMessenger.of(context);
-                final navigator = Navigator.of(context);
-                
-                final success = await ref.read(superAdminActionsProvider.notifier).updateAnnouncement(
-                  id: announcement.id,
-                  title: titleController.text,
-                  message: messageController.text,
-                  type: type,
-                  targetAudience: audience,
-                  isActive: isActive,
-                );
-
-                if (!mounted) return;
-                
-                if (success) {
-                  navigator.pop();
-                  scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Announcement updated')));
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Edit Announcement', style: TextStyle(fontWeight: FontWeight.w600)),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: titleC, decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder())),
+          const SizedBox(height: 14),
+          TextField(controller: msgC, decoration: const InputDecoration(labelText: 'Message', border: OutlineInputBorder()), maxLines: 3),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()), items: ['info', 'warning', 'critical', 'maintenance'].map((t) => DropdownMenuItem(value: t, child: Text(t[0].toUpperCase() + t.substring(1)))).toList(), onChanged: (v) => setS(() => type = v ?? 'info')),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(initialValue: audience, decoration: const InputDecoration(labelText: 'Audience', border: OutlineInputBorder()), items: ['all', 'admins', 'managers', 'agents'].map((a) => DropdownMenuItem(value: a, child: Text(a[0].toUpperCase() + a.substring(1)))).toList(), onChanged: (v) => setS(() => audience = v ?? 'all')),
+        ])),
+        actions: [
+          TextButton(onPressed: () => _delete(a.id), style: TextButton.styleFrom(foregroundColor: Colors.red), child: const Text('Delete')),
+          const Spacer(),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () async {
+            if (titleC.text.isEmpty || msgC.text.isEmpty) return;
+            await ref.read(superAdminActionsProvider.notifier).updateAnnouncement(id: a.id, title: titleC.text, message: msgC.text, type: type, targetAudience: audience);
+            if (!ctx.mounted) return;
+            Navigator.pop(ctx);
+          }, style: ElevatedButton.styleFrom(backgroundColor: D.accent, foregroundColor: Colors.white), child: const Text('Save')),
+        ],
+      )),
     );
+  }
+
+  void _toggle(String id, bool v) async {
+    await ref.read(superAdminActionsProvider.notifier).updateAnnouncement(id: id, isActive: v);
+  }
+
+  void _delete(String id) async {
+    await ref.read(superAdminActionsProvider.notifier).deleteAnnouncement(id);
+    if (mounted) Navigator.pop(context);
   }
 }

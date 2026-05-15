@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../loans/data/repositories/loans_repository.dart';
 import '../../../savings/data/repositories/savings_repository.dart';
@@ -320,3 +320,4 @@ final analyticsProvider = FutureProvider<AnalyticsStats>((ref) async {
     liquidityRatio: liquidityRatio.clamp(0, 500),
   );
 });
+

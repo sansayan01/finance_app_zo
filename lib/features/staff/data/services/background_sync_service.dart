@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'local_database.dart';
 import 'offline_sync_engine.dart';
 import '../../../../core/providers/storage_providers.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 /// Background sync service that handles automatic synchronization
 /// between local database and Supabase
@@ -206,3 +206,4 @@ final backgroundSyncServiceProvider = Provider<BackgroundSyncService>((ref) {
 
   return BackgroundSyncService(client, localDb, syncEngine);
 });
+

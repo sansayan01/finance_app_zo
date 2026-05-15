@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/presentation/pages/branch_management_page.dart';
 
@@ -648,3 +648,4 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
   }
 }
+

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../repositories/staff_repository.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../repositories/collection_repository.dart';
 import '../models/staff_profile_model.dart';
@@ -184,3 +184,4 @@ final nearbyOverdueCountProvider = FutureProvider<int>((ref) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getNearbyOverdueCount(profile.id);
 });
+

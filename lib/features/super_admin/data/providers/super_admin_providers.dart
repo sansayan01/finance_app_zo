@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../models/super_admin_models.dart';
 import '../repositories/super_admin_repository.dart';
 
@@ -389,3 +389,4 @@ final superAdminActionsProvider = StateNotifierProvider<SuperAdminActionsNotifie
   final repository = ref.watch(superAdminRepositoryProvider);
   return SuperAdminActionsNotifier(repository, ref);
 });
+

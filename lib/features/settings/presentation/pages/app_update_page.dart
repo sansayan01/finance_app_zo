@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/providers/system_config_provider.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 class AppUpdatePage extends ConsumerStatefulWidget {
   const AppUpdatePage({super.key});
@@ -305,3 +305,4 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
     );
   }
 }
+

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../data/providers/super_admin_providers.dart';
 import '../../data/models/super_admin_models.dart';
 
-/// Feature Flags Management Page
 class FeatureFlagsPage extends ConsumerStatefulWidget {
   const FeatureFlagsPage({super.key});
-
   @override
   ConsumerState<FeatureFlagsPage> createState() => _FeatureFlagsPageState();
 }
@@ -16,241 +14,100 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final flagsAsync = ref.watch(featureFlagsProvider);
+    final bg = D.bg(context);
+    final cardBg = D.surface(context);
+    final flags = ref.watch(featureFlagsProvider);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: const Text('Feature Flags'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: _showCreateFlagDialog,
-              ),
-            ],
-          ),
-
-          // Description
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            sliver: SliverToBoxAdapter(
-              child: Card(
-                color: Colors.blue.withValues(alpha: 0.1),
-                child: const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.blue),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Control platform features globally or per organization',
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+      backgroundColor: bg,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: D.bodyPad,
+              sliver: SliverToBoxAdapter(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    D.header('Feature Flags', 'Control platform features', isDark),
+                    FloatingActionButton.small(onPressed: _create, backgroundColor: D.accent, foregroundColor: Colors.white, child: const Icon(Icons.add)),
+                  ]),
+                  const SizedBox(height: 20),
+                ]),
               ),
             ),
-          ),
-
-          // Flags List
-          flagsAsync.when(
-            data: (flags) => SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildFlagCard(context, flags[index], isDark),
-                  childCount: flags.length,
-                ),
+            flags.when(
+              data: (f) => SliverPadding(
+                padding: D.bodyBottomPad,
+                sliver: SliverList(delegate: SliverChildBuilderDelegate((_, i) => _flagCard(f[i], isDark, cardBg), childCount: f.length)),
               ),
+              loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
+              error: (e, _) => SliverToBoxAdapter(child: Center(child: Text('Error: $e'))),
             ),
-            loading: () => const SliverToBoxAdapter(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => SliverToBoxAdapter(
-              child: Center(child: Text('Error: $e')),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFlagCard(BuildContext context, FeatureFlag flag, bool isDark) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      color: isDark ? Colors.grey[900] : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        flag.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        flag.key,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: flag.isEnabled,
-                  onChanged: (value) => _toggleFlag(flag.id, value),
-                  activeThumbColor: Colors.green,
-                ),
-              ],
-            ),
-            if (flag.description != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                flag.description!,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: [
-                Chip(
-                  label: Text('${flag.rolloutPercentage}% rollout'),
-                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                  labelStyle: const TextStyle(fontSize: 12),
-                ),
-                if (flag.targetOrgs.isNotEmpty)
-                  Chip(
-                    label: Text('${flag.targetOrgs.length} orgs'),
-                    backgroundColor: Colors.orange.withValues(alpha: 0.1),
-                    labelStyle: const TextStyle(fontSize: 12),
-                  ),
-                if (flag.targetRoles.isNotEmpty)
-                  Chip(
-                    label: Text('${flag.targetRoles.length} roles'),
-                    backgroundColor: Colors.purple.withValues(alpha: 0.1),
-                    labelStyle: const TextStyle(fontSize: 12),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn().slideX(begin: 0.1);
+  Widget _flagCard(FeatureFlag f, bool isDark, Color cardBg) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: D.card(context),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(f.name, style: D.titleStyle(isDark)),
+            Text(f.key, style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: D.muted(context))),
+          ])),
+          Switch(value: f.isEnabled, onChanged: (v) => _toggle(f.id, v), activeTrackColor: Colors.green),
+        ]),
+        if (f.description != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(f.description!, style: D.valueStyle(isDark))),
+        const SizedBox(height: 10),
+        Row(children: [
+          _chip('${f.rolloutPercentage}%', Colors.blue),
+          if (f.targetOrgs.isNotEmpty) ...[const SizedBox(width: 8), _chip('${f.targetOrgs.length} orgs', Colors.orange)],
+          if (f.targetRoles.isNotEmpty) ...[const SizedBox(width: 8), _chip('${f.targetRoles.length} roles', Colors.purple)],
+        ]),
+      ]),
+    );
   }
 
-  void _toggleFlag(String flagId, bool isEnabled) async {
-    final success = await ref.read(superAdminActionsProvider.notifier).toggleFeatureFlag(flagId, isEnabled);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success 
-              ? 'Feature ${isEnabled ? 'enabled' : 'disabled'}' 
-              : 'Failed to update feature flag'),
-        ),
-      );
-    }
+  Widget _chip(String label, Color color) {
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: color)));
   }
 
-  void _showCreateFlagDialog() {
-    final keyController = TextEditingController();
-    final nameController = TextEditingController();
-    final descController = TextEditingController();
+  void _toggle(String id, bool v) async {
+    await ref.read(superAdminActionsProvider.notifier).toggleFeatureFlag(id, v);
+  }
 
+  void _create() {
+    final keyC = TextEditingController();
+    final nameC = TextEditingController();
+    final descC = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create Feature Flag'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: keyController,
-              decoration: const InputDecoration(
-                labelText: 'Key',
-                hintText: 'e.g., new_dashboard',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                hintText: 'e.g., New Dashboard',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-              ),
-              maxLines: 2,
-            ),
-          ],
-        ),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('New Flag', style: TextStyle(fontWeight: FontWeight.w600)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: keyC, decoration: const InputDecoration(labelText: 'Key', hintText: 'new_feature', prefixIcon: Icon(Icons.vpn_key), border: OutlineInputBorder())),
+          const SizedBox(height: 14),
+          TextField(controller: nameC, decoration: const InputDecoration(labelText: 'Name', hintText: 'New Feature', prefixIcon: Icon(Icons.flag), border: OutlineInputBorder())),
+          const SizedBox(height: 14),
+          TextField(controller: descC, decoration: const InputDecoration(labelText: 'Description', prefixIcon: Icon(Icons.description), border: OutlineInputBorder()), maxLines: 2),
+        ]),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (keyController.text.isEmpty || nameController.text.isEmpty) {
-                return;
-              }
-
-              final flag = FeatureFlag(
-                id: '',
-                key: keyController.text,
-                name: nameController.text,
-                description: descController.text.isEmpty ? null : descController.text,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              );
-
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              final navigator = Navigator.of(context);
-              
-              final repo = ref.read(superAdminRepositoryProvider);
-              final success = await repo.upsertFeatureFlag(flag);
-
-              if (!mounted) return;
-
-              navigator.pop();
-              ref.invalidate(featureFlagsProvider);
-              scaffoldMessenger.showSnackBar(
-                  SnackBar(
-                    content: Text(success 
-                        ? 'Feature flag created' 
-                        : 'Failed to create feature flag'),
-                  ),
-                );
-            },
-            child: const Text('Create'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () async {
+            if (keyC.text.isEmpty || nameC.text.isEmpty) return;
+            final flag = FeatureFlag(id: '', key: keyC.text, name: nameC.text, description: descC.text.isEmpty ? null : descC.text, createdAt: DateTime.now(), updatedAt: DateTime.now());
+            final repo = ref.read(superAdminRepositoryProvider);
+            await repo.upsertFeatureFlag(flag);
+            if (!ctx.mounted) return;
+            Navigator.pop(ctx);
+            ref.invalidate(featureFlagsProvider);
+          }, style: ElevatedButton.styleFrom(backgroundColor: D.accent, foregroundColor: Colors.white), child: const Text('Create')),
         ],
       ),
     );

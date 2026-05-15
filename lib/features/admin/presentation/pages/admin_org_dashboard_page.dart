@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/presentation/pages/branch_management_page.dart';
 
@@ -573,3 +573,4 @@ class _ActionTile extends StatelessWidget {
     );
   }
 }
+

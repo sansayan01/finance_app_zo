@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/staff_providers.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 class DailySummaryPage extends ConsumerStatefulWidget {
   final DateTime? date;
@@ -369,3 +369,4 @@ class _DailySummaryPageState extends ConsumerState<DailySummaryPage> {
 
   bool _isSameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
 }
+

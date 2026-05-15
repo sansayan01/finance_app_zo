@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/savings_model.dart';
 import '../repositories/savings_repository.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../transactions/data/repositories/transactions_repository.dart';
 import '../../../transactions/data/models/transaction_model.dart';
@@ -46,3 +46,4 @@ final userSavingsProvider =
   final savings = await ref.watch(allSavingsProvider.future);
   return savings.where((s) => s.memberId == userId).toList();
 });
+

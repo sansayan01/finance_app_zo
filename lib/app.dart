@@ -30,22 +30,26 @@ class _MicroFlowAppState extends ConsumerState<MicroFlowApp> {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeProvider);
 
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            themeMode == ThemeMode.dark ? Brightness.light : Brightness.dark,
-        systemNavigationBarColor: themeMode == ThemeMode.dark
-            ? const Color(0xFF1A1F2E)
-            : Colors.white,
-        systemNavigationBarIconBrightness:
-            themeMode == ThemeMode.dark ? Brightness.light : Brightness.dark,
-      ),
-    );
-
     final brand = ref.watch(brandProvider);
     final brandingAsync = ref.watch(brandingProvider);
     final appName = brandingAsync.valueOrNull?.displayName ?? brand.name;
+
+    // Apply system UI overlay style safely
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness:
+              themeMode == ThemeMode.dark ? Brightness.light : Brightness.dark,
+          systemNavigationBarColor: themeMode == ThemeMode.dark
+              ? const Color(0xFF1A1F2E)
+              : Colors.white,
+          systemNavigationBarIconBrightness:
+              themeMode == ThemeMode.dark ? Brightness.light : Brightness.dark,
+        ),
+      );
+    });
 
     return MaterialApp.router(
       title: appName,
@@ -55,7 +59,12 @@ class _MicroFlowAppState extends ConsumerState<MicroFlowApp> {
       themeMode: themeMode,
       routerConfig: router,
       builder: (context, child) {
-        return UpdateWrapper(child: child ?? const SizedBox.shrink());
+        if (child == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return UpdateWrapper(child: child);
       },
     );
   }

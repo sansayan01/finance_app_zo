@@ -1,6 +1,31 @@
 import '../../../../core/constants/enums.dart';
 export '../../../../core/constants/enums.dart';
 
+UserRole parseRole(String roleStr) {
+  final normalized = roleStr.toLowerCase();
+  
+  if (normalized == 'superadmin' || normalized == 'super_admin') {
+    return UserRole.superAdmin;
+  }
+  if (normalized == 'executiveadmin' || normalized == 'admin') {
+    return UserRole.executiveAdmin;
+  }
+  if (normalized == 'manager') {
+    return UserRole.manager;
+  }
+  if (normalized == 'collectionagent' || normalized == 'staff' || normalized == 'fieldstaff') {
+    return UserRole.collectionAgent;
+  }
+  if (normalized == 'customer' || normalized == 'retailmember') {
+    return UserRole.customer;
+  }
+
+  return UserRole.values.firstWhere(
+    (e) => e.name.toLowerCase() == normalized,
+    orElse: () => UserRole.customer,
+  );
+}
+
 class UserModel {
   final String id;
   final String email;
@@ -45,7 +70,7 @@ class UserModel {
           ? DateTime.parse(json['created_at'] as String)
           : null,
       role: json['role'] != null
-          ? _parseRole(json['role'].toString())
+          ? parseRole(json['role'].toString())
           : null,
       is2FAEnabled: json['is_2fa_enabled'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
@@ -67,31 +92,6 @@ class UserModel {
       'is_2fa_enabled': is2FAEnabled,
       'is_active': isActive,
     };
-  }
-
-  static UserRole _parseRole(String roleStr) {
-    final normalized = roleStr.toLowerCase();
-    
-    if (normalized == 'superadmin' || normalized == 'super_admin') {
-      return UserRole.superAdmin;
-    }
-    if (normalized == 'executiveadmin' || normalized == 'admin') {
-      return UserRole.executiveAdmin;
-    }
-    if (normalized == 'manager') {
-      return UserRole.manager;
-    }
-    if (normalized == 'collectionagent' || normalized == 'staff' || normalized == 'fieldstaff') {
-      return UserRole.collectionAgent;
-    }
-    if (normalized == 'customer' || normalized == 'retailmember') {
-      return UserRole.customer;
-    }
-
-    return UserRole.values.firstWhere(
-      (e) => e.name.toLowerCase() == normalized,
-      orElse: () => UserRole.customer,
-    );
   }
 }
 
@@ -153,10 +153,7 @@ class ProfileModel {
       state: json['state'] as String?,
       pincode: json['pincode'] as String?,
       role: json['role'] != null
-          ? UserRole.values.firstWhere(
-              (e) => e.name == json['role'],
-              orElse: () => UserRole.customer,
-            )
+          ? parseRole(json['role'].toString())
           : null,
       orgId: json['org_id'] as String?,
       branchId: json['branch_id'] as String?,

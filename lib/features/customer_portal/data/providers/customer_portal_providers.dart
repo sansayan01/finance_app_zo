@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../repositories/customer_portal_repository.dart';
 import '../models/customer_portal_models.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -173,3 +173,4 @@ final notificationNotifierProvider = StateNotifierProvider<NotificationNotifier,
   final repository = ref.watch(customerPortalRepositoryProvider);
   return NotificationNotifier(repository, ref);
 });
+

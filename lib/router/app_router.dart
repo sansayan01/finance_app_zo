@@ -12,10 +12,8 @@ import '../core/providers/org_provider.dart';
 // Branches
 import '../features/branches/presentation/pages/branch_management_page.dart';
 
-// Super Admin
-import '../features/admin/presentation/pages/admin_dashboard_page.dart';
+// Super Admin (Admin pages still in use)
 import '../features/admin/presentation/pages/admin_org_detail_page.dart';
-import '../features/admin/presentation/pages/admin_org_dashboard_page.dart';
 import '../features/admin/presentation/pages/admin_org_settings_page.dart';
 
 // Auth
@@ -68,16 +66,33 @@ import '../features/staff/presentation/pages/analytics_dashboard.dart';
 import '../features/staff/presentation/providers/sync_status_provider.dart';
 import '../core/services/haptic_service.dart';
 
-// Super Admin Portal - NEW
-// import '../features/super_admin/presentation/pages/super_admin_shell.dart';
-// import '../features/super_admin/presentation/pages/super_admin_dashboard.dart';
-// import '../features/super_admin/presentation/pages/organizations_management_page.dart';
-// import '../features/super_admin/presentation/pages/users_management_page.dart';
-// import '../features/super_admin/presentation/pages/audit_logs_page.dart';
-// import '../features/super_admin/presentation/pages/support_tickets_page.dart';
-// import '../features/super_admin/presentation/pages/feature_flags_page.dart';
-// import '../features/super_admin/presentation/pages/announcements_page.dart';
-// import '../features/super_admin/presentation/pages/platform_analytics_page.dart';
+// Super Admin Portal
+import '../features/super_admin/presentation/widgets/super_admin_shell.dart';
+import '../features/super_admin/presentation/pages/super_admin_dashboard.dart';
+import '../features/super_admin/presentation/pages/organizations_management_page.dart';
+import '../features/super_admin/presentation/pages/users_management_page.dart';
+import '../features/super_admin/presentation/pages/audit_logs_page.dart';
+import '../features/super_admin/presentation/pages/support_tickets_page.dart';
+import '../features/super_admin/presentation/pages/feature_flags_page.dart';
+import '../features/super_admin/presentation/pages/announcements_page.dart';
+import '../features/super_admin/presentation/pages/maintenance_page.dart';
+import '../features/super_admin/presentation/pages/platform_analytics_page.dart';
+import '../features/super_admin/presentation/pages/platform_settings_page.dart';
+import '../features/super_admin/presentation/pages/platform_map_page.dart';
+import '../features/super_admin/presentation/pages/security_scorecard_page.dart';
+import '../features/super_admin/presentation/pages/nps_survey_page.dart';
+import '../features/super_admin/presentation/pages/notification_center_page.dart';
+import '../features/super_admin/presentation/pages/background_jobs_page.dart';
+import '../features/super_admin/presentation/pages/onboarding_management_page.dart';
+import '../features/super_admin/presentation/pages/report_center_page.dart';
+import '../features/super_admin/presentation/pages/platform_health_page.dart';
+import '../features/super_admin/presentation/pages/system_controls_page.dart';
+import '../features/super_admin/presentation/pages/feature_adoption_page.dart';
+import '../features/super_admin/presentation/pages/revenue_reconciliation_page.dart';
+import '../features/super_admin/presentation/pages/executive_summary_page.dart';
+import '../features/billing/presentation/pages/billing_page.dart';
+import '../features/billing/presentation/pages/invoices_page.dart';
+import '../features/billing/presentation/pages/usage_limits_page.dart';
 
 // Branch Manager Portal - NEW
 // import '../features/branch_manager/presentation/pages/branch_manager_shell.dart';
@@ -144,7 +159,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         final user = ref.read(currentUserProvider);
         final role = user?.role;
         final isSetupPath = state.matchedLocation == '/setup';
-        final isAdminPath = state.matchedLocation == '/' || state.matchedLocation.startsWith('/loans') || state.matchedLocation.startsWith('/savings') || state.matchedLocation.startsWith('/users') || state.matchedLocation.startsWith('/settings') || state.matchedLocation.startsWith('/analytics') || state.matchedLocation.startsWith('/transactions') || state.matchedLocation.startsWith('/search') || state.matchedLocation.startsWith('/notifications') || state.matchedLocation.startsWith('/members') || state.matchedLocation.startsWith('/branches');
+        final isAdminPath = state.matchedLocation == '/' || state.matchedLocation.startsWith('/loans') || state.matchedLocation.startsWith('/savings') || state.matchedLocation.startsWith('/users') || state.matchedLocation.startsWith('/settings') || state.matchedLocation.startsWith('/analytics') || state.matchedLocation.startsWith('/transactions') || state.matchedLocation.startsWith('/search') || state.matchedLocation.startsWith('/notifications') || state.matchedLocation.startsWith('/members') || state.matchedLocation.startsWith('/branches') || state.matchedLocation.startsWith('/super-admin');
         final isStaffPath = state.matchedLocation.startsWith('/staff');
 
         // Force setup for executive admins if setup is not complete
@@ -162,7 +177,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (isAuthPath) {
           switch (role) {
             case UserRole.superAdmin:
-              return '/admin';
+              return '/super-admin';
             case UserRole.executiveAdmin:
               return '/';
             case UserRole.manager:
@@ -210,42 +225,131 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Super Admin Panel
-      GoRoute(
-        path: '/admin',
-        builder: (context, state) {
+      ShellRoute(
+        builder: (context, state, child) {
           final user = ref.read(currentUserProvider);
           if (user?.role != UserRole.superAdmin) {
             return const Scaffold(body: Center(child: Text('Access denied')));
           }
-          return const AdminDashboardPage();
+          return SuperAdminShell(child: child);
         },
         routes: [
           GoRoute(
-            path: 'my-org',
-            builder: (context, state) {
-              final user = ref.read(currentUserProvider);
-              if (user?.role != UserRole.superAdmin) {
-                return const Scaffold(body: Center(child: Text('Access denied')));
-              }
-              return const AdminOrgDashboardPage();
-            },
+            path: '/super-admin',
+            builder: (context, state) => const SuperAdminDashboard(),
           ),
           GoRoute(
-            path: 'org/settings',
-            builder: (context, state) {
-              final user = ref.read(currentUserProvider);
-              if (user?.role != UserRole.superAdmin) {
-                return const Scaffold(body: Center(child: Text('Access denied')));
-              }
-              return const AdminOrgSettingsPage();
-            },
+            path: '/super-admin/organizations',
+            builder: (context, state) => const OrganizationsManagementPage(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return AdminOrgDetailPage(orgId: id);
+                },
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) => const AdminOrgSettingsPage(),
+                  ),
+                ],
+              ),
+            ],
           ),
           GoRoute(
-            path: 'org/:id',
-            builder: (context, state) {
-              final id = state.pathParameters['id']!;
-              return AdminOrgDetailPage(orgId: id);
-            },
+            path: '/super-admin/users',
+            builder: (context, state) => const UsersManagementPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/support',
+            builder: (context, state) => const SupportTicketsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/billing',
+            builder: (context, state) => const BillingPage(),
+            routes: [
+              GoRoute(
+                path: 'invoices',
+                builder: (context, state) => const InvoicesPage(),
+              ),
+              GoRoute(
+                path: 'usage-limits',
+                builder: (context, state) => const UsageLimitsPage(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/super-admin/audit-logs',
+            builder: (context, state) => const AuditLogsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/feature-flags',
+            builder: (context, state) => const FeatureFlagsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/announcements',
+            builder: (context, state) => const AnnouncementsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/maintenance',
+            builder: (context, state) => const MaintenancePage(),
+          ),
+          GoRoute(
+            path: '/super-admin/settings',
+            builder: (context, state) => const PlatformSettingsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/analytics',
+            builder: (context, state) => const PlatformAnalyticsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/map',
+            builder: (context, state) => const PlatformMapPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/security',
+            builder: (context, state) => const SecurityScorecardPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/nps',
+            builder: (context, state) => const NPSSurveyPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/notifications',
+            builder: (context, state) => const NotificationCenterPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/jobs',
+            builder: (context, state) => const BackgroundJobsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/onboarding',
+            builder: (context, state) => const OnboardingManagementPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/reports',
+            builder: (context, state) => const ReportCenterPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/health',
+            builder: (context, state) => const PlatformHealthPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/controls',
+            builder: (context, state) => const SystemControlsPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/adoption',
+            builder: (context, state) => const FeatureAdoptionPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/reconciliation',
+            builder: (context, state) => const RevenueReconciliationPage(),
+          ),
+          GoRoute(
+            path: '/super-admin/executive-summary',
+            builder: (context, state) => const ExecutiveSummaryPage(),
           ),
         ],
       ),
@@ -477,10 +581,10 @@ class HomePageContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
 
-    // Redirect super admin to admin panel
+    // Redirect super admin to super admin panel
     if (user?.role == UserRole.superAdmin) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/admin');
+        context.go('/super-admin');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

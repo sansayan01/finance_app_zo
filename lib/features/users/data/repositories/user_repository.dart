@@ -8,15 +8,65 @@ class UserRepository {
   UserRepository(this._client, this._orgId);
 
   Future<List<ProfileModel>> getUsers() async {
-    final response = await _client
-        .from('profiles')
-        .select()
-        .eq('org_id', _orgId)
-        .order('created_at', ascending: false);
+    final users = <ProfileModel>[];
 
-    return (response as List)
-        .map((json) => ProfileModel.fromJson(json))
-        .toList();
+    try {
+      final profiles = await _client
+          .from('profiles')
+          .select()
+          .eq('org_id', _orgId)
+          .order('created_at', ascending: false);
+      
+      users.addAll((profiles as List).map((j) => ProfileModel.fromJson(j)));
+    } catch (e) {
+      // Log error in dev or ignore in prod
+    }
+
+    try {
+      List? members;
+      try {
+        members = await _client
+            .from('members')
+            .select()
+            .eq('org_id', _orgId)
+            .order('created_at', ascending: false) as List?;
+      } catch (_) {
+        try {
+          members = await _client
+              .from('members')
+              .select()
+              .order('created_at', ascending: false) as List?;
+        } catch (_) {
+          members = await _client.from('members').select() as List?;
+        }
+      }
+
+      if (members != null) {
+        final existingIds = users.map((u) => u.id).toSet();
+        for (final m in members) {
+          final mid = m['id']?.toString() ?? '';
+          if (existingIds.contains(mid)) continue;
+          
+          users.add(ProfileModel(
+            id: mid,
+            userId: m['user_id']?.toString(),
+            fullName: (m['full_name'] ?? m['name']) as String?,
+            phone: m['phone'] as String?,
+            email: m['email'] as String?,
+            role: UserRole.customer,
+            orgId: m['org_id']?.toString() ?? _orgId,
+            branchId: m['branch_id']?.toString(),
+            address: m['address'] as String?,
+            city: m['city'] as String?,
+            state: m['state'] as String?,
+            pincode: m['pincode'] as String?,
+            createdAt: DateTime.tryParse(m['created_at']?.toString() ?? ''),
+          ));
+        }
+      }
+    } catch (_) {}
+
+    return users;
   }
 
   Future<void> createUser({
@@ -78,17 +128,29 @@ class UserRepository {
   }
 
   Future<Map<String, int>> getUserStats() async {
-    final response = await _client.from('profiles').select('role').eq('org_id', _orgId);
-    final roles = (response as List).map((e) => e['role'] as String).toList();
+    final roles = <String>[];
+    try {
+      final response = await _client.from('profiles').select('role').eq('org_id', _orgId);
+      roles.addAll((response as List).map((e) => e['role'] as String));
+    } catch (_) {}
 
-    final stats = {
-      'total': roles.length,
-      'admins':
-          roles.where((r) => r == 'admin' || r == 'executiveAdmin').length,
+    int memberCount = 0;
+    try {
+      List memberResponse;
+      try {
+        memberResponse = await _client.from('members').select('id').eq('org_id', _orgId) as List;
+      } catch (_) {
+        memberResponse = await _client.from('members').select('id') as List;
+      }
+      memberCount = memberResponse.length;
+    } catch (_) {}
+
+    final stats = <String, int>{
+      'total': roles.length + memberCount,
+      'admins': roles.where((r) => r == 'admin' || r == 'executiveAdmin' || r == 'superAdmin').length,
       'managers': roles.where((r) => r == 'manager').length,
-      'staff': roles.where((r) => r == 'staff' || r == 'collectionAgent').length,
-      'members':
-          roles.where((r) => r == 'customer' || r == 'retailMember').length,
+      'staff': roles.where((r) => r == 'staff' || r == 'collectionAgent' || r == 'fieldstaff').length,
+      'members': memberCount + roles.where((r) => r == 'customer' || r == 'retailmember').length,
     };
 
     return stats;

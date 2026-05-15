@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 final allNotificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
@@ -14,3 +14,4 @@ final allNotificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref
     return [];
   }
 });
+

@@ -1,275 +1,200 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/async_value_widget.dart';
 import '../../data/providers/super_admin_providers.dart';
 
-/// Users Management Page
 class UsersManagementPage extends ConsumerStatefulWidget {
   const UsersManagementPage({super.key});
-
   @override
   ConsumerState<UsersManagementPage> createState() => _UsersManagementPageState();
 }
 
 class _UsersManagementPageState extends ConsumerState<UsersManagementPage> {
-  final _searchController = TextEditingController();
-  String? _roleFilter;
+  final _search = TextEditingController();
+  String? _role;
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  void dispose() { _search.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = D.bg(context);
+    final cardBg = D.surface(context);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: const Text('All Users'),
-            actions: [
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.filter_list),
-                onSelected: (value) => setState(() {
-                  _roleFilter = value.isEmpty ? null : value;
-                }),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: '', child: Text('All Roles')),
-                  const PopupMenuItem(value: 'superAdmin', child: Text('Super Admin')),
-                  const PopupMenuItem(value: 'executiveAdmin', child: Text('Executive Admin')),
-                  const PopupMenuItem(value: 'manager', child: Text('Manager')),
-                  const PopupMenuItem(value: 'collectionAgent', child: Text('Collection Agent')),
-                  const PopupMenuItem(value: 'customer', child: Text('Customer')),
-                ],
-              ),
-            ],
-          ),
-
-          // Search
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            sliver: SliverToBoxAdapter(
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search users...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+      backgroundColor: bg,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: D.bodyPad,
+              sliver: SliverToBoxAdapter(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  D.header('Users', 'All platform users', isDark),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _search,
+                    decoration: D.searchInput(context, _search, () { _search.clear(); setState(() {}); }),
+                    style: TextStyle(fontSize: 14, color: D.text(context)),
+                    onChanged: (_) => setState(() {}),
                   ),
-                  filled: true,
-                  fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
-                ),
-                onChanged: (_) => setState(() {}),
+                  const SizedBox(height: 14),
+                  _roleFilter(isDark),
+                  const SizedBox(height: 20),
+                ]),
               ),
             ),
-          ),
-
-          // Users List
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: AsyncValueSliver(
-              value: ref.watch(allUsersProvider({
-                'search': _searchController.text,
-                'role': _roleFilter,
-              })),
-              builder: (users) => SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildUserCard(context, users[index], isDark),
-                  childCount: users.length,
-                ),
+            SliverPadding(
+              padding: D.bodyBottomPad,
+              sliver: AsyncValueSliver(
+                value: ref.watch(allUsersProvider({'search': _search.text, 'role': _role})),
+                builder: (users) => SliverList(delegate: SliverChildBuilderDelegate((_, i) => _userCard(users[i], isDark, cardBg), childCount: users.length)),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildUserCard(BuildContext context, Map<String, dynamic> user, bool isDark) {
-    final role = user['role'] as String? ?? 'customer';
-    final isActive = user['is_active'] as bool? ?? true;
-    final orgName = user['organizations']?['name'];
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      color: isDark ? Colors.grey[900] : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _getRoleColor(role).withValues(alpha: 0.1),
-          child: Text(
-            (user['name'] as String?)?.isNotEmpty == true 
-                ? user['name'][0].toUpperCase() 
-                : '?',
-            style: TextStyle(
-              color: _getRoleColor(role),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        title: Text(
-          user['name'] ?? 'Unknown',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(user['email'] ?? ''),
-            if (orgName != null)
-              Text(
-                orgName,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.blue,
-                ),
-              ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  Widget _roleFilter(bool isDark) {
+    final roles = ['All', 'superAdmin', 'executiveAdmin', 'manager', 'collectionAgent'];
+    final labels = ['All', 'Super Admin', 'Admin', 'Manager', 'Agent'];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(children: List.generate(roles.length, (i) {
+        final sel = (i == 0 && _role == null) || _role == roles[i];
+        return Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: GestureDetector(
+            onTap: () => setState(() => _role = i == 0 ? null : roles[i]),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: _getRoleColor(role).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: sel ? D.accent.withValues(alpha: 0.1) : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: sel ? D.accent.withValues(alpha: 0.3) : D.borderColor(isDark)),
               ),
-              child: Text(
-                _getRoleDisplayName(role),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: _getRoleColor(role),
-                ),
+              child: Text(labels[i], style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: sel ? D.accent : D.muted(context))),
+            ),
+          ),
+        );
+      })),
+    );
+  }
+
+  Widget _userCard(Map<String, dynamic> u, bool isDark, Color cardBg) {
+    final role = u['role'] as String? ?? 'customer';
+    final active = u['is_active'] as bool? ?? true;
+    final rc = _roleColor(role);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: D.card(context),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(D.radius),
+          onTap: () => _detail(u),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: rc.withValues(alpha: 0.12),
+                child: Text(((u['name'] as String? ?? '?')[0]).toUpperCase(), style: TextStyle(fontWeight: FontWeight.w700, color: rc, fontSize: 16)),
               ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              isActive ? Icons.check_circle : Icons.block,
-              color: isActive ? Colors.green : Colors.red,
-              size: 20,
-            ),
-          ],
+              const SizedBox(width: 14),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(u['name'] as String? ?? '', style: D.titleStyle(isDark)),
+                const SizedBox(height: 2),
+                Text(u['email'] as String? ?? '', style: D.subtitleStyle(isDark)),
+              ])),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: rc.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: Text(_roleName(role), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: rc))),
+                const SizedBox(height: 4),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Container(width: 6, height: 6, decoration: BoxDecoration(color: active ? Colors.green : Colors.red, shape: BoxShape.circle)),
+                  const SizedBox(width: 4),
+                  Text(active ? 'Active' : 'Inactive', style: D.subtitleStyle(isDark)),
+                ]),
+              ]),
+            ]),
+          ),
         ),
-        onTap: () => _showUserDetails(user),
       ),
-    ).animate().fadeIn().slideX(begin: 0.1);
+    );
   }
 
-  Color _getRoleColor(String role) {
-    switch (role) {
-      case 'superAdmin':
-        return Colors.red;
-      case 'executiveAdmin':
-        return Colors.orange;
-      case 'manager':
-        return Colors.blue;
-      case 'collectionAgent':
-        return Colors.green;
-      case 'customer':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
+  Color _roleColor(String r) {
+    switch (r) { case 'superAdmin': return Colors.red; case 'executiveAdmin': return Colors.orange; case 'manager': return Colors.blue; case 'collectionAgent': return Colors.green; default: return Colors.purple; }
   }
 
-  String _getRoleDisplayName(String role) {
-    switch (role) {
-      case 'superAdmin':
-        return 'Super Admin';
-      case 'executiveAdmin':
-        return 'Executive Admin';
-      case 'manager':
-        return 'Manager';
-      case 'collectionAgent':
-        return 'Agent';
-      case 'customer':
-        return 'Customer';
-      default:
-        return role;
-    }
+  String _roleName(String r) {
+    switch (r) { case 'superAdmin': return 'Super Admin'; case 'executiveAdmin': return 'Admin'; case 'manager': return 'Manager'; case 'collectionAgent': return 'Agent'; default: return 'Customer'; }
   }
 
-  void _showUserDetails(Map<String, dynamic> user) {
+  void _detail(Map<String, dynamic> u) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        maxChildSize: 0.9,
-        minChildSize: 0.3,
-        expand: false,
-        builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: D.surface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: D.dim(context), borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 20),
-              Text(
-                user['name'] ?? 'Unknown',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Text(u['name'] as String? ?? '', style: D.h2(isDark)),
+              const SizedBox(height: 4),
+              Text(u['email'] as String? ?? '', style: D.subtitleStyle(isDark)),
+              const SizedBox(height: 20),
+              _detailRow(Icons.badge, 'Role', _roleName(u['role'] ?? '')),
+              _detailRow(Icons.email, 'Email', u['email'] ?? ''),
+              _detailRow(Icons.phone, 'Phone', u['phone'] ?? 'N/A'),
+              _detailRow(Icons.calendar_today, 'Joined', (u['created_at'] as String?)?.substring(0, 10) ?? 'N/A'),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final newState = !(u['is_active'] ?? true);
+                    await ref.read(superAdminActionsProvider.notifier).updateUserStatus(u['id'], newState);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  icon: Icon((u['is_active'] ?? true) ? Icons.block : Icons.check_circle),
+                  label: Text((u['is_active'] ?? true) ? 'Deactivate User' : 'Activate User'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: (u['is_active'] ?? true) ? Colors.red : Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                user['email'] ?? '',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _toggleUserStatus(user['id'], !(user['is_active'] ?? true)),
-                      icon: Icon(user['is_active'] == true ? Icons.block : Icons.check),
-                      label: Text(user['is_active'] == true ? 'Deactivate' : 'Activate'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: user['is_active'] == true ? Colors.red : Colors.green,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ]),
           ),
         ),
       ),
     );
   }
 
-  void _toggleUserStatus(String userId, bool isActive) async {
-    final success = await ref.read(superAdminActionsProvider.notifier).updateUserStatus(userId, isActive);
-    if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success 
-              ? 'User ${isActive ? 'activated' : 'deactivated'}' 
-              : 'Failed to update user'),
-        ),
-      );
-    }
+  Widget _detailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(children: [
+        Icon(icon, size: 16, color: D.iconMuted(context)),
+        const SizedBox(width: 12),
+        SizedBox(width: 80, child: Text(label, style: D.labelStyle(Theme.of(context).brightness == Brightness.dark))),
+        Expanded(child: Text(value, style: D.valueStyle(Theme.of(context).brightness == Brightness.dark))),
+      ]),
+    );
   }
 }

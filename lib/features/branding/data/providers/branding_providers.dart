@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../models/org_branding_model.dart';
 import '../repositories/branding_repository.dart';
 
@@ -98,3 +98,4 @@ final featureEnabledProvider = Provider.family<bool, (String orgId, String featu
     orElse: () => false,
   );
 });
+

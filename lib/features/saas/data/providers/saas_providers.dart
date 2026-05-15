@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../enterprise/models/enterprise_models.dart';
 import '../../../analytics/models/analytics_models.dart';
 import '../../../operations/models/operations_models.dart';
@@ -151,3 +151,4 @@ final announcementsProvider = FutureProvider<List<AnnouncementModel>>((ref) asyn
   
   return response.map<AnnouncementModel>((json) => AnnouncementModel.fromJson(json)).toList();
 });
+

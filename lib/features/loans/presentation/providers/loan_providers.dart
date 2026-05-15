@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/loan_model.dart';
 import '../../data/repositories/loans_repository.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../core/constants/enums.dart';
 
@@ -89,3 +89,4 @@ final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
   final repository = ref.watch(loansRepositoryProvider);
   return repository.getLoanSummary();
 });
+

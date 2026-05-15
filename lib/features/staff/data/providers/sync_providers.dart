@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/storage_providers.dart';
 import '../services/offline_sync_engine.dart';
 
@@ -139,3 +139,4 @@ final isOnlineProvider = StreamProvider<bool>((ref) async* {
   await Future.delayed(const Duration(seconds: 5));
   yield await engine.isOnline();
 });
+

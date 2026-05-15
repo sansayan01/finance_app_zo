@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/brand_model.dart';
 import 'activity_log_repository_provider.dart';
 import '../models/activity_log_model.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 class BrandNotifier extends StateNotifier<BrandModel> {
   final Ref _ref;
@@ -79,3 +79,4 @@ class BrandNotifier extends StateNotifier<BrandModel> {
 final brandProvider = StateNotifierProvider<BrandNotifier, BrandModel>((ref) {
   return BrandNotifier(ref);
 });
+

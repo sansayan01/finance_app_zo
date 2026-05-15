@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 final branchListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.read(supabaseClientProvider);
@@ -265,3 +265,4 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
     );
   }
 }
+

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../models/api_key_model.dart';
 import '../repositories/api_repository.dart';
@@ -153,3 +153,4 @@ final apiNotifierProvider = StateNotifierProvider<ApiNotifier, AsyncValue<void>>
   final repository = ref.watch(apiRepositoryProvider);
   return ApiNotifier(repository, ref);
 });
+

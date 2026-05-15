@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/haptic_service.dart';
@@ -1615,3 +1615,4 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     );
   }
 }
+

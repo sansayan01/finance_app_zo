@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../models/subscription_plan_model.dart';
 import '../models/org_subscription_model.dart';
@@ -192,3 +192,4 @@ final billingNotifierProvider = StateNotifierProvider<BillingNotifier, AsyncValu
   final repository = ref.watch(billingRepositoryProvider);
   return BillingNotifier(repository, ref);
 });
+

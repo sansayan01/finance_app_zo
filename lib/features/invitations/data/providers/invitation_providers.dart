@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../models/org_invitation_model.dart';
 import '../repositories/invitation_repository.dart';
@@ -189,3 +189,4 @@ class InvitationRequest {
     this.message,
   });
 }
+

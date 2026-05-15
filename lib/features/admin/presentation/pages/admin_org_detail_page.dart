@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 final adminOrgDetailProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, orgId) async {
   final client = ref.read(supabaseClientProvider);
@@ -371,3 +371,4 @@ class AdminOrgDetailPage extends ConsumerWidget {
     }
   }
 }
+

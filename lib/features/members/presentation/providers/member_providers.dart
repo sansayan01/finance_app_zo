@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../data/models/member_model.dart';
@@ -21,3 +21,4 @@ final memberSummaryProvider = FutureProvider<MemberSummary>((ref) async {
   final repository = ref.watch(membersRepositoryProvider);
   return repository.getMemberSummary();
 });
+

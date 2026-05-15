@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import 'package:microflow_pro/core/constants/enums.dart';
 import '../models/collection_model.dart';
 import '../repositories/collection_repository.dart';
@@ -249,3 +249,4 @@ final collectionNotifierProvider = StateNotifierProvider<CollectionNotifier, Asy
   final syncNotifier = ref.watch(syncStatusProvider.notifier);
   return CollectionNotifier(repository, syncNotifier);
 });
+

@@ -281,6 +281,16 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                 ),
                 const SizedBox(width: 12),
                 _StatCard(
+                  label: 'Managers',
+                  value: stats['managers'].toString(),
+                  icon: Icons.manage_accounts_rounded,
+                  color: theme.colorScheme.secondary,
+                  isSelected: _filterRole == UserRole.manager,
+                  onTap: () =>
+                      setState(() => _filterRole = UserRole.manager),
+                ),
+                const SizedBox(width: 12),
+                _StatCard(
                   label: 'Staff',
                   value: stats['staff'].toString(),
                   icon: Icons.support_agent_rounded,

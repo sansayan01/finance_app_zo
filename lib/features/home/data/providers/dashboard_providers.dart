@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../loans/data/repositories/loans_repository.dart';
 import '../../../loans/data/models/loan_model.dart';
@@ -94,3 +94,4 @@ final todayAgendaProvider = FutureProvider<List<dynamic>>((ref) async {
   }
   return agenda;
 });
+

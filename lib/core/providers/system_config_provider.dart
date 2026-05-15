@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import '../models/system_config.dart';
-import '../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 final systemConfigProvider = FutureProvider<SystemConfig>((ref) async {
   final client = ref.watch(supabaseClientProvider);
@@ -110,3 +110,4 @@ bool _isVersionLower(String current, String target) {
     return false;
   }
 }
+

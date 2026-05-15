@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../providers/loan_providers.dart';
 import '../../data/models/loan_model.dart';
 import '../../data/models/emi_schedule_model.dart';
@@ -896,3 +896,4 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     }
   }
 }
+

@@ -5,7 +5,7 @@ import '../../data/models/member_model.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/providers/org_provider.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 class OnboardingState {
   final String fullName;
@@ -125,3 +125,4 @@ final onboardingProvider = StateNotifierProvider<OnboardingNotifier, OnboardingS
     ref.watch(locationServiceProvider),
   );
 });
+

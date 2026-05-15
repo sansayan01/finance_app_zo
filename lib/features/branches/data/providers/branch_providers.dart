@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../repositories/branch_repository.dart';
 import '../../models/branch_model.dart';
@@ -152,3 +152,4 @@ class BranchNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 }
+

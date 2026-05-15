@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../repositories/branch_manager_repository.dart';
 import '../models/branch_stats_model.dart';
 import '../../../auth/data/models/user_model.dart';
@@ -119,3 +119,4 @@ final approvalActionsProvider = StateNotifierProvider<ApprovalNotifier, AsyncVal
   final repository = ref.watch(branchManagerRepositoryProvider);
   return ApprovalNotifier(repository, ref);
 });
+

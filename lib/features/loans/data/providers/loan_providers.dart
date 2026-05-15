@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/loan_model.dart';
 import '../repositories/loans_repository.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 
 final loansRepositoryProvider = Provider<LoansRepository>((ref) {
@@ -22,3 +22,4 @@ final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
 
 // Alias for backward compatibility
 final loansProvider = allLoansProvider;
+

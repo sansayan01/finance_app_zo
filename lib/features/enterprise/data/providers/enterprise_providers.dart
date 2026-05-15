@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../providers/supabase_provider.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../models/audit_log_model.dart';
 import '../repositories/enterprise_repository.dart';
 
@@ -17,3 +17,4 @@ final auditStatsProvider = FutureProvider.family<Map<String, dynamic>, String>((
   final repository = ref.watch(enterpriseRepositoryProvider);
   return repository.getAuditStats(orgId);
 });
+

@@ -167,7 +167,7 @@ class NewLoanState {
       double periodsInTenure;
       switch (interestBasis) {
         case InterestBasis.onPrincipal:
-          return principalAmount * (interestAmount / 100);
+          return interestAmount;
         case InterestBasis.daily:
           periodsInTenure = tenureInDays.toDouble();
           break;

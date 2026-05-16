@@ -501,7 +501,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
               value: state.interestBasis.name,
               hint: 'Interest basis',
               items: InterestBasis.values.map((e) => e.name).toList(),
-              itemLabels: ['Per Day', 'Per Week', 'Per Month', 'Per Year', '% of Principal'],
+              itemLabels: ['Per Day', 'Per Week', 'Per Month', 'Per Year', 'On Principal'],
               onChanged: (val) {
                 if (val != null) {
                   ref.read(newLoanProvider.notifier).updateInterestBasis(
@@ -515,7 +515,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
             const SizedBox(height: 12),
             _buildTextField(
               controller: _rateController,
-              suffix: state.interestBasis == InterestBasis.onPrincipal ? '%' : '₹',
+              suffix: state.interestBasis == InterestBasis.onPrincipal ? '₹ (flat)' : '₹',
               onChanged: (val) {
                 final parsed = double.tryParse(val) ?? 0;
                 ref.read(newLoanProvider.notifier).updateInterestAmount(parsed);
@@ -523,24 +523,24 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
               theme: theme,
               isDark: isDark,
             ),
-            if (state.interestBasis != InterestBasis.onPrincipal) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Total interest: ${currencyFormat.format(state.totalInterest)}',
-                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
-                      ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      state.interestBasis == InterestBasis.onPrincipal
+                          ? 'Total interest: ${currencyFormat.format(state.interestAmount)} (one-time flat)'
+                          : 'Total interest: ${currencyFormat.format(state.totalInterest)}',
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ],
 
           _buildDivider(theme),
@@ -1216,7 +1216,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
       case InterestBasis.yearly:
         return '/year';
       case InterestBasis.onPrincipal:
-        return '% of principal';
+        return 'on principal';
     }
   }
 

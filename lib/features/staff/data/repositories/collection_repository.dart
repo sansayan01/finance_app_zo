@@ -17,7 +17,7 @@ class CollectionRepository {
           id,
           member_id,
           member_name,
-          outstanding_amount,
+          outstanding_balance,
           loan_number,
           members(
             id,
@@ -273,7 +273,7 @@ class CollectionRepository {
             id,
             loan_number,
             principal,
-            outstanding_amount,
+            outstanding_balance,
             status
           )
         ''')
@@ -289,14 +289,14 @@ class CollectionRepository {
       
       for (final loan in loans) {
         if (loan['status'] == 'active') {
-          outstanding += (loan['outstanding_amount'] as num?)?.toDouble() ?? 0;
+          outstanding += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
           loanNumber ??= loan['loan_number'];
         }
       }
 
       result.add({
         ...member,
-        'outstanding_amount': outstanding,
+        'outstanding_balance': outstanding,
         'loan_number': loanNumber,
       });
     }
@@ -317,7 +317,7 @@ class CollectionRepository {
             interest_rate,
             tenure_months,
             emi,
-            outstanding_amount,
+            outstanding_balance,
             status,
             start_date,
             paid_emis,
@@ -382,7 +382,7 @@ class CollectionRepository {
 
     return {
       ...response,
-      'outstanding_amount': outstandingAmount,
+      'outstanding_balance': outstandingAmount,
       'overdue_amount': overdueAmount,
       'next_due_amount': nextDueAmount,
       'next_due_date': nextDueDate?.toIso8601String(),
@@ -401,7 +401,7 @@ class CollectionRepository {
           interest_rate,
           tenure_months,
           emi,
-          outstanding_amount,
+          outstanding_balance,
           status,
           start_date,
           paid_emis,

@@ -165,7 +165,7 @@ class _CustomerSearchPageState extends ConsumerState<CustomerSearchPage> {
                     name: c['full_name'] as String? ?? 'Unknown',
                     phone: c['phone'] as String? ?? '',
                     area: c['area'] as String? ?? '',
-                    outstanding: (c['outstanding_amount'] as num?)?.toDouble() ?? 0,
+                    outstanding: (c['outstanding_balance'] as num?)?.toDouble() ?? 0,
                     index: i,
                     onTap: () => context.push('/staff/customers/${c['id']}'),
                   );
@@ -212,7 +212,7 @@ class _CustomerSearchPageState extends ConsumerState<CustomerSearchPage> {
               name: c['full_name'] as String? ?? 'Unknown',
               phone: c['phone'] as String? ?? '',
               area: c['area'] as String? ?? '',
-              outstanding: (c['outstanding_amount'] as num?)?.toDouble() ?? 0,
+              outstanding: (c['outstanding_balance'] as num?)?.toDouble() ?? 0,
               index: i,
               onTap: () => context.push('/staff/customers/${c['id']}'),
             );

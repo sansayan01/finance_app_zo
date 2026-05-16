@@ -110,7 +110,7 @@ class BackgroundSyncService {
             principal,
             interest_rate,
             status,
-            outstanding_amount,
+            outstanding_balance,
             loan_schedules(
               id,
               due_date,

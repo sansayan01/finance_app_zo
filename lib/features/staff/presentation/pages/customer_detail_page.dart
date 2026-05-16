@@ -186,7 +186,7 @@ class _CustomerDetailPageState extends ConsumerState<CustomerDetailPage>
   }
 
   Widget _buildOverviewTab(BuildContext context, Map<String, dynamic> customer, bool isDark) {
-    final outstandingAmount = (customer['outstanding_amount'] ?? 0).toDouble();
+    final outstandingAmount = (customer['outstanding_balance'] ?? 0).toDouble();
     final totalSavings = (customer['total_savings'] ?? 0).toDouble();
     final overdueAmount = (customer['overdue_amount'] ?? 0).toDouble();
     final collectionRate = (customer['collection_rate'] ?? 0).toDouble();

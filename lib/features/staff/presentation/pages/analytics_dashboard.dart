@@ -404,7 +404,7 @@ class _AnalyticsDashboardState extends ConsumerState<AnalyticsDashboard> {
                 children: customers.take(5).toList().asMap().entries.map((entry) {
                   final i = entry.key; final c = entry.value;
                   final name = c['full_name'] as String? ?? 'Unknown';
-                  final outstanding = (c['outstanding_amount'] as num?)?.toDouble() ?? 0;
+                  final outstanding = (c['outstanding_balance'] as num?)?.toDouble() ?? 0;
                   final rankColors = [Colors.amber, Colors.grey, Colors.brown, AppColors.primary, AppColors.primary];
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),

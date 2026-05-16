@@ -71,7 +71,7 @@ class EMIRepository {
       if (newBalance <= 0) {
         await _client.from('loans').update({
           'status': 'closed',
-          'closed_at': now.toIso8601String(),
+          'closed_date': now.toIso8601String().split('T').first,
         }).eq('id', loanId);
       }
     } catch (e) {
@@ -119,7 +119,7 @@ class EMIRepository {
       if (newBalance <= 0) {
         await _client.from('loans').update({
           'status': 'closed',
-          'closed_at': now.toIso8601String(),
+          'closed_date': now.toIso8601String().split('T').first,
         }).eq('id', loanId);
       }
     } catch (e) {

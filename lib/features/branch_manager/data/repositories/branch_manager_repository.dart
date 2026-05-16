@@ -33,22 +33,21 @@ class BranchManagerRepository {
   /// Get branch collections
   Future<List<Map<String, dynamic>>> getBranchCollections(String branchId, {DateTime? date}) async {
     date ??= DateTime.now();
-    
+    final dateStr = date.toIso8601String().split('T').first;
+
     final response = await _client
         .from('collections')
         .select('''
           *,
-          collector:staff_profiles!fk_collections_staff(full_name, id),
+          collector:profiles!fk_collections_staff(full_name, id),
           loan:loans(
             id,
-            loan_amount,
-            member:members(name, id)
+            amount,
+            member:members(full_name, id)
           )
         ''')
-        .eq('branch_id', branchId)
-        .gte('collected_at', date.toIso8601String())
-        .lt('collected_at', date.add(const Duration(days: 1)).toIso8601String())
-        .order('collected_at', ascending: false);
+        .eq('collection_date', dateStr)
+        .order('created_at', ascending: false);
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -60,7 +59,7 @@ class BranchManagerRepository {
         .select('''
           *,
           requested_by_user:profiles!fk_approvals_requested(full_name as name, role),
-          member:members(name, id, phone)
+          member:members(full_name, id, phone)
         ''')
         .eq('branch_id', branchId)
         .eq('status', 'pending')
@@ -75,17 +74,16 @@ class BranchManagerRepository {
         .from('loans')
         .select('''
           *,
-          member:members(name, id, phone, address),
-          emi_schedule:emi_schedules(
+          member:members(full_name, id, phone, address),
+          emi_schedule(
             id,
             due_date,
-            amount,
+            emi_amount,
             status
           )
         ''')
         .eq('branch_id', branchId)
-        .eq('status', 'active')
-        .lt('next_emi_due', DateTime.now().toIso8601String());
+        .eq('status', 'active');
 
     return List<Map<String, dynamic>>.from(response);
   }

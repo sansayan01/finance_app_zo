@@ -50,13 +50,10 @@ class CustomerPortalRepository {
   Future<List<Map<String, dynamic>>> getCustomerTransactions(String customerId, {int? limit}) async {
     var query = _client
         .from('transactions')
-        .select('''
-          *,
-          savings_account:savings_accounts(account_number)
-        ''')
-        .eq('customer_id', customerId)
-        .order('transaction_date', ascending: false);
-    
+        .select()
+        .eq('member_id', customerId)
+        .order('created_at', ascending: false);
+
     if (limit != null) {
       query = query.limit(limit);
     }
@@ -297,20 +294,19 @@ class CustomerPortalRepository {
         .from('loans')
         .select('''
           id,
-          loan_id,
-          principal_amount,
+          loan_number,
+          amount,
+          principal,
           interest_rate,
           tenure_months,
           emi_amount,
           outstanding_balance,
           status,
-          disbursed_date,
-          maturity_date,
+          disbursement_date,
+          end_date,
           loan_purpose,
-          branch:branches(id, name),
-          collected_amount,
-          next_emi_date,
-          next_emi_amount
+          start_date,
+          first_emi_date
         ''')
         .eq('member_id', customerId)
         .order('created_at', ascending: false);
@@ -332,15 +328,17 @@ class CustomerPortalRepository {
   /// Get customer's savings
   Future<List<Map<String, dynamic>>> getCustomerSavings(String customerId) async {
     final response = await _client
-        .from('savings_accounts')
+        .from('savings')
         .select('''
           id,
           account_number,
           balance,
-          interest_rate,
+          plan_name,
+          target_amount,
+          monthly_deposit,
           status,
           created_at,
-          savings_plan:savings_plans(id, name, type)
+          maturity_date
         ''')
         .eq('member_id', customerId);
 
@@ -352,8 +350,8 @@ class CustomerPortalRepository {
     final response = await _client
         .from('transactions')
         .select()
-        .eq('savings_account_id', savingsAccountId)
-        .order('transaction_date', ascending: false);
+        .eq('savings_id', savingsAccountId)
+        .order('created_at', ascending: false);
 
     return response;
   }
@@ -364,13 +362,12 @@ class CustomerPortalRepository {
         .from('profiles')
         .select('''
           id,
-          name,
+          full_name,
           email,
           phone,
           role,
           created_at,
           member_id,
-          kyc_status,
           branch:branches(id, name)
         ''')
         .eq('id', customerId)

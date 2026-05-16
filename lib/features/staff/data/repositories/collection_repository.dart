@@ -177,7 +177,7 @@ class CollectionRepository {
           is_partial,
           is_offline,
           sync_status,
-          staff_profiles!inner(full_name)
+          profiles!fk_collections_staff(full_name)
         ''')
         .eq('staff_id', staffId);
 
@@ -207,7 +207,7 @@ class CollectionRepository {
 
     // Flatten staff name
     return response.map((item) {
-      final staff = item['staff_profiles'] as Map<String, dynamic>?;
+      final staff = item['profiles'] as Map<String, dynamic>?;
       return {
         ...Map<String, dynamic>.from(item),
         'staff_name': staff?['full_name'],
@@ -416,7 +416,7 @@ class CollectionRepository {
             balance,
             is_paid,
             is_overdue,
-            paid_date,
+            paid_on,
             penalty
           )
         ''')
@@ -473,7 +473,7 @@ class CollectionRepository {
           is_partial,
           is_offline,
           sync_status,
-          staff_profiles!inner(full_name)
+          profiles!fk_collections_staff(full_name)
         ''')
         .eq('member_id', customerId)
         .order('collection_time', ascending: false)
@@ -481,7 +481,7 @@ class CollectionRepository {
 
     // Flatten staff name
     return response.map((item) {
-      final staff = item['staff_profiles'] as Map<String, dynamic>?;
+      final staff = item['profiles'] as Map<String, dynamic>?;
       return {
         ...Map<String, dynamic>.from(item),
         'staff_name': staff?['full_name'],

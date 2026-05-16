@@ -65,8 +65,8 @@ class CustomerLoansPage extends ConsumerWidget {
 
   Widget _buildLoanCard(BuildContext context, WidgetRef ref, dynamic loan, NumberFormat currencyFormat) {
     final theme = Theme.of(context);
-    final progress = ((loan['paid_amount'] as num?)?.toDouble() ?? 0.0) / ((loan['principal_amount'] as num?)?.toDouble() ?? 1.0);
-    final nextDueDate = DateTime.tryParse(loan['next_emi_date'] ?? '');
+    final progress = ((loan['paid_amount'] as num?)?.toDouble() ?? 0.0) / ((loan['amount'] as num?)?.toDouble() ?? 1.0);
+    final nextDueDate = DateTime.tryParse(loan['first_emi_date'] ?? '');
     final isOverdue = nextDueDate?.isBefore(DateTime.now()) ?? false;
 
     return Card(
@@ -105,7 +105,7 @@ class CustomerLoansPage extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    'Loan #${(loan['loan_id'] as String?)?.substring(0, 8) ?? ''}',
+                    'Loan #${(loan['loan_number'] as String?) ?? ''}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -120,7 +120,7 @@ class CustomerLoansPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        currencyFormat.format(loan['principal_amount'] ?? 0),
+                        currencyFormat.format(loan['amount'] ?? 0),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

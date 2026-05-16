@@ -125,6 +125,21 @@ class EMIRepository {
         .update({'status': status}).eq('id', emiId);
   }
 
+  Future<List<Map<String, dynamic>>> getPaymentHistory(String loanId) async {
+    try {
+      final response = await _client
+          .from('transactions')
+          .select()
+          .eq('loan_id', loanId)
+          .eq('type', 'emi_payment')
+          .order('entered_at', ascending: false);
+
+      return (response as List).map((json) => json as Map<String, dynamic>).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<List<EMIScheduleModel>> getTodaysDues() async {
     try {
       final today = DateTime.now();

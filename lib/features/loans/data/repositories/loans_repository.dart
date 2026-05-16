@@ -205,6 +205,22 @@ class LoansRepository {
     await _client.from('loans').update({'status': status}).eq('id', id);
   }
 
+  Future<void> updateLoan(String id, {
+    String? remarks,
+    String? purpose,
+    double? interestRate,
+    int? tenureMonths,
+  }) async {
+    final data = <String, dynamic>{};
+    if (remarks != null) data['remarks'] = remarks;
+    if (purpose != null) data['purpose'] = purpose;
+    if (interestRate != null) data['interest_rate'] = interestRate;
+    if (tenureMonths != null) data['tenure_months'] = tenureMonths;
+    data['updated_at'] = DateTime.now().toIso8601String();
+    
+    await _client.from('loans').update(data).eq('id', id);
+  }
+
   Future<void> settleLoan(String loanId, double amount) async {
     final loan = await getLoanById(loanId);
     if (loan == null) return;

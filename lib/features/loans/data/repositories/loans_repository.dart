@@ -271,4 +271,62 @@ class LoansRepository {
       'outstanding_balance': newBalance,
     }).eq('id', loanId);
   }
+
+  Future<void> deleteLoan(String loanId) async {
+    try {
+      // Try using the RPC function first (safest approach)
+      try {
+        final result = await _client.rpc(
+          'delete_loan_safely',
+          params: {
+            'p_loan_id': loanId,
+            'p_org_id': _orgId,
+          },
+        );
+        
+        if (result != true) {
+          throw Exception('Loan not found or deletion failed');
+        }
+        return;
+      } catch (rpcError) {
+        // Fallback to manual deletion if RPC doesn't exist
+      }
+
+      // Manual deletion with proper ordering
+      // 1. Delete transactions
+      await _client
+          .from('transactions')
+          .delete()
+          .eq('loan_id', loanId)
+          .eq('org_id', _orgId);
+
+      // 2. Delete EMI schedules
+      await _client
+          .from('emi_schedule')
+          .delete()
+          .eq('loan_id', loanId)
+          .eq('org_id', _orgId);
+
+      // 3. Nullify loan_id in collections
+      await _client
+          .from('collections')
+          .update({'loan_id': null})
+          .eq('loan_id', loanId)
+          .eq('org_id', _orgId);
+
+      // 4. Delete the loan
+      final response = await _client
+          .from('loans')
+          .delete()
+          .eq('id', loanId)
+          .eq('org_id', _orgId)
+          .select('id');
+
+      if (response.isEmpty) {
+        throw Exception('Loan could not be deleted. Check permissions or constraints.');
+      }
+    } catch (e) {
+      throw Exception('Delete failed: $e');
+    }
+  }
 }

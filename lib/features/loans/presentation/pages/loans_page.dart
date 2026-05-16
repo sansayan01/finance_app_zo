@@ -314,7 +314,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
         children: [
           _AnalyticsCard(
             label: 'CAPITAL DEPLOYED',
-            value: AppFormatters.formatCompactCurrency(summary.totalDisbursed),
+            value: AppFormatters.formatCurrency(summary.totalDisbursed),
             icon: Icons.account_balance_wallet_rounded,
             color: primary,
             isDark: isDark,
@@ -323,7 +323,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
           _AnalyticsCard(
             label: 'TOTAL OUTSTANDING',
             value:
-                AppFormatters.formatCompactCurrency(summary.totalOutstanding),
+                AppFormatters.formatCurrency(summary.totalOutstanding),
             icon: Icons.donut_large_rounded,
             color: AppColors.warning,
             isDark: isDark,
@@ -820,14 +820,14 @@ class _PremiumLoanCard extends StatelessWidget {
             children: [
               _DataPoint(
                   label: 'PRINCIPAL',
-                  value: AppFormatters.formatCompactCurrency(loan.amount)),
+                  value: AppFormatters.formatCurrency(loan.amount)),
               _DataPoint(
                   label: 'RATE',
                   value: '${loan.interestRate}%',
                   icon: Icons.percent_rounded),
               _DataPoint(
                   label: 'BALANCE',
-                  value: AppFormatters.formatCompactCurrency(
+                  value: AppFormatters.formatCurrency(
                       loan.outstandingBalance),
                   highlight: true),
             ],

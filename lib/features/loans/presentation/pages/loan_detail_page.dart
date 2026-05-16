@@ -11,9 +11,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
-import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../providers/loan_providers.dart';
-import '../../../home/data/providers/dashboard_providers.dart' show overdueLoansProvider;
+import '../../../home/data/providers/dashboard_providers.dart' show overdueLoansProvider, dashboardLoansProvider, activeLoansProvider;
 import '../../data/models/loan_model.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../widgets/collection_sheet.dart';
@@ -567,10 +566,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildActionButton(
-                  'Pay', Icons.add_rounded, const Color(0xFF5E5CE6), () {
-                if (nextEmi != null) {
-                  _showCollectionSheet(context, loan, nextEmi);
-                }
+                  'Collect', Icons.payments_rounded, const Color(0xFF5E5CE6), () {
+                _showCollectionSheet(context, loan, nextEmi);
               }),
               _buildActionButton('Statement', Icons.description_rounded,
                   theme.colorScheme.onSurface, () => _handlePdfExport()),
@@ -3005,7 +3002,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   // --- Handlers ---
   void _showCollectionSheet(
-      BuildContext context, LoanModel loan, EMIScheduleModel emi) {
+      BuildContext context, LoanModel loan, EMIScheduleModel? emi) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -3292,19 +3289,50 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
+              
+              // Show loading indicator
+              if (!mounted) return;
+              final messenger = ScaffoldMessenger.of(context);
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Deleting loan...')),
+              );
+              
               try {
-                final client = ref.read(supabaseClientProvider);
-                await client.from('emi_schedule').delete().eq('loan_id', widget.loanId);
-                await client.from('loans').delete().eq('id', widget.loanId);
+                final repository = ref.read(loansRepositoryProvider);
+                await repository.deleteLoan(widget.loanId);
+                
+                // Invalidate all loan-related providers to refresh UI
                 ref.invalidate(loansProvider);
+                ref.invalidate(emiScheduleProvider(widget.loanId));
+                ref.invalidate(paymentHistoryProvider(widget.loanId));
+                ref.invalidate(dashboardLoansProvider);
+                ref.invalidate(activeLoansProvider);
+                ref.invalidate(loanSummaryProvider);
+                ref.invalidate(overdueLoansProvider);
+                
+                // Force UI rebuild by reading the provider again
+                await ref.read(loansProvider.future);
+                
                 if (!mounted) return;
-                Navigator.pop(context);
+                messenger.hideCurrentSnackBar();
+                // Pop back twice to exit detail page
+                Navigator.of(context).popUntil((route) => route.isFirst);
                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Loan record deleted')));
+                  const SnackBar(
+                    content: Text('Loan deleted successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               } catch (e) {
                 if (!mounted) return;
+                messenger.hideCurrentSnackBar();
                 ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Delete failed: $e')));
+                  SnackBar(
+                    content: Text('Delete failed: $e'),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 5),
+                  ),
+                );
               }
             },
             child: const Text('DELETE', style: TextStyle(color: Colors.red)),

@@ -197,8 +197,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
 
         // Admin role trying to access staff pages → redirect to admin
+        // Exception: executiveAdmin can access /staff/collection for payment recording
         if (role == UserRole.executiveAdmin && isStaffPath) {
-          return '/';
+          final isCollectionRoute = state.matchedLocation.startsWith('/staff/collection');
+          if (!isCollectionRoute) {
+            return '/';
+          }
         }
 
         return null;
@@ -798,8 +802,9 @@ class StaffBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
+      minimum: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
@@ -995,8 +1000,9 @@ class _PremiumBottomBar extends StatelessWidget {
 
     return SafeArea(
       top: false,
+      minimum: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(

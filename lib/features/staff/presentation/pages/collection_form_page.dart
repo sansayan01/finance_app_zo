@@ -13,6 +13,7 @@ import '../../data/providers/staff_providers.dart';
 import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../widgets/receipt_generator.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 
 class CollectionFormPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -781,10 +782,40 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     setState(() => _isSubmitting = true);
     HapticFeedback.mediumImpact();
 
+    // Try to get staff profile first (for collectionAgent/manager)
+    // Fall back to current user ID (for executiveAdmin without staff profile)
+    String collectorId;
+    
     final profile = await ref.read(staffProfileProvider.future);
-    if (profile == null) {
-      setState(() => _isSubmitting = false);
-      return;
+    if (profile != null) {
+      collectorId = profile.id;
+    } else {
+      // Executive admin or other user without staff profile
+      final authState = ref.read(authStateProvider);
+      final user = authState.when(
+        data: (user) => user,
+        loading: () => null,
+        error: (_, __) => null,
+      );
+      
+      if (user == null) {
+        setState(() => _isSubmitting = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Error: User not authenticated'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+      
+      collectorId = user.id;
     }
 
     final amountCollected = double.tryParse(_amountController.text) ?? 0;
@@ -819,7 +850,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     }
 
     await ref.read(collectionNotifierProvider.notifier).recordCollection(
-      staffId: profile.id,
+      staffId: collectorId,
       loanId: widget.loanId,
       loanScheduleId: _loanScheduleId,
       memberId: _memberId,

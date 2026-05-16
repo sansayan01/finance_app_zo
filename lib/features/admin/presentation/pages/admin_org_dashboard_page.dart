@@ -241,11 +241,12 @@ class AdminOrgDashboardPage extends ConsumerWidget {
 
   Widget _buildQuickActions(BuildContext context, bool isDark) {
     final actions = [
+      _QuickAction(Icons.payments_rounded, 'Collect Payment', AppColors.cyan, () => context.push('/staff/collections')),
       _QuickAction(Icons.person_add_rounded, 'Add Staff', AppColors.primary, () => context.go('/users/new')),
       _QuickAction(Icons.person_add_rounded, 'New Member', AppColors.success, () => context.go('/members/onboarding')),
       _QuickAction(Icons.add_circle_rounded, 'New Loan', AppColors.warning, () => context.go('/loans/new')),
-      _QuickAction(Icons.savings_rounded, 'New Savings', AppColors.cyan, () => context.go('/savings/new')),
-      _QuickAction(Icons.business_rounded, 'Branches', AppColors.pink, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage()))),
+      _QuickAction(Icons.savings_rounded, 'New Savings', AppColors.pink, () => context.go('/savings/new')),
+      _QuickAction(Icons.business_rounded, 'Branches', AppColors.orange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage()))),
     ];
 
     return Column(

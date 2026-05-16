@@ -16,6 +16,7 @@ import '../../../home/data/providers/dashboard_providers.dart' show overdueLoans
 import '../../data/models/loan_model.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../widgets/collection_sheet.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class LoanDetailPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -1429,7 +1430,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: payments.length > 10 ? 10 : payments.length,
+              itemCount: payments.length > 5 ? 5 : payments.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final payment = payments[index];
@@ -1442,7 +1443,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             ),
             
             // View All button
-            if (payments.length > 10)
+            if (payments.length > 5)
               InkWell(
                 onTap: () => _showFullPaymentHistory(payments, theme),
                 child: Container(
@@ -1497,7 +1498,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
     final paymentMode = payment['payment_mode'] as String? ?? 'cash';
     final enteredAt = payment['entered_at'] != null
-        ? DateTime.parse(payment['entered_at'] as String)
+        ? DateTime.parse(payment['entered_at'] as String).toLocal()
         : DateTime.now();
     final notes = payment['notes'] as String?;
     final transactionId = payment['transaction_id'] as String?;
@@ -1713,7 +1714,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
     final paymentMode = payment['payment_mode'] as String? ?? 'cash';
     final enteredAt = payment['entered_at'] != null
-        ? DateTime.parse(payment['entered_at'] as String)
+        ? DateTime.parse(payment['entered_at'] as String).toLocal()
         : DateTime.now();
     final notes = payment['notes'] as String?;
 
@@ -3627,14 +3628,41 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
     final notes = <Map<String, dynamic>>[];
     
     for (int i = 0; i < parts.length; i++) {
-      final note = parts[i].trim();
-      if (note.isNotEmpty) {
-        notes.add({
-          'text': note,
-          'index': i,
-          'isLatest': i == parts.length - 1,
-        });
+      final part = parts[i].trim();
+      if (part.isEmpty) continue;
+      
+      if (part.contains(' |~| ')) {
+        final subparts = part.split(' |~| ');
+        if (subparts.length >= 3) {
+          final text = subparts[0].trim();
+          final author = subparts[1].trim();
+          final dateStr = subparts[2].trim();
+          DateTime? date;
+          try {
+            date = DateTime.parse(dateStr).toLocal();
+          } catch (_) {
+            date = widget.loan.updatedAt;
+          }
+          
+          notes.add({
+            'text': text,
+            'author': author,
+            'date': date,
+            'index': i,
+            'isLatest': i == parts.length - 1,
+          });
+          continue;
+        }
       }
+      
+      // Fallback for old style unstructured notes
+      notes.add({
+        'text': part,
+        'author': widget.loan.staffName ?? 'Staff',
+        'date': widget.loan.updatedAt,
+        'index': i,
+        'isLatest': i == parts.length - 1,
+      });
     }
     
     return notes.reversed.toList();
@@ -3656,9 +3684,16 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
     try {
       final repo = ref.read(loansRepositoryProvider);
       final existingNotes = widget.loan.remarks ?? '';
+      
+      final currentUser = ref.read(currentUserProvider);
+      final authorName = currentUser?.fullName ?? 'Staff';
+      final now = DateTime.now();
+      
+      final newFormattedNote = "${_notesController.text.trim()} |~| $authorName |~| ${now.toIso8601String()}";
+      
       final newNote = existingNotes.isEmpty 
-          ? _notesController.text 
-          : '$existingNotes | ${_notesController.text}';
+          ? newFormattedNote 
+          : '$existingNotes | $newFormattedNote';
       
       await repo.updateLoan(widget.loan.id, remarks: newNote);
       ref.invalidate(loanDetailProvider(widget.loan.id));
@@ -3804,11 +3839,15 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: notes.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final note = notes[index];
                     final text = note['text'] as String;
                     final isLatest = note['isLatest'] as bool;
+                    final author = note['author'] as String;
+                    final date = note['date'] as DateTime;
+                    
+                    final dateFormatted = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
                     
                     return Container(
                       padding: const EdgeInsets.all(14),
@@ -3821,56 +3860,70 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                             ? Border.all(color: const Color(0xFF5E5CE6).withValues(alpha: 0.2))
                             : null,
                       ),
-                      child: Row(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isLatest 
-                                  ? const Color(0xFF5E5CE6).withValues(alpha: 0.15)
-                                  : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              isLatest ? Icons.fiber_new_rounded : Icons.note_rounded,
-                              size: 14,
-                              color: isLatest ? const Color(0xFF5E5CE6) : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isLatest ? const Color(0xFF5E5CE6) : theme.dividerColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    isLatest ? 'LATEST UPDATE' : 'PAST NOTE',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1,
+                                      color: isLatest ? const Color(0xFF5E5CE6) : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                dateFormatted,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            text,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.5,
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(text,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                        height: 1.4)),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    if (isLatest)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text('Latest',
-                                            style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w700,
-                                                color: const Color(0xFF5E5CE6))),
-                                      ),
-                                    const SizedBox(width: 6),
-                                    Text('${widget.loan.updatedAt.day.toString().padLeft(2, '0')}/${widget.loan.updatedAt.month.toString().padLeft(2, '0')}/${widget.loan.updatedAt.year}',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                                            fontSize: 10)),
-                                  ],
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 10,
+                                backgroundColor: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
+                                child: Text(
+                                  author.isNotEmpty ? author[0].toUpperCase() : 'S',
+                                  style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF5E5CE6)),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                author,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

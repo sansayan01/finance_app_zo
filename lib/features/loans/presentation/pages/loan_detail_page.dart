@@ -3271,17 +3271,46 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       messenger.hideCurrentSnackBar();
 
       if (hasPayments || hasPaidEmis) {
-        messenger.showSnackBar(SnackBar(
-          content: Text('Cannot delete loan with ${payments.length} payment(s) recorded. Close the loan instead.'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ));
-        return;
+        final confirmCascade = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+                SizedBox(width: 8),
+                Text('Payments Recorded'),
+              ],
+            ),
+            content: Text(
+              'This loan has ${payments.length} payment(s) and repayment schedule records. '
+              'Deleting the loan will permanently delete all associated payment history.\n\n'
+              'Are you sure you want to delete the entire loan and all its data?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('CANCEL'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('DELETE ALL DATA'),
+              ),
+            ],
+          ),
+        );
+        
+        if (confirmCascade != true) return;
       }
     } catch (e) {
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
     }
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -3320,26 +3349,28 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 // Force UI rebuild by reading the provider again
                 await ref.read(loansProvider.future);
                 
-                if (!mounted) return;
-                messenger.hideCurrentSnackBar();
-                // Pop back twice to exit detail page
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Loan deleted successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                if (mounted) {
+                  messenger.hideCurrentSnackBar();
+                  // Pop back twice to exit detail page
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Loan deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
               } catch (e) {
-                if (!mounted) return;
-                messenger.hideCurrentSnackBar();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Delete failed: $e'),
-                    backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 5),
-                  ),
-                );
+                if (mounted) {
+                  messenger.hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Delete failed: $e'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 5),
+                    ),
+                  );
+                }
               }
             },
             child: const Text('DELETE', style: TextStyle(color: Colors.red)),

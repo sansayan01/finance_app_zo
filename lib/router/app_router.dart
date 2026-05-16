@@ -34,6 +34,7 @@ import '../features/settings/presentation/pages/app_update_page.dart';
 import '../core/widgets/hud_navigation.dart';
 import '../features/loans/presentation/pages/loan_detail_page.dart';
 import '../features/loans/presentation/pages/new_loan_page.dart';
+import '../features/loans/presentation/pages/edit_loan_page.dart';
 import '../features/savings/presentation/pages/new_recurring_saving_page.dart';
 import '../features/savings/presentation/pages/saving_detail_page.dart';
 import '../features/users/presentation/pages/users_page.dart';
@@ -378,6 +379,15 @@ final routerProvider = Provider<GoRouter>((ref) {
               final id = state.pathParameters['id']!;
               return LoanDetailPage(loanId: id);
             },
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return EditLoanPage(loanId: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/savings',

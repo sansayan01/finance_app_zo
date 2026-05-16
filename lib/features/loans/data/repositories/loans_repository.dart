@@ -206,16 +206,53 @@ class LoansRepository {
   }
 
   Future<void> updateLoan(String id, {
-    String? remarks,
-    String? purpose,
+    String? borrowerId,
+    double? principal,
     double? interestRate,
     int? tenureMonths,
+    String? frequency,
+    String? collectionType,
+    String? interestLogic,
+    DateTime? firstInstallmentDate,
+    double? estimatedInstallment,
+    double? totalExposure,
+    String? interestMode,
+    String? interestRateBasis,
+    double? interestAmount,
+    String? interestBasis,
+    int? tenureValue,
+    String? tenureUnit,
+    String? remarks,
+    String? purpose,
   }) async {
     final data = <String, dynamic>{};
-    if (remarks != null) data['remarks'] = remarks;
-    if (purpose != null) data['purpose'] = purpose;
+    if (borrowerId != null) data['customer_id'] = borrowerId;
+    if (principal != null) {
+      data['amount'] = principal;
+      data['principal'] = principal;
+    }
     if (interestRate != null) data['interest_rate'] = interestRate;
     if (tenureMonths != null) data['tenure_months'] = tenureMonths;
+    if (frequency != null) data['frequency'] = frequency;
+    if (collectionType != null) data['collection_type'] = collectionType;
+    if (interestLogic != null) data['interest_type'] = interestLogic;
+    if (firstInstallmentDate != null) {
+      data['first_installment_date'] = firstInstallmentDate.toIso8601String();
+      data['first_emi_date'] = firstInstallmentDate.toIso8601String();
+    }
+    if (estimatedInstallment != null) data['emi_amount'] = estimatedInstallment;
+    if (totalExposure != null) {
+      data['outstanding_balance'] = totalExposure;
+      data['total_repayable'] = totalExposure;
+    }
+    if (interestMode != null) data['interest_mode'] = interestMode;
+    if (interestRateBasis != null) data['interest_rate_basis'] = interestRateBasis;
+    if (interestAmount != null) data['interest_amount'] = interestAmount;
+    if (interestBasis != null) data['interest_basis'] = interestBasis;
+    if (tenureValue != null) data['tenure_value'] = tenureValue;
+    if (tenureUnit != null) data['tenure_unit'] = tenureUnit;
+    if (remarks != null) data['remarks'] = remarks;
+    if (purpose != null) data['purpose'] = purpose;
     data['updated_at'] = DateTime.now().toIso8601String();
     
     await _client.from('loans').update(data).eq('id', id);

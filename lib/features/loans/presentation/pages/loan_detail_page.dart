@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
@@ -49,15 +50,15 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0A0A0C) : const Color(0xFFF2F2F7),
-      extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(theme),
-      body: loanAsync.when(
-        data: (loan) {
-          if (loan == null) return const Center(child: Text('Loan Not Found'));
-          return Stack(
+    return loanAsync.when(
+      data: (loan) {
+        if (loan == null) return const Center(child: Text('Loan Not Found'));
+        return Scaffold(
+          backgroundColor:
+              isDark ? const Color(0xFF0A0A0C) : const Color(0xFFF2F2F7),
+          extendBodyBehindAppBar: true,
+          appBar: _buildAppBar(theme, loan),
+          body: Stack(
             children: [
               _buildAmbientBackground(loan),
               RefreshIndicator(
@@ -166,7 +167,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                             const SizedBox(height: 40),
                             _buildSectionHeader('Activity Timeline', theme),
                             const SizedBox(height: 16),
-                            _buildActivityTimeline(loan, scheduleAsync, theme),
+                             _buildActivityTimeline(loan, scheduleAsync, theme),
                             const SizedBox(height: 100),
                           ],
                         ),
@@ -177,15 +178,15 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ),
             ),
           ],
-        );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-      ),
+        ),
+      );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(ThemeData theme) {
+  PreferredSizeWidget _buildAppBar(ThemeData theme, LoanModel? loan) {
     final blurAlpha = (_scrollOffset / 100).clamp(0.0, 1.0);
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -215,6 +216,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   if (val == 'default') {
                     _handleStatusChange(LoanStatus.defaultStatus);
                   }
+                  if (val == 'reactivate') {
+                    _handleReactivate();
+                  }
                   if (val == 'restructure') {
                     _handleLoanRestructure();
                   }
@@ -235,17 +239,30 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
-                    value: 'default',
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning_amber_rounded,
-                            size: 18, color: Colors.orange),
-                        SizedBox(width: 12),
-                        Text('Mark Defaulted'),
-                      ],
+                  if (loan != null && loan.status == LoanStatus.defaultStatus)
+                    const PopupMenuItem(
+                      value: 'reactivate',
+                      child: Row(
+                        children: [
+                          Icon(Icons.play_circle_outline_rounded,
+                              size: 18, color: Colors.green),
+                          SizedBox(width: 12),
+                          Text('Reactivate Loan'),
+                        ],
+                      ),
+                    )
+                  else
+                    const PopupMenuItem(
+                      value: 'default',
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded,
+                              size: 18, color: Colors.orange),
+                          SizedBox(width: 12),
+                          Text('Mark Defaulted'),
+                        ],
+                      ),
                     ),
-                  ),
                   const PopupMenuItem(
                     value: 'restructure',
                     child: Row(
@@ -2070,104 +2087,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   Future<void> _handleEdit() async {
-    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
-    if (loan == null) return;
-
     HapticFeedback.mediumImpact();
-    final remarksController = TextEditingController(text: loan.remarks ?? '');
-    final purposeController = TextEditingController(text: loan.purpose ?? '');
-    final interestRateController = TextEditingController(text: loan.interestRate.toString());
-    final tenureController = TextEditingController(text: loan.tenureMonths.toString());
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit Loan Details'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: purposeController,
-                decoration: InputDecoration(
-                  labelText: 'Purpose',
-                  hintText: 'Loan purpose...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: remarksController,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: 'Remarks/Notes',
-                  hintText: 'Internal notes...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: interestRateController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: 'Interest Rate (%)',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: tenureController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Tenure (Months)',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              final repo = ref.read(loansRepositoryProvider);
-              try {
-                final newRate = double.tryParse(interestRateController.text);
-                final newTenure = int.tryParse(tenureController.text);
-                
-                await repo.updateLoan(
-                  loan.id,
-                  remarks: remarksController.text,
-                  purpose: purposeController.text,
-                  interestRate: newRate,
-                  tenureMonths: newTenure,
-                );
-                ref.invalidate(loanDetailProvider(widget.loanId));
-                if (ctx.mounted) Navigator.pop(ctx);
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Loan updated successfully')));
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Update failed: $e')));
-              }
-            },
-            child: const Text('SAVE'),
-          ),
-        ],
-      ),
-    );
+    context.push('/loans/${widget.loanId}/edit');
   }
 
   Future<void> _handleStatusChange(LoanStatus newStatus) async {
@@ -2186,6 +2107,70 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       if (!mounted) return;
       messenger
           .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+    }
+  }
+
+  Future<void> _handleReactivate() async {
+    HapticFeedback.mediumImpact();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.play_circle_outline_rounded, color: Colors.green),
+            SizedBox(width: 12),
+            Text('Reactivate Loan'),
+          ],
+        ),
+        content: const Text(
+          'This will mark the loan as active again and resume normal collection tracking. All existing EMIs will be restored to their original status. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.check_rounded, size: 18),
+            label: const Text('Reactivate'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref.read(loansRepositoryProvider).updateLoanStatus(
+        widget.loanId,
+        LoanStatus.active.name,
+      );
+      ref.invalidate(loanDetailProvider(widget.loanId));
+      ref.invalidate(loansProvider);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            SizedBox(width: 12),
+            Text('Loan Reactivated Successfully'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      messenger
+          .showSnackBar(SnackBar(content: Text('Failed to reactivate: $e')));
     }
   }
 

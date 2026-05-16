@@ -27,13 +27,13 @@ class LoanDetailPage extends ConsumerStatefulWidget {
 
 class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0;
+  final ValueNotifier<double> _scrollOffset = ValueNotifier<double>(0);
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      setState(() => _scrollOffset = _scrollController.offset);
+      _scrollOffset.value = _scrollController.offset;
     });
   }
 
@@ -81,13 +81,15 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _buildHugeBalance(loan, theme),
+                        RepaintBoundary(child: _buildHugeBalance(loan, theme)),
                         const SizedBox(height: 16),
                         _buildNextDueAlert(scheduleAsync, theme),
                         const SizedBox(height: 24),
-                        _buildDigitalPass(loan, theme),
+                        RepaintBoundary(child: _buildDigitalPass(loan, theme)),
                         const SizedBox(height: 32),
-                        _buildPrimaryActionRow(loan, scheduleAsync, theme),
+                        RepaintBoundary(
+                            child: _buildPrimaryActionRow(
+                                loan, scheduleAsync, theme)),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -126,12 +128,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                             const SizedBox(height: 32),
                             _buildSectionHeader('Upcoming Payments', theme),
                             const SizedBox(height: 16),
-                            _buildHorizontalTimeline(
-                                loan, scheduleAsync, theme),
+                                                        RepaintBoundary(child: _buildHorizontalTimeline(loan, scheduleAsync, theme)),
                             const SizedBox(height: 40),
                             _buildSectionHeader('Loan Intelligence', theme),
                             const SizedBox(height: 16),
-                            _buildLoanIntelligence(loan, theme),
+                                                        RepaintBoundary(child: _buildLoanIntelligence(loan, theme)),
                             const SizedBox(height: 40),
                             _buildSectionHeader('Payment History', theme),
                             const SizedBox(height: 16),
@@ -143,7 +144,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                             const SizedBox(height: 40),
                             _buildSectionHeader('Financial Health', theme),
                             const SizedBox(height: 16),
-                            _buildHealthMetrics(loan, scheduleAsync, theme),
+                                                        RepaintBoundary(child: _buildHealthMetrics(loan, scheduleAsync, theme)),
                             const SizedBox(height: 40),
                             _buildSectionHeader('NPA Classification', theme),
                             const SizedBox(height: 16),
@@ -187,10 +188,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   PreferredSizeWidget _buildAppBar(ThemeData theme, LoanModel? loan) {
-    final blurAlpha = (_scrollOffset / 100).clamp(0.0, 1.0);
+
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight),
-      child: ClipRRect(
+      child: ValueListenableBuilder<double>(
+        valueListenable: _scrollOffset,
+        builder: (context, offset, _) {
+          final blurAlpha = (offset / 100).clamp(0.0, 1.0);
+          return ClipRRect(
         child: BackdropFilter(
           filter:
               ImageFilter.blur(sigmaX: 15 * blurAlpha, sigmaY: 15 * blurAlpha),
@@ -304,8 +309,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             ],
           ),
         ),
-      ),
-    );
+            );
+          },
+        ),
+      );
+
   }
 
   Widget _buildAmbientBackground(LoanModel loan) {
@@ -1426,19 +1434,18 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             const SizedBox(height: 12),
             
             // Payment list
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: payments.length > 10 ? 10 : payments.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final payment = payments[index];
-                return InkWell(
-                  onTap: () => _showPaymentDetailSheet(payment, theme),
-                  borderRadius: BorderRadius.circular(16),
-                  child: _buildPaymentTile(payment, theme),
-                );
-              },
+                        Column(
+              children: [
+                for (int i = 0; i < (payments.length > 10 ? 10 : payments.length); i++)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: i == (payments.length > 10 ? 9 : payments.length - 1) ? 0 : 8),
+                    child: InkWell(
+                      onTap: () => _showPaymentDetailSheet(payments[i], theme),
+                      borderRadius: BorderRadius.circular(16),
+                      child: _buildPaymentTile(payments[i], theme),
+                    ),
+                  ),
+              ],
             ),
             
             // View All button
@@ -1900,18 +1907,17 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   const Divider(height: 1),
                   
                   // Rows - limited to 20 with "View All" option
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: schedule.length > 20 ? 20 : schedule.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final emi = schedule[index];
-                      return InkWell(
-                        onTap: () => _showEMIDetailSheet(emi, loan, theme),
-                        child: _buildEMIRow(emi, theme),
-                      );
-                    },
+                                    Column(
+                    children: [
+                      for (int i = 0; i < (schedule.length > 20 ? 20 : schedule.length); i++) ...[
+                        InkWell(
+                          onTap: () => _showEMIDetailSheet(schedule[i], loan, theme),
+                          child: _buildEMIRow(schedule[i], theme),
+                        ),
+                        if (i < (schedule.length > 20 ? 20 : schedule.length) - 1)
+                          const Divider(height: 1),
+                      ],
+                    ],
                   ),
                   
                   // View All button if more than 20
@@ -2707,53 +2713,54 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       fontWeight: FontWeight.w700,
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
               const SizedBox(height: 12),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: overdueEmis.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final emi = overdueEmis[index];
-                  final daysOverdue = DateTime.now().difference(emi.dueDate).inDays;
-                  return Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.warning_rounded, color: Colors.red, size: 20),
+                            Column(
+                children: [
+                  for (int i = 0; i < overdueEmis.length; i++) ...[
+                    Builder(builder: (context) {
+                      final emi = overdueEmis[i];
+                      final daysOverdue = DateTime.now().difference(emi.dueDate).inDays;
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('EMI #${emi.emiNumber}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w700)),
-                              Text('$daysOverdue days overdue',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                      color: Colors.red, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.warning_rounded, color: Colors.red, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('EMI #${emi.emiNumber}',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w700)),
+                                  Text('$daysOverdue days overdue',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                          color: Colors.red, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                            Text(AppFormatters.formatCurrency(emi.penaltyAmount),
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.red)),
+                          ],
                         ),
-                        Text(AppFormatters.formatCurrency(emi.penaltyAmount),
-                            style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: Colors.red)),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    }),
+                    if (i < overdueEmis.length - 1) const SizedBox(height: 8),
+                  ],
+                ],
               ),
             ],
           ],
@@ -3800,82 +3807,96 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                           color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                 )
               else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: notes.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final note = notes[index];
-                    final text = note['text'] as String;
-                    final isLatest = note['isLatest'] as bool;
-                    
-                    return Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isLatest 
-                            ? const Color(0xFF5E5CE6).withValues(alpha: 0.08)
-                            : theme.colorScheme.surface.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(14),
-                        border: isLatest 
-                            ? Border.all(color: const Color(0xFF5E5CE6).withValues(alpha: 0.2))
-                            : null,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isLatest 
-                                  ? const Color(0xFF5E5CE6).withValues(alpha: 0.15)
-                                  : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              isLatest ? Icons.fiber_new_rounded : Icons.note_rounded,
-                              size: 14,
-                              color: isLatest ? const Color(0xFF5E5CE6) : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                            ),
+                Column(
+                  children: [
+                    for (int i = 0; i < notes.length; i++) ...[
+                      Builder(builder: (context) {
+                        final note = notes[i];
+                        final text = note['text'] as String;
+                        final isLatest = note['isLatest'] as bool;
+                        
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isLatest 
+                                ? const Color(0xFF5E5CE6).withValues(alpha: 0.08)
+                                : theme.colorScheme.surface.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(14),
+                            border: isLatest 
+                                ? Border.all(color: const Color(0xFF5E5CE6).withValues(alpha: 0.2))
+                                : null,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(text,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                        height: 1.4)),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    if (isLatest)
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        width: 8,
+                                        height: 8,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(6),
+                                          shape: BoxShape.circle,
+                                          color: isLatest ? const Color(0xFF5E5CE6) : theme.dividerColor,
                                         ),
-                                        child: Text('Latest',
-                                            style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w700,
-                                                color: const Color(0xFF5E5CE6))),
                                       ),
-                                    const SizedBox(width: 6),
-                                    Text('${widget.loan.updatedAt.day.toString().padLeft(2, '0')}/${widget.loan.updatedAt.month.toString().padLeft(2, '0')}/${widget.loan.updatedAt.year}',
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        isLatest ? 'LATEST UPDATE' : 'PAST NOTE',
                                         style: theme.textTheme.labelSmall?.copyWith(
-                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                                            fontSize: 10)),
-                                  ],
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1,
+                                          color: isLatest ? const Color(0xFF5E5CE6) : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    note['date'] as String,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                text,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  height: 1.5,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 10,
+                                    backgroundColor: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
+                                    child: Text(
+                                      (note['author'] as String)[0],
+                                      style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF5E5CE6)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    note['author'] as String,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
-                  },
+                        );
+                      }),
+                      if (i < notes.length - 1) const SizedBox(height: 10),
+                    ],
+                  ],
                 ),
 
               // Add note section
@@ -4174,15 +4195,13 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
             ),
             child: Column(
               children: [
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayed.length,
-                  separatorBuilder: (_, __) => _buildTimelineConnector(theme),
-                  itemBuilder: (context, index) {
-                    final activity = displayed[index];
-                    return _buildTimelineItem(activity, theme);
-                  },
+                                Column(
+                  children: [
+                    for (int i = 0; i < displayed.length; i++) ...[
+                      _buildTimelineItem(displayed[i], theme),
+                      if (i < displayed.length - 1) _buildTimelineConnector(theme),
+                    ],
+                  ],
                 ),
                 
                 // Load More button

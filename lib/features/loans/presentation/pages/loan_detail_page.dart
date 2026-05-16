@@ -967,22 +967,23 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   Widget _buildLoanIntelligence(LoanModel loan, ThemeData theme) {
-    // Calculate insights
+    // Calculate insights using proper tenure logic
     final totalAmount = loan.totalRepayable;
     final principal = loan.amount;
     final totalInterest = loan.totalInterest;
     final interestRatio = totalAmount > 0 ? (totalInterest / totalAmount) * 100 : 0;
     final principalRatio = totalAmount > 0 ? (principal / totalAmount) * 100 : 0;
     
-    // Cost per day (assuming tenure in days from formattedTenure logic)
-    int tenureDays = loan.tenureMonths * 30; // Approximate
+    // Calculate tenure in days properly based on tenureValue and tenureUnit
+    int tenureDays = _calculateTenureInDays(loan);
     final costPerDay = tenureDays > 0 ? totalInterest / tenureDays : 0;
-    final costPerMonth = loan.tenureMonths > 0 ? totalInterest / loan.tenureMonths : 0;
+    
+    // Calculate tenure in months for cost/month
+    double tenureMonths = _calculateTenureInMonths(loan);
+    final costPerMonth = tenureMonths > 0 ? totalInterest / tenureMonths : 0;
     
     // Effective interest rate (total interest / principal * 100)
     final effectiveRate = principal > 0 ? (totalInterest / principal) * 100 : 0;
-    
-    // Prepayment savings estimate (if paid off today, save remaining interest)
     
     return Container(
       padding: const EdgeInsets.all(24),
@@ -1007,7 +1008,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             child: Row(
               children: [
                 Expanded(
-                  flex: principalRatio.round(),
+                  flex: principalRatio.round().clamp(1, 99),
                   child: Container(
                     height: 14,
                     decoration: BoxDecoration(
@@ -1017,7 +1018,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   ),
                 ),
                 Expanded(
-                  flex: interestRatio.round(),
+                  flex: interestRatio.round().clamp(1, 99),
                   child: Container(
                     height: 14,
                     decoration: BoxDecoration(
@@ -1065,16 +1066,16 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ),
             ],
           ),
-          
+           
           const SizedBox(height: 24),
           const Divider(height: 1),
           const SizedBox(height: 20),
           
-          // Key Metrics Grid
+          // Key Metrics Grid - 2x2 layout matching screenshot
           Row(
             children: [
               Expanded(
-                child: _buildInsightCard(
+                child: _buildStatCard(
                   icon: Icons.percent_rounded,
                   label: 'Effective Rate',
                   value: '${effectiveRate.toStringAsFixed(1)}%',
@@ -1085,7 +1086,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildInsightCard(
+                child: _buildStatCard(
                   icon: Icons.calendar_today_rounded,
                   label: 'Cost/Month',
                   value: '₹${costPerMonth.toStringAsFixed(0)}',
@@ -1102,7 +1103,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           Row(
             children: [
               Expanded(
-                child: _buildInsightCard(
+                child: _buildStatCard(
                   icon: Icons.today_rounded,
                   label: 'Cost/Day',
                   value: '₹${costPerDay.toStringAsFixed(0)}',
@@ -1113,7 +1114,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildInsightCard(
+                child: _buildStatCard(
                   icon: Icons.savings_rounded,
                   label: 'Total Interest',
                   value: AppFormatters.formatCurrency(totalInterest),
@@ -1146,7 +1147,57 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildInsightCard({
+  int _calculateTenureInDays(LoanModel loan) {
+    if (loan.tenureValue != null && loan.tenureUnit != null) {
+      final unit = loan.tenureUnit!.toLowerCase();
+      final value = loan.tenureValue!;
+      switch (unit) {
+        case 'day':
+        case 'days':
+          return value;
+        case 'week':
+        case 'weeks':
+          return value * 7;
+        case 'month':
+        case 'months':
+          return value * 30;
+        case 'year':
+        case 'years':
+          return value * 365;
+        default:
+          return value * 30;
+      }
+    }
+    // Fallback to tenureMonths
+    return loan.tenureMonths * 30;
+  }
+
+  double _calculateTenureInMonths(LoanModel loan) {
+    if (loan.tenureValue != null && loan.tenureUnit != null) {
+      final unit = loan.tenureUnit!.toLowerCase();
+      final value = loan.tenureValue!;
+      switch (unit) {
+        case 'day':
+        case 'days':
+          return value / 30;
+        case 'week':
+        case 'weeks':
+          return value / 4.33;
+        case 'month':
+        case 'months':
+          return value.toDouble();
+        case 'year':
+        case 'years':
+          return value * 12;
+        default:
+          return value.toDouble();
+      }
+    }
+    // Fallback to tenureMonths
+    return loan.tenureMonths.toDouble();
+  }
+
+  Widget _buildStatCard({
     required IconData icon,
     required String label,
     required String value,
@@ -1155,31 +1206,42 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     required ThemeData theme,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(16),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: color),
+          Icon(icon, size: 20, color: color),
           const SizedBox(height: 10),
-          Text(label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: color,
+              fontSize: 20,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value,
-              style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: color)),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(subtitle,
-              style: theme.textTheme.labelSmall?.copyWith(
-                  fontSize: 10,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 10,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+          ),
         ],
       ),
     );

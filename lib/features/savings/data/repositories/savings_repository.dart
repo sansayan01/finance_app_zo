@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/enums.dart';
 import '../models/savings_model.dart';
 
 class SavingsRepository {
@@ -143,7 +144,7 @@ class SavingsRepository {
       'member_name': saving.memberName,
       'savings_id': savingId,
       'amount': amount,
-      'type': 'savingsDeposit',
+      'type': TransactionType.savingsDeposit.name,
       'org_id': _orgId,
       'description': 'Deposit into Savings Vault',
       'created_at': DateTime.now().toIso8601String(),

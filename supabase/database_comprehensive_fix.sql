@@ -402,7 +402,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     staff_id UUID REFERENCES public.staff_profiles(id) ON DELETE SET NULL,
     type TEXT CHECK (type IN ('loanDisbursement', 'emiPayment', 'savingsDeposit', 'savingsWithdrawal', 'penalty', 'staffCashDeposit', 'other', 'collection', 'deposit', 'withdrawal')),
     amount DECIMAL(12, 2),
-    payment_mode TEXT CHECK (payment_mode IN ('cash', 'upi', 'bank_transfer', 'cheque', 'card')),
+    payment_mode TEXT CHECK (payment_mode IN ('cash', 'upi', 'bankTransfer', 'bank_transfer', 'cheque', 'card')),
     reference_number TEXT,
     description TEXT,
     gps_lat DECIMAL(10, 8),
@@ -427,7 +427,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_date ON public.transactions(transact
 CREATE TABLE IF NOT EXISTS public.wallet_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     staff_id UUID REFERENCES public.staff_profiles(id) ON DELETE CASCADE,
-    type TEXT CHECK (type IN ('collection', 'deposit', 'adjustment', 'refund')),
+    type TEXT CHECK (type IN ('collection', 'deposit', 'withdrawal', 'adjustment', 'refund')),
     amount DECIMAL(12, 2),
     direction TEXT CHECK (direction IN ('in', 'out')),
     payment_mode TEXT,

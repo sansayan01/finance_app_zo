@@ -540,7 +540,7 @@ class _AnalyticsCard extends StatelessWidget {
     required this.color,
     this.subtitle,
     required this.isDark,
-  });
+  }); 
 
   @override
   Widget build(BuildContext context) {

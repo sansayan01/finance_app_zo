@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
 
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -586,7 +587,9 @@ class StaffHomePage extends ConsumerWidget {
           builder: (context, setState) {
             return Container(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 
+                        MediaQuery.of(context).padding.bottom + 
+                        AppSpacing.xxl + 20,
                 left: 20,
                 right: 20,
                 top: 24,
@@ -779,7 +782,7 @@ class StaffHomePage extends ConsumerWidget {
                                 // Offline fallback
                                 final queue = OfflineQueueService();
                                 await queue.enqueueTransaction({
-                                  'type': 'savingsDeposit',
+                                  'type': TransactionType.savingsDeposit.name,
                                   'savings_id': item.savingsId,
                                   'amount': amount,
                                   'payment_mode': selectedPaymentMode,
@@ -948,7 +951,12 @@ class StaffHomePage extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xxl + 24,
+          left: 24,
+          right: 24,
+          top: 24,
+        ),
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1086,7 +1094,12 @@ class StaffHomePage extends ConsumerWidget {
       context: context,
       builder: (ctx) {
         return Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xxl + 24,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
           decoration: BoxDecoration(
             color: theme.scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),

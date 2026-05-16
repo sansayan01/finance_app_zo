@@ -817,7 +817,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             return SingleChildScrollView(
               controller: scrollController,
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).padding.bottom + 90),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1679,7 +1679,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 Expanded(
                   child: ListView.separated(
                     controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: EdgeInsets.fromLTRB(24, 8, 24, 8 + MediaQuery.of(context).padding.bottom + 90),
                     itemCount: payments.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {

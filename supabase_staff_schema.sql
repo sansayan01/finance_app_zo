@@ -314,7 +314,7 @@ CREATE TABLE IF NOT EXISTS public.wallet_transactions (
     staff_id UUID REFERENCES public.staff_profiles(id) ON DELETE SET NULL NOT NULL,
     
     -- Transaction details
-    type TEXT NOT NULL CHECK (type IN ('collection', 'deposit', 'withdrawal', 'adjustment')),
+    type TEXT NOT NULL CHECK (type IN ('collection', 'deposit', 'withdrawal', 'adjustment', 'refund')),
     amount DECIMAL(12,2) NOT NULL,
     direction TEXT NOT NULL CHECK (direction IN ('in', 'out')),
     payment_mode TEXT CHECK (payment_mode IN ('cash', 'upi', 'bank', 'adjustment')),

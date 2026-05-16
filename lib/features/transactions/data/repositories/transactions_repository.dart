@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/enums.dart';
 import '../models/transaction_model.dart';
 
 class TransactionsRepository {
@@ -69,21 +70,21 @@ class TransactionsRepository {
   Future<void> createTransaction({
     required String memberId,
     required String memberName,
-    required String type,
+    required TransactionType type,
     required double amount,
     String? loanId,
     String? savingsId,
-    String? paymentMode,
+    PaymentMode? paymentMode,
     String? description,
   }) async {
     await _client.from('transactions').insert({
       'member_id': memberId,
       'member_name': memberName,
-      'type': type,
+      'type': type.name,
       'amount': amount,
       'loan_id': loanId,
       'savings_id': savingsId,
-      'payment_mode': paymentMode,
+      'payment_mode': paymentMode?.name,
       'description': description,
       'org_id': _orgId,
       'created_at': DateTime.now().toIso8601String(),

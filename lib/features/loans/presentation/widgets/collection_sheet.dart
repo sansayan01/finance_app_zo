@@ -130,7 +130,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
     return Container(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 
+                MediaQuery.of(context).padding.bottom + 
+                AppSpacing.xxl + 20, // Extra buffer for custom bottom bars
         left: AppSpacing.lg,
         right: AppSpacing.lg,
         top: AppSpacing.xl,

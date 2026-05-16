@@ -113,7 +113,7 @@ class OfflineSyncEngine {
     final table = item['table'] as String;
     final data = Map<String, dynamic>.from(item['data'] as Map);
 
-    switch (operation) {
+    switch (operation.toLowerCase()) {
       case 'insert':
         await _client.from(table).insert(data);
         break;

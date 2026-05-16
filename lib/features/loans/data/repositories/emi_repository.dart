@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/enums.dart';
 import '../models/emi_schedule_model.dart';
 
 class EMIRepository {
@@ -43,7 +44,7 @@ class EMIRepository {
       // 2. Create Transaction Record (using base schema columns)
       await _client.from('transactions').insert({
         'loan_id': loanId,
-        'type': 'emiCollection',
+        'type': TransactionType.emiPayment.name,
         'amount': amount,
         'description': 'EMI payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
@@ -91,7 +92,7 @@ class EMIRepository {
       // 1. Create Transaction Record (using base schema columns)
       await _client.from('transactions').insert({
         'loan_id': loanId,
-        'type': 'emiCollection',
+        'type': TransactionType.emiPayment.name,
         'amount': amount,
         'description': 'Manual payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
@@ -199,7 +200,7 @@ class EMIRepository {
           .from('transactions')
           .select()
           .eq('loan_id', loanId)
-          .eq('type', 'emi_payment')
+          .eq('type', TransactionType.emiPayment.name)
           .order('entered_at', ascending: false);
 
       return (response as List).map((json) => json as Map<String, dynamic>).toList();

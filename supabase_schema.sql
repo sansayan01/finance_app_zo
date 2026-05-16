@@ -53,7 +53,18 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     member_id UUID REFERENCES public.members(id) ON DELETE SET NULL,
     member_name TEXT NOT NULL,
     amount DECIMAL(12,2) NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('emiCollection', 'loanDisbursement', 'savingsDeposit', 'savingsWithdrawal', 'penalty')),
+    type TEXT NOT NULL CHECK (type IN (
+        'loanDisbursement',
+        'emiPayment',
+        'savingsDeposit',
+        'savingsWithdrawal',
+        'penalty',
+        'staffCashDeposit',
+        'other',
+        'collection',
+        'deposit',
+        'withdrawal'
+    )),
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

@@ -13,6 +13,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../providers/loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show overdueLoansProvider;
 import '../../data/models/loan_model.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../widgets/collection_sheet.dart';
@@ -139,7 +140,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                             const SizedBox(height: 40),
                             _buildSectionHeader('EMI Breakdown', theme),
                             const SizedBox(height: 16),
-                            _buildEMIBreakdownTable(scheduleAsync, theme),
+                            _buildEMIBreakdownTable(scheduleAsync, theme, loan),
                             const SizedBox(height: 40),
                             _buildSectionHeader('Financial Health', theme),
                             const SizedBox(height: 16),
@@ -628,69 +629,361 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     return scheduleAsync.when(
       data: (schedule) {
         if (schedule.isEmpty) return const Text('No schedule found.');
-        return SizedBox(
-          height: 160,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: schedule.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              final emi = schedule[index];
-              return _buildTimelineCard(emi, theme);
-            },
-          ),
+        
+
+        // Find current EMI (next upcoming or first overdue)
+        int currentEmiIndex = -1;
+        for (int i = 0; i < schedule.length; i++) {
+          if (schedule[i].status == EMIStatus.upcoming || schedule[i].status == EMIStatus.overdue) {
+            currentEmiIndex = i;
+            break;
+          }
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Filter tabs
+            _buildTimelineFilterTabs(schedule, theme, (filtered) {
+              // Rebuild with filtered schedule
+            }),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 170,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: schedule.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final emi = schedule[index];
+                  final isCurrent = index == currentEmiIndex;
+                  return _buildTimelineCard(emi, theme, isCurrent: isCurrent, onTap: () {
+                    _showEMIDetailSheet(emi, loan, theme);
+                  });
+                },
+              ),
+            ),
+          ],
         );
       },
-      loading: () => const ShimmerCard(height: 160),
+      loading: () => const ShimmerCard(height: 170),
       error: (_, __) => const Text('Error loading schedule'),
     );
   }
 
-  Widget _buildTimelineCard(EMIScheduleModel emi, ThemeData theme) {
+  Widget _buildTimelineFilterTabs(List<EMIScheduleModel> schedule, ThemeData theme, Function(List<EMIScheduleModel>) onFilter) {
+    final allCount = schedule.length;
+    final overdueCount = schedule.where((e) => e.status == EMIStatus.overdue || e.status == EMIStatus.defaulted).length;
+    final upcomingCount = schedule.where((e) => e.status == EMIStatus.upcoming).length;
+    final paidCount = schedule.where((e) => e.status == EMIStatus.paid).length;
+    
+    return Row(
+      children: [
+        _buildFilterChip('All ($allCount)', true, theme),
+        const SizedBox(width: 8),
+        _buildFilterChip('Overdue ($overdueCount)', false, theme, color: Colors.red),
+        const SizedBox(width: 8),
+        _buildFilterChip('Upcoming ($upcomingCount)', false, theme, color: theme.colorScheme.primary),
+        const SizedBox(width: 8),
+        _buildFilterChip('Paid ($paidCount)', false, theme, color: Colors.green),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip(String label, bool isSelected, ThemeData theme, {Color? color}) {
+    final chipColor = color ?? theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? chipColor.withValues(alpha: 0.15) : chipColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: isSelected ? chipColor : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+    );
+  }
+
+  Widget _buildTimelineCard(EMIScheduleModel emi, ThemeData theme, {bool isCurrent = false, VoidCallback? onTap}) {
     final isPaid = emi.status == EMIStatus.paid;
-    final isOverdue = emi.status == EMIStatus.overdue;
+    final isOverdue = emi.status == EMIStatus.overdue || emi.status == EMIStatus.defaulted;
     final color = isPaid
         ? Colors.green
         : (isOverdue ? Colors.red : theme.colorScheme.primary);
 
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8)),
-            child: Text(emi.status.name.toUpperCase(),
-                style: TextStyle(
-                    fontSize: 10, fontWeight: FontWeight.w900, color: color)),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 150,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isCurrent ? color : color.withValues(alpha: 0.2), 
+            width: isCurrent ? 2 : 1.5,
           ),
-          const Spacer(),
-          Text('EMI #${emi.emiNumber}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-          Text(AppFormatters.formatCurrency(emi.emiAmount),
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4),
-          Text(AppFormatters.formatDate(emi.dueDate),
-              style:
-                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          boxShadow: isCurrent ? [
+            BoxShadow(
+              color: color.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ] : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text(emi.status.name.toUpperCase(),
+                      style: TextStyle(
+                          fontSize: 9, fontWeight: FontWeight.w900, color: color)),
+                ),
+                const Spacer(),
+                if (isCurrent)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
+            const Spacer(),
+            Text('EMI #${emi.emiNumber}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+            Text(AppFormatters.formatCurrency(emi.emiAmount),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 4),
+            Text(AppFormatters.formatDate(emi.dueDate),
+                style:
+                    const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+            if (isOverdue) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.payment_rounded, size: 12, color: Colors.red),
+                    SizedBox(width: 4),
+                    Text('Collect', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEMIDetailSheet(EMIScheduleModel emi, LoanModel loan, ThemeData theme) {
+    final isPaid = emi.status == EMIStatus.paid;
+    final isOverdue = emi.status == EMIStatus.overdue || emi.status == EMIStatus.defaulted;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.3,
+          maxChildSize: 0.8,
+          expand: false,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: theme.dividerColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: (isPaid ? Colors.green : isOverdue ? Colors.red : theme.colorScheme.primary).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            isPaid ? Icons.check_circle_rounded : isOverdue ? Icons.warning_rounded : Icons.calendar_today_rounded,
+                            color: isPaid ? Colors.green : isOverdue ? Colors.red : theme.colorScheme.primary,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('EMI #${emi.emiNumber}',
+                                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                              Text(emi.status.name.toUpperCase(),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isPaid ? Colors.green : isOverdue ? Colors.red : theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Amount
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        children: [
+                          Text('EMI Amount',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                          const SizedBox(height: 8),
+                          Text(AppFormatters.formatCurrency(emi.emiAmount),
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: theme.colorScheme.primary)),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 20),
+                    
+                    // Breakdown
+                    Text('Breakdown',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                    const SizedBox(height: 12),
+                    
+                    _buildDetailRow('Due Date', AppFormatters.formatDate(emi.dueDate), theme),
+                    _buildDetailRow('Principal', AppFormatters.formatCurrency(emi.principal), theme),
+                    _buildDetailRow('Interest', AppFormatters.formatCurrency(emi.interest), theme),
+                    if (emi.penaltyAmount > 0)
+                      _buildDetailRow('Penalty', AppFormatters.formatCurrency(emi.penaltyAmount), theme, valueColor: Colors.red),
+                    _buildDetailRow('Balance After', AppFormatters.formatCurrency(emi.balanceAfter), theme),
+                    if (emi.paidOn != null)
+                      _buildDetailRow('Paid On', AppFormatters.formatDate(emi.paidOn!), theme),
+                    if (emi.paymentMode != null)
+                      _buildDetailRow('Payment Mode', emi.paymentMode!.name.toUpperCase(), theme),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Action button for overdue
+                    if (isOverdue)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _showCollectionSheet(context, loan, emi);
+                          },
+                          icon: const Icon(Icons.payment_rounded),
+                          label: const Text('Collect Payment'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, ThemeData theme, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+          Text(value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: valueColor ?? theme.colorScheme.onSurface)),
         ],
       ),
     );
   }
 
   Widget _buildLoanIntelligence(LoanModel loan, ThemeData theme) {
+    // Calculate insights
+    final totalAmount = loan.totalRepayable;
+    final principal = loan.amount;
+    final totalInterest = loan.totalInterest;
+    final interestRatio = totalAmount > 0 ? (totalInterest / totalAmount) * 100 : 0;
+    final principalRatio = totalAmount > 0 ? (principal / totalAmount) * 100 : 0;
+    
+    // Cost per day (assuming tenure in days from formattedTenure logic)
+    int tenureDays = loan.tenureMonths * 30; // Approximate
+    final costPerDay = tenureDays > 0 ? totalInterest / tenureDays : 0;
+    final costPerMonth = loan.tenureMonths > 0 ? totalInterest / loan.tenureMonths : 0;
+    
+    // Effective interest rate (total interest / principal * 100)
+    final effectiveRate = principal > 0 ? (totalInterest / principal) * 100 : 0;
+    
+    // Prepayment savings estimate (if paid off today, save remaining interest)
+    
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -698,12 +991,147 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Principal vs Interest Visual Breakdown
+          Text('Cost Breakdown',
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+          const SizedBox(height: 12),
+          
+          // Stacked bar showing principal vs interest ratio
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: principalRatio.round(),
+                  child: Container(
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: interestRatio.round(),
+                  child: Container(
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text('Principal (${principalRatio.toStringAsFixed(1)}%)',
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                ],
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text('Interest (${interestRatio.toStringAsFixed(1)}%)',
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+          const Divider(height: 1),
+          const SizedBox(height: 20),
+          
+          // Key Metrics Grid
+          Row(
+            children: [
+              Expanded(
+                child: _buildInsightCard(
+                  icon: Icons.percent_rounded,
+                  label: 'Effective Rate',
+                  value: '${effectiveRate.toStringAsFixed(1)}%',
+                  subtitle: 'Total interest cost',
+                  color: const Color(0xFF5E5CE6),
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildInsightCard(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Cost/Month',
+                  value: '₹${costPerMonth.toStringAsFixed(0)}',
+                  subtitle: 'Interest per month',
+                  color: Colors.orange,
+                  theme: theme,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildInsightCard(
+                  icon: Icons.today_rounded,
+                  label: 'Cost/Day',
+                  value: '₹${costPerDay.toStringAsFixed(0)}',
+                  subtitle: 'Interest per day',
+                  color: Colors.teal,
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildInsightCard(
+                  icon: Icons.savings_rounded,
+                  label: 'Total Interest',
+                  value: AppFormatters.formatCurrency(totalInterest),
+                  subtitle: 'Over full tenure',
+                  color: Colors.deepPurple,
+                  theme: theme,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          const Divider(height: 1),
+          const SizedBox(height: 20),
+          
+          // Summary rows
           _buildInfoRow('Principal Amount',
               AppFormatters.formatCurrency(loan.amount), theme),
-          const SizedBox(height: 12),
-          _buildInfoRow('Total Interest',
-              AppFormatters.formatCurrency(loan.totalInterest), theme),
           const SizedBox(height: 12),
           _buildInfoRow('Total Repayable',
               AppFormatters.formatCurrency(loan.totalRepayable), theme),
@@ -713,6 +1141,45 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           _buildInfoRow('Installment Amount',
               AppFormatters.formatCurrency(loan.emiAmount), theme,
               isBold: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required String subtitle,
+    required Color color,
+    required ThemeData theme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 10),
+          Text(label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: color)),
+          const SizedBox(height: 2),
+          Text(subtitle,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
         ],
       ),
     );
@@ -747,8 +1214,16 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         double totalPaid = payments.fold<double>(
             0.0, (sum, p) => sum + ((p['amount'] as num?)?.toDouble() ?? 0.0));
 
+        // Calculate payment mode distribution
+        final modeCounts = <String, int>{};
+        for (final payment in payments) {
+          final mode = payment['payment_mode'] as String? ?? 'cash';
+          modeCounts[mode] = (modeCounts[mode] ?? 0) + 1;
+        }
+
         return Column(
           children: [
+            // Summary card
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -789,7 +1264,103 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            
+            // Payment mode distribution mini-chart
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Payment Methods',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: modeCounts.entries.map((entry) {
+                      final mode = entry.key;
+                      final count = entry.value;
+                      final pct = (count / payments.length * 100).toStringAsFixed(0);
+                      
+                      IconData modeIcon;
+                      Color modeColor;
+                      switch (mode) {
+                        case 'cash':
+                          modeIcon = Icons.payments_rounded;
+                          modeColor = Colors.green;
+                          break;
+                        case 'upi':
+                          modeIcon = Icons.qr_code_rounded;
+                          modeColor = Colors.purple;
+                          break;
+                        case 'bank_transfer':
+                          modeIcon = Icons.account_balance_rounded;
+                          modeColor = Colors.blue;
+                          break;
+                        case 'cheque':
+                          modeIcon = Icons.book_rounded;
+                          modeColor = Colors.orange;
+                          break;
+                        case 'card':
+                          modeIcon = Icons.credit_card_rounded;
+                          modeColor = Colors.teal;
+                          break;
+                        default:
+                          modeIcon = Icons.payments_rounded;
+                          modeColor = Colors.green;
+                      }
+                      
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: modeColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(modeIcon, size: 12, color: modeColor),
+                            const SizedBox(width: 6),
+                            Text('${mode.replaceAll('_', ' ').split(' ').map(_capitalize).join(' ')} ($pct%)',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: modeColor)),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Filter chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildPaymentFilterChip('All', true, theme),
+                  const SizedBox(width: 8),
+                  _buildPaymentFilterChip('Cash', false, theme, color: Colors.green),
+                  const SizedBox(width: 8),
+                  _buildPaymentFilterChip('UPI', false, theme, color: Colors.purple),
+                  const SizedBox(width: 8),
+                  _buildPaymentFilterChip('Bank', false, theme, color: Colors.blue),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Payment list
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -797,16 +1368,31 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final payment = payments[index];
-                return _buildPaymentTile(payment, theme);
+                return InkWell(
+                  onTap: () => _showPaymentDetailSheet(payment, theme),
+                  borderRadius: BorderRadius.circular(16),
+                  child: _buildPaymentTile(payment, theme),
+                );
               },
             ),
+            
+            // View All button
             if (payments.length > 10)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  'Showing 10 of ${payments.length} payments',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+              InkWell(
+                onTap: () => _showFullPaymentHistory(payments, theme),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('View All ${payments.length} Payments',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.primary),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -821,6 +1407,239 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         ),
         child: Text('Failed to load payment history',
             style: TextStyle(color: Colors.red)),
+      ),
+    );
+  }
+
+  Widget _buildPaymentFilterChip(String label, bool isSelected, ThemeData theme, {Color? color}) {
+    final chipColor = color ?? theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? chipColor.withValues(alpha: 0.15) : chipColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isSelected ? chipColor : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+    );
+  }
+
+  void _showPaymentDetailSheet(Map<String, dynamic> payment, ThemeData theme) {
+    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+    final paymentMode = payment['payment_mode'] as String? ?? 'cash';
+    final enteredAt = payment['entered_at'] != null
+        ? DateTime.parse(payment['entered_at'] as String)
+        : DateTime.now();
+    final notes = payment['notes'] as String?;
+    final transactionId = payment['transaction_id'] as String?;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.receipt_long_rounded, color: Colors.green, size: 24),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Payment Detail',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+                        Text('Transaction Record',
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Amount
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    Text('Amount Paid',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                    const SizedBox(height: 8),
+                    Text(AppFormatters.formatCurrency(amount),
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.green)),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Details
+              _buildDetailRow('Payment Mode', paymentMode.replaceAll('_', ' ').toUpperCase(), theme),
+              _buildDetailRow('Date & Time', 
+                  '${enteredAt.day}/${enteredAt.month}/${enteredAt.year} ${enteredAt.hour.toString().padLeft(2, '0')}:${enteredAt.minute.toString().padLeft(2, '0')}', 
+                  theme),
+              if (transactionId != null)
+                _buildDetailRow('Transaction ID', transactionId, theme),
+              if (notes != null && notes.isNotEmpty)
+                _buildDetailRow('Notes', notes, theme),
+              
+              const SizedBox(height: 24),
+              
+              // Receipt button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    // TODO: Implement receipt generation
+                  },
+                  icon: const Icon(Icons.receipt_rounded),
+                  label: const Text('Download Receipt'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullPaymentHistory(List<Map<String, dynamic>> payments, ThemeData theme) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.receipt_long_rounded, size: 20, color: Colors.green),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('All Payments',
+                                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                            Text('${payments.length} transactions',
+                                style: theme.textTheme.bodySmall?.copyWith(fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    itemCount: payments.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final payment = payments[index];
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showPaymentDetailSheet(payment, theme);
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: _buildPaymentTile(payment, theme),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -911,7 +1730,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   Widget _buildEMIBreakdownTable(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
+      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme, LoanModel loan) {
     return scheduleAsync.when(
       data: (schedule) {
         if (schedule.isEmpty) {
@@ -928,7 +1747,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
 
         int paidCount = schedule.where((e) => e.status == EMIStatus.paid).length;
-        int overdueCount = schedule.where((e) => e.status == EMIStatus.overdue).length;
+        int overdueCount = schedule.where((e) => e.status == EMIStatus.overdue || e.status == EMIStatus.defaulted).length;
         int upcomingCount = schedule.where((e) => e.status == EMIStatus.upcoming).length;
 
         double totalPrincipal = schedule.fold<double>(0, (s, e) => s + e.principal);
@@ -937,6 +1756,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
         return Column(
           children: [
+            // Stats badges
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -970,7 +1790,26 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            
+            // Filter chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildEMIFilterChip('All', true, theme),
+                  const SizedBox(width: 8),
+                  _buildEMIFilterChip('Paid', false, theme, color: Colors.green),
+                  const SizedBox(width: 8),
+                  _buildEMIFilterChip('Overdue', false, theme, color: Colors.red),
+                  const SizedBox(width: 8),
+                  _buildEMIFilterChip('Upcoming', false, theme, color: theme.colorScheme.primary),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Table
             Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
@@ -978,6 +1817,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ),
               child: Column(
                 children: [
+                  // Header
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
@@ -993,17 +1833,45 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     ),
                   ),
                   const Divider(height: 1),
+                  
+                  // Rows - limited to 20 with "View All" option
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: schedule.length,
+                    itemCount: schedule.length > 20 ? 20 : schedule.length,
                     separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final emi = schedule[index];
-                      return _buildEMIRow(emi, theme);
+                      return InkWell(
+                        onTap: () => _showEMIDetailSheet(emi, loan, theme),
+                        child: _buildEMIRow(emi, theme),
+                      );
                     },
                   ),
+                  
+                  // View All button if more than 20
+                  if (schedule.length > 20)
+                    InkWell(
+                      onTap: () => _showFullEMISchedule(schedule, loan, theme),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('View All ${schedule.length} EMIs',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700)),
+                            const SizedBox(width: 4),
+                            Icon(Icons.arrow_forward_rounded, size: 16, color: theme.colorScheme.primary),
+                          ],
+                        ),
+                      ),
+                    ),
+                  
                   const Divider(height: 1),
+                  
+                  // Totals
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
@@ -1026,13 +1894,119 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       },
       loading: () => const ShimmerCard(height: 300),
       error: (_, __) => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(24),
         ),
-        child: Text('Failed to load EMI schedule',
-            style: TextStyle(color: Colors.red)),
+        child: Center(
+          child: Text('Failed to load EMI schedule',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEMIFilterChip(String label, bool isSelected, ThemeData theme, {Color? color}) {
+    final chipColor = color ?? theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? chipColor.withValues(alpha: 0.15) : chipColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isSelected ? chipColor : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+    );
+  }
+
+  void _showFullEMISchedule(List<EMIScheduleModel> schedule, LoanModel loan, ThemeData theme) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.table_chart_rounded, size: 20, color: theme.colorScheme.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Full EMI Schedule',
+                                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                            Text('${schedule.length} installments',
+                                style: theme.textTheme.bodySmall?.copyWith(fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    itemCount: schedule.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final emi = schedule[index];
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showEMIDetailSheet(emi, loan, theme);
+                        },
+                        child: _buildEMIRow(emi, theme),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1104,30 +2078,301 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Widget _buildHealthMetrics(LoanModel loan,
       AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
+    return scheduleAsync.when(
+      data: (schedule) {
+        final now = DateTime.now();
+        
+        // Calculate metrics
+        final totalEmis = schedule.length;
+        final paidEmis = schedule.where((e) => e.status == EMIStatus.paid).toList();
+        final overdueEmis = schedule.where((e) => e.status == EMIStatus.overdue || e.status == EMIStatus.defaulted).toList();
+        
+        // Payment consistency score (% paid on time)
+        final paidOnTime = paidEmis.where((e) {
+          if (e.paidOn == null) return false;
+          return e.paidOn!.isBefore(e.dueDate) || e.paidOn!.isAtSameMomentAs(e.dueDate);
+        }).length;
+        final consistencyScore = paidEmis.isEmpty ? 100.0 : (paidOnTime / paidEmis.length) * 100;
+        
+        // Days since last payment
+        int daysSinceLastPayment = 0;
+        if (paidEmis.isNotEmpty) {
+          final lastPayment = paidEmis.reduce((a, b) => 
+            (a.paidOn ?? a.dueDate).isAfter(b.paidOn ?? b.dueDate) ? a : b);
+          daysSinceLastPayment = now.difference(lastPayment.paidOn ?? lastPayment.dueDate).inDays;
+        }
+        
+        // Percentage paid
+        final totalAmount = loan.totalRepayable;
+        final paidAmount = paidEmis.fold<double>(0, (sum, e) => sum + e.emiAmount);
+        final percentagePaid = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
+        
+        // Collection efficiency (paid / expected so far)
+        final expectedEmis = schedule.where((e) => e.dueDate.isBefore(now) || e.dueDate.isAtSameMomentAs(now)).toList();
+        final expectedAmount = expectedEmis.fold<double>(0, (sum, e) => sum + e.emiAmount);
+        final collectionEfficiency = expectedAmount > 0 ? (paidAmount / expectedAmount) * 100 : 100;
+        
+        // Risk classification
+        int maxDaysPastDue = 0;
+        for (final emi in overdueEmis) {
+          final daysPast = now.difference(emi.dueDate).inDays;
+          if (daysPast > maxDaysPastDue) maxDaysPastDue = daysPast;
+        }
+        
+        String riskLevel;
+        Color riskColor;
+        IconData riskIcon;
+        if (maxDaysPastDue >= 90) {
+          riskLevel = 'High Risk';
+          riskColor = Colors.red;
+          riskIcon = Icons.dangerous_rounded;
+        } else if (maxDaysPastDue >= 60) {
+          riskLevel = 'Medium-High Risk';
+          riskColor = Colors.deepOrange;
+          riskIcon = Icons.warning_rounded;
+        } else if (maxDaysPastDue >= 30) {
+          riskLevel = 'Medium Risk';
+          riskColor = Colors.orange;
+          riskIcon = Icons.info_rounded;
+        } else if (overdueEmis.isNotEmpty) {
+          riskLevel = 'Low Risk';
+          riskColor = Colors.amber;
+          riskIcon = Icons.visibility_rounded;
+        } else {
+          riskLevel = 'Minimal Risk';
+          riskColor = Colors.green;
+          riskIcon = Icons.shield_rounded;
+        }
+        
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Risk Classification Badge
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: riskColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: riskColor.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: riskColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(riskIcon, color: riskColor, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Risk Classification',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                          Text(riskLevel,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: riskColor)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: riskColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text('$maxDaysPastDue DPD',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: riskColor)),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Progress Bar - Percentage Paid
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Repayment Progress',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+                  Text('${percentagePaid.toStringAsFixed(1)}%',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: percentagePaid / 100,
+                  minHeight: 10,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('₹${AppFormatters.formatCurrency(paidAmount)} paid',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                  Text('₹${AppFormatters.formatCurrency(totalAmount)} total',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Health Metrics Grid
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildHealthMetricCard(
+                      icon: Icons.check_circle_outline_rounded,
+                      label: 'Consistency',
+                      value: '${consistencyScore.toStringAsFixed(0)}%',
+                      subtitle: 'On-time payments',
+                      color: consistencyScore >= 80 ? Colors.green : consistencyScore >= 50 ? Colors.orange : Colors.red,
+                      theme: theme,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildHealthMetricCard(
+                      icon: Icons.calendar_today_rounded,
+                      label: 'Last Payment',
+                      value: paidEmis.isEmpty ? 'N/A' : '$daysSinceLastPayment ago',
+                      subtitle: paidEmis.isEmpty ? 'No payments yet' : 'Days since last',
+                      color: daysSinceLastPayment <= 30 ? Colors.green : daysSinceLastPayment <= 60 ? Colors.orange : Colors.red,
+                      theme: theme,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildHealthMetricCard(
+                      icon: Icons.trending_up_rounded,
+                      label: 'Collection Eff.',
+                      value: '${collectionEfficiency.toStringAsFixed(0)}%',
+                      subtitle: 'vs expected',
+                      color: collectionEfficiency >= 90 ? Colors.green : collectionEfficiency >= 70 ? Colors.orange : Colors.red,
+                      theme: theme,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildHealthMetricCard(
+                      icon: Icons.pie_chart_rounded,
+                      label: 'EMI Status',
+                      value: '$paidEmis/$totalEmis',
+                      subtitle: 'Paid / Total',
+                      color: theme.colorScheme.primary,
+                      theme: theme,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 20),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
+              
+              // Original metrics
+              _buildHealthRow(
+                  'Status',
+                  loan.status.name.toUpperCase(),
+                  Icons.circle,
+                  loan.status == LoanStatus.active ? Colors.green : Colors.orange,
+                  theme),
+              const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1)),
+              _buildHealthRow('Tenure', loan.formattedTenure,
+                  Icons.timelapse_rounded, const Color(0xFF5E5CE6), theme),
+              const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(height: 1)),
+              _buildHealthRow('Interest Type', loan.interestType.name.toUpperCase(),
+                  Icons.percent_rounded, Colors.orange, theme),
+            ],
+          ),
+        );
+      },
+      loading: () => const ShimmerCard(height: 400),
+      error: (_, __) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: Center(
+          child: Text('Failed to load health metrics',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHealthMetricCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required String subtitle,
+    required Color color,
+    required ThemeData theme,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(32),
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHealthRow(
-              'Status',
-              loan.status.name.toUpperCase(),
-              Icons.circle,
-              loan.status == LoanStatus.active ? Colors.green : Colors.orange,
-              theme),
-          const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1)),
-          _buildHealthRow('Tenure', '${loan.tenureMonths} Months',
-              Icons.timelapse_rounded, const Color(0xFF5E5CE6), theme),
-          const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1)),
-          _buildHealthRow('Interest Type', loan.interestType.name.toUpperCase(),
-              Icons.percent_rounded, Colors.orange, theme),
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 10),
+          Text(label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: color)),
+          const SizedBox(height: 2),
+          Text(subtitle,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
         ],
       ),
     );
@@ -1291,108 +2536,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   Widget _buildStaffNotes(LoanModel loan, ThemeData theme) {
-    final notesController = TextEditingController();
-    
-    return StatefulBuilder(
-      builder: (context, setState) {
-        final notes = <String, DateTime>{};
-        if (loan.remarks != null && loan.remarks!.isNotEmpty) {
-          notes[loan.remarks!] = loan.updatedAt;
-        }
-
-        return Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (notes.isNotEmpty) ...[
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: notes.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final entry = notes.entries.elementAt(index);
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(entry.key,
-                                  style: theme.textTheme.bodyMedium),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${entry.value.day}/${entry.value.month}/${entry.value.year} at ${entry.value.hour.toString().padLeft(2, '0')}:${entry.value.minute.toString().padLeft(2, '0')}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                                    fontSize: 11),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 24),
-                  ],
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: notesController,
-                          maxLines: 2,
-                          decoration: InputDecoration(
-                            hintText: 'Add internal note...',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filled(
-                        onPressed: () async {
-                          if (notesController.text.trim().isEmpty) return;
-                          
-                          final messenger = ScaffoldMessenger.of(context);
-                          try {
-                            final repo = ref.read(loansRepositoryProvider);
-                            final existingNotes = loan.remarks ?? '';
-                            final newNote = existingNotes.isEmpty 
-                                ? notesController.text 
-                                : '$existingNotes | ${notesController.text}';
-                            
-                            await repo.updateLoan(loan.id, remarks: newNote);
-                            ref.invalidate(loanDetailProvider(widget.loanId));
-                            
-                            messenger.showSnackBar(
-                                const SnackBar(content: Text('Note added')));
-                          } catch (e) {
-                            messenger.showSnackBar(
-                                SnackBar(content: Text('Failed to add note: $e')));
-                          }
-                        },
-                        icon: const Icon(Icons.add_rounded),
-                        style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFF5E5CE6)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
+    return _StaffNotesWidget(loan: loan, theme: theme);
   }
 
   Widget _buildPenaltyTracking(
@@ -1790,142 +2934,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Widget _buildActivityTimeline(LoanModel loan,
       AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
-    final activities = _buildActivityList(loan, scheduleAsync);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: activities.length,
-        separatorBuilder: (_, __) => _buildTimelineConnector(theme),
-        itemBuilder: (context, index) {
-          final activity = activities[index];
-          return _buildTimelineItem(activity, theme);
-        },
-      ),
-    );
-  }
-
-  List<_ActivityItem> _buildActivityList(LoanModel loan,
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync) {
-    final activities = <_ActivityItem>[];
-
-    activities.add(_ActivityItem(
-      icon: Icons.add_circle_rounded,
-      color: const Color(0xFF5E5CE6),
-      title: 'Loan Created',
-      subtitle: 'Loan ${loan.loanNumber} disbursed',
-      date: loan.createdAt,
-    ));
-
-    if (loan.disbursementDate != null) {
-      activities.add(_ActivityItem(
-        icon: Icons.currency_rupee_rounded,
-        color: Colors.green,
-        title: 'Amount Disbursed',
-        subtitle: AppFormatters.formatCurrency(loan.amount),
-        date: loan.disbursementDate!,
-      ));
-    }
-
-    if (loan.status == LoanStatus.active || loan.status == LoanStatus.closed) {
-      activities.add(_ActivityItem(
-        icon: Icons.check_circle_rounded,
-        color: Colors.green,
-        title: 'Loan Activated',
-        subtitle: 'Status changed to Active',
-        date: loan.updatedAt,
-      ));
-    }
-
-    final schedule = scheduleAsync.value;
-    if (schedule != null) {
-      final paidEmis = schedule.where((e) => e.status == EMIStatus.paid && e.paidOn != null).toList();
-      for (final emi in paidEmis.take(3)) {
-        activities.add(_ActivityItem(
-          icon: Icons.payment_rounded,
-          color: Colors.blue,
-          title: 'EMI #${emi.emiNumber} Paid',
-          subtitle: '${AppFormatters.formatCurrency(emi.emiAmount)} via ${emi.paymentMode?.name ?? 'unknown'}',
-          date: emi.paidOn!,
-        ));
-      }
-
-      final overdueEmis = schedule.where((e) => e.status == EMIStatus.overdue).toList();
-      for (final emi in overdueEmis) {
-        activities.add(_ActivityItem(
-          icon: Icons.warning_rounded,
-          color: Colors.red,
-          title: 'EMI #${emi.emiNumber} Overdue',
-          subtitle: 'Due: ${emi.dueDate.day}/${emi.dueDate.month}/${emi.dueDate.year}',
-          date: emi.dueDate,
-        ));
-      }
-    }
-
-    if (loan.status == LoanStatus.closed) {
-      activities.add(_ActivityItem(
-        icon: Icons.celebration_rounded,
-        color: Colors.amber,
-        title: 'Loan Closed',
-        subtitle: 'Fully repaid',
-        date: loan.updatedAt,
-      ));
-    }
-
-    activities.sort((a, b) => b.date.compareTo(a.date));
-    return activities.take(10).toList();
-  }
-
-  Widget _buildTimelineConnector(ThemeData theme) {
-    return Container(
-      width: 2,
-      height: 20,
-      color: theme.dividerColor,
-      margin: const EdgeInsets.only(left: 20),
-    );
-  }
-
-  Widget _buildTimelineItem(_ActivityItem activity, ThemeData theme) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: activity.color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(activity.icon, color: activity.color, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(activity.title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700)),
-              Text(activity.subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-              const SizedBox(height: 2),
-              Text(
-                '${activity.date.day}/${activity.date.month}/${activity.date.year} at ${activity.date.hour.toString().padLeft(2, '0')}:${activity.date.minute.toString().padLeft(2, '0')}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    fontSize: 11),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return _ActivityTimelineWidget(
+      loan: loan,
+      scheduleAsync: scheduleAsync,
+      theme: theme,
     );
   }
 
@@ -1969,7 +2981,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       sb.writeln('Principal: ${AppFormatters.formatCurrency(loan.amount)}');
       sb.writeln('Interest Rate: ${loan.interestRate}%');
       sb.writeln('Interest Type: ${loan.interestType.name.toUpperCase()}');
-      sb.writeln('Tenure: ${loan.tenureMonths} months');
+      sb.writeln('Tenure: ${loan.formattedTenure}');
       sb.writeln('EMI Amount: ${AppFormatters.formatCurrency(loan.emiAmount)}');
       sb.writeln('Total Interest: ${AppFormatters.formatCurrency(loan.totalInterest)}');
       sb.writeln('Total Repayable: ${AppFormatters.formatCurrency(loan.totalRepayable)}');
@@ -2154,6 +3166,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       );
       ref.invalidate(loanDetailProvider(widget.loanId));
       ref.invalidate(loansProvider);
+      ref.invalidate(overdueLoansProvider);
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(
         content: const Row(
@@ -2488,6 +3501,695 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       ),
     );
   }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
+  }
+}
+
+class _StaffNotesWidget extends ConsumerStatefulWidget {
+  final LoanModel loan;
+  final ThemeData theme;
+
+  const _StaffNotesWidget({required this.loan, required this.theme});
+
+  @override
+  ConsumerState<_StaffNotesWidget> createState() => _StaffNotesWidgetState();
+}
+
+class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
+  final TextEditingController _notesController = TextEditingController();
+  String _searchQuery = '';
+  bool _isAddingNote = false;
+
+  List<Map<String, dynamic>> _parseNotes() {
+    final remarks = widget.loan.remarks;
+    if (remarks == null || remarks.isEmpty) return [];
+
+    final parts = remarks.split(' | ');
+    final notes = <Map<String, dynamic>>[];
+    
+    for (int i = 0; i < parts.length; i++) {
+      final note = parts[i].trim();
+      if (note.isNotEmpty) {
+        notes.add({
+          'text': note,
+          'index': i,
+          'isLatest': i == parts.length - 1,
+        });
+      }
+    }
+    
+    return notes.reversed.toList();
+  }
+
+  List<Map<String, dynamic>> _getFilteredNotes() {
+    final notes = _parseNotes();
+    if (_searchQuery.isEmpty) return notes;
+    
+    return notes.where((note) => 
+      note['text'].toString().toLowerCase().contains(_searchQuery.toLowerCase())
+    ).toList();
+  }
+
+  Future<void> _addNote() async {
+    if (_notesController.text.trim().isEmpty) return;
+    
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final repo = ref.read(loansRepositoryProvider);
+      final existingNotes = widget.loan.remarks ?? '';
+      final newNote = existingNotes.isEmpty 
+          ? _notesController.text 
+          : '$existingNotes | ${_notesController.text}';
+      
+      await repo.updateLoan(widget.loan.id, remarks: newNote);
+      ref.invalidate(loanDetailProvider(widget.loan.id));
+      
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 12),
+              Text('Note added successfully'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+        _notesController.clear();
+        setState(() => _isAddingNote = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(
+          content: Text('Failed to add note: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final notes = _getFilteredNotes();
+    final allNotes = _parseNotes();
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Search bar
+              if (allNotes.length > 1) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded, size: 18, 
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          onChanged: (val) => setState(() => _searchQuery = val),
+                          decoration: InputDecoration(
+                            hintText: 'Search notes...',
+                            border: InputBorder.none,
+                            hintStyle: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                          ),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                      if (_searchQuery.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          onPressed: () => setState(() => _searchQuery = ''),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Notes count
+              if (allNotes.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.note_rounded, size: 16, 
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                      const SizedBox(width: 6),
+                      Text('${allNotes.length} note${allNotes.length > 1 ? 's' : ''}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+
+              // Notes list
+              if (notes.isEmpty && _searchQuery.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.sticky_note_2_rounded, size: 40,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                      const SizedBox(height: 8),
+                      Text('No notes yet',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                      const SizedBox(height: 4),
+                      Text('Add your first internal note',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
+                    ],
+                  ),
+                )
+              else if (notes.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Text('No notes match your search',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: notes.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final note = notes[index];
+                    final text = note['text'] as String;
+                    final isLatest = note['isLatest'] as bool;
+                    
+                    return Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isLatest 
+                            ? const Color(0xFF5E5CE6).withValues(alpha: 0.08)
+                            : theme.colorScheme.surface.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(14),
+                        border: isLatest 
+                            ? Border.all(color: const Color(0xFF5E5CE6).withValues(alpha: 0.2))
+                            : null,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isLatest 
+                                  ? const Color(0xFF5E5CE6).withValues(alpha: 0.15)
+                                  : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              isLatest ? Icons.fiber_new_rounded : Icons.note_rounded,
+                              size: 14,
+                              color: isLatest ? const Color(0xFF5E5CE6) : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(text,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                        height: 1.4)),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    if (isLatest)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text('Latest',
+                                            style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF5E5CE6))),
+                                      ),
+                                    const SizedBox(width: 6),
+                                    Text('${widget.loan.updatedAt.day.toString().padLeft(2, '0')}/${widget.loan.updatedAt.month.toString().padLeft(2, '0')}/${widget.loan.updatedAt.year}',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                            fontSize: 10)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
+              // Add note section
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
+              
+              if (_isAddingNote) ...[
+                TextField(
+                  controller: _notesController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Write your note...',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    contentPadding: const EdgeInsets.all(14),
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text('${_notesController.text.length}/500',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: _notesController.text.length > 500 
+                                  ? Colors.red 
+                                  : theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                    ),
+                  ),
+                  maxLength: 500,
+                  buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          _notesController.clear();
+                          setState(() => _isAddingNote = false);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _notesController.text.trim().isEmpty || _notesController.text.length > 500
+                            ? null
+                            : _addNote,
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Add Note'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF5E5CE6),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          disabledBackgroundColor: const Color(0xFF5E5CE6).withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else
+                InkWell(
+                  onTap: () => setState(() => _isAddingNote = true),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.add_rounded, size: 18, color: Color(0xFF5E5CE6)),
+                        ),
+                        const SizedBox(width: 12),
+                        Text('Add internal note...',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        const Spacer(),
+                        Icon(Icons.chevron_right_rounded,
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActivityTimelineWidget extends StatefulWidget {
+  final LoanModel loan;
+  final AsyncValue<List<EMIScheduleModel>> scheduleAsync;
+  final ThemeData theme;
+
+  const _ActivityTimelineWidget({
+    required this.loan,
+    required this.scheduleAsync,
+    required this.theme,
+  });
+
+  @override
+  State<_ActivityTimelineWidget> createState() => _ActivityTimelineWidgetState();
+}
+
+class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
+  String _selectedFilter = 'all';
+  int _displayCount = 8;
+  static const int _loadMoreIncrement = 8;
+
+  List<_ActivityItem> _getAllActivities() {
+    final activities = <_ActivityItem>[];
+    final loan = widget.loan;
+    final schedule = widget.scheduleAsync.value;
+
+    // Loan creation
+    activities.add(_ActivityItem(
+      icon: Icons.add_circle_rounded,
+      color: const Color(0xFF5E5CE6),
+      title: 'Loan Created',
+      subtitle: 'Loan ${loan.loanNumber} created',
+      date: loan.createdAt,
+      type: 'loan',
+    ));
+
+    // Disbursement
+    if (loan.disbursementDate != null) {
+      activities.add(_ActivityItem(
+        icon: Icons.currency_rupee_rounded,
+        color: Colors.green,
+        title: 'Amount Disbursed',
+        subtitle: AppFormatters.formatCurrency(loan.amount),
+        date: loan.disbursementDate!,
+        type: 'payment',
+      ));
+    }
+
+    // Status changes
+    if (loan.status == LoanStatus.active) {
+      activities.add(_ActivityItem(
+        icon: Icons.check_circle_rounded,
+        color: Colors.green,
+        title: 'Loan Activated',
+        subtitle: 'Status changed to Active',
+        date: loan.updatedAt,
+        type: 'status',
+      ));
+    } else if (loan.status == LoanStatus.defaultStatus) {
+      activities.add(_ActivityItem(
+        icon: Icons.warning_rounded,
+        color: Colors.red,
+        title: 'Loan Defaulted',
+        subtitle: 'Status changed to Default',
+        date: loan.updatedAt,
+        type: 'status',
+      ));
+    } else if (loan.status == LoanStatus.restructured) {
+      activities.add(_ActivityItem(
+        icon: Icons.settings_suggest_rounded,
+        color: Colors.purple,
+        title: 'Loan Restructured',
+        subtitle: 'Terms modified',
+        date: loan.updatedAt,
+        type: 'status',
+      ));
+    } else if (loan.status == LoanStatus.closed) {
+      activities.add(_ActivityItem(
+        icon: Icons.celebration_rounded,
+        color: Colors.amber,
+        title: 'Loan Closed',
+        subtitle: 'Fully repaid',
+        date: loan.updatedAt,
+        type: 'status',
+      ));
+    }
+
+    // EMI payments and overdue
+    if (schedule != null) {
+      final paidEmis = schedule.where((e) => e.status == EMIStatus.paid && e.paidOn != null).toList();
+      for (final emi in paidEmis) {
+        activities.add(_ActivityItem(
+          icon: Icons.payment_rounded,
+          color: Colors.blue,
+          title: 'EMI #${emi.emiNumber} Paid',
+          subtitle: '${AppFormatters.formatCurrency(emi.emiAmount)} via ${(emi.paymentMode?.name ?? 'unknown').replaceAll('_', ' ').split(' ').map((s) => s[0].toUpperCase() + s.substring(1)).join(' ')}',
+          date: emi.paidOn!,
+          type: 'payment',
+        ));
+      }
+
+      final overdueEmis = schedule.where((e) => e.status == EMIStatus.overdue || e.status == EMIStatus.defaulted).toList();
+      for (final emi in overdueEmis) {
+        activities.add(_ActivityItem(
+          icon: Icons.warning_amber_rounded,
+          color: Colors.red,
+          title: 'EMI #${emi.emiNumber} Overdue',
+          subtitle: 'Due: ${emi.dueDate.day}/${emi.dueDate.month}/${emi.dueDate.year}',
+          date: emi.dueDate,
+          type: 'alert',
+        ));
+      }
+    }
+
+    // Notes added
+    if (loan.remarks != null && loan.remarks!.isNotEmpty) {
+      final noteCount = loan.remarks!.split(' | ').length;
+      activities.add(_ActivityItem(
+        icon: Icons.note_add_rounded,
+        color: Colors.orange,
+        title: 'Notes Added',
+        subtitle: '$noteCount internal note${noteCount > 1 ? 's' : ''}',
+        date: loan.updatedAt,
+        type: 'note',
+      ));
+    }
+
+    // Sort by date (newest first)
+    activities.sort((a, b) => b.date.compareTo(a.date));
+    return activities;
+  }
+
+  List<_ActivityItem> _getFilteredActivities() {
+    final all = _getAllActivities();
+    if (_selectedFilter == 'all') return all;
+    return all.where((a) => a.type == _selectedFilter).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final allActivities = _getAllActivities();
+    final filtered = _getFilteredActivities();
+    final displayed = filtered.take(_displayCount).toList();
+    final hasMore = _displayCount < filtered.length;
+
+    return Column(
+      children: [
+        // Filter chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildActivityFilterChip('All (${allActivities.length})', 'all', theme),
+              const SizedBox(width: 8),
+              _buildActivityFilterChip('Payments', 'payment', theme, color: Colors.blue),
+              const SizedBox(width: 8),
+              _buildActivityFilterChip('Status', 'status', theme, color: Colors.green),
+              const SizedBox(width: 8),
+              _buildActivityFilterChip('Alerts', 'alert', theme, color: Colors.red),
+              const SizedBox(width: 8),
+              _buildActivityFilterChip('Notes', 'note', theme, color: Colors.orange),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Activities list
+        if (displayed.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.timeline_rounded, size: 48,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                const SizedBox(height: 12),
+                Text('No activities found',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              children: [
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: displayed.length,
+                  separatorBuilder: (_, __) => _buildTimelineConnector(theme),
+                  itemBuilder: (context, index) {
+                    final activity = displayed[index];
+                    return _buildTimelineItem(activity, theme);
+                  },
+                ),
+                
+                // Load More button
+                if (hasMore) ...[
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () => setState(() => _displayCount += _loadMoreIncrement),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Load More (${filtered.length - _displayCount} remaining)',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w700)),
+                          const SizedBox(width: 4),
+                          Icon(Icons.expand_more_rounded, size: 18, color: theme.colorScheme.primary),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildActivityFilterChip(String label, String value, ThemeData theme, {Color? color}) {
+    final isSelected = _selectedFilter == value;
+    final chipColor = color ?? theme.colorScheme.primary;
+    return GestureDetector(
+      onTap: () => setState(() {
+        _selectedFilter = value;
+        _displayCount = 8;
+      }),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? chipColor.withValues(alpha: 0.15) : chipColor.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? chipColor : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+      ),
+    );
+  }
+
+  Widget _buildTimelineConnector(ThemeData theme) {
+    return Container(
+      width: 2,
+      height: 20,
+      color: theme.dividerColor,
+      margin: const EdgeInsets.only(left: 20),
+    );
+  }
+
+  Widget _buildTimelineItem(_ActivityItem activity, ThemeData theme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: activity.color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(activity.icon, color: activity.color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(activity.title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700)),
+              Text(activity.subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+              const SizedBox(height: 2),
+              Text(
+                '${activity.date.day}/${activity.date.month}/${activity.date.year} at ${activity.date.hour.toString().padLeft(2, '0')}:${activity.date.minute.toString().padLeft(2, '0')}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _ActivityItem {
@@ -2496,6 +4198,7 @@ class _ActivityItem {
   final String title;
   final String subtitle;
   final DateTime date;
+  final String type;
 
   _ActivityItem({
     required this.icon,
@@ -2503,6 +4206,7 @@ class _ActivityItem {
     required this.title,
     required this.subtitle,
     required this.date,
+    this.type = 'loan',
   });
 }
 

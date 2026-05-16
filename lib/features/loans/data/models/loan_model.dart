@@ -9,6 +9,8 @@ class LoanModel {
   final double amount;
   final double interestRate;
   final int tenureMonths;
+  final int? tenureValue;
+  final String? tenureUnit;
   final double emiAmount;
   final double totalInterest;
   final double totalRepayable;
@@ -40,6 +42,8 @@ class LoanModel {
     required this.amount,
     required this.interestRate,
     required this.tenureMonths,
+    this.tenureValue,
+    this.tenureUnit,
     required this.emiAmount,
     required this.totalInterest,
     required this.totalRepayable,
@@ -61,6 +65,33 @@ class LoanModel {
     this.staffName,
   });
 
+  String get formattedTenure {
+    if (tenureValue != null && tenureUnit != null) {
+      final unitLabel = _getUnitLabel(tenureUnit!);
+      return '$tenureValue $unitLabel${tenureValue! > 1 ? 's' : ''}';
+    }
+    return '$tenureMonths Months';
+  }
+
+  String _getUnitLabel(String unit) {
+    switch (unit.toLowerCase()) {
+      case 'day':
+      case 'days':
+        return 'Day';
+      case 'week':
+      case 'weeks':
+        return 'Week';
+      case 'month':
+      case 'months':
+        return 'Month';
+      case 'year':
+      case 'years':
+        return 'Year';
+      default:
+        return 'Month';
+    }
+  }
+
   factory LoanModel.fromJson(Map<String, dynamic> json) {
     // Handle Supabase join format (support both profiles and customers aliases)
     final profilesJson =
@@ -79,6 +110,8 @@ class LoanModel {
       amount: (json['amount'] ?? json['principal_amount'] ?? 0.0).toDouble(),
       interestRate: (json['interest_rate'] ?? 0.0).toDouble(),
       tenureMonths: json['tenure_months'] as int? ?? 12,
+      tenureValue: json['tenure_value'] as int?,
+      tenureUnit: json['tenure_unit'] as String?,
       emiAmount: (json['emi_amount'] ?? json['estimated_installment'] ?? 0.0)
           .toDouble(),
       totalInterest: (json['total_interest'] ?? 0.0).toDouble(),
@@ -141,6 +174,8 @@ class LoanModel {
       'amount': amount,
       'interest_rate': interestRate,
       'tenure_months': tenureMonths,
+      if (tenureValue != null) 'tenure_value': tenureValue,
+      if (tenureUnit != null) 'tenure_unit': tenureUnit,
       'emi_amount': emiAmount,
       'total_interest': totalInterest,
       'total_repayable': totalRepayable,

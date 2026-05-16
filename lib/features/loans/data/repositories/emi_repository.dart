@@ -54,17 +54,18 @@ class EMIRepository {
       // 3. Update loan's outstanding balance
       final loanResponse = await _client
           .from('loans')
-          .select('outstanding_amount')
+          .select('outstanding_amount, outstanding_balance')
           .eq('id', loanId)
           .single();
 
       final currentBalance =
-          (loanResponse['outstanding_amount'] as num?)?.toDouble() ?? 0;
+          ((loanResponse['outstanding_amount'] ?? loanResponse['outstanding_balance']) as num?)?.toDouble() ?? 0;
 
       final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
 
       await _client.from('loans').update({
         'outstanding_amount': newBalance,
+        'outstanding_balance': newBalance,
       }).eq('id', loanId);
 
       // 4. Check if loan is fully paid - auto close
@@ -72,6 +73,8 @@ class EMIRepository {
         await _client.from('loans').update({
           'status': 'closed',
           'closed_date': now.toIso8601String().split('T').first,
+          'outstanding_amount': 0.0,
+          'outstanding_balance': 0.0,
         }).eq('id', loanId);
       }
     } catch (e) {
@@ -102,17 +105,18 @@ class EMIRepository {
       // 2. Update loan's outstanding balance
       final loanResponse = await _client
           .from('loans')
-          .select('outstanding_amount')
+          .select('outstanding_amount, outstanding_balance')
           .eq('id', loanId)
           .single();
 
       final currentBalance =
-          (loanResponse['outstanding_amount'] as num?)?.toDouble() ?? 0;
+          ((loanResponse['outstanding_amount'] ?? loanResponse['outstanding_balance']) as num?)?.toDouble() ?? 0;
 
       final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
 
       await _client.from('loans').update({
         'outstanding_amount': newBalance,
+        'outstanding_balance': newBalance,
       }).eq('id', loanId);
 
       // 3. Check if loan is fully paid - auto close
@@ -120,6 +124,8 @@ class EMIRepository {
         await _client.from('loans').update({
           'status': 'closed',
           'closed_date': now.toIso8601String().split('T').first,
+          'outstanding_amount': 0.0,
+          'outstanding_balance': 0.0,
         }).eq('id', loanId);
       }
     } catch (e) {

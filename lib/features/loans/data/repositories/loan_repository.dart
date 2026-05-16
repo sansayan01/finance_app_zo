@@ -28,6 +28,7 @@ class LoanRepository {
       'first_installment_date': firstInstallmentDate.toIso8601String(),
       'emi_amount': estimatedInstallment,
       'outstanding_balance': totalExposure,
+      'outstanding_amount': totalExposure,
       'total_repayable': totalExposure,
       'status': 'active',
       'org_id': _orgId,
@@ -47,6 +48,7 @@ class LoanRepository {
     await _client.from('loans').update({
       'status': 'closed',
       'outstanding_balance': 0,
+      'outstanding_amount': 0,
     }).eq('id', loanId);
   }
 }

@@ -177,6 +177,7 @@ class LoansRepository {
       'collection_type': collectionType,
       'emi_amount': estimatedInstallment,
       'outstanding_balance': totalExposure,
+      'outstanding_amount': totalExposure,
       'total_repayable': totalExposure,
       'interest_type': interestLogic,
       'status': 'active',
@@ -269,6 +270,7 @@ class LoansRepository {
     await _client.from('loans').update({
       'status': newStatus,
       'outstanding_balance': newBalance,
+      'outstanding_amount': newBalance,
     }).eq('id', loanId);
   }
 
@@ -284,46 +286,67 @@ class LoansRepository {
           },
         );
         
-        if (result != true) {
-          throw Exception('Loan not found or deletion failed');
+        if (result == true) {
+          return;
         }
-        return;
       } catch (rpcError) {
         // Fallback to manual deletion if RPC doesn't exist
       }
 
-      // Manual deletion with proper ordering
-      // 1. Delete transactions
+      // Manual deletion with proper ordering and robust foreign key unlinking
+      // 1. Delete transactions associated with this loan
       await _client
           .from('transactions')
           .delete()
-          .eq('loan_id', loanId)
-          .eq('org_id', _orgId);
+          .eq('loan_id', loanId);
 
-      // 2. Delete EMI schedules
+      // 2. Delete EMI schedules associated with this loan
       await _client
           .from('emi_schedule')
           .delete()
-          .eq('loan_id', loanId)
-          .eq('org_id', _orgId);
+          .eq('loan_id', loanId);
 
-      // 3. Nullify loan_id in collections
+      // 3. Delete loan_schedules (plural) associated with this loan if table exists
+      try {
+        await _client
+            .from('loan_schedules')
+            .delete()
+            .eq('loan_id', loanId);
+      } catch (_) {
+        // Ignore if table or permission doesn't exist
+      }
+
+      // 4. Nullify loan_id in collections to avoid foreign key block
       await _client
           .from('collections')
           .update({'loan_id': null})
-          .eq('loan_id', loanId)
-          .eq('org_id', _orgId);
+          .eq('loan_id', loanId);
 
-      // 4. Delete the loan
-      final response = await _client
+      // 5. Nullify loan_id in customer_payment_requests to avoid foreign key block
+      try {
+        await _client
+            .from('customer_payment_requests')
+            .update({'loan_id': null})
+            .eq('loan_id', loanId);
+      } catch (_) {
+        // Ignore if table or constraint doesn't exist
+      }
+
+      // 6. Delete the loan itself
+      await _client
           .from('loans')
           .delete()
-          .eq('id', loanId)
-          .eq('org_id', _orgId)
-          .select('id');
+          .eq('id', loanId);
 
-      if (response.isEmpty) {
-        throw Exception('Loan could not be deleted. Check permissions or constraints.');
+      // 7. Verify deletion dynamically by checking if the record still exists
+      final check = await _client
+          .from('loans')
+          .select('id')
+          .eq('id', loanId)
+          .maybeSingle();
+
+      if (check != null) {
+        throw Exception('Loan record still exists after deletion. Check organization permissions or active database constraints.');
       }
     } catch (e) {
       throw Exception('Delete failed: $e');

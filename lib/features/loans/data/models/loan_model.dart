@@ -117,9 +117,11 @@ class LoanModel {
       totalInterest: (json['total_interest'] ?? 0.0).toDouble(),
       totalRepayable:
           (json['total_repayable'] ?? json['total_exposure'] ?? 0.0).toDouble(),
-      outstandingBalance:
-          (json['outstanding_balance'] ?? json['total_exposure'] ?? 0.0)
-              .toDouble(),
+      outstandingBalance: (json['outstanding_balance'] ??
+              json['outstanding_amount'] ??
+              json['total_exposure'] ??
+              0.0)
+          .toDouble(),
       interestType: InterestType.values.firstWhere(
         (e) =>
             e.name == json['interest_type'] ||

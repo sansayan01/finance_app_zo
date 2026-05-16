@@ -239,7 +239,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              AppFormatters.formatCurrency(widget.loan.outstandingBalance),
+                              AppFormatters.formatCurrency(
+                                  widget.loan.status == LoanStatus.closed
+                                      ? 0.0
+                                      : widget.loan.outstandingBalance),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),

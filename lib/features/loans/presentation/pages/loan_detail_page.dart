@@ -229,7 +229,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 itemBuilder: (ctx) => [
-                  const PopupMenuItem(
+                  if (loan != null && loan.status != LoanStatus.closed)
+                    const PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
@@ -251,7 +252,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         ],
                       ),
                     )
-                  else
+                  else if (loan != null && loan.status != LoanStatus.closed)
                     const PopupMenuItem(
                       value: 'default',
                       child: Row(
@@ -263,7 +264,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         ],
                       ),
                     ),
-                  const PopupMenuItem(
+                  if (loan != null && loan.status != LoanStatus.closed)
+                    const PopupMenuItem(
                     value: 'restructure',
                     child: Row(
                       children: [
@@ -339,7 +341,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.5),
         const SizedBox(height: 8),
         Text(
-          AppFormatters.formatCurrency(loan.outstandingBalance),
+          AppFormatters.formatCurrency(
+              loan.status == LoanStatus.closed ? 0.0 : loan.outstandingBalance),
           style: theme.textTheme.displayLarge?.copyWith(
             fontWeight: FontWeight.w900,
             letterSpacing: -2,
@@ -565,15 +568,18 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildActionButton(
+              if (loan.status != LoanStatus.closed)
+                _buildActionButton(
                   'Collect', Icons.payments_rounded, const Color(0xFF5E5CE6), () {
                 _showCollectionSheet(context, loan, nextEmi);
               }),
               _buildActionButton('Statement', Icons.description_rounded,
                   theme.colorScheme.onSurface, () => _handlePdfExport()),
-              _buildActionButton('Settle', Icons.account_balance_rounded,
+              if (loan.status != LoanStatus.closed)
+                _buildActionButton('Settle', Icons.account_balance_rounded,
                   theme.colorScheme.onSurface, () => _handleSettlement(loan)),
-              _buildActionButton('Reminder', Icons.notifications_active_rounded,
+              if (loan.status != LoanStatus.closed)
+                _buildActionButton('Reminder', Icons.notifications_active_rounded,
                   theme.colorScheme.onSurface, () => _sendPaymentReminder(loan)),
               _buildActionButton('Message', Icons.chat_bubble_rounded,
                   theme.colorScheme.onSurface, () => _makeWhatsApp(loan)),

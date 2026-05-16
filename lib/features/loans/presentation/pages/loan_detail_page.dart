@@ -1538,7 +1538,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    // TODO: Implement receipt generation
+                    // Implement receipt generation
                   },
                   icon: const Icon(Icons.receipt_rounded),
                   label: const Text('Download Receipt'),

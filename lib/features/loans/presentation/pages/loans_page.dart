@@ -83,7 +83,8 @@ class _LoansPageState extends ConsumerState<LoansPage>
             color: primary,
             backgroundColor: theme.cardColor,
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics()),
               slivers: [
                 // Premium Dynamic Header
                 SliverToBoxAdapter(

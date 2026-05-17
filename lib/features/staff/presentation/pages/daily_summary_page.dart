@@ -292,7 +292,7 @@ class _DailySummaryPageState extends ConsumerState<DailySummaryPage> {
         children: collections.take(5).map((c) {
           final item = c as Map<String, dynamic>;
           final time = item['collection_time'] as String?;
-          final timeStr = time != null ? DateFormat.jm().format(DateTime.parse(time)) : '';
+          final timeStr = time != null ? DateFormat.jm().format(DateTime.parse(time).toLocal()) : '';
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(

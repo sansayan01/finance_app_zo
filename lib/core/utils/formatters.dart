@@ -33,19 +33,19 @@ class AppFormatters {
   }
 
   static String formatDate(DateTime date) {
-    return _dateFormat.format(date);
+    return _dateFormat.format(date.toLocal());
   }
 
   static String formatShortDate(DateTime date) {
-    return _shortDateFormat.format(date);
+    return _shortDateFormat.format(date.toLocal());
   }
 
   static String formatTime(DateTime time) {
-    return _timeFormat.format(time);
+    return _timeFormat.format(time.toLocal());
   }
 
   static String formatDateTime(DateTime dateTime) {
-    return _dateTimeFormat.format(dateTime);
+    return _dateTimeFormat.format(dateTime.toLocal());
   }
 
   static String formatPhone(String phone) {
@@ -84,6 +84,6 @@ class AppFormatters {
   }
 
   static DateTime convertToIST(DateTime dateTime) {
-    return dateTime.toUtc().add(const Duration(hours: 5, minutes: 30));
+    return dateTime.toLocal();
   }
 }

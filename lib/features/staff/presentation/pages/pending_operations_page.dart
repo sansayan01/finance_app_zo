@@ -335,7 +335,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
   }
 
   String _formatDateTime(String isoString) {
-    try { return DateFormat('MMM d, h:mm a').format(DateTime.parse(isoString)); }
+    try { return DateFormat('MMM d, h:mm a').format(DateTime.parse(isoString).toLocal()); }
     catch (_) { return isoString; }
   }
 

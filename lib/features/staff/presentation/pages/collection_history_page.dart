@@ -248,7 +248,13 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage> {
     final isDigital = mode.toLowerCase() != 'cash';
     final color = isDigital ? AppColors.info : AppColors.success;
     final time = item['collection_time'] as String?;
-    final timeStr = time != null && time.length >= 16 ? time.substring(11, 16) : '--:--';
+    String timeStr = '--:--';
+    if (time != null) {
+      try {
+        final parsed = DateTime.parse(time).toLocal();
+        timeStr = '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

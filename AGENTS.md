@@ -1,10 +1,22 @@
-# MicroFlow Pro - Staff Portal
+# MicroFlow Pro
 
 ## Project Overview
 
 MicroFlow Pro is a **Flutter cross-platform financial management app** for MFIs (Micro-Finance Institutions) and savings groups. 
 
 **Repository**: https://github.com/sansayan01/finance_app_zo
+
+---
+
+## 👥 Role Hierarchy
+
+| Level | Role | Scope | Description |
+|-------|------|-------|-------------|
+| 1 | **Super Admin** | Platform | Manages all organizations, platform-wide settings |
+| 2 | **Executive Admin** | Organization | Organization-level management, oversees all branches |
+| 3 | **Branch Manager** | Branch | Branch-level oversight, manages staff within a branch |
+| 4 | **Staff / Collection Agent** | Field | Field operations — collections, visits, GPS check-ins |
+| 5 | **Customer** | Self | End user — loan recipient, savings member |
 
 ---
 
@@ -31,7 +43,7 @@ MicroFlow Pro is a **Flutter cross-platform financial management app** for MFIs 
 ### 1. Router Integration ✅
 - All staff pages now properly connected to router
 - StaffShell with dedicated bottom navigation
-- Role-based redirect (staff → /staff, admin → /)
+- Role-based redirect (super_admin → /super-admin, executive_admin → /, branch_manager → /branch, staff → /staff, customer → /customer)
 - Pending count badge on sync tab
 
 ### 2. Offline Sync Integration ✅
@@ -118,7 +130,25 @@ flutter run
 
 ## 🔑 Key Features
 
-### Staff Portal
+### Super Admin Portal
+- **Organizations**: Create, manage, suspend organizations
+- **Platform Settings**: Global configuration, billing, limits
+
+### Executive Admin Portal (Organization)
+- **Dashboard**: Total outstanding, active members, today's collection, PAR rate
+- **Quick Actions**: New Loan, Savings, Add User, Timeline, Branches
+- **Loans**: Create, approve, track, close
+- **Savings**: Plans, deposits, maturity
+- **Users**: Staff & branch manager management, role assignment
+- **Analytics**: Reports, performance metrics
+- **Today's Agenda**: Due today overview
+
+### Branch Manager Portal
+- **Branch Dashboard**: Branch-level stats, staff performance
+- **Staff Management**: Assign areas, monitor collections
+- **Approvals**: Branch-level loan/savings approvals
+
+### Staff / Collection Agent Portal
 - **Dashboard**: Wallet, streak, targets, today's agenda
 - **Collections**: Record with GPS, multiple payment modes
 - **Offline**: Queue collections, auto-sync when online
@@ -126,12 +156,10 @@ flutter run
 - **Visits**: GPS-tagged check-in/out
 - **Gamification**: Streaks, achievements, leaderboards
 
-### Admin Portal
-- **Dashboard**: Stats, trends, quick actions
-- **Loans**: Create, approve, track, close
-- **Savings**: Plans, deposits, maturity
-- **Users**: Staff management, role assignment
-- **Analytics**: Reports, performance metrics
+### Customer Portal
+- **Loan Status**: View active loans, repayment schedule
+- **Payment History**: Track payments made
+- **Savings**: View savings balance, maturity
 
 ---
 
@@ -149,9 +177,11 @@ Before production:
 ## 📝 Database Notes
 
 All tables have Row Level Security enabled:
-- Staff can only read/update their own data
-- Admins have full access
-- Collections are filtered by staff_id
+- **Super Admin**: Full platform access across all organizations
+- **Executive Admin**: Full access within their organization
+- **Branch Manager**: Access scoped to their branch
+- **Staff**: Can only read/update their own data, collections filtered by staff_id
+- **Customer**: Can only view their own loans, payments, and savings
 - Sync status is tracked per record
 - Streaks are calculated automatically
 - Wallet updates happen via database triggers
@@ -182,4 +212,4 @@ Credentials are stored securely.
 
 ---
 
-**Last Updated**: May 12, 2026
+**Last Updated**: May 18, 2026

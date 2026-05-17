@@ -97,9 +97,6 @@ class _UsersPageState extends ConsumerState<UsersPage> {
                           const SizedBox(height: 16),
                           _buildRoleFilterChips(theme, primary),
                           const SizedBox(height: 24),
-                          // Debug banner
-                          _buildDebugBanner(usersAsync, theme),
-                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -361,6 +358,10 @@ class _UsersPageState extends ConsumerState<UsersPage> {
   }
 
   Widget _buildRoleFilterChips(ThemeData theme, Color primary) {
+    final visibleRoles = UserRole.values
+        .where((role) => role != UserRole.superAdmin)
+        .toList();
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -375,7 +376,7 @@ class _UsersPageState extends ConsumerState<UsersPage> {
             primary: primary,
           ),
           const SizedBox(width: 8),
-          ...UserRole.values.map((role) => Padding(
+          ...visibleRoles.map((role) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: _FilterChip(
                   label: role.name[0].toUpperCase() + role.name.substring(1),
@@ -474,78 +475,6 @@ class _UsersPageState extends ConsumerState<UsersPage> {
         ],
       ),
     ).animate().fadeIn(delay: 100.ms);
-  }
-
-  Widget _buildDebugBanner(
-      AsyncValue<List<ProfileModel>> usersAsync, ThemeData theme) {
-    return usersAsync.when(
-      data: (users) {
-        final customerCount =
-            users.where((u) => u.role == UserRole.customer).length;
-        final profileCount = users.where((u) => u.userId != null).length;
-        final memberCount = users.where((u) => u.userId == null).length;
-
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.bug_report_rounded,
-                      size: 16, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Text('DEBUG: User Data',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.primary,
-                        fontSize: 12,
-                      )),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text('Total fetched: ${users.length}',
-                  style: theme.textTheme.bodySmall),
-              Text('• Profiles (with auth): $profileCount',
-                  style: theme.textTheme.bodySmall),
-              Text('• Members (no auth): $memberCount',
-                  style: theme.textTheme.bodySmall),
-              Text('• Customers: $customerCount',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: customerCount == 0
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  )),
-              if (users.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text('First user role: ${users.first.role?.name ?? "null"}',
-                    style: theme.textTheme.bodySmall),
-              ],
-            ],
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (e, _) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text('Error: $e',
-            style: TextStyle(
-              color: theme.colorScheme.error,
-              fontSize: 12,
-            )),
-      ),
-    );
   }
 }
 

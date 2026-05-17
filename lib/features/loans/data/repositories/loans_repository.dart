@@ -293,43 +293,43 @@ class LoansRepository {
         // Fallback to manual deletion if RPC doesn't exist
       }
 
-      // Manual deletion with proper ordering and robust foreign key unlinking
-      // 1. Delete transactions associated with this loan
+      // Manual deletion with proper ordering
+      // 1. Delete transactions
       await _client
           .from('transactions')
           .delete()
           .eq('loan_id', loanId);
 
-      // 2. Delete EMI schedules associated with this loan
+      // 2. Delete EMI schedules
       await _client
           .from('emi_schedule')
           .delete()
           .eq('loan_id', loanId);
 
-      // 3. Delete loan_schedules (plural) associated with this loan if table exists
+      // 3. Delete loan_schedules if table exists
       try {
         await _client
             .from('loan_schedules')
             .delete()
             .eq('loan_id', loanId);
       } catch (_) {
-        // Ignore if table or permission doesn't exist
+        // Ignore if table doesn't exist
       }
 
-      // 4. Nullify loan_id in collections to avoid foreign key block
+      // 4. Delete collections (not just nullify)
       await _client
           .from('collections')
-          .update({'loan_id': null})
+          .delete()
           .eq('loan_id', loanId);
 
-      // 5. Nullify loan_id in customer_payment_requests to avoid foreign key block
+      // 5. Delete customer payment requests if table exists
       try {
         await _client
             .from('customer_payment_requests')
-            .update({'loan_id': null})
+            .delete()
             .eq('loan_id', loanId);
       } catch (_) {
-        // Ignore if table or constraint doesn't exist
+        // Ignore if table doesn't exist
       }
 
       // 6. Delete the loan itself
@@ -338,7 +338,7 @@ class LoansRepository {
           .delete()
           .eq('id', loanId);
 
-      // 7. Verify deletion dynamically by checking if the record still exists
+      // 7. Verify deletion
       final check = await _client
           .from('loans')
           .select('id')

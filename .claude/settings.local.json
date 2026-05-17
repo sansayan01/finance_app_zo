@@ -7,7 +7,15 @@
       "Bash(npx skills *)",
       "Bash(mkdir -p \"d:/Projects/finance_app_zo/.claude/skills\")",
       "Bash(cp -r \"d:/Projects/finance_app_zo/.agents/skills/supabase\" \"d:/Projects/finance_app_zo/.claude/skills/supabase\")",
-      "Bash(cp -r \"d:/Projects/finance_app_zo/.agents/skills/supabase-postgres-best-practices\" \"d:/Projects/finance_app_zo/.claude/skills/supabase-postgres-best-practices\")"
+      "Bash(cp -r \"d:/Projects/finance_app_zo/.agents/skills/supabase-postgres-best-practices\" \"d:/Projects/finance_app_zo/.claude/skills/supabase-postgres-best-practices\")",
+      "Bash(python -c \"import graphify\")",
+      "Bash(pip install *)",
+      "Bash(python3 -c \"import graphify\")",
+      "Bash(python3 -m pip install graphifyy -q)",
+      "Bash(where.exe python *)",
+      "Read(//c/Program Files/**)",
+      "Bash(ls -la \"/c/Python\"*)",
+      "Bash(flutter --version)"
     ]
   },
   "enabledMcpjsonServers": [

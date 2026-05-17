@@ -531,7 +531,7 @@
       "source_file": "lib/features/loans/presentation/pages/loan_detail_page.dart",
       "source_location": null,
       "id": "dart_io",
-      "community": 35,
+      "community": 171,
       "norm_label": "dart:io"
     },
     {
@@ -693,7 +693,7 @@
       "source_file": "lib/core/providers/system_config_provider.dart",
       "source_location": null,
       "id": "package_package_info_plus_package_info_plus_dart",
-      "community": 35,
+      "community": 171,
       "norm_label": "package:package_info_plus/package_info_plus.dart"
     },
     {
@@ -3285,7 +3285,7 @@
       "source_file": "lib/features/users/presentation/pages/new_user_page.dart",
       "source_location": null,
       "id": "package_flutter_services_dart",
-      "community": 136,
+      "community": 154,
       "norm_label": "package:flutter/services.dart"
     },
     {
@@ -3573,7 +3573,7 @@
       "source_file": "lib/core/providers/branding_provider.dart",
       "source_location": null,
       "id": "lib_core_providers_branding_provider_dart",
-      "community": 149,
+      "community": 115,
       "norm_label": "branding_provider.dart"
     },
     {
@@ -3582,7 +3582,7 @@
       "source_file": "lib/core/providers/branding_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_branding_provider_dart_brandingconfig",
-      "community": 149,
+      "community": 115,
       "norm_label": "brandingconfig"
     },
     {
@@ -3591,7 +3591,7 @@
       "source_file": "lib/core/providers/branding_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_branding_provider_dart_brandingnotifier",
-      "community": 149,
+      "community": 115,
       "norm_label": "brandingnotifier"
     },
     {
@@ -3600,7 +3600,7 @@
       "source_file": "lib/core/providers/branding_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_branding_provider_dart_mapentry",
-      "community": 149,
+      "community": 115,
       "norm_label": "mapentry"
     },
     {
@@ -3609,7 +3609,7 @@
       "source_file": "lib/core/providers/branding_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_branding_provider_dart_preloadlogo",
-      "community": 149,
+      "community": 115,
       "norm_label": "preloadlogo"
     },
     {
@@ -3618,7 +3618,7 @@
       "source_file": "lib/core/providers/branding_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_branding_provider_dart_loadbranding",
-      "community": 149,
+      "community": 115,
       "norm_label": "loadbranding"
     },
     {
@@ -3627,7 +3627,7 @@
       "source_file": "lib/features/setup/presentation/pages/setup_wizard_page.dart",
       "source_location": null,
       "id": "dart_typed_data",
-      "community": 48,
+      "community": 115,
       "norm_label": "dart:typed_data"
     },
     {
@@ -3645,7 +3645,7 @@
       "source_file": "lib/core/providers/branding_provider.dart",
       "source_location": null,
       "id": "org_provider_dart",
-      "community": 149,
+      "community": 115,
       "norm_label": "org_provider.dart"
     },
     {
@@ -3654,7 +3654,7 @@
       "source_file": "lib/core/providers/org_provider.dart",
       "source_location": null,
       "id": "lib_core_providers_org_provider_dart",
-      "community": 166,
+      "community": 94,
       "norm_label": "org_provider.dart"
     },
     {
@@ -3663,7 +3663,7 @@
       "source_file": "lib/router/app_router.dart",
       "source_location": null,
       "id": "features_auth_presentation_providers_auth_provider_dart",
-      "community": 166,
+      "community": 0,
       "norm_label": "../features/auth/presentation/providers/auth_provider.dart"
     },
     {
@@ -3672,7 +3672,7 @@
       "source_file": "lib/core/providers/storage_providers.dart",
       "source_location": null,
       "id": "lib_core_providers_storage_providers_dart",
-      "community": 94,
+      "community": 166,
       "norm_label": "storage_providers.dart"
     },
     {
@@ -3681,7 +3681,7 @@
       "source_file": "lib/core/providers/storage_providers.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_storage_providers_dart_unimplementederror",
-      "community": 94,
+      "community": 166,
       "norm_label": "unimplementederror"
     },
     {
@@ -3690,7 +3690,7 @@
       "source_file": "lib/core/providers/system_config_provider.dart",
       "source_location": null,
       "id": "lib_core_providers_system_config_provider_dart",
-      "community": 35,
+      "community": 171,
       "norm_label": "system_config_provider.dart"
     },
     {
@@ -3699,7 +3699,7 @@
       "source_file": "lib/core/providers/system_config_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_system_config_provider_dart_updatecheckresult",
-      "community": 35,
+      "community": 171,
       "norm_label": "updatecheckresult"
     },
     {
@@ -3708,7 +3708,7 @@
       "source_file": "lib/core/providers/system_config_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_system_config_provider_dart_systemconfig",
-      "community": 35,
+      "community": 171,
       "norm_label": "systemconfig"
     },
     {
@@ -3717,7 +3717,7 @@
       "source_file": "lib/core/providers/system_config_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_providers_system_config_provider_dart_isversionlower",
-      "community": 35,
+      "community": 171,
       "norm_label": "_isversionlower"
     },
     {
@@ -3726,7 +3726,7 @@
       "source_file": "lib/core/providers/system_config_provider.dart",
       "source_location": null,
       "id": "models_system_config_dart",
-      "community": 35,
+      "community": 171,
       "norm_label": "../models/system_config.dart"
     },
     {
@@ -3870,7 +3870,7 @@
       "source_file": "lib/core/services/haptic_service.dart",
       "source_location": null,
       "id": "lib_core_services_haptic_service_dart",
-      "community": 136,
+      "community": 154,
       "norm_label": "haptic_service.dart"
     },
     {
@@ -3879,7 +3879,7 @@
       "source_file": "lib/core/services/haptic_service.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_services_haptic_service_dart_hapticservice",
-      "community": 136,
+      "community": 154,
       "norm_label": "hapticservice"
     },
     {
@@ -3888,7 +3888,7 @@
       "source_file": "lib/core/services/location_service.dart",
       "source_location": null,
       "id": "lib_core_services_location_service_dart",
-      "community": 150,
+      "community": 38,
       "norm_label": "location_service.dart"
     },
     {
@@ -3897,7 +3897,7 @@
       "source_file": "lib/core/services/location_service.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_services_location_service_dart_locationservice",
-      "community": 150,
+      "community": 38,
       "norm_label": "locationservice"
     },
     {
@@ -3906,7 +3906,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "package_geolocator_geolocator_dart",
-      "community": 150,
+      "community": 38,
       "norm_label": "package:geolocator/geolocator.dart"
     },
     {
@@ -4779,7 +4779,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "lib_core_widgets_branded_loading_dart",
-      "community": 48,
+      "community": 115,
       "norm_label": "branded_loading.dart"
     },
     {
@@ -4788,7 +4788,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_brandedloading",
-      "community": 48,
+      "community": 115,
       "norm_label": "brandedloading"
     },
     {
@@ -4797,7 +4797,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_brandedsplashscreen",
-      "community": 48,
+      "community": 115,
       "norm_label": "brandedsplashscreen"
     },
     {
@@ -4806,7 +4806,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_brandedappbarlogo",
-      "community": 48,
+      "community": 115,
       "norm_label": "brandedappbarlogo"
     },
     {
@@ -4815,7 +4815,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_dynamicbrandtext",
-      "community": 48,
+      "community": 115,
       "norm_label": "dynamicbrandtext"
     },
     {
@@ -4824,7 +4824,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_build",
-      "community": 48,
+      "community": 115,
       "norm_label": "build"
     },
     {
@@ -4833,7 +4833,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_builddefaultloading",
-      "community": 48,
+      "community": 115,
       "norm_label": "_builddefaultloading"
     },
     {
@@ -4842,7 +4842,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_buildbrandedloadingfrombytes",
-      "community": 48,
+      "community": 115,
       "norm_label": "_buildbrandedloadingfrombytes"
     },
     {
@@ -4851,7 +4851,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_column",
-      "community": 48,
+      "community": 115,
       "norm_label": "column"
     },
     {
@@ -4860,7 +4860,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_sizedbox",
-      "community": 48,
+      "community": 115,
       "norm_label": "sizedbox"
     },
     {
@@ -4869,7 +4869,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_builddefaultsplash",
-      "community": 48,
+      "community": 115,
       "norm_label": "_builddefaultsplash"
     },
     {
@@ -4878,7 +4878,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_container",
-      "community": 48,
+      "community": 115,
       "norm_label": "container"
     },
     {
@@ -4887,7 +4887,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_scaffold",
-      "community": 48,
+      "community": 115,
       "norm_label": "scaffold"
     },
     {
@@ -4896,7 +4896,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_circularprogressindicator",
-      "community": 48,
+      "community": 115,
       "norm_label": "circularprogressindicator"
     },
     {
@@ -4905,7 +4905,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_builddefaultlogo",
-      "community": 48,
+      "community": 115,
       "norm_label": "_builddefaultlogo"
     },
     {
@@ -4914,7 +4914,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_icon",
-      "community": 48,
+      "community": 115,
       "norm_label": "icon"
     },
     {
@@ -4923,7 +4923,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_branded_loading_dart_text",
-      "community": 48,
+      "community": 115,
       "norm_label": "text"
     },
     {
@@ -4932,7 +4932,7 @@
       "source_file": "lib/features/users/presentation/pages/user_details_page.dart",
       "source_location": null,
       "id": "package_flutter_animate_flutter_animate_dart",
-      "community": 217,
+      "community": 283,
       "norm_label": "package:flutter_animate/flutter_animate.dart"
     },
     {
@@ -4941,7 +4941,7 @@
       "source_file": "lib/core/widgets/branded_loading.dart",
       "source_location": null,
       "id": "providers_branding_provider_dart",
-      "community": 48,
+      "community": 115,
       "norm_label": "../providers/branding_provider.dart"
     },
     {
@@ -5004,7 +5004,7 @@
       "source_file": "lib/core/widgets/glass_card.dart",
       "source_location": null,
       "id": "lib_core_widgets_glass_card_dart",
-      "community": 162,
+      "community": 26,
       "norm_label": "glass_card.dart"
     },
     {
@@ -5013,7 +5013,7 @@
       "source_file": "lib/core/widgets/glass_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_glass_card_dart_glasscard",
-      "community": 162,
+      "community": 26,
       "norm_label": "glasscard"
     },
     {
@@ -5022,7 +5022,7 @@
       "source_file": "lib/core/widgets/glass_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_glass_card_dart_glasscardstate",
-      "community": 162,
+      "community": 26,
       "norm_label": "_glasscardstate"
     },
     {
@@ -5031,7 +5031,7 @@
       "source_file": "lib/core/widgets/glass_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_glass_card_dart_initstate",
-      "community": 162,
+      "community": 26,
       "norm_label": "initstate"
     },
     {
@@ -5040,7 +5040,7 @@
       "source_file": "lib/core/widgets/glass_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_glass_card_dart_dispose",
-      "community": 162,
+      "community": 26,
       "norm_label": "dispose"
     },
     {
@@ -5049,7 +5049,7 @@
       "source_file": "lib/core/widgets/glass_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_glass_card_dart_build",
-      "community": 162,
+      "community": 26,
       "norm_label": "build"
     },
     {
@@ -5058,7 +5058,7 @@
       "source_file": "lib/core/widgets/glass_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_glass_card_dart_gesturedetector",
-      "community": 162,
+      "community": 26,
       "norm_label": "gesturedetector"
     },
     {
@@ -5193,7 +5193,7 @@
       "source_file": "lib/router/app_router.dart",
       "source_location": null,
       "id": "dart_ui",
-      "community": 184,
+      "community": 145,
       "norm_label": "dart:ui"
     },
     {
@@ -5724,7 +5724,7 @@
       "source_file": "lib/core/widgets/sparkline_chart.dart",
       "source_location": null,
       "id": "lib_core_widgets_sparkline_chart_dart",
-      "community": 12,
+      "community": 13,
       "norm_label": "sparkline_chart.dart"
     },
     {
@@ -5733,7 +5733,7 @@
       "source_file": "lib/core/widgets/sparkline_chart.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_sparkline_chart_dart_sparklinechart",
-      "community": 12,
+      "community": 13,
       "norm_label": "sparklinechart"
     },
     {
@@ -5742,7 +5742,7 @@
       "source_file": "lib/core/widgets/sparkline_chart.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_sparkline_chart_dart_build",
-      "community": 12,
+      "community": 13,
       "norm_label": "build"
     },
     {
@@ -5751,7 +5751,7 @@
       "source_file": "lib/core/widgets/sparkline_chart.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_sparkline_chart_dart_sizedbox",
-      "community": 12,
+      "community": 13,
       "norm_label": "sizedbox"
     },
     {
@@ -5760,7 +5760,7 @@
       "source_file": "lib/features/users/presentation/pages/user_details_page.dart",
       "source_location": null,
       "id": "package_fl_chart_fl_chart_dart",
-      "community": 12,
+      "community": 13,
       "norm_label": "package:fl_chart/fl_chart.dart"
     },
     {
@@ -5769,7 +5769,7 @@
       "source_file": "lib/core/widgets/status_badge.dart",
       "source_location": null,
       "id": "lib_core_widgets_status_badge_dart",
-      "community": 339,
+      "community": 26,
       "norm_label": "status_badge.dart"
     },
     {
@@ -5778,7 +5778,7 @@
       "source_file": "lib/core/widgets/status_badge.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_status_badge_dart_statusbadge",
-      "community": 339,
+      "community": 26,
       "norm_label": "statusbadge"
     },
     {
@@ -5787,7 +5787,7 @@
       "source_file": "lib/core/widgets/status_badge.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_status_badge_dart_build",
-      "community": 339,
+      "community": 26,
       "norm_label": "build"
     },
     {
@@ -5796,7 +5796,7 @@
       "source_file": "lib/core/widgets/status_badge.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_status_badge_dart_container",
-      "community": 339,
+      "community": 26,
       "norm_label": "container"
     },
     {
@@ -5805,7 +5805,7 @@
       "source_file": "lib/core/widgets/status_badge.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_core_widgets_status_badge_dart_color",
-      "community": 339,
+      "community": 26,
       "norm_label": "color"
     },
     {
@@ -6156,7 +6156,7 @@
       "source_file": "lib/router/app_router.dart",
       "source_location": null,
       "id": "package_go_router_go_router_dart",
-      "community": 146,
+      "community": 334,
       "norm_label": "package:go_router/go_router.dart"
     },
     {
@@ -6417,7 +6417,7 @@
       "source_file": "lib/router/app_router.dart",
       "source_location": null,
       "id": "core_providers_org_provider_dart",
-      "community": 84,
+      "community": 179,
       "norm_label": "../core/providers/org_provider.dart"
     },
     {
@@ -6840,7 +6840,7 @@
       "source_file": "lib/features/admin/presentation/widgets/trial_banner.dart",
       "source_location": null,
       "id": "lib_features_admin_presentation_widgets_trial_banner_dart",
-      "community": 333,
+      "community": 179,
       "norm_label": "trial_banner.dart"
     },
     {
@@ -6849,7 +6849,7 @@
       "source_file": "lib/features/admin/presentation/widgets/trial_banner.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_admin_presentation_widgets_trial_banner_dart_trialbanner",
-      "community": 333,
+      "community": 179,
       "norm_label": "trialbanner"
     },
     {
@@ -6858,7 +6858,7 @@
       "source_file": "lib/features/admin/presentation/widgets/trial_banner.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_admin_presentation_widgets_trial_banner_dart_build",
-      "community": 333,
+      "community": 179,
       "norm_label": "build"
     },
     {
@@ -6867,7 +6867,7 @@
       "source_file": "lib/features/admin/presentation/widgets/trial_banner.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_admin_presentation_widgets_trial_banner_dart_buildbanner",
-      "community": 333,
+      "community": 179,
       "norm_label": "_buildbanner"
     },
     {
@@ -6876,7 +6876,7 @@
       "source_file": "lib/features/admin/presentation/widgets/trial_banner.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_admin_presentation_widgets_trial_banner_dart_container",
-      "community": 333,
+      "community": 179,
       "norm_label": "container"
     },
     {
@@ -6885,7 +6885,7 @@
       "source_file": "lib/features/admin/presentation/widgets/trial_banner.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_admin_presentation_widgets_trial_banner_dart_sizedbox",
-      "community": 333,
+      "community": 179,
       "norm_label": "sizedbox"
     },
     {
@@ -7857,7 +7857,7 @@
       "source_file": "lib/features/auth/presentation/pages/verify_email_page.dart",
       "source_location": null,
       "id": "providers_auth_provider_dart",
-      "community": 217,
+      "community": 334,
       "norm_label": "../providers/auth_provider.dart"
     },
     {
@@ -8019,7 +8019,7 @@
       "source_file": "lib/features/auth/presentation/pages/verify_email_page.dart",
       "source_location": null,
       "id": "lib_features_auth_presentation_pages_verify_email_page_dart",
-      "community": 217,
+      "community": 334,
       "norm_label": "verify_email_page.dart"
     },
     {
@@ -8028,7 +8028,7 @@
       "source_file": "lib/features/auth/presentation/pages/verify_email_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_auth_presentation_pages_verify_email_page_dart_verifyemailpage",
-      "community": 217,
+      "community": 334,
       "norm_label": "verifyemailpage"
     },
     {
@@ -8037,7 +8037,7 @@
       "source_file": "lib/features/auth/presentation/pages/verify_email_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_auth_presentation_pages_verify_email_page_dart_build",
-      "community": 217,
+      "community": 334,
       "norm_label": "build"
     },
     {
@@ -8046,7 +8046,7 @@
       "source_file": "lib/features/auth/presentation/pages/verify_email_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_auth_presentation_pages_verify_email_page_dart_scaffold",
-      "community": 217,
+      "community": 334,
       "norm_label": "scaffold"
     },
     {
@@ -8055,7 +8055,7 @@
       "source_file": "lib/features/auth/presentation/pages/verify_email_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_auth_presentation_pages_verify_email_page_dart_sizedbox",
-      "community": 217,
+      "community": 334,
       "norm_label": "sizedbox"
     },
     {
@@ -8775,7 +8775,7 @@
       "source_file": "lib/features/branches/data/providers/branch_providers.dart",
       "source_location": null,
       "id": "lib_features_branches_data_providers_branch_providers_dart",
-      "community": 84,
+      "community": 179,
       "norm_label": "branch_providers.dart"
     },
     {
@@ -8784,7 +8784,7 @@
       "source_file": "lib/features/branches/data/providers/branch_providers.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_branches_data_providers_branch_providers_dart_branchnotifier",
-      "community": 84,
+      "community": 179,
       "norm_label": "branchnotifier"
     },
     {
@@ -8793,7 +8793,7 @@
       "source_file": "lib/features/branches/data/providers/branch_providers.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_branches_data_providers_branch_providers_dart_branchrepository",
-      "community": 84,
+      "community": 179,
       "norm_label": "branchrepository"
     },
     {
@@ -8802,7 +8802,7 @@
       "source_file": "lib/features/branches/data/providers/branch_providers.dart",
       "source_location": null,
       "id": "repositories_branch_repository_dart",
-      "community": 84,
+      "community": 179,
       "norm_label": "../repositories/branch_repository.dart"
     },
     {
@@ -9873,7 +9873,7 @@
       "source_file": "lib/features/branding/data/repositories/branding_repository.dart",
       "source_location": null,
       "id": "lib_features_branding_data_repositories_branding_repository_dart",
-      "community": 48,
+      "community": 115,
       "norm_label": "branding_repository.dart"
     },
     {
@@ -9882,7 +9882,7 @@
       "source_file": "lib/features/branding/data/repositories/branding_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_branding_data_repositories_branding_repository_dart_brandingrepository",
-      "community": 48,
+      "community": 115,
       "norm_label": "brandingrepository"
     },
     {
@@ -9891,7 +9891,7 @@
       "source_file": "lib/features/branding/data/repositories/branding_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_branding_data_repositories_branding_repository_dart_updatebranding",
-      "community": 48,
+      "community": 115,
       "norm_label": "updatebranding"
     },
     {
@@ -10188,7 +10188,7 @@
       "source_file": "lib/features/chatbot/presentation/providers/chat_config_provider.dart",
       "source_location": null,
       "id": "lib_features_chatbot_presentation_providers_chat_config_provider_dart",
-      "community": 171,
+      "community": 166,
       "norm_label": "chat_config_provider.dart"
     },
     {
@@ -10197,7 +10197,7 @@
       "source_file": "lib/features/chatbot/presentation/providers/chat_config_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_chatbot_presentation_providers_chat_config_provider_dart_chatconfig",
-      "community": 171,
+      "community": 166,
       "norm_label": "chatconfig"
     },
     {
@@ -10206,7 +10206,7 @@
       "source_file": "lib/features/chatbot/presentation/providers/chat_config_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_chatbot_presentation_providers_chat_config_provider_dart_chatconfignotifier",
-      "community": 171,
+      "community": 166,
       "norm_label": "chatconfignotifier"
     },
     {
@@ -10215,7 +10215,7 @@
       "source_file": "lib/features/chatbot/presentation/providers/chat_config_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_chatbot_presentation_providers_chat_config_provider_dart_copywith",
-      "community": 171,
+      "community": 166,
       "norm_label": "copywith"
     },
     {
@@ -13014,7 +13014,7 @@
       "source_file": "lib/features/loans/data/models/loan_model.dart",
       "source_location": null,
       "id": "lib_features_loans_data_models_loan_model_dart",
-      "community": 340,
+      "community": 65,
       "norm_label": "loan_model.dart"
     },
     {
@@ -13023,7 +13023,7 @@
       "source_file": "lib/features/loans/data/models/loan_model.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_loans_data_models_loan_model_dart_loanmodel",
-      "community": 340,
+      "community": 65,
       "norm_label": "loanmodel"
     },
     {
@@ -13032,7 +13032,7 @@
       "source_file": "lib/features/loans/data/models/loan_model.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_loans_data_models_loan_model_dart_loansummary",
-      "community": 340,
+      "community": 65,
       "norm_label": "loansummary"
     },
     {
@@ -13041,7 +13041,7 @@
       "source_file": "lib/features/loans/data/models/loan_model.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_loans_data_models_loan_model_dart_getunitlabel",
-      "community": 340,
+      "community": 65,
       "norm_label": "_getunitlabel"
     },
     {
@@ -13050,7 +13050,7 @@
       "source_file": "lib/features/loans/data/models/loan_model.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_loans_data_models_loan_model_dart_tosnake",
-      "community": 340,
+      "community": 65,
       "norm_label": "_tosnake"
     },
     {
@@ -13626,7 +13626,7 @@
       "source_file": "lib/features/loans/presentation/widgets/collection_sheet.dart",
       "source_location": null,
       "id": "data_models_loan_model_dart",
-      "community": 189,
+      "community": 64,
       "norm_label": "../../data/models/loan_model.dart"
     },
     {
@@ -14625,7 +14625,7 @@
       "source_file": "lib/features/loans/presentation/widgets/collection_sheet.dart",
       "source_location": null,
       "id": "data_models_emi_schedule_model_dart",
-      "community": 189,
+      "community": 64,
       "norm_label": "../../data/models/emi_schedule_model.dart"
     },
     {
@@ -15048,7 +15048,7 @@
       "source_file": "lib/features/loans/presentation/providers/loan_providers.dart",
       "source_location": null,
       "id": "lib_features_loans_presentation_providers_loan_providers_dart",
-      "community": 189,
+      "community": 64,
       "norm_label": "loan_providers.dart"
     },
     {
@@ -15057,7 +15057,7 @@
       "source_file": "lib/features/loans/presentation/providers/loan_providers.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_loans_presentation_providers_loan_providers_dart_loansrepository",
-      "community": 189,
+      "community": 64,
       "norm_label": "loansrepository"
     },
     {
@@ -15066,7 +15066,7 @@
       "source_file": "lib/features/loans/presentation/providers/loan_providers.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_loans_presentation_providers_loan_providers_dart_emirepository",
-      "community": 189,
+      "community": 64,
       "norm_label": "emirepository"
     },
     {
@@ -15075,7 +15075,7 @@
       "source_file": "lib/features/loans/presentation/providers/new_loan_provider.dart",
       "source_location": null,
       "id": "data_repositories_loans_repository_dart",
-      "community": 189,
+      "community": 64,
       "norm_label": "../../data/repositories/loans_repository.dart"
     },
     {
@@ -15084,7 +15084,7 @@
       "source_file": "lib/features/loans/presentation/providers/loan_providers.dart",
       "source_location": null,
       "id": "data_repositories_emi_repository_dart",
-      "community": 189,
+      "community": 64,
       "norm_label": "../../data/repositories/emi_repository.dart"
     },
     {
@@ -16146,7 +16146,7 @@
       "source_file": "lib/features/savings/data/repositories/savings_repository.dart",
       "source_location": null,
       "id": "models_savings_model_dart",
-      "community": 180,
+      "community": 149,
       "norm_label": "../models/savings_model.dart"
     },
     {
@@ -16164,7 +16164,7 @@
       "source_file": "lib/features/savings/data/repositories/savings_repository.dart",
       "source_location": null,
       "id": "lib_features_savings_data_repositories_savings_repository_dart",
-      "community": 180,
+      "community": 149,
       "norm_label": "savings_repository.dart"
     },
     {
@@ -16173,7 +16173,7 @@
       "source_file": "lib/features/savings/data/repositories/savings_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_data_repositories_savings_repository_dart_savingsrepository",
-      "community": 180,
+      "community": 149,
       "norm_label": "savingsrepository"
     },
     {
@@ -16182,7 +16182,7 @@
       "source_file": "lib/features/savings/data/repositories/savings_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_data_repositories_savings_repository_dart_mapsavingslist",
-      "community": 180,
+      "community": 149,
       "norm_label": "_mapsavingslist"
     },
     {
@@ -16191,7 +16191,7 @@
       "source_file": "lib/features/savings/data/repositories/savings_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_data_repositories_savings_repository_dart_savingsmodel",
-      "community": 180,
+      "community": 149,
       "norm_label": "savingsmodel"
     },
     {
@@ -16200,7 +16200,7 @@
       "source_file": "lib/features/savings/data/repositories/savings_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_data_repositories_savings_repository_dart_savingssummary",
-      "community": 180,
+      "community": 149,
       "norm_label": "savingssummary"
     },
     {
@@ -16209,7 +16209,7 @@
       "source_file": "lib/features/savings/data/repositories/savings_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_data_repositories_savings_repository_dart_getactivesavingsplans",
-      "community": 180,
+      "community": 149,
       "norm_label": "getactivesavingsplans"
     },
     {
@@ -16533,7 +16533,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "data_providers_savings_providers_dart",
-      "community": 118,
+      "community": 150,
       "norm_label": "../../data/providers/savings_providers.dart"
     },
     {
@@ -17212,6 +17212,15 @@
       "norm_label": "container"
     },
     {
+      "label": "LineTooltipItem",
+      "file_type": "code",
+      "source_file": "lib/features/savings/presentation/pages/saving_detail_page.dart",
+      "source_location": null,
+      "id": "d_projects_finance_app_zo_lib_features_savings_presentation_pages_saving_detail_page_dart_linetooltipitem",
+      "community": 12,
+      "norm_label": "linetooltipitem"
+    },
+    {
       "label": "FlLine",
       "file_type": "code",
       "source_file": "lib/features/savings/presentation/pages/saving_detail_page.dart",
@@ -17473,12 +17482,21 @@
       "norm_label": "_buildtransactionitem"
     },
     {
+      "label": "../../../../features/transactions/data/models/transaction_model.dart",
+      "file_type": "code",
+      "source_file": "lib/features/savings/presentation/pages/saving_detail_page.dart",
+      "source_location": null,
+      "id": "features_transactions_data_models_transaction_model_dart",
+      "community": 12,
+      "norm_label": "../../../../features/transactions/data/models/transaction_model.dart"
+    },
+    {
       "label": "new_recurring_saving_provider.dart",
       "file_type": "code",
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "lib_features_savings_presentation_providers_new_recurring_saving_provider_dart",
-      "community": 118,
+      "community": 150,
       "norm_label": "new_recurring_saving_provider.dart"
     },
     {
@@ -17487,7 +17505,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_newrecurringsavingstate",
-      "community": 118,
+      "community": 150,
       "norm_label": "newrecurringsavingstate"
     },
     {
@@ -17496,7 +17514,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_newrecurringsavingnotifier",
-      "community": 118,
+      "community": 150,
       "norm_label": "newrecurringsavingnotifier"
     },
     {
@@ -17505,7 +17523,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_copywith",
-      "community": 118,
+      "community": 150,
       "norm_label": "copywith"
     },
     {
@@ -17514,7 +17532,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_updatemember",
-      "community": 118,
+      "community": 150,
       "norm_label": "updatemember"
     },
     {
@@ -17523,7 +17541,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_updatecollectiontype",
-      "community": 118,
+      "community": 150,
       "norm_label": "updatecollectiontype"
     },
     {
@@ -17532,7 +17550,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_updateinstallmentamount",
-      "community": 118,
+      "community": 150,
       "norm_label": "updateinstallmentamount"
     },
     {
@@ -17541,7 +17559,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_updatematurityamount",
-      "community": 118,
+      "community": 150,
       "norm_label": "updatematurityamount"
     },
     {
@@ -17550,7 +17568,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_updateinitialbalance",
-      "community": 118,
+      "community": 150,
       "norm_label": "updateinitialbalance"
     },
     {
@@ -17559,7 +17577,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_updatematuritydate",
-      "community": 118,
+      "community": 150,
       "norm_label": "updatematuritydate"
     },
     {
@@ -17568,7 +17586,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_updateprematurepenalty",
-      "community": 118,
+      "community": 150,
       "norm_label": "updateprematurepenalty"
     },
     {
@@ -17577,7 +17595,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_savings_presentation_providers_new_recurring_saving_provider_dart_reset",
-      "community": 118,
+      "community": 150,
       "norm_label": "reset"
     },
     {
@@ -17586,7 +17604,7 @@
       "source_file": "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart",
       "source_location": null,
       "id": "data_repositories_savings_repository_dart",
-      "community": 118,
+      "community": 150,
       "norm_label": "../../data/repositories/savings_repository.dart"
     },
     {
@@ -19962,7 +19980,7 @@
       "source_file": "lib/features/staff/presentation/widgets/weekly_performance_chart.dart",
       "source_location": null,
       "id": "data_providers_staff_providers_dart",
-      "community": 334,
+      "community": 121,
       "norm_label": "../../data/providers/staff_providers.dart"
     },
     {
@@ -22536,7 +22554,7 @@
       "source_file": "lib/features/staff/presentation/widgets/sync_status_card.dart",
       "source_location": null,
       "id": "data_providers_sync_providers_dart",
-      "community": 32,
+      "community": 172,
       "norm_label": "../../data/providers/sync_providers.dart"
     },
     {
@@ -24066,7 +24084,7 @@
       "source_file": "lib/features/staff/presentation/widgets/break_card.dart",
       "source_location": null,
       "id": "lib_features_staff_presentation_widgets_break_card_dart",
-      "community": 331,
+      "community": 121,
       "norm_label": "break_card.dart"
     },
     {
@@ -24075,7 +24093,7 @@
       "source_file": "lib/features/staff/presentation/widgets/break_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_break_card_dart_breakcard",
-      "community": 331,
+      "community": 121,
       "norm_label": "breakcard"
     },
     {
@@ -24084,7 +24102,7 @@
       "source_file": "lib/features/staff/presentation/widgets/break_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_break_card_dart_breakcardstate",
-      "community": 331,
+      "community": 121,
       "norm_label": "_breakcardstate"
     },
     {
@@ -24093,7 +24111,7 @@
       "source_file": "lib/features/staff/presentation/widgets/break_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_break_card_dart_snackbar",
-      "community": 331,
+      "community": 121,
       "norm_label": "snackbar"
     },
     {
@@ -24102,7 +24120,7 @@
       "source_file": "lib/features/staff/presentation/widgets/break_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_break_card_dart_build",
-      "community": 331,
+      "community": 121,
       "norm_label": "build"
     },
     {
@@ -24111,7 +24129,7 @@
       "source_file": "lib/features/staff/presentation/widgets/break_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_break_card_dart_container",
-      "community": 331,
+      "community": 121,
       "norm_label": "container"
     },
     {
@@ -24120,7 +24138,7 @@
       "source_file": "lib/features/staff/presentation/widgets/break_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_break_card_dart_sizedbox",
-      "community": 331,
+      "community": 121,
       "norm_label": "sizedbox"
     },
     {
@@ -24336,7 +24354,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart",
-      "community": 115,
+      "community": 29,
       "norm_label": "gps_accuracy_indicator.dart"
     },
     {
@@ -24345,7 +24363,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_gpsaccuracyindicator",
-      "community": 115,
+      "community": 29,
       "norm_label": "gpsaccuracyindicator"
     },
     {
@@ -24354,7 +24372,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_gpsstatuscard",
-      "community": 115,
+      "community": 29,
       "norm_label": "gpsstatuscard"
     },
     {
@@ -24363,7 +24381,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_build",
-      "community": 115,
+      "community": 29,
       "norm_label": "build"
     },
     {
@@ -24372,7 +24390,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_sizedbox",
-      "community": 115,
+      "community": 29,
       "norm_label": "sizedbox"
     },
     {
@@ -24381,7 +24399,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_icon",
-      "community": 115,
+      "community": 29,
       "norm_label": "icon"
     },
     {
@@ -24390,7 +24408,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_tooltip",
-      "community": 115,
+      "community": 29,
       "norm_label": "tooltip"
     },
     {
@@ -24399,7 +24417,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_container",
-      "community": 115,
+      "community": 29,
       "norm_label": "container"
     },
     {
@@ -24408,7 +24426,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_spacer",
-      "community": 115,
+      "community": 29,
       "norm_label": "spacer"
     },
     {
@@ -24417,7 +24435,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_center",
-      "community": 115,
+      "community": 29,
       "norm_label": "center"
     },
     {
@@ -24426,7 +24444,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_builddetailrow",
-      "community": 115,
+      "community": 29,
       "norm_label": "_builddetailrow"
     },
     {
@@ -24435,7 +24453,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_accuracy_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_accuracy_indicator_dart_row",
-      "community": 115,
+      "community": 29,
       "norm_label": "row"
     },
     {
@@ -24444,7 +24462,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "lib_features_staff_presentation_widgets_gps_status_chip_dart",
-      "community": 150,
+      "community": 38,
       "norm_label": "gps_status_chip.dart"
     },
     {
@@ -24453,7 +24471,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_gpsstatuschip",
-      "community": 150,
+      "community": 38,
       "norm_label": "gpsstatuschip"
     },
     {
@@ -24462,7 +24480,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_build",
-      "community": 150,
+      "community": 38,
       "norm_label": "build"
     },
     {
@@ -24471,7 +24489,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_gesturedetector",
-      "community": 150,
+      "community": 38,
       "norm_label": "gesturedetector"
     },
     {
@@ -24480,7 +24498,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_sizedbox",
-      "community": 150,
+      "community": 38,
       "norm_label": "sizedbox"
     },
     {
@@ -24489,7 +24507,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_buildpulsingdot",
-      "community": 150,
+      "community": 38,
       "norm_label": "_buildpulsingdot"
     },
     {
@@ -24498,7 +24516,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_container",
-      "community": 150,
+      "community": 38,
       "norm_label": "container"
     },
     {
@@ -24507,7 +24525,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_getbackgroundcolor",
-      "community": 150,
+      "community": 38,
       "norm_label": "_getbackgroundcolor"
     },
     {
@@ -24516,7 +24534,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_getcolor",
-      "community": 150,
+      "community": 38,
       "norm_label": "_getcolor"
     },
     {
@@ -24525,7 +24543,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_geticon",
-      "community": 150,
+      "community": 38,
       "norm_label": "_geticon"
     },
     {
@@ -24534,7 +24552,7 @@
       "source_file": "lib/features/staff/presentation/widgets/gps_status_chip.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_gps_status_chip_dart_gettext",
-      "community": 150,
+      "community": 38,
       "norm_label": "_gettext"
     },
     {
@@ -24543,7 +24561,7 @@
       "source_file": "lib/features/staff/presentation/widgets/leaderboard_snapshot.dart",
       "source_location": null,
       "id": "lib_features_staff_presentation_widgets_leaderboard_snapshot_dart",
-      "community": 146,
+      "community": 34,
       "norm_label": "leaderboard_snapshot.dart"
     },
     {
@@ -24552,7 +24570,7 @@
       "source_file": "lib/features/staff/presentation/widgets/leaderboard_snapshot.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_leaderboard_snapshot_dart_leaderboardsnapshot",
-      "community": 146,
+      "community": 34,
       "norm_label": "leaderboardsnapshot"
     },
     {
@@ -24561,7 +24579,7 @@
       "source_file": "lib/features/staff/presentation/widgets/leaderboard_snapshot.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_leaderboard_snapshot_dart_build",
-      "community": 146,
+      "community": 34,
       "norm_label": "build"
     },
     {
@@ -24570,7 +24588,7 @@
       "source_file": "lib/features/staff/presentation/widgets/leaderboard_snapshot.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_leaderboard_snapshot_dart_container",
-      "community": 146,
+      "community": 34,
       "norm_label": "container"
     },
     {
@@ -24579,7 +24597,7 @@
       "source_file": "lib/features/staff/presentation/widgets/leaderboard_snapshot.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_leaderboard_snapshot_dart_sizedbox",
-      "community": 146,
+      "community": 34,
       "norm_label": "sizedbox"
     },
     {
@@ -24588,7 +24606,7 @@
       "source_file": "lib/features/staff/presentation/widgets/leaderboard_snapshot.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_leaderboard_snapshot_dart_padding",
-      "community": 146,
+      "community": 34,
       "norm_label": "padding"
     },
     {
@@ -24597,7 +24615,7 @@
       "source_file": "lib/features/staff/presentation/widgets/leaderboard_snapshot.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_leaderboard_snapshot_dart_divider",
-      "community": 146,
+      "community": 34,
       "norm_label": "divider"
     },
     {
@@ -24651,7 +24669,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "lib_features_staff_presentation_widgets_offline_mode_indicator_dart",
-      "community": 32,
+      "community": 162,
       "norm_label": "offline_mode_indicator.dart"
     },
     {
@@ -24660,7 +24678,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_offlinemodeindicator",
-      "community": 32,
+      "community": 162,
       "norm_label": "offlinemodeindicator"
     },
     {
@@ -24669,7 +24687,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_build",
-      "community": 32,
+      "community": 162,
       "norm_label": "build"
     },
     {
@@ -24678,7 +24696,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_buildindicator",
-      "community": 32,
+      "community": 162,
       "norm_label": "_buildindicator"
     },
     {
@@ -24687,7 +24705,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_container",
-      "community": 32,
+      "community": 162,
       "norm_label": "container"
     },
     {
@@ -24696,7 +24714,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_sizedbox",
-      "community": 32,
+      "community": 162,
       "norm_label": "sizedbox"
     },
     {
@@ -24705,7 +24723,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_icon",
-      "community": 32,
+      "community": 162,
       "norm_label": "icon"
     },
     {
@@ -24714,7 +24732,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_showsyncoptions",
-      "community": 32,
+      "community": 162,
       "norm_label": "_showsyncoptions"
     },
     {
@@ -24723,7 +24741,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_consumer",
-      "community": 32,
+      "community": 162,
       "norm_label": "consumer"
     },
     {
@@ -24732,7 +24750,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_buildstatusrow",
-      "community": 32,
+      "community": 162,
       "norm_label": "_buildstatusrow"
     },
     {
@@ -24741,7 +24759,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_row",
-      "community": 32,
+      "community": 162,
       "norm_label": "row"
     },
     {
@@ -24750,7 +24768,7 @@
       "source_file": "lib/features/staff/presentation/widgets/offline_mode_indicator.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_offline_mode_indicator_dart_formattime",
-      "community": 32,
+      "community": 162,
       "norm_label": "_formattime"
     },
     {
@@ -24984,7 +25002,7 @@
       "source_file": "lib/features/staff/presentation/widgets/sync_status_card.dart",
       "source_location": null,
       "id": "lib_features_staff_presentation_widgets_sync_status_card_dart",
-      "community": 32,
+      "community": 172,
       "norm_label": "sync_status_card.dart"
     },
     {
@@ -24993,7 +25011,7 @@
       "source_file": "lib/features/staff/presentation/widgets/sync_status_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_sync_status_card_dart_syncstatuscard",
-      "community": 32,
+      "community": 172,
       "norm_label": "syncstatuscard"
     },
     {
@@ -25002,7 +25020,7 @@
       "source_file": "lib/features/staff/presentation/widgets/sync_status_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_sync_status_card_dart_build",
-      "community": 32,
+      "community": 172,
       "norm_label": "build"
     },
     {
@@ -25011,7 +25029,7 @@
       "source_file": "lib/features/staff/presentation/widgets/sync_status_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_sync_status_card_dart_sizedbox",
-      "community": 32,
+      "community": 172,
       "norm_label": "sizedbox"
     },
     {
@@ -25020,7 +25038,7 @@
       "source_file": "lib/features/staff/presentation/widgets/sync_status_card.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_sync_status_card_dart_triggersync",
-      "community": 32,
+      "community": 172,
       "norm_label": "_triggersync"
     },
     {
@@ -25029,7 +25047,7 @@
       "source_file": "lib/features/staff/presentation/widgets/sync_status_card.dart",
       "source_location": null,
       "id": "sync_status_bar_dart",
-      "community": 32,
+      "community": 172,
       "norm_label": "sync_status_bar.dart"
     },
     {
@@ -26154,7 +26172,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "lib_features_super_admin_presentation_pages_maintenance_page_dart",
-      "community": 172,
+      "community": 117,
       "norm_label": "maintenance_page.dart"
     },
     {
@@ -26163,7 +26181,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_maintenancepage",
-      "community": 172,
+      "community": 117,
       "norm_label": "maintenancepage"
     },
     {
@@ -26172,7 +26190,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_maintenancepagestate",
-      "community": 172,
+      "community": 117,
       "norm_label": "_maintenancepagestate"
     },
     {
@@ -26181,7 +26199,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_build",
-      "community": 172,
+      "community": 117,
       "norm_label": "build"
     },
     {
@@ -26190,7 +26208,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_scaffold",
-      "community": 172,
+      "community": 117,
       "norm_label": "scaffold"
     },
     {
@@ -26199,7 +26217,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_sizedbox",
-      "community": 172,
+      "community": 117,
       "norm_label": "sizedbox"
     },
     {
@@ -26208,7 +26226,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_card",
-      "community": 172,
+      "community": 117,
       "norm_label": "_card"
     },
     {
@@ -26217,7 +26235,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_container",
-      "community": 172,
+      "community": 117,
       "norm_label": "container"
     },
     {
@@ -26226,7 +26244,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_toggle",
-      "community": 172,
+      "community": 117,
       "norm_label": "_toggle"
     },
     {
@@ -26235,7 +26253,7 @@
       "source_file": "lib/features/super_admin/presentation/pages/maintenance_page.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_super_admin_presentation_pages_maintenance_page_dart_create",
-      "community": 172,
+      "community": 117,
       "norm_label": "_create"
     },
     {
@@ -28296,7 +28314,7 @@
       "source_file": "lib/features/users/data/repositories/user_repository.dart",
       "source_location": null,
       "id": "lib_features_users_data_repositories_user_repository_dart",
-      "community": 159,
+      "community": 101,
       "norm_label": "user_repository.dart"
     },
     {
@@ -28305,7 +28323,7 @@
       "source_file": "lib/features/users/data/repositories/user_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_users_data_repositories_user_repository_dart_userrepository",
-      "community": 159,
+      "community": 101,
       "norm_label": "userrepository"
     },
     {
@@ -28314,7 +28332,7 @@
       "source_file": "lib/features/users/data/repositories/user_repository.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_features_users_data_repositories_user_repository_dart_deleteuser",
-      "community": 159,
+      "community": 101,
       "norm_label": "deleteuser"
     },
     {
@@ -29673,7 +29691,7 @@
       "source_file": "lib/providers/supabase_provider.dart",
       "source_location": null,
       "id": "lib_providers_supabase_provider_dart",
-      "community": 149,
+      "community": 94,
       "norm_label": "supabase_provider.dart"
     },
     {
@@ -29682,7 +29700,7 @@
       "source_file": "lib/providers/supabase_provider.dart",
       "source_location": null,
       "id": "d_projects_finance_app_zo_lib_providers_supabase_provider_dart_exception",
-      "community": 149,
+      "community": 94,
       "norm_label": "exception"
     },
     {
@@ -37521,7 +37539,7 @@
       "source_file": ".kiro/skills/graphify/SKILL.md",
       "source_location": "L592",
       "id": "graphify_skill_step_7d_mcp_server_only_if_mcp_flag",
-      "community": 72,
+      "community": 180,
       "norm_label": "step 7d - mcp server (only if --mcp flag)"
     },
     {
@@ -37530,7 +37548,7 @@
       "source_file": ".kiro/skills/graphify/SKILL.md",
       "source_location": "L594",
       "id": "graphify_skill_codeblock_20",
-      "community": 72,
+      "community": 180,
       "norm_label": "code:bash (python3 -m graphify.serve graphify-out/graph.json)"
     },
     {
@@ -37539,7 +37557,7 @@
       "source_file": ".kiro/skills/graphify/SKILL.md",
       "source_location": "L601",
       "id": "graphify_skill_codeblock_21",
-      "community": 72,
+      "community": 180,
       "norm_label": "code:json ({)"
     },
     {
@@ -52892,6 +52910,16 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "lib/features/savings/presentation/pages/saving_detail_page.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_savings_presentation_pages_saving_detail_page_dart",
+      "target": "core_constants_enums_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "lib/features/settings/presentation/pages/profile_page.dart",
       "source_location": null,
       "weight": 1.0,
@@ -64466,6 +64494,16 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_features_savings_presentation_pages_saving_detail_page_dart",
+      "target": "d_projects_finance_app_zo_lib_features_savings_presentation_pages_saving_detail_page_dart_linetooltipitem"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/savings/presentation/pages/saving_detail_page.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_savings_presentation_pages_saving_detail_page_dart",
       "target": "d_projects_finance_app_zo_lib_features_savings_presentation_pages_saving_detail_page_dart_flline"
     },
     {
@@ -64747,6 +64785,16 @@
       "weight": 1.0,
       "source": "lib_features_savings_presentation_pages_saving_detail_page_dart",
       "target": "d_projects_finance_app_zo_lib_features_savings_presentation_pages_saving_detail_page_dart_buildtransactionitem"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/savings/presentation/pages/saving_detail_page.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_savings_presentation_pages_saving_detail_page_dart",
+      "target": "features_transactions_data_models_transaction_model_dart"
     },
     {
       "relation": "defines",
@@ -86654,5 +86702,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "dddaaf21f50cfe8b755786eeb8323f4dab00bacb"
+  "built_at_commit": "6453835ce51fcb8568647580326fa015d07827ad"
 }

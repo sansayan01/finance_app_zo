@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../features/transactions/data/models/transaction_model.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
 
@@ -148,6 +150,83 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Widget _buildYieldChart(SavingsModel saving, ThemeData theme) {
+    final totalDays = saving.maturityDate.difference(saving.createdAt).inDays;
+    double planDurationMonths = totalDays / 30.0;
+    if (planDurationMonths <= 0) planDurationMonths = 12.0;
+
+    double interval = 3.0;
+    if (planDurationMonths <= 6) {
+      interval = 1.0;
+    } else if (planDurationMonths <= 12) {
+      interval = 3.0;
+    } else if (planDurationMonths <= 24) {
+      interval = 6.0;
+    } else {
+      interval = 12.0;
+    }
+
+    final transactionsAsync = ref.watch(savingTransactionsProvider(saving.id));
+    final List<FlSpot> currentProgressSpots = [];
+
+    // Start with (0, 0)
+    currentProgressSpots.add(const FlSpot(0, 0));
+
+    transactionsAsync.maybeWhen(
+      data: (txList) {
+        if (txList.isNotEmpty) {
+          // Sort transactions by date ascending
+          final sortedTxs = List<TransactionModel>.from(txList)
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+          double accumulated = 0;
+          for (final tx in sortedTxs) {
+            final days = tx.createdAt.difference(saving.createdAt).inDays;
+            double monthFraction = days / 30.0;
+            if (monthFraction < 0) monthFraction = 0;
+            if (monthFraction > planDurationMonths) monthFraction = planDurationMonths;
+
+            if (tx.type == TransactionType.savingsWithdrawal) {
+              accumulated -= tx.amount;
+            } else {
+              accumulated += tx.amount;
+            }
+            if (accumulated < 0) accumulated = 0;
+
+            currentProgressSpots.add(FlSpot(monthFraction, accumulated));
+          }
+
+          // Make sure the line extends to the current date/balance
+          final currentDays = DateTime.now().difference(saving.createdAt).inDays;
+          double currentMonthFraction = currentDays / 30.0;
+          if (currentMonthFraction < 0) currentMonthFraction = 0;
+          if (currentMonthFraction > planDurationMonths) currentMonthFraction = planDurationMonths;
+
+          if (currentProgressSpots.last.x < currentMonthFraction) {
+            currentProgressSpots.add(FlSpot(currentMonthFraction, saving.currentAmount));
+          }
+        } else {
+          // Fallback to basic line if no transaction records are found
+          final currentDays = DateTime.now().difference(saving.createdAt).inDays;
+          double currentMonthFraction = currentDays / 30.0;
+          if (currentMonthFraction < 0) currentMonthFraction = 0;
+          if (currentMonthFraction > planDurationMonths) currentMonthFraction = planDurationMonths;
+          if (currentMonthFraction == 0) currentMonthFraction = 0.5;
+
+          currentProgressSpots.add(FlSpot(currentMonthFraction, saving.currentAmount));
+        }
+      },
+      orElse: () {
+        // Fallback when loading/error
+        final currentDays = DateTime.now().difference(saving.createdAt).inDays;
+        double currentMonthFraction = currentDays / 30.0;
+        if (currentMonthFraction < 0) currentMonthFraction = 0;
+        if (currentMonthFraction > planDurationMonths) currentMonthFraction = planDurationMonths;
+        if (currentMonthFraction == 0) currentMonthFraction = 0.5;
+
+        currentProgressSpots.add(FlSpot(currentMonthFraction, saving.currentAmount));
+      },
+    );
+
     return Container(
       height: 260,
       padding: const EdgeInsets.only(top: 32, right: 24, left: 16, bottom: 16),
@@ -158,6 +237,26 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       ),
       child: LineChart(
         LineChartData(
+          minX: 0,
+          maxX: planDurationMonths,
+          minY: 0,
+          maxY: saving.targetAmount * 1.2,
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (touchedSpot) => theme.cardColor,
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  return LineTooltipItem(
+                    'M${spot.x.toStringAsFixed(1)}: ${AppFormatters.formatCurrency(spot.y)}',
+                    theme.textTheme.bodySmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  );
+                }).toList();
+              },
+            ),
+          ),
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
@@ -181,7 +280,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (value, meta) {
-                  if (value % 3 != 0) return const SizedBox.shrink();
+                  if (value % interval != 0 && value != planDurationMonths.toInt()) {
+                    return const SizedBox.shrink();
+                  }
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text('M${value.toInt()}',
@@ -207,14 +308,12 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             ),
           ),
           borderData: FlBorderData(show: false),
-          minY: 0,
-          maxY: saving.targetAmount * 1.2,
           lineBarsData: [
             // Target Line (Straight)
             LineChartBarData(
               spots: [
                 const FlSpot(0, 0),
-                FlSpot(12, saving.targetAmount),
+                FlSpot(planDurationMonths, saving.targetAmount),
               ],
               isCurved: false,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
@@ -224,19 +323,18 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             ),
             // Current Progress Line (Curved)
             LineChartBarData(
-              spots: [
-                const FlSpot(0, 0),
-                FlSpot(6, saving.currentAmount),
-              ],
+              spots: currentProgressSpots,
               isCurved: true,
+              preventCurveOverShooting: true,
               color: AppColors.success,
               barWidth: 4,
               isStrokeCapRound: true,
               dotData: FlDotData(
                 show: true,
                 getDotPainter: (spot, percent, barData, index) {
+                  final isLast = index == currentProgressSpots.length - 1;
                   return FlDotCirclePainter(
-                    radius: 4,
+                    radius: isLast ? 5 : 3,
                     color: AppColors.success,
                     strokeWidth: 2,
                     strokeColor: theme.scaffoldBackgroundColor,

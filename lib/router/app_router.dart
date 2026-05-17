@@ -41,6 +41,9 @@ import '../features/savings/presentation/pages/edit_savings_vault_page.dart';
 import '../features/users/presentation/pages/users_page.dart';
 import '../features/users/presentation/pages/new_user_page.dart';
 import '../features/users/presentation/pages/user_details_page.dart';
+import '../features/users/presentation/pages/user_audit_page.dart';
+import '../features/users/presentation/pages/org_chart_page.dart';
+import '../features/users/presentation/pages/bulk_import_members_page.dart';
 import '../features/analytics/presentation/pages/analytics_page.dart';
 import '../features/home/presentation/pages/search_page.dart';
 import '../features/home/presentation/pages/notifications_page.dart';
@@ -441,11 +444,28 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const NewUserPage(),
           ),
           GoRoute(
+            path: '/users/import',
+            builder: (context, state) => const BulkImportMembersPage(),
+          ),
+          GoRoute(
+            path: '/users/org-chart',
+            builder: (context, state) => const OrgChartPage(),
+          ),
+          GoRoute(
             path: '/users/:id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               return UserDetailsPage(userId: id);
             },
+            routes: [
+              GoRoute(
+                path: 'audit',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return UserAuditPage(userId: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/settings',

@@ -49,6 +49,7 @@ class TransactionsRepository {
   Future<List<TransactionModel>> getTransactionsBySavingsId(
     String savingsId, {
     int limit = 50,
+    int offset = 0,
   }) async {
     try {
       final response = await _client
@@ -57,7 +58,7 @@ class TransactionsRepository {
           .eq('org_id', _orgId)
           .eq('savings_id', savingsId)
           .order('created_at', ascending: false)
-          .limit(limit);
+          .range(offset, offset + limit - 1);
 
       return (response as List)
           .map((json) => TransactionModel.fromJson(json))
@@ -65,6 +66,27 @@ class TransactionsRepository {
     } catch (e) {
       return [];
     }
+  }
+
+  Future<void> updateTransaction({
+    required String id,
+    double? amount,
+    String? description,
+    DateTime? createdAt,
+    TransactionType? type,
+  }) async {
+    final patch = <String, dynamic>{};
+    if (amount != null) patch['amount'] = amount;
+    if (description != null) patch['description'] = description;
+    if (createdAt != null) patch['created_at'] = createdAt.toIso8601String();
+    if (type != null) patch['type'] = type.name;
+    if (patch.isEmpty) return;
+
+    await _client.from('transactions').update(patch).eq('id', id);
+  }
+
+  Future<void> deleteTransaction(String id) async {
+    await _client.from('transactions').delete().eq('id', id);
   }
 
   Future<void> createTransaction({

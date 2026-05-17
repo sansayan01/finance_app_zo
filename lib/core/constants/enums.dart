@@ -38,9 +38,11 @@ enum SavingsFrequency {
 
 enum SavingsStatus {
   active,
+  paused,
   matured,
   withdrawn,
   cancelled,
+  closed,
 }
 
 enum TransactionType {

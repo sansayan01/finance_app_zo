@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/aurora_background.dart';
@@ -361,6 +362,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
   PreferredSizeWidget _buildAppBar(ThemeData theme, SavingsModel saving) {
     final blurAlpha = (_scrollOffset / 100).clamp(0.0, 1.0);
+    final isPaused = saving.status.toLowerCase() == 'paused';
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight),
       child: ClipRRect(
@@ -371,21 +373,81 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             backgroundColor: theme.scaffoldBackgroundColor
                 .withValues(alpha: 0.7 * blurAlpha),
             elevation: 0,
+            titleSpacing: 0,
+            title: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    saving.planName.isNotEmpty
+                        ? saving.planName
+                        : 'Savings Vault',
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildStatusBadge(saving.status, theme),
+              ],
+            ),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.ios_share_rounded),
+                tooltip: 'Share vault summary',
+                onPressed: () => _shareVaultSummary(saving),
+              ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_horiz_rounded),
                 onSelected: (value) {
-                  if (value == 'edit') {
-                    context.push('/savings/${saving.id}/edit');
+                  switch (value) {
+                    case 'edit':
+                      context.push('/savings/${saving.id}/edit');
+                      break;
+                    case 'pause':
+                      _setStatus(saving, 'paused');
+                      break;
+                    case 'resume':
+                      _setStatus(saving, 'active');
+                      break;
+                    case 'share':
+                      _shareVaultSummary(saving);
+                      break;
+                    case 'delete':
+                      _showDeleteDialog();
+                      break;
                   }
-                  if (value == 'delete') _showDeleteDialog();
                 },
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'edit', child: Text('Edit Vault')),
+                  PopupMenuItem(
+                    value: isPaused ? 'resume' : 'pause',
+                    child: Row(
+                      children: [
+                        Icon(
+                          isPaused
+                              ? Icons.play_arrow_rounded
+                              : Icons.pause_rounded,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(isPaused ? 'Resume Vault' : 'Pause Vault'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'share',
+                    child: Row(
+                      children: [
+                        Icon(Icons.ios_share_rounded, size: 18),
+                        SizedBox(width: 8),
+                        Text('Share Summary'),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                       value: 'delete',
                       child: Text('Close Account',
@@ -395,6 +457,109 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status, ThemeData theme) {
+    final s = status.toLowerCase();
+    late final Color color;
+    late final String label;
+    switch (s) {
+      case 'paused':
+        color = Colors.orange;
+        label = 'PAUSED';
+        break;
+      case 'matured':
+      case 'completed':
+        color = theme.colorScheme.primary;
+        label = 'MATURED';
+        break;
+      case 'closed':
+      case 'cancelled':
+      case 'withdrawn':
+        color = Colors.red;
+        label = 'CLOSED';
+        break;
+      case 'active':
+      default:
+        color = AppColors.success;
+        label = 'ACTIVE';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _setStatus(SavingsModel saving, String newStatus) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(savingsRepositoryProvider)
+          .setSavingStatus(saving.id, newStatus);
+      if (!mounted) return;
+      ref.invalidate(savingDetailProvider(saving.id));
+      ref.invalidate(allSavingsProvider);
+      HapticFeedback.lightImpact();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(newStatus == 'paused'
+              ? 'Vault paused. Contributions are on hold.'
+              : 'Vault resumed.'),
+          backgroundColor:
+              newStatus == 'paused' ? Colors.orange : AppColors.success,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _shareVaultSummary(SavingsModel saving) {
+    final progress =
+        (saving.currentAmount / saving.targetAmount * 100).clamp(0, 100);
+    final daysLeft = saving.maturityDate.difference(DateTime.now()).inDays;
+    final buffer = StringBuffer()
+      ..writeln('🏦 Savings Vault Summary')
+      ..writeln('━━━━━━━━━━━━━━━━━━━━━')
+      ..writeln('Plan: ${saving.planName}')
+      ..writeln('Member: ${saving.memberName}')
+      ..writeln('Status: ${_capitalize(saving.status)}')
+      ..writeln('')
+      ..writeln(
+          '💰 Current Balance : ${AppFormatters.formatCurrency(saving.currentAmount)}')
+      ..writeln(
+          '🎯 Target Amount   : ${AppFormatters.formatCurrency(saving.targetAmount)}')
+      ..writeln('📈 Progress        : ${progress.toStringAsFixed(1)}%')
+      ..writeln('💎 Annual Yield    : ${saving.interestRate}%')
+      ..writeln(
+          '🗓️  Maturity Date   : ${AppFormatters.formatDate(saving.maturityDate)}')
+      ..writeln('⏳ Days Remaining  : $daysLeft days')
+      ..writeln(
+          '💸 ${_capitalize(saving.collectionType)} Deposit : ${AppFormatters.formatCurrency(saving.monthlyDeposit)}')
+      ..writeln('')
+      ..writeln('Shared from MicroFlow Pro');
+
+    SharePlus.instance.share(
+      ShareParams(
+        text: buffer.toString(),
+        subject: 'Savings Vault: ${saving.planName}',
       ),
     );
   }
@@ -729,35 +894,55 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Widget _buildPrimaryActionRow(SavingsModel saving, ThemeData theme) {
+    final isPaused = saving.status.toLowerCase() == 'paused';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildActionButton('Deposit', Icons.add_rounded, AppColors.success,
-              () => _showDepositDialog(saving)),
-          _buildActionButton('Statement', Icons.description_rounded,
-              theme.colorScheme.onSurface, () {
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Generating statement...')));
-          }),
+          _buildActionButton(
+            'Deposit',
+            Icons.add_rounded,
+            AppColors.success,
+            isPaused
+                ? () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              'Vault is paused. Resume it to make deposits.')),
+                    )
+                : () => _showDepositDialog(saving),
+            disabled: isPaused,
+          ),
+          _buildActionButton(
+            'Share',
+            Icons.ios_share_rounded,
+            theme.colorScheme.onSurface,
+            () => _shareVaultSummary(saving),
+          ),
           _buildActionButton(
               'Withdraw', Icons.outbound_rounded, theme.colorScheme.onSurface,
               () {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text('Withdrawal feature coming soon')));
           }),
-          _buildActionButton('Close', Icons.lock_outline_rounded, Colors.red,
-              () => _showDeleteDialog()),
+          _buildActionButton(
+            isPaused ? 'Resume' : 'Pause',
+            isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+            isPaused ? AppColors.success : Colors.orange,
+            () => _setStatus(saving, isPaused ? 'active' : 'paused'),
+          ),
         ],
       ),
     ).animate().fadeIn(delay: 400.ms);
   }
 
   Widget _buildActionButton(
-      String label, IconData icon, Color color, VoidCallback onTap) {
+      String label, IconData icon, Color color, VoidCallback onTap,
+      {bool disabled = false}) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final effectiveColor =
+        disabled ? theme.colorScheme.onSurface.withValues(alpha: 0.3) : color;
 
     return GestureDetector(
       onTap: () {
@@ -772,19 +957,19 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isDark
-                  ? color.withValues(alpha: 0.15)
-                  : color.withValues(alpha: 0.1),
-              border:
-                  Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+                  ? effectiveColor.withValues(alpha: 0.15)
+                  : effectiveColor.withValues(alpha: 0.1),
+              border: Border.all(
+                  color: effectiveColor.withValues(alpha: 0.3), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.2),
+                  color: effectiveColor.withValues(alpha: 0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Icon(icon, color: color, size: 30),
+            child: Icon(icon, color: effectiveColor, size: 30),
           ),
           const SizedBox(height: 12),
           Text(label,
@@ -870,86 +1055,399 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Widget _buildTransactionList(ThemeData theme) {
-    final transactionsAsync =
-        ref.watch(savingTransactionsProvider(widget.savingId));
+    final pageState = ref.watch(savingTxPagerProvider(widget.savingId));
+    final transactions = pageState.items;
 
-    return transactionsAsync.when(
-      data: (transactions) {
-        if (transactions.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              child: Text(
-                'No transaction history available.',
-                style: theme.textTheme.bodySmall,
+    if (pageState.error != null && transactions.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            children: [
+              Text('Error: ${pageState.error}', style: theme.textTheme.bodySmall),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => ref
+                    .read(savingTxPagerProvider(widget.savingId).notifier)
+                    .refresh(),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (transactions.isEmpty && pageState.isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 32),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (transactions.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: Text(
+            'No transaction history available.',
+            style: theme.textTheme.bodySmall,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        ...transactions.map((t) => _buildTransactionItem(t, theme)),
+        const SizedBox(height: 8),
+        if (pageState.hasMore)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: pageState.isLoading
+                  ? null
+                  : () => ref
+                      .read(savingTxPagerProvider(widget.savingId).notifier)
+                      .loadMore(),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                side: BorderSide(color: theme.dividerColor),
+              ),
+              icon: pageState.isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.expand_more_rounded, size: 18),
+              label: Text(pageState.isLoading ? 'Loading…' : 'Load More'),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              '— End of history —',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
-          );
-        }
-
-        return Column(
-          children: transactions
-              .map((t) => _buildTransactionItem(
-                    t.description ?? _capitalize(t.type.name),
-                    AppFormatters.formatDate(t.createdAt),
-                    t.amount,
-                    t.type.name.contains('Deposit') ||
-                        t.type.name.contains('Interest'),
-                    theme,
-                  ))
-              .toList(),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('Error: $e'),
+          ),
+      ],
     );
   }
 
   String _capitalize(String s) =>
       s.isNotEmpty ? s[0].toUpperCase() + s.substring(1) : s;
 
-  Widget _buildTransactionItem(String title, String date, double amount,
-      bool isCredit, ThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
+  Widget _buildTransactionItem(TransactionModel tx, ThemeData theme) {
+    final isCredit = tx.type != TransactionType.savingsWithdrawal;
+    final title = tx.description ?? _capitalize(tx.type.name);
+    final date = AppFormatters.formatDate(tx.createdAt);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => _showTransactionActionsSheet(tx),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: (isCredit ? AppColors.success : Colors.red)
+                    .withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(isCredit ? Icons.add_rounded : Icons.remove_rounded,
+                  color: isCredit ? AppColors.success : Colors.red, size: 18),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  Text(date, style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ),
+            Text(
+              '${isCredit ? '+' : '-'} ${AppFormatters.formatCurrency(tx.amount)}',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: isCredit ? AppColors.success : Colors.red,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right_rounded,
+                size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: (isCredit ? AppColors.success : Colors.red)
-                  .withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(isCredit ? Icons.add_rounded : Icons.remove_rounded,
-                color: isCredit ? AppColors.success : Colors.red, size: 18),
+    );
+  }
+
+  void _showTransactionActionsSheet(TransactionModel tx) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetCtx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit_rounded),
+                title: const Text('Edit Transaction'),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _showEditTransactionDialog(tx);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded,
+                    color: Colors.red),
+                title: const Text('Delete Transaction',
+                    style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _confirmDeleteTransaction(tx);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w700)),
-                Text(date, style: theme.textTheme.bodySmall),
-              ],
+        );
+      },
+    );
+  }
+
+  void _showEditTransactionDialog(TransactionModel tx) {
+    final amountController =
+        TextEditingController(text: tx.amount.toStringAsFixed(2));
+    final descController = TextEditingController(text: tx.description ?? '');
+    DateTime selectedDate = tx.createdAt;
+    TransactionType selectedType = tx.type == TransactionType.savingsWithdrawal
+        ? TransactionType.savingsWithdrawal
+        : TransactionType.savingsDeposit;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(builder: (ctx, setLocalState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            title: const Text('Edit Transaction',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SegmentedButton<TransactionType>(
+                    segments: const [
+                      ButtonSegment(
+                        value: TransactionType.savingsDeposit,
+                        label: Text('Deposit'),
+                        icon: Icon(Icons.add_rounded),
+                      ),
+                      ButtonSegment(
+                        value: TransactionType.savingsWithdrawal,
+                        label: Text('Withdraw'),
+                        icon: Icon(Icons.remove_rounded),
+                      ),
+                    ],
+                    selected: {selectedType},
+                    onSelectionChanged: (s) =>
+                        setLocalState(() => selectedType = s.first),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: amountController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      prefixText: '₹ ',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: ctx,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now().add(const Duration(days: 1)),
+                      );
+                      if (picked != null) {
+                        setLocalState(() {
+                          selectedDate = DateTime(
+                            picked.year,
+                            picked.month,
+                            picked.day,
+                            selectedDate.hour,
+                            selectedDate.minute,
+                          );
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                    label: Text(AppFormatters.formatDate(selectedDate)),
+                  ),
+                ],
+              ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final amt = double.tryParse(amountController.text) ?? 0;
+                  if (amt <= 0) return;
+                  Navigator.pop(dialogCtx);
+                  await _applyTransactionEdit(
+                    tx: tx,
+                    amount: amt,
+                    description: descController.text.trim(),
+                    createdAt: selectedDate,
+                    type: selectedType,
+                  );
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  Future<void> _applyTransactionEdit({
+    required TransactionModel tx,
+    required double amount,
+    required String description,
+    required DateTime createdAt,
+    required TransactionType type,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(transactionsRepositoryProvider).updateTransaction(
+            id: tx.id,
+            amount: amount,
+            description: description.isEmpty ? null : description,
+            createdAt: createdAt,
+            type: type,
+          );
+      await ref
+          .read(savingsRepositoryProvider)
+          .recalculateBalance(widget.savingId);
+
+      if (!mounted) return;
+      ref.invalidate(savingDetailProvider(widget.savingId));
+      ref.invalidate(savingTransactionsProvider(widget.savingId));
+      ref.invalidate(allSavingsProvider);
+      ref
+          .read(savingTxPagerProvider(widget.savingId).notifier)
+          .refresh();
+
+      HapticFeedback.lightImpact();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Transaction updated'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _confirmDeleteTransaction(TransactionModel tx) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Transaction?'),
+        content: Text(
+            'This will remove "${tx.description ?? _capitalize(tx.type.name)}" of ${AppFormatters.formatCurrency(tx.amount)} and recalculate the vault balance.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
           ),
-          Text(
-            '${isCredit ? '+' : '-'} ₹$amount',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: isCredit ? AppColors.success : Colors.red,
-            ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await _deleteTransaction(tx);
+            },
+            child:
+                const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _deleteTransaction(TransactionModel tx) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(transactionsRepositoryProvider)
+          .deleteTransaction(tx.id);
+      await ref
+          .read(savingsRepositoryProvider)
+          .recalculateBalance(widget.savingId);
+
+      if (!mounted) return;
+      ref.invalidate(savingDetailProvider(widget.savingId));
+      ref.invalidate(savingTransactionsProvider(widget.savingId));
+      ref.invalidate(allSavingsProvider);
+      ref
+          .read(savingTxPagerProvider(widget.savingId).notifier)
+          .refresh();
+
+      HapticFeedback.mediumImpact();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Transaction deleted'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 }

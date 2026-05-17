@@ -164,4 +164,31 @@ class SavingsRepository {
   Future<void> deleteSavingPlan(String id) async {
     await _client.from('savings_plans').delete().eq('id', id);
   }
+
+  Future<void> setSavingStatus(String id, String status) async {
+    await _client.from('savings_plans').update({'status': status}).eq('id', id);
+  }
+
+  Future<void> recalculateBalance(String savingId) async {
+    final rows = await _client
+        .from('transactions')
+        .select('type, amount')
+        .eq('savings_id', savingId);
+
+    double balance = 0;
+    for (final r in rows as List) {
+      final t = r['type'] as String?;
+      final amt = (r['amount'] as num?)?.toDouble() ?? 0;
+      if (t == TransactionType.savingsWithdrawal.name) {
+        balance -= amt;
+      } else {
+        balance += amt;
+      }
+    }
+    if (balance < 0) balance = 0;
+
+    await _client
+        .from('savings_plans')
+        .update({'current_amount': balance}).eq('id', savingId);
+  }
 }

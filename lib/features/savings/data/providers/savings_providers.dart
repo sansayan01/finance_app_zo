@@ -41,6 +41,94 @@ final savingTransactionsProvider =
   return repository.getTransactionsBySavingsId(id);
 });
 
+class SavingTxPageState {
+  final List<TransactionModel> items;
+  final bool hasMore;
+  final bool isLoading;
+  final Object? error;
+
+  const SavingTxPageState({
+    required this.items,
+    required this.hasMore,
+    required this.isLoading,
+    this.error,
+  });
+
+  static const empty = SavingTxPageState(
+    items: [],
+    hasMore: true,
+    isLoading: false,
+  );
+
+  SavingTxPageState copyWith({
+    List<TransactionModel>? items,
+    bool? hasMore,
+    bool? isLoading,
+    Object? error,
+  }) {
+    return SavingTxPageState(
+      items: items ?? this.items,
+      hasMore: hasMore ?? this.hasMore,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+    );
+  }
+}
+
+class SavingTxPager extends StateNotifier<SavingTxPageState> {
+  SavingTxPager(this._ref, this._savingId) : super(SavingTxPageState.empty) {
+    refresh();
+  }
+
+  final Ref _ref;
+  final String _savingId;
+  static const int _pageSize = 10;
+
+  Future<void> refresh() async {
+    state = SavingTxPageState.empty.copyWith(isLoading: true);
+    try {
+      final repo = _ref.read(transactionsRepositoryProvider);
+      final page = await repo.getTransactionsBySavingsId(
+        _savingId,
+        limit: _pageSize,
+        offset: 0,
+      );
+      state = SavingTxPageState(
+        items: page,
+        hasMore: page.length == _pageSize,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e);
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || !state.hasMore) return;
+    state = state.copyWith(isLoading: true);
+    try {
+      final repo = _ref.read(transactionsRepositoryProvider);
+      final page = await repo.getTransactionsBySavingsId(
+        _savingId,
+        limit: _pageSize,
+        offset: state.items.length,
+      );
+      state = SavingTxPageState(
+        items: [...state.items, ...page],
+        hasMore: page.length == _pageSize,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e);
+    }
+  }
+}
+
+final savingTxPagerProvider = StateNotifierProvider.family<SavingTxPager,
+    SavingTxPageState, String>((ref, id) {
+  return SavingTxPager(ref, id);
+});
+
 final userSavingsProvider =
     FutureProvider.family<List<SavingsModel>, String>((ref, userId) async {
   final savings = await ref.watch(allSavingsProvider.future);

@@ -31,7 +31,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _panController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   TextInputType _panKeyboardType = TextInputType.text;
   final FocusNode _panFocusNode = FocusNode();
@@ -39,7 +39,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   @override
   void initState() {
     super.initState();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(newUserProvider);
       _fullNameController.text = state.fullName;
@@ -51,12 +51,17 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
       _aadharController.text = state.aadharNumber;
       _panController.text = state.panNumber;
       _passwordController.text = state.password;
-      
+
       final currentUser = ref.read(currentUserProvider);
       if (widget.initialBranchId != null) {
-        ref.read(newUserProvider.notifier).updateBranchId(widget.initialBranchId);
-      } else if (currentUser?.role == UserRole.manager && currentUser?.branchId != null) {
-        ref.read(newUserProvider.notifier).updateBranchId(currentUser!.branchId);
+        ref
+            .read(newUserProvider.notifier)
+            .updateBranchId(widget.initialBranchId);
+      } else if (currentUser?.role == UserRole.manager &&
+          currentUser?.branchId != null) {
+        ref
+            .read(newUserProvider.notifier)
+            .updateBranchId(currentUser!.branchId);
       }
     });
 
@@ -116,7 +121,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_person_rounded, size: 64, color: Colors.grey),
+              const Icon(Icons.lock_person_rounded,
+                  size: 64, color: Colors.grey),
               const SizedBox(height: 16),
               Text(
                 'You do not have permission to create users.\nYour current role: ${currentUser.role?.name ?? 'None'}',
@@ -187,8 +193,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       children: [
                         Expanded(
                             flex: 3,
-                            child: _buildFormDetails(state, currentUser, theme, isDark,
-                                primary, false, availableRoles)),
+                            child: _buildFormDetails(state, currentUser, theme,
+                                isDark, primary, false, availableRoles)),
                         const SizedBox(width: 24),
                         Expanded(
                             flex: 2,
@@ -201,8 +207,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       children: [
                         _buildSummary(state, theme, isDark, primary),
                         const SizedBox(height: 20),
-                        _buildFormDetails(state, currentUser, theme, isDark, primary,
-                            isNarrow, availableRoles),
+                        _buildFormDetails(state, currentUser, theme, isDark,
+                            primary, isNarrow, availableRoles),
                       ],
                     );
                   }
@@ -268,7 +274,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       if (state.branchId == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text('Please select a branch first.'),
+                            content:
+                                const Text('Please select a branch first.'),
                             backgroundColor: theme.colorScheme.error,
                             behavior: SnackBarBehavior.floating,
                           ),
@@ -383,11 +390,11 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
       List<UserRole> availableRoles) {
     final branchesAsync = ref.watch(activeBranchesProvider);
     final branches = branchesAsync.value ?? [];
-    
+
     // Only show branch selection if user is admin or super admin
-    final showBranchSelection = currentUser?.role == UserRole.executiveAdmin || 
-                               currentUser?.role == UserRole.superAdmin;
-    
+    final showBranchSelection = currentUser?.role == UserRole.executiveAdmin ||
+        currentUser?.role == UserRole.superAdmin;
+
     return Column(
       children: [
         // ── Branch Assignment Card (if admin) ──
@@ -406,7 +413,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                   value: state.branchId,
                   hint: 'Select target branch',
                   branches: branches,
-                  onChanged: (val) => ref.read(newUserProvider.notifier).updateBranchId(val),
+                  onChanged: (val) =>
+                      ref.read(newUserProvider.notifier).updateBranchId(val),
                   theme: theme,
                   isDark: isDark,
                 ),
@@ -928,7 +936,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                         ),
                         Text(
                           'Code: ${branch.code}',
-                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                          style:
+                              theme.textTheme.bodySmall?.copyWith(fontSize: 11),
                         ),
                       ],
                     ),

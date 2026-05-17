@@ -11,7 +11,8 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
-import '../../../home/data/providers/dashboard_providers.dart' hide savingsSummaryProvider;
+import '../../../home/data/providers/dashboard_providers.dart'
+    hide savingsSummaryProvider;
 
 class SavingsPage extends ConsumerStatefulWidget {
   const SavingsPage({super.key});
@@ -47,12 +48,12 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics()),
-          slivers: [
-            _buildAppBar(context, theme, isDark),
-            SliverToBoxAdapter(
-                child: _buildWealthSummary(savingsAsync, theme, isDark)),
-            _buildFilters(theme, isDark),
-            _buildSavingsList(savingsAsync, theme, isDark),
+            slivers: [
+              _buildAppBar(context, theme, isDark),
+              SliverToBoxAdapter(
+                  child: _buildWealthSummary(savingsAsync, theme, isDark)),
+              _buildFilters(theme, isDark),
+              _buildSavingsList(savingsAsync, theme, isDark),
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
@@ -129,8 +130,8 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
       data: (savings) {
         final totalSaved = savings.fold(0.0, (sum, s) => sum + s.currentAmount);
         final totalTarget = savings.fold(0.0, (sum, s) => sum + s.targetAmount);
-        final progress = (totalTarget > 0 ? totalSaved / totalTarget : 0.0)
-            .clamp(0.0, 1.0);
+        final progress =
+            (totalTarget > 0 ? totalSaved / totalTarget : 0.0).clamp(0.0, 1.0);
         final avgRate = savings.isEmpty
             ? 0.0
             : (savings.fold(0.0, (sum, s) => sum + s.interestRate) /
@@ -155,132 +156,136 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
                   child: Stack(
-                  children: [
-                    Positioned(
-                      top: -60,
-                      right: -40,
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.12),
+                    children: [
+                      Positioned(
+                        top: -60,
+                        right: -40,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: -80,
-                      left: -40,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.12),
+                      Positioned(
+                        bottom: -80,
+                        left: -40,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned.fill(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                        child: const SizedBox(),
+                      Positioned.fill(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                          child: const SizedBox(),
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(28),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('CUMULATIVE WEALTH',
-                                      style: theme.textTheme.labelSmall
+                      Padding(
+                        padding: const EdgeInsets.all(28),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('CUMULATIVE WEALTH',
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                                letterSpacing: 2,
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.7))),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      AppFormatters.formatCurrency(totalSaved),
+                                      style: theme.textTheme.displaySmall
                                           ?.copyWith(
-                                              letterSpacing: 2,
-                                              fontWeight: FontWeight.w900,
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.7))),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    AppFormatters.formatCurrency(totalSaved),
-                                    style:
-                                        theme.textTheme.displaySmall?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: -1,
-                                      color: Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: -1,
+                                        color: Colors.white,
+                                      ),
                                     ),
+                                  ],
+                                ),
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.2)),
                                   ),
-                                ],
-                              ),
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.2)),
+                                  child: const Icon(Icons.shield_rounded,
+                                      color: Colors.white, size: 28),
                                 ),
-                                child: const Icon(Icons.shield_rounded,
-                                    color: Colors.white, size: 28),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 32),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildGlobalMetric(
-                                  'GOAL',
-                                  AppFormatters.formatCompactCurrency(
-                                      totalTarget),
-                                  theme,
-                                  color: Colors.white,
-                                  labelColor: Colors.white.withValues(alpha: 0.7)),
-                              _buildGlobalMetric(
-                                  'AVG YIELD', '${avgRate.toStringAsFixed(1)}%',
-                                  theme,
-                                  color: Colors.white,
-                                  labelColor: Colors.white.withValues(alpha: 0.7)),
-                              _buildGlobalMetric('PLANS',
-                                  savings.length.toString(), theme,
-                                  color: Colors.white,
-                                  labelColor: Colors.white.withValues(alpha: 0.7)),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                  '${(progress * 100).toStringAsFixed(1)}% ACHIEVED',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white)),
-                              const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: progress,
-                                  minHeight: 8,
-                                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildGlobalMetric(
+                                    'GOAL',
+                                    AppFormatters.formatCompactCurrency(
+                                        totalTarget),
+                                    theme,
+                                    color: Colors.white,
+                                    labelColor:
+                                        Colors.white.withValues(alpha: 0.7)),
+                                _buildGlobalMetric('AVG YIELD',
+                                    '${avgRate.toStringAsFixed(1)}%', theme,
+                                    color: Colors.white,
+                                    labelColor:
+                                        Colors.white.withValues(alpha: 0.7)),
+                                _buildGlobalMetric(
+                                    'PLANS', savings.length.toString(), theme,
+                                    color: Colors.white,
+                                    labelColor:
+                                        Colors.white.withValues(alpha: 0.7)),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                    '${(progress * 100).toStringAsFixed(1)}% ACHIEVED',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white)),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: progress,
+                                    minHeight: 8,
+                                    backgroundColor:
+                                        Colors.white.withValues(alpha: 0.2),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                            Colors.white),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               ),
             ],
           ),
@@ -300,7 +305,8 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
         Text(label,
             style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: labelColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                color: labelColor ??
+                    theme.colorScheme.onSurface.withValues(alpha: 0.4))),
         const SizedBox(height: 4),
         Text(value,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -450,9 +456,8 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
           final matchesFilter = (_activeFilter == 0) ||
               (_activeFilter == 1 && s.status == 'active') ||
               (_activeFilter == 2 && s.status == 'completed');
-          final matchesSearch = s.memberName
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase());
+          final matchesSearch =
+              s.memberName.toLowerCase().contains(_searchQuery.toLowerCase());
           return matchesFilter && matchesSearch;
         }).toList();
 
@@ -602,7 +607,7 @@ class _PremiumSavingCard extends StatelessWidget {
               _buildMiniMetric('ACCUMULATED',
                   AppFormatters.formatCurrency(saving.currentAmount), theme),
               _buildMiniMetric(
-                  'MONTHLY',
+                  saving.collectionType.toUpperCase(),
                   AppFormatters.formatCompactCurrency(saving.monthlyDeposit),
                   theme,
                   color: theme.colorScheme.primary),
@@ -643,7 +648,8 @@ class _PremiumSavingCard extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(3),
-                        gradient: const LinearGradient(colors: AppColors.successGradient),
+                        gradient: const LinearGradient(
+                            colors: AppColors.successGradient),
                       ),
                     ),
                   ),
@@ -695,11 +701,14 @@ class _PremiumSavingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        gradient: isMatured ? const LinearGradient(colors: AppColors.successGradient) : AppColors.primaryGradient,
+        gradient: isMatured
+            ? const LinearGradient(colors: AppColors.successGradient)
+            : AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: (isMatured ? AppColors.success : AppColors.primary).withValues(alpha: 0.3),
+            color: (isMatured ? AppColors.success : AppColors.primary)
+                .withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           )
@@ -735,5 +744,3 @@ class _FilterDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
 }
-
-

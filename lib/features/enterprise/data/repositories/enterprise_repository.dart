@@ -18,10 +18,7 @@ class EnterpriseRepository {
     DateTime? endDate,
   }) async {
     try {
-      var query = _client
-          .from('audit_logs')
-          .select()
-          .eq('org_id', orgId);
+      var query = _client.from('audit_logs').select().eq('org_id', orgId);
 
       if (action != null) query = query.eq('action', action);
       if (entityType != null) query = query.eq('entity_type', entityType);

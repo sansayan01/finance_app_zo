@@ -4,41 +4,41 @@ import 'package:equatable/equatable.dart';
 class OrgBrandingModel extends Equatable {
   final String id;
   final String orgId;
-  
+
   // Logos
   final String? logoUrl;
   final String? logoDarkUrl;
   final String? faviconUrl;
-  
+
   // Colors
   final String primaryColor;
   final String secondaryColor;
   final String accentColor;
   final String backgroundColor;
   final String textColor;
-  
+
   // Typography
   final String fontFamily;
   final String? headingFont;
-  
+
   // Custom Domain
   final String? customDomain;
   final bool domainVerified;
-  
+
   // Email
   final String? emailHeaderText;
   final String? emailFooterText;
   final String? emailSignature;
-  
+
   // Login Page
   final String? loginBackgroundUrl;
   final String? loginTitle;
   final String? loginSubtitle;
   final String loginButtonText;
-  
+
   // Features
   final Map<String, dynamic> features;
-  
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -203,11 +203,29 @@ class OrgBrandingModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, orgId, logoUrl, logoDarkUrl, faviconUrl,
-    primaryColor, secondaryColor, accentColor, backgroundColor, textColor,
-    fontFamily, headingFont, customDomain, domainVerified,
-    emailHeaderText, emailFooterText, emailSignature,
-    loginBackgroundUrl, loginTitle, loginSubtitle, loginButtonText,
-    features, createdAt, updatedAt,
-  ];
+        id,
+        orgId,
+        logoUrl,
+        logoDarkUrl,
+        faviconUrl,
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        backgroundColor,
+        textColor,
+        fontFamily,
+        headingFont,
+        customDomain,
+        domainVerified,
+        emailHeaderText,
+        emailFooterText,
+        emailSignature,
+        loginBackgroundUrl,
+        loginTitle,
+        loginSubtitle,
+        loginButtonText,
+        features,
+        createdAt,
+        updatedAt,
+      ];
 }

@@ -15,7 +15,9 @@ class BranchRepository {
         .eq('org_id', _orgId)
         .order('created_at', ascending: false);
 
-    return (response as List).map((json) => BranchModel.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => BranchModel.fromJson(json))
+        .toList();
   }
 
   /// Get active branches only
@@ -27,7 +29,9 @@ class BranchRepository {
         .eq('status', 'active')
         .order('name');
 
-    return (response as List).map((json) => BranchModel.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => BranchModel.fromJson(json))
+        .toList();
   }
 
   /// Get a single branch by ID
@@ -121,22 +125,16 @@ class BranchRepository {
     // First, unassign all staff from this branch
     await _client
         .from('staff_profiles')
-        .update({'branch_id': null})
-        .eq('branch_id', id);
+        .update({'branch_id': null}).eq('branch_id', id);
 
     // Then delete the branch
-    await _client
-        .from('branches')
-        .delete()
-        .eq('id', id)
-        .eq('org_id', _orgId);
+    await _client.from('branches').delete().eq('id', id).eq('org_id', _orgId);
   }
 
   /// Get branch statistics
   Future<BranchStats> getBranchStats(String branchId) async {
-    final response = await _client
-        .rpc('get_branch_stats', params: {'p_branch_id': branchId})
-        .maybeSingle();
+    final response = await _client.rpc('get_branch_stats',
+        params: {'p_branch_id': branchId}).maybeSingle();
 
     if (response == null) return const BranchStats();
     return BranchStats.fromJson(response);
@@ -144,10 +142,8 @@ class BranchRepository {
 
   /// Get branch count
   Future<int> getBranchCount() async {
-    final response = await _client
-        .from('branches')
-        .select('id')
-        .eq('org_id', _orgId);
+    final response =
+        await _client.from('branches').select('id').eq('org_id', _orgId);
 
     return response.length;
   }
@@ -167,8 +163,8 @@ class BranchRepository {
         .from('staff_profiles')
         .select('id, full_name, email')
         .eq('org_id', _orgId)
-        .inFilter('role', ['branch_manager', 'manager', 'supervisor'])
-        .order('full_name');
+        .inFilter('role', ['branch_manager', 'manager', 'supervisor']).order(
+            'full_name');
 
     return List<Map<String, dynamic>>.from(response);
   }

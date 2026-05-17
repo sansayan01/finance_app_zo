@@ -49,8 +49,8 @@ class AchievementModel extends Equatable {
       points: (json['points'] as num).toInt(),
       category: json['category'] as String,
       isUnlocked: json['is_unlocked'] as bool? ?? false,
-      unlockedAt: json['unlocked_at'] != null 
-          ? DateTime.parse(json['unlocked_at'] as String) 
+      unlockedAt: json['unlocked_at'] != null
+          ? DateTime.parse(json['unlocked_at'] as String)
           : null,
       progress: (json['progress'] as num?)?.toDouble() ?? 0,
       target: (json['target'] as num?)?.toDouble() ?? 1,

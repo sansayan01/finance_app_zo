@@ -12,7 +12,7 @@ class SaaSDashboardPage extends ConsumerStatefulWidget {
 
 class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
   int _selectedIndex = 0;
-  
+
   final List<_NavItem> _navItems = [
     _NavItem(Icons.dashboard, 'Overview', '/saas'),
     _NavItem(Icons.business, 'Organizations', '/saas/organizations'),
@@ -26,7 +26,7 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: Row(
         children: [
@@ -69,9 +69,9 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
                     ))
                 .toList(),
           ),
-          
+
           const VerticalDivider(thickness: 1, width: 1),
-          
+
           // Main Content
           Expanded(
             child: _buildOverviewContent(theme),
@@ -117,9 +117,9 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Stats Grid
           LayoutBuilder(
             builder: (context, constraints) {
@@ -128,7 +128,7 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
                   : constraints.maxWidth > 800
                       ? 2
                       : 1;
-              
+
               return GridView.count(
                 crossAxisCount: crossAxisCount,
                 shrinkWrap: true,
@@ -173,9 +173,9 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
               );
             },
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Charts Row
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,9 +192,9 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Recent Activity & Alerts
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,7 +321,8 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.show_chart, size: 48, color: theme.colorScheme.primary),
+                  Icon(Icons.show_chart,
+                      size: 48, color: theme.colorScheme.primary),
                   const SizedBox(height: 8),
                   Text('Revenue Chart', style: theme.textTheme.bodyMedium),
                 ],
@@ -360,41 +361,43 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
           ),
           const SizedBox(height: 16),
           ...orgs.map((org) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Text(
-                    org.$1[0],
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: Text(
+                        org.$1[0],
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(org.$1, style: theme.textTheme.bodyMedium),
+                          Text(org.$2, style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(org.$3, style: theme.textTheme.labelSmall),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(org.$1, style: theme.textTheme.bodyMedium),
-                      Text(org.$2, style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(org.$3, style: theme.textTheme.labelSmall),
-                ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
@@ -403,7 +406,11 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
   Widget _buildRecentActivity(ThemeData theme) {
     final activities = [
       ('New organization registered', 'ABC Micro Finance', '2 hours ago'),
-      ('Subscription upgraded', 'XYZ Credit Society → Enterprise', '5 hours ago'),
+      (
+        'Subscription upgraded',
+        'XYZ Credit Society → Enterprise',
+        '5 hours ago'
+      ),
       ('Payment received', '₹45,000 from LMN Finance', '1 day ago'),
       ('New staff onboarded', '15 staff members added', '2 days ago'),
       ('Support ticket resolved', 'Issue #1234 closed', '2 days ago'),
@@ -433,33 +440,33 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
           ),
           const SizedBox(height: 16),
           ...activities.map((activity) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(top: 6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.only(top: 6),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(activity.$1, style: theme.textTheme.bodyMedium),
+                          Text(activity.$2, style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                    Text(activity.$3, style: theme.textTheme.labelSmall),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(activity.$1, style: theme.textTheme.bodyMedium),
-                      Text(activity.$2, style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                ),
-                Text(activity.$3, style: theme.textTheme.labelSmall),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
@@ -484,16 +491,21 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
           ),
           const SizedBox(height: 16),
           // Alert items
-          _buildAlertItem(theme, Colors.orange, 'High CPU Usage', 'Server 3 at 89%', 'warning'),
-          _buildAlertItem(theme, Colors.red, 'Payment Failed', '3 transactions failed', 'error'),
-          _buildAlertItem(theme, Colors.blue, 'Scheduled Maintenance', 'Tonight 2-4 AM IST', 'info'),
-          _buildAlertItem(theme, Colors.green, 'Backup Complete', 'All data backed up', 'success'),
+          _buildAlertItem(theme, Colors.orange, 'High CPU Usage',
+              'Server 3 at 89%', 'warning'),
+          _buildAlertItem(theme, Colors.red, 'Payment Failed',
+              '3 transactions failed', 'error'),
+          _buildAlertItem(theme, Colors.blue, 'Scheduled Maintenance',
+              'Tonight 2-4 AM IST', 'info'),
+          _buildAlertItem(theme, Colors.green, 'Backup Complete',
+              'All data backed up', 'success'),
         ],
       ),
     );
   }
 
-  Widget _buildAlertItem(ThemeData theme, Color color, String title, String subtitle, String type) {
+  Widget _buildAlertItem(ThemeData theme, Color color, String title,
+      String subtitle, String type) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -506,7 +518,13 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
         child: Row(
           children: [
             Icon(
-              type == 'error' ? Icons.error : type == 'warning' ? Icons.warning : type == 'success' ? Icons.check_circle : Icons.info,
+              type == 'error'
+                  ? Icons.error
+                  : type == 'warning'
+                      ? Icons.warning
+                      : type == 'success'
+                          ? Icons.check_circle
+                          : Icons.info,
               color: color,
               size: 20,
             ),
@@ -515,7 +533,9 @@ class _SaaSDashboardPageState extends ConsumerState<SaaSDashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                  Text(title,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w500)),
                   Text(subtitle, style: theme.textTheme.bodySmall),
                 ],
               ),

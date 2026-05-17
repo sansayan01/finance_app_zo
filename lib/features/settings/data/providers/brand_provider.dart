@@ -7,8 +7,7 @@ import 'package:microflow_pro/providers/supabase_provider.dart';
 class BrandNotifier extends StateNotifier<BrandModel> {
   final Ref _ref;
 
-  BrandNotifier(this._ref)
-      : super(BrandModel(name: 'MicroFlow Pro')) {
+  BrandNotifier(this._ref) : super(BrandModel(name: 'MicroFlow Pro')) {
     _loadBrand();
   }
 
@@ -30,7 +29,9 @@ class BrandNotifier extends StateNotifier<BrandModel> {
               .maybeSingle();
           if (org != null) {
             state = BrandModel(
-              name: org['display_name'] as String? ?? org['name'] as String? ?? 'MicroFlow Pro',
+              name: org['display_name'] as String? ??
+                  org['name'] as String? ??
+                  'MicroFlow Pro',
               logoUrl: org['logo_url'] as String?,
               primaryColor: org['primary_color'] as String?,
             );
@@ -79,4 +80,3 @@ class BrandNotifier extends StateNotifier<BrandModel> {
 final brandProvider = StateNotifierProvider<BrandNotifier, BrandModel>((ref) {
   return BrandNotifier(ref);
 });
-

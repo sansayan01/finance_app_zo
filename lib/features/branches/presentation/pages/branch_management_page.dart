@@ -11,7 +11,8 @@ class BranchManagementPage extends ConsumerStatefulWidget {
   const BranchManagementPage({super.key});
 
   @override
-  ConsumerState<BranchManagementPage> createState() => _BranchManagementPageState();
+  ConsumerState<BranchManagementPage> createState() =>
+      _BranchManagementPageState();
 }
 
 class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
@@ -40,16 +41,20 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
               _buildAppBar(context, isDark, orgAsync),
               Expanded(
                 child: branchesAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                        Icon(Icons.error_outline,
+                            size: 48, color: AppColors.error),
                         const SizedBox(height: 16),
-                        Text('Error loading branches', style: TextStyle(color: AppColors.error)),
+                        Text('Error loading branches',
+                            style: TextStyle(color: AppColors.error)),
                         const SizedBox(height: 8),
-                        Text('$e', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        Text('$e',
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
                       ],
                     ),
                   ),
@@ -74,7 +79,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
             icon: const Icon(Icons.add_business_rounded, color: Colors.white),
             label: Text(
               'Add Branch',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
             ),
           ).animate().scale(delay: 300.ms);
         },
@@ -84,7 +90,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
     );
   }
 
-  Widget _buildAppBar(BuildContext context, bool isDark, AsyncValue<Map<String, dynamic>?> orgAsync) {
+  Widget _buildAppBar(BuildContext context, bool isDark,
+      AsyncValue<Map<String, dynamic>?> orgAsync) {
     final branchesAsync = ref.watch(branchesProvider);
     final branchCount = branchesAsync.valueOrNull?.length ?? 0;
     final maxBranches = orgAsync.valueOrNull?['max_branches'] ?? 5;
@@ -132,7 +139,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.business_rounded, size: 16, color: AppColors.primary),
+                Icon(Icons.business_rounded,
+                    size: 16, color: AppColors.primary),
                 const SizedBox(width: 6),
                 Text(
                   '$branchCount',
@@ -160,11 +168,15 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
             height: 80,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.primary.withValues(alpha: 0.2), AppColors.accent.withValues(alpha: 0.2)],
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.2),
+                  AppColors.accent.withValues(alpha: 0.2)
+                ],
               ),
               borderRadius: BorderRadius.circular(24),
             ),
-            child: Icon(Icons.business_rounded, size: 40, color: AppColors.primary),
+            child: Icon(Icons.business_rounded,
+                size: 40, color: AppColors.primary),
           ),
           const SizedBox(height: 24),
           Text(
@@ -188,11 +200,14 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
           ElevatedButton.icon(
             onPressed: () => _showBranchDialog(context),
             icon: const Icon(Icons.add_business_rounded, color: Colors.white),
-            label: const Text('Create Branch', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            label: const Text('Create Branch',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.w600)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ],
@@ -215,7 +230,9 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.8),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: branch.isActive
@@ -249,7 +266,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                       ),
                       child: Center(
                         child: Text(
-                          branch.code.substring(0, branch.code.length > 3 ? 3 : branch.code.length),
+                          branch.code.substring(0,
+                              branch.code.length > 3 ? 3 : branch.code.length),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
@@ -268,7 +286,9 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -277,7 +297,9 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                               Icon(
                                 Icons.location_on_outlined,
                                 size: 14,
-                                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                color: isDark
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade600,
                               ),
                               const SizedBox(width: 4),
                               Expanded(
@@ -285,7 +307,9 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                                   branch.city ?? 'No location',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                    color: isDark
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade600,
                                   ),
                                 ),
                               ),
@@ -295,7 +319,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: branch.isActive
                             ? AppColors.success.withValues(alpha: 0.1)
@@ -307,7 +332,9 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: branch.isActive ? AppColors.success : AppColors.error,
+                          color: branch.isActive
+                              ? AppColors.success
+                              : AppColors.error,
                         ),
                       ),
                     ),
@@ -318,18 +345,23 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.03),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.person_outline_rounded, size: 16, color: AppColors.primary),
+                        Icon(Icons.person_outline_rounded,
+                            size: 16, color: AppColors.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Manager: ${branch.managerName}',
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                            color: isDark
+                                ? Colors.grey.shade300
+                                : Colors.grey.shade700,
                           ),
                         ),
                       ],
@@ -349,7 +381,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                     _buildQuickAction(
                       icon: Icons.people_outline_rounded,
                       label: 'Staff',
-                      onTap: () => context.push('/admin/branches/${branch.id}/staff'),
+                      onTap: () =>
+                          context.push('/admin/branches/${branch.id}/staff'),
                       isDark: isDark,
                     ),
                     const SizedBox(width: 8),
@@ -374,7 +407,10 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 300.ms, delay: (index * 50).ms).slideX(begin: 0.1, end: 0);
+    )
+        .animate()
+        .fadeIn(duration: 300.ms, delay: (index * 50).ms)
+        .slideX(begin: 0.1, end: 0);
   }
 
   Widget _buildQuickAction({
@@ -401,7 +437,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w600, color: color),
             ),
           ],
         ),
@@ -454,7 +491,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Branch?'),
-        content: Text('Are you sure you want to delete "${branch.name}"? This will unassign all staff and members from this branch.'),
+        content: Text(
+            'Are you sure you want to delete "${branch.name}"? This will unassign all staff and members from this branch.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -477,7 +515,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
           SnackBar(
             content: Text('${branch.name} deleted successfully'),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -573,11 +612,14 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                        gradient: const LinearGradient(
+                            colors: [AppColors.primary, AppColors.accent]),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        isEdit ? Icons.edit_rounded : Icons.add_business_rounded,
+                        isEdit
+                            ? Icons.edit_rounded
+                            : Icons.add_business_rounded,
                         color: Colors.white,
                         size: 22,
                       ),
@@ -589,40 +631,56 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close_rounded, color: isDark ? Colors.white54 : Colors.black54),
+                      icon: Icon(Icons.close_rounded,
+                          color: isDark ? Colors.white54 : Colors.black54),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-                _buildTextField(_nameCtrl, 'Branch Name', Icons.business_rounded, isDark, required: true),
+                _buildTextField(
+                    _nameCtrl, 'Branch Name', Icons.business_rounded, isDark,
+                    required: true),
                 const SizedBox(height: 16),
-                _buildTextField(_codeCtrl, 'Branch Code', Icons.tag_rounded, isDark, required: true, hint: 'e.g., BR001'),
+                _buildTextField(
+                    _codeCtrl, 'Branch Code', Icons.tag_rounded, isDark,
+                    required: true, hint: 'e.g., BR001'),
                 const SizedBox(height: 16),
-                _buildTextField(_addressCtrl, 'Address', Icons.location_on_outlined, isDark),
+                _buildTextField(_addressCtrl, 'Address',
+                    Icons.location_on_outlined, isDark),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField(_cityCtrl, 'City', Icons.location_city_rounded, isDark)),
+                    Expanded(
+                        child: _buildTextField(_cityCtrl, 'City',
+                            Icons.location_city_rounded, isDark)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildTextField(_stateCtrl, 'State', Icons.map_outlined, isDark)),
+                    Expanded(
+                        child: _buildTextField(
+                            _stateCtrl, 'State', Icons.map_outlined, isDark)),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField(_pincodeCtrl, 'Pincode', Icons.pin_drop_rounded, isDark)),
+                    Expanded(
+                        child: _buildTextField(_pincodeCtrl, 'Pincode',
+                            Icons.pin_drop_rounded, isDark)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildTextField(_phoneCtrl, 'Phone', Icons.phone_rounded, isDark)),
+                    Expanded(
+                        child: _buildTextField(
+                            _phoneCtrl, 'Phone', Icons.phone_rounded, isDark)),
                   ],
                 ),
                 const SizedBox(height: 16),
-                _buildTextField(_emailCtrl, 'Email', Icons.email_outlined, isDark),
+                _buildTextField(
+                    _emailCtrl, 'Email', Icons.email_outlined, isDark),
                 const SizedBox(height: 24),
                 _buildManagerDropdown(isDark),
                 const SizedBox(height: 24),
@@ -634,11 +692,18 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                     ),
                     child: _isLoading
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Text(isEdit ? 'Update Branch' : 'Create Branch', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : Text(isEdit ? 'Update Branch' : 'Create Branch',
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -649,7 +714,9 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String label, IconData icon, bool isDark, {bool required = false, String? hint}) {
+  Widget _buildTextField(
+      TextEditingController ctrl, String label, IconData icon, bool isDark,
+      {bool required = false, String? hint}) {
     return TextFormField(
       controller: ctrl,
       decoration: InputDecoration(
@@ -658,9 +725,13 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
         prefixIcon: Icon(icon, size: 20),
         filled: true,
         fillColor: isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
       ),
-      validator: required ? (v) => v?.trim().isEmpty == true ? 'Required' : null : null,
+      validator: required
+          ? (v) => v?.trim().isEmpty == true ? 'Required' : null
+          : null,
     );
   }
 
@@ -669,7 +740,8 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
       builder: (context, ref, _) {
         final managersAsync = ref.watch(potentialManagersProvider);
         return managersAsync.when(
-          loading: () => const SizedBox(height: 56, child: Center(child: CircularProgressIndicator())),
+          loading: () => const SizedBox(
+              height: 56, child: Center(child: CircularProgressIndicator())),
           error: (_, __) => const SizedBox.shrink(),
           data: (managers) {
             return DropdownButtonFormField<String>(
@@ -678,15 +750,19 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                 labelText: 'Branch Manager',
                 prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                fillColor:
+                    isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
               ),
               items: [
-                const DropdownMenuItem(value: null, child: Text('No manager assigned')),
+                const DropdownMenuItem(
+                    value: null, child: Text('No manager assigned')),
                 ...managers.map((m) => DropdownMenuItem(
-                  value: m['id'] as String,
-                  child: Text(m['full_name'] ?? 'Unknown'),
-                )),
+                      value: m['id'] as String,
+                      child: Text(m['full_name'] ?? 'Unknown'),
+                    )),
               ],
               onChanged: (v) => setState(() => _selectedManagerId = v),
             );
@@ -704,10 +780,12 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
       await widget.onSave({
         'name': _nameCtrl.text.trim(),
         'code': _codeCtrl.text.trim().toUpperCase(),
-        'address': _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+        'address':
+            _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
         'city': _cityCtrl.text.trim().isEmpty ? null : _cityCtrl.text.trim(),
         'state': _stateCtrl.text.trim().isEmpty ? null : _stateCtrl.text.trim(),
-        'pincode': _pincodeCtrl.text.trim().isEmpty ? null : _pincodeCtrl.text.trim(),
+        'pincode':
+            _pincodeCtrl.text.trim().isEmpty ? null : _pincodeCtrl.text.trim(),
         'phone': _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
         'email': _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
         'manager_id': _selectedManagerId,
@@ -716,7 +794,8 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating),
+          SnackBar(
+              content: Text('Error: $e'), behavior: SnackBarBehavior.floating),
         );
       }
     } finally {
@@ -755,7 +834,9 @@ class BranchDetailSheet extends ConsumerWidget {
             width: 40,
             height: 4,
             margin: const EdgeInsets.only(top: 12),
-            decoration: BoxDecoration(color: Colors.grey.shade400, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(
+                color: Colors.grey.shade400,
+                borderRadius: BorderRadius.circular(2)),
           ),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -765,13 +846,18 @@ class BranchDetailSheet extends ConsumerWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                    gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.accent]),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
                     child: Text(
-                      branch.code.substring(0, branch.code.length > 3 ? 3 : branch.code.length),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
+                      branch.code.substring(
+                          0, branch.code.length > 3 ? 3 : branch.code.length),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18),
                     ),
                   ),
                 ),
@@ -785,14 +871,17 @@ class BranchDetailSheet extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                       Text(
                         branch.city ?? 'No location set',
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                          color: isDark
+                              ? Colors.grey.shade400
+                              : Colors.grey.shade600,
                         ),
                       ),
                     ],
@@ -809,17 +898,26 @@ class BranchDetailSheet extends ConsumerWidget {
               data: (stats) => ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  _buildStatRow(Icons.people_outline_rounded, 'Total Staff', '${stats.totalStaff}', isDark),
-                  _buildStatRow(Icons.person_outline_rounded, 'Total Members', '${stats.totalMembers}', isDark),
-                  _buildStatRow(Icons.account_balance_wallet_outlined, 'Total Savings', '₹${stats.totalSavings.toStringAsFixed(0)}', isDark),
-                  _buildStatRow(Icons.trending_up_rounded, 'Active Loans', '₹${stats.activeLoans.toStringAsFixed(0)}', isDark),
+                  _buildStatRow(Icons.people_outline_rounded, 'Total Staff',
+                      '${stats.totalStaff}', isDark),
+                  _buildStatRow(Icons.person_outline_rounded, 'Total Members',
+                      '${stats.totalMembers}', isDark),
+                  _buildStatRow(
+                      Icons.account_balance_wallet_outlined,
+                      'Total Savings',
+                      '₹${stats.totalSavings.toStringAsFixed(0)}',
+                      isDark),
+                  _buildStatRow(Icons.trending_up_rounded, 'Active Loans',
+                      '₹${stats.activeLoans.toStringAsFixed(0)}', isDark),
                   if (branch.managerName != null) ...[
                     const SizedBox(height: 16),
-                    _buildStatRow(Icons.person_outline_rounded, 'Manager', branch.managerName!, isDark),
+                    _buildStatRow(Icons.person_outline_rounded, 'Manager',
+                        branch.managerName!, isDark),
                   ],
                   if (branch.address != null) ...[
                     const SizedBox(height: 16),
-                    _buildStatRow(Icons.location_on_outlined, 'Address', branch.address!, isDark),
+                    _buildStatRow(Icons.location_on_outlined, 'Address',
+                        branch.address!, isDark),
                   ],
                 ],
               ),
@@ -846,7 +944,11 @@ class BranchDetailSheet extends ConsumerWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label, style: TextStyle(fontSize: 14, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 14,
+                    color:
+                        isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
           ),
           Text(
             value,

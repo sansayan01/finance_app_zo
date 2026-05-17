@@ -46,4 +46,3 @@ final userSavingsProvider =
   final savings = await ref.watch(allSavingsProvider.future);
   return savings.where((s) => s.memberId == userId).toList();
 });
-

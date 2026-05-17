@@ -100,9 +100,7 @@ class BackgroundSyncService {
     if (staffId == null) return;
 
     // Pull customers
-    final customers = await _client
-        .from('members')
-        .select('''
+    final customers = await _client.from('members').select('''
           *,
           loans(
             id,
@@ -123,8 +121,7 @@ class BackgroundSyncService {
             account_number,
             current_amount
           )
-        ''')
-        .limit(500);
+        ''').limit(500);
 
     await _localDb.syncCustomers(List<Map<String, dynamic>>.from(customers));
 
@@ -202,8 +199,8 @@ class BackgroundSyncState {
 final backgroundSyncServiceProvider = Provider<BackgroundSyncService>((ref) {
   final client = ref.watch(supabaseClientProvider);
   final localDb = LocalDatabase();
-  final syncEngine = OfflineSyncEngine(client, ref.watch(sharedPreferencesProvider));
+  final syncEngine =
+      OfflineSyncEngine(client, ref.watch(sharedPreferencesProvider));
 
   return BackgroundSyncService(client, localDb, syncEngine);
 });
-

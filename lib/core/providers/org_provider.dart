@@ -17,7 +17,8 @@ final currentOrgProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return null;
   final client = ref.watch(supabaseClientProvider);
-  final response = await client.from('organizations').select().eq('id', orgId).maybeSingle();
+  final response =
+      await client.from('organizations').select().eq('id', orgId).maybeSingle();
   return response;
 });
 
@@ -28,7 +29,12 @@ final hasBranchManagerProvider = FutureProvider<bool>((ref) async {
   if (orgId == null) return false;
   final client = ref.watch(supabaseClientProvider);
   try {
-    final result = await client.from('profiles').select('id').eq('org_id', orgId).eq('role', 'manager').limit(1);
+    final result = await client
+        .from('profiles')
+        .select('id')
+        .eq('org_id', orgId)
+        .eq('role', 'manager')
+        .limit(1);
     return (result as List).isNotEmpty;
   } catch (_) {
     return false;
@@ -56,4 +62,3 @@ final setupCompleteProvider = FutureProvider<bool>((ref) async {
     return false;
   }
 });
-

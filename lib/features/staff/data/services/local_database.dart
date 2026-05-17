@@ -46,13 +46,10 @@ class LocalDatabase {
   /// Get collections for a specific date
   List<Map<String, dynamic>> getCollectionsForDate(DateTime date) {
     final dateStr = date.toIso8601String().split('T').first;
-    return _collections.values
-        .map((e) => e.cast<String, dynamic>())
-        .where((c) {
-          final collectionTime = c['collection_time'] as String?;
-          return collectionTime?.startsWith(dateStr) ?? false;
-        })
-        .toList();
+    return _collections.values.map((e) => e.cast<String, dynamic>()).where((c) {
+      final collectionTime = c['collection_time'] as String?;
+      return collectionTime?.startsWith(dateStr) ?? false;
+    }).toList();
   }
 
   /// Delete a collection
@@ -80,17 +77,14 @@ class LocalDatabase {
   /// Search customers locally
   List<Map<String, dynamic>> searchCustomers(String query) {
     final lowerQuery = query.toLowerCase();
-    return _customers.values
-        .map((e) => e.cast<String, dynamic>())
-        .where((c) {
-          final name = (c['full_name'] as String?)?.toLowerCase() ?? '';
-          final phone = (c['phone'] as String?)?.toLowerCase() ?? '';
-          final memberId = (c['member_id'] as String?)?.toLowerCase() ?? '';
-          return name.contains(lowerQuery) ||
-              phone.contains(lowerQuery) ||
-              memberId.contains(lowerQuery);
-        })
-        .toList();
+    return _customers.values.map((e) => e.cast<String, dynamic>()).where((c) {
+      final name = (c['full_name'] as String?)?.toLowerCase() ?? '';
+      final phone = (c['phone'] as String?)?.toLowerCase() ?? '';
+      final memberId = (c['member_id'] as String?)?.toLowerCase() ?? '';
+      return name.contains(lowerQuery) ||
+          phone.contains(lowerQuery) ||
+          memberId.contains(lowerQuery);
+    }).toList();
   }
 
   /// Get all customers
@@ -137,7 +131,8 @@ class LocalDatabase {
 
   /// Add a pending operation
   Future<void> addPendingOperation(Map<String, dynamic> operation) async {
-    final id = operation['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+    final id =
+        operation['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
     await _pendingOps.put(id, operation);
   }
 

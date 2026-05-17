@@ -32,12 +32,12 @@ class CollectionListTile extends StatelessWidget {
     final amount = (emi['emi'] ?? emi['amount'] ?? 0).toDouble();
     final area = emi['area'] ?? emi['member_area'] ?? '';
     final period = emi['period'] ?? 0;
-    
+
     // Status color
     Color statusColor;
     IconData statusIcon;
     String statusText;
-    
+
     if (isPaid) {
       statusColor = AppColors.success;
       statusIcon = Icons.check_circle;
@@ -61,8 +61,8 @@ class CollectionListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isOverdue 
-              ? statusColor.withValues(alpha: 0.3) 
+          color: isOverdue
+              ? statusColor.withValues(alpha: 0.3)
               : theme.colorScheme.outline.withValues(alpha: 0.2),
           width: isOverdue ? 1.5 : 1,
         ),
@@ -92,7 +92,7 @@ class CollectionListTile extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: AppSpacing.md),
-                  
+
                   // Member info
                   Expanded(
                     child: Column(
@@ -159,7 +159,7 @@ class CollectionListTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // Amount
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -168,8 +168,8 @@ class CollectionListTile extends StatelessWidget {
                         '₹${AppFormatters.formatCompactCurrency(amount)}',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: isPaid 
-                              ? AppColors.success 
+                          color: isPaid
+                              ? AppColors.success
                               : (isOverdue ? AppColors.error : null),
                         ),
                       ),
@@ -185,7 +185,7 @@ class CollectionListTile extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               // Quick action button (if not paid and showing quick action)
               if (!isPaid && showQuickAction) ...[
                 SizedBox(height: AppSpacing.sm),
@@ -211,7 +211,7 @@ class CollectionListTile extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: AppSpacing.sm),
-                    
+
                     // Quick collect button
                     Expanded(
                       flex: 2,

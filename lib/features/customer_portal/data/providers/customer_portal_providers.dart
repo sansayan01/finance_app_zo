@@ -5,37 +5,47 @@ import '../models/customer_portal_models.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Customer Portal Repository Provider
-final customerPortalRepositoryProvider = Provider<CustomerPortalRepository>((ref) {
+final customerPortalRepositoryProvider =
+    Provider<CustomerPortalRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return CustomerPortalRepository(client);
 });
 
 /// Customer Dashboard Provider
-final customerDashboardProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, memberId) async {
+final customerDashboardProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, memberId) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getCustomerDashboard(memberId);
 });
 
 /// Customer Loans Provider
-final customerLoansProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, memberId) async {
+final customerLoansProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, memberId) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getCustomerLoans(memberId);
 });
 
 /// Customer Savings Provider
-final customerSavingsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, memberId) async {
+final customerSavingsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, memberId) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getCustomerSavings(memberId);
 });
 
 /// Customer Transactions Provider
-final customerTransactionsProvider = FutureProvider.family<List<Map<String, dynamic>>, (String, int?)>((ref, params) async {
+final customerTransactionsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, (String, int?)>(
+        (ref, params) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getCustomerTransactions(params.$1, limit: params.$2);
 });
 
 /// Customer Notifications Provider
-final customerNotificationsProvider = FutureProvider.family<List<CustomerNotification>, String>((ref, memberId) async {
+final customerNotificationsProvider =
+    FutureProvider.family<List<CustomerNotification>, String>(
+        (ref, memberId) async {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return repository.getNotifications(memberId);
 });
@@ -51,7 +61,8 @@ class EMIPaymentNotifier extends StateNotifier<AsyncValue<void>> {
   final CustomerPortalRepository _repository;
   final Ref _ref;
 
-  EMIPaymentNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  EMIPaymentNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
   Future<bool> payEMI(String loanId, double amount, String paymentMode) async {
     state = const AsyncValue.loading();
@@ -67,7 +78,8 @@ class EMIPaymentNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final emiPaymentProvider = StateNotifierProvider<EMIPaymentNotifier, AsyncValue<void>>((ref) {
+final emiPaymentProvider =
+    StateNotifierProvider<EMIPaymentNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return EMIPaymentNotifier(repository, ref);
 });
@@ -77,7 +89,8 @@ class SavingsDepositNotifier extends StateNotifier<AsyncValue<void>> {
   final CustomerPortalRepository _repository;
   final Ref _ref;
 
-  SavingsDepositNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  SavingsDepositNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
   Future<bool> deposit(String accountId, double amount) async {
     state = const AsyncValue.loading();
@@ -106,7 +119,8 @@ class SavingsDepositNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final savingsDepositProvider = StateNotifierProvider<SavingsDepositNotifier, AsyncValue<void>>((ref) {
+final savingsDepositProvider =
+    StateNotifierProvider<SavingsDepositNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return SavingsDepositNotifier(repository, ref);
 });
@@ -116,9 +130,11 @@ class SupportTicketNotifier extends StateNotifier<AsyncValue<void>> {
   final CustomerPortalRepository _repository;
   final Ref _ref;
 
-  SupportTicketNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  SupportTicketNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
-  Future<bool> createTicket(String customerId, String subject, String message, {String? category}) async {
+  Future<bool> createTicket(String customerId, String subject, String message,
+      {String? category}) async {
     state = const AsyncValue.loading();
     try {
       await _repository.createSupportTicket(
@@ -136,7 +152,8 @@ class SupportTicketNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final supportTicketProvider = StateNotifierProvider<SupportTicketNotifier, AsyncValue<void>>((ref) {
+final supportTicketProvider =
+    StateNotifierProvider<SupportTicketNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return SupportTicketNotifier(repository, ref);
 });
@@ -146,7 +163,8 @@ class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
   final CustomerPortalRepository _repository;
   final Ref _ref;
 
-  NotificationNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  NotificationNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
   Future<void> markAsRead(String notificationId) async {
     try {
@@ -169,8 +187,8 @@ class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final notificationNotifierProvider = StateNotifierProvider<NotificationNotifier, AsyncValue<void>>((ref) {
+final notificationNotifierProvider =
+    StateNotifierProvider<NotificationNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(customerPortalRepositoryProvider);
   return NotificationNotifier(repository, ref);
 });
-

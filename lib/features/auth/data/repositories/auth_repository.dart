@@ -91,7 +91,11 @@ class AuthRepository {
   }
 
   Future<UserModel> _createOrgAndProfile(
-    User user, String fullName, String email, String? phone, String? orgName,
+    User user,
+    String fullName,
+    String email,
+    String? phone,
+    String? orgName,
   ) async {
     String orgId = '00000000-0000-0000-0000-000000000001';
     if (orgName != null && orgName.isNotEmpty) {
@@ -99,16 +103,21 @@ class AuthRepository {
           .toLowerCase()
           .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
           .replaceAll(RegExp(r'^-|-$'), '');
-      final trialEnd = DateTime.now().add(const Duration(days: 14)).toIso8601String();
-      final orgResponse = await _client.from('organizations').insert({
-        'name': orgName,
-        'slug': slug,
-        'status': 'trial',
-        'trial_ends_at': trialEnd,
-        'max_branches': 2,
-        'max_staff': 5,
-        'max_members': 100,
-      }).select('id').single();
+      final trialEnd =
+          DateTime.now().add(const Duration(days: 14)).toIso8601String();
+      final orgResponse = await _client
+          .from('organizations')
+          .insert({
+            'name': orgName,
+            'slug': slug,
+            'status': 'trial',
+            'trial_ends_at': trialEnd,
+            'max_branches': 2,
+            'max_staff': 5,
+            'max_members': 100,
+          })
+          .select('id')
+          .single();
       orgId = orgResponse['id'].toString();
 
       await _client.from('profiles').insert({
@@ -186,7 +195,8 @@ class AuthRepository {
       }
 
       if (profile != null) {
-        role = _parseRole(profile['role'] as String?, user.email, user.userMetadata);
+        role = _parseRole(
+            profile['role'] as String?, user.email, user.userMetadata);
       } else {
         role = _parseRole(null, user.email, user.userMetadata);
       }
@@ -210,7 +220,8 @@ class AuthRepository {
     );
   }
 
-  UserRole _parseRole(String? roleStr, String? email, Map<String, dynamic>? metadata) {
+  UserRole _parseRole(
+      String? roleStr, String? email, Map<String, dynamic>? metadata) {
     // 1. Explicit super admin override
     if (email != null && email.toLowerCase() == 'msayan9733@gmail.com') {
       return UserRole.superAdmin;
@@ -229,7 +240,7 @@ class AuthRepository {
     }
 
     final normalized = effectiveRole.toLowerCase();
-    
+
     if (normalized == 'superadmin' || normalized == 'super_admin') {
       return UserRole.superAdmin;
     }
@@ -239,7 +250,9 @@ class AuthRepository {
     if (normalized == 'manager') {
       return UserRole.manager;
     }
-    if (normalized == 'collectionagent' || normalized == 'staff' || normalized == 'fieldstaff') {
+    if (normalized == 'collectionagent' ||
+        normalized == 'staff' ||
+        normalized == 'fieldstaff') {
       return UserRole.collectionAgent;
     }
     if (normalized == 'customer' || normalized == 'retailmember') {
@@ -282,7 +295,10 @@ class AuthRepository {
       if (employeeId != null) updates['employee_id'] = employeeId;
       if (assignedZone != null) updates['assigned_zone'] = assignedZone;
 
-      await _client.from('profiles').update(updates).eq('user_id', _client.auth.currentUser!.id);
+      await _client
+          .from('profiles')
+          .update(updates)
+          .eq('user_id', _client.auth.currentUser!.id);
 
       await _logRepo?.log(
         action: 'Profile Updated',

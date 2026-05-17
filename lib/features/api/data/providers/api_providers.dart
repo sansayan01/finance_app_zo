@@ -29,7 +29,8 @@ final webhooksProvider = FutureProvider<List<WebhookModel>>((ref) async {
 });
 
 // Integrations
-final integrationsProvider = FutureProvider<List<IntegrationModel>>((ref) async {
+final integrationsProvider =
+    FutureProvider<List<IntegrationModel>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return [];
 
@@ -149,8 +150,8 @@ class ApiNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final apiNotifierProvider = StateNotifierProvider<ApiNotifier, AsyncValue<void>>((ref) {
+final apiNotifierProvider =
+    StateNotifierProvider<ApiNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(apiRepositoryProvider);
   return ApiNotifier(repository, ref);
 });
-

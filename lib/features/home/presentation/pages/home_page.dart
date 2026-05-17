@@ -130,7 +130,8 @@ class HomePage extends ConsumerWidget {
                       Text(
                         '${overdue.length} accounts are currently in default',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -160,14 +161,16 @@ class HomePage extends ConsumerWidget {
           children: [
             _SummaryChip(
               label: 'Disbursed',
-              value: AppFormatters.formatCompactCurrency(summary.totalDisbursed),
+              value:
+                  AppFormatters.formatCompactCurrency(summary.totalDisbursed),
               icon: Icons.outbond_rounded,
               color: AppColors.primary,
             ),
             const SizedBox(width: 10),
             _SummaryChip(
               label: 'Collected',
-              value: AppFormatters.formatCompactCurrency(summary.totalCollected),
+              value:
+                  AppFormatters.formatCompactCurrency(summary.totalCollected),
               icon: Icons.move_to_inbox_rounded,
               color: AppColors.success,
             ),
@@ -249,13 +252,17 @@ class HomePage extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: (isLoan ? AppColors.primary : AppColors.orange)
-                                .withValues(alpha: 0.1),
+                            color:
+                                (isLoan ? AppColors.primary : AppColors.orange)
+                                    .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            isLoan ? Icons.payments_rounded : Icons.savings_rounded,
-                            color: isLoan ? AppColors.primary : AppColors.orange,
+                            isLoan
+                                ? Icons.payments_rounded
+                                : Icons.savings_rounded,
+                            color:
+                                isLoan ? AppColors.primary : AppColors.orange,
                             size: 20,
                           ),
                         ),
@@ -265,7 +272,9 @@ class HomePage extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isLoan ? item.customerName ?? 'Unknown' : item.memberName,
+                                isLoan
+                                    ? item.customerName ?? 'Unknown'
+                                    : item.memberName,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -379,7 +388,8 @@ class HomePage extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -599,7 +609,8 @@ class HomePage extends ConsumerWidget {
                   child: _QuickActionBtn(
                     icon: Icons.person_add_alt_1_rounded,
                     label: 'Add User',
-                    color: isDark ? AppColors.accentDark : AppColors.accentLight,
+                    color:
+                        isDark ? AppColors.accentDark : AppColors.accentLight,
                     onTap: () => context.push('/users/new'),
                   ),
                 ),
@@ -624,7 +635,10 @@ class HomePage extends ConsumerWidget {
                     icon: Icons.business_rounded,
                     label: 'Branches',
                     color: AppColors.pink,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage())),
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const BranchManagementPage())),
                   ),
                 ),
                 if (!hasManager) ...[
@@ -1783,7 +1797,8 @@ class _SummaryChip extends StatelessWidget {
                 label,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontSize: 10,
-                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                  color:
+                      theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                 ),
               ),
             ],

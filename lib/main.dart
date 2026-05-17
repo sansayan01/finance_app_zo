@@ -61,7 +61,8 @@ Future<void> main() async {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, color: Colors.red, size: 64),
+                const Icon(Icons.error_outline_rounded,
+                    color: Colors.red, size: 64),
                 const SizedBox(height: 24),
                 const Text(
                   'Something went wrong',
@@ -103,7 +104,7 @@ Future<void> main() async {
   } catch (e, stackTrace) {
     debugPrint('💥 FATAL ERROR: $e');
     debugPrint(stackTrace.toString());
-    
+
     // Last resort fallback
     runApp(MaterialApp(
       home: Scaffold(

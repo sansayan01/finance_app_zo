@@ -20,7 +20,7 @@ UserRole parseRole(String roleStr) {
       normalized == 'collectionagent') {
     return UserRole.collectionAgent;
   }
-  
+
   // Default to customer for everything else
   return UserRole.customer;
 }
@@ -152,7 +152,8 @@ class ProfileModel {
       role: parseRole(json['role']?.toString() ?? 'customer'),
       orgId: json['org_id']?.toString(),
       branchId: json['branch_id']?.toString(),
-      branchName: json['branch'] is Map ? json['branch']['name']?.toString() : null,
+      branchName:
+          json['branch'] is Map ? json['branch']['name']?.toString() : null,
       employeeId: json['employee_id']?.toString(),
       assignedZone: json['assigned_zone']?.toString(),
       email: json['email']?.toString(),

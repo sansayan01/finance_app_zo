@@ -12,9 +12,8 @@ class CustomerSavingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final memberId = ref.watch(currentMemberIdProvider);
-    final savingsAsync = memberId != null
-        ? ref.watch(customerSavingsProvider(memberId))
-        : null;
+    final savingsAsync =
+        memberId != null ? ref.watch(customerSavingsProvider(memberId)) : null;
 
     final theme = Theme.of(context);
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
@@ -44,7 +43,8 @@ class CustomerSavingsPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Total Savings Card
-                      _buildTotalSavingsCard(theme, currencyFormat, totalBalance),
+                      _buildTotalSavingsCard(
+                          theme, currencyFormat, totalBalance),
                       const SizedBox(height: 16),
 
                       // Quick Actions
@@ -74,9 +74,12 @@ class CustomerSavingsPage extends ConsumerWidget {
                           itemCount: savings.length,
                           itemBuilder: (context, index) {
                             final account = savings[index];
-                            return _buildSavingsAccountCard(context, ref, account, currencyFormat)
+                            return _buildSavingsAccountCard(
+                                    context, ref, account, currencyFormat)
                                 .animate()
-                                .fadeIn(duration: 300.ms, delay: Duration(milliseconds: index * 50));
+                                .fadeIn(
+                                    duration: 300.ms,
+                                    delay: Duration(milliseconds: index * 50));
                           },
                         ),
                     ],
@@ -95,7 +98,8 @@ class CustomerSavingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildTotalSavingsCard(ThemeData theme, NumberFormat currencyFormat, double totalBalance) {
+  Widget _buildTotalSavingsCard(
+      ThemeData theme, NumberFormat currencyFormat, double totalBalance) {
     return Card(
       elevation: 0,
       color: theme.colorScheme.primaryContainer,
@@ -112,7 +116,8 @@ class CustomerSavingsPage extends ConsumerWidget {
             Text(
               'Total Savings',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                color:
+                    theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
               ),
             ),
             Text(
@@ -128,7 +133,8 @@ class CustomerSavingsPage extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildQuickActionsCard(BuildContext context, WidgetRef ref, ThemeData theme) {
+  Widget _buildQuickActionsCard(
+      BuildContext context, WidgetRef ref, ThemeData theme) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -241,7 +247,8 @@ class CustomerSavingsPage extends ConsumerWidget {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -285,14 +292,16 @@ class CustomerSavingsPage extends ConsumerWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => _showWithdrawDialog(context, ref, accountId: account['id']),
+                    onPressed: () => _showWithdrawDialog(context, ref,
+                        accountId: account['id']),
                     child: const Text('Withdraw'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _showDepositDialog(context, ref, accountId: account['id']),
+                    onPressed: () => _showDepositDialog(context, ref,
+                        accountId: account['id']),
                     child: const Text('Deposit'),
                   ),
                 ),
@@ -304,7 +313,8 @@ class CustomerSavingsPage extends ConsumerWidget {
     );
   }
 
-  void _showDepositDialog(BuildContext context, WidgetRef ref, {String? accountId}) {
+  void _showDepositDialog(BuildContext context, WidgetRef ref,
+      {String? accountId}) {
     final controller = TextEditingController();
 
     showDialog(
@@ -349,7 +359,8 @@ class CustomerSavingsPage extends ConsumerWidget {
     );
   }
 
-  void _showWithdrawDialog(BuildContext context, WidgetRef ref, {String? accountId}) {
+  void _showWithdrawDialog(BuildContext context, WidgetRef ref,
+      {String? accountId}) {
     final controller = TextEditingController();
     final reasonController = TextEditingController();
 

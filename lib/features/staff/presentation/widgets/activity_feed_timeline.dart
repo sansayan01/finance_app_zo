@@ -20,14 +20,23 @@ class ActivityFeedTimeline extends ConsumerWidget {
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.05)),
             ),
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.history_rounded, size: 36, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                  Icon(Icons.history_rounded,
+                      size: 36,
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.2)),
                   const SizedBox(height: 8),
-                  Text('No recent activity', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
+                  Text('No recent activity',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4))),
                 ],
               ),
             ),
@@ -39,9 +48,15 @@ class ActivityFeedTimeline extends ConsumerWidget {
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+            border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10)),
             ],
           ),
           child: Column(
@@ -49,9 +64,12 @@ class ActivityFeedTimeline extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.history_rounded, size: 18, color: AppColors.primary),
+                  Icon(Icons.history_rounded,
+                      size: 18, color: AppColors.primary),
                   const SizedBox(width: 8),
-                  Text('Recent Activity', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  Text('Recent Activity',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w800)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -59,7 +77,8 @@ class ActivityFeedTimeline extends ConsumerWidget {
                 final action = activity['action'] as String? ?? '';
                 final createdAt = activity['created_at'] as String?;
                 final metadata = activity['metadata'] as Map<String, dynamic>?;
-                final time = createdAt != null ? DateTime.tryParse(createdAt) : null;
+                final time =
+                    createdAt != null ? DateTime.tryParse(createdAt) : null;
 
                 return _buildActivityRow(theme, action, metadata, time);
               }),
@@ -72,7 +91,8 @@ class ActivityFeedTimeline extends ConsumerWidget {
     );
   }
 
-  Widget _buildActivityRow(ThemeData theme, String action, Map<String, dynamic>? metadata, DateTime? time) {
+  Widget _buildActivityRow(ThemeData theme, String action,
+      Map<String, dynamic>? metadata, DateTime? time) {
     final (icon, label, color) = _getActivityInfo(theme, action, metadata);
 
     return Padding(
@@ -82,14 +102,17 @@ class ActivityFeedTimeline extends ConsumerWidget {
           Container(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, size: 16, color: color),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
-              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(fontWeight: FontWeight.w500),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -97,18 +120,25 @@ class ActivityFeedTimeline extends ConsumerWidget {
           if (time != null)
             Text(
               _formatTime(time),
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 10),
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  fontSize: 10),
             ),
         ],
       ),
     );
   }
 
-  (IconData, String, Color) _getActivityInfo(ThemeData theme, String action, Map<String, dynamic>? metadata) {
+  (IconData, String, Color) _getActivityInfo(
+      ThemeData theme, String action, Map<String, dynamic>? metadata) {
     switch (action) {
       case 'collection_recorded':
       case 'collection':
-        return (Icons.payments_rounded, 'Collection recorded', AppColors.success);
+        return (
+          Icons.payments_rounded,
+          'Collection recorded',
+          AppColors.success
+        );
       case 'visit_check_in':
         return (Icons.login_rounded, 'Visit check-in', AppColors.primary);
       case 'visit_check_out':
@@ -120,11 +150,19 @@ class ActivityFeedTimeline extends ConsumerWidget {
         return (Icons.coffee_outlined, 'Break ended', Colors.orangeAccent);
       case 'cash_deposit':
         final amount = metadata?['amount'] as double? ?? 0;
-        return (Icons.account_balance_outlined, '₹${amount.toStringAsFixed(0)} deposited', AppColors.indigo);
+        return (
+          Icons.account_balance_outlined,
+          '₹${amount.toStringAsFixed(0)} deposited',
+          AppColors.indigo
+        );
       case 'sync_completed':
         return (Icons.cloud_done_outlined, 'Data synced', AppColors.success);
       default:
-        return (Icons.circle_outlined, action.replaceAll('_', ' '), theme.colorScheme.onSurface);
+        return (
+          Icons.circle_outlined,
+          action.replaceAll('_', ' '),
+          theme.colorScheme.onSurface
+        );
     }
   }
 

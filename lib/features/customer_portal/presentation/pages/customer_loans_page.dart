@@ -12,9 +12,8 @@ class CustomerLoansPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final memberId = ref.watch(currentMemberIdProvider);
-    final loansAsync = memberId != null
-        ? ref.watch(customerLoansProvider(memberId))
-        : null;
+    final loansAsync =
+        memberId != null ? ref.watch(customerLoansProvider(memberId)) : null;
 
     // final theme = Theme.of(context);
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
@@ -37,7 +36,8 @@ class CustomerLoansPage extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.account_balance_wallet_outlined, size: 64, color: Colors.grey),
+                          Icon(Icons.account_balance_wallet_outlined,
+                              size: 64, color: Colors.grey),
                           SizedBox(height: 16),
                           Text('No active loans'),
                           SizedBox(height: 8),
@@ -50,9 +50,12 @@ class CustomerLoansPage extends ConsumerWidget {
                       itemCount: loans.length,
                       itemBuilder: (context, index) {
                         final loan = loans[index];
-                        return _buildLoanCard(context, ref, loan, currencyFormat)
+                        return _buildLoanCard(
+                                context, ref, loan, currencyFormat)
                             .animate()
-                            .fadeIn(duration: 300.ms, delay: Duration(milliseconds: index * 50))
+                            .fadeIn(
+                                duration: 300.ms,
+                                delay: Duration(milliseconds: index * 50))
                             .slideX(begin: 0.1, end: 0);
                       },
                     ),
@@ -63,9 +66,11 @@ class CustomerLoansPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoanCard(BuildContext context, WidgetRef ref, dynamic loan, NumberFormat currencyFormat) {
+  Widget _buildLoanCard(BuildContext context, WidgetRef ref, dynamic loan,
+      NumberFormat currencyFormat) {
     final theme = Theme.of(context);
-    final progress = ((loan['paid_amount'] as num?)?.toDouble() ?? 0.0) / ((loan['amount'] as num?)?.toDouble() ?? 1.0);
+    final progress = ((loan['paid_amount'] as num?)?.toDouble() ?? 0.0) /
+        ((loan['amount'] as num?)?.toDouble() ?? 1.0);
     final nextDueDate = DateTime.tryParse(loan['first_emi_date'] ?? '');
     final isOverdue = nextDueDate?.isBefore(DateTime.now()) ?? false;
 
@@ -75,7 +80,9 @@ class CustomerLoansPage extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isOverdue ? Colors.red.withValues(alpha: 0.5) : theme.colorScheme.outlineVariant,
+          color: isOverdue
+              ? Colors.red.withValues(alpha: 0.5)
+              : theme.colorScheme.outlineVariant,
         ),
       ),
       child: InkWell(
@@ -90,9 +97,11 @@ class CustomerLoansPage extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getLoanStatusColor(loan['status'] ?? 'active').withValues(alpha: 0.1),
+                      color: _getLoanStatusColor(loan['status'] ?? 'active')
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -188,7 +197,8 @@ class CustomerLoansPage extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.warning_amber, color: Colors.red, size: 20),
+                      const Icon(Icons.warning_amber,
+                          color: Colors.red, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Next EMI overdue - Pay now to avoid penalty',
@@ -205,7 +215,8 @@ class CustomerLoansPage extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => context.push('/customer/loans/${loan['id']}/schedule'),
+                      onPressed: () => context
+                          .push('/customer/loans/${loan['id']}/schedule'),
                       icon: const Icon(Icons.calendar_today, size: 18),
                       label: const Text('Schedule'),
                     ),
@@ -285,11 +296,12 @@ class CustomerLoansPage extends ConsumerWidget {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final success = await ref.read(emiPaymentProvider.notifier).payEMI(
-                loan['id'] ?? '',
-                (loan['emi_amount'] ?? 0).toDouble(),
-                'upi',
-              );
+              final success =
+                  await ref.read(emiPaymentProvider.notifier).payEMI(
+                        loan['id'] ?? '',
+                        (loan['emi_amount'] ?? 0).toDouble(),
+                        'upi',
+                      );
               if (success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Payment successful!')),

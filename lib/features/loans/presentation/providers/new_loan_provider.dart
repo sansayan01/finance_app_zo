@@ -194,7 +194,8 @@ class NewLoanState {
     double r = _ratePerPeriod;
     if (r == 0) return 0;
 
-    double totalPayment = (principalAmount * r * pow(1 + r, n)) / (pow(1 + r, n) - 1) * n;
+    double totalPayment =
+        (principalAmount * r * pow(1 + r, n)) / (pow(1 + r, n) - 1) * n;
     return totalPayment - principalAmount;
   }
 
@@ -262,7 +263,8 @@ class NewLoanState {
       }
     }
 
-    DateTime startDate = firstInstallmentDate ?? DateTime.now().add(const Duration(days: 30));
+    DateTime startDate =
+        firstInstallmentDate ?? DateTime.now().add(const Duration(days: 30));
 
     for (int i = 1; i <= n; i++) {
       double interestPart;
@@ -283,7 +285,11 @@ class NewLoanState {
 
       if (i == n) {
         principalPart = balance;
-        interestPart = interestMode == InterestMode.amount ? fixedInterestPerInstallment : (interestLogic == InterestLogic.reducingBalance ? balance * _ratePerPeriod : interestPart);
+        interestPart = interestMode == InterestMode.amount
+            ? fixedInterestPerInstallment
+            : (interestLogic == InterestLogic.reducingBalance
+                ? balance * _ratePerPeriod
+                : interestPart);
         emi = principalPart + interestPart;
       }
 
@@ -299,10 +305,12 @@ class NewLoanState {
           dueDate = startDate.add(Duration(days: (i - 1) * 7));
           break;
         case CollectionType.yearly:
-          dueDate = DateTime(startDate.year + (i - 1), startDate.month, startDate.day);
+          dueDate = DateTime(
+              startDate.year + (i - 1), startDate.month, startDate.day);
           break;
         case CollectionType.monthly:
-          dueDate = DateTime(startDate.year, startDate.month + (i - 1), startDate.day);
+          dueDate = DateTime(
+              startDate.year, startDate.month + (i - 1), startDate.day);
           break;
       }
 
@@ -339,8 +347,10 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
       state = state.copyWith(interestAmount: amount);
   void updateInterestBasis(InterestBasis basis) =>
       state = state.copyWith(interestBasis: basis);
-  void updateTenureValue(int value) => state = state.copyWith(tenureValue: value);
-  void updateTenureUnit(TenureUnit unit) => state = state.copyWith(tenureUnit: unit);
+  void updateTenureValue(int value) =>
+      state = state.copyWith(tenureValue: value);
+  void updateTenureUnit(TenureUnit unit) =>
+      state = state.copyWith(tenureUnit: unit);
   void updateCollectionType(CollectionType type) =>
       state = state.copyWith(collectionType: type);
   void updateInterestLogic(InterestLogic logic) =>
@@ -392,7 +402,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
 
   double _calculateEquivalentAPR() {
     if (state.interestAmount <= 0 || state.tenureInDays <= 0) return 0;
-    
+
     double totalInterest;
     switch (state.interestBasis) {
       case InterestBasis.onPrincipal:
@@ -410,7 +420,9 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
         totalInterest = state.interestAmount * (state.tenureInDays / 365);
         break;
     }
-    return (totalInterest / state.principalAmount) * (365 / state.tenureInDays) * 100;
+    return (totalInterest / state.principalAmount) *
+        (365 / state.tenureInDays) *
+        100;
   }
 
   void reset() => state = NewLoanState();

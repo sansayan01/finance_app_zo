@@ -57,8 +57,10 @@ class InvoiceModel {
       amount: (json['amount'] ?? 0.0).toDouble(),
       currency: json['currency']?.toString() ?? 'INR',
       status: json['status']?.toString() ?? 'unpaid',
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      dueDate: DateTime.parse(json['due_date'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
+      dueDate:
+          DateTime.parse(json['due_date'] ?? DateTime.now().toIso8601String()),
       paidAt: json['paid_at'] != null ? DateTime.parse(json['paid_at']) : null,
       invoicePdf: json['invoice_pdf']?.toString(),
       invoiceUrl: json['invoice_url']?.toString(),

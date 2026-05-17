@@ -19,8 +19,7 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 });
 
 // Current staff profile
-final staffProfileProvider =
-    FutureProvider<StaffProfileModel?>((ref) async {
+final staffProfileProvider = FutureProvider<StaffProfileModel?>((ref) async {
   final authState = ref.watch(authStateProvider);
   final user = authState.when(
     data: (user) => user,
@@ -69,13 +68,13 @@ final todayTargetProvider = FutureProvider<TargetModel?>((ref) async {
   if (profile == null) return null;
 
   final repository = ref.watch(staffRepositoryProvider);
-  
+
   // Ensure target exists
   await repository.ensureTodayTarget(
     profile.id,
     profile.dailyCollectionTarget,
   );
-  
+
   return repository.getTodayTarget(profile.id);
 });
 
@@ -89,19 +88,23 @@ final todaySummaryProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 });
 
 // Daily summary for a specific date
-final dailySummaryProvider = FutureProvider.family<Map<String, dynamic>, ({String staffId, DateTime date})>((ref, params) async {
+final dailySummaryProvider = FutureProvider.family<Map<String, dynamic>,
+    ({String staffId, DateTime date})>((ref, params) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getDailySummary(params.staffId, params.date);
 });
 
 // Today's breaks
-final todayBreaksProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, staffId) async {
+final todayBreaksProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, staffId) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getTodayBreaks(staffId);
 });
 
 // Current activity status
-final currentActivityProvider = FutureProvider.family<String?, String>((ref, staffId) async {
+final currentActivityProvider =
+    FutureProvider.family<String?, String>((ref, staffId) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getCurrentActivity(staffId);
 });
@@ -126,7 +129,8 @@ final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
   return repository.getUnreadNotificationCount(profile.id);
 });
 
-final recentNotificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final recentNotificationsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
   final repository = ref.watch(staffRepositoryProvider);
@@ -144,7 +148,8 @@ final activeVisitProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 
 // ─── Recent Activities ───
 
-final recentActivitiesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final recentActivitiesProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
   final repository = ref.watch(staffRepositoryProvider);
@@ -153,7 +158,8 @@ final recentActivitiesProvider = FutureProvider<List<Map<String, dynamic>>>((ref
 
 // ─── Savings Stats ───
 
-final todaySavingsStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final todaySavingsStatsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) {
     return {
@@ -169,7 +175,8 @@ final todaySavingsStatsProvider = FutureProvider<Map<String, dynamic>>((ref) asy
 
 // ─── Weekly Trend ───
 
-final weeklyTrendProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final weeklyTrendProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
   final repository = ref.watch(staffRepositoryProvider);
@@ -184,4 +191,3 @@ final nearbyOverdueCountProvider = FutureProvider<int>((ref) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getNearbyOverdueCount(profile.id);
 });
-

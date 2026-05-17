@@ -49,11 +49,8 @@ class MembersRepository {
   Future<MemberModel> createMember(MemberModel member) async {
     final json = member.toJson();
     json['org_id'] = _orgId;
-    final response = await _client
-        .from('members')
-        .insert(json)
-        .select()
-        .single();
+    final response =
+        await _client.from('members').insert(json).select().single();
     return MemberModel.fromJson(response);
   }
 }

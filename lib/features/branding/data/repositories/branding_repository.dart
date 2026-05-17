@@ -54,13 +54,12 @@ class BrandingRepository {
     final fileName = isDark ? 'logo_dark.png' : 'logo.png';
     final storagePath = 'branding/$orgId/$fileName';
 
-    await _client.storage
-        .from('organization-assets')
-        .uploadBinary(storagePath, Uint8List.fromList(bytes), fileOptions: const FileOptions(upsert: true));
+    await _client.storage.from('organization-assets').uploadBinary(
+        storagePath, Uint8List.fromList(bytes),
+        fileOptions: const FileOptions(upsert: true));
 
-    final publicUrl = _client.storage
-        .from('organization-assets')
-        .getPublicUrl(storagePath);
+    final publicUrl =
+        _client.storage.from('organization-assets').getPublicUrl(storagePath);
 
     // Update branding record
     await updateBranding(orgId, {
@@ -74,7 +73,8 @@ class BrandingRepository {
   Future<void> setCustomDomain(String orgId, String domain) async {
     try {
       // Generate verification token
-      final response = await _client.rpc('generate_verification_token').single();
+      final response =
+          await _client.rpc('generate_verification_token').single();
       final token = response as String;
 
       // Update branding
@@ -110,14 +110,11 @@ class BrandingRepository {
         'domain_verified': true,
       });
 
-      await _client
-          .from('custom_domains')
-          .update({
-            'verified': true,
-            'status': 'active',
-            'verified_at': DateTime.now().toIso8601String(),
-          })
-          .eq('org_id', orgId);
+      await _client.from('custom_domains').update({
+        'verified': true,
+        'status': 'active',
+        'verified_at': DateTime.now().toIso8601String(),
+      }).eq('org_id', orgId);
 
       return true;
     } catch (e) {

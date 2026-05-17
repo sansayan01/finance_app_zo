@@ -37,15 +37,11 @@ class InvitationRepository {
 
   /// Get invitation by token
   Future<OrgInvitationModel?> getInvitationByToken(String token) async {
-    final response = await _client
-        .from('org_invitations')
-        .select('''
+    final response = await _client.from('org_invitations').select('''
           *,
           org:organizations(name),
           inviter:profiles!fk_inv_invited(full_name)
-        ''')
-        .eq('token', token)
-        .maybeSingle();
+        ''').eq('token', token).maybeSingle();
 
     if (response == null) return null;
     return OrgInvitationModel.fromJson(response);
@@ -63,9 +59,8 @@ class InvitationRepository {
       query = query.eq('status', status);
     }
 
-    final response = await query
-        .order('created_at', ascending: false)
-        .limit(limit);
+    final response =
+        await query.order('created_at', ascending: false).limit(limit);
 
     return response
         .map<OrgInvitationModel>((json) => OrgInvitationModel.fromJson(json))

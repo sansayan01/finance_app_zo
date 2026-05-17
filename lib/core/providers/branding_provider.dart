@@ -37,7 +37,7 @@ class BrandingConfig {
 
   factory BrandingConfig.fromJson(Map<String, dynamic>? json, String orgId) {
     if (json == null) return BrandingConfig.defaultConfig(orgId);
-    
+
     return BrandingConfig(
       orgId: orgId,
       displayName: json['display_name'] as String?,
@@ -89,11 +89,11 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
   /// Load branding configuration
   Future<void> loadBranding() async {
     state = const AsyncValue.loading();
-    
+
     try {
       final client = ref.read(supabaseClientProvider);
       final orgId = ref.read(currentOrgIdProvider);
-      
+
       if (orgId == null) {
         state = AsyncValue.data(BrandingConfig.defaultConfig('default'));
         return;
@@ -102,7 +102,7 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
       // Check cache first
       final prefs = await SharedPreferences.getInstance();
       final cachedBranding = prefs.getString('branding_$orgId');
-      
+
       if (cachedBranding != null) {
         try {
           final decoded = Map<String, dynamic>.from(
@@ -129,9 +129,7 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
       }
 
       // Fetch from database
-      final response = await client
-          .from('organizations')
-          .select('''
+      final response = await client.from('organizations').select('''
             id,
             name,
             display_name,
@@ -147,9 +145,7 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
               use_custom_branding,
               show_powered_by
             )
-          ''')
-          .eq('id', orgId)
-          .maybeSingle();
+          ''').eq('id', orgId).maybeSingle();
 
       if (response != null) {
         final brandingData = response['org_branding'] as List?;
@@ -159,9 +155,13 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
 
         final config = BrandingConfig(
           orgId: orgId,
-          displayName: response['display_name'] as String? ?? response['name'] as String?,
-          logoUrl: branding?['logo_url'] as String? ?? response['logo_url'] as String?,
-          primaryColor: branding?['primary_color'] as String? ?? response['brand_color'] as String? ?? '#1976D2',
+          displayName: response['display_name'] as String? ??
+              response['name'] as String?,
+          logoUrl: branding?['logo_url'] as String? ??
+              response['logo_url'] as String?,
+          primaryColor: branding?['primary_color'] as String? ??
+              response['brand_color'] as String? ??
+              '#1976D2',
           secondaryColor: branding?['secondary_color'] as String? ?? '#424242',
           accentColor: branding?['accent_color'] as String? ?? '#FF5722',
           logoDarkUrl: branding?['logo_dark_url'] as String?,
@@ -196,18 +196,17 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
   Future<void> preloadLogo(String logoUrl) async {
     try {
       final client = ref.read(supabaseClientProvider);
-      
+
       // Check if it's a Supabase storage URL
       if (logoUrl.contains('brand-assets')) {
         final uri = Uri.parse(logoUrl);
         final pathSegments = uri.pathSegments;
         final bucketIndex = pathSegments.indexOf('brand-assets');
-        
+
         if (bucketIndex != -1 && bucketIndex + 1 < pathSegments.length) {
           final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
-          _cachedLogoBytes = await client.storage
-              .from('brand-assets')
-              .download(filePath);
+          _cachedLogoBytes =
+              await client.storage.from('brand-assets').download(filePath);
         }
       }
     } catch (e) {
@@ -274,18 +273,20 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
     if (orgId == null) return null;
 
     try {
-      final fileName = isDark ? 'org_$orgId/logo_dark.png' : 'org_$orgId/logo.png';
-      
-      await client.storage.from('brand-assets').uploadBinary(
-        fileName,
-        logoBytes,
-        fileOptions: const FileOptions(
-          contentType: 'image/png',
-          upsert: true,
-        ),
-      );
+      final fileName =
+          isDark ? 'org_$orgId/logo_dark.png' : 'org_$orgId/logo.png';
 
-      final logoUrl = client.storage.from('brand-assets').getPublicUrl(fileName);
+      await client.storage.from('brand-assets').uploadBinary(
+            fileName,
+            logoBytes,
+            fileOptions: const FileOptions(
+              contentType: 'image/png',
+              upsert: true,
+            ),
+          );
+
+      final logoUrl =
+          client.storage.from('brand-assets').getPublicUrl(fileName);
 
       // Update branding record
       await client.from('org_branding').upsert({
@@ -317,6 +318,7 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
 }
 
 /// Branding Provider
-final brandingProvider = StateNotifierProvider<BrandingNotifier, AsyncValue<BrandingConfig>>((ref) {
+final brandingProvider =
+    StateNotifierProvider<BrandingNotifier, AsyncValue<BrandingConfig>>((ref) {
   return BrandingNotifier(ref);
-});
+});

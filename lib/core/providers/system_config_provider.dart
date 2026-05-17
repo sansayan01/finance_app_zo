@@ -6,13 +6,10 @@ import 'package:microflow_pro/providers/supabase_provider.dart';
 
 final systemConfigProvider = FutureProvider<SystemConfig>((ref) async {
   final client = ref.watch(supabaseClientProvider);
-  
-  final response = await client
-      .from('system_config')
-      .select()
-      .limit(1)
-      .maybeSingle();
-      
+
+  final response =
+      await client.from('system_config').select().limit(1).maybeSingle();
+
   if (response == null) {
     return const SystemConfig(
       currentVersionAndroid: '1.0.0',
@@ -24,7 +21,7 @@ final systemConfigProvider = FutureProvider<SystemConfig>((ref) async {
       maintenanceMessage: '',
     );
   }
-  
+
   return SystemConfig.fromJson(response);
 });
 
@@ -51,7 +48,7 @@ final updateCheckProvider = FutureProvider<UpdateCheckResult>((ref) async {
   final config = await ref.watch(systemConfigProvider.future);
   final packageInfo = await PackageInfo.fromPlatform();
   final currentAppVersion = packageInfo.version;
-  
+
   if (config.isUnderMaintenance) {
     return UpdateCheckResult(
       status: UpdateStatus.maintenance,
@@ -110,4 +107,3 @@ bool _isVersionLower(String current, String target) {
     return false;
   }
 }
-

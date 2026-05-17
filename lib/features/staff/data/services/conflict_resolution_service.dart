@@ -171,7 +171,8 @@ class ConflictResolutionService {
     switch (table) {
       case 'collections':
         // For collections, prefer server amounts but keep local remarks
-        if (local['remarks'] != null && local['remarks'].toString().isNotEmpty) {
+        if (local['remarks'] != null &&
+            local['remarks'].toString().isNotEmpty) {
           merged['remarks'] = local['remarks'];
         }
         break;

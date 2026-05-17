@@ -94,4 +94,3 @@ final todayAgendaProvider = FutureProvider<List<dynamic>>((ref) async {
   }
   return agenda;
 });
-

@@ -36,18 +36,27 @@ class ReferralModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'org_id': orgId,
-    'referrer_org_id': referrerOrgId,
-    'referral_code': referralCode,
-    'status': status,
-    'reward_amount': rewardAmount,
-    'discount_percent': discountPercent,
-    'created_at': createdAt.toIso8601String(),
-  };
+        'id': id,
+        'org_id': orgId,
+        'referrer_org_id': referrerOrgId,
+        'referral_code': referralCode,
+        'status': status,
+        'reward_amount': rewardAmount,
+        'discount_percent': discountPercent,
+        'created_at': createdAt.toIso8601String(),
+      };
 
   @override
-  List<Object?> get props => [id, orgId, referrerOrgId, referralCode, status, rewardAmount, discountPercent, createdAt];
+  List<Object?> get props => [
+        id,
+        orgId,
+        referrerOrgId,
+        referralCode,
+        status,
+        rewardAmount,
+        discountPercent,
+        createdAt
+      ];
 }
 
 /// Feature request model
@@ -83,7 +92,8 @@ class FeatureRequestModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, description, category, votes, status, createdAt];
+  List<Object?> get props =>
+      [id, title, description, category, votes, status, createdAt];
 }
 
 /// Announcement model
@@ -121,5 +131,6 @@ class AnnouncementModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, content, type, status, publishedAt, createdAt];
+  List<Object?> get props =>
+      [id, title, content, type, status, publishedAt, createdAt];
 }

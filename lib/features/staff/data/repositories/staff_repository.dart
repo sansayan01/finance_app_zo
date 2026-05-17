@@ -14,16 +14,11 @@ class StaffRepository {
   Future<StaffProfileModel?> getStaffProfile(String userId,
       [String? fullName, String? email]) async {
     try {
-      final response = await _client
-          .from('staff_profiles')
-          .select('''
+      final response = await _client.from('staff_profiles').select('''
             *,
             branches(name),
             supervisor:staff_profiles!fk_sp_supervisor(full_name)
-          ''')
-          .eq('user_id', userId)
-          .eq('org_id', _orgId)
-          .maybeSingle();
+          ''').eq('user_id', userId).eq('org_id', _orgId).maybeSingle();
 
       if (response != null) {
         return StaffProfileModel.fromJson(response);
@@ -38,15 +33,11 @@ class StaffRepository {
   /// Get staff profile by staff ID
   Future<StaffProfileModel?> getStaffById(String staffId) async {
     try {
-      final response = await _client
-          .from('staff_profiles')
-          .select('''
+      final response = await _client.from('staff_profiles').select('''
             *,
             branches(name),
             supervisor:staff_profiles!fk_sp_supervisor(full_name)
-          ''')
-          .eq('id', staffId)
-          .single();
+          ''').eq('id', staffId).single();
 
       return StaffProfileModel.fromJson(response);
     } catch (e) {
@@ -466,30 +457,31 @@ class StaffRepository {
     return await _client
         .from('staff_breaks')
         .select()
-         .eq('staff_id', staffId)
-         .filter('start_time', 'gte', today)
-         .order('start_time', ascending: false);
+        .eq('staff_id', staffId)
+        .filter('start_time', 'gte', today)
+        .order('start_time', ascending: false);
   }
 
   /// Get daily summary for a specific date
-  Future<Map<String, dynamic>> getDailySummary(String staffId, DateTime date) async {
+  Future<Map<String, dynamic>> getDailySummary(
+      String staffId, DateTime date) async {
     final dateStr = date.toIso8601String().split('T').first;
 
     // Get collections for the date
     final collections = await _client
         .from('collections')
         .select()
-         .eq('staff_id', staffId)
-         .filter('collection_time', 'gte', dateStr)
-         .filter('collection_time', 'lt', '${dateStr}T23:59:59');
+        .eq('staff_id', staffId)
+        .filter('collection_time', 'gte', dateStr)
+        .filter('collection_time', 'lt', '${dateStr}T23:59:59');
 
     // Get visits for the date
     final visits = await _client
         .from('visit_logs')
         .select()
-         .eq('staff_id', staffId)
-         .filter('check_in_at', 'gte', dateStr)
-         .filter('check_in_at', 'lt', '${dateStr}T23:59:59');
+        .eq('staff_id', staffId)
+        .filter('check_in_at', 'gte', dateStr)
+        .filter('check_in_at', 'lt', '${dateStr}T23:59:59');
 
     // Calculate summary
     double totalCollected = 0;
@@ -672,7 +664,8 @@ class StaffRepository {
           .from('collections')
           .select('amount_collected, collection_date')
           .eq('staff_id', staffId)
-          .filter('collection_date', 'gte', weekAgo.toIso8601String().split('T').first)
+          .filter('collection_date', 'gte',
+              weekAgo.toIso8601String().split('T').first)
           .order('collection_date', ascending: true);
 
       // Group by date and sum amounts

@@ -172,7 +172,7 @@ class StaffWallet {
 final staffWalletProvider = FutureProvider<StaffWallet>((ref) async {
   final repository = ref.watch(transactionsRepositoryProvider);
   final transactions = await repository.getTransactionsByDate(DateTime.now());
-  
+
   double cashInHand = 0;
   double totalCash = 0;
   double totalDigital = 0;

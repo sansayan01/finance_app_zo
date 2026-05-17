@@ -322,8 +322,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
           const SizedBox(width: 16),
           _AnalyticsCard(
             label: 'TOTAL OUTSTANDING',
-            value:
-                AppFormatters.formatCurrency(summary.totalOutstanding),
+            value: AppFormatters.formatCurrency(summary.totalOutstanding),
             icon: Icons.donut_large_rounded,
             color: AppColors.warning,
             isDark: isDark,
@@ -540,7 +539,7 @@ class _AnalyticsCard extends StatelessWidget {
     required this.color,
     this.subtitle,
     required this.isDark,
-  }); 
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -827,8 +826,7 @@ class _PremiumLoanCard extends StatelessWidget {
                   icon: Icons.percent_rounded),
               _DataPoint(
                   label: 'BALANCE',
-                  value: AppFormatters.formatCurrency(
-                      loan.outstandingBalance),
+                  value: AppFormatters.formatCurrency(loan.outstandingBalance),
                   highlight: true),
             ],
           ),

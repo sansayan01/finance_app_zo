@@ -41,10 +41,11 @@ class SyncStatus {
 }
 
 /// Sync Status Provider
-/// 
+///
 /// This is a simplified provider for the router.
 /// The full implementation is in sync_providers.dart
-final syncStatusProvider = StateNotifierProvider<SyncStatusNotifier, SyncStatus>((ref) {
+final syncStatusProvider =
+    StateNotifierProvider<SyncStatusNotifier, SyncStatus>((ref) {
   return SyncStatusNotifier();
 });
 

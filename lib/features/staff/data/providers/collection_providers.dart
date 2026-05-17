@@ -16,7 +16,8 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 });
 
 // Today's due EMIs
-final todayDueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final todayDueEmisProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -28,7 +29,8 @@ final todayDueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) as
 final todayEmisProvider = todayDueEmisProvider;
 
 // Overdue EMIs
-final overdueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final overdueEmisProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -37,7 +39,8 @@ final overdueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asy
 });
 
 // Today's collections
-final todayCollectionsProvider = FutureProvider<List<CollectionModel>>((ref) async {
+final todayCollectionsProvider =
+    FutureProvider<List<CollectionModel>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -46,7 +49,8 @@ final todayCollectionsProvider = FutureProvider<List<CollectionModel>>((ref) asy
 });
 
 // Today's collection stats (Aliased for StaffHomeDashboard)
-final todayCollectionStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final todayCollectionStatsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) {
     return {
@@ -65,26 +69,34 @@ final todayCollectionStatsProvider = FutureProvider<Map<String, dynamic>>((ref) 
 final todayStatsProvider = todayCollectionStatsProvider;
 
 // Customer detail provider
-final customerDetailProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, customerId) async {
+final customerDetailProvider =
+    FutureProvider.family<Map<String, dynamic>, String>(
+        (ref, customerId) async {
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.getCustomerDetail(customerId);
 });
 
 // Customer search provider
-final customerSearchProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, query) async {
+final customerSearchProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, query) async {
   if (query.isEmpty) return [];
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.searchCustomers(query);
 });
 
 // Customer loans provider
-final customerLoansProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, customerId) async {
+final customerLoansProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, customerId) async {
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.getCustomerLoans(customerId);
 });
 
 // Customer savings provider
-final customerSavingsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, customerId) async {
+final customerSavingsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, customerId) async {
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.getCustomerSavings(customerId);
 });
@@ -102,10 +114,12 @@ typedef HistoryParams = ({
   String? paymentMode,
 });
 
-final collectionHistoryProvider = FutureProvider.family<List<Map<String, dynamic>>, HistoryParams>((ref, params) async {
+final collectionHistoryProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, HistoryParams>(
+        (ref, params) async {
   final profile = await ref.watch(staffProfileProvider.future);
   final staffId = params.staffId ?? profile?.id;
-  
+
   if (staffId == null) return [];
 
   final repository = ref.watch(collectionRepositoryProvider);
@@ -120,7 +134,8 @@ final collectionHistoryProvider = FutureProvider.family<List<Map<String, dynamic
 });
 
 // Recent collections
-final recentCollectionsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final recentCollectionsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -129,7 +144,8 @@ final recentCollectionsProvider = FutureProvider<List<Map<String, dynamic>>>((re
 });
 
 // Frequent customers
-final frequentCustomersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final frequentCustomersProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -142,7 +158,8 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
   final CollectionRepository _repository;
   final SyncStatusNotifier _syncNotifier;
 
-  CollectionNotifier(this._repository, this._syncNotifier) : super(const AsyncValue.data(null));
+  CollectionNotifier(this._repository, this._syncNotifier)
+      : super(const AsyncValue.data(null));
 
   Future<void> recordCollection({
     required String staffId,
@@ -210,12 +227,13 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
             'gps_accuracy': gpsAccuracy,
             'gps_address': gpsAddress,
             'remarks': remarks,
-            'collection_date': DateTime.now().toIso8601String().split('T').first,
+            'collection_date':
+                DateTime.now().toIso8601String().split('T').first,
             'collection_time': DateTime.now().toUtc().toIso8601String(),
             'sync_status': 'pending',
           },
         );
-        
+
         // Return a local model for the offline queued collection
         final now = DateTime.now();
         state = AsyncValue.data(CollectionModel(
@@ -244,9 +262,10 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
   }
 }
 
-final collectionNotifierProvider = StateNotifierProvider<CollectionNotifier, AsyncValue<CollectionModel?>>((ref) {
+final collectionNotifierProvider =
+    StateNotifierProvider<CollectionNotifier, AsyncValue<CollectionModel?>>(
+        (ref) {
   final repository = ref.watch(collectionRepositoryProvider);
   final syncNotifier = ref.watch(syncStatusProvider.notifier);
   return CollectionNotifier(repository, syncNotifier);
 });
-

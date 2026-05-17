@@ -10,7 +10,8 @@ import '../../../growth/models/growth_models.dart';
 // ============================================
 
 /// Audit logs provider
-final auditLogsProvider = FutureProvider.family<List<AuditLogModel>, String>((ref, orgId) async {
+final auditLogsProvider =
+    FutureProvider.family<List<AuditLogModel>, String>((ref, orgId) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('audit_logs')
@@ -18,19 +19,22 @@ final auditLogsProvider = FutureProvider.family<List<AuditLogModel>, String>((re
       .eq('org_id', orgId)
       .order('created_at', ascending: false)
       .limit(100);
-  
-  return response.map<AuditLogModel>((json) => AuditLogModel.fromJson(json)).toList();
+
+  return response
+      .map<AuditLogModel>((json) => AuditLogModel.fromJson(json))
+      .toList();
 });
 
 /// Organization settings provider
-final orgSettingsProvider = FutureProvider.family<OrgSettingsModel?, String>((ref, orgId) async {
+final orgSettingsProvider =
+    FutureProvider.family<OrgSettingsModel?, String>((ref, orgId) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('org_settings')
       .select()
       .eq('org_id', orgId)
       .maybeSingle();
-  
+
   if (response == null) return null;
   return OrgSettingsModel.fromJson(response);
 });
@@ -40,28 +44,32 @@ final orgSettingsProvider = FutureProvider.family<OrgSettingsModel?, String>((re
 // ============================================
 
 /// Organization metrics provider
-final orgMetricsProvider = FutureProvider.family<OrgMetricsModel?, String>((ref, orgId) async {
+final orgMetricsProvider =
+    FutureProvider.family<OrgMetricsModel?, String>((ref, orgId) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('org_metrics')
       .select()
       .eq('org_id', orgId)
       .maybeSingle();
-  
+
   if (response == null) return null;
   return OrgMetricsModel.fromJson(response);
 });
 
 /// Custom reports provider
-final customReportsProvider = FutureProvider.family<List<CustomReportModel>, String>((ref, orgId) async {
+final customReportsProvider =
+    FutureProvider.family<List<CustomReportModel>, String>((ref, orgId) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('custom_reports')
       .select()
       .eq('org_id', orgId)
       .order('created_at', ascending: false);
-  
-  return response.map<CustomReportModel>((json) => CustomReportModel.fromJson(json)).toList();
+
+  return response
+      .map<CustomReportModel>((json) => CustomReportModel.fromJson(json))
+      .toList();
 });
 
 // ============================================
@@ -69,47 +77,53 @@ final customReportsProvider = FutureProvider.family<List<CustomReportModel>, Str
 // ============================================
 
 /// System status provider
-final systemStatusProvider = FutureProvider<List<SystemStatusModel>>((ref) async {
+final systemStatusProvider =
+    FutureProvider<List<SystemStatusModel>>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('system_status')
       .select()
-      .inFilter('status', ['investigating', 'identified', 'monitoring'])
-      .order('created_at', ascending: false);
-  
-  return response.map<SystemStatusModel>((json) => SystemStatusModel.fromJson(json)).toList();
+      .inFilter('status', ['investigating', 'identified', 'monitoring']).order(
+          'created_at',
+          ascending: false);
+
+  return response
+      .map<SystemStatusModel>((json) => SystemStatusModel.fromJson(json))
+      .toList();
 });
 
 /// Help articles provider
-final helpArticlesProvider = FutureProvider.family<List<HelpArticleModel>, String?>((ref, category) async {
+final helpArticlesProvider =
+    FutureProvider.family<List<HelpArticleModel>, String?>(
+        (ref, category) async {
   final client = ref.watch(supabaseClientProvider);
-  var query = client
-      .from('help_articles')
-      .select()
-      .eq('status', 'published');
-  
+  var query = client.from('help_articles').select().eq('status', 'published');
+
   if (category != null) {
     query = query.eq('category', category);
   }
-  
+
   final response = await query.order('view_count', ascending: false);
-  return response.map<HelpArticleModel>((json) => HelpArticleModel.fromJson(json)).toList();
+  return response
+      .map<HelpArticleModel>((json) => HelpArticleModel.fromJson(json))
+      .toList();
 });
 
 /// Video tutorials provider
-final videoTutorialsProvider = FutureProvider.family<List<VideoTutorialModel>, String?>((ref, category) async {
+final videoTutorialsProvider =
+    FutureProvider.family<List<VideoTutorialModel>, String?>(
+        (ref, category) async {
   final client = ref.watch(supabaseClientProvider);
-  var query = client
-      .from('video_tutorials')
-      .select()
-      .eq('status', 'published');
-  
+  var query = client.from('video_tutorials').select().eq('status', 'published');
+
   if (category != null) {
     query = query.eq('category', category);
   }
-  
+
   final response = await query.order('view_count', ascending: false);
-  return response.map<VideoTutorialModel>((json) => VideoTutorialModel.fromJson(json)).toList();
+  return response
+      .map<VideoTutorialModel>((json) => VideoTutorialModel.fromJson(json))
+      .toList();
 });
 
 // ============================================
@@ -117,30 +131,37 @@ final videoTutorialsProvider = FutureProvider.family<List<VideoTutorialModel>, S
 // ============================================
 
 /// Referrals provider
-final referralsProvider = FutureProvider.family<List<ReferralModel>, String>((ref, orgId) async {
+final referralsProvider =
+    FutureProvider.family<List<ReferralModel>, String>((ref, orgId) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('referrals')
       .select()
       .eq('org_id', orgId)
       .order('created_at', ascending: false);
-  
-  return response.map<ReferralModel>((json) => ReferralModel.fromJson(json)).toList();
+
+  return response
+      .map<ReferralModel>((json) => ReferralModel.fromJson(json))
+      .toList();
 });
 
 /// Feature requests provider
-final featureRequestsProvider = FutureProvider<List<FeatureRequestModel>>((ref) async {
+final featureRequestsProvider =
+    FutureProvider<List<FeatureRequestModel>>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('feature_requests')
       .select()
       .order('votes', ascending: false);
-  
-  return response.map<FeatureRequestModel>((json) => FeatureRequestModel.fromJson(json)).toList();
+
+  return response
+      .map<FeatureRequestModel>((json) => FeatureRequestModel.fromJson(json))
+      .toList();
 });
 
 /// Announcements provider
-final announcementsProvider = FutureProvider<List<AnnouncementModel>>((ref) async {
+final announcementsProvider =
+    FutureProvider<List<AnnouncementModel>>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final response = await client
       .from('announcements')
@@ -148,7 +169,8 @@ final announcementsProvider = FutureProvider<List<AnnouncementModel>>((ref) asyn
       .eq('status', 'published')
       .order('published_at', ascending: false)
       .limit(10);
-  
-  return response.map<AnnouncementModel>((json) => AnnouncementModel.fromJson(json)).toList();
-});
 
+  return response
+      .map<AnnouncementModel>((json) => AnnouncementModel.fromJson(json))
+      .toList();
+});

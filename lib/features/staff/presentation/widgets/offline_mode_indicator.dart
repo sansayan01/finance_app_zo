@@ -106,17 +106,26 @@ class OfflineModeIndicator extends ConsumerWidget {
     );
   }
 
-  (Color, IconData, String) _getStatusInfo(bool isOnline, SyncUIState syncStatus) {
+  (Color, IconData, String) _getStatusInfo(
+      bool isOnline, SyncUIState syncStatus) {
     if (syncStatus.isSyncing) {
       return (Colors.blue, Icons.sync, 'Syncing data...');
     }
 
     if (!isOnline) {
-      return (Colors.orange, Icons.wifi_off, 'You are offline. Changes will sync when connected.');
+      return (
+        Colors.orange,
+        Icons.wifi_off,
+        'You are offline. Changes will sync when connected.'
+      );
     }
 
     if (syncStatus.pending > 0) {
-      return (Colors.amber, Icons.sync_problem, '${syncStatus.pending} operations pending sync');
+      return (
+        Colors.amber,
+        Icons.sync_problem,
+        '${syncStatus.pending} operations pending sync'
+      );
     }
 
     if (syncStatus.error != null) {

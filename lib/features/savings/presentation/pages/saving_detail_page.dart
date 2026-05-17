@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/utils/formatters.dart';
@@ -69,77 +70,77 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                 controller: _scrollController,
                 physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics()),
-              slivers: [
-                SliverToBoxAdapter(
-                    child: SizedBox(
-                        height: MediaQuery.of(context).padding.top + 60)),
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      _buildCurrentBalance(saving, theme),
-                      const SizedBox(height: 32),
-                      _buildVaultCard(saving, theme),
-                      const SizedBox(height: 32),
-                      _buildPrimaryActionRow(saving, theme),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.scaffoldBackgroundColor,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(40)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: isDark ? 0.5 : 0.05),
-                          blurRadius: 30,
-                          offset: const Offset(0, -10),
-                        ),
+                slivers: [
+                  SliverToBoxAdapter(
+                      child: SizedBox(
+                          height: MediaQuery.of(context).padding.top + 60)),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _buildCurrentBalance(saving, theme),
+                        const SizedBox(height: 32),
+                        _buildVaultCard(saving, theme),
+                        const SizedBox(height: 32),
+                        _buildPrimaryActionRow(saving, theme),
+                        const SizedBox(height: 40),
                       ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Center(
-                            child: Container(
-                              width: 40,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: theme.dividerColor,
-                                borderRadius: BorderRadius.circular(2),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: theme.scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(40)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black
+                                .withValues(alpha: isDark ? 0.5 : 0.05),
+                            blurRadius: 30,
+                            offset: const Offset(0, -10),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Container(
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: theme.dividerColor,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 32),
-                          _buildSectionHeader('Vault Intelligence', theme),
-                          const SizedBox(height: 16),
-                          _buildIntelligenceCard(saving, theme),
-                          const SizedBox(height: 40),
-                          _buildSectionHeader('Yield Projection', theme),
-                          const SizedBox(height: 16),
-                          _buildYieldChart(saving, theme),
-                          const SizedBox(height: 40),
-                          _buildSectionHeader('Deposit History', theme),
-                          const SizedBox(height: 16),
-                          _buildTransactionList(theme),
-                          const SizedBox(height: 100),
-                        ],
+                            const SizedBox(height: 32),
+                            _buildSectionHeader('Vault Intelligence', theme),
+                            const SizedBox(height: 16),
+                            _buildIntelligenceCard(saving, theme),
+                            const SizedBox(height: 40),
+                            _buildSectionHeader('Yield Projection', theme),
+                            const SizedBox(height: 16),
+                            _buildYieldChart(saving, theme),
+                            const SizedBox(height: 40),
+                            _buildSectionHeader('Deposit History', theme),
+                            const SizedBox(height: 16),
+                            _buildTransactionList(theme),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
       ),
@@ -280,7 +281,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_horiz_rounded),
                 onSelected: (value) {
-                  if (value == 'edit') _showEditDialog(saving);
+                  if (value == 'edit') {
+                    context.push('/savings/${saving.id}/edit');
+                  }
                   if (value == 'delete') _showDeleteDialog();
                 },
                 itemBuilder: (context) => [
@@ -293,80 +296,6 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showEditDialog(SavingsModel saving) {
-    final interestController =
-        TextEditingController(text: saving.interestRate.toString());
-    DateTime selectedDate = saving.maturityDate;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Edit Savings Vault'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: interestController,
-                keyboardType: TextInputType.number,
-                decoration:
-                    const InputDecoration(labelText: 'Interest Rate (%)'),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                title: const Text('Maturity Date'),
-                subtitle: Text(AppFormatters.formatDate(selectedDate)),
-                trailing: const Icon(Icons.calendar_today_rounded),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 3650)),
-                  );
-                  if (picked != null) {
-                    setDialogState(() => selectedDate = picked);
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () async {
-                final rate = double.tryParse(interestController.text) ??
-                    saving.interestRate;
-                final navigator = Navigator.of(context);
-                final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-                await ref
-                    .read(savingsRepositoryProvider)
-                    .updateSavingMetadata(widget.savingId, {
-                  'interest_rate': rate,
-                  'maturity_date': selectedDate.toIso8601String(),
-                });
-
-                if (!mounted) return;
-                ref.invalidate(savingDetailProvider(widget.savingId));
-                ref.invalidate(allSavingsProvider);
-                navigator.pop();
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(
-                      content: Text('Vault updated successfully'),
-                      backgroundColor: AppColors.success),
-                );
-              },
-              child: const Text('Save Changes'),
-            ),
-          ],
         ),
       ),
     );
@@ -410,7 +339,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         TextEditingController(text: saving.monthlyDeposit.toString());
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Record Deposit'),
         content: TextField(
           controller: controller,
@@ -422,12 +351,12 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               final amount = double.tryParse(controller.text) ?? 0;
-              final navigator = Navigator.of(context);
+              final navigator = Navigator.of(dialogContext);
               final scaffoldMessenger = ScaffoldMessenger.of(context);
 
               if (amount > 0) {
@@ -441,9 +370,37 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                 ref.invalidate(allSavingsProvider);
                 navigator.pop();
                 scaffoldMessenger.showSnackBar(
-                  const SnackBar(
-                      content: Text('Deposit recorded successfully'),
-                      backgroundColor: AppColors.success),
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.check_circle_rounded, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Deposit Confirmed',
+                                style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white),
+                              ),
+                              Text(
+                                '₹${amount.toStringAsFixed(0)} added to vault.',
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    margin: const EdgeInsets.all(16),
+                    duration: const Duration(seconds: 4),
+                  ),
                 );
               }
             },
@@ -696,6 +653,14 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Widget _buildIntelligenceCard(SavingsModel saving, ThemeData theme) {
+    double monthlyEquivalent = saving.monthlyDeposit;
+    final typeStr = saving.collectionType.toLowerCase();
+    if (typeStr == 'daily') {
+      monthlyEquivalent = saving.monthlyDeposit * 30;
+    } else if (typeStr == 'weekly') {
+      monthlyEquivalent = saving.monthlyDeposit * 4.33;
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -704,8 +669,14 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       ),
       child: Column(
         children: [
-          _buildInfoRow('Monthly Deposit',
+          _buildInfoRow('${_capitalize(saving.collectionType)} Deposit',
               AppFormatters.formatCurrency(saving.monthlyDeposit), theme),
+          if (typeStr != 'monthly') ...[
+            const SizedBox(height: 12),
+            _buildInfoRow('Monthly Equivalent',
+                AppFormatters.formatCurrency(monthlyEquivalent), theme,
+                valueColor: theme.colorScheme.primary),
+          ],
           const SizedBox(height: 12),
           _buildInfoRow(
               'Interest Earned',

@@ -172,7 +172,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text('No credit card required',
-            style: TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600)),
         ).animate().fadeIn(delay: 350.ms),
       ],
     );

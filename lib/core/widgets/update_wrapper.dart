@@ -104,8 +104,8 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: 0.1),
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: isCompleted
@@ -129,17 +129,14 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                             Text('$pct%',
                                                 style: TextStyle(
                                                     fontSize: 10,
-                                                    fontWeight:
-                                                        FontWeight.w700,
+                                                    fontWeight: FontWeight.w700,
                                                     color: theme
                                                         .colorScheme.primary)),
                                           ],
                                         ),
                                       )
-                                    : const Icon(
-                                        Icons.system_update_rounded,
-                                        size: 40,
-                                        color: Colors.blue),
+                                    : const Icon(Icons.system_update_rounded,
+                                        size: 40, color: Colors.blue),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -158,10 +155,12 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                         isCompleted
                             ? 'Tap install to apply the update.'
                             : isFailed
-                                ? _downloadProgress.error ?? 'Something went wrong.'
+                                ? _downloadProgress.error ??
+                                    'Something went wrong.'
                                 : isDownloading
                                     ? 'Downloading the latest version ($pct%)'
-                                    : result.message ?? 'A new version is available.',
+                                    : result.message ??
+                                        'A new version is available.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall
                             ?.copyWith(color: Colors.grey[600]),
@@ -173,8 +172,8 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 6,
-                            backgroundColor:
-                                theme.colorScheme.primary.withValues(alpha: 0.15),
+                            backgroundColor: theme.colorScheme.primary
+                                .withValues(alpha: 0.15),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -220,8 +219,8 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                           borderRadius:
                                               BorderRadius.circular(12)),
                                     ),
-                                    icon: const Icon(
-                                        Icons.refresh_rounded, size: 18),
+                                    icon: const Icon(Icons.refresh_rounded,
+                                        size: 18),
                                     label: const Text('Retry'),
                                   )
                                 : isDownloading
@@ -245,11 +244,10 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                               borderRadius:
                                                   BorderRadius.circular(12)),
                                         ),
-                                        icon: const Icon(
-                                            Icons.download_rounded, size: 18),
-                                        label: Text(isForce
-                                            ? 'Update Now'
-                                            : 'Update'),
+                                        icon: const Icon(Icons.download_rounded,
+                                            size: 18),
+                                        label: Text(
+                                            isForce ? 'Update Now' : 'Update'),
                                       ),
                       ),
                       if (!isForce && !isDownloading && !isCompleted) ...[

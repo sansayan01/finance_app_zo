@@ -128,9 +128,24 @@ class BranchModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, orgId, name, code, address, city, state, pincode,
-        phone, email, managerId, managerName, status,
-        locationLat, locationLng, operatingHours, createdAt, updatedAt,
+        id,
+        orgId,
+        name,
+        code,
+        address,
+        city,
+        state,
+        pincode,
+        phone,
+        email,
+        managerId,
+        managerName,
+        status,
+        locationLat,
+        locationLng,
+        operatingHours,
+        createdAt,
+        updatedAt,
       ];
 }
 
@@ -160,5 +175,6 @@ class BranchStats extends Equatable {
   }
 
   @override
-  List<Object?> get props => [totalStaff, totalMembers, totalLoans, totalSavings, activeLoans];
+  List<Object?> get props =>
+      [totalStaff, totalMembers, totalLoans, totalSavings, activeLoans];
 }

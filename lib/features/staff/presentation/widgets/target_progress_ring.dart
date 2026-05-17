@@ -87,8 +87,9 @@ class _TargetProgressRingState extends State<TargetProgressRing>
                   painter: _ProgressRingPainter(
                     progress: _animation.value,
                     color: _getProgressColor(progress),
-                    backgroundColor:
-                        isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]!,
+                    backgroundColor: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.grey[200]!,
                     strokeWidth: 12,
                   ),
                 );

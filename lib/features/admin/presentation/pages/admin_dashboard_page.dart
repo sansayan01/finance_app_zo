@@ -8,9 +8,13 @@ import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/haptic_service.dart';
 
-final adminOrgListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final adminOrgListProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.read(supabaseClientProvider);
-  final orgs = await client.from('organizations').select('id, name, slug, status, created_at').order('created_at', ascending: false);
+  final orgs = await client
+      .from('organizations')
+      .select('id, name, slug, status, created_at')
+      .order('created_at', ascending: false);
   return List<Map<String, dynamic>>.from(orgs);
 });
 
@@ -41,8 +45,10 @@ class AdminDashboardPage extends ConsumerWidget {
             error: (e, _) => Center(child: Text('Error: $e')),
             data: (orgs) {
               final totalOrgs = orgs.length;
-              final activeOrgs = orgs.where((o) => o['status'] == 'active').length;
-              final suspended = orgs.where((o) => o['status'] == 'suspended').length;
+              final activeOrgs =
+                  orgs.where((o) => o['status'] == 'active').length;
+              final suspended =
+                  orgs.where((o) => o['status'] == 'suspended').length;
 
               return RefreshIndicator(
                 onRefresh: () async {
@@ -56,10 +62,11 @@ class AdminDashboardPage extends ConsumerWidget {
                     const SizedBox(height: 28),
                     _buildStatsRow(totalOrgs, activeOrgs, suspended, isDark),
                     const SizedBox(height: 28),
-                    _buildSectionHeader('Organizations', '${orgs.length} total', isDark),
+                    _buildSectionHeader(
+                        'Organizations', '${orgs.length} total', isDark),
                     const SizedBox(height: 16),
-                    ...orgs.asMap().entries.map((e) =>
-                      _buildOrgCard(context, e.value, e.key, isDark)),
+                    ...orgs.asMap().entries.map(
+                        (e) => _buildOrgCard(context, e.value, e.key, isDark)),
                   ],
                 ),
               );
@@ -70,7 +77,8 @@ class AdminDashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, WidgetRef ref, ThemeData theme, bool isDark) {
+  Widget _buildHeader(
+      BuildContext context, WidgetRef ref, ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -80,19 +88,29 @@ class AdminDashboardPage extends ConsumerWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Super Admin', style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800, letterSpacing: -0.8)),
+                Text('Super Admin',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800, letterSpacing: -0.8)),
                 const SizedBox(height: 4),
-                Text('Platform Overview', style: TextStyle(
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                  fontSize: 15)),
+                Text('Platform Overview',
+                    style: TextStyle(
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                        fontSize: 15)),
               ],
             ),
             Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.accent]),
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4))
+                ],
               ),
               child: Material(
                 color: Colors.transparent,
@@ -107,9 +125,14 @@ class AdminDashboardPage extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.grid_view_rounded, size: 18, color: Colors.white),
+                        Icon(Icons.grid_view_rounded,
+                            size: 18, color: Colors.white),
                         SizedBox(width: 6),
-                        Text('My Org', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                        Text('My Org',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13)),
                       ],
                     ),
                   ),
@@ -119,9 +142,14 @@ class AdminDashboardPage extends ConsumerWidget {
             const SizedBox(width: 8),
             Container(
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.15),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.2)),
+                border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.white.withValues(alpha: 0.2)),
               ),
               child: Material(
                 color: Colors.transparent,
@@ -134,7 +162,8 @@ class AdminDashboardPage extends ConsumerWidget {
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(10),
-                    child: Icon(Icons.logout_rounded, size: 20, color: Colors.white),
+                    child: Icon(Icons.logout_rounded,
+                        size: 20, color: Colors.white),
                   ),
                 ),
               ),
@@ -147,10 +176,18 @@ class AdminDashboardPage extends ConsumerWidget {
 
   Widget _buildStatsRow(int total, int active, int suspended, bool isDark) {
     final stats = [
-      _StatData(Icons.business_rounded, 'Total', '$total', AppColors.primary, AppColors.primaryLight),
-      _StatData(Icons.check_circle_rounded, 'Active', '$active', AppColors.success, AppColors.success.withValues(alpha: 0.7)),
-      _StatData(Icons.pause_circle_rounded, 'Suspended', '$suspended', AppColors.warning, AppColors.warning.withValues(alpha: 0.7)),
-      _StatData(Icons.trending_up_rounded, 'Rate', '${total == 0 ? 0 : (active * 100 ~/ total)}%', AppColors.cyan, AppColors.cyan.withValues(alpha: 0.7)),
+      _StatData(Icons.business_rounded, 'Total', '$total', AppColors.primary,
+          AppColors.primaryLight),
+      _StatData(Icons.check_circle_rounded, 'Active', '$active',
+          AppColors.success, AppColors.success.withValues(alpha: 0.7)),
+      _StatData(Icons.pause_circle_rounded, 'Suspended', '$suspended',
+          AppColors.warning, AppColors.warning.withValues(alpha: 0.7)),
+      _StatData(
+          Icons.trending_up_rounded,
+          'Rate',
+          '${total == 0 ? 0 : (active * 100 ~/ total)}%',
+          AppColors.cyan,
+          AppColors.cyan.withValues(alpha: 0.7)),
     ];
 
     return Row(
@@ -169,24 +206,31 @@ class AdminDashboardPage extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: TextStyle(
-          fontSize: 18, fontWeight: FontWeight.w700,
-          color: isDark ? Colors.white : const Color(0xFF0F172A))),
+        Text(title,
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF0F172A))),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.08) : AppColors.primary.withValues(alpha: 0.1),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text(subtitle, style: TextStyle(
-            fontSize: 12, fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade400 : AppColors.primary)),
+          child: Text(subtitle,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.grey.shade400 : AppColors.primary)),
         ),
       ],
     );
   }
 
-  Widget _buildOrgCard(BuildContext context, Map<String, dynamic> org, int index, bool isDark) {
+  Widget _buildOrgCard(
+      BuildContext context, Map<String, dynamic> org, int index, bool isDark) {
     final status = org['status'] as String? ?? 'unknown';
     final isActive = status == 'active';
     final name = org['name'] as String? ?? '';
@@ -217,48 +261,78 @@ class AdminDashboardPage extends ConsumerWidget {
           child: Row(
             children: [
               Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isActive
-                        ? [AppColors.success.withValues(alpha: 0.2), AppColors.success.withValues(alpha: 0.05)]
-                        : [AppColors.warning.withValues(alpha: 0.2), AppColors.warning.withValues(alpha: 0.05)],
+                        ? [
+                            AppColors.success.withValues(alpha: 0.2),
+                            AppColors.success.withValues(alpha: 0.05)
+                          ]
+                        : [
+                            AppColors.warning.withValues(alpha: 0.2),
+                            AppColors.warning.withValues(alpha: 0.05)
+                          ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(isActive ? Icons.check_circle_rounded : Icons.pause_circle_rounded,
-                  color: statusColor, size: 24),
+                child: Icon(
+                    isActive
+                        ? Icons.check_circle_rounded
+                        : Icons.pause_circle_rounded,
+                    color: statusColor,
+                    size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 15,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                    Text(name,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A))),
                     const SizedBox(height: 3),
-                    Text('$slug  •  $dateStr', style: TextStyle(
-                      fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade500)),
+                    Text('$slug  •  $dateStr',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? Colors.grey.shade500
+                                : Colors.grey.shade500)),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.25)),
+                  border:
+                      Border.all(color: statusColor.withValues(alpha: 0.25)),
                 ),
-                child: Text(statusLabel, style: TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w700, color: statusColor, letterSpacing: 0.3)),
+                child: Text(statusLabel,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
+                        letterSpacing: 0.3)),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right_rounded, color: isDark ? Colors.grey.shade600 : Colors.grey.shade400, size: 22),
+              Icon(Icons.chevron_right_rounded,
+                  color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                  size: 22),
             ],
           ),
         ),
-      ).animate().fadeIn(duration: 400.ms, delay: (100 * index).ms).slideX(begin: 0.1, end: 0),
+      )
+          .animate()
+          .fadeIn(duration: 400.ms, delay: (100 * index).ms)
+          .slideX(begin: 0.1, end: 0),
     );
   }
 }
@@ -276,26 +350,36 @@ class _StatCard extends StatelessWidget {
   final _StatData data;
   final bool isDark;
   final int index;
-  const _StatCard({required this.data, required this.isDark, required this.index});
+  const _StatCard(
+      {required this.data, required this.isDark, required this.index});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.85),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.8)
+            : Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withValues(alpha: 0.2) : data.color.withValues(alpha: 0.08),
-            blurRadius: 16, offset: const Offset(0, 4)),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : data.color.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
         children: [
           Container(
-            width: 36, height: 36,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: data.color.withValues(alpha: isDark ? 0.15 : 0.1),
               borderRadius: BorderRadius.circular(12),
@@ -303,16 +387,23 @@ class _StatCard extends StatelessWidget {
             child: Icon(data.icon, color: data.color, size: 20),
           ),
           const SizedBox(height: 10),
-          Text(data.value, style: TextStyle(
-            fontSize: 20, fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : const Color(0xFF0F172A))),
+          Text(data.value,
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A))),
           const SizedBox(height: 2),
-          Text(data.label, style: TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w500,
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+          Text(data.label,
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
         ],
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: (150 + 100 * index).ms).slideY(begin: 0.2, end: 0);
+    )
+        .animate()
+        .fadeIn(duration: 400.ms, delay: (150 + 100 * index).ms)
+        .slideY(begin: 0.2, end: 0);
   }
 }
 
@@ -343,4 +434,3 @@ class GlassmorphicCard extends StatelessWidget {
     );
   }
 }
-

@@ -8,7 +8,8 @@ import '../providers/loan_providers.dart' hide loanSummaryProvider;
 import '../../data/models/emi_schedule_model.dart';
 import '../../data/models/loan_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../home/data/providers/dashboard_providers.dart' show dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
+import '../../../home/data/providers/dashboard_providers.dart'
+    show dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
 
 class CollectionSheet extends ConsumerStatefulWidget {
   final LoanModel loan;
@@ -34,8 +35,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   @override
   void initState() {
     super.initState();
-    _amountController.text = widget.emi?.emiAmount.toStringAsFixed(2) 
-        ?? widget.loan.emiAmount.toStringAsFixed(2);
+    _amountController.text = widget.emi?.emiAmount.toStringAsFixed(2) ??
+        widget.loan.emiAmount.toStringAsFixed(2);
   }
 
   @override
@@ -54,7 +55,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     try {
       final repository = ref.read(emiRepositoryProvider);
       final user = ref.read(currentUserProvider);
-      
+
       final amount = double.tryParse(_amountController.text) ?? 0;
       if (amount <= 0) {
         if (mounted) {
@@ -72,7 +73,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
           loanId: widget.loan.id,
           amount: amount,
           paymentMode: _selectedMode.name,
-          notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+          notes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
           agentId: user?.id,
         );
       } else {
@@ -81,7 +84,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
           loanId: widget.loan.id,
           amount: amount,
           paymentMode: _selectedMode.name,
-          notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+          notes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
           agentId: user?.id,
         );
       }
@@ -99,10 +104,12 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         HapticFeedback.heavyImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Collected ${AppFormatters.formatCurrency(amount)} successfully'),
+            content: Text(
+                'Collected ${AppFormatters.formatCurrency(amount)} successfully'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -114,7 +121,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             content: Text('Collection failed: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -130,9 +138,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
     return Container(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 
-                MediaQuery.of(context).padding.bottom + 
-                AppSpacing.xxl + 20, // Extra buffer for custom bottom bars
+        bottom: MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.of(context).padding.bottom +
+            AppSpacing.xxl +
+            20, // Extra buffer for custom bottom bars
         left: AppSpacing.lg,
         right: AppSpacing.lg,
         top: AppSpacing.xl,
@@ -154,12 +163,14 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.emi != null ? 'Collect Installment' : 'Collect Payment',
+                      widget.emi != null
+                          ? 'Collect Installment'
+                          : 'Collect Payment',
                       style: theme.textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w900),
                     ),
                     Text(
-                      widget.emi != null 
+                      widget.emi != null
                           ? 'EMI #${widget.emi!.emiNumber} · ${widget.loan.loanNumber}'
                           : '${widget.loan.loanNumber} · Manual Collection',
                       style: theme.textTheme.bodySmall,
@@ -173,7 +184,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
-            
+
             // EMI Info Card or Loan Info Card
             Container(
               padding: const EdgeInsets.all(16),
@@ -192,7 +203,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                             Text(
                               'Due Date',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -210,12 +222,14 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                             Text(
                               'Expected Amount',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              AppFormatters.formatCurrency(widget.emi!.emiAmount),
+                              AppFormatters.formatCurrency(
+                                  widget.emi!.emiAmount),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: primary,
@@ -234,7 +248,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                             Text(
                               'Outstanding Balance',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -255,12 +270,14 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                             Text(
                               'EMI Amount',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              AppFormatters.formatCurrency(widget.loan.emiAmount),
+                              AppFormatters.formatCurrency(
+                                  widget.loan.emiAmount),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: primary,
@@ -272,7 +289,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                     ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            
+
             Text(
               'COLLECTION AMOUNT',
               style: theme.textTheme.labelSmall
@@ -281,7 +298,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
@@ -291,7 +309,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                 prefixText: '₹ ',
                 prefixStyle: theme.textTheme.headlineSmall
                     ?.copyWith(color: primary, fontWeight: FontWeight.w900),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 filled: true,
                 fillColor: theme.colorScheme.surfaceContainerHighest
                     .withValues(alpha: 0.3),
@@ -364,8 +383,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2))
                     : const Text('Confirm Collection',
-                        style:
-                            TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 16)),
               ),
             ),
           ],

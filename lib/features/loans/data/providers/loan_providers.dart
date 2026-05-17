@@ -22,4 +22,3 @@ final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
 
 // Alias for backward compatibility
 final loansProvider = allLoansProvider;
-

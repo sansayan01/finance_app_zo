@@ -13,39 +13,39 @@ class CollectionModel extends Equatable {
   final String? loanScheduleId;
   final String? memberId;
   final String staffId;
-  
+
   // Denormalized member info (for offline access)
   final String memberName;
   final String? memberPhone;
   final String? loanNumber;
-  
+
   // Collection details
   final double amountExpected;
   final double amountCollected;
   double get variance => amountExpected - amountCollected;
   final bool isPartial;
   final bool isAdvance;
-  
+
   // Payment details
   final PaymentMode paymentMode;
   final String? referenceNumber;
-  
+
   // GPS Location (mandatory for audit)
   final double gpsLat;
   final double gpsLng;
   final double? gpsAccuracy;
   final String? gpsAddress;
-  
+
   // Timestamps
   final DateTime collectionDate;
   final DateTime collectionTime;
-  
+
   // Sync status (for offline-first)
   final SyncState syncStatus;
   final String? localId;
   final int syncAttempts;
   final DateTime? lastSyncAt;
-  
+
   // Audit
   final String? remarks;
   final DateTime createdAt;
@@ -72,7 +72,7 @@ class CollectionModel extends Equatable {
     this.gpsAddress,
     required this.collectionDate,
     required this.collectionTime,
-      this.syncStatus = SyncState.synced,
+    this.syncStatus = SyncState.synced,
     this.localId,
     this.syncAttempts = 0,
     this.lastSyncAt,
@@ -103,7 +103,7 @@ class CollectionModel extends Equatable {
       gpsAddress: json['gps_address'] as String?,
       collectionDate: DateTime.parse(json['collection_date'] as String),
       collectionTime: DateTime.parse(json['collection_time'] as String),
-       syncStatus: _parseSyncState(json['sync_status'] as String?),
+      syncStatus: _parseSyncState(json['sync_status'] as String?),
       localId: json['local_id'] as String?,
       syncAttempts: json['sync_attempts'] as int? ?? 0,
       lastSyncAt: json['last_sync_at'] != null
@@ -231,7 +231,7 @@ class CollectionModel extends Equatable {
     String? gpsAddress,
     DateTime? collectionDate,
     DateTime? collectionTime,
-      SyncState? syncStatus,
+    SyncState? syncStatus,
     String? localId,
     int? syncAttempts,
     DateTime? lastSyncAt,

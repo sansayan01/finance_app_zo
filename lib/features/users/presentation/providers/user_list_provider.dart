@@ -33,7 +33,8 @@ class UserListNotifier extends StateNotifier<AsyncValue<List<ProfileModel>>> {
   final UserRepository _repository;
   final Ref _ref;
 
-  UserListNotifier(this._repository, this._ref) : super(const AsyncValue.loading()) {
+  UserListNotifier(this._repository, this._ref)
+      : super(const AsyncValue.loading()) {
     _loadUsers();
   }
 
@@ -62,6 +63,8 @@ class UserListNotifier extends StateNotifier<AsyncValue<List<ProfileModel>>> {
   }
 }
 
-final userListNotifierProvider = StateNotifierProvider<UserListNotifier, AsyncValue<List<ProfileModel>>>((ref) {
+final userListNotifierProvider =
+    StateNotifierProvider<UserListNotifier, AsyncValue<List<ProfileModel>>>(
+        (ref) {
   return UserListNotifier(ref.watch(userRepositoryProvider), ref);
 });

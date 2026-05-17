@@ -53,19 +53,16 @@ class LoansRepository {
     try {
       // Use SQL aggregation instead of fetching all records
       // This is much more efficient and uses less bandwidth
-      
+
       // Get loan counts and totals in a single query
-      final response = await _client
-          .from('loans')
-          .select('''
+      final response = await _client.from('loans').select('''
             status,
             outstanding_balance,
             amount
-          ''')
-          .eq('org_id', _orgId);
+          ''').eq('org_id', _orgId);
 
       final loans = response as List;
-      
+
       int totalLoans = loans.length;
       int activeLoans = 0;
       int defaultLoans = 0;
@@ -75,7 +72,8 @@ class LoansRepository {
 
       for (final loan in loans) {
         final status = loan['status'] as String?;
-        final outstanding = (loan['outstanding_balance'] as num?)?.toDouble() ?? 0.0;
+        final outstanding =
+            (loan['outstanding_balance'] as num?)?.toDouble() ?? 0.0;
         final amount = (loan['amount'] as num?)?.toDouble() ?? 0.0;
 
         if (status == 'active') {
@@ -206,7 +204,8 @@ class LoansRepository {
     await _client.from('loans').update({'status': status}).eq('id', id);
   }
 
-  Future<void> updateLoan(String id, {
+  Future<void> updateLoan(
+    String id, {
     String? borrowerId,
     double? principal,
     double? interestRate,
@@ -247,7 +246,9 @@ class LoansRepository {
       data['total_repayable'] = totalExposure;
     }
     if (interestMode != null) data['interest_mode'] = interestMode;
-    if (interestRateBasis != null) data['interest_rate_basis'] = interestRateBasis;
+    if (interestRateBasis != null) {
+      data['interest_rate_basis'] = interestRateBasis;
+    }
     if (interestAmount != null) data['interest_amount'] = interestAmount;
     if (interestBasis != null) data['interest_basis'] = interestBasis;
     if (tenureValue != null) data['tenure_value'] = tenureValue;
@@ -255,7 +256,7 @@ class LoansRepository {
     if (remarks != null) data['remarks'] = remarks;
     if (purpose != null) data['purpose'] = purpose;
     data['updated_at'] = DateTime.now().toIso8601String();
-    
+
     await _client.from('loans').update(data).eq('id', id);
   }
 
@@ -285,7 +286,7 @@ class LoansRepository {
             'p_org_id': _orgId,
           },
         );
-        
+
         if (result == true) {
           return;
         }
@@ -295,32 +296,20 @@ class LoansRepository {
 
       // Manual deletion with proper ordering
       // 1. Delete transactions
-      await _client
-          .from('transactions')
-          .delete()
-          .eq('loan_id', loanId);
+      await _client.from('transactions').delete().eq('loan_id', loanId);
 
       // 2. Delete EMI schedules
-      await _client
-          .from('emi_schedule')
-          .delete()
-          .eq('loan_id', loanId);
+      await _client.from('emi_schedule').delete().eq('loan_id', loanId);
 
       // 3. Delete loan_schedules if table exists
       try {
-        await _client
-            .from('loan_schedules')
-            .delete()
-            .eq('loan_id', loanId);
+        await _client.from('loan_schedules').delete().eq('loan_id', loanId);
       } catch (_) {
         // Ignore if table doesn't exist
       }
 
       // 4. Delete collections (not just nullify)
-      await _client
-          .from('collections')
-          .delete()
-          .eq('loan_id', loanId);
+      await _client.from('collections').delete().eq('loan_id', loanId);
 
       // 5. Delete customer payment requests if table exists
       try {
@@ -333,10 +322,7 @@ class LoansRepository {
       }
 
       // 6. Delete the loan itself
-      await _client
-          .from('loans')
-          .delete()
-          .eq('id', loanId);
+      await _client.from('loans').delete().eq('id', loanId);
 
       // 7. Verify deletion
       final check = await _client
@@ -346,7 +332,8 @@ class LoansRepository {
           .maybeSingle();
 
       if (check != null) {
-        throw Exception('Loan record still exists after deletion. Check organization permissions or active database constraints.');
+        throw Exception(
+            'Loan record still exists after deletion. Check organization permissions or active database constraints.');
       }
     } catch (e) {
       throw Exception('Delete failed: $e');

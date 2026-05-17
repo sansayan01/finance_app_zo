@@ -52,11 +52,13 @@ class CustomerDashboard extends ConsumerWidget {
 
                         // Next EMI Alert
                         if (dashboard['next_emi'] != null)
-                          _buildNextEMICard(context, theme, dashboard, currencyFormat),
+                          _buildNextEMICard(
+                              context, theme, dashboard, currencyFormat),
                         const SizedBox(height: 16),
 
                         // Savings Progress
-                        _buildSavingsProgressCard(theme, dashboard, currencyFormat),
+                        _buildSavingsProgressCard(
+                            theme, dashboard, currencyFormat),
                         const SizedBox(height: 16),
 
                         // Recent Transactions
@@ -75,12 +77,14 @@ class CustomerDashboard extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(Icons.error_outline,
+                        size: 48, color: Colors.red),
                     const SizedBox(height: 16),
                     Text('Error: ${error.toString()}'),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => ref.invalidate(customerDashboardProvider),
+                      onPressed: () =>
+                          ref.invalidate(customerDashboardProvider),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -104,7 +108,8 @@ class CustomerDashboard extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.2),
+                color:
+                    theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -121,7 +126,8 @@ class CustomerDashboard extends ConsumerWidget {
                   Text(
                     'Welcome back,',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                      color: theme.colorScheme.onPrimaryContainer
+                          .withValues(alpha: 0.8),
                     ),
                   ),
                   Text(
@@ -140,7 +146,8 @@ class CustomerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildQuickStatsCard(ThemeData theme, Map<String, dynamic> dashboard, NumberFormat currencyFormat) {
+  Widget _buildQuickStatsCard(ThemeData theme, Map<String, dynamic> dashboard,
+      NumberFormat currencyFormat) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -189,7 +196,8 @@ class CustomerDashboard extends ConsumerWidget {
                     theme,
                     Icons.payment,
                     'Outstanding',
-                    currencyFormat.format(dashboard['outstanding_balance'] ?? 0),
+                    currencyFormat
+                        .format(dashboard['outstanding_balance'] ?? 0),
                     Colors.orange,
                   ),
                 ),
@@ -210,7 +218,8 @@ class CustomerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 100.ms);
   }
 
-  Widget _buildStatItem(ThemeData theme, IconData icon, String label, String value, Color color) {
+  Widget _buildStatItem(
+      ThemeData theme, IconData icon, String label, String value, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -239,13 +248,17 @@ class CustomerDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildNextEMICard(BuildContext context, ThemeData theme, Map<String, dynamic> dashboard, NumberFormat currencyFormat) {
+  Widget _buildNextEMICard(BuildContext context, ThemeData theme,
+      Map<String, dynamic> dashboard, NumberFormat currencyFormat) {
     final nextEmi = dashboard['next_emi'] as Map<String, dynamic>? ?? {};
-    final dueDate = DateTime.tryParse(nextEmi['due_date'] ?? '') ?? DateTime.now();
+    final dueDate =
+        DateTime.tryParse(nextEmi['due_date'] ?? '') ?? DateTime.now();
     final isOverdue = dueDate.isBefore(DateTime.now());
 
     return Card(
-      color: isOverdue ? Colors.red.withValues(alpha: 0.1) : theme.colorScheme.tertiaryContainer,
+      color: isOverdue
+          ? Colors.red.withValues(alpha: 0.1)
+          : theme.colorScheme.tertiaryContainer,
       child: InkWell(
         onTap: () => context.push('/customer/loans'),
         borderRadius: BorderRadius.circular(12),
@@ -255,7 +268,9 @@ class CustomerDashboard extends ConsumerWidget {
             children: [
               Icon(
                 isOverdue ? Icons.warning : Icons.event,
-                color: isOverdue ? Colors.red : theme.colorScheme.onTertiaryContainer,
+                color: isOverdue
+                    ? Colors.red
+                    : theme.colorScheme.onTertiaryContainer,
                 size: 32,
               ),
               const SizedBox(width: 16),
@@ -267,13 +282,18 @@ class CustomerDashboard extends ConsumerWidget {
                       isOverdue ? 'Overdue EMI' : 'Next EMI Due',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isOverdue ? Colors.red : theme.colorScheme.onTertiaryContainer,
+                        color: isOverdue
+                            ? Colors.red
+                            : theme.colorScheme.onTertiaryContainer,
                       ),
                     ),
                     Text(
                       '${currencyFormat.format(nextEmi['amount'] ?? 0)} • Due: ${DateFormat('MMM d').format(dueDate)}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isOverdue ? Colors.red.withValues(alpha: 0.8) : theme.colorScheme.onTertiaryContainer.withValues(alpha: 0.8),
+                        color: isOverdue
+                            ? Colors.red.withValues(alpha: 0.8)
+                            : theme.colorScheme.onTertiaryContainer
+                                .withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -281,7 +301,9 @@ class CustomerDashboard extends ConsumerWidget {
               ),
               Icon(
                 Icons.arrow_forward_ios,
-                color: isOverdue ? Colors.red : theme.colorScheme.onTertiaryContainer,
+                color: isOverdue
+                    ? Colors.red
+                    : theme.colorScheme.onTertiaryContainer,
               ),
             ],
           ),
@@ -290,7 +312,8 @@ class CustomerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
 
-  Widget _buildSavingsProgressCard(ThemeData theme, Map<String, dynamic> dashboard, NumberFormat currencyFormat) {
+  Widget _buildSavingsProgressCard(ThemeData theme,
+      Map<String, dynamic> dashboard, NumberFormat currencyFormat) {
     final goal = (dashboard['savings_goal'] ?? 100000) as num;
     final current = (dashboard['total_savings'] ?? 0) as num;
     final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
@@ -348,8 +371,10 @@ class CustomerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
   }
 
-  Widget _buildRecentTransactionsCard(BuildContext context, ThemeData theme, Map<String, dynamic> dashboard) {
-    final transactions = dashboard['recent_transactions'] as List<dynamic>? ?? [];
+  Widget _buildRecentTransactionsCard(
+      BuildContext context, ThemeData theme, Map<String, dynamic> dashboard) {
+    final transactions =
+        dashboard['recent_transactions'] as List<dynamic>? ?? [];
 
     return Card(
       elevation: 0,
@@ -404,7 +429,9 @@ class CustomerDashboard extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isCredit ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+          color: isCredit
+              ? Colors.green.withValues(alpha: 0.1)
+              : Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -479,7 +506,8 @@ class CustomerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 500.ms);
   }
 
-  Widget _buildQuickActionChip(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+  Widget _buildQuickActionChip(
+      BuildContext context, IconData icon, String label, VoidCallback onTap) {
     final theme = Theme.of(context);
     return ActionChip(
       avatar: Icon(icon, size: 18),

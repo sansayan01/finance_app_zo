@@ -71,7 +71,8 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
             height: widget.height,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: widget.borderRadius ?? BorderRadius.circular(AppSpacing.borderRadiusMd),
+              borderRadius: widget.borderRadius ??
+                  BorderRadius.circular(AppSpacing.borderRadiusMd),
             ),
             child: widget.child,
           ),

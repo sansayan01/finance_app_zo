@@ -20,7 +20,8 @@ class BillingRepository {
         .order('sort_order');
 
     return response
-        .map<SubscriptionPlanModel>((json) => SubscriptionPlanModel.fromJson(json))
+        .map<SubscriptionPlanModel>(
+            (json) => SubscriptionPlanModel.fromJson(json))
         .toList();
   }
 
@@ -40,14 +41,10 @@ class BillingRepository {
 
   /// Get current subscription for org
   Future<OrgSubscriptionModel?> getSubscription(String orgId) async {
-    final response = await _client
-        .from('subscriptions')
-        .select('''
+    final response = await _client.from('subscriptions').select('''
           *,
           plan_name:subscription_plans(name)
-        ''')
-        .eq('org_id', orgId)
-        .maybeSingle();
+        ''').eq('org_id', orgId).maybeSingle();
 
     if (response == null) return null;
 
@@ -60,20 +57,18 @@ class BillingRepository {
 
   /// Get subscription status with usage
   Future<Map<String, dynamic>> getSubscriptionStatus(String orgId) async {
-    final response = await _client
-        .rpc('get_subscription_status', params: {'p_org_id': orgId})
-        .maybeSingle();
+    final response = await _client.rpc('get_subscription_status',
+        params: {'p_org_id': orgId}).maybeSingle();
 
     return response ?? {};
   }
 
   /// Check if limit reached for a resource
   Future<bool> checkLimit(String orgId, String limitType) async {
-    final response = await _client
-        .rpc('check_subscription_limit', params: {
-          'p_org_id': orgId,
-          'p_limit_type': limitType,
-        });
+    final response = await _client.rpc('check_subscription_limit', params: {
+      'p_org_id': orgId,
+      'p_limit_type': limitType,
+    });
 
     return response as bool? ?? false;
   }
@@ -111,24 +106,18 @@ class BillingRepository {
 
   /// Cancel subscription at period end
   Future<void> cancelSubscription(String subscriptionId) async {
-    await _client
-        .from('subscriptions')
-        .update({
-          'cancel_at_period_end': true,
-          'canceled_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', subscriptionId);
+    await _client.from('subscriptions').update({
+      'cancel_at_period_end': true,
+      'canceled_at': DateTime.now().toIso8601String(),
+    }).eq('id', subscriptionId);
   }
 
   /// Reactivate canceled subscription
   Future<void> reactivateSubscription(String subscriptionId) async {
-    await _client
-        .from('subscriptions')
-        .update({
-          'cancel_at_period_end': false,
-          'canceled_at': null,
-        })
-        .eq('id', subscriptionId);
+    await _client.from('subscriptions').update({
+      'cancel_at_period_end': false,
+      'canceled_at': null,
+    }).eq('id', subscriptionId);
   }
 
   /// Update subscription plan (upgrade/downgrade)
@@ -137,14 +126,11 @@ class BillingRepository {
     required String newPlanId,
     String billingCycle = 'monthly',
   }) async {
-    await _client
-        .from('subscriptions')
-        .update({
-          'plan_id': newPlanId,
-          'billing_cycle': billingCycle,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', subscriptionId);
+    await _client.from('subscriptions').update({
+      'plan_id': newPlanId,
+      'billing_cycle': billingCycle,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', subscriptionId);
   }
 
   // ==================== INVOICES ====================
@@ -204,7 +190,8 @@ class BillingRepository {
   }
 
   /// Set default payment method
-  Future<void> setDefaultPaymentMethod(String orgId, String paymentMethodId) async {
+  Future<void> setDefaultPaymentMethod(
+      String orgId, String paymentMethodId) async {
     // Unset current default
     await _client
         .from('payment_methods')
@@ -215,16 +202,12 @@ class BillingRepository {
     // Set new default
     await _client
         .from('payment_methods')
-        .update({'is_default': true})
-        .eq('id', paymentMethodId);
+        .update({'is_default': true}).eq('id', paymentMethodId);
   }
 
   /// Delete payment method
   Future<void> deletePaymentMethod(String paymentMethodId) async {
-    await _client
-        .from('payment_methods')
-        .delete()
-        .eq('id', paymentMethodId);
+    await _client.from('payment_methods').delete().eq('id', paymentMethodId);
   }
 
   // ==================== USAGE ====================

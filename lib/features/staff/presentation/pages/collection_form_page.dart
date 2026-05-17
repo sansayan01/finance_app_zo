@@ -57,15 +57,18 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     if (widget.loanData != null) {
       final schedule = widget.loanData!['current_schedule'] ?? {};
       final member = widget.loanData!['members'] ?? {};
-      
+
       setState(() {
         _amountExpected = (schedule['emi'] as num?)?.toDouble() ?? 0;
-        _memberName = member['full_name'] ?? widget.loanData!['member_name'] ?? '';
-        _memberId = member['id']?.toString() ?? widget.loanData!['member_id']?.toString() ?? '';
+        _memberName =
+            member['full_name'] ?? widget.loanData!['member_name'] ?? '';
+        _memberId = member['id']?.toString() ??
+            widget.loanData!['member_id']?.toString() ??
+            '';
         _memberPhone = member['phone']?.toString() ?? '';
         _loanScheduleId = schedule['id']?.toString();
       });
-      
+
       _amountController.text = _amountExpected.toStringAsFixed(0);
     }
   }
@@ -86,7 +89,8 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     final collectionState = ref.watch(collectionNotifierProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0A14) : const Color(0xFFF5F5F5),
+      backgroundColor:
+          isDark ? const Color(0xFF0A0A14) : const Color(0xFFF5F5F5),
       appBar: _buildAppBar(theme),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
@@ -135,7 +139,10 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
           end: Alignment.bottomRight,
           colors: isDark
               ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
-              : [AppColors.primary.withValues(alpha: 0.9), AppColors.primaryDark.withValues(alpha: 0.9)],
+              : [
+                  AppColors.primary.withValues(alpha: 0.9),
+                  AppColors.primaryDark.withValues(alpha: 0.9)
+                ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -234,10 +241,15 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -247,11 +259,16 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.payments_rounded, size: 18, color: AppColors.primary),
+                decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.payments_rounded,
+                    size: 18, color: AppColors.primary),
               ),
               const SizedBox(width: 10),
-              Text('Collection Amount', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              Text('Collection Amount',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
             ],
           ),
           const SizedBox(height: 16),
@@ -356,7 +373,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
 
   Widget _buildQuickAmountButton(String label, double amount) {
     final theme = Theme.of(context);
-    
+
     return ActionChip(
       label: Text('$label (₹${amount.toStringAsFixed(0)})'),
       labelStyle: theme.textTheme.labelSmall?.copyWith(
@@ -383,10 +400,15 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -396,25 +418,33 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.credit_card_rounded, size: 18, color: AppColors.primary),
+                decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.credit_card_rounded,
+                    size: 18, color: AppColors.primary),
               ),
               const SizedBox(width: 10),
-              Text('Payment Mode', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              Text('Payment Mode',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
-            children: cm.PaymentMode.values.map((mode) {
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: mode != cm.PaymentMode.values.last ? 8 : 0,
-                  ),
-                  child: _buildPaymentModeButton(mode, theme),
-                ),
-              );
-            }).take(3).toList(),
+            children: cm.PaymentMode.values
+                .map((mode) {
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: mode != cm.PaymentMode.values.last ? 8 : 0,
+                      ),
+                      child: _buildPaymentModeButton(mode, theme),
+                    ),
+                  );
+                })
+                .take(3)
+                .toList(),
           ),
           const SizedBox(height: 8),
           Row(
@@ -450,7 +480,9 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.15)
-              : (isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface),
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : theme.colorScheme.surface),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -461,14 +493,17 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
           children: [
             Icon(
               _getPaymentIcon(mode),
-              color: isSelected ? AppColors.primary : theme.colorScheme.onSurface,
+              color:
+                  isSelected ? AppColors.primary : theme.colorScheme.onSurface,
               size: 20,
             ),
             const SizedBox(height: 6),
             Text(
               _getPaymentLabel(mode),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: isSelected ? AppColors.primary : theme.colorScheme.onSurface,
+                color: isSelected
+                    ? AppColors.primary
+                    : theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -515,10 +550,15 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -528,11 +568,16 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.tag_rounded, size: 18, color: AppColors.primary),
+                decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10)),
+                child:
+                    Icon(Icons.tag_rounded, size: 18, color: AppColors.primary),
               ),
               const SizedBox(width: 10),
-              Text('Reference Number', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              Text('Reference Number',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
             ],
           ),
           const SizedBox(height: 12),
@@ -566,10 +611,15 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
         ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -579,11 +629,16 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
+                decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.notes_rounded,
+                    size: 18, color: AppColors.primary),
               ),
               const SizedBox(width: 10),
-              Text('Remarks', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              Text('Remarks',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
             ],
           ),
           const SizedBox(height: 12),
@@ -611,7 +666,8 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     );
   }
 
-  Widget _buildSubmitButton(ThemeData theme, AsyncValue<CollectionModel?> state) {
+  Widget _buildSubmitButton(
+      ThemeData theme, AsyncValue<CollectionModel?> state) {
     return state.when(
       data: (collection) {
         if (collection != null && !_isSubmitting) {
@@ -766,7 +822,9 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
                 children: [
                   Icon(Icons.refresh_rounded, size: 22),
                   SizedBox(width: 10),
-                  Text('Retry', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  Text('Retry',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 ],
               ),
             ),
@@ -785,7 +843,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     // Try to get staff profile first (for collectionAgent/manager)
     // Fall back to current user ID (for executiveAdmin without staff profile)
     String collectorId;
-    
+
     final profile = await ref.read(staffProfileProvider.future);
     if (profile != null) {
       collectorId = profile.id;
@@ -797,7 +855,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         loading: () => null,
         error: (_, __) => null,
       );
-      
+
       if (user == null) {
         setState(() => _isSubmitting = false);
         if (mounted) {
@@ -814,7 +872,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
         }
         return;
       }
-      
+
       collectorId = user.id;
     }
 
@@ -850,27 +908,27 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     }
 
     await ref.read(collectionNotifierProvider.notifier).recordCollection(
-      staffId: collectorId,
-      loanId: widget.loanId,
-      loanScheduleId: _loanScheduleId,
-      memberId: _memberId,
-      memberName: _memberName,
-      memberPhone: _memberPhone,
-      loanNumber: widget.loanData?['loan_number'],
-      amountExpected: _amountExpected,
-      amountCollected: amountCollected,
-      isPartial: _isPartial,
-      paymentMode: _selectedPaymentMode,
-      referenceNumber: _referenceController.text.isNotEmpty
-          ? _referenceController.text
-          : null,
-      gpsLat: gpsLat,
-      gpsLng: gpsLng,
-      gpsAccuracy: gpsAccuracy,
-      remarks: _remarksController.text.isNotEmpty
-          ? _remarksController.text
-          : null,
-    );
+          staffId: collectorId,
+          loanId: widget.loanId,
+          loanScheduleId: _loanScheduleId,
+          memberId: _memberId,
+          memberName: _memberName,
+          memberPhone: _memberPhone,
+          loanNumber: widget.loanData?['loan_number'],
+          amountExpected: _amountExpected,
+          amountCollected: amountCollected,
+          isPartial: _isPartial,
+          paymentMode: _selectedPaymentMode,
+          referenceNumber: _referenceController.text.isNotEmpty
+              ? _referenceController.text
+              : null,
+          gpsLat: gpsLat,
+          gpsLng: gpsLng,
+          gpsAccuracy: gpsAccuracy,
+          remarks: _remarksController.text.isNotEmpty
+              ? _remarksController.text
+              : null,
+        );
 
     setState(() => _isSubmitting = false);
   }

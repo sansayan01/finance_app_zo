@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 
-final allNotificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final allNotificationsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
     final client = ref.watch(supabaseClientProvider);
     final response = await client
@@ -14,4 +15,3 @@ final allNotificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref
     return [];
   }
 });
-

@@ -1,4 +1,3 @@
-
 class ApiKeyModel {
   final String id;
   final String orgId;
@@ -22,7 +21,8 @@ class ApiKeyModel {
     this.lastUsedAt,
   });
 
-  bool get isExpired => expiresAt != null && expiresAt!.isBefore(DateTime.now());
+  bool get isExpired =>
+      expiresAt != null && expiresAt!.isBefore(DateTime.now());
   bool get isValid => isActive && !isExpired;
 
   factory ApiKeyModel.fromJson(Map<String, dynamic> json) {
@@ -33,9 +33,14 @@ class ApiKeyModel {
       keyPrefix: json['key_prefix']?.toString() ?? '',
       scopes: List<String>.from(json['scopes'] ?? []),
       isActive: json['is_active'] ?? true,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
-      lastUsedAt: json['last_used_at'] != null ? DateTime.parse(json['last_used_at']) : null,
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'])
+          : null,
+      lastUsedAt: json['last_used_at'] != null
+          ? DateTime.parse(json['last_used_at'])
+          : null,
     );
   }
 }
@@ -64,9 +69,14 @@ class ApiKeyWithSecret extends ApiKeyModel {
       keyPrefix: json['key_prefix']?.toString() ?? '',
       scopes: List<String>.from(json['scopes'] ?? []),
       isActive: json['is_active'] ?? true,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
-      lastUsedAt: json['last_used_at'] != null ? DateTime.parse(json['last_used_at']) : null,
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'])
+          : null,
+      lastUsedAt: json['last_used_at'] != null
+          ? DateTime.parse(json['last_used_at'])
+          : null,
       fullKey: json['full_key']?.toString() ?? '',
     );
   }
@@ -99,7 +109,8 @@ class WebhookModel {
       url: json['url']?.toString() ?? '',
       events: List<String>.from(json['events'] ?? []),
       isActive: json['is_active'] ?? true,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 }
@@ -131,7 +142,8 @@ class IntegrationModel {
       name: json['name']?.toString() ?? '',
       config: Map<String, dynamic>.from(json['config'] ?? {}),
       isActive: json['is_active'] ?? true,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 }

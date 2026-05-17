@@ -66,7 +66,8 @@ class SyncStatusBar extends StatelessWidget {
                     Text(
                       'Last sync: ${_formatTime(lastSyncAt!)}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 10,
                       ),
                     ),
@@ -77,7 +78,8 @@ class SyncStatusBar extends StatelessWidget {
             // Pending count or action
             if (pendingCount > 0)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.orangeAccent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -92,7 +94,8 @@ class SyncStatusBar extends StatelessWidget {
               )
             else if (status == SyncStatus.synced)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.greenAccent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),

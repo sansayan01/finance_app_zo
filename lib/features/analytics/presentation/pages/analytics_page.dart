@@ -65,7 +65,8 @@ class AnalyticsPage extends ConsumerWidget {
                     const SizedBox(height: 24),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _buildDisbursementVsCollection(context, stats, theme),
+                      child:
+                          _buildDisbursementVsCollection(context, stats, theme),
                     ),
                     const SizedBox(height: 24),
                     Padding(
@@ -138,7 +139,8 @@ class AnalyticsPage extends ConsumerWidget {
                     style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                   ),
                 ],
               ),
@@ -300,12 +302,18 @@ class AnalyticsPage extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildSmallGaugeStat('Yield', '${stats.portfolioYield.toInt()}%',
-                    Icons.trending_up_rounded, theme),
+                _buildSmallGaugeStat(
+                    'Yield',
+                    '${stats.portfolioYield.toInt()}%',
+                    Icons.trending_up_rounded,
+                    theme),
                 _buildSmallGaugeStat('PAR', '${stats.parPercentage.toInt()}%',
                     Icons.warning_amber_rounded, theme),
-                _buildSmallGaugeStat('Growth',
-                    '${stats.memberGrowthRate.toInt()}%', Icons.groups_rounded, theme),
+                _buildSmallGaugeStat(
+                    'Growth',
+                    '${stats.memberGrowthRate.toInt()}%',
+                    Icons.groups_rounded,
+                    theme),
               ],
             ),
           ],
@@ -318,7 +326,8 @@ class AnalyticsPage extends ConsumerWidget {
       String label, String value, IconData icon, ThemeData theme) {
     return Column(
       children: [
-        Icon(icon, size: 16, color: theme.colorScheme.primary.withValues(alpha: 0.6)),
+        Icon(icon,
+            size: 16, color: theme.colorScheme.primary.withValues(alpha: 0.6)),
         const SizedBox(height: 4),
         Text(value,
             style: theme.textTheme.bodyMedium
@@ -596,7 +605,8 @@ class AnalyticsPage extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.03),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(Icons.bar_chart_rounded,
@@ -833,7 +843,8 @@ class AnalyticsPage extends ConsumerWidget {
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
-                      spots: stats.monthlyDisbursements.asMap().entries.map((e) {
+                      spots:
+                          stats.monthlyDisbursements.asMap().entries.map((e) {
                         return FlSpot(e.key.toDouble(), e.value);
                       }).toList(),
                       isCurved: true,
@@ -1335,8 +1346,6 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-
-
 class _MemberStat extends StatelessWidget {
   final String value;
   final String label;
@@ -1428,17 +1437,23 @@ class _DelinquencyItem extends StatelessWidget {
       children: [
         Row(
           children: [
-            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 8),
             Text(label, style: theme.textTheme.labelSmall),
             const Spacer(),
             Text('${percentage.toStringAsFixed(1)}%',
-                style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700)),
+                style: theme.textTheme.labelSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
           ],
         ),
         const SizedBox(height: 4),
         Text(AppFormatters.formatCompactCurrency(amount),
-            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w700)),
       ],
     );
   }
@@ -1458,7 +1473,8 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(
+              color: color, borderRadius: BorderRadius.circular(2)),
         ),
         const SizedBox(width: 8),
         Text(label, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),

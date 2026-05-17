@@ -55,12 +55,14 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   final MembersRepository _repository;
   final LocationService _locationService;
 
-  OnboardingNotifier(this._repository, this._locationService) : super(OnboardingState());
+  OnboardingNotifier(this._repository, this._locationService)
+      : super(OnboardingState());
 
   void updateFullName(String val) => state = state.copyWith(fullName: val);
   void updatePhone(String val) => state = state.copyWith(phone: val);
   void updateShopName(String val) => state = state.copyWith(shopName: val);
-  void updateBusinessType(String val) => state = state.copyWith(businessType: val);
+  void updateBusinessType(String val) =>
+      state = state.copyWith(businessType: val);
 
   Future<void> captureLocation() async {
     state = state.copyWith(isLoading: true);
@@ -72,7 +74,8 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
         isLoading: false,
       );
     } else {
-      state = state.copyWith(isLoading: false, error: 'Could not capture location');
+      state =
+          state.copyWith(isLoading: false, error: 'Could not capture location');
     }
   }
 
@@ -119,10 +122,10 @@ final locationServiceProvider = Provider<LocationService>((ref) {
   return LocationService();
 });
 
-final onboardingProvider = StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
+final onboardingProvider =
+    StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
   return OnboardingNotifier(
     ref.watch(membersRepositoryProvider),
     ref.watch(locationServiceProvider),
   );
 });
-

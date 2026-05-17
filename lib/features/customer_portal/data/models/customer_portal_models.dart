@@ -151,7 +151,8 @@ class CustomerNotification extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, customerId, title, message, type, isRead, createdAt, readAt, data];
+  List<Object?> get props =>
+      [id, customerId, title, message, type, isRead, createdAt, readAt, data];
 }
 
 class CustomerPaymentRequest extends Equatable {
@@ -215,7 +216,18 @@ class CustomerPaymentRequest extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, customerId, loanId, amount, paymentMethod, status, requestedAt, processedAt, processedBy, notes];
+  List<Object?> get props => [
+        id,
+        customerId,
+        loanId,
+        amount,
+        paymentMethod,
+        status,
+        requestedAt,
+        processedAt,
+        processedBy,
+        notes
+      ];
 }
 
 class CustomerSupportTicket extends Equatable {
@@ -297,7 +309,18 @@ class CustomerSupportTicket extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, customerId, subject, message, status, priority, assignedTo, createdAt, updatedAt, resolvedAt];
+  List<Object?> get props => [
+        id,
+        customerId,
+        subject,
+        message,
+        status,
+        priority,
+        assignedTo,
+        createdAt,
+        updatedAt,
+        resolvedAt
+      ];
 }
 
 class CustomerFeedback extends Equatable {
@@ -335,5 +358,6 @@ class CustomerFeedback extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, customerId, type, subject, message, rating, status, createdAt];
+  List<Object?> get props =>
+      [id, customerId, type, subject, message, rating, status, createdAt];
 }

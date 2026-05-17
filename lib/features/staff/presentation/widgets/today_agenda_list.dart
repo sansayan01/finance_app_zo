@@ -146,7 +146,8 @@ class TodayAgendaList extends StatelessWidget {
     );
   }
 
-  Widget _buildEmiCard(BuildContext context, Map<String, dynamic> emi, int index) {
+  Widget _buildEmiCard(
+      BuildContext context, Map<String, dynamic> emi, int index) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -245,7 +246,8 @@ class TodayAgendaList extends StatelessWidget {
                             child: Text(
                               'EMI #$period',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -259,14 +261,16 @@ class TodayAgendaList extends StatelessWidget {
                           Icon(
                             Icons.location_on_outlined,
                             size: 12,
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 2),
                           Expanded(
                             child: Text(
                               area.isNotEmpty ? area : 'No area',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

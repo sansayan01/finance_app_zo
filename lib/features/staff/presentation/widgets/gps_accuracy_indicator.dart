@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// GPS Accuracy Indicator
-/// 
+///
 /// Shows the current GPS accuracy with a color-coded indicator.
 /// Green = High accuracy (< 10m)
 /// Yellow = Medium accuracy (10-50m)
@@ -107,7 +107,8 @@ class GpsStatusCard extends StatelessWidget {
         color: isDark ? const Color(0xFF1E1E2A) : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]!,
+          color:
+              isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]!,
         ),
       ),
       child: Column(
@@ -169,13 +170,14 @@ class GpsStatusCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {Color? color, int maxLines = 1}) {
+  Widget _buildDetailRow(String label, String value,
+      {Color? color, int maxLines = 1}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$label: ',
-        style: TextStyle(
+          style: TextStyle(
             fontSize: 12,
             color: Colors.grey[600],
           ),

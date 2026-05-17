@@ -37,6 +37,7 @@ import '../features/loans/presentation/pages/new_loan_page.dart';
 import '../features/loans/presentation/pages/edit_loan_page.dart';
 import '../features/savings/presentation/pages/new_recurring_saving_page.dart';
 import '../features/savings/presentation/pages/saving_detail_page.dart';
+import '../features/savings/presentation/pages/edit_savings_vault_page.dart';
 import '../features/users/presentation/pages/users_page.dart';
 import '../features/users/presentation/pages/new_user_page.dart';
 import '../features/users/presentation/pages/user_details_page.dart';
@@ -160,12 +161,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         final user = ref.read(currentUserProvider);
         final role = user?.role;
         final isSetupPath = state.matchedLocation == '/setup';
-        final isAdminPath = state.matchedLocation == '/' || state.matchedLocation.startsWith('/loans') || state.matchedLocation.startsWith('/savings') || state.matchedLocation.startsWith('/users') || state.matchedLocation.startsWith('/settings') || state.matchedLocation.startsWith('/analytics') || state.matchedLocation.startsWith('/transactions') || state.matchedLocation.startsWith('/search') || state.matchedLocation.startsWith('/notifications') || state.matchedLocation.startsWith('/members') || state.matchedLocation.startsWith('/branches') || state.matchedLocation.startsWith('/super-admin');
+        final isAdminPath = state.matchedLocation == '/' ||
+            state.matchedLocation.startsWith('/loans') ||
+            state.matchedLocation.startsWith('/savings') ||
+            state.matchedLocation.startsWith('/users') ||
+            state.matchedLocation.startsWith('/settings') ||
+            state.matchedLocation.startsWith('/analytics') ||
+            state.matchedLocation.startsWith('/transactions') ||
+            state.matchedLocation.startsWith('/search') ||
+            state.matchedLocation.startsWith('/notifications') ||
+            state.matchedLocation.startsWith('/members') ||
+            state.matchedLocation.startsWith('/branches') ||
+            state.matchedLocation.startsWith('/super-admin');
         final isStaffPath = state.matchedLocation.startsWith('/staff');
 
         // Force setup for executive admins if setup is not complete
         if (role == UserRole.executiveAdmin) {
-          final setupStatus = ref.read(setupCompleteProvider).valueOrNull ?? false;
+          final setupStatus =
+              ref.read(setupCompleteProvider).valueOrNull ?? false;
           if (!setupStatus && !isSetupPath) {
             return '/setup';
           }
@@ -192,14 +205,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
 
         // Staff role trying to access admin pages → redirect to staff
-        if ((role == UserRole.manager || role == UserRole.collectionAgent) && isAdminPath) {
+        if ((role == UserRole.manager || role == UserRole.collectionAgent) &&
+            isAdminPath) {
           return '/staff';
         }
 
         // Admin role trying to access staff pages → redirect to admin
         // Exception: executiveAdmin can access /staff/collection for payment recording
         if (role == UserRole.executiveAdmin && isStaffPath) {
-          final isCollectionRoute = state.matchedLocation.startsWith('/staff/collection');
+          final isCollectionRoute =
+              state.matchedLocation.startsWith('/staff/collection');
           if (!isCollectionRoute) {
             return '/';
           }
@@ -407,6 +422,15 @@ final routerProvider = Provider<GoRouter>((ref) {
               final id = state.pathParameters['id']!;
               return SavingDetailPage(savingId: id);
             },
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return EditSavingsVaultPage(savingId: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/users',
@@ -604,7 +628,8 @@ class HomePageContent extends ConsumerWidget {
     }
 
     // Redirect staff to their dashboard
-    if (user?.role == UserRole.collectionAgent || user?.role == UserRole.manager) {
+    if (user?.role == UserRole.collectionAgent ||
+        user?.role == UserRole.manager) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/staff');
       });
@@ -951,7 +976,8 @@ class _StaffNavItem extends StatelessWidget {
                     style: TextStyle(
                       color: isSelected ? primary : inactiveColor,
                       fontSize: 10,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                 ],
@@ -962,7 +988,8 @@ class _StaffNavItem extends StatelessWidget {
                 right: 8,
                 top: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.red,
                     borderRadius: BorderRadius.circular(10),

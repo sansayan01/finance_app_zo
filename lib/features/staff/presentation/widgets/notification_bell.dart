@@ -18,7 +18,8 @@ class NotificationBell extends ConsumerWidget {
       children: [
         IconButton(
           onPressed: () => context.push('/notifications'),
-          icon: Icon(Icons.notifications_outlined, size: size, color: Colors.white.withValues(alpha: 0.85)),
+          icon: Icon(Icons.notifications_outlined,
+              size: size, color: Colors.white.withValues(alpha: 0.85)),
           splashColor: Colors.white.withValues(alpha: 0.1),
           highlightColor: Colors.white.withValues(alpha: 0.05),
         ),
@@ -33,14 +34,22 @@ class NotificationBell extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Colors.redAccent,
                   shape: BoxShape.circle,
-                  border: Border.all(color: theme.scaffoldBackgroundColor, width: 1.5),
+                  border: Border.all(
+                      color: theme.scaffoldBackgroundColor, width: 1.5),
                   boxShadow: [
-                    BoxShadow(color: Colors.redAccent.withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 2)),
+                    BoxShadow(
+                        color: Colors.redAccent.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2)),
                   ],
                 ),
                 child: Text(
                   count > 99 ? '99+' : '$count',
-                  style: TextStyle(color: Colors.white, fontSize: count > 99 ? 7 : 9, fontWeight: FontWeight.w800, height: 1),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: count > 99 ? 7 : 9,
+                      fontWeight: FontWeight.w800,
+                      height: 1),
                 ),
               ),
             );

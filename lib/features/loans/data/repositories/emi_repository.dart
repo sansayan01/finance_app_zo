@@ -46,7 +46,8 @@ class EMIRepository {
         'loan_id': loanId,
         'type': TransactionType.emiPayment.name,
         'amount': amount,
-        'description': 'EMI payment via $paymentMode${notes != null ? ': $notes' : ''}',
+        'description':
+            'EMI payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
         'entered_at': now.toUtc().toIso8601String(),
         'created_at': now.toUtc().toIso8601String(),
@@ -59,8 +60,10 @@ class EMIRepository {
           .eq('id', loanId)
           .single();
 
-      final currentBalance =
-          ((loanResponse['outstanding_amount'] ?? loanResponse['outstanding_balance']) as num?)?.toDouble() ?? 0;
+      final currentBalance = ((loanResponse['outstanding_amount'] ??
+                  loanResponse['outstanding_balance']) as num?)
+              ?.toDouble() ??
+          0;
 
       final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
 
@@ -98,7 +101,8 @@ class EMIRepository {
         'loan_id': loanId,
         'type': TransactionType.emiPayment.name,
         'amount': amount,
-        'description': 'Manual payment via $paymentMode${notes != null ? ': $notes' : ''}',
+        'description':
+            'Manual payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
         'entered_at': now.toUtc().toIso8601String(),
         'created_at': now.toUtc().toIso8601String(),
@@ -111,8 +115,10 @@ class EMIRepository {
           .eq('id', loanId)
           .single();
 
-      final currentBalance =
-          ((loanResponse['outstanding_amount'] ?? loanResponse['outstanding_balance']) as num?)?.toDouble() ?? 0;
+      final currentBalance = ((loanResponse['outstanding_amount'] ??
+                  loanResponse['outstanding_balance']) as num?)
+              ?.toDouble() ??
+          0;
 
       final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
 
@@ -211,7 +217,9 @@ class EMIRepository {
           .eq('type', TransactionType.emiPayment.name)
           .order('entered_at', ascending: false);
 
-      return (response as List).map((json) => json as Map<String, dynamic>).toList();
+      return (response as List)
+          .map((json) => json as Map<String, dynamic>)
+          .toList();
     } catch (e) {
       return [];
     }
@@ -223,12 +231,12 @@ class EMIRepository {
       final startOfDay = DateTime(today.year, today.month, today.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-       final response = await _client
-           .from('emi_schedule')
-           .select()
-           .filter('due_date', 'gte', startOfDay.toIso8601String())
-           .filter('due_date', 'lt', endOfDay.toIso8601String())
-           .inFilter('status', ['upcoming', 'overdue', 'pendingPayment']);
+      final response = await _client
+          .from('emi_schedule')
+          .select()
+          .filter('due_date', 'gte', startOfDay.toIso8601String())
+          .filter('due_date', 'lt', endOfDay.toIso8601String())
+          .inFilter('status', ['upcoming', 'overdue', 'pendingPayment']);
 
       return (response as List)
           .map((json) => EMIScheduleModel.fromJson(json))

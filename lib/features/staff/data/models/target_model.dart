@@ -16,26 +16,26 @@ enum TargetStatus {
 class TargetModel extends Equatable {
   final String id;
   final String staffId;
-  
+
   // Target period
   final PeriodType periodType;
   final DateTime targetDate;
   final DateTime periodStart;
   final DateTime periodEnd;
-  
+
   // Targets
   final double targetAmount;
   final int? targetCount;
   final double achievedAmount;
   final int achievedCount;
-  
+
   // Overdue-specific
   final double overdueTargetAmount;
   final double overdueAchievedAmount;
-  
+
   // Status
   final TargetStatus status;
-  
+
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;

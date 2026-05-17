@@ -39,7 +39,8 @@ class AuditLogModel extends Equatable {
       gpsLng: (json['gps_lng'] as num?)?.toDouble(),
       ipAddress: json['ip_address'],
       userAgent: json['user_agent'],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 

@@ -84,8 +84,7 @@ class NewUserNotifier extends StateNotifier<NewUserState> {
       state = state.copyWith(aadharNumber: value);
   void updatePanNumber(String value) =>
       state = state.copyWith(panNumber: value);
-  void updateBranchId(String? value) =>
-      state = state.copyWith(branchId: value);
+  void updateBranchId(String? value) => state = state.copyWith(branchId: value);
 
   Future<void> createUser() async {
     state = state.copyWith(isLoading: true);
@@ -116,4 +115,3 @@ final newUserProvider =
     StateNotifierProvider<NewUserNotifier, NewUserState>((ref) {
   return NewUserNotifier(ref.watch(userRepositoryProvider));
 });
-

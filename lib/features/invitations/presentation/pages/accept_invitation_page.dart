@@ -10,7 +10,8 @@ class AcceptInvitationPage extends ConsumerStatefulWidget {
   const AcceptInvitationPage({super.key, required this.token});
 
   @override
-  ConsumerState<AcceptInvitationPage> createState() => _AcceptInvitationPageState();
+  ConsumerState<AcceptInvitationPage> createState() =>
+      _AcceptInvitationPageState();
 }
 
 class _AcceptInvitationPageState extends ConsumerState<AcceptInvitationPage> {
@@ -49,7 +50,8 @@ class _AcceptInvitationPageState extends ConsumerState<AcceptInvitationPage> {
             passwordController: _passwordController,
             obscurePassword: _obscurePassword,
             isLoading: _isLoading,
-            onTogglePassword: () => setState(() => _obscurePassword = !_obscurePassword),
+            onTogglePassword: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
             onAccept: _acceptInvitation,
           );
         },
@@ -73,7 +75,8 @@ class _AcceptInvitationPageState extends ConsumerState<AcceptInvitationPage> {
       if (action == 'signup') {
         // User needs to sign up
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please sign up to complete invitation')),
+          const SnackBar(
+              content: Text('Please sign up to complete invitation')),
         );
         context.go('/auth');
       } else if (action == 'login') {
@@ -164,7 +167,8 @@ class _InvitationForm extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.email, color: Colors.grey[600], size: 20),
+                            Icon(Icons.email,
+                                color: Colors.grey[600], size: 20),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -177,7 +181,8 @@ class _InvitationForm extends StatelessWidget {
                         const Divider(height: 24),
                         Row(
                           children: [
-                            Icon(Icons.badge, color: Colors.grey[600], size: 20),
+                            Icon(Icons.badge,
+                                color: Colors.grey[600], size: 20),
                             const SizedBox(width: 12),
                             Text(
                               'Role: ${invitation.roleDisplay}',
@@ -190,7 +195,8 @@ class _InvitationForm extends StatelessWidget {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.message, color: Colors.grey[600], size: 20),
+                              Icon(Icons.message,
+                                  color: Colors.grey[600], size: 20),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -229,7 +235,9 @@ class _InvitationForm extends StatelessWidget {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       onPressed: onTogglePassword,
-                      icon: Icon(obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off),
                     ),
                     border: const OutlineInputBorder(),
                   ),

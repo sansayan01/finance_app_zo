@@ -45,7 +45,19 @@ class AuditLogModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, orgId, userId, action, entityType, entityId, oldValues, newValues, ipAddress, userAgent, createdAt];
+  List<Object?> get props => [
+        id,
+        orgId,
+        userId,
+        action,
+        entityType,
+        entityId,
+        oldValues,
+        newValues,
+        ipAddress,
+        userAgent,
+        createdAt
+      ];
 }
 
 /// Organization settings model
@@ -99,9 +111,11 @@ class OrgSettingsModel extends Equatable {
       sessionTimeoutMinutes: json['session_timeout_minutes'] as int? ?? 30,
       passwordPolicy: json['password_policy'] as bool? ?? true,
       passwordMinLength: json['password_min_length'] as int? ?? 8,
-      passwordRequireUppercase: json['password_require_uppercase'] as bool? ?? true,
+      passwordRequireUppercase:
+          json['password_require_uppercase'] as bool? ?? true,
       passwordRequireNumbers: json['password_require_numbers'] as bool? ?? true,
-      passwordRequireSymbols: json['password_require_symbols'] as bool? ?? false,
+      passwordRequireSymbols:
+          json['password_require_symbols'] as bool? ?? false,
       dataEncryption: json['data_encryption'] as bool? ?? true,
       auditLogging: json['audit_logging'] as bool? ?? true,
       auditRetentionDays: json['audit_retention_days'] as int? ?? 90,
@@ -115,10 +129,23 @@ class OrgSettingsModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, orgId, twoFactorRequired, sessionTimeout, sessionTimeoutMinutes,
-    passwordPolicy, passwordMinLength, passwordRequireUppercase,
-    passwordRequireNumbers, passwordRequireSymbols, dataEncryption,
-    auditLogging, auditRetentionDays, ssoEnabled, ssoProvider, ssoDomain,
-    createdAt, updatedAt
-  ];
+        id,
+        orgId,
+        twoFactorRequired,
+        sessionTimeout,
+        sessionTimeoutMinutes,
+        passwordPolicy,
+        passwordMinLength,
+        passwordRequireUppercase,
+        passwordRequireNumbers,
+        passwordRequireSymbols,
+        dataEncryption,
+        auditLogging,
+        auditRetentionDays,
+        ssoEnabled,
+        ssoProvider,
+        ssoDomain,
+        createdAt,
+        updatedAt
+      ];
 }

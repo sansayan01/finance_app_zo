@@ -13,13 +13,15 @@ final billingRepositoryProvider = Provider<BillingRepository>((ref) {
 });
 
 // All available plans
-final subscriptionPlansProvider = FutureProvider<List<SubscriptionPlanModel>>((ref) async {
+final subscriptionPlansProvider =
+    FutureProvider<List<SubscriptionPlanModel>>((ref) async {
   final repository = ref.watch(billingRepositoryProvider);
   return repository.getPlans();
 });
 
 // Current org subscription
-final currentSubscriptionProvider = FutureProvider<OrgSubscriptionModel?>((ref) async {
+final currentSubscriptionProvider =
+    FutureProvider<OrgSubscriptionModel?>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return null;
 
@@ -28,7 +30,8 @@ final currentSubscriptionProvider = FutureProvider<OrgSubscriptionModel?>((ref) 
 });
 
 // Subscription status with usage
-final subscriptionStatusProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final subscriptionStatusProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return {};
 
@@ -37,7 +40,8 @@ final subscriptionStatusProvider = FutureProvider<Map<String, dynamic>>((ref) as
 });
 
 // Limit check provider
-final limitCheckProvider = FutureProvider.family<bool, String>((ref, limitType) async {
+final limitCheckProvider =
+    FutureProvider.family<bool, String>((ref, limitType) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return false;
 
@@ -55,7 +59,8 @@ final orgInvoicesProvider = FutureProvider<List<InvoiceModel>>((ref) async {
 });
 
 // Payment methods
-final paymentMethodsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final paymentMethodsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return [];
 
@@ -68,7 +73,8 @@ class BillingNotifier extends StateNotifier<AsyncValue<void>> {
   final BillingRepository _repository;
   final Ref _ref;
 
-  BillingNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  BillingNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
   /// Create checkout session and return URL
   Future<String?> createCheckout({
@@ -188,8 +194,8 @@ class BillingNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final billingNotifierProvider = StateNotifierProvider<BillingNotifier, AsyncValue<void>>((ref) {
+final billingNotifierProvider =
+    StateNotifierProvider<BillingNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(billingRepositoryProvider);
   return BillingNotifier(repository, ref);
 });
-

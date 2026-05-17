@@ -5,7 +5,8 @@ class ActivityLogRepository {
   final SupabaseClient _client;
   final String _orgId;
 
-  ActivityLogRepository(this._client, [this._orgId = '00000000-0000-0000-0000-000000000001']);
+  ActivityLogRepository(this._client,
+      [this._orgId = '00000000-0000-0000-0000-000000000001']);
 
   Future<void> log({
     required String action,

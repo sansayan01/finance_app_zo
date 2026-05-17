@@ -88,8 +88,10 @@ class _CollectionsReport extends ConsumerWidget {
           ).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 24),
           _buildSummaryCard(context, 'Today', currencyFormat.format(28000)),
-          _buildSummaryCard(context, 'This Week', currencyFormat.format(139000)),
-          _buildSummaryCard(context, 'This Month', currencyFormat.format(520000)),
+          _buildSummaryCard(
+              context, 'This Week', currencyFormat.format(139000)),
+          _buildSummaryCard(
+              context, 'This Month', currencyFormat.format(520000)),
         ],
       ),
     );
@@ -103,8 +105,8 @@ class _CollectionsReport extends ConsumerWidget {
         trailing: Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ),
     );
@@ -124,15 +126,18 @@ class _LoansReport extends StatelessWidget {
       child: Column(
         children: [
           _buildStatCard(context, 'Total Active Loans', '45', Colors.blue),
-          _buildStatCard(context, 'Total Disbursed', currencyFormat.format(2500000), Colors.green),
-          _buildStatCard(context, 'Outstanding Balance', currencyFormat.format(1800000), Colors.orange),
+          _buildStatCard(context, 'Total Disbursed',
+              currencyFormat.format(2500000), Colors.green),
+          _buildStatCard(context, 'Outstanding Balance',
+              currencyFormat.format(1800000), Colors.orange),
           _buildStatCard(context, 'Overdue Loans', '8', Colors.red),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value, Color color) {
+  Widget _buildStatCard(
+      BuildContext context, String title, String value, Color color) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -148,9 +153,9 @@ class _LoansReport extends StatelessWidget {
         trailing: Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
       ),
     );
@@ -176,7 +181,8 @@ class _MembersReport extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value, Color color) {
+  Widget _buildStatCard(
+      BuildContext context, String title, String value, Color color) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -192,9 +198,9 @@ class _MembersReport extends StatelessWidget {
         trailing: Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
       ),
     );

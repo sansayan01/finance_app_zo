@@ -161,7 +161,8 @@ class UserDetailsPage extends ConsumerWidget {
               ),
             ),
             const PopupMenuDivider(),
-            if (ref.watch(currentUserProvider)?.role == UserRole.executiveAdmin) ...[
+            if (ref.watch(currentUserProvider)?.role ==
+                UserRole.executiveAdmin) ...[
               PopupMenuItem(
                 value: 'deactivate',
                 child: Row(
@@ -171,7 +172,8 @@ class UserDetailsPage extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Text('Deactivate Member',
                         style: TextStyle(
-                            fontWeight: FontWeight.w600, color: Colors.orange[400])),
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange[400])),
                   ],
                 ),
               ),
@@ -1218,7 +1220,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                   const SizedBox(height: 20),
 
                   // Branch Assignment Section
-                  _buildBranchAssignmentSection(theme, primary, isDark, isNarrow),
+                  _buildBranchAssignmentSection(
+                      theme, primary, isDark, isNarrow),
                   const SizedBox(height: 20),
 
                   // Account Details
@@ -1288,7 +1291,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                               'Field Operations',
                               Icons.corporate_fare_outlined,
                               theme,
-                              isDark ? AppColors.warningDark : AppColors.orange),
+                              isDark
+                                  ? AppColors.warningDark
+                                  : AppColors.orange),
                           const SizedBox(height: 24),
                           _buildTwoColumn(
                             isNarrow: isNarrow,
@@ -1322,18 +1327,23 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionHeader('Security & Access', Icons.lock_outline_rounded,
-                            theme, isDark ? Colors.redAccent : Colors.red),
+                        _buildSectionHeader(
+                            'Security & Access',
+                            Icons.lock_outline_rounded,
+                            theme,
+                            isDark ? Colors.redAccent : Colors.red),
                         const SizedBox(height: 24),
                         Text(
                           'Send a secure password reset link to the registered email address.',
-                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
+                          style:
+                              theme.textTheme.bodySmall?.copyWith(fontSize: 12),
                         ),
                         const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: _isResetting ? null : _handlePasswordReset,
+                            onPressed:
+                                _isResetting ? null : _handlePasswordReset,
                             icon: _isResetting
                                 ? const SizedBox(
                                     height: 18,
@@ -1341,10 +1351,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2, color: Colors.red))
                                 : const Icon(Icons.send_rounded, size: 18),
-                            label: Text(_isResetting ? 'Sending...' : 'Reset User Password'),
+                            label: Text(_isResetting
+                                ? 'Sending...'
+                                : 'Reset User Password'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: isDark ? Colors.redAccent : Colors.red,
-                              side: BorderSide(color: isDark ? Colors.redAccent : Colors.red),
+                              foregroundColor:
+                                  isDark ? Colors.redAccent : Colors.red,
+                              side: BorderSide(
+                                  color:
+                                      isDark ? Colors.redAccent : Colors.red),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
@@ -1537,26 +1552,31 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
                 fontSize: 10,
-                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7))),
+                color:
+                    theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7))),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
           textCapitalization: textCapitalization,
-          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          style:
+              theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: icon != null ? Icon(icon, size: 18) : null,
             filled: true,
             fillColor: isDark ? AppColors.fillDark : AppColors.fillLight,
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none),
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: primary, width: 1.5)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
       ],

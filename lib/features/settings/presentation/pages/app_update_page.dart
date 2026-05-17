@@ -76,7 +76,9 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
         await client.storage.from('app-updates').uploadBinary(
               filePath,
               _selectedFile!.bytes!,
-              fileOptions: const FileOptions(upsert: true, contentType: 'application/vnd.android.package-archive'),
+              fileOptions: const FileOptions(
+                  upsert: true,
+                  contentType: 'application/vnd.android.package-archive'),
             );
 
         downloadUrl = client.storage.from('app-updates').getPublicUrl(filePath);
@@ -96,7 +98,10 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
         updates['update_url_android'] = downloadUrl;
       }
 
-      await client.from('system_config').update(updates).eq('id', (await ref.read(systemConfigProvider.future)).id ?? '');
+      await client
+          .from('system_config')
+          .update(updates)
+          .eq('id', (await ref.read(systemConfigProvider.future)).id ?? '');
 
       ref.invalidate(systemConfigProvider);
       ref.invalidate(updateCheckProvider);
@@ -137,10 +142,10 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
           children: [
             Text(
               'Publish a new APK. The old file is automatically replaced.',
-              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              style:
+                  theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
-
             if (_error != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -151,13 +156,16 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 20),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13))),
+                    Expanded(
+                        child: Text(_error!,
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 13))),
                   ],
                 ),
               ),
-
             if (_success != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -168,13 +176,16 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                    const Icon(Icons.check_circle_outline,
+                        color: Colors.green, size: 20),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(_success!, style: const TextStyle(color: Colors.green, fontSize: 13))),
+                    Expanded(
+                        child: Text(_success!,
+                            style: const TextStyle(
+                                color: Colors.green, fontSize: 13))),
                   ],
                 ),
               ),
-
             GlassCard(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -211,7 +222,6 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                 ],
               ),
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
-
             const SizedBox(height: 20),
             GlassCard(
               padding: const EdgeInsets.all(24),
@@ -255,9 +265,8 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                                   : 'Tap to select APK',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: _selectedFile != null
-                                    ? Colors.green
-                                    : null,
+                                color:
+                                    _selectedFile != null ? Colors.green : null,
                               ),
                             ),
                             if (_selectedFile != null)
@@ -297,7 +306,6 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                 ],
               ),
             ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.05, end: 0),
-
             const SizedBox(height: 100),
           ],
         ),
@@ -305,4 +313,3 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
     );
   }
 }
-

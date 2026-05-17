@@ -40,7 +40,7 @@ class UserRepository {
 
     try {
       List<dynamic> memberResponse;
-      
+
       try {
         debugPrint('Attempting members query with org_id: $_orgId');
         memberResponse = await _client
@@ -48,7 +48,8 @@ class UserRepository {
             .select()
             .eq('org_id', _orgId)
             .order('created_at', ascending: false);
-        debugPrint('Members fetched with org_id filter: ${memberResponse.length}');
+        debugPrint(
+            'Members fetched with org_id filter: ${memberResponse.length}');
         if (memberResponse.isNotEmpty) {
           debugPrint('First member data: ${memberResponse.first}');
         }
@@ -60,26 +61,30 @@ class UserRepository {
               .from('members')
               .select()
               .order('created_at', ascending: false);
-          debugPrint('Members fetched without filter: ${memberResponse.length}');
+          debugPrint(
+              'Members fetched without filter: ${memberResponse.length}');
           // Filter manually by org_id
           memberResponse = memberResponse.where((m) {
             if (m is! Map) return false;
             final mOrgId = m['org_id']?.toString();
             return mOrgId == _orgId;
           }).toList();
-          debugPrint('Members after manual org_id filter: ${memberResponse.length}');
+          debugPrint(
+              'Members after manual org_id filter: ${memberResponse.length}');
         } catch (e2) {
           debugPrint('Second member query failed: $e2');
           debugPrint('Trying plain select...');
           memberResponse = await _client.from('members').select();
-          debugPrint('Members fetched with plain select: ${memberResponse.length}');
+          debugPrint(
+              'Members fetched with plain select: ${memberResponse.length}');
           // Filter manually by org_id
           memberResponse = memberResponse.where((m) {
             if (m is! Map) return false;
             final mOrgId = m['org_id']?.toString();
             return mOrgId == _orgId;
           }).toList();
-          debugPrint('Members after manual org_id filter: ${memberResponse.length}');
+          debugPrint(
+              'Members after manual org_id filter: ${memberResponse.length}');
         }
       }
 
@@ -93,26 +98,32 @@ class UserRepository {
         }
         final map = Map<String, dynamic>.from(m);
         final mid = map['id']?.toString() ?? '';
-        
+
         if (mid.isEmpty) {
           debugPrint('Skipping member with empty id');
           continue;
         }
-        
+
         final memberOrgId = map['org_id']?.toString();
-        if (memberOrgId != null && memberOrgId.isNotEmpty && memberOrgId != _orgId) {
-          debugPrint('Skipping member $mid with different org_id: $memberOrgId (expected: $_orgId)');
+        if (memberOrgId != null &&
+            memberOrgId.isNotEmpty &&
+            memberOrgId != _orgId) {
+          debugPrint(
+              'Skipping member $mid with different org_id: $memberOrgId (expected: $_orgId)');
           continue;
         }
-        
+
         if (seenIds.contains(mid)) {
-          debugPrint('Skipping member $mid - already in seenIds (from profiles)');
+          debugPrint(
+              'Skipping member $mid - already in seenIds (from profiles)');
           skippedCount++;
           continue;
         }
 
-        final fullName = (map['full_name'] ?? map['name'] ?? 'Unknown').toString();
-        debugPrint('Adding member: id=$mid, name=$fullName, phone=${map['phone']}, email=${map['email']}, org_id=${map['org_id']}');
+        final fullName =
+            (map['full_name'] ?? map['name'] ?? 'Unknown').toString();
+        debugPrint(
+            'Adding member: id=$mid, name=$fullName, phone=${map['phone']}, email=${map['email']}, org_id=${map['org_id']}');
         seenIds.add(mid);
         addedCount++;
         users.add(ProfileModel(
@@ -134,7 +145,8 @@ class UserRepository {
         ));
       }
 
-      debugPrint('Member processing complete: added=$addedCount, skipped(duplicate)=$skippedCount');
+      debugPrint(
+          'Member processing complete: added=$addedCount, skipped(duplicate)=$skippedCount');
     } catch (e, st) {
       debugPrint('Error fetching members: $e');
       debugPrint('Stack trace: $st');
@@ -156,13 +168,15 @@ class UserRepository {
     String? branchId,
     required String password,
   }) async {
-    debugPrint('createUser called: name=$fullName, role=${role.name}, org_id=$_orgId');
-    
+    debugPrint(
+        'createUser called: name=$fullName, role=${role.name}, org_id=$_orgId');
+
     // For customers, create directly in members table (not profiles)
     if (role == UserRole.customer) {
       debugPrint('Creating customer in members table');
       try {
-        final memberId = 'CUST-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+        final memberId =
+            'CUST-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
         await _client.from('members').insert({
           'org_id': _orgId,
           'full_name': fullName,
@@ -179,7 +193,7 @@ class UserRepository {
         rethrow;
       }
     }
-    
+
     // For staff roles, use existing flow (profiles table)
     debugPrint('Creating staff user in profiles table');
     try {
@@ -222,13 +236,18 @@ class UserRepository {
 
   Future<void> updateUser(String id, Map<String, dynamic> data) async {
     data['org_id'] = _orgId;
-    await _client.from('profiles').update(data).eq('id', id).eq('org_id', _orgId);
+    await _client
+        .from('profiles')
+        .update(data)
+        .eq('id', id)
+        .eq('org_id', _orgId);
   }
 
   Future<Map<String, int>> getUserStats() async {
     final roles = <String>[];
     try {
-      final response = await _client.from('profiles').select('role').eq('org_id', _orgId);
+      final response =
+          await _client.from('profiles').select('role').eq('org_id', _orgId);
       final list = response as List? ?? [];
       for (final r in list) {
         if (r is! Map) continue;
@@ -265,15 +284,19 @@ class UserRepository {
         final n = r.toLowerCase();
         return n.contains('admin') || n == 'owner';
       }).length,
-      'managers': roles.where((r) => r.toLowerCase().contains('manager')).length,
+      'managers':
+          roles.where((r) => r.toLowerCase().contains('manager')).length,
       'staff': roles.where((r) {
         final n = r.toLowerCase();
         return n.contains('agent') || n == 'staff' || n == 'collector';
       }).length,
-      'members': memberCount + roles.where((r) {
-        final n = r.toLowerCase();
-        return n.contains('customer') || n.contains('member') || n == 'user';
-      }).length,
+      'members': memberCount +
+          roles.where((r) {
+            final n = r.toLowerCase();
+            return n.contains('customer') ||
+                n.contains('member') ||
+                n == 'user';
+          }).length,
     };
   }
 
@@ -293,7 +316,8 @@ class UserRepository {
     // If there's an auth user, delete it via edge function
     if (userId != null) {
       try {
-        await _client.functions.invoke('delete-user', body: {'user_id': userId});
+        await _client.functions
+            .invoke('delete-user', body: {'user_id': userId});
       } catch (e) {
         // Ignore if function fails - profile is already deleted
       }

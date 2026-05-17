@@ -17,7 +17,8 @@ class StaffMapPage extends ConsumerStatefulWidget {
   ConsumerState<StaffMapPage> createState() => _StaffMapPageState();
 }
 
-class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerProviderStateMixin {
+class _StaffMapPageState extends ConsumerState<StaffMapPage>
+    with SingleTickerProviderStateMixin {
   Position? _pos;
   String _filter = 'all';
   late AnimationController _radarCtrl;
@@ -25,7 +26,9 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    _radarCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
+    _radarCtrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 4))
+          ..repeat();
     _locate();
   }
 
@@ -38,7 +41,11 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
   Future<void> _locate() async {
     try {
       final p = await LocationService().getCurrentLocation();
-      if (mounted) setState(() { _pos = p; });
+      if (mounted) {
+        setState(() {
+          _pos = p;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() {});
     }
@@ -50,29 +57,55 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
+      backgroundColor:
+          isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white70 : Colors.black87)),
-        title: const Text('Route Planner', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+        leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(Icons.arrow_back_rounded,
+                color: isDark ? Colors.white70 : Colors.black87)),
+        title: const Text('Route Planner',
+            style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
         centerTitle: false,
         actions: [
-          _chip(theme, Icons.sort_rounded, _filter == 'all' ? 'All' : 'Nearby', () => _showFilter(theme)),
+          _chip(theme, Icons.sort_rounded, _filter == 'all' ? 'All' : 'Nearby',
+              () => _showFilter(theme)),
           const SizedBox(width: 4),
           Container(
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
-              color: (_pos != null ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+              color: (_pos != null ? AppColors.success : AppColors.error)
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: (_pos != null ? AppColors.success : AppColors.error).withValues(alpha: 0.15)),
+              border: Border.all(
+                  color: (_pos != null ? AppColors.success : AppColors.error)
+                      .withValues(alpha: 0.15)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 7, height: 7, decoration: BoxDecoration(color: _pos != null ? AppColors.success : AppColors.error, shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: (_pos != null ? AppColors.success : AppColors.error).withValues(alpha: 0.6), blurRadius: 4)])),
+              Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                      color: _pos != null ? AppColors.success : AppColors.error,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                            color: (_pos != null
+                                    ? AppColors.success
+                                    : AppColors.error)
+                                .withValues(alpha: 0.6),
+                            blurRadius: 4)
+                      ])),
               const SizedBox(width: 6),
-              Text(_pos != null ? 'Live' : 'No GPS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _pos != null ? AppColors.success : AppColors.error)),
+              Text(_pos != null ? 'Live' : 'No GPS',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color:
+                          _pos != null ? AppColors.success : AppColors.error)),
             ]),
           ),
         ],
@@ -83,47 +116,78 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
 
   Widget _content(ThemeData theme, bool isDark) {
     return ref.watch(todayDueEmisProvider).when(
-      data: (due) {
-        final items = _sortFilter(due);
-        if (items.isEmpty) {
-          return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(padding: const EdgeInsets.all(32), decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.05), shape: BoxShape.circle),
-              child: Icon(Icons.explore_outlined, size: 60, color: AppColors.primary.withValues(alpha: 0.2))),
-            const SizedBox(height: 24),
-            Text('No stops today', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface.withValues(alpha: 0.35))),
-            const SizedBox(height: 8),
-            Text('All collections up to date!', style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.2))),
-          ]));
-        }
+          data: (due) {
+            final items = _sortFilter(due);
+            if (items.isEmpty) {
+              return Center(
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                    Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.05),
+                            shape: BoxShape.circle),
+                        child: Icon(Icons.explore_outlined,
+                            size: 60,
+                            color: AppColors.primary.withValues(alpha: 0.2))),
+                    const SizedBox(height: 24),
+                    Text('No stops today',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.35))),
+                    const SizedBox(height: 8),
+                    Text('All collections up to date!',
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.2))),
+                  ]));
+            }
 
-        return RefreshIndicator(
-          onRefresh: () async { ref.invalidate(todayDueEmisProvider); await _locate(); },
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-            children: [
-              _radar(theme, isDark, items),
-              const SizedBox(height: 24),
-              _routeBar(theme, items),
-              const SizedBox(height: 24),
-              _missionProgress(theme, items.length, 0), // Mocking 0 for now as we don't have 'done' flag in items
-              ...items.asMap().entries.map((e) => _stopCard(theme, isDark, e.key, e.value)),
-            ],
-          ),
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(todayDueEmisProvider);
+                await _locate();
+              },
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+                children: [
+                  _radar(theme, isDark, items),
+                  const SizedBox(height: 24),
+                  _routeBar(theme, items),
+                  const SizedBox(height: 24),
+                  _missionProgress(theme, items.length,
+                      0), // Mocking 0 for now as we don't have 'done' flag in items
+                  ...items
+                      .asMap()
+                      .entries
+                      .map((e) => _stopCard(theme, isDark, e.key, e.value)),
+                ],
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => Center(
+              child: Text('Failed',
+                  style: TextStyle(color: theme.colorScheme.error))),
         );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => Center(child: Text('Failed', style: TextStyle(color: theme.colorScheme.error))),
-    );
   }
 
-  Widget _radar(ThemeData theme, bool isDark, List<Map<String, dynamic>> items) {
+  Widget _radar(
+      ThemeData theme, bool isDark, List<Map<String, dynamic>> items) {
     return Container(
       height: 240,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF181C24) : Colors.white,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04), blurRadius: 24, offset: const Offset(0, 10)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 10)),
         ],
       ),
       child: Stack(
@@ -133,7 +197,8 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
               animation: _radarCtrl,
               builder: (_, __) => CustomPaint(
                 size: const Size(180, 180),
-                painter: _RadarPainter(isDark: isDark, angle: _radarCtrl.value * 2 * math.pi),
+                painter: _RadarPainter(
+                    isDark: isDark, angle: _radarCtrl.value * 2 * math.pi),
               ),
             ),
           ),
@@ -141,41 +206,82 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
             final a = (e.key * 60.0 + 30.0) * math.pi / 180.0;
             final r = 40.0 + (e.key % 2) * 25.0;
             return Positioned(
-              left: 180 / 2 + r * math.cos(a) + (MediaQuery.of(context).size.width - 40) / 2 - 180 / 2 - 12,
+              left: 180 / 2 +
+                  r * math.cos(a) +
+                  (MediaQuery.of(context).size.width - 40) / 2 -
+                  180 / 2 -
+                  12,
               top: 120 + r * math.sin(a) - 12,
               child: Container(
-                width: 24, height: 24,
-                decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 8)]),
-                child: Center(child: Text('${e.key + 1}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900))),
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                          blurRadius: 8)
+                    ]),
+                child: Center(
+                    child: Text('${e.key + 1}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900))),
               ),
             );
           }),
           Positioned(
-            left: 24, bottom: 24,
+            left: 24,
+            bottom: 24,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10)),
                   child: Row(children: [
-                    Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
+                    Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                            color: AppColors.primary, shape: BoxShape.circle)),
                     const SizedBox(width: 8),
-                    Text('SCANNING AREA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.primary, letterSpacing: 0.5)),
+                    Text('SCANNING AREA',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primary,
+                            letterSpacing: 0.5)),
                   ]),
                 ),
                 const SizedBox(height: 8),
-                Text('6 points detected in 5km radius', style: TextStyle(fontSize: 9, color: theme.colorScheme.onSurface.withValues(alpha: 0.3), fontWeight: FontWeight.w600)),
+                Text('6 points detected in 5km radius',
+                    style: TextStyle(
+                        fontSize: 9,
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                        fontWeight: FontWeight.w600)),
               ],
             ),
           ),
           Positioned(
-            right: 24, bottom: 24,
+            right: 24,
+            bottom: 24,
             child: Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05), shape: BoxShape.circle),
-              child: Icon(Icons.fullscreen_rounded, size: 20, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+              decoration: BoxDecoration(
+                  color: (isDark ? Colors.white : Colors.black)
+                      .withValues(alpha: 0.05),
+                  shape: BoxShape.circle),
+              child: Icon(Icons.fullscreen_rounded,
+                  size: 20,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
             ),
           ),
         ],
@@ -189,25 +295,45 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
     for (final item in items) {
       final m = item['members'] as Map? ?? {};
       if (_pos != null && m['gps_lat'] != null && m['gps_lng'] != null) {
-        totalDist += Geolocator.distanceBetween(_pos!.latitude, _pos!.longitude, (m['gps_lat'] as num).toDouble(), (m['gps_lng'] as num).toDouble());
+        totalDist += Geolocator.distanceBetween(_pos!.latitude, _pos!.longitude,
+            (m['gps_lat'] as num).toDouble(), (m['gps_lng'] as num).toDouble());
         count++;
       }
     }
 
     return Row(
       children: [
-        Expanded(child: _routeBox(theme, items.length.toString(), 'STOPS', Icons.place_rounded)),
+        Expanded(
+            child: _routeBox(
+                theme, items.length.toString(), 'STOPS', Icons.place_rounded)),
         const SizedBox(width: 12),
-        Expanded(child: _routeBox(theme, count > 0 ? (totalDist / 1000).toStringAsFixed(1) : '-', 'KM DIST', Icons.map_rounded)),
+        Expanded(
+            child: _routeBox(
+                theme,
+                count > 0 ? (totalDist / 1000).toStringAsFixed(1) : '-',
+                'KM DIST',
+                Icons.map_rounded)),
         const SizedBox(width: 12),
         Container(
-          width: 64, height: 64,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [AppColors.primary, AppColors.accent], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.accent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight),
             borderRadius: BorderRadius.circular(22),
-            boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 6))],
+            boxShadow: [
+              BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6))
+            ],
           ),
-          child: IconButton(onPressed: _openMaps, icon: const Icon(Icons.navigation_rounded, color: Colors.white, size: 28)),
+          child: IconButton(
+              onPressed: _openMaps,
+              icon: const Icon(Icons.navigation_rounded,
+                  color: Colors.white, size: 28)),
         ),
       ],
     );
@@ -219,7 +345,9 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark ? const Color(0xFF181C24) : Colors.white,
+        color: theme.brightness == Brightness.dark
+            ? const Color(0xFF181C24)
+            : Colors.white,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -228,19 +356,38 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('MISSION PROGRESS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), letterSpacing: 1)),
-              Text('$done OF $total STOPS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.primary)),
+              Text('MISSION PROGRESS',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      letterSpacing: 1)),
+              Text('$done OF $total STOPS',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primary)),
             ],
           ),
           const SizedBox(height: 12),
           Stack(
             children: [
-              Container(height: 6, width: double.infinity, decoration: BoxDecoration(color: theme.brightness == Brightness.dark ? Colors.white10 : Colors.black.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(3))),
+              Container(
+                  height: 6,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(3))),
               FractionallySizedBox(
                 widthFactor: pct,
                 child: Container(
                   height: 6,
-                  decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.accent]), borderRadius: BorderRadius.circular(3)),
+                  decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.accent]),
+                      borderRadius: BorderRadius.circular(3)),
                 ),
               ),
             ],
@@ -257,21 +404,35 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF181C24) : Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.04)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 14, color: AppColors.primary),
           const SizedBox(height: 6),
-          Text(val, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87, height: 1.1)),
-          Text(label, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: theme.colorScheme.onSurface.withValues(alpha: 0.35), letterSpacing: 0.5)),
+          Text(val,
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : Colors.black87,
+                  height: 1.1)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                  letterSpacing: 0.5)),
         ],
       ),
     );
   }
 
-  Widget _stopCard(ThemeData theme, bool isDark, int index, Map<String, dynamic> item) {
+  Widget _stopCard(
+      ThemeData theme, bool isDark, int index, Map<String, dynamic> item) {
     final m = item['members'] ?? {};
     final name = m['full_name'] ?? item['member_name'] ?? 'Unknown';
     final area = m['area']?.toString() ?? '';
@@ -280,7 +441,8 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
 
     double? dist;
     if (_pos != null && m['gps_lat'] != null && m['gps_lng'] != null) {
-      dist = Geolocator.distanceBetween(_pos!.latitude, _pos!.longitude, (m['gps_lat'] as num).toDouble(), (m['gps_lng'] as num).toDouble());
+      dist = Geolocator.distanceBetween(_pos!.latitude, _pos!.longitude,
+          (m['gps_lat'] as num).toDouble(), (m['gps_lng'] as num).toDouble());
     }
 
     return IntrinsicHeight(
@@ -289,10 +451,21 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
           Column(
             children: [
               Container(
-                width: 24, height: 24,
-                decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, border: Border.all(color: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE), width: 4)),
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF0A0A0B)
+                            : const Color(0xFFF8F9FE),
+                        width: 4)),
               ),
-              Expanded(child: Container(width: 2, color: AppColors.primary.withValues(alpha: 0.15))),
+              Expanded(
+                  child: Container(
+                      width: 2,
+                      color: AppColors.primary.withValues(alpha: 0.15))),
             ],
           ),
           const SizedBox(width: 16),
@@ -302,7 +475,13 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF181C24) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03), blurRadius: 15, offset: const Offset(0, 8))],
+                boxShadow: [
+                  BoxShadow(
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8))
+                ],
               ),
               child: Material(
                 color: Colors.transparent,
@@ -317,15 +496,39 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('STOP #${index + 1}', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColors.primary, letterSpacing: 1)),
+                              Text('STOP #${index + 1}',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.primary,
+                                      letterSpacing: 1)),
                               const SizedBox(height: 6),
-                              Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(name,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
                               if (area.isNotEmpty) ...[
                                 const SizedBox(height: 4),
                                 Row(children: [
-                                  Icon(Icons.location_on_rounded, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                                  Icon(Icons.location_on_rounded,
+                                      size: 12,
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.3)),
                                   const SizedBox(width: 4),
-                                  Flexible(child: Text(area, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  Flexible(
+                                      child: Text(area,
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: theme.colorScheme.onSurface
+                                                  .withValues(alpha: 0.4),
+                                              fontWeight: FontWeight.w500),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis)),
                                 ]),
                               ],
                             ],
@@ -334,9 +537,20 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('₹${amount.toStringAsFixed(0)}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+                            Text('₹${amount.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87)),
                             if (dist != null)
-                              Text('${(dist / 1000).toStringAsFixed(1)} km away', style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w700)),
+                              Text(
+                                  '${(dist / 1000).toStringAsFixed(1)} km away',
+                                  style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700)),
                           ],
                         ),
                       ],
@@ -344,7 +558,10 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
                   ),
                 ),
               ),
-            ).animate().fadeIn(duration: 400.ms, delay: (index * 60).ms).slideX(begin: 0.04, end: 0),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, delay: (index * 60).ms)
+                .slideX(begin: 0.04, end: 0),
           ),
         ],
       ),
@@ -356,26 +573,51 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
     if (_filter == 'nearby' && _pos != null) {
       list.sort((a, b) {
         final ma = a['members'] as Map? ?? {}, mb = b['members'] as Map? ?? {};
-        final da = ma['gps_lat'] != null ? Geolocator.distanceBetween(_pos!.latitude, _pos!.longitude, (ma['gps_lat'] as num).toDouble(), (ma['gps_lng'] as num).toDouble()) : double.infinity;
-        final db = mb['gps_lat'] != null ? Geolocator.distanceBetween(_pos!.latitude, _pos!.longitude, (mb['gps_lat'] as num).toDouble(), (mb['gps_lng'] as num).toDouble()) : double.infinity;
+        final da = ma['gps_lat'] != null
+            ? Geolocator.distanceBetween(
+                _pos!.latitude,
+                _pos!.longitude,
+                (ma['gps_lat'] as num).toDouble(),
+                (ma['gps_lng'] as num).toDouble())
+            : double.infinity;
+        final db = mb['gps_lat'] != null
+            ? Geolocator.distanceBetween(
+                _pos!.latitude,
+                _pos!.longitude,
+                (mb['gps_lat'] as num).toDouble(),
+                (mb['gps_lng'] as num).toDouble())
+            : double.infinity;
         return da.compareTo(db);
       });
     }
     return list;
   }
 
-  Widget _chip(ThemeData theme, IconData icon, String label, VoidCallback onTap) {
+  Widget _chip(
+      ThemeData theme, IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () { HapticFeedback.lightImpact(); onTap(); },
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Container(
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.1))),
+        decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border:
+                Border.all(color: AppColors.primary.withValues(alpha: 0.1))),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(icon, size: 14, color: AppColors.primary),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
-          const SizedBox(width: 2), Icon(Icons.expand_more_rounded, size: 16, color: AppColors.primary),
+          Text(label,
+              style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12)),
+          const SizedBox(width: 2),
+          Icon(Icons.expand_more_rounded, size: 16, color: AppColors.primary),
         ]),
       ),
     );
@@ -384,14 +626,26 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
   void _showFilter(ThemeData theme) {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
-      context: context, backgroundColor: Colors.transparent,
+      context: context,
+      backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),
-        decoration: BoxDecoration(color: theme.scaffoldBackgroundColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(36))),
+        decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(36))),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 48, height: 5, decoration: BoxDecoration(color: theme.dividerColor, borderRadius: BorderRadius.circular(3))),
+          Container(
+              width: 48,
+              height: 5,
+              decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(3))),
           const SizedBox(height: 28),
-          Align(alignment: Alignment.centerLeft, child: Text('Route Order', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800))),
+          Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Route Order',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800))),
           const SizedBox(height: 24),
           Wrap(spacing: 10, runSpacing: 10, children: [
             _filterPill(ctx, 'all', 'Default', Icons.all_inclusive_rounded),
@@ -402,22 +656,41 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
     );
   }
 
-  Widget _filterPill(BuildContext ctx, String value, String label, IconData icon) {
+  Widget _filterPill(
+      BuildContext ctx, String value, String label, IconData icon) {
     final sel = _filter == value;
     return GestureDetector(
-      onTap: () { setState(() => _filter = value); Navigator.pop(ctx); },
+      onTap: () {
+        setState(() => _filter = value);
+        Navigator.pop(ctx);
+      },
       child: AnimatedContainer(
         duration: 200.ms,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
-          color: sel ? AppColors.primary : AppColors.primary.withValues(alpha: 0.05),
+          color: sel
+              ? AppColors.primary
+              : AppColors.primary.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: sel ? AppColors.primary : AppColors.primary.withValues(alpha: 0.08), width: sel ? 1.5 : 1),
+          border: Border.all(
+              color: sel
+                  ? AppColors.primary
+                  : AppColors.primary.withValues(alpha: 0.08),
+              width: sel ? 1.5 : 1),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 16, color: sel ? Colors.white : AppColors.primary.withValues(alpha: 0.5)),
+          Icon(icon,
+              size: 16,
+              color: sel
+                  ? Colors.white
+                  : AppColors.primary.withValues(alpha: 0.5)),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: sel ? Colors.white : AppColors.primary.withValues(alpha: 0.5))),
+          Text(label,
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: sel
+                      ? Colors.white
+                      : AppColors.primary.withValues(alpha: 0.5))),
         ]),
       ),
     );
@@ -425,8 +698,11 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> with SingleTickerPr
 
   Future<void> _openMaps() async {
     if (_pos == null) return;
-    final uri = Uri.parse('https://www.google.com/maps/dir/${_pos!.latitude},${_pos!.longitude}');
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final uri = Uri.parse(
+        'https://www.google.com/maps/dir/${_pos!.latitude},${_pos!.longitude}');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 }
 
@@ -439,31 +715,51 @@ class _RadarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    final p = Paint()..color = AppColors.primary.withValues(alpha: 0.1)..style = PaintingStyle.stroke..strokeWidth = 1.5;
-    
+    final p = Paint()
+      ..color = AppColors.primary.withValues(alpha: 0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
     // Draw concentric circles
     for (int i = 1; i <= 3; i++) {
       canvas.drawCircle(c, radius * (i / 3), p);
     }
-    
+
     // Draw sweep
     final sweepPaint = Paint()
       ..shader = SweepGradient(
-        colors: [AppColors.primary.withValues(alpha: 0.2), AppColors.primary.withValues(alpha: 0)],
+        colors: [
+          AppColors.primary.withValues(alpha: 0.2),
+          AppColors.primary.withValues(alpha: 0)
+        ],
         stops: const [0.0, 0.2],
         transform: GradientRotation(angle - 1.2),
       ).createShader(Rect.fromCircle(center: c, radius: radius));
-    
+
     canvas.drawCircle(c, radius, sweepPaint..style = PaintingStyle.fill);
-    
+
     // Draw crosshair
-    final crossPaint = Paint()..color = AppColors.primary.withValues(alpha: 0.15)..strokeWidth = 1;
-    canvas.drawLine(Offset(c.dx - radius, c.dy), Offset(c.dx + radius, c.dy), crossPaint);
-    canvas.drawLine(Offset(c.dx, c.dy - radius), Offset(c.dx, c.dy + radius), crossPaint);
-    
+    final crossPaint = Paint()
+      ..color = AppColors.primary.withValues(alpha: 0.15)
+      ..strokeWidth = 1;
+    canvas.drawLine(
+        Offset(c.dx - radius, c.dy), Offset(c.dx + radius, c.dy), crossPaint);
+    canvas.drawLine(
+        Offset(c.dx, c.dy - radius), Offset(c.dx, c.dy + radius), crossPaint);
+
     // Center point
-    canvas.drawCircle(c, 6, Paint()..color = AppColors.primary..style = PaintingStyle.fill);
-    canvas.drawCircle(c, 10, Paint()..color = AppColors.primary.withValues(alpha: 0.2)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+    canvas.drawCircle(
+        c,
+        6,
+        Paint()
+          ..color = AppColors.primary
+          ..style = PaintingStyle.fill);
+    canvas.drawCircle(
+        c,
+        10,
+        Paint()
+          ..color = AppColors.primary.withValues(alpha: 0.2)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
   }
 
   @override

@@ -587,9 +587,10 @@ class StaffHomePage extends ConsumerWidget {
           builder: (context, setState) {
             return Container(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 
-                        MediaQuery.of(context).padding.bottom + 
-                        AppSpacing.xxl + 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom +
+                    MediaQuery.of(context).padding.bottom +
+                    AppSpacing.xxl +
+                    20,
                 left: 20,
                 right: 20,
                 top: 24,
@@ -964,20 +965,41 @@ class StaffHomePage extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: theme.dividerColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+            Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: theme.dividerColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            const Text('Cash Vault', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+            const Text('Cash Vault',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
             const SizedBox(height: 32),
-            _buildVaultInfoRow('Cash in Hand', AppFormatters.formatCurrency(wallet?.cashInHand ?? 0), AppColors.success, theme),
+            _buildVaultInfoRow(
+                'Cash in Hand',
+                AppFormatters.formatCurrency(wallet?.cashInHand ?? 0),
+                AppColors.success,
+                theme),
             const SizedBox(height: 16),
-            _buildVaultInfoRow('Digital Today', AppFormatters.formatCurrency(wallet?.totalDigitalCollected ?? 0), AppColors.primary, theme),
+            _buildVaultInfoRow(
+                'Digital Today',
+                AppFormatters.formatCurrency(
+                    wallet?.totalDigitalCollected ?? 0),
+                AppColors.primary,
+                theme),
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 24),
-            const Text('Handover to Branch', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('Handover to Branch',
+                style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
-            Text('Generate this QR for the Branch Manager to scan and confirm your cash deposit.', 
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6))),
+            Text(
+                'Generate this QR for the Branch Manager to scan and confirm your cash deposit.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.6))),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
@@ -985,7 +1007,8 @@ class StaffHomePage extends ConsumerWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: Icon(Icons.qr_code_2_rounded, size: 200, color: Colors.black.withValues(alpha: 0.8)),
+              child: Icon(Icons.qr_code_2_rounded,
+                  size: 200, color: Colors.black.withValues(alpha: 0.8)),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -1002,12 +1025,15 @@ class StaffHomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildVaultInfoRow(String label, String value, Color color, ThemeData theme) {
+  Widget _buildVaultInfoRow(
+      String label, String value, Color color, ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: theme.textTheme.bodyMedium),
-        Text(value, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, color: color)),
+        Text(value,
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w900, color: color)),
       ],
     );
   }

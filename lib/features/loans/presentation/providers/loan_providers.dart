@@ -77,7 +77,8 @@ final emiScheduleProvider =
 });
 
 final paymentHistoryProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, loanId) async {
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, loanId) async {
   final repository = ref.watch(emiRepositoryProvider);
   return repository.getPaymentHistory(loanId);
 });
@@ -95,4 +96,3 @@ final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
   final repository = ref.watch(loansRepositoryProvider);
   return repository.getLoanSummary();
 });
-

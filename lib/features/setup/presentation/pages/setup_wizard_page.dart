@@ -31,13 +31,13 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   bool _isLoading = false;
   String? _error;
   static const String _stepKey = 'wizard_current_step';
-  
+
   // Created IDs for reference
   String? _createdBranchId;
   String? _createdBranchManagerId;
   String? _createdCollectionAgentId;
   String? _createdCustomerId;
-  
+
   // List of branches for selection
   List<Map<String, dynamic>> _branches = [];
 
@@ -120,7 +120,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Resume Setup?'),
-            content: Text('You left off at step ${savedStep + 1}. Would you like to resume from where you stopped?'),
+            content: Text(
+                'You left off at step ${savedStep + 1}. Would you like to resume from where you stopped?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -198,32 +199,40 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
 
       // Create organization if doesn't exist
       if (orgId == null) {
-        final orgName = authUser?.userMetadata?['org_name'] as String? ?? 'My Organization';
+        final orgName =
+            authUser?.userMetadata?['org_name'] as String? ?? 'My Organization';
         final slug = orgName
             .toLowerCase()
             .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
             .replaceAll(RegExp(r'^-|-$'), '');
-        final trialEnd = DateTime.now().add(const Duration(days: 14)).toIso8601String();
+        final trialEnd =
+            DateTime.now().add(const Duration(days: 14)).toIso8601String();
 
-        final orgResponse = await client.from('organizations').insert({
-          'name': orgName,
-          'display_name': _orgDisplayNameCtrl.text.trim(),
-          'slug': slug,
-          'status': 'trial',
-          'trial_ends_at': trialEnd,
-          'max_branches': 2,
-          'max_staff': 5,
-          'max_members': 100,
-          'address': _orgAddressCtrl.text.trim(),
-          'city': _orgCityCtrl.text.trim(),
-          'state': _orgStateCtrl.text.trim(),
-          'pincode': _orgPincodeCtrl.text.trim(),
-          'gst_number': _orgGstCtrl.text.trim().isNotEmpty ? _orgGstCtrl.text.trim() : null,
-          'phone': _orgPhoneCtrl.text.trim(),
-          'email': _orgEmailCtrl.text.trim(),
-          'brand_color': '#1976D2', // Default brand color
-          'created_by': authUser?.id,
-        }).select('id').single();
+        final orgResponse = await client
+            .from('organizations')
+            .insert({
+              'name': orgName,
+              'display_name': _orgDisplayNameCtrl.text.trim(),
+              'slug': slug,
+              'status': 'trial',
+              'trial_ends_at': trialEnd,
+              'max_branches': 2,
+              'max_staff': 5,
+              'max_members': 100,
+              'address': _orgAddressCtrl.text.trim(),
+              'city': _orgCityCtrl.text.trim(),
+              'state': _orgStateCtrl.text.trim(),
+              'pincode': _orgPincodeCtrl.text.trim(),
+              'gst_number': _orgGstCtrl.text.trim().isNotEmpty
+                  ? _orgGstCtrl.text.trim()
+                  : null,
+              'phone': _orgPhoneCtrl.text.trim(),
+              'email': _orgEmailCtrl.text.trim(),
+              'brand_color': '#1976D2', // Default brand color
+              'created_by': authUser?.id,
+            })
+            .select('id')
+            .single();
         orgId = orgResponse['id'].toString();
 
         // Update user profile
@@ -246,7 +255,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           'city': _orgCityCtrl.text.trim(),
           'state': _orgStateCtrl.text.trim(),
           'pincode': _orgPincodeCtrl.text.trim(),
-          'gst_number': _orgGstCtrl.text.trim().isNotEmpty ? _orgGstCtrl.text.trim() : null,
+          'gst_number': _orgGstCtrl.text.trim().isNotEmpty
+              ? _orgGstCtrl.text.trim()
+              : null,
           'phone': _orgPhoneCtrl.text.trim(),
           'email': _orgEmailCtrl.text.trim(),
         }).eq('id', orgId);
@@ -255,19 +266,22 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       // Upload logo if selected
       if (_orgLogoBytes != null) {
         final isPng = _orgLogoBytes!.length > 4 &&
-            _orgLogoBytes![0] == 0x89 && _orgLogoBytes![1] == 0x50 &&
-            _orgLogoBytes![2] == 0x4E && _orgLogoBytes![3] == 0x47;
+            _orgLogoBytes![0] == 0x89 &&
+            _orgLogoBytes![1] == 0x50 &&
+            _orgLogoBytes![2] == 0x4E &&
+            _orgLogoBytes![3] == 0x47;
         final ext = isPng ? 'png' : 'jpg';
         final mime = isPng ? 'image/png' : 'image/jpeg';
         final logoFileName = 'org_$orgId/logo.$ext';
 
         await client.storage.from('brand-assets').uploadBinary(
-          logoFileName,
-          _orgLogoBytes!,
-          fileOptions: FileOptions(contentType: mime, upsert: true),
-        );
+              logoFileName,
+              _orgLogoBytes!,
+              fileOptions: FileOptions(contentType: mime, upsert: true),
+            );
 
-        final logoUrl = client.storage.from('brand-assets').getPublicUrl(logoFileName);
+        final logoUrl =
+            client.storage.from('brand-assets').getPublicUrl(logoFileName);
         await client.from('organizations').update({
           'logo_url': logoUrl,
         }).eq('id', orgId);
@@ -314,7 +328,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       final code = _branchCodeCtrl.text.trim().toUpperCase();
 
       // Check if branch with this code already exists (from a partial run)
-      final existing = await client.from('branches')
+      final existing = await client
+          .from('branches')
           .select('id, name')
           .eq('org_id', orgId)
           .eq('code', code)
@@ -325,20 +340,24 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         _createdBranchId = existing['id'].toString();
         branchName = existing['name'] as String;
       } else {
-        final res = await client.from('branches').insert({
-          'org_id': orgId,
-          'name': _branchNameCtrl.text.trim(),
-          'code': code,
-          'city': _branchZoneCtrl.text.trim(),
-          'state': _branchDistrictCtrl.text.trim(),
-          'address': _branchAddressCtrl.text.trim(),
-          'status': 'active',
-        }).select('id, name').single();
-        
+        final res = await client
+            .from('branches')
+            .insert({
+              'org_id': orgId,
+              'name': _branchNameCtrl.text.trim(),
+              'code': code,
+              'city': _branchZoneCtrl.text.trim(),
+              'state': _branchDistrictCtrl.text.trim(),
+              'address': _branchAddressCtrl.text.trim(),
+              'status': 'active',
+            })
+            .select('id, name')
+            .single();
+
         _createdBranchId = res['id'].toString();
         branchName = res['name'] as String;
       }
-      
+
       // Add to branches list for selection
       if (!mounted) return;
       setState(() {
@@ -349,7 +368,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         _selectedAgentBranchId = _createdBranchId;
         _selectedCustomerBranchId = _createdBranchId;
       });
-      
+
       await _saveStep(2);
       if (!mounted) return;
       setState(() => _currentStep = 2);
@@ -389,7 +408,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       if (orgId == null) throw Exception('Organization not found');
 
       // Check if manager already exists (reuse on retry)
-      final existing = await client.from('profiles')
+      final existing = await client
+          .from('profiles')
           .select('id')
           .eq('org_id', orgId)
           .eq('role', 'manager')
@@ -402,21 +422,32 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         return;
       }
 
-      final managerCode = 'BM${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10)}';
-      
-      final res = await client.from('profiles').insert({
-        'org_id': orgId,
-        'full_name': _managerNameCtrl.text.trim(),
-        'phone': _managerPhoneCtrl.text.trim(),
-        'email': _managerEmailCtrl.text.trim().isNotEmpty ? _managerEmailCtrl.text.trim() : null,
-        'role': 'manager',
-        'branch_id': _selectedManagerBranchId,
-        'status': 'active',
-        'staff_code': managerCode,
-        'employee_id': _managerEmployeeIdCtrl.text.trim().isNotEmpty ? _managerEmployeeIdCtrl.text.trim() : null,
-        'assigned_zone': _managerZoneCtrl.text.trim().isNotEmpty ? _managerZoneCtrl.text.trim() : null,
-      }).select('id').single();
-      
+      final managerCode =
+          'BM${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10)}';
+
+      final res = await client
+          .from('profiles')
+          .insert({
+            'org_id': orgId,
+            'full_name': _managerNameCtrl.text.trim(),
+            'phone': _managerPhoneCtrl.text.trim(),
+            'email': _managerEmailCtrl.text.trim().isNotEmpty
+                ? _managerEmailCtrl.text.trim()
+                : null,
+            'role': 'manager',
+            'branch_id': _selectedManagerBranchId,
+            'status': 'active',
+            'staff_code': managerCode,
+            'employee_id': _managerEmployeeIdCtrl.text.trim().isNotEmpty
+                ? _managerEmployeeIdCtrl.text.trim()
+                : null,
+            'assigned_zone': _managerZoneCtrl.text.trim().isNotEmpty
+                ? _managerZoneCtrl.text.trim()
+                : null,
+          })
+          .select('id')
+          .single();
+
       _createdBranchManagerId = res['id'].toString();
       await _saveStep(3);
       if (!mounted) return;
@@ -457,7 +488,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       if (orgId == null) throw Exception('Organization not found');
 
       // Check if agent already exists (reuse on retry)
-      final existing = await client.from('profiles')
+      final existing = await client
+          .from('profiles')
           .select('id')
           .eq('org_id', orgId)
           .eq('role', 'collectionAgent')
@@ -470,21 +502,32 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         return;
       }
 
-      final agentCode = 'CA${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10)}';
-      
-      final res = await client.from('profiles').insert({
-        'org_id': orgId,
-        'full_name': _agentNameCtrl.text.trim(),
-        'phone': _agentPhoneCtrl.text.trim(),
-        'email': _agentEmailCtrl.text.trim().isNotEmpty ? _agentEmailCtrl.text.trim() : null,
-        'role': 'collectionAgent',
-        'branch_id': _selectedAgentBranchId,
-        'status': 'active',
-        'staff_code': agentCode,
-        'employee_id': _agentEmployeeIdCtrl.text.trim().isNotEmpty ? _agentEmployeeIdCtrl.text.trim() : null,
-        'assigned_zone': _agentZoneCtrl.text.trim().isNotEmpty ? _agentZoneCtrl.text.trim() : null,
-      }).select('id').single();
-      
+      final agentCode =
+          'CA${DateTime.now().millisecondsSinceEpoch.toString().substring(5, 10)}';
+
+      final res = await client
+          .from('profiles')
+          .insert({
+            'org_id': orgId,
+            'full_name': _agentNameCtrl.text.trim(),
+            'phone': _agentPhoneCtrl.text.trim(),
+            'email': _agentEmailCtrl.text.trim().isNotEmpty
+                ? _agentEmailCtrl.text.trim()
+                : null,
+            'role': 'collectionAgent',
+            'branch_id': _selectedAgentBranchId,
+            'status': 'active',
+            'staff_code': agentCode,
+            'employee_id': _agentEmployeeIdCtrl.text.trim().isNotEmpty
+                ? _agentEmployeeIdCtrl.text.trim()
+                : null,
+            'assigned_zone': _agentZoneCtrl.text.trim().isNotEmpty
+                ? _agentZoneCtrl.text.trim()
+                : null,
+          })
+          .select('id')
+          .single();
+
       _createdCollectionAgentId = res['id'].toString();
       await _saveStep(4);
       if (!mounted) return;
@@ -525,7 +568,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       if (orgId == null) throw Exception('Organization not found');
 
       // Check if customer already exists (reuse on retry)
-      final existing = await client.from('members')
+      final existing = await client
+          .from('members')
           .select('id')
           .eq('org_id', orgId)
           .eq('full_name', _customerNameCtrl.text.trim())
@@ -538,20 +582,29 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         return;
       }
 
-      final customerId = 'C${DateTime.now().millisecondsSinceEpoch.toString().substring(4, 10)}';
-      
-      final res = await client.from('members').insert({
-        'org_id': orgId,
-        'full_name': _customerNameCtrl.text.trim(),
-        'phone': _customerPhoneCtrl.text.trim(),
-        'member_id': customerId,
-        'branch_id': _selectedCustomerBranchId,
-        'kyc_status': 'pending',
-        'status': 'active',
-        'pan': _customerPanCtrl.text.trim().isNotEmpty ? _customerPanCtrl.text.trim().toUpperCase() : null,
-        'aadhar': _customerAadharCtrl.text.trim().isNotEmpty ? _customerAadharCtrl.text.trim() : null,
-      }).select('id').single();
-      
+      final customerId =
+          'C${DateTime.now().millisecondsSinceEpoch.toString().substring(4, 10)}';
+
+      final res = await client
+          .from('members')
+          .insert({
+            'org_id': orgId,
+            'full_name': _customerNameCtrl.text.trim(),
+            'phone': _customerPhoneCtrl.text.trim(),
+            'member_id': customerId,
+            'branch_id': _selectedCustomerBranchId,
+            'kyc_status': 'pending',
+            'status': 'active',
+            'pan': _customerPanCtrl.text.trim().isNotEmpty
+                ? _customerPanCtrl.text.trim().toUpperCase()
+                : null,
+            'aadhar': _customerAadharCtrl.text.trim().isNotEmpty
+                ? _customerAadharCtrl.text.trim()
+                : null,
+          })
+          .select('id')
+          .single();
+
       _createdCustomerId = res['id'].toString();
       await _saveStep(5);
       if (!mounted) return;
@@ -587,24 +640,31 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       setState(() => _orgLogoBytes = compressed);
       final originalKb = (rawBytes.length / 1024).toStringAsFixed(1);
       final compressedKb = (compressed.length / 1024).toStringAsFixed(1);
-      final pct = rawBytes.isNotEmpty ? ((1 - compressed.length / rawBytes.length) * 100).toStringAsFixed(0) : '0';
+      final pct = rawBytes.isNotEmpty
+          ? ((1 - compressed.length / rawBytes.length) * 100).toStringAsFixed(0)
+          : '0';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$originalKb KB → $compressedKb KB ($pct% reduction)'), backgroundColor: Colors.green, duration: const Duration(seconds: 2)),
+        SnackBar(
+            content:
+                Text('$originalKb KB → $compressedKb KB ($pct% reduction)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2)),
       );
     }
   }
 
   Future<Uint8List> _compressLogo(Uint8List raw) async {
     try {
-      final codec = await ui.instantiateImageCodec(raw, targetWidth: 256, targetHeight: 256);
+      final codec = await ui.instantiateImageCodec(raw,
+          targetWidth: 256, targetHeight: 256);
       final frame = await codec.getNextFrame();
       final resized = frame.image;
 
       final pngData = await resized.toByteData(format: ui.ImageByteFormat.png);
-      
+
       resized.dispose();
       codec.dispose();
-      
+
       return pngData?.buffer.asUint8List() ?? raw;
     } catch (_) {
       return raw;
@@ -663,7 +723,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                      Icon(Icons.error_outline,
+                          color: Colors.red.shade700, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -705,7 +766,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           children: List.generate(total, (i) {
             final isActive = i == _currentStep;
             final isDone = i < _currentStep;
-            
+
             return Expanded(
               child: Row(
                 children: [
@@ -720,17 +781,22 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                               ? theme.colorScheme.primary
                               : theme.colorScheme.surfaceContainerHighest,
                       border: Border.all(
-                        color: isActive ? theme.colorScheme.primary : Colors.transparent,
+                        color: isActive
+                            ? theme.colorScheme.primary
+                            : Colors.transparent,
                         width: 2,
                       ),
                     ),
                     child: Center(
                       child: isDone
-                          ? const Icon(Icons.check, size: 18, color: Colors.white)
+                          ? const Icon(Icons.check,
+                              size: 18, color: Colors.white)
                           : Text(
                               '${i + 1}',
                               style: TextStyle(
-                                color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                                color: isActive
+                                    ? theme.colorScheme.onPrimary
+                                    : theme.colorScheme.onSurfaceVariant,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -742,8 +808,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                       child: Container(
                         height: 3,
                         decoration: BoxDecoration(
-                          color: i < _currentStep 
-                              ? Colors.green 
+                          color: i < _currentStep
+                              ? Colors.green
                               : theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(2),
                         ),
@@ -761,7 +827,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           children: List.generate(total, (i) {
             final isActive = i == _currentStep;
             final isSkippable = !mandatorySteps[i];
-            
+
             return Expanded(
               child: Column(
                 children: [
@@ -880,9 +946,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                         ),
                 ),
               ).animate().scale(
-                begin: const Offset(0.8, 0.8),
-                duration: 400.ms,
-              ),
+                    begin: const Offset(0.8, 0.8),
+                    duration: 400.ms,
+                  ),
               const SizedBox(height: 8),
               Text(
                 'Brand Logo (will change app icon)',
@@ -1065,15 +1131,15 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               ),
             ),
             const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _branchZoneCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'City',
-                    hintText: 'Mumbai',
-                  ),
+            Expanded(
+              child: TextField(
+                controller: _branchZoneCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  hintText: 'Mumbai',
                 ),
               ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -1500,10 +1566,10 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
             size: 60,
           ),
         ).animate().scale(
-          begin: const Offset(0.5, 0.5),
-          duration: 400.ms,
-          curve: Curves.elasticOut,
-        ),
+              begin: const Offset(0.5, 0.5),
+              duration: 400.ms,
+              curve: Curves.elasticOut,
+            ),
         const SizedBox(height: 24),
         Text(
           'Setup Complete!',
@@ -1529,10 +1595,14 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           child: Column(
             children: [
               if (_logoChanged) _doneItem(Icons.image, 'Brand logo updated'),
-              if (_createdBranchId != null) _doneItem(Icons.business, 'Branch created'),
-              if (_createdBranchManagerId != null) _doneItem(Icons.person, 'Branch manager added'),
-              if (_createdCollectionAgentId != null) _doneItem(Icons.badge, 'Collection agent added'),
-              if (_createdCustomerId != null) _doneItem(Icons.people, 'Customer onboarded'),
+              if (_createdBranchId != null)
+                _doneItem(Icons.business, 'Branch created'),
+              if (_createdBranchManagerId != null)
+                _doneItem(Icons.person, 'Branch manager added'),
+              if (_createdCollectionAgentId != null)
+                _doneItem(Icons.badge, 'Collection agent added'),
+              if (_createdCustomerId != null)
+                _doneItem(Icons.people, 'Customer onboarded'),
             ],
           ),
         ).animate().fadeIn(delay: 400.ms),
@@ -1588,10 +1658,12 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: _isLoading ? null : () {
-              HapticService.medium();
-              onPressed();
-            },
+            onPressed: _isLoading
+                ? null
+                : () {
+                    HapticService.medium();
+                    onPressed();
+                  },
             child: _isLoading
                 ? const SizedBox(
                     width: 20,
@@ -1615,4 +1687,3 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     );
   }
 }
-

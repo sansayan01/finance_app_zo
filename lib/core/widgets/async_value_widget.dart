@@ -36,7 +36,8 @@ class AsyncValueSliver<T> extends StatelessWidget {
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 32),
+                        const Icon(Icons.error_outline,
+                            color: Colors.red, size: 32),
                         const SizedBox(height: 8),
                         Text('Error: $e'),
                       ],

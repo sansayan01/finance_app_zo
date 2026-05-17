@@ -65,8 +65,7 @@ class ApiRepository {
     try {
       await _client
           .from('api_keys')
-          .update({'is_active': false})
-          .eq('id', keyId);
+          .update({'is_active': false}).eq('id', keyId);
       return true;
     } catch (e) {
       return false;
@@ -138,10 +137,7 @@ class ApiRepository {
       if (events != null) updates['events'] = events;
       if (isActive != null) updates['is_active'] = isActive;
 
-      await _client
-          .from('webhooks')
-          .update(updates)
-          .eq('id', webhookId);
+      await _client.from('webhooks').update(updates).eq('id', webhookId);
       return true;
     } catch (e) {
       return false;
@@ -177,10 +173,8 @@ class ApiRepository {
 
   /// Get all integrations for org
   Future<List<IntegrationModel>> getIntegrations(String orgId) async {
-    final response = await _client
-        .from('integrations')
-        .select()
-        .eq('org_id', orgId);
+    final response =
+        await _client.from('integrations').select().eq('org_id', orgId);
 
     return response
         .map<IntegrationModel>((json) => IntegrationModel.fromJson(json))

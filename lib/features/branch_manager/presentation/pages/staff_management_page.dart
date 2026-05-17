@@ -10,9 +10,8 @@ class StaffManagementPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final branchId = ref.watch(currentUserBranchIdProvider);
-    final staffAsync = branchId != null
-        ? ref.watch(branchStaffProvider(branchId))
-        : null;
+    final staffAsync =
+        branchId != null ? ref.watch(branchStaffProvider(branchId)) : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +35,9 @@ class StaffManagementPage extends ConsumerWidget {
                         final member = staff[index];
                         return _buildStaffCard(context, ref, member)
                             .animate()
-                            .fadeIn(duration: 300.ms, delay: Duration(milliseconds: index * 50))
+                            .fadeIn(
+                                duration: 300.ms,
+                                delay: Duration(milliseconds: index * 50))
                             .slideX(begin: 0.1, end: 0);
                       },
                     ),
@@ -53,10 +54,15 @@ class StaffManagementPage extends ConsumerWidget {
 
   Widget _buildStaffCard(BuildContext context, WidgetRef ref, dynamic staff) {
     final theme = Theme.of(context);
-    final roleDisplay = staff.role.toString().split('.').last.replaceAllMapped(
-      RegExp(r'[A-Z]'),
-      (match) => ' ${match.group(0)}',
-    ).trim();
+    final roleDisplay = staff.role
+        .toString()
+        .split('.')
+        .last
+        .replaceAllMapped(
+          RegExp(r'[A-Z]'),
+          (match) => ' ${match.group(0)}',
+        )
+        .trim();
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -80,7 +86,8 @@ class StaffManagementPage extends ConsumerWidget {
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'view', child: Text('View Details')),
-            const PopupMenuItem(value: 'performance', child: Text('Performance')),
+            const PopupMenuItem(
+                value: 'performance', child: Text('Performance')),
             const PopupMenuItem(value: 'areas', child: Text('Assign Areas')),
             const PopupMenuItem(value: 'deactivate', child: Text('Deactivate')),
           ],

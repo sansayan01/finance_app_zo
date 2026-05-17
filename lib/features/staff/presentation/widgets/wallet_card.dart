@@ -136,10 +136,12 @@ class WalletCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: isLoading ? null : () {
-                        HapticFeedback.mediumImpact();
-                        onDeposit?.call();
-                      },
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              HapticFeedback.mediumImpact();
+                              onDeposit?.call();
+                            },
                       icon: isLoading
                           ? const SizedBox(
                               width: 16,

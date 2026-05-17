@@ -16,7 +16,9 @@ final platformMetricsProvider = FutureProvider<PlatformMetrics>((ref) async {
 });
 
 /// All Organizations Provider
-final allOrganizationsProvider = FutureProvider.family<List<Map<String, dynamic>>, Map<String, dynamic>>((ref, params) async {
+final allOrganizationsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
+        (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAllOrganizations(
     limit: params['limit'] ?? 50,
@@ -27,19 +29,23 @@ final allOrganizationsProvider = FutureProvider.family<List<Map<String, dynamic>
 });
 
 /// Organization Details Provider
-final organizationDetailsProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, orgId) async {
+final organizationDetailsProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>((ref, orgId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getOrganizationById(orgId);
 });
 
 /// Organization Health Provider
-final organizationHealthProvider = FutureProvider.family<OrganizationHealthScore?, String>((ref, orgId) async {
+final organizationHealthProvider =
+    FutureProvider.family<OrganizationHealthScore?, String>((ref, orgId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getOrganizationHealth(orgId);
 });
 
 /// All Users Provider
-final allUsersProvider = FutureProvider.family<List<Map<String, dynamic>>, Map<String, dynamic>>((ref, params) async {
+final allUsersProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
+        (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAllUsers(
     limit: params['limit'] ?? 50,
@@ -50,7 +56,9 @@ final allUsersProvider = FutureProvider.family<List<Map<String, dynamic>>, Map<S
 });
 
 /// User Activity Log Provider
-final userActivityLogProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, userId) async {
+final userActivityLogProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, userId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getUserActivityLog(userId);
 });
@@ -62,13 +70,16 @@ final featureFlagsProvider = FutureProvider<List<FeatureFlag>>((ref) async {
 });
 
 /// Platform Announcements Provider
-final platformAnnouncementsProvider = FutureProvider<List<PlatformAnnouncement>>((ref) async {
+final platformAnnouncementsProvider =
+    FutureProvider<List<PlatformAnnouncement>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAnnouncements();
 });
 
 /// Audit Logs Provider
-final auditLogsProvider = FutureProvider.family<List<SystemAuditLog>, Map<String, dynamic>>((ref, params) async {
+final auditLogsProvider =
+    FutureProvider.family<List<SystemAuditLog>, Map<String, dynamic>>(
+        (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAuditLogs(
     limit: params['limit'] ?? 100,
@@ -79,7 +90,9 @@ final auditLogsProvider = FutureProvider.family<List<SystemAuditLog>, Map<String
 });
 
 /// Support Tickets Provider
-final supportTicketsProvider = FutureProvider.family<List<SupportTicket>, Map<String, dynamic>>((ref, params) async {
+final supportTicketsProvider =
+    FutureProvider.family<List<SupportTicket>, Map<String, dynamic>>(
+        (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getSupportTickets(
     status: params['status'],
@@ -89,25 +102,29 @@ final supportTicketsProvider = FutureProvider.family<List<SupportTicket>, Map<St
 });
 
 /// Maintenance Windows Provider
-final maintenanceWindowsProvider = FutureProvider<List<MaintenanceWindow>>((ref) async {
+final maintenanceWindowsProvider =
+    FutureProvider<List<MaintenanceWindow>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getMaintenanceWindows();
 });
 
 /// Platform Revenue Provider
-final platformRevenueProvider = FutureProvider<List<PlatformRevenue>>((ref) async {
+final platformRevenueProvider =
+    FutureProvider<List<PlatformRevenue>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getRevenue();
 });
 
 /// Revenue Summary Provider
-final revenueSummaryProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final revenueSummaryProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getRevenueSummary();
 });
 
 /// Platform Settings Provider
-final platformSettingsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final platformSettingsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getPlatformSettings();
 });
@@ -119,13 +136,15 @@ final apiUsageStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 });
 
 /// Error Logs Provider
-final errorLogsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final errorLogsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getErrorLogs();
 });
 
 /// Activity Feed Provider
-final activityFeedProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final activityFeedProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getActivityFeed();
 });
@@ -135,7 +154,8 @@ class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final SuperAdminRepository _repository;
   final Ref _ref;
 
-  SuperAdminActionsNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  SuperAdminActionsNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
   /// Update organization status
   Future<bool> updateOrganizationStatus(String orgId, String status) async {
@@ -308,10 +328,12 @@ class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   /// Update ticket status
-  Future<bool> updateTicketStatus(String ticketId, String status, {String? assignedTo}) async {
+  Future<bool> updateTicketStatus(String ticketId, String status,
+      {String? assignedTo}) async {
     state = const AsyncValue.loading();
     try {
-      final success = await _repository.updateTicketStatus(ticketId, status, assignedTo: assignedTo);
+      final success = await _repository.updateTicketStatus(ticketId, status,
+          assignedTo: assignedTo);
       if (success) {
         _ref.invalidate(supportTicketsProvider);
       }
@@ -385,8 +407,8 @@ class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 /// Super Admin Actions Provider
-final superAdminActionsProvider = StateNotifierProvider<SuperAdminActionsNotifier, AsyncValue<void>>((ref) {
+final superAdminActionsProvider =
+    StateNotifierProvider<SuperAdminActionsNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(superAdminRepositoryProvider);
   return SuperAdminActionsNotifier(repository, ref);
 });
-

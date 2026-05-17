@@ -11,27 +11,27 @@ class BranchManagerRepository {
 
   /// Get branch statistics
   Future<BranchStats> getBranchStats(String branchId) async {
-    final response = await _client.rpc('get_branch_stats', params: {'p_branch_id': branchId});
+    final response = await _client
+        .rpc('get_branch_stats', params: {'p_branch_id': branchId});
     return BranchStats.fromJson(response);
   }
 
   /// Get branch staff
   Future<List<ProfileModel>> getBranchStaff(String branchId) async {
-    final response = await _client
-        .from('staff_profiles')
-        .select('''
+    final response = await _client.from('staff_profiles').select('''
           *,
           branch:branches!fk_sp_branch(name, id)
-        ''')
-        .eq('branch_id', branchId)
-        .order('full_name');
+        ''').eq('branch_id', branchId).order('full_name');
 
     final List<dynamic> list = response as List<dynamic>;
-    return list.map((item) => ProfileModel.fromJson(item as Map<String, dynamic>)).toList();
+    return list
+        .map((item) => ProfileModel.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get branch collections
-  Future<List<Map<String, dynamic>>> getBranchCollections(String branchId, {DateTime? date}) async {
+  Future<List<Map<String, dynamic>>> getBranchCollections(String branchId,
+      {DateTime? date}) async {
     date ??= DateTime.now();
     final dateStr = date.toIso8601String().split('T').first;
 
@@ -53,7 +53,8 @@ class BranchManagerRepository {
   }
 
   /// Get pending approvals
-  Future<List<Map<String, dynamic>>> getPendingApprovals(String branchId) async {
+  Future<List<Map<String, dynamic>>> getPendingApprovals(
+      String branchId) async {
     final response = await _client
         .from('pending_approvals')
         .select('''
@@ -69,10 +70,9 @@ class BranchManagerRepository {
   }
 
   /// Get branch overdue loans
-  Future<List<Map<String, dynamic>>> getBranchOverdueLoans(String branchId) async {
-    final response = await _client
-        .from('loans')
-        .select('''
+  Future<List<Map<String, dynamic>>> getBranchOverdueLoans(
+      String branchId) async {
+    final response = await _client.from('loans').select('''
           *,
           member:members(full_name, id, phone, address),
           emi_schedule(
@@ -81,15 +81,14 @@ class BranchManagerRepository {
             emi_amount,
             status
           )
-        ''')
-        .eq('branch_id', branchId)
-        .eq('status', 'active');
+        ''').eq('branch_id', branchId).eq('status', 'active');
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   /// Approve pending request
-  Future<void> approveRequest(String requestId, String managerId, {String? notes}) async {
+  Future<void> approveRequest(String requestId, String managerId,
+      {String? notes}) async {
     await _client.from('pending_approvals').update({
       'status': 'approved',
       'approved_by': managerId,
@@ -99,7 +98,8 @@ class BranchManagerRepository {
   }
 
   /// Reject pending request
-  Future<void> rejectRequest(String requestId, String managerId, String reason) async {
+  Future<void> rejectRequest(
+      String requestId, String managerId, String reason) async {
     await _client.from('pending_approvals').update({
       'status': 'rejected',
       'rejected_by': managerId,
@@ -109,18 +109,22 @@ class BranchManagerRepository {
   }
 
   /// Get staff performance
-  Future<List<Map<String, dynamic>>> getStaffPerformance(String branchId, {DateTime? startDate, DateTime? endDate}) async {
+  Future<List<Map<String, dynamic>>> getStaffPerformance(String branchId,
+      {DateTime? startDate, DateTime? endDate}) async {
     final response = await _client.rpc('get_branch_staff_performance', params: {
       'p_branch_id': branchId,
-      'p_start_date': startDate?.toIso8601String() ?? DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
-      'p_end_date': endDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      'p_start_date': startDate?.toIso8601String() ??
+          DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+      'p_end_date':
+          endDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
     });
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   /// Get branch daily summary
-  Future<Map<String, dynamic>> getBranchDailySummary(String branchId, DateTime date) async {
+  Future<Map<String, dynamic>> getBranchDailySummary(
+      String branchId, DateTime date) async {
     final response = await _client.rpc('get_branch_daily_summary', params: {
       'p_branch_id': branchId,
       'p_date': date.toIso8601String(),
@@ -130,7 +134,8 @@ class BranchManagerRepository {
   }
 
   /// Assign collection agent to area
-  Future<void> assignAgentToArea(String agentId, String areaId, String branchId) async {
+  Future<void> assignAgentToArea(
+      String agentId, String areaId, String branchId) async {
     await _client.from('agent_areas').upsert({
       'agent_id': agentId,
       'area_id': areaId,
@@ -140,7 +145,8 @@ class BranchManagerRepository {
   }
 
   /// Get branch targets
-  Future<Map<String, dynamic>> getBranchTargets(String branchId, {int? month, int? year}) async {
+  Future<Map<String, dynamic>> getBranchTargets(String branchId,
+      {int? month, int? year}) async {
     final now = DateTime.now();
     final targetMonth = month ?? now.month;
     final targetYear = year ?? now.year;
@@ -153,19 +159,21 @@ class BranchManagerRepository {
         .eq('year', targetYear)
         .maybeSingle();
 
-    return response ?? {
-      'branch_id': branchId,
-      'month': targetMonth,
-      'year': targetYear,
-      'collection_target': 0,
-      'new_members_target': 0,
-      'loans_disbursed_target': 0,
-      'savings_target': 0,
-    };
+    return response ??
+        {
+          'branch_id': branchId,
+          'month': targetMonth,
+          'year': targetYear,
+          'collection_target': 0,
+          'new_members_target': 0,
+          'loans_disbursed_target': 0,
+          'savings_target': 0,
+        };
   }
 
   /// Update branch targets
-  Future<void> updateBranchTargets(String branchId, int month, int year, Map<String, double> targets) async {
+  Future<void> updateBranchTargets(
+      String branchId, int month, int year, Map<String, double> targets) async {
     await _client.from('branch_targets').upsert({
       'branch_id': branchId,
       'month': month,

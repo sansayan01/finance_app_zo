@@ -75,7 +75,8 @@ class BranchManagerDashboard extends ConsumerWidget {
                   const SizedBox(height: 16),
 
                   // Collection Progress
-                  _buildCollectionProgressCard(theme, stats, targets, currencyFormat),
+                  _buildCollectionProgressCard(
+                      theme, stats, targets, currencyFormat),
                   const SizedBox(height: 16),
 
                   // Staff Performance
@@ -161,7 +162,8 @@ class BranchManagerDashboard extends ConsumerWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: stats.isActive ? Colors.green : Colors.red,
                     borderRadius: BorderRadius.circular(20),
@@ -179,7 +181,8 @@ class BranchManagerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms);
   }
 
-  Widget _buildPendingApprovalsCard(BuildContext context, ThemeData theme, int count) {
+  Widget _buildPendingApprovalsCard(
+      BuildContext context, ThemeData theme, int count) {
     return Card(
       color: theme.colorScheme.errorContainer,
       child: InkWell(
@@ -209,7 +212,8 @@ class BranchManagerDashboard extends ConsumerWidget {
                     Text(
                       '$count requests awaiting your review',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onErrorContainer.withValues(alpha: 0.8),
+                        color: theme.colorScheme.onErrorContainer
+                            .withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -226,7 +230,8 @@ class BranchManagerDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildDailySummaryCard(ThemeData theme, Map<String, dynamic> summary, NumberFormat currencyFormat) {
+  Widget _buildDailySummaryCard(ThemeData theme, Map<String, dynamic> summary,
+      NumberFormat currencyFormat) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -282,7 +287,8 @@ class BranchManagerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 100.ms);
   }
 
-  Widget _buildSummaryItem(ThemeData theme, IconData icon, String label, String value, Color color) {
+  Widget _buildSummaryItem(
+      ThemeData theme, IconData icon, String label, String value, Color color) {
     return Column(
       children: [
         Container(
@@ -310,9 +316,11 @@ class BranchManagerDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildCollectionProgressCard(ThemeData theme, BranchStats stats, Map<String, dynamic> targets, NumberFormat currencyFormat) {
+  Widget _buildCollectionProgressCard(ThemeData theme, BranchStats stats,
+      Map<String, dynamic> targets, NumberFormat currencyFormat) {
     final collectionTarget = (targets['collection_target'] ?? 0) as num;
-    final progress = collectionTarget > 0 ? stats.totalCollections / collectionTarget : 0.0;
+    final progress =
+        collectionTarget > 0 ? stats.totalCollections / collectionTarget : 0.0;
 
     return Card(
       elevation: 0,
@@ -338,7 +346,9 @@ class BranchManagerDashboard extends ConsumerWidget {
                   '${(progress * 100).toStringAsFixed(1)}%',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: progress >= 1 ? Colors.green : theme.colorScheme.primary,
+                    color: progress >= 1
+                        ? Colors.green
+                        : theme.colorScheme.primary,
                   ),
                 ),
               ],
@@ -377,7 +387,8 @@ class BranchManagerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
 
-  Widget _buildStaffPerformanceCard(BuildContext context, ThemeData theme, String branchId, BranchStats stats) {
+  Widget _buildStaffPerformanceCard(BuildContext context, ThemeData theme,
+      String branchId, BranchStats stats) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -410,9 +421,11 @@ class BranchManagerDashboard extends ConsumerWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _buildStaffStat(theme, Icons.person_outline, '${stats.totalStaff}', 'Active Staff'),
+                  _buildStaffStat(theme, Icons.person_outline,
+                      '${stats.totalStaff}', 'Active Staff'),
                   const SizedBox(width: 24),
-                  _buildStaffStat(theme, Icons.trending_up, '85%', 'Avg. Efficiency'),
+                  _buildStaffStat(
+                      theme, Icons.trending_up, '85%', 'Avg. Efficiency'),
                 ],
               ),
             ],
@@ -422,7 +435,8 @@ class BranchManagerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
   }
 
-  Widget _buildStaffStat(ThemeData theme, IconData icon, String value, String label) {
+  Widget _buildStaffStat(
+      ThemeData theme, IconData icon, String value, String label) {
     return Row(
       children: [
         Icon(icon, color: theme.colorScheme.primary),
@@ -448,7 +462,8 @@ class BranchManagerDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildOverdueAlertCard(BuildContext context, ThemeData theme, BranchStats stats) {
+  Widget _buildOverdueAlertCard(
+      BuildContext context, ThemeData theme, BranchStats stats) {
     return Card(
       color: Colors.orange.withValues(alpha: 0.1),
       child: InkWell(
@@ -542,7 +557,8 @@ class BranchManagerDashboard extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms, delay: 400.ms);
   }
 
-  Widget _buildQuickActionChip(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+  Widget _buildQuickActionChip(
+      BuildContext context, IconData icon, String label, VoidCallback onTap) {
     final theme = Theme.of(context);
     return ActionChip(
       avatar: Icon(icon, size: 18),

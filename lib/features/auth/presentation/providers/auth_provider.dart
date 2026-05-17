@@ -7,7 +7,8 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../../settings/data/providers/activity_log_repository_provider.dart';
 
-final Provider<AuthRepository?> authRepositoryProvider = Provider<AuthRepository?>((ref) {
+final Provider<AuthRepository?> authRepositoryProvider =
+    Provider<AuthRepository?>((ref) {
   try {
     final client = Supabase.instance.client;
     final logRepo = ref.read(activityLogRepositoryProvider);

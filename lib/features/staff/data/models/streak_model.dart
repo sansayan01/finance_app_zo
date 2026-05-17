@@ -3,20 +3,20 @@ import 'package:equatable/equatable.dart';
 class StreakModel extends Equatable {
   final String id;
   final String staffId;
-  
+
   // Streak data
   final int currentStreak;
   final int longestStreak;
   final DateTime? lastCollectionDate;
-  
+
   // Achievements
   final int totalCollections;
   final double totalAmountCollected;
   final int perfectDays;
-  
+
   // Badges
   final List<String> badges;
-  
+
   // Timestamps
   final DateTime updatedAt;
   final DateTime createdAt;
@@ -63,7 +63,8 @@ class StreakModel extends Equatable {
       'staff_id': staffId,
       'current_streak': currentStreak,
       'longest_streak': longestStreak,
-      'last_collection_date': lastCollectionDate?.toIso8601String().split('T').first,
+      'last_collection_date':
+          lastCollectionDate?.toIso8601String().split('T').first,
       'total_collections': totalCollections,
       'total_amount_collected': totalAmountCollected,
       'perfect_days': perfectDays,
@@ -75,7 +76,7 @@ class StreakModel extends Equatable {
 
   bool get hasActiveStreak => currentStreak > 0;
   bool get isNewRecord => currentStreak >= longestStreak && currentStreak > 0;
-  
+
   String get streakEmoji {
     if (currentStreak >= 30) return '🔥🔥🔥';
     if (currentStreak >= 14) return '🔥🔥';

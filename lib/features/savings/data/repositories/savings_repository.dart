@@ -84,6 +84,11 @@ class SavingsRepository {
         createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
             DateTime.now(),
         status: json['status']?.toString() ?? 'active',
+        collectionType: json['collection_type']?.toString() ?? 'monthly',
+        prematurePenalty:
+            (json['premature_penalty'] as num?)?.toDouble() ?? 2.0,
+        totalInstallments: (json['total_installments'] as num?)?.toInt() ?? 12,
+        maturityAmount: (json['maturity_amount'] as num?)?.toDouble() ?? 0.0,
       );
     }).toList();
   }

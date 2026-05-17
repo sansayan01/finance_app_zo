@@ -43,9 +43,11 @@ class BranchStats extends Equatable {
       activeLoansCount: (json['active_loans_count'] as num?)?.toInt() ?? 0,
       overdueLoans: (json['overdue_loans'] as num?)?.toInt() ?? 0,
       totalCollections: (json['total_collections'] as num?)?.toDouble() ?? 0.0,
-      totalDisbursements: (json['total_disbursements'] as num?)?.toDouble() ?? 0.0,
+      totalDisbursements:
+          (json['total_disbursements'] as num?)?.toDouble() ?? 0.0,
       totalSavings: (json['total_savings'] as num?)?.toDouble() ?? 0.0,
-      outstandingAmount: (json['outstanding_amount'] as num?)?.toDouble() ?? 0.0,
+      outstandingAmount:
+          (json['outstanding_amount'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

@@ -80,7 +80,7 @@ class CollectionFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return FilterChip(
       avatar: Icon(
         _icon,
@@ -96,7 +96,7 @@ class CollectionFilterChip extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected 
+                color: isSelected
                     ? _color.withValues(alpha: 0.2)
                     : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
@@ -117,7 +117,9 @@ class CollectionFilterChip extends StatelessWidget {
       selectedColor: _color.withValues(alpha: 0.15),
       checkmarkColor: _color,
       side: BorderSide(
-        color: isSelected ? _color : theme.colorScheme.outline.withValues(alpha: 0.3),
+        color: isSelected
+            ? _color
+            : theme.colorScheme.outline.withValues(alpha: 0.3),
       ),
       labelStyle: TextStyle(
         color: isSelected ? _color : null,
@@ -220,17 +222,14 @@ class CollectionSortButton extends StatelessWidget {
           Icon(
             icon,
             size: 20,
-            color: currentSort == value 
-                ? AppColors.primary 
-                : null,
+            color: currentSort == value ? AppColors.primary : null,
           ),
           const SizedBox(width: 12),
           Text(
             label,
             style: TextStyle(
-              fontWeight: currentSort == value 
-                  ? FontWeight.w600 
-                  : FontWeight.w400,
+              fontWeight:
+                  currentSort == value ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
           if (currentSort == value) ...[
@@ -265,7 +264,8 @@ class AreaFilterDropdown extends StatelessWidget {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         isDense: true,
       ),
       items: [
@@ -274,9 +274,9 @@ class AreaFilterDropdown extends StatelessWidget {
           child: Text('All Areas'),
         ),
         ...areas.map((area) => DropdownMenuItem(
-          value: area,
-          child: Text(area),
-        )),
+              value: area,
+              child: Text(area),
+            )),
       ],
       onChanged: onChanged,
     );

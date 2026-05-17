@@ -4,11 +4,21 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 
-final branchListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final branchListProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.read(supabaseClientProvider);
   final orgId = ref.read(currentOrgIdOrThrowProvider);
-  final branches = await client.from('branches').select('id, name, code, zone, district, status, created_at, manager_id, staff_profiles!fk_branches_manager(full_name)').eq('org_id', orgId).order('created_at', ascending: false);
-  final staff = await client.from('staff_profiles').select('id, full_name, role').eq('org_id', orgId).inFilter('role', ['branch_manager', 'manager']).eq('status', 'active');
+  final branches = await client
+      .from('branches')
+      .select(
+          'id, name, code, zone, district, status, created_at, manager_id, staff_profiles!fk_branches_manager(full_name)')
+      .eq('org_id', orgId)
+      .order('created_at', ascending: false);
+  final staff = await client
+      .from('staff_profiles')
+      .select('id, full_name, role')
+      .eq('org_id', orgId)
+      .inFilter('role', ['branch_manager', 'manager']).eq('status', 'active');
   return {
     'branches': List<Map<String, dynamic>>.from(branches),
     'staff': List<Map<String, dynamic>>.from(staff),
@@ -19,7 +29,8 @@ class BranchManagementPage extends ConsumerStatefulWidget {
   const BranchManagementPage({super.key});
 
   @override
-  ConsumerState<BranchManagementPage> createState() => _BranchManagementPageState();
+  ConsumerState<BranchManagementPage> createState() =>
+      _BranchManagementPageState();
 }
 
 class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
@@ -67,7 +78,10 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
       _selectedManagerId = null;
       setState(() => _showForm = false);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       setState(() => _isSaving = false);
     }
@@ -84,8 +98,11 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-            colors: isDark ? [const Color(0xFF0F1115), const Color(0xFF1A1F2E)] : [const Color(0xFFF8F9FB), const Color(0xFFEEF2FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [const Color(0xFF0F1115), const Color(0xFF1A1F2E)]
+                : [const Color(0xFFF8F9FB), const Color(0xFFEEF2FF)],
           ),
         ),
         child: SafeArea(
@@ -102,13 +119,23 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Branches (${branches.length})', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                      Text('Branches (${branches.length})',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A))),
                       if (!_showForm)
                         ElevatedButton.icon(
                           onPressed: () => setState(() => _showForm = true),
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('Add Branch'),
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12))),
                         ),
                     ],
                   ),
@@ -120,16 +147,31 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                       child: Center(
                         child: Column(
                           children: [
-                            Icon(Icons.business_rounded, size: 64, color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                            Icon(Icons.business_rounded,
+                                size: 64,
+                                color: isDark
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade300),
                             const SizedBox(height: 16),
-                            Text('No branches yet', style: TextStyle(fontSize: 16, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+                            Text('No branches yet',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    color: isDark
+                                        ? Colors.grey.shade500
+                                        : Colors.grey.shade600)),
                             const SizedBox(height: 8),
-                            TextButton(onPressed: () => setState(() => _showForm = true), child: const Text('Create your first branch')),
+                            TextButton(
+                                onPressed: () =>
+                                    setState(() => _showForm = true),
+                                child: const Text('Create your first branch')),
                           ],
                         ),
                       ),
                     ),
-                  ...branches.asMap().entries.map((e) => _buildBranchCard(e.value, isDark)),
+                  ...branches
+                      .asMap()
+                      .entries
+                      .map((e) => _buildBranchCard(e.value, isDark)),
                 ],
               );
             },
@@ -147,15 +189,26 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.15),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.2)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.white.withValues(alpha: 0.2)),
             ),
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 18,
+                color: isDark ? Colors.white : const Color(0xFF0F172A)),
           ),
         ),
         const SizedBox(width: 12),
-        Text('Branch Management', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+        Text('Branch Management',
+            style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF0F172A))),
       ],
     );
   }
@@ -165,7 +218,9 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.9),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.8)
+            : Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
@@ -174,25 +229,62 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.add_business_rounded, color: AppColors.primary, size: 20),
+              Icon(Icons.add_business_rounded,
+                  color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
-              Text('New Branch', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+              Text('New Branch',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A))),
             ],
           ),
           const SizedBox(height: 16),
-          TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Branch Name', hintText: 'e.g. Main Branch'), style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A))),
+          TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(
+                  labelText: 'Branch Name', hintText: 'e.g. Main Branch'),
+              style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A))),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: _codeCtrl, decoration: const InputDecoration(labelText: 'Branch Code', hintText: 'e.g. MAIN01'), style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)))),
+              Expanded(
+                  child: TextField(
+                      controller: _codeCtrl,
+                      decoration: const InputDecoration(
+                          labelText: 'Branch Code', hintText: 'e.g. MAIN01'),
+                      style: TextStyle(
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A)))),
               const SizedBox(width: 12),
-              Expanded(child: TextField(controller: _zoneCtrl, decoration: const InputDecoration(labelText: 'Zone/Area', hintText: 'e.g. North'), style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)))),
+              Expanded(
+                  child: TextField(
+                      controller: _zoneCtrl,
+                      decoration: const InputDecoration(
+                          labelText: 'Zone/Area', hintText: 'e.g. North'),
+                      style: TextStyle(
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A)))),
             ],
           ),
           const SizedBox(height: 12),
-          TextField(controller: _districtCtrl, decoration: const InputDecoration(labelText: 'District', hintText: 'e.g. Chennai'), style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A))),
+          TextField(
+              controller: _districtCtrl,
+              decoration: const InputDecoration(
+                  labelText: 'District', hintText: 'e.g. Chennai'),
+              style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A))),
           const SizedBox(height: 12),
-          TextField(controller: _addressCtrl, decoration: const InputDecoration(labelText: 'Address (optional)'), style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)), maxLines: 2),
+          TextField(
+              controller: _addressCtrl,
+              decoration:
+                  const InputDecoration(labelText: 'Address (optional)'),
+              style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              maxLines: 2),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -206,8 +298,16 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _createBranch,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-                  child: _isSaving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Create Branch'),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('Create Branch'),
                 ),
               ),
             ],
@@ -227,42 +327,68 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.8),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [AppColors.primary.withValues(alpha: 0.2), AppColors.accent.withValues(alpha: 0.1)]),
+              gradient: LinearGradient(colors: [
+                AppColors.primary.withValues(alpha: 0.2),
+                AppColors.accent.withValues(alpha: 0.1)
+              ]),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.business_rounded, color: AppColors.primary, size: 22),
+            child: const Icon(Icons.business_rounded,
+                color: AppColors.primary, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(branch['name'] as String? ?? '', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                Text(branch['name'] as String? ?? '',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color:
+                            isDark ? Colors.white : const Color(0xFF0F172A))),
                 const SizedBox(height: 2),
-                Text('${branch['code']}  •  ${branch['zone']}  •  ${mgrName ?? 'No manager'}', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+                Text(
+                    '${branch['code']}  •  ${branch['zone']}  •  ${mgrName ?? 'No manager'}',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? Colors.grey.shade500
+                            : Colors.grey.shade600)),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: isActive ? AppColors.success.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+              color: isActive
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(isActive ? 'Active' : 'Inactive', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: isActive ? AppColors.success : Colors.grey)),
+            child: Text(isActive ? 'Active' : 'Inactive',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? AppColors.success : Colors.grey)),
           ),
         ],
       ),
     );
   }
 }
-

@@ -10,13 +10,10 @@ class GamificationRepository {
   /// Get user achievements
   Future<List<AchievementModel>> getUserAchievements(String staffId) async {
     try {
-      final response = await _client
-          .from('staff_achievements')
-          .select('''
+      final response = await _client.from('staff_achievements').select('''
             *,
             achievements(*)
-          ''')
-          .eq('staff_id', staffId);
+          ''').eq('staff_id', staffId);
 
       return (response as List)
           .map((json) => AchievementModel.fromJson({
@@ -60,13 +57,13 @@ class GamificationRepository {
     }
 
     try {
-       final response = await _client
-           .from('staff_leaderboard_view')
-           .select()
-           .filter('collection_time', 'gte', startDate.toIso8601String())
-           .filter('collection_time', 'lt', endDate.toIso8601String())
-           .order('total_collected', ascending: false)
-           .limit(50);
+      final response = await _client
+          .from('staff_leaderboard_view')
+          .select()
+          .filter('collection_time', 'gte', startDate.toIso8601String())
+          .filter('collection_time', 'lt', endDate.toIso8601String())
+          .order('total_collected', ascending: false)
+          .limit(50);
 
       final entries = <LeaderboardEntry>[];
       int rank = 1;
@@ -113,8 +110,7 @@ class GamificationRepository {
   Future<int?> getUserRank(String staffId) async {
     try {
       final response = await _client
-          .rpc('get_staff_rank', params: {'p_staff_id': staffId})
-          .maybeSingle();
+          .rpc('get_staff_rank', params: {'p_staff_id': staffId}).maybeSingle();
 
       return response?['rank'] as int?;
     } catch (_) {

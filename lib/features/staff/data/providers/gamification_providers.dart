@@ -28,7 +28,8 @@ final weeklyLeaderboardProvider = FutureProvider<LeaderboardModel>((ref) async {
   );
 });
 
-final monthlyLeaderboardProvider = FutureProvider<LeaderboardModel>((ref) async {
+final monthlyLeaderboardProvider =
+    FutureProvider<LeaderboardModel>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   final repository = ref.watch(gamificationRepositoryProvider);
 

@@ -10,7 +10,8 @@ class BrandingSettingsPage extends ConsumerStatefulWidget {
   const BrandingSettingsPage({super.key, required this.orgId});
 
   @override
-  ConsumerState<BrandingSettingsPage> createState() => _BrandingSettingsPageState();
+  ConsumerState<BrandingSettingsPage> createState() =>
+      _BrandingSettingsPageState();
 }
 
 class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
@@ -157,8 +158,10 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: branding?.logoUrl != null
-                            ? Image.network(branding!.logoUrl!, fit: BoxFit.contain)
-                            : const Icon(Icons.image, size: 40, color: Colors.grey),
+                            ? Image.network(branding!.logoUrl!,
+                                fit: BoxFit.contain)
+                            : const Icon(Icons.image,
+                                size: 40, color: Colors.grey),
                       ),
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
@@ -184,8 +187,10 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: branding?.logoDarkUrl != null
-                            ? Image.network(branding!.logoDarkUrl!, fit: BoxFit.contain)
-                            : const Icon(Icons.image, size: 40, color: Colors.grey),
+                            ? Image.network(branding!.logoDarkUrl!,
+                                fit: BoxFit.contain)
+                            : const Icon(Icons.image,
+                                size: 40, color: Colors.grey),
                       ),
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
@@ -227,7 +232,10 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Color(int.parse(_primaryColorController.text.replaceFirst('#', 'FF'), radix: 16)),
+                          color: Color(int.parse(
+                              _primaryColorController.text
+                                  .replaceFirst('#', 'FF'),
+                              radix: 16)),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -278,7 +286,8 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Color(int.parse(controller.text.replaceFirst('#', 'FF'), radix: 16)),
+              color: Color(int.parse(controller.text.replaceFirst('#', 'FF'),
+                  radix: 16)),
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -412,9 +421,17 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
 
     final featureList = [
       {'key': 'chatbot', 'name': 'Smart Assistant', 'icon': Icons.chat},
-      {'key': 'analytics', 'name': 'Advanced Analytics', 'icon': Icons.analytics},
+      {
+        'key': 'analytics',
+        'name': 'Advanced Analytics',
+        'icon': Icons.analytics
+      },
       {'key': 'api_access', 'name': 'API Access', 'icon': Icons.api},
-      {'key': 'white_label', 'name': 'White Label', 'icon': Icons.branding_watermark},
+      {
+        'key': 'white_label',
+        'name': 'White Label',
+        'icon': Icons.branding_watermark
+      },
       {'key': 'custom_domain', 'name': 'Custom Domain', 'icon': Icons.domain},
       {'key': 'sso', 'name': 'SSO (SAML)', 'icon': Icons.login},
       {'key': 'audit_logs', 'name': 'Audit Logs', 'icon': Icons.history},
@@ -447,7 +464,8 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
-        final notifier = ref.read(brandingNotifierProvider(widget.orgId).notifier);
+        final notifier =
+            ref.read(brandingNotifierProvider(widget.orgId).notifier);
         await notifier.uploadLogo(
           file.name,
           file.bytes!,
@@ -471,8 +489,16 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
   Future<String?> _pickColor(String currentColor) async {
     // Simple color picker - in production, use a color picker package
     final colors = [
-      '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-      '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1',
+      '#3B82F6',
+      '#EF4444',
+      '#10B981',
+      '#F59E0B',
+      '#8B5CF6',
+      '#EC4899',
+      '#06B6D4',
+      '#84CC16',
+      '#F97316',
+      '#6366F1',
     ];
 
     return showDialog<String>(
@@ -482,21 +508,26 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
         content: Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: colors.map((c) => GestureDetector(
-            onTap: () => Navigator.pop(ctx, c),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Color(int.parse(c.replaceFirst('#', 'FF'), radix: 16)),
-                border: Border.all(
-                  color: currentColor == c ? Colors.black : Colors.transparent,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          )).toList(),
+          children: colors
+              .map((c) => GestureDetector(
+                    onTap: () => Navigator.pop(ctx, c),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Color(
+                            int.parse(c.replaceFirst('#', 'FF'), radix: 16)),
+                        border: Border.all(
+                          color: currentColor == c
+                              ? Colors.black
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ))
+              .toList(),
         ),
       ),
     );
@@ -505,7 +536,8 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
   Future<void> _verifyDomain() async {
     setState(() => _isLoading = true);
     try {
-      final notifier = ref.read(brandingNotifierProvider(widget.orgId).notifier);
+      final notifier =
+          ref.read(brandingNotifierProvider(widget.orgId).notifier);
       final success = await notifier.verifyCustomDomain();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -529,7 +561,8 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
 
     setState(() => _isLoading = true);
     try {
-      final notifier = ref.read(brandingNotifierProvider(widget.orgId).notifier);
+      final notifier =
+          ref.read(brandingNotifierProvider(widget.orgId).notifier);
       await notifier.updateBranding({
         'primary_color': _primaryColorController.text,
         'secondary_color': _secondaryColorController.text,

@@ -10,9 +10,8 @@ class PendingApprovalsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final branchId = ref.watch(currentUserBranchIdProvider);
-    final approvalsAsync = branchId != null
-        ? ref.watch(pendingApprovalsProvider(branchId))
-        : null;
+    final approvalsAsync =
+        branchId != null ? ref.watch(pendingApprovalsProvider(branchId)) : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -26,7 +25,8 @@ class PendingApprovalsPage extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+                          Icon(Icons.check_circle_outline,
+                              size: 64, color: Colors.green),
                           SizedBox(height: 16),
                           Text('All caught up! No pending approvals.'),
                         ],
@@ -39,7 +39,9 @@ class PendingApprovalsPage extends ConsumerWidget {
                         final approval = approvals[index];
                         return _buildApprovalCard(context, ref, approval)
                             .animate()
-                            .fadeIn(duration: 300.ms, delay: Duration(milliseconds: index * 50))
+                            .fadeIn(
+                                duration: 300.ms,
+                                delay: Duration(milliseconds: index * 50))
                             .slideY(begin: 0.1, end: 0);
                       },
                     ),
@@ -49,10 +51,12 @@ class PendingApprovalsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildApprovalCard(BuildContext context, WidgetRef ref, Map<String, dynamic> approval) {
+  Widget _buildApprovalCard(
+      BuildContext context, WidgetRef ref, Map<String, dynamic> approval) {
     final theme = Theme.of(context);
     final type = approval['type'] as String? ?? 'Unknown';
-    final createdAt = DateTime.tryParse(approval['created_at'] ?? '') ?? DateTime.now();
+    final createdAt =
+        DateTime.tryParse(approval['created_at'] ?? '') ?? DateTime.now();
     final requestedBy = approval['requested_by_user']?['name'] ?? 'Unknown';
     final memberName = approval['member']?['name'] ?? 'N/A';
 
@@ -66,7 +70,8 @@ class PendingApprovalsPage extends ConsumerWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: _getTypeColor(type).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -106,7 +111,8 @@ class PendingApprovalsPage extends ConsumerWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _showRejectDialog(context, ref, approval['id']),
+                    onPressed: () =>
+                        _showRejectDialog(context, ref, approval['id']),
                     icon: const Icon(Icons.close),
                     label: const Text('Reject'),
                     style: OutlinedButton.styleFrom(
@@ -117,7 +123,8 @@ class PendingApprovalsPage extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _approveRequest(context, ref, approval['id']),
+                    onPressed: () =>
+                        _approveRequest(context, ref, approval['id']),
                     icon: const Icon(Icons.check),
                     label: const Text('Approve'),
                     style: ElevatedButton.styleFrom(
@@ -170,15 +177,16 @@ class PendingApprovalsPage extends ConsumerWidget {
     return '${diff.inDays}d ago';
   }
 
-  void _approveRequest(BuildContext context, WidgetRef ref, String approvalId) async {
+  void _approveRequest(
+      BuildContext context, WidgetRef ref, String approvalId) async {
     final user = ref.read(authProvider).user;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
       await ref.read(approvalActionsProvider.notifier).approve(
-        approvalId,
-        user?.id ?? '',
-      );
+            approvalId,
+            user?.id ?? '',
+          );
       if (context.mounted) {
         scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Request approved successfully')),
@@ -193,7 +201,8 @@ class PendingApprovalsPage extends ConsumerWidget {
     }
   }
 
-  void _showRejectDialog(BuildContext context, WidgetRef ref, String approvalId) {
+  void _showRejectDialog(
+      BuildContext context, WidgetRef ref, String approvalId) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -224,10 +233,10 @@ class PendingApprovalsPage extends ConsumerWidget {
               final user = ref.read(authProvider).user;
               try {
                 await ref.read(approvalActionsProvider.notifier).reject(
-                  approvalId,
-                  user?.id ?? '',
-                  controller.text,
-                );
+                      approvalId,
+                      user?.id ?? '',
+                      controller.text,
+                    );
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(

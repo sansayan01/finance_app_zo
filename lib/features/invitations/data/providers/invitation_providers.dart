@@ -11,7 +11,8 @@ final invitationRepositoryProvider = Provider<InvitationRepository>((ref) {
 });
 
 // All org invitations
-final orgInvitationsProvider = FutureProvider<List<OrgInvitationModel>>((ref) async {
+final orgInvitationsProvider =
+    FutureProvider<List<OrgInvitationModel>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return [];
 
@@ -20,7 +21,8 @@ final orgInvitationsProvider = FutureProvider<List<OrgInvitationModel>>((ref) as
 });
 
 // Pending invitations
-final pendingInvitationsProvider = FutureProvider<List<OrgInvitationModel>>((ref) async {
+final pendingInvitationsProvider =
+    FutureProvider<List<OrgInvitationModel>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return [];
 
@@ -31,14 +33,17 @@ final pendingInvitationsProvider = FutureProvider<List<OrgInvitationModel>>((ref
 // Invitation stats
 final invitationStatsProvider = FutureProvider<Map<String, int>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
-  if (orgId == null) return {'pending': 0, 'accepted': 0, 'expired': 0, 'revoked': 0};
+  if (orgId == null) {
+    return {'pending': 0, 'accepted': 0, 'expired': 0, 'revoked': 0};
+  }
 
   final repository = ref.watch(invitationRepositoryProvider);
   return repository.getInvitationStats(orgId);
 });
 
 // Invitation by token (for accept page)
-final invitationByTokenProvider = FutureProvider.family<OrgInvitationModel?, String>((ref, token) async {
+final invitationByTokenProvider =
+    FutureProvider.family<OrgInvitationModel?, String>((ref, token) async {
   final repository = ref.watch(invitationRepositoryProvider);
   return repository.getInvitationByToken(token);
 });
@@ -48,7 +53,8 @@ class InvitationNotifier extends StateNotifier<AsyncValue<void>> {
   final InvitationRepository _repository;
   final Ref _ref;
 
-  InvitationNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  InvitationNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
   /// Create invitation
   Future<OrgInvitationModel?> createInvitation({
@@ -170,7 +176,8 @@ class InvitationNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final invitationNotifierProvider = StateNotifierProvider<InvitationNotifier, AsyncValue<void>>((ref) {
+final invitationNotifierProvider =
+    StateNotifierProvider<InvitationNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(invitationRepositoryProvider);
   return InvitationNotifier(repository, ref);
 });
@@ -189,4 +196,3 @@ class InvitationRequest {
     this.message,
   });
 }
-

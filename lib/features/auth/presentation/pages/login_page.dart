@@ -74,9 +74,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final primary = theme.colorScheme.primary;
     final brandingAsync = ref.watch(brandingProvider);
     final brandName = brandingAsync.maybeWhen(
-      data: (config) => config.displayName,
-      orElse: () => null,
-    ) ?? 'MicroFlow Pro';
+          data: (config) => config.displayName,
+          orElse: () => null,
+        ) ??
+        'MicroFlow Pro';
 
     return Scaffold(
       backgroundColor:
@@ -168,8 +169,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         color: logoUrl != null ? Colors.transparent : primary,
         borderRadius: BorderRadius.circular(20),
         image: logoUrl != null
-            ? DecorationImage(
-                image: NetworkImage(logoUrl), fit: BoxFit.contain)
+            ? DecorationImage(image: NetworkImage(logoUrl), fit: BoxFit.contain)
             : null,
         boxShadow: [
           BoxShadow(
@@ -405,9 +405,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     fontWeight: FontWeight.w500)),
             Text('Start 14-Day Free Trial',
                 style: TextStyle(
-                    color: primary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700)),
+                    color: primary, fontSize: 13, fontWeight: FontWeight.w700)),
             const Icon(Icons.arrow_forward_rounded,
                 size: 16, color: AppColors.success),
           ],

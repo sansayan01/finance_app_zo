@@ -336,19 +336,25 @@ class CustomerPortalRepository {
   /// Get customer's savings
   Future<List<Map<String, dynamic>>> getCustomerSavings(
       String customerId) async {
-    final response = await _client.from('savings').select('''
+    final response = await _client.from('savings_plans').select('''
           id,
-          account_number,
-          balance,
           plan_name,
+          current_amount,
           target_amount,
           monthly_deposit,
           status,
           created_at,
-          maturity_date
-        ''').eq('member_id', customerId);
+          maturity_date,
+          collection_type
+        ''').eq('member_id', customerId).order('created_at', ascending: false);
 
-    return response;
+    return response.map((item) {
+      return {
+        ...Map<String, dynamic>.from(item),
+        'balance': item['current_amount'] ?? 0.0,
+        'account_number': item['id'].toString().substring(0, 8).toUpperCase(),
+      };
+    }).toList();
   }
 
   /// Get savings transactions

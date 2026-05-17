@@ -339,75 +339,130 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         TextEditingController(text: saving.monthlyDeposit.toString());
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Record Deposit'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Amount',
-            prefixText: '₹ ',
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(controller.text) ?? 0;
-              final navigator = Navigator.of(dialogContext);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-              if (amount > 0) {
-                await ref
-                    .read(savingsRepositoryProvider)
-                    .recordDeposit(widget.savingId, amount);
-
-                if (!mounted) return;
-                ref.invalidate(savingDetailProvider(widget.savingId));
-                ref.invalidate(savingTransactionsProvider(widget.savingId));
-                ref.invalidate(allSavingsProvider);
-                navigator.pop();
-                scaffoldMessenger.showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.check_circle_rounded, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'Deposit Confirmed',
-                                style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white),
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        bool isSubmitting = false;
+        bool isSuccess = false;
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: isSuccess 
+                  ? null 
+                  : const Text('Record Deposit', style: TextStyle(fontWeight: FontWeight.w800)),
+              content: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: isSuccess
+                    ? Padding(
+                        key: const ValueKey('success'),
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
                               ),
-                              Text(
-                                '₹${amount.toStringAsFixed(0)} added to vault.',
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
-                              ),
-                            ],
-                          ),
+                              child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 64),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Deposit Successful',
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '₹${controller.text} added to vault.',
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    backgroundColor: AppColors.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    margin: const EdgeInsets.all(16),
-                    duration: const Duration(seconds: 4),
-                  ),
-                );
-              }
-            },
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
+                      )
+                    : TextField(
+                        key: const ValueKey('input'),
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        autofocus: true,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                        decoration: InputDecoration(
+                          labelText: 'Amount',
+                          prefixText: '₹ ',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                        ),
+                      ),
+              ),
+              actions: isSuccess
+                  ? []
+                  : [
+                      TextButton(
+                          onPressed: isSubmitting ? null : () => Navigator.pop(dialogContext),
+                          child: const Text('Cancel')),
+                      ElevatedButton(
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                final amount = double.tryParse(controller.text) ?? 0;
+                                if (amount <= 0) return;
+
+                                setState(() => isSubmitting = true);
+
+                                try {
+                                  await ref
+                                      .read(savingsRepositoryProvider)
+                                      .recordDeposit(widget.savingId, amount);
+
+                                  HapticFeedback.heavyImpact();
+                                  
+                                  setState(() {
+                                    isSubmitting = false;
+                                    isSuccess = true;
+                                  });
+
+                                  // Wait for user to see the success message
+                                  await Future.delayed(const Duration(milliseconds: 1800));
+
+                                  if (!mounted) return;
+                                  ref.invalidate(savingDetailProvider(widget.savingId));
+                                  ref.invalidate(savingTransactionsProvider(widget.savingId));
+                                  ref.invalidate(allSavingsProvider);
+                                  
+                                  if (dialogContext.mounted) {
+                                    Navigator.of(dialogContext).pop();
+                                  }
+                                } catch (e) {
+                                  setState(() => isSubmitting = false);
+                                  ScaffoldMessenger.of(this.context).showSnackBar(
+                                    SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                                  );
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        child: isSubmitting
+                            ? const SizedBox(
+                                width: 20, 
+                                height: 20, 
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                              )
+                            : const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+            );
+          },
+        );
+      },
     );
   }
 

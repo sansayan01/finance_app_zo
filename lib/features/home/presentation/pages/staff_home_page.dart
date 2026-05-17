@@ -584,11 +584,11 @@ class StaffHomePage extends ConsumerWidget {
       builder: (ctx) {
         bool isSubmitting = false;
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (sheetContext, setState) {
             return Container(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom +
-                    MediaQuery.of(context).padding.bottom +
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom +
+                    MediaQuery.of(sheetContext).padding.bottom +
                     AppSpacing.xxl +
                     20,
                 left: 20,
@@ -769,8 +769,8 @@ class StaffHomePage extends ConsumerWidget {
                                   item.savingsId!,
                                   amount,
                                 );
-                                if (context.mounted) {
-                                  Navigator.pop(context);
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
                                   _showSuccessFeedback(
                                       context,
                                       'Deposit Recorded',
@@ -790,14 +790,14 @@ class StaffHomePage extends ConsumerWidget {
                                   'member_name': item.memberName,
                                   'timestamp': DateTime.now().toIso8601String(),
                                 });
-                                if (context.mounted) {
-                                  Navigator.pop(context);
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
                                   _showSuccessFeedback(context, 'Saved Offline',
                                       'Will sync automatically when online.');
                                 }
                                 ref.invalidate(offlineQueueCountProvider);
                               }
-                              if (context.mounted) {
+                              if (sheetContext.mounted) {
                                 setState(() => isSubmitting = false);
                               }
                             },

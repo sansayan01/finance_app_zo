@@ -100,9 +100,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       ref.invalidate(loanSummaryProvider);
 
       if (mounted) {
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
         HapticFeedback.heavyImpact();
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
                 'Collected ${AppFormatters.formatCurrency(amount)} successfully'),

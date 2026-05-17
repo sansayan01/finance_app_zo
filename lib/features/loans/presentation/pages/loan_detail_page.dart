@@ -1494,12 +1494,34 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
+  DateTime _getPaymentDate(Map<String, dynamic> payment) {
+    if (payment['entered_at'] != null) {
+      try {
+        return AppFormatters.convertToIST(DateTime.parse(payment['entered_at'] as String));
+      } catch (_) {}
+    }
+    if (payment['created_at'] != null) {
+      try {
+        return AppFormatters.convertToIST(DateTime.parse(payment['created_at'] as String));
+      } catch (_) {}
+    }
+    if (payment['transaction_time'] != null) {
+      try {
+        return AppFormatters.convertToIST(DateTime.parse(payment['transaction_time'] as String));
+      } catch (_) {}
+    }
+    if (payment['collection_time'] != null) {
+      try {
+        return AppFormatters.convertToIST(DateTime.parse(payment['collection_time'] as String));
+      } catch (_) {}
+    }
+    return AppFormatters.convertToIST(DateTime.now());
+  }
+
   void _showPaymentDetailSheet(Map<String, dynamic> payment, ThemeData theme) {
     final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
     final paymentMode = payment['payment_mode'] as String? ?? 'cash';
-    final enteredAt = payment['entered_at'] != null
-        ? DateTime.parse(payment['entered_at'] as String).toLocal()
-        : DateTime.now();
+    final enteredAt = _getPaymentDate(payment);
     final notes = payment['notes'] as String?;
     final transactionId = payment['transaction_id'] as String?;
 
@@ -1713,9 +1735,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Widget _buildPaymentTile(Map<String, dynamic> payment, ThemeData theme) {
     final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
     final paymentMode = payment['payment_mode'] as String? ?? 'cash';
-    final enteredAt = payment['entered_at'] != null
-        ? DateTime.parse(payment['entered_at'] as String).toLocal()
-        : DateTime.now();
+    final enteredAt = _getPaymentDate(payment);
     final notes = payment['notes'] as String?;
 
     IconData modeIcon;
@@ -3073,9 +3093,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         for (final payment in payments) {
           final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
           final mode = payment['payment_mode'] as String? ?? 'cash';
-          final date = payment['entered_at'] != null
-              ? DateTime.parse(payment['entered_at'] as String)
-              : DateTime.now();
+          final date = _getPaymentDate(payment);
           final notes = payment['notes'] as String?;
           sb.writeln('${date.day}/${date.month}/${date.year} | $mode | ${AppFormatters.formatCurrency(amount)}${notes != null ? ' | $notes' : ''}');
         }
@@ -3670,9 +3688,9 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
           final dateStr = subparts[2].trim();
           DateTime? date;
           try {
-            date = DateTime.parse(dateStr).toLocal();
+            date = AppFormatters.convertToIST(DateTime.parse(dateStr));
           } catch (_) {
-            date = widget.loan.updatedAt;
+            date = AppFormatters.convertToIST(widget.loan.updatedAt);
           }
           
           notes.add({

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../data/providers/staff_providers.dart';
 
 class VisitCheckInPage extends ConsumerStatefulWidget {
@@ -489,7 +490,7 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
   String _formatTime(dynamic time) {
     if (time == null) return '--:--';
     try {
-      final dt = DateTime.parse(time.toString()).toLocal();
+      final dt = AppFormatters.convertToIST(DateTime.parse(time.toString()));
       return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {
       return '--:--';

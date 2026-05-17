@@ -211,7 +211,7 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
             'gps_address': gpsAddress,
             'remarks': remarks,
             'collection_date': DateTime.now().toIso8601String().split('T').first,
-            'collection_time': DateTime.now().toIso8601String(),
+            'collection_time': DateTime.now().toUtc().toIso8601String(),
             'sync_status': 'pending',
           },
         );

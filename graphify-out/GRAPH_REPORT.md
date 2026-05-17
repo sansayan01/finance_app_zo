@@ -1,16 +1,16 @@
 # Graph Report - finance_app_zo  (2026-05-17)
 
 ## Corpus Check
-- 425 files · ~275,189 words
+- 430 files · ~276,999 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4086 nodes · 4710 edges · 331 communities (293 shown, 38 thin omitted)
+- 4150 nodes · 4774 edges · 327 communities (287 shown, 40 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3dc0d1df`
+- Built from commit: `07e06ca0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -191,15 +191,12 @@
 - [[_COMMUNITY_Community 173|Community 173]]
 - [[_COMMUNITY_Community 174|Community 174]]
 - [[_COMMUNITY_Community 175|Community 175]]
-- [[_COMMUNITY_Community 176|Community 176]]
 - [[_COMMUNITY_Community 177|Community 177]]
 - [[_COMMUNITY_Community 178|Community 178]]
 - [[_COMMUNITY_Community 179|Community 179]]
-- [[_COMMUNITY_Community 180|Community 180]]
 - [[_COMMUNITY_Community 181|Community 181]]
 - [[_COMMUNITY_Community 182|Community 182]]
 - [[_COMMUNITY_Community 183|Community 183]]
-- [[_COMMUNITY_Community 184|Community 184]]
 - [[_COMMUNITY_Community 185|Community 185]]
 - [[_COMMUNITY_Community 186|Community 186]]
 - [[_COMMUNITY_Community 187|Community 187]]
@@ -319,7 +316,6 @@
 - [[_COMMUNITY_Community 302|Community 302]]
 - [[_COMMUNITY_Community 305|Community 305]]
 - [[_COMMUNITY_Community 327|Community 327]]
-- [[_COMMUNITY_Community 328|Community 328]]
 - [[_COMMUNITY_Community 329|Community 329]]
 - [[_COMMUNITY_Community 330|Community 330]]
 
@@ -347,7 +343,7 @@
 - `wWinMain()` --calls--> `CreateAndAttachConsole()`  [INFERRED]
   windows/runner/main.cpp → windows/runner/utils.cpp
 
-## Communities (331 total, 38 thin omitted)
+## Communities (327 total, 40 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.02
@@ -355,7 +351,7 @@ Nodes (102): ../core/widgets/hud_navigation.dart, AdminOrgDetailPage, AdminShell
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
-Nodes (77): _ActivityItem, _ActivityTimelineWidget, _ActivityTimelineWidgetState, build, _buildActionButton, _buildActivityFilterChip, _buildActivityTimeline, _buildAmbientBackground (+69 more)
+Nodes (78): _ActivityItem, _ActivityTimelineWidget, _ActivityTimelineWidgetState, build, _buildActionButton, _buildActivityFilterChip, _buildActivityTimeline, _buildAmbientBackground (+70 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.04
@@ -374,8 +370,8 @@ Cohesion: 0.04
 Nodes (45): _AmortizationPreviewSheet, build, _buildBottomBar, _buildDatePicker, _buildDivider, _buildDropdown, _buildFacilityDetails, _buildFinancialSummary (+37 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.08
-Nodes (23): ActionChip, BranchManagerDashboard, build, _buildBottomNav, _buildBranchInfoCard, _buildCollectionProgressCard, _buildDailySummaryCard, _buildOverdueAlertCard (+15 more)
+Cohesion: 0.04
+Nodes (43): ActionChip, BranchManagerDashboard, build, _buildBottomNav, _buildBranchInfoCard, _buildCollectionProgressCard, _buildDailySummaryCard, _buildOverdueAlertCard (+35 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.06
@@ -446,16 +442,16 @@ Cohesion: 0.06
 Nodes (30): 1. Environment Configuration (CRITICAL), 2. Supabase Setup, 3. main.dart Updates, 4. GoRouter Updates, 5. Run Flutter Commands, 6. Test Checklist, 7. Known Issues to Fix, 8. Quick Fixes (+22 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.18
-Nodes (9): MemberModel, MemberSummary, CollectionNotifier, CollectionRepository, CollectionRepository, ../models/collection_model.dart, package:microflow_pro/core/constants/enums.dart, ../repositories/collection_repository.dart (+1 more)
+Cohesion: 0.17
+Nodes (9): MemberModel, MemberSummary, CollectionModel, copyWith, _parsePaymentMode, _parseSyncState, CollectionRepository, ../models/collection_model.dart (+1 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.1
 Nodes (19): build, _buildAlertItem, _buildOverviewContent, _buildQuickAction, _buildRecentActivity, _buildRevenueChart, _buildStatCard, _buildSystemAlerts (+11 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.06
-Nodes (27): ../constants/app_colors.dart, ../constants/app_spacing.dart, AppColors, AppTypography, AppTheme, BorderSide, ThemeData, build (+19 more)
+Cohesion: 0.11
+Nodes (14): ../constants/app_colors.dart, AppColors, AppTypography, AppTheme, BorderSide, ThemeData, build, GlassTextField (+6 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.06
@@ -487,7 +483,7 @@ Nodes (27): 1. Project Overview, 2. Technology Stack & Choices, 3. Feature List,
 
 ### Community 34 - "Community 34"
 Cohesion: 0.07
-Nodes (27): _achievementCard, _achievements, build, Column, Container, dispose, Divider, GamificationDashboard (+19 more)
+Nodes (28): _achievementCard, _achievements, build, Column, Container, dispose, Divider, GamificationDashboard (+20 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.07
@@ -502,8 +498,8 @@ Cohesion: 0.07
 Nodes (26): build, _buildCollectionsList, _buildCollectionSummary, _buildContent, _buildDateHeader, _buildMetric, _buildModeRow, _buildPaymentModeBreakdown (+18 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.05
-Nodes (38): LocationService, build, Center, _chip, Container, _content, dispose, _filterPill (+30 more)
+Cohesion: 0.07
+Nodes (26): build, Center, _chip, Container, _content, dispose, _filterPill, GestureDetector (+18 more)
 
 ### Community 39 - "Community 39"
 Cohesion: 0.07
@@ -530,8 +526,8 @@ Cohesion: 0.08
 Nodes (24): ../../../branches/presentation/pages/branch_management_page.dart, _ActionTile, AdminOrgDashboardPage, build, _buildOrgHeader, _buildOrgSettingsCard, _buildQuickActions, _buildRecentActivity (+16 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.2
-Nodes (9): build, _card, Container, _create, MaintenancePage, _MaintenancePageState, Scaffold, SizedBox (+1 more)
+Cohesion: 0.06
+Nodes (31): _PluginRegistrant, register, package:app_links_linux/app_links_linux.dart, package:connectivity_plus/connectivity_plus.dart, package:file_selector_linux/file_selector_linux.dart, package:file_selector_macos/file_selector_macos.dart, package:file_selector_windows/file_selector_windows.dart, package:geolocator_android/geolocator_android.dart (+23 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.08
@@ -578,8 +574,8 @@ Cohesion: 0.1
 Nodes (20): BrandingSettingsPage, _BrandingSettingsPageState, build, _buildColorField, _buildColorsCard, _buildCustomDomainCard, _buildFeaturesCard, _buildLoginPageCard (+12 more)
 
 ### Community 57 - "Community 57"
-Cohesion: 0.11
-Nodes (13): ApiRepository, InvitationRepository, EMIRepository, LoanRepository, MembersRepository, MemberSummary, TransactionsRepository, ../models/api_key_model.dart (+5 more)
+Cohesion: 0.06
+Nodes (24): EnterpriseRepository, EMIRepository, LoanRepository, MembersRepository, MemberSummary, getActiveSavingsPlans, _mapSavingsList, SavingsModel (+16 more)
 
 ### Community 58 - "Community 58"
 Cohesion: 0.1
@@ -618,12 +614,12 @@ Cohesion: 0.11
 Nodes (18): AdminDashboardPage, build, _buildHeader, _buildOrgCard, _buildSectionHeader, _buildStatsRow, ClipRRect, Column (+10 more)
 
 ### Community 67 - "Community 67"
-Cohesion: 0.11
-Nodes (18): _BlockingOverlay, build, Container, dispose, _formatSize, Icon, _MaintenanceOverlay, PopScope (+10 more)
+Cohesion: 0.04
+Nodes (45): AppUpdateService, dispose, DownloadProgress, reset, _startPolling, _update, _BlockingOverlay, build (+37 more)
 
 ### Community 68 - "Community 68"
 Cohesion: 0.11
-Nodes (18): BreakLoggingPage, _BreakLoggingPageState, build, _buildActiveBreakCard, _buildBreakSetup, _buildBreakTypeSelector, _buildHeaderCard, _buildNotesSection (+10 more)
+Nodes (16): app.dart, core/config/env_config.dart, ../../../../core/providers/storage_providers.dart, copyWith, OfflineSyncEngine, refresh, SyncStatusNotifier, SyncUIState (+8 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.11
@@ -650,8 +646,8 @@ Cohesion: 0.12
 Nodes (16): AdminOrgDetailPage, build, _buildAppBar, _buildContent, _buildDangerZone, _buildHeaderCard, _buildInfoSection, _buildLimitsCard (+8 more)
 
 ### Community 75 - "Community 75"
-Cohesion: 0.13
-Nodes (11): ../../../analytics/models/analytics_models.dart, InvitationNotifier, InvitationRepository, InvitationRequest, ActivityLogRepository, ../../../enterprise/models/enterprise_models.dart, ../../../growth/models/growth_models.dart, ../../../operations/models/operations_models.dart (+3 more)
+Cohesion: 0.25
+Nodes (6): InvitationNotifier, InvitationRepository, InvitationRequest, InvitationRepository, ../models/org_invitation_model.dart, ../repositories/invitation_repository.dart
 
 ### Community 76 - "Community 76"
 Cohesion: 0.12
@@ -666,8 +662,8 @@ Cohesion: 0.12
 Nodes (16): build, Container, _details, Expanded, _filterRow, Row, Scaffold, SizedBox (+8 more)
 
 ### Community 79 - "Community 79"
-Cohesion: 0.12
-Nodes (16): build, _buildForm, _buildLogo, _buildSignInLink, _buildSignUpButton, _buildTermsCheckbox, _buildWelcomeText, Column (+8 more)
+Cohesion: 0.13
+Nodes (14): assets, link_mode_preference, target_architecture, target_os, config, build_asset_types, extensions, linking_enabled (+6 more)
 
 ### Community 80 - "Community 80"
 Cohesion: 0.12
@@ -686,8 +682,8 @@ Cohesion: 0.12
 Nodes (15): build, CustomPaint, dispose, GestureDetector, _getProgressColor, initState, paint, _ProgressRingPainter (+7 more)
 
 ### Community 84 - "Community 84"
-Cohesion: 0.13
-Nodes (14): MembersRepository, copyWith, LocationService, MembersRepository, OnboardingNotifier, OnboardingState, reset, updateBusinessType (+6 more)
+Cohesion: 0.1
+Nodes (18): ../core/providers/org_provider.dart, BranchNotifier, BranchRepository, MembersRepository, copyWith, LocationService, MembersRepository, OnboardingNotifier (+10 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.12
@@ -702,8 +698,8 @@ Cohesion: 0.22
 Nodes (8): _adoptionCard, build, Container, FeatureAdoptionPage, _growthRow, Padding, Scaffold, SizedBox
 
 ### Community 88 - "Community 88"
-Cohesion: 0.12
-Nodes (15): copyWith, NewUserNotifier, NewUserState, reset, updateAadharNumber, updateAssignedZone, updateBranchId, updateEmail (+7 more)
+Cohesion: 0.1
+Nodes (19): copyWith, NewUserNotifier, NewUserState, reset, updateAadharNumber, updateAssignedZone, updateBranchId, updateEmail (+11 more)
 
 ### Community 89 - "Community 89"
 Cohesion: 0.12
@@ -714,8 +710,8 @@ Cohesion: 0.12
 Nodes (15): build, _buildBottomNav, _buildLoanCard, Card, CustomerLoansPage, _getLoanStatusColor, Icon, NavigationBar (+7 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.12
-Nodes (12): BrandingConfig, BrandingNotifier, loadBranding, MapEntry, preloadLogo, UnimplementedError, ChatConfig, ChatConfigNotifier (+4 more)
+Cohesion: 0.13
+Nodes (14): AppFormatters, convertToIST, formatCompactCurrency, formatCurrency, formatDate, formatDateTime, formatDaysRemaining, formatLoanId (+6 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.12
@@ -726,16 +722,16 @@ Cohesion: 0.13
 Nodes (14): AnimatedBuilder, build, Container, didUpdateWidget, dispose, _GaugePainter, initState, LinearProgressBar (+6 more)
 
 ### Community 94 - "Community 94"
-Cohesion: 0.15
-Nodes (10): ../core/providers/org_provider.dart, ApiNotifier, ApiRepository, BranchNotifier, BranchRepository, LoansRepository, ../models/loan_model.dart, ../repositories/api_repository.dart (+2 more)
+Cohesion: 0.07
+Nodes (25): activity_log_repository_provider.dart, ../../../analytics/models/analytics_models.dart, build, _buildBanner, Container, SizedBox, TrialBanner, EnterpriseRepository (+17 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.13
 Nodes (14): BranchReportsPage, build, _buildStatCard, _buildSummaryCard, Card, _CollectionsReport, DefaultTabController, FlSpot (+6 more)
 
 ### Community 96 - "Community 96"
-Cohesion: 0.13
-Nodes (13): copyWith, _log, SystemSettings, SystemSettingsNotifier, getAutoLockMinutes, hasPin, isBiometricEnabled, SecurityService (+5 more)
+Cohesion: 0.06
+Nodes (30): UnimplementedError, _loadTheme, ThemeNotifier, AuthNotifier, AuthRepository, AuthState, _checkSession, copyWith (+22 more)
 
 ### Community 97 - "Community 97"
 Cohesion: 0.15
@@ -746,16 +742,16 @@ Cohesion: 0.14
 Nodes (13): 👤 Author, Code Style, code:block1 (lib/), 🤝 Contributing, Core Tables, 🗄️ Database Schema, Key Capabilities, 📄 License (+5 more)
 
 ### Community 99 - "Community 99"
-Cohesion: 0.14
-Nodes (13): AnnouncementsPage, _AnnouncementsPageState, build, _card, Container, _create, _delete, _edit (+5 more)
+Cohesion: 0.1
+Nodes (18): _getCurrencySymbol, InvoiceLineItem, InvoiceModel, SubscriptionPlanModel, AnnouncementsPage, _AnnouncementsPageState, build, _card (+10 more)
 
 ### Community 100 - "Community 100"
 Cohesion: 0.14
 Nodes (13): ../../../../core/widgets/async_value_widget.dart, build, Container, _create, dispose, _filterRow, OrganizationsManagementPage, _OrganizationsManagementPageState (+5 more)
 
 ### Community 101 - "Community 101"
-Cohesion: 0.15
-Nodes (10): EmailService, send, OfflineQueueService, ChatbotRepository, deleteUser, UserRepository, dart:convert, ../models/chat_message.dart (+2 more)
+Cohesion: 0.22
+Nodes (7): EmailService, send, OfflineQueueService, ChatbotRepository, dart:convert, ../models/chat_message.dart, package:http/http.dart
 
 ### Community 102 - "Community 102"
 Cohesion: 0.14
@@ -766,8 +762,8 @@ Cohesion: 0.14
 Nodes (13): copyWith, NewRecurringSavingNotifier, NewRecurringSavingState, reset, updateCollectionType, updateInitialBalance, updateInstallmentAmount, updateMaturityAmount (+5 more)
 
 ### Community 104 - "Community 104"
-Cohesion: 0.14
-Nodes (13): ../../../../core/widgets/glass_button.dart, build, _buildSectionTitle, Column, dispose, initState, ProfilePage, _ProfilePageState (+5 more)
+Cohesion: 0.13
+Nodes (14): ../../../../core/widgets/aurora_background.dart, ../../../../core/widgets/glass_button.dart, build, _buildSectionTitle, Column, dispose, initState, ProfilePage (+6 more)
 
 ### Community 105 - "Community 105"
 Cohesion: 0.14
@@ -814,36 +810,36 @@ Cohesion: 0.17
 Nodes (11): build, _buildDetailRow, Center, Container, GpsAccuracyIndicator, GpsStatusCard, Icon, Row (+3 more)
 
 ### Community 116 - "Community 116"
-Cohesion: 0.17
-Nodes (11): build, _chip, Container, _create, FeatureFlagsPage, _FeatureFlagsPageState, _flagCard, Scaffold (+3 more)
+Cohesion: 0.25
+Nodes (7): ../../../../core/constants/app_spacing.dart, ../../../../core/utils/formatters.dart, build, Card, CollectionListTile, launchUrl, package:url_launcher/url_launcher.dart
 
 ### Community 117 - "Community 117"
 Cohesion: 0.13
 Nodes (14): ../../../../core/theme/design_system.dart, build, Container, ExecutiveSummaryPage, _highlight, Scaffold, SizedBox, build (+6 more)
 
 ### Community 118 - "Community 118"
-Cohesion: 0.18
-Nodes (10): build, _buildHUDItem, Container, FloatingHUD, GestureDetector, HUDNavigation, HUDNavItem, SizedBox (+2 more)
+Cohesion: 0.17
+Nodes (11): build, _buildHUDItem, Container, FloatingHUD, GestureDetector, HUDNavigation, HUDNavItem, SizedBox (+3 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.09
-Nodes (21): ../../../../core/widgets/glass_card.dart, build, Center, _formatTime, _getNotifColor, _getNotifIcon, NotificationsPage, Padding (+13 more)
+Cohesion: 0.17
+Nodes (11): ../../../../core/widgets/glass_card.dart, build, Center, _formatTime, _getNotifColor, _getNotifIcon, NotificationsPage, Padding (+3 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.17
 Nodes (11): BackgroundSyncService, BackgroundSyncState, dispose, getCurrentState, performFullSync, _pullServerData, startAutoSync, stopAutoSync (+3 more)
 
 ### Community 121 - "Community 121"
-Cohesion: 0.14
-Nodes (13): AppFormatters, formatCompactCurrency, formatCurrency, formatDate, formatDateTime, formatDaysRemaining, formatLoanId, formatMemberId (+5 more)
+Cohesion: 0.29
+Nodes (6): build, dispose, GestureDetector, GlassCard, _GlassCardState, initState
 
 ### Community 122 - "Community 122"
 Cohesion: 0.17
 Nodes (11): build, _buildStatusIcon, Container, _formatTime, GestureDetector, _getBackgroundColor, _getBorderColor, _getStatusText (+3 more)
 
 ### Community 123 - "Community 123"
-Cohesion: 0.17
-Nodes (11): SUPABASE_ANON_KEY, SUPABASE_URL, mcp, supabase, plugin, $schema, args, command (+3 more)
+Cohesion: 0.13
+Nodes (14): SUPABASE_ANON_KEY, SUPABASE_URL, Authorization, mcp, supabase, plugin, $schema, args (+6 more)
 
 ### Community 124 - "Community 124"
 Cohesion: 0.18
@@ -890,20 +886,20 @@ Cohesion: 0.18
 Nodes (10): createTestableWidget, enterText, FakeLoanModel, FakeSavingsModel, FakeUserModel, ProviderScope, pump, registerFallbackValues (+2 more)
 
 ### Community 135 - "Community 135"
-Cohesion: 0.14
-Nodes (13): _approveRequest, build, _buildApprovalCard, Card, _formatTimeAgo, _getApprovalTitle, _getTypeColor, PendingApprovalsPage (+5 more)
+Cohesion: 0.17
+Nodes (11): build, _chip, Container, _create, FeatureFlagsPage, _FeatureFlagsPageState, _flagCard, Scaffold (+3 more)
 
 ### Community 136 - "Community 136"
-Cohesion: 0.17
-Nodes (11): build, _buildItem, ClipRRect, Container, GestureDetector, LumaBar, LumaBarItem, _NavItem (+3 more)
+Cohesion: 0.18
+Nodes (10): build, _buildItem, ClipRRect, Container, GestureDetector, LumaBar, LumaBarItem, _NavItem (+2 more)
 
 ### Community 137 - "Community 137"
-Cohesion: 0.18
-Nodes (10): ../../../../core/widgets/aurora_background.dart, ../../../../core/widgets/shimmer_card.dart, ActivityLogsPage, build, IntrinsicHeight, _LogItem, Scaffold, SizedBox (+2 more)
+Cohesion: 0.2
+Nodes (9): ../../../../core/widgets/shimmer_card.dart, ActivityLogsPage, build, IntrinsicHeight, _LogItem, Scaffold, SizedBox, Spacer (+1 more)
 
 ### Community 138 - "Community 138"
-Cohesion: 0.1
-Nodes (19): ../../../../core/constants/app_spacing.dart, ../../../../core/utils/formatters.dart, HapticService, build, Card, CollectionListTile, launchUrl, build (+11 more)
+Cohesion: 0.18
+Nodes (10): build, _buildLimitIndicator, _buildStatItem, Color, Column, Container, GlassCard, SizedBox (+2 more)
 
 ### Community 139 - "Community 139"
 Cohesion: 0.18
@@ -918,8 +914,8 @@ Cohesion: 0.2
 Nodes (9): 1. Query Performance (query), 2. Connection Management (conn), 3. Security & RLS (security), 4. Schema Design (schema), 5. Concurrency & Locking (lock), 6. Data Access Patterns (data), 7. Monitoring & Diagnostics (monitor), 8. Advanced Features (advanced) (+1 more)
 
 ### Community 142 - "Community 142"
-Cohesion: 0.2
-Nodes (8): BrandingNotifier, BrandingRepository, loadBranding, BrandingRepository, updateBranding, dart:typed_data, ../../models/org_branding_model.dart, ../repositories/branding_repository.dart
+Cohesion: 0.12
+Nodes (14): BrandingConfig, BrandingNotifier, loadBranding, MapEntry, preloadLogo, BrandingNotifier, BrandingRepository, loadBranding (+6 more)
 
 ### Community 143 - "Community 143"
 Cohesion: 0.2
@@ -946,28 +942,28 @@ Cohesion: 0.2
 Nodes (9): build, Container, Expanded, OnboardingManagementPage, _orgProgress, Scaffold, SizedBox, _stat (+1 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.2
-Nodes (9): build, _buildSearchResults, Center, dispose, initState, Scaffold, SearchPage, _SearchPageState (+1 more)
+Cohesion: 0.11
+Nodes (16): build, _buildSearchResults, Center, dispose, initState, Scaffold, SearchPage, _SearchPageState (+8 more)
 
 ### Community 150 - "Community 150"
-Cohesion: 0.2
-Nodes (9): AuthNotifier, AuthRepository, AuthState, _checkSession, copyWith, _getErrorMessage, ../../data/models/user_model.dart, ../../data/repositories/auth_repository.dart (+1 more)
+Cohesion: 0.33
+Nodes (5): build, NotificationBell, Positioned, Stack, ../../data/providers/staff_providers.dart
 
 ### Community 151 - "Community 151"
-Cohesion: 0.2
-Nodes (9): app.dart, core/config/env_config.dart, Icon, MaterialApp, _runMicroFlowApp, SizedBox, Text, package:flutter_downloader/flutter_downloader.dart (+1 more)
+Cohesion: 0.18
+Nodes (10): build, _buildPulsingDot, Container, GestureDetector, _getBackgroundColor, _getColor, _getIcon, _getText (+2 more)
 
 ### Community 152 - "Community 152"
-Cohesion: 0.2
-Nodes (9): AppUpdateService, dispose, DownloadProgress, reset, _startPolling, _update, dart:async, package:open_filex/open_filex.dart (+1 more)
+Cohesion: 0.18
+Nodes (10): build, CustomScrollView, GlassCard, Padding, Scaffold, SizedBox, TransactionsPage, _TransactionTimelineTile (+2 more)
 
 ### Community 153 - "Community 153"
-Cohesion: 0.14
-Nodes (12): ../../../../core/constants/app_colors.dart, BreakCard, _BreakCardState, build, Container, SizedBox, SnackBar, build (+4 more)
+Cohesion: 0.2
+Nodes (8): HapticService, BreakCard, _BreakCardState, build, Container, SizedBox, SnackBar, package:flutter/services.dart
 
 ### Community 154 - "Community 154"
-Cohesion: 0.2
-Nodes (9): build, _buildEmiCard, _buildEmptyState, Center, Column, Container, _getInitials, SizedBox (+1 more)
+Cohesion: 0.12
+Nodes (15): ../../../../core/constants/app_colors.dart, build, _buildEmiCard, _buildEmptyState, Center, Column, Container, _getInitials (+7 more)
 
 ### Community 155 - "Community 155"
 Cohesion: 0.2
@@ -1006,16 +1002,16 @@ Cohesion: 0.22
 Nodes (3): FlutterAppDelegate, FlutterImplicitEngineDelegate, AppDelegate
 
 ### Community 164 - "Community 164"
-Cohesion: 0.18
-Nodes (9): GamificationRepository, addPoints, awardAchievement, GamificationRepository, LeaderboardModel, ../models/achievement_model.dart, ../models/leaderboard_model.dart, ../repositories/gamification_repository.dart (+1 more)
+Cohesion: 0.12
+Nodes (13): CollectionNotifier, CollectionRepository, GamificationRepository, addPoints, awardAchievement, GamificationRepository, LeaderboardModel, ../models/achievement_model.dart (+5 more)
 
 ### Community 165 - "Community 165"
 Cohesion: 0.25
 Nodes (6): SuperAdminActionsNotifier, SuperAdminRepository, PlatformMetrics, SuperAdminRepository, ../models/super_admin_models.dart, ../repositories/super_admin_repository.dart
 
 ### Community 166 - "Community 166"
-Cohesion: 0.29
-Nodes (5): activity_log_repository_provider.dart, BrandNotifier, ActivityLogRepository, ../models/activity_log_model.dart, ../models/brand_model.dart
+Cohesion: 0.4
+Nodes (4): ../constants/app_spacing.dart, build, ShimmerCard, package:shimmer/shimmer.dart
 
 ### Community 167 - "Community 167"
 Cohesion: 0.25
@@ -1038,12 +1034,12 @@ Cohesion: 0.29
 Nodes (6): main, MaterialApp, main, SizedBox, package:microflow_pro/app.dart, package:microflow_pro/core/providers/storage_providers.dart
 
 ### Community 172 - "Community 172"
-Cohesion: 0.25
-Nodes (7): ../../../../core/providers/storage_providers.dart, copyWith, OfflineSyncEngine, refresh, SyncStatusNotifier, SyncUIState, ../services/offline_sync_engine.dart
+Cohesion: 0.29
+Nodes (5): LocationService, deleteUser, UserRepository, package:flutter/foundation.dart, package:geolocator/geolocator.dart
 
 ### Community 173 - "Community 173"
-Cohesion: 0.22
-Nodes (8): build, Container, Divider, LeaderboardSnapshot, Padding, SizedBox, ../../data/providers/gamification_providers.dart, package:go_router/go_router.dart
+Cohesion: 0.4
+Nodes (4): build, Color, Container, StatusBadge
 
 ### Community 174 - "Community 174"
 Cohesion: 0.18
@@ -1053,25 +1049,17 @@ Nodes (10): addPending, copyWith, recordFailure, recordSuccess, reset, SyncStatu
 Cohesion: 0.29
 Nodes (6): code:block1 (references/query-missing-indexes.md), How to Use, References, Rule Categories by Priority, Supabase Postgres Best Practices, When to Apply
 
-### Community 176 - "Community 176"
-Cohesion: 0.25
-Nodes (7): build, _buildStaffCard, Card, PopupMenuItem, Scaffold, StaffManagementPage, ../../data/providers/branch_manager_providers.dart
-
 ### Community 177 - "Community 177"
 Cohesion: 0.29
-Nodes (6): getActiveSavingsPlans, _mapSavingsList, SavingsModel, SavingsRepository, SavingsSummary, ../models/savings_model.dart
+Nodes (5): ApiNotifier, ApiRepository, ApiRepository, ../models/api_key_model.dart, ../repositories/api_repository.dart
 
 ### Community 178 - "Community 178"
-Cohesion: 0.14
-Nodes (11): _loadTheme, ThemeNotifier, AsyncValueSliver, AsyncValueWidget, build, Function, Icon, SizedBox (+3 more)
+Cohesion: 0.29
+Nodes (6): AsyncValueSliver, AsyncValueWidget, build, Function, Icon, SizedBox
 
 ### Community 179 - "Community 179"
-Cohesion: 0.29
-Nodes (6): build, Scaffold, SizedBox, VerifyEmailPage, package:flutter_animate/flutter_animate.dart, ../providers/auth_provider.dart
-
-### Community 180 - "Community 180"
-Cohesion: 0.25
-Nodes (7): _applyResolution, ConflictRecord, ConflictResolutionService, Exception, getDefaultStrategy, _hasDataDifferences, setDefaultStrategy
+Cohesion: 0.33
+Nodes (5): build, GestureDetector, GlassButton, _GlassButtonState, SizedBox
 
 ### Community 181 - "Community 181"
 Cohesion: 0.48
@@ -1084,10 +1072,6 @@ Nodes (5): code:sql (create policy orders_policy on orders), code:sql (create po
 ### Community 183 - "Community 183"
 Cohesion: 0.4
 Nodes (4): images, info, author, version
-
-### Community 184 - "Community 184"
-Cohesion: 0.33
-Nodes (4): EnterpriseRepository, EnterpriseRepository, ../../models/audit_log_model.dart, ../repositories/enterprise_repository.dart
 
 ### Community 185 - "Community 185"
 Cohesion: 0.33
@@ -1122,8 +1106,8 @@ Cohesion: 0.33
 Nodes (5): copyWith, _parseRole, _parseShift, _parseStatus, StaffProfileModel
 
 ### Community 193 - "Community 193"
-Cohesion: 0.33
-Nodes (5): build, NotificationBell, Positioned, Stack, ../../data/providers/staff_providers.dart
+Cohesion: 0.5
+Nodes (3): assets_for_linking, status, timestamp
 
 ### Community 194 - "Community 194"
 Cohesion: 0.33
@@ -1170,8 +1154,8 @@ Cohesion: 0.4
 Nodes (4): formatPhoneForDisplay, KYCValidators, maskAadhar, maskPAN
 
 ### Community 205 - "Community 205"
-Cohesion: 0.4
-Nodes (4): mcpServers, supabase, type, url
+Cohesion: 0.29
+Nodes (6): Authorization, mcpServers, supabase, headers, type, url
 
 ### Community 206 - "Community 206"
 Cohesion: 0.4
@@ -1193,10 +1177,6 @@ Nodes (5): Backend, Frontend, Integrations, Local Storage, 🛠️ Tech Stack
 Cohesion: 0.4
 Nodes (4): images, info, author, version
 
-### Community 211 - "Community 211"
-Cohesion: 0.29
-Nodes (6): build, dispose, GestureDetector, GlassCard, _GlassCardState, initState
-
 ### Community 212 - "Community 212"
 Cohesion: 0.4
 Nodes (4): ApiKeyModel, ApiKeyWithSecret, IntegrationModel, WebhookModel
@@ -1213,13 +1193,9 @@ Nodes (4): copyWith, _parseActivityType, _parseSyncStatus, StaffLocationModel
 Cohesion: 0.4
 Nodes (4): copyWith, _parsePeriodType, _parseTargetStatus, TargetModel
 
-### Community 216 - "Community 216"
-Cohesion: 0.4
-Nodes (4): refresh, UserListNotifier, ../../data/repositories/user_repository.dart, new_user_provider.dart
-
 ### Community 217 - "Community 217"
-Cohesion: 0.4
-Nodes (4): build, SizedBox, SparklineChart, package:fl_chart/fl_chart.dart
+Cohesion: 0.09
+Nodes (22): build, _buildForm, _buildLogo, _buildSignInLink, _buildSignUpButton, _buildTermsCheckbox, _buildWelcomeText, Column (+14 more)
 
 ### Community 218 - "Community 218"
 Cohesion: 0.4
@@ -1402,45 +1378,41 @@ Cohesion: 0.67
 Nodes (3): code:bash ($(cat .graphify_python) -c "), code:bash ($(cat .graphify_python) -c "), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag)
 
 ### Community 283 - "Community 283"
-Cohesion: 0.67
-Nodes (3): code:bash (python3 -m graphify.serve graphify-out/graph.json), code:json ({), Step 7d - MCP server (only if --mcp flag)
+Cohesion: 0.4
+Nodes (4): build, SizedBox, SparklineChart, package:fl_chart/fl_chart.dart
 
 ### Community 284 - "Community 284"
 Cohesion: 0.67
 Nodes (3): code:bash ($(cat .graphify_python) -c "), code:block24 (Graph complete. Outputs in PATH_TO_DIR/graphify-out/), Step 9 - Save manifest, update cost tracker, clean up, and report
 
 ### Community 327 - "Community 327"
-Cohesion: 0.29
-Nodes (5): _getCurrencySymbol, InvoiceLineItem, InvoiceModel, SubscriptionPlanModel, package:intl/intl.dart
-
-### Community 328 - "Community 328"
-Cohesion: 0.33
-Nodes (5): build, _buildBanner, Container, SizedBox, TrialBanner
+Cohesion: 0.2
+Nodes (9): build, _card, Container, _create, MaintenancePage, _MaintenancePageState, Scaffold, SizedBox (+1 more)
 
 ### Community 329 - "Community 329"
 Cohesion: 0.33
 Nodes (5): main, MaterialApp, package:microflow_pro/core/widgets/glass_button.dart, package:microflow_pro/core/widgets/shimmer_loading.dart, package:microflow_pro/core/widgets/status_badge.dart
 
 ### Community 330 - "Community 330"
-Cohesion: 0.4
-Nodes (4): CollectionModel, copyWith, _parsePaymentMode, _parseSyncState
+Cohesion: 0.67
+Nodes (3): code:bash (python3 -m graphify.serve graphify-out/graph.json), code:json ({), Step 7d - MCP server (only if --mcp flag)
 
 ## Knowledge Gaps
-- **3268 isolated node(s):** `type`, `url`, `version`, `source`, `sourceType` (+3263 more)
+- **3321 isolated node(s):** `type`, `url`, `Authorization`, `version`, `source` (+3316 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **38 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **40 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `package:flutter_riverpod/flutter_riverpod.dart` connect `Community 178` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 22`, `Community 24`, `Community 25`, `Community 27`, `Community 28`, `Community 30`, `Community 31`, `Community 32`, `Community 34`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 45`, `Community 46`, `Community 47`, `Community 48`, `Community 49`, `Community 50`, `Community 56`, `Community 59`, `Community 60`, `Community 61`, `Community 62`, `Community 63`, `Community 64`, `Community 66`, `Community 67`, `Community 68`, `Community 69`, `Community 70`, `Community 71`, `Community 73`, `Community 74`, `Community 75`, `Community 77`, `Community 78`, `Community 79`, `Community 80`, `Community 84`, `Community 86`, `Community 87`, `Community 88`, `Community 89`, `Community 90`, `Community 91`, `Community 94`, `Community 95`, `Community 96`, `Community 99`, `Community 100`, `Community 103`, `Community 104`, `Community 107`, `Community 109`, `Community 111`, `Community 112`, `Community 116`, `Community 117`, `Community 119`, `Community 120`, `Community 124`, `Community 126`, `Community 127`, `Community 128`, `Community 129`, `Community 130`, `Community 131`, `Community 132`, `Community 133`, `Community 134`, `Community 135`, `Community 137`, `Community 142`, `Community 143`, `Community 146`, `Community 147`, `Community 148`, `Community 149`, `Community 150`, `Community 151`, `Community 152`, `Community 153`, `Community 156`, `Community 157`, `Community 159`, `Community 161`, `Community 162`, `Community 164`, `Community 165`, `Community 166`, `Community 171`, `Community 172`, `Community 173`, `Community 174`, `Community 176`, `Community 179`, `Community 184`, `Community 189`, `Community 193`, `Community 216`, `Community 328`?**
-  _High betweenness centrality (0.216) - this node is a cross-community bridge._
-- **Why does `package:flutter/material.dart` connect `Community 26` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 22`, `Community 25`, `Community 27`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 32`, `Community 34`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 45`, `Community 46`, `Community 47`, `Community 48`, `Community 49`, `Community 50`, `Community 56`, `Community 59`, `Community 60`, `Community 61`, `Community 63`, `Community 64`, `Community 66`, `Community 67`, `Community 68`, `Community 69`, `Community 70`, `Community 71`, `Community 73`, `Community 74`, `Community 77`, `Community 78`, `Community 79`, `Community 80`, `Community 82`, `Community 83`, `Community 86`, `Community 87`, `Community 90`, `Community 93`, `Community 95`, `Community 99`, `Community 100`, `Community 102`, `Community 104`, `Community 107`, `Community 109`, `Community 111`, `Community 113`, `Community 115`, `Community 116`, `Community 117`, `Community 118`, `Community 119`, `Community 122`, `Community 124`, `Community 125`, `Community 127`, `Community 128`, `Community 129`, `Community 130`, `Community 131`, `Community 132`, `Community 133`, `Community 134`, `Community 135`, `Community 136`, `Community 137`, `Community 138`, `Community 145`, `Community 146`, `Community 147`, `Community 148`, `Community 149`, `Community 151`, `Community 153`, `Community 154`, `Community 157`, `Community 161`, `Community 162`, `Community 171`, `Community 173`, `Community 176`, `Community 178`, `Community 179`, `Community 193`, `Community 211`, `Community 217`, `Community 328`, `Community 329`?**
-  _High betweenness centrality (0.173) - this node is a cross-community bridge._
-- **Why does `package:go_router/go_router.dart` connect `Community 173` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 133`, `Community 8`, `Community 137`, `Community 10`, `Community 11`, `Community 7`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 149`, `Community 25`, `Community 154`, `Community 27`, `Community 30`, `Community 31`, `Community 34`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 43`, `Community 44`, `Community 46`, `Community 47`, `Community 176`, `Community 49`, `Community 48`, `Community 179`, `Community 50`, `Community 60`, `Community 61`, `Community 63`, `Community 193`, `Community 66`, `Community 69`, `Community 70`, `Community 73`, `Community 79`, `Community 90`, `Community 100`, `Community 104`, `Community 124`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **What connects `type`, `url`, `version` to the rest of the system?**
-  _3268 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `package:flutter_riverpod/flutter_riverpod.dart` connect `Community 94` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 22`, `Community 25`, `Community 27`, `Community 28`, `Community 30`, `Community 31`, `Community 32`, `Community 34`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 46`, `Community 47`, `Community 48`, `Community 49`, `Community 50`, `Community 56`, `Community 59`, `Community 60`, `Community 61`, `Community 62`, `Community 63`, `Community 64`, `Community 66`, `Community 67`, `Community 68`, `Community 69`, `Community 70`, `Community 71`, `Community 73`, `Community 74`, `Community 75`, `Community 77`, `Community 78`, `Community 80`, `Community 84`, `Community 86`, `Community 87`, `Community 88`, `Community 89`, `Community 90`, `Community 95`, `Community 96`, `Community 99`, `Community 100`, `Community 103`, `Community 104`, `Community 107`, `Community 109`, `Community 111`, `Community 112`, `Community 117`, `Community 119`, `Community 120`, `Community 124`, `Community 126`, `Community 127`, `Community 128`, `Community 129`, `Community 130`, `Community 131`, `Community 132`, `Community 133`, `Community 134`, `Community 135`, `Community 137`, `Community 142`, `Community 143`, `Community 146`, `Community 147`, `Community 148`, `Community 149`, `Community 150`, `Community 152`, `Community 153`, `Community 154`, `Community 156`, `Community 157`, `Community 159`, `Community 161`, `Community 162`, `Community 164`, `Community 165`, `Community 171`, `Community 174`, `Community 177`, `Community 178`, `Community 189`, `Community 217`, `Community 327`?**
+  _High betweenness centrality (0.227) - this node is a cross-community bridge._
+- **Why does `package:flutter/material.dart` connect `Community 26` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 22`, `Community 25`, `Community 27`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 32`, `Community 34`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 41`, `Community 42`, `Community 43`, `Community 44`, `Community 46`, `Community 47`, `Community 48`, `Community 49`, `Community 50`, `Community 56`, `Community 59`, `Community 60`, `Community 61`, `Community 63`, `Community 64`, `Community 66`, `Community 67`, `Community 68`, `Community 69`, `Community 70`, `Community 71`, `Community 73`, `Community 74`, `Community 77`, `Community 78`, `Community 80`, `Community 82`, `Community 83`, `Community 86`, `Community 87`, `Community 90`, `Community 93`, `Community 94`, `Community 95`, `Community 96`, `Community 99`, `Community 100`, `Community 102`, `Community 104`, `Community 107`, `Community 109`, `Community 111`, `Community 113`, `Community 115`, `Community 116`, `Community 117`, `Community 118`, `Community 119`, `Community 121`, `Community 122`, `Community 124`, `Community 125`, `Community 127`, `Community 128`, `Community 129`, `Community 130`, `Community 131`, `Community 132`, `Community 133`, `Community 134`, `Community 135`, `Community 136`, `Community 137`, `Community 138`, `Community 145`, `Community 146`, `Community 147`, `Community 148`, `Community 149`, `Community 150`, `Community 151`, `Community 152`, `Community 153`, `Community 154`, `Community 157`, `Community 161`, `Community 162`, `Community 166`, `Community 171`, `Community 173`, `Community 178`, `Community 179`, `Community 217`, `Community 283`, `Community 327`, `Community 329`?**
+  _High betweenness centrality (0.185) - this node is a cross-community bridge._
+- **Why does `package:microflow_pro/core/constants/enums.dart` connect `Community 24` to `Community 164`, `Community 171`, `Community 81`, `Community 84`, `Community 31`?**
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
+- **What connects `type`, `url`, `Authorization` to the rest of the system?**
+  _3321 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.02 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**

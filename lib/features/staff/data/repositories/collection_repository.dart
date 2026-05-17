@@ -117,7 +117,7 @@ class CollectionRepository {
       'gps_accuracy': gpsAccuracy,
       'gps_address': gpsAddress,
       'collection_date': now.toIso8601String().split('T').first,
-      'collection_time': now.toIso8601String(),
+      'collection_time': now.toUtc().toIso8601String(),
       'sync_status': 'synced',
       'remarks': remarks,
       'org_id': _orgId,

@@ -5,12 +5,10 @@
   ],
   "mcp": {
     "supabase": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@supabase/mcp-server-supabase"],
-      "env": {
-        "SUPABASE_URL": "https://tccwdpsnuudzfyxfoohk.supabase.co",
-        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjY3dkcHNudXVkemZ5eGZvb2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDQ1MTgsImV4cCI6MjA5MzkyMDUxOH0.I3B-A6YIrC2XlFlbf1eyTVqmcVJUOOcOUBYstpYE9_Y"
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=tccwdpsnuudzfyxfoohk&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+      "headers": {
+        "Authorization": "Bearer sbp_65e5721cce74581386ca56ea2707c8ed1e38c760"
       },
       "enabled": true
     }

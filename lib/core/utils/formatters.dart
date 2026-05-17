@@ -82,4 +82,8 @@ class AppFormatters {
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return formatDate(dateTime);
   }
+
+  static DateTime convertToIST(DateTime dateTime) {
+    return dateTime.toUtc().add(const Duration(hours: 5, minutes: 30));
+  }
 }

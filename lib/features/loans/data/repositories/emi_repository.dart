@@ -38,7 +38,7 @@ class EMIRepository {
       // 1. Update EMI Schedule
       await _client.from('emi_schedule').update({
         'is_paid': true,
-        'paid_date': now.toIso8601String(),
+        'paid_date': now.toUtc().toIso8601String(),
       }).eq('id', emiId);
 
       // 2. Create Transaction Record (using base schema columns)
@@ -48,7 +48,8 @@ class EMIRepository {
         'amount': amount,
         'description': 'EMI payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
-        'created_at': now.toIso8601String(),
+        'entered_at': now.toUtc().toIso8601String(),
+        'created_at': now.toUtc().toIso8601String(),
       });
 
       // 3. Update loan's outstanding balance
@@ -99,7 +100,8 @@ class EMIRepository {
         'amount': amount,
         'description': 'Manual payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
-        'created_at': now.toIso8601String(),
+        'entered_at': now.toUtc().toIso8601String(),
+        'created_at': now.toUtc().toIso8601String(),
       });
 
       // 2. Update loan's outstanding balance

@@ -2914,30 +2914,43 @@ class _Avatar extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    color.withValues(alpha: 0.95),
-                    color.withValues(alpha: 0.55),
-                  ],
-                ),
+                gradient: (profile.avatarUrl != null &&
+                        profile.avatarUrl!.trim().isNotEmpty)
+                    ? null
+                    : LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.95),
+                          color.withValues(alpha: 0.55),
+                        ],
+                      ),
+                image: (profile.avatarUrl != null &&
+                        profile.avatarUrl!.trim().isNotEmpty)
+                    ? DecorationImage(
+                        image: NetworkImage(profile.avatarUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
                 border: Border.all(
                   color: theme.scaffoldBackgroundColor,
                   width: 2,
                 ),
               ),
-              child: Center(
-                child: Text(
-                  ((profile.fullName ?? '?').isNotEmpty
-                          ? (profile.fullName![0])
-                          : '?')
-                      .toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                  ),
+              child: (profile.avatarUrl != null &&
+                      profile.avatarUrl!.trim().isNotEmpty)
+                  ? null
+                  : Center(
+                      child: Text(
+                        ((profile.fullName ?? '?').isNotEmpty
+                                ? (profile.fullName![0])
+                                : '?')
+                            .toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                        ),
                 ),
               ),
             ),

@@ -49,6 +49,7 @@ dependencies:
   equatable: ^2.0.8
   share_plus: ^12.0.2
   image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
   file_picker: ^8.1.2
   flutter_downloader: ^1.11.8
   open_filex: ^4.5.0

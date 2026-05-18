@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -17,6 +18,7 @@ import '../providers/user_list_provider.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../providers/new_user_provider.dart';
 import '../providers/admin_user_actions_provider.dart';
+import '../providers/avatar_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/data/providers/branch_providers.dart';
 import '../../../branches/models/branch_model.dart';
@@ -59,7 +61,8 @@ class UserDetailsPage extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildIdentityHeader(user, theme, isDark),
+                                _buildIdentityHeader(
+                                    context, ref, user, theme, isDark),
                                 if (_isAdminViewer(ref)) ...[
                                   const SizedBox(height: 28),
                                   _buildAdminSection(
@@ -1974,8 +1977,12 @@ class UserDetailsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildIdentityHeader(ProfileModel user, ThemeData theme, bool isDark) {
+  Widget _buildIdentityHeader(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme, bool isDark) {
     final primary = theme.colorScheme.primary;
+    final avatarState = ref.watch(avatarUploadNotifierProvider);
+    final hasAvatar =
+        user.avatarUrl != null && user.avatarUrl!.trim().isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -2004,31 +2011,82 @@ class UserDetailsPage extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Hero(
-                  tag: 'user_avatar_${user.id}',
-                  child: Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [primary, primary.withValues(alpha: 0.7)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                            color: primary.withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            spreadRadius: -2),
+                GestureDetector(
+                  onTap: () => _showAvatarOptions(context, ref, user),
+                  child: Hero(
+                    tag: 'user_avatar_${user.id}',
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 76,
+                          height: 76,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: hasAvatar
+                                ? null
+                                : LinearGradient(
+                                    colors: [
+                                      primary,
+                                      primary.withValues(alpha: 0.7)
+                                    ],
+                                  ),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: primary.withValues(alpha: 0.3),
+                                  blurRadius: 15,
+                                  spreadRadius: -2),
+                            ],
+                            image: hasAvatar
+                                ? DecorationImage(
+                                    image: NetworkImage(user.avatarUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: hasAvatar
+                              ? null
+                              : Center(
+                                  child: Text(
+                                    user.fullName?[0].toUpperCase() ?? '?',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.w900),
+                                  ),
+                                ),
+                        ),
+                        // Camera badge
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: theme.scaffoldBackgroundColor,
+                                  width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: primary.withValues(alpha: 0.4),
+                                    blurRadius: 6),
+                              ],
+                            ),
+                            child: avatarState.isLoading
+                                ? const Padding(
+                                    padding: EdgeInsets.all(5),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.camera_alt_rounded,
+                                    size: 13, color: Colors.white),
+                          ),
+                        ),
                       ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        user.fullName?[0].toUpperCase() ?? '?',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w900),
-                      ),
                     ),
                   ),
                 ),
@@ -2092,6 +2150,130 @@ class UserDetailsPage extends ConsumerWidget {
         ],
       ),
     ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.05, end: 0);
+  }
+
+  /// Shows a bottom sheet with avatar options: gallery, camera, or remove.
+  void _showAvatarOptions(
+      BuildContext context, WidgetRef ref, ProfileModel user) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Profile Photo',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w900)),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildAvatarOption(
+                    icon: Icons.photo_library_rounded,
+                    label: 'Gallery',
+                    color: primary,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _uploadAvatar(ref, user, ImageSource.gallery);
+                    },
+                  ),
+                  _buildAvatarOption(
+                    icon: Icons.camera_alt_rounded,
+                    label: 'Camera',
+                    color: AppColors.success,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _uploadAvatar(ref, user, ImageSource.camera);
+                    },
+                  ),
+                  if (user.avatarUrl != null &&
+                      user.avatarUrl!.trim().isNotEmpty)
+                    _buildAvatarOption(
+                      icon: Icons.delete_rounded,
+                      label: 'Remove',
+                      color: AppColors.error,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        ref
+                            .read(avatarUploadNotifierProvider.notifier)
+                            .removeAvatar(
+                              profileId: user.id,
+                              userId: user.userId ?? user.id,
+                            );
+                      },
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Images are compressed to save storage',
+                style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.5)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 8),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w700, color: color)),
+        ],
+      ),
+    );
+  }
+
+  void _uploadAvatar(WidgetRef ref, ProfileModel user, ImageSource source) {
+    HapticService.selection();
+    ref.read(avatarUploadNotifierProvider.notifier).uploadAvatar(
+          profileId: user.id,
+          userId: user.userId ?? user.id,
+          source: source,
+        );
   }
 
   Widget _buildTrustScoreGauge(

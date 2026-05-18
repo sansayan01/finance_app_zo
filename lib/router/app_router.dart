@@ -315,6 +315,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const MaintenancePage(),
           ),
           GoRoute(
+            path: '/super-admin/app-update',
+            builder: (context, state) => const AppUpdatePage(),
+          ),
+          GoRoute(
             path: '/super-admin/settings',
             builder: (context, state) => const PlatformSettingsPage(),
           ),
@@ -478,10 +482,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'logs',
                 builder: (context, state) => const ActivityLogsPage(),
-              ),
-              GoRoute(
-                path: 'app-update',
-                builder: (context, state) => const AppUpdatePage(),
               ),
             ],
           ),

@@ -3,4 +3,8 @@
     <external-path name="downloads" path="Download/"/>
     <external-files-path name="external_files" path="."/>
     <cache-path name="cache" path="."/>
+    <!-- Required so FileProvider can share APKs downloaded into
+         getApplicationDocumentsDirectory() (Context.getFilesDir())
+         with the system package installer. -->
+    <files-path name="files" path="."/>
 </paths>

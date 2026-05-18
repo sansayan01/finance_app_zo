@@ -311,13 +311,6 @@ class _OrganizationSection extends StatelessWidget {
             _Priority.p2,
           ),
         ),
-        _ActionRow(
-          title: 'App Updates',
-          subtitle: 'Publish new APK version',
-          icon: Icons.system_update_rounded,
-          color: Colors.indigo,
-          onTap: () => context.push('/settings/app-update'),
-        ),
       ],
     );
   }

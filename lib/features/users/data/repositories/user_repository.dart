@@ -200,16 +200,25 @@ class UserRepository {
   // ADMIN ACTIONS
   // ---------------------------------------------------------------------------
 
-  /// Update a single profile. `org_id` is forced to the current org.
+  /// Update a single profile. RLS enforces org isolation; we don't filter
+  /// by org_id here because that would silently no-op for profiles with a
+  /// NULL org_id (orphan self-registered users), making the update appear
+  /// to succeed while changing nothing.
   Future<void> updateProfile(String id, Map<String, dynamic> data) async {
     data.remove('id');
     data.remove('org_id');
     data['updated_at'] = DateTime.now().toIso8601String();
-    await _client
+    final rows = await _client
         .from('profiles')
         .update(data)
         .eq('id', id)
-        .eq('org_id', _orgId);
+        .select('id');
+    if (rows.isEmpty) {
+      throw Exception(
+        'No profile was updated. The profile may belong to a different '
+        'organization, have a missing org_id, or you may lack permission.',
+      );
+    }
   }
 
   Future<void> updateUserRole(String id, UserRole role) =>

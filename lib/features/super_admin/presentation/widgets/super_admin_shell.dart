@@ -35,6 +35,7 @@ class _SuperAdminShellState extends ConsumerState<SuperAdminShell> {
           '/super-admin/health'),
       _NavItem(Icons.shield, 'Security Scorecard', '/super-admin/security'),
       _NavItem(Icons.build, 'Maintenance', '/super-admin/maintenance'),
+      _NavItem(Icons.system_update, 'App Updates', '/super-admin/app-update'),
       _NavItem(Icons.settings, 'Settings', '/super-admin/settings'),
       _NavItem(Icons.toggle_on, 'System Controls', '/super-admin/controls'),
     ]),

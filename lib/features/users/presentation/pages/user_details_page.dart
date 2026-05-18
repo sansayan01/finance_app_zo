@@ -769,6 +769,7 @@ class UserDetailsPage extends ConsumerWidget {
                   DropdownButtonFormField<UserRole>(
                     initialValue: selected,
                     items: UserRole.values
+                        .where((r) => r != UserRole.superAdmin)
                         .map((r) => DropdownMenuItem(
                               value: r,
                               child: Text(_roleLabel(r)),

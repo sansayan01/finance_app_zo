@@ -16,6 +16,7 @@ import '../../../savings/data/models/savings_model.dart';
 import '../providers/user_list_provider.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../providers/new_user_provider.dart';
+import '../providers/admin_user_actions_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/data/providers/branch_providers.dart';
 import '../../../branches/models/branch_model.dart';
@@ -59,6 +60,12 @@ class UserDetailsPage extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildIdentityHeader(user, theme, isDark),
+                                if (_isAdminViewer(ref)) ...[
+                                  const SizedBox(height: 28),
+                                  _buildAdminSection(
+                                      context, ref, user, loans, savings,
+                                      theme: theme, isDark: isDark),
+                                ],
                                 if (loans.isNotEmpty) ...[
                                   const SizedBox(height: 28),
                                   _buildTrustScoreGauge(user, theme, isDark),
@@ -101,6 +108,1720 @@ class UserDetailsPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  // ===========================================================================
+  // ADMIN-ONLY SECTION (visible to executiveAdmin / superAdmin)
+  // ===========================================================================
+
+  /// Returns true when the *current* signed-in user has admin powers over
+  /// this page (executiveAdmin or superAdmin).
+  bool _isAdminViewer(WidgetRef ref) {
+    final me = ref.watch(currentUserProvider);
+    if (me == null) return false;
+    return me.role == UserRole.executiveAdmin ||
+        me.role == UserRole.superAdmin;
+  }
+
+  /// Container that holds every admin-only section. Rendered only when
+  /// [_isAdminViewer] is true.
+  Widget _buildAdminSection(
+    BuildContext context,
+    WidgetRef ref,
+    ProfileModel user,
+    List<LoanModel> loans,
+    List<SavingsModel> savings, {
+    required ThemeData theme,
+    required bool isDark,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildAdminBanner(theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminIdentityContext(user, theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminFinancialExposure(loans, savings, theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminRolePermissions(context, ref, user, theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminSecurityAccess(context, ref, user, theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminAuditTimeline(ref, user, theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminNotes(context, ref, user, theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminCompliance(context, ref, user, theme, isDark),
+        const SizedBox(height: 20),
+        _buildAdminViewAsUser(context, user, loans, savings, theme, isDark),
+      ],
+    );
+  }
+
+  /// Small banner at the top of the admin block so it's visually obvious
+  /// the viewer is in admin context.
+  Widget _buildAdminBanner(ThemeData theme, bool isDark) {
+    final accent = isDark ? AppColors.warningDark : AppColors.orange;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.admin_panel_settings_rounded,
+                color: accent, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ADMIN VIEW',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: accent,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                    fontSize: 10,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Privileged controls below. All actions are audit-logged.',
+                  style:
+                      theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1, end: 0);
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 3a — IDENTITY & MULTI-TENANT CONTEXT
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminIdentityContext(
+      ProfileModel user, ThemeData theme, bool isDark) {
+    final primary = theme.colorScheme.primary;
+    final rows = <_KvRow>[
+      _KvRow('Member ID',
+          user.memberCode ?? 'MF-${user.id.substring(0, 8).toUpperCase()}'),
+      _KvRow('Organization', user.orgId ?? 'N/A'),
+      _KvRow('Branch', user.branchName ?? user.branchId ?? 'Unassigned'),
+      if (user.employeeId != null && user.employeeId!.isNotEmpty)
+        _KvRow('Employee ID', user.employeeId!),
+      if (user.assignedZone != null && user.assignedZone!.isNotEmpty)
+        _KvRow('Assigned Zone', user.assignedZone!),
+      _KvRow('Email', user.email ?? 'N/A'),
+      _KvRow('Phone', user.phone ?? 'N/A'),
+      _KvRow('Status', _statusLabel(user.status)),
+      _KvRow('Created', _fmtDate(user.createdAt)),
+      _KvRow('Last Updated', _fmtDate(user.updatedAt)),
+      _KvRow('Last Seen', _fmtDate(user.lastSeenAt)),
+    ];
+
+    return _AdminCard(
+      title: 'Identity & Tenant Context',
+      icon: Icons.account_tree_rounded,
+      accent: primary,
+      isDark: isDark,
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            _kvRow(rows[i], theme, isDark),
+            if (i < rows.length - 1)
+              Divider(
+                  height: 18,
+                  thickness: 0.4,
+                  color: theme.dividerColor.withValues(alpha: 0.2)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 3b — FINANCIAL EXPOSURE
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminFinancialExposure(List<LoanModel> loans,
+      List<SavingsModel> savings, ThemeData theme, bool isDark) {
+    final activeLoans =
+        loans.where((l) => l.status == LoanStatus.active).toList();
+    final closedLoans =
+        loans.where((l) => l.status == LoanStatus.closed).toList();
+    final defaultedLoans = loans
+        .where((l) =>
+            l.status == LoanStatus.defaultStatus ||
+            l.status == LoanStatus.restructured)
+        .toList();
+    final totalOutstanding = activeLoans.fold<double>(
+        0.0, (s, l) => s + l.outstandingBalance);
+    final totalSavings =
+        savings.fold<double>(0.0, (s, x) => s + x.targetAmount);
+
+    return _AdminCard(
+      title: 'Financial Exposure',
+      icon: Icons.trending_up_rounded,
+      accent: isDark ? AppColors.successDark : AppColors.success,
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _bigStat(
+                  label: 'OUTSTANDING',
+                  value: '₹${_compact(totalOutstanding)}',
+                  color: theme.colorScheme.primary,
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _bigStat(
+                  label: 'SAVINGS BAL',
+                  value: '₹${_compact(totalSavings)}',
+                  color:
+                      isDark ? AppColors.successDark : AppColors.success,
+                  theme: theme,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _miniStat('Active', activeLoans.length, Colors.blue, theme),
+              const SizedBox(width: 8),
+              _miniStat('Closed', closedLoans.length, Colors.grey, theme),
+              const SizedBox(width: 8),
+              _miniStat(
+                  'Defaulted', defaultedLoans.length, Colors.red, theme),
+              const SizedBox(width: 8),
+              _miniStat('Plans', savings.length,
+                  isDark ? AppColors.successDark : AppColors.success, theme),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 4a — ROLE & PERMISSIONS
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminRolePermissions(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme, bool isDark) {
+    final primary = theme.colorScheme.primary;
+    return _AdminCard(
+      title: 'Role & Permissions',
+      icon: Icons.shield_outlined,
+      accent: primary,
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('CURRENT ROLE',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            fontSize: 10)),
+                    const SizedBox(height: 4),
+                    Text(_roleLabel(user.role),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900, fontSize: 16)),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _showChangeRoleDialog(context, ref, user, theme, isDark),
+                icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                label: const Text('Change'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primary,
+                  side: BorderSide(color: primary.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _divider(theme),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('BRANCH ASSIGNMENT',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            fontSize: 10)),
+                    const SizedBox(height: 4),
+                    Text(user.branchName ?? user.branchId ?? 'Unassigned',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800, fontSize: 14)),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _showReassignBranchDialog(context, ref, user, theme),
+                icon: const Icon(Icons.account_tree_rounded, size: 16),
+                label: const Text('Reassign'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primary,
+                  side: BorderSide(color: primary.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 4b — SECURITY & ACCESS
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminSecurityAccess(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme, bool isDark) {
+    final danger = isDark ? Colors.redAccent : Colors.red;
+    return _AdminCard(
+      title: 'Security & Access',
+      icon: Icons.lock_outline_rounded,
+      accent: danger,
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _kvRow(_KvRow('Last seen', _fmtDate(user.lastSeenAt)),
+              theme, isDark),
+          const SizedBox(height: 8),
+          _kvRow(_KvRow('Account status', _statusLabel(user.status)),
+              theme, isDark),
+          const SizedBox(height: 14),
+          _divider(theme),
+          const SizedBox(height: 12),
+          // Status switcher
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _statusChip(context, ref, user, AccountStatus.active,
+                  'Active', Colors.green, theme),
+              _statusChip(context, ref, user, AccountStatus.suspended,
+                  'Suspend', Colors.orange, theme),
+              _statusChip(context, ref, user, AccountStatus.inactive,
+                  'Deactivate', Colors.grey, theme),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _divider(theme),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      _handlePasswordReset(context, ref, user),
+                  icon: const Icon(Icons.password_rounded, size: 16),
+                  label: const Text('Reset Password'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.primary,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      _handleForceLogout(context, ref, user),
+                  icon: const Icon(Icons.logout_rounded, size: 16),
+                  label: const Text('Force Logout'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: danger,
+                    side: BorderSide(color: danger.withValues(alpha: 0.5)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 5a — AUDIT TIMELINE
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminAuditTimeline(
+      WidgetRef ref, ProfileModel user, ThemeData theme, bool isDark) {
+    final accent = isDark ? AppColors.warningDark : AppColors.orange;
+    final auditAsync = ref.watch(userAuditLogsProvider(
+      UserAuditQuery(profileId: user.id, authUserId: user.userId),
+    ));
+    return _AdminCard(
+      title: 'Audit Timeline',
+      icon: Icons.history_rounded,
+      accent: accent,
+      isDark: isDark,
+      child: auditAsync.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Center(
+            child: SizedBox(
+              height: 18,
+              width: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        ),
+        error: (e, _) => Text('Failed to load audit log: $e',
+            style:
+                theme.textTheme.bodySmall?.copyWith(color: Colors.red)),
+        data: (entries) {
+          if (entries.isEmpty) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  'No admin-visible events recorded yet.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey, fontWeight: FontWeight.w500),
+                ),
+              ),
+            );
+          }
+          final visible = entries.take(10).toList();
+          return Column(
+            children: [
+              for (var i = 0; i < visible.length; i++) ...[
+                _auditRow(visible[i], theme, isDark),
+                if (i < visible.length - 1)
+                  Divider(
+                      height: 14,
+                      thickness: 0.3,
+                      color: theme.dividerColor.withValues(alpha: 0.2)),
+              ],
+              if (entries.length > 10) ...[
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    '${entries.length - 10} more events',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 5b — INTERNAL ADMIN NOTES
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminNotes(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme, bool isDark) {
+    final notesAsync = ref.watch(adminNotesProvider(user.id));
+    final accent = theme.colorScheme.tertiary;
+    return _AdminCard(
+      title: 'Internal Admin Notes',
+      icon: Icons.sticky_note_2_outlined,
+      accent: accent,
+      isDark: isDark,
+      trailing: TextButton.icon(
+        onPressed: () => _showAddNoteSheet(context, ref, user),
+        icon: const Icon(Icons.add_rounded, size: 16),
+        label: const Text('Add Note'),
+        style: TextButton.styleFrom(foregroundColor: accent),
+      ),
+      child: notesAsync.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(
+              child: SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2))),
+        ),
+        error: (e, _) => Text('Failed to load notes: $e',
+            style: theme.textTheme.bodySmall?.copyWith(color: Colors.red)),
+        data: (notes) {
+          if (notes.isEmpty) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text('No notes yet. Add one for the next admin.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey, fontWeight: FontWeight.w500)),
+              ),
+            );
+          }
+          return Column(
+            children: [
+              for (final note in notes)
+                _noteTile(context, ref, user, note, theme, isDark),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 5c — COMPLIANCE
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminCompliance(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme, bool isDark) {
+    final exportsAsync = ref.watch(userDataExportsProvider(user.id));
+    return _AdminCard(
+      title: 'Compliance & Data Rights',
+      icon: Icons.gavel_rounded,
+      accent: Colors.indigo,
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Right-to-export and right-to-be-forgotten controls. Every '
+            'request is audit-logged and tied to your admin profile.',
+            style:
+                theme.textTheme.bodySmall?.copyWith(fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _handleRequestDataExport(context, ref, user),
+                  icon: const Icon(Icons.download_rounded, size: 16),
+                  label: const Text('Request Data Export'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.indigo,
+                    side: BorderSide(color: Colors.indigo.withValues(alpha: 0.5)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      _showDeleteWithReasonDialog(context, ref, user),
+                  icon: const Icon(Icons.delete_forever_rounded, size: 16),
+                  label: const Text('Delete (Reason)'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          exportsAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (exports) {
+              if (exports.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _divider(theme),
+                  const SizedBox(height: 8),
+                  Text('RECENT EXPORT REQUESTS',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                          fontSize: 10)),
+                  const SizedBox(height: 8),
+                  for (final ex in exports.take(5))
+                    _exportRow(ex, theme, isDark),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PHASE 6 — VIEW AS USER (read-only preview of what the user sees)
+  // ---------------------------------------------------------------------------
+  Widget _buildAdminViewAsUser(
+      BuildContext context,
+      ProfileModel user,
+      List<LoanModel> loans,
+      List<SavingsModel> savings,
+      ThemeData theme,
+      bool isDark) {
+    return _AdminCard(
+      title: 'View as User',
+      icon: Icons.visibility_rounded,
+      accent: Colors.teal,
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Open a read-only preview of what this member sees in their own '
+            'portal. No auth tokens are issued — this is a data-only view, '
+            'and every open is audit-logged.',
+            style:
+                theme.textTheme.bodySmall?.copyWith(fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () =>
+                  _openViewAsSheet(context, user, loans, savings, theme, isDark),
+              icon: const Icon(Icons.preview_rounded, size: 18),
+              label: const Text('Open Read-Only View'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // ADMIN — DIALOGS / ACTION HANDLERS
+  // ===========================================================================
+
+  Future<void> _showChangeRoleDialog(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme, bool isDark) async {
+    UserRole selected = user.role ?? UserRole.customer;
+    final reasonCtrl = TextEditingController();
+    bool busy = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            title: const Text('Change Role'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Changing the role takes effect immediately. The user '
+                    'may need to re-login for permissions to refresh.',
+                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<UserRole>(
+                    initialValue: selected,
+                    items: UserRole.values
+                        .map((r) => DropdownMenuItem(
+                              value: r,
+                              child: Text(_roleLabel(r)),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) setState(() => selected = v);
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'New role',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: reasonCtrl,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: 'Reason (optional)',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: busy ? null : () => Navigator.pop(ctx),
+                child: const Text('CANCEL'),
+              ),
+              ElevatedButton(
+                onPressed: busy
+                    ? null
+                    : () async {
+                        if (selected == user.role) {
+                          Navigator.pop(ctx);
+                          return;
+                        }
+                        setState(() => busy = true);
+                        try {
+                          await ref
+                              .read(userRepositoryProvider)
+                              .changeUserRole(
+                                profileId: user.id,
+                                oldRole: user.role ?? UserRole.customer,
+                                newRole: selected,
+                                reason: reasonCtrl.text,
+                              );
+                          ref.invalidate(userListProvider);
+                          ref.invalidate(userDetailsProvider(user.id));
+                          ref.invalidate(userAuditLogsProvider(
+                              UserAuditQuery(
+                                  profileId: user.id,
+                                  authUserId: user.userId)));
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            _toast(context, 'Role updated.');
+                          }
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            setState(() => busy = false);
+                            _toast(context, 'Failed: $e', error: true);
+                          }
+                        }
+                      },
+                child: busy
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('UPDATE'),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  Future<void> _showReassignBranchDialog(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme) async {
+    final branchesAsync = ref.read(activeBranchesProvider);
+    final branches = branchesAsync.value ?? const <BranchModel>[];
+    String? selected = user.branchId;
+    bool busy = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            title: const Text('Reassign Branch'),
+            content: branches.isEmpty
+                ? const Text('No active branches available.')
+                : DropdownButtonFormField<String>(
+                    initialValue: selected,
+                    items: branches
+                        .map((b) => DropdownMenuItem(
+                            value: b.id, child: Text(b.name)))
+                        .toList(),
+                    onChanged: (v) => setState(() => selected = v),
+                    decoration: InputDecoration(
+                      labelText: 'Branch',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+            actions: [
+              TextButton(
+                onPressed: busy ? null : () => Navigator.pop(ctx),
+                child: const Text('CANCEL'),
+              ),
+              ElevatedButton(
+                onPressed: busy || selected == null || selected == user.branchId
+                    ? null
+                    : () async {
+                        setState(() => busy = true);
+                        try {
+                          final repo = ref.read(userRepositoryProvider);
+                          await repo
+                              .updateProfile(user.id, {'branch_id': selected});
+                          await repo.logAdminAction(
+                            action: 'profile.branch_reassigned',
+                            entityType: 'profile',
+                            entityId: user.id,
+                            details: {
+                              'from': user.branchId,
+                              'to': selected,
+                            },
+                          );
+                          ref.invalidate(userListProvider);
+                          ref.invalidate(userDetailsProvider(user.id));
+                          ref.invalidate(userAuditLogsProvider(
+                              UserAuditQuery(
+                                  profileId: user.id,
+                                  authUserId: user.userId)));
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            _toast(context, 'Branch updated.');
+                          }
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            setState(() => busy = false);
+                            _toast(context, 'Failed: $e', error: true);
+                          }
+                        }
+                      },
+                child: busy
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('REASSIGN'),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  Widget _statusChip(BuildContext context, WidgetRef ref, ProfileModel user,
+      AccountStatus target, String label, Color color, ThemeData theme) {
+    final isCurrent = user.status == target;
+    return ActionChip(
+      avatar: Icon(
+        isCurrent ? Icons.check_circle_rounded : Icons.circle_outlined,
+        size: 16,
+        color: color,
+      ),
+      label: Text(label),
+      backgroundColor: color.withValues(alpha: isCurrent ? 0.18 : 0.08),
+      labelStyle: TextStyle(
+          color: color, fontWeight: FontWeight.w800, fontSize: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+            color: color.withValues(alpha: isCurrent ? 0.6 : 0.25)),
+      ),
+      onPressed: isCurrent
+          ? null
+          : () => _confirmAndChangeStatus(context, ref, user, target),
+    );
+  }
+
+  Future<void> _confirmAndChangeStatus(BuildContext context, WidgetRef ref,
+      ProfileModel user, AccountStatus newStatus) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Change status to ${_statusLabel(newStatus)}?'),
+        content: Text(
+            'This will change ${user.fullName ?? "this user"}\'s account state '
+            'immediately. The change is audit-logged.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('CANCEL')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('CONFIRM')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(userRepositoryProvider).changeUserStatus(
+            profileId: user.id,
+            oldStatus: user.status,
+            newStatus: newStatus,
+          );
+      ref.invalidate(userListProvider);
+      ref.invalidate(userDetailsProvider(user.id));
+      ref.invalidate(userAuditLogsProvider(
+          UserAuditQuery(profileId: user.id, authUserId: user.userId)));
+      if (context.mounted) _toast(context, 'Status updated.');
+    } catch (e) {
+      if (context.mounted) _toast(context, 'Failed: $e', error: true);
+    }
+  }
+
+  Future<void> _handlePasswordReset(
+      BuildContext context, WidgetRef ref, ProfileModel user) async {
+    final email = user.email ?? '';
+    if (email.isEmpty) {
+      _toast(context, 'User has no email — cannot reset.', error: true);
+      return;
+    }
+    try {
+      await ref.read(userRepositoryProvider).sendPasswordReset(email);
+      await ref.read(userRepositoryProvider).logAdminAction(
+        action: 'profile.password_reset_sent',
+        entityType: 'profile',
+        entityId: user.id,
+        details: {'email': email},
+      );
+      ref.invalidate(userAuditLogsProvider(
+          UserAuditQuery(profileId: user.id, authUserId: user.userId)));
+      if (context.mounted) {
+        _toast(context, 'Reset link sent to $email.');
+      }
+    } catch (e) {
+      if (context.mounted) _toast(context, 'Failed: $e', error: true);
+    }
+  }
+
+  Future<void> _handleForceLogout(
+      BuildContext context, WidgetRef ref, ProfileModel user) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Force logout?'),
+        content: Text(
+            'All active sessions for ${user.fullName ?? "this user"} will be '
+            'invalidated. They will need to sign in again.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('CANCEL')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('FORCE LOGOUT')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      final repo = ref.read(userRepositoryProvider);
+      await repo.forceLogout(user.id, userId: user.userId);
+      await repo.logAdminAction(
+        action: 'profile.force_logout',
+        entityType: 'profile',
+        entityId: user.id,
+      );
+      ref.invalidate(userAuditLogsProvider(
+          UserAuditQuery(profileId: user.id, authUserId: user.userId)));
+      if (context.mounted) _toast(context, 'Sessions revoked.');
+    } catch (e) {
+      if (context.mounted) _toast(context, 'Failed: $e', error: true);
+    }
+  }
+
+  Future<void> _showAddNoteSheet(
+      BuildContext context, WidgetRef ref, ProfileModel user) async {
+    final ctrl = TextEditingController();
+    bool pinned = false;
+    bool busy = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 16,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Add Internal Note',
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                const SizedBox(height: 4),
+                Text('Visible only to admins of this organization.',
+                    style: Theme.of(ctx).textTheme.bodySmall),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: ctrl,
+                  maxLines: 4,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Member requested loan top-up; pending KYC',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text('Pin to top'),
+                  value: pinned,
+                  onChanged: (v) => setState(() => pinned = v ?? false),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: busy ? null : () => Navigator.pop(ctx),
+                        child: const Text('CANCEL'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: busy
+                            ? null
+                            : () async {
+                                if (ctrl.text.trim().isEmpty) return;
+                                setState(() => busy = true);
+                                try {
+                                  await ref
+                                      .read(userRepositoryProvider)
+                                      .addAdminNote(
+                                        profileId: user.id,
+                                        body: ctrl.text,
+                                        pinned: pinned,
+                                      );
+                                  ref.invalidate(adminNotesProvider(user.id));
+                                  ref.invalidate(userAuditLogsProvider(
+                                      UserAuditQuery(
+                                          profileId: user.id,
+                                          authUserId: user.userId)));
+                                  if (ctx.mounted) {
+                                    Navigator.pop(ctx);
+                                    _toast(context, 'Note added.');
+                                  }
+                                } catch (e) {
+                                  if (ctx.mounted) {
+                                    setState(() => busy = false);
+                                    _toast(context, 'Failed: $e',
+                                        error: true);
+                                  }
+                                }
+                              },
+                        child: busy
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('SAVE'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  Future<void> _handleRequestDataExport(
+      BuildContext context, WidgetRef ref, ProfileModel user) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Request data export?'),
+        content: Text(
+            'A data-export request will be queued for ${user.fullName ?? "this user"}. '
+            'A backend job will compile the file and the download link will '
+            'appear here when ready.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('CANCEL')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('REQUEST')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref
+          .read(userRepositoryProvider)
+          .requestUserDataExport(profileId: user.id);
+      ref.invalidate(userDataExportsProvider(user.id));
+      ref.invalidate(userAuditLogsProvider(
+          UserAuditQuery(profileId: user.id, authUserId: user.userId)));
+      if (context.mounted) _toast(context, 'Export queued.');
+    } catch (e) {
+      if (context.mounted) _toast(context, 'Failed: $e', error: true);
+    }
+  }
+
+  Future<void> _showDeleteWithReasonDialog(
+      BuildContext context, WidgetRef ref, ProfileModel user) async {
+    final reasonCtrl = TextEditingController();
+    bool busy = false;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            title: const Text('Permanently delete user?'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'This is irreversible. The profile will be removed and '
+                    'their auth account deleted via the delete-user Edge '
+                    'Function. A reason is required for compliance.',
+                    style:
+                        Theme.of(ctx).textTheme.bodySmall?.copyWith(fontSize: 12),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: reasonCtrl,
+                    maxLines: 3,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: 'Reason *',
+                      hintText: 'e.g. KYC fraud confirmed; user request',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: busy ? null : () => Navigator.pop(ctx, false),
+                  child: const Text('CANCEL')),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: busy
+                    ? null
+                    : () async {
+                        if (reasonCtrl.text.trim().isEmpty) return;
+                        setState(() => busy = true);
+                        try {
+                          await ref
+                              .read(userRepositoryProvider)
+                              .deleteUserWithReason(
+                                profileId: user.id,
+                                reason: reasonCtrl.text,
+                              );
+                          if (ctx.mounted) Navigator.pop(ctx, true);
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            setState(() => busy = false);
+                            _toast(context, 'Failed: $e', error: true);
+                          }
+                        }
+                      },
+                child: busy
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('DELETE'),
+              ),
+            ],
+          );
+        });
+      },
+    );
+    if (result == true && context.mounted) {
+      ref.invalidate(userListProvider);
+      _toast(context, 'User deleted.');
+      context.pop();
+    }
+  }
+
+  Future<void> _openViewAsSheet(
+      BuildContext context,
+      ProfileModel user,
+      List<LoanModel> loans,
+      List<SavingsModel> savings,
+      ThemeData theme,
+      bool isDark) async {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
+          expand: false,
+          builder: (ctx, scrollCtrl) {
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    color: Colors.teal.withValues(alpha: 0.12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.visibility_rounded,
+                            size: 18, color: Colors.teal),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('VIEWING AS ${user.fullName ?? "USER"}',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.teal,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1,
+                                      fontSize: 10)),
+                              Text('Read-only preview · no actions available',
+                                  style: theme.textTheme.bodySmall),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            icon: const Icon(Icons.close_rounded)),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollCtrl,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GlassCard(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor:
+                                      theme.colorScheme.primary
+                                          .withValues(alpha: 0.15),
+                                  child: Text(
+                                    (user.fullName ?? '?')[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 22,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(user.fullName ?? '—',
+                                          style: theme.textTheme.titleLarge
+                                              ?.copyWith(
+                                                  fontWeight:
+                                                      FontWeight.w900)),
+                                      Text(user.email ?? user.phone ?? '',
+                                          style: theme.textTheme.bodySmall),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Your Loans',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 8),
+                          if (loans.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text('No active loans.',
+                                  style: TextStyle(color: Colors.grey)),
+                            )
+                          else
+                            for (final l in loans.take(5))
+                              GlassCard(
+                                padding: const EdgeInsets.all(14),
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                        Icons.account_balance_wallet_rounded,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                              'Loan ${l.id.substring(0, math.min(8, l.id.length)).toUpperCase()}',
+                                              style: const TextStyle(
+                                                  fontWeight:
+                                                      FontWeight.w800)),
+                                          Text(
+                                              'Outstanding: ₹${_compact(l.outstandingBalance)}',
+                                              style:
+                                                  theme.textTheme.bodySmall),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(l.status.name.toUpperCase(),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                                fontWeight:
+                                                    FontWeight.w900)),
+                                  ],
+                                ),
+                              ),
+                          const SizedBox(height: 16),
+                          Text('Your Savings',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 8),
+                          if (savings.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text('No savings plans.',
+                                  style: TextStyle(color: Colors.grey)),
+                            )
+                          else
+                            for (final s in savings.take(5))
+                              GlassCard(
+                                padding: const EdgeInsets.all(14),
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.savings_rounded,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                              'Plan ${s.id.substring(0, math.min(8, s.id.length)).toUpperCase()}',
+                                              style: const TextStyle(
+                                                  fontWeight:
+                                                      FontWeight.w800)),
+                                          Text(
+                                              'Target: ₹${_compact(s.targetAmount)}',
+                                              style:
+                                                  theme.textTheme.bodySmall),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ===========================================================================
+  // ADMIN — SMALL UI HELPERS
+  // ===========================================================================
+
+  Widget _kvRow(_KvRow row, ThemeData theme, bool isDark) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(row.label.toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  fontSize: 10,
+                  color: theme.textTheme.bodySmall?.color
+                      ?.withValues(alpha: 0.7))),
+        ),
+        Expanded(
+          child: Text(row.value,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600, fontSize: 13)),
+        ),
+      ],
+    );
+  }
+
+  Widget _bigStat(
+      {required String label,
+      required String value,
+      required Color color,
+      required ThemeData theme}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
+                  fontSize: 10)),
+          const SizedBox(height: 6),
+          Text(value,
+              style: theme.textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.w900, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniStat(String label, int n, Color color, ThemeData theme) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Text('$n',
+                style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900, color: color)),
+            Text(label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    letterSpacing: 0.5)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _auditRow(
+      Map<String, dynamic> row, ThemeData theme, bool isDark) {
+    final action = (row['action'] ?? '—').toString();
+    final created = row['created_at']?.toString();
+    final ip = row['ip_address']?.toString();
+    final details = row['details'];
+    final detailStr = (details is Map && details.isNotEmpty)
+        ? details.entries
+            .take(2)
+            .map((e) => '${e.key}=${e.value}')
+            .join(', ')
+        : null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            margin: const EdgeInsets.only(top: 6, right: 10),
+            decoration: BoxDecoration(
+                color: _auditColorFor(action), shape: BoxShape.circle),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(action,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w800, fontSize: 13)),
+                if (detailStr != null)
+                  Text(detailStr,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(fontSize: 11, color: Colors.grey)),
+                Text(
+                    [
+                      _fmtDate(
+                          created != null ? DateTime.tryParse(created) : null),
+                      if (ip != null && ip.isNotEmpty) ip,
+                    ].join(' · '),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _auditColorFor(String action) {
+    if (action.contains('deleted') || action.contains('force_logout')) {
+      return Colors.red;
+    }
+    if (action.contains('role') || action.contains('status')) {
+      return Colors.orange;
+    }
+    if (action.contains('password') || action.contains('export')) {
+      return Colors.indigo;
+    }
+    if (action.contains('note')) return Colors.purple;
+    return Colors.green;
+  }
+
+  Widget _noteTile(BuildContext context, WidgetRef ref, ProfileModel user,
+      Map<String, dynamic> note, ThemeData theme, bool isDark) {
+    final body = (note['body'] ?? '').toString();
+    final pinned = note['pinned'] == true;
+    final createdAt = note['created_at']?.toString();
+    final author = note['author'];
+    final authorName = author is Map ? author['full_name']?.toString() : null;
+    final accent = pinned ? Colors.amber : theme.colorScheme.tertiary;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(pinned ? Icons.push_pin_rounded : Icons.notes_rounded,
+              size: 16, color: accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(body,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 4),
+                Text(
+                    [
+                      authorName ?? 'Admin',
+                      _fmtDate(createdAt != null
+                          ? DateTime.tryParse(createdAt)
+                          : null),
+                    ].join(' · '),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          PopupMenuButton<String>(
+            iconSize: 18,
+            onSelected: (v) async {
+              final repo = ref.read(userRepositoryProvider);
+              if (v == 'pin') {
+                await repo.setAdminNotePinned(
+                    note['id'].toString(), !pinned);
+              } else if (v == 'delete') {
+                await repo.deleteAdminNote(note['id'].toString(),
+                    profileId: user.id);
+              }
+              ref.invalidate(adminNotesProvider(user.id));
+              ref.invalidate(userAuditLogsProvider(
+                  UserAuditQuery(profileId: user.id, authUserId: user.userId)));
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                  value: 'pin', child: Text(pinned ? 'Unpin' : 'Pin')),
+              const PopupMenuItem(value: 'delete', child: Text('Delete')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _exportRow(
+      Map<String, dynamic> ex, ThemeData theme, bool isDark) {
+    final status = (ex['status'] ?? 'pending').toString();
+    final created = ex['created_at']?.toString();
+    final url = ex['file_url']?.toString();
+    Color c;
+    switch (status) {
+      case 'completed':
+        c = Colors.green;
+        break;
+      case 'processing':
+        c = Colors.blue;
+        break;
+      case 'failed':
+        c = Colors.red;
+        break;
+      default:
+        c = Colors.orange;
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                  color: c.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6)),
+              child: Text(status.toUpperCase(),
+                  style: TextStyle(
+                      color: c,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1))),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _fmtDate(created != null ? DateTime.tryParse(created) : null),
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
+            ),
+          ),
+          if (url != null && url.isNotEmpty)
+            const Icon(Icons.cloud_download_rounded,
+                size: 16, color: Colors.green),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider(ThemeData theme) => Divider(
+      height: 0,
+      thickness: 0.4,
+      color: theme.dividerColor.withValues(alpha: 0.2));
+
+  void _toast(BuildContext context, String msg, {bool error = false}) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg),
+        backgroundColor: error ? Colors.red : AppColors.success,
+        behavior: SnackBarBehavior.floating));
+  }
+
+  String _statusLabel(AccountStatus s) {
+    switch (s) {
+      case AccountStatus.active:
+        return 'Active';
+      case AccountStatus.inactive:
+        return 'Inactive';
+      case AccountStatus.suspended:
+        return 'Suspended';
+      case AccountStatus.onLeave:
+        return 'On Leave';
+      case AccountStatus.pending:
+        return 'Pending';
+    }
+  }
+
+  String _roleLabel(UserRole? r) {
+    if (r == null) return '—';
+    switch (r) {
+      case UserRole.superAdmin:
+        return 'Super Admin';
+      case UserRole.executiveAdmin:
+        return 'Executive Admin';
+      case UserRole.manager:
+        return 'Branch Manager';
+      case UserRole.collectionAgent:
+        return 'Collection Agent';
+      case UserRole.customer:
+        return 'Customer';
+    }
+  }
+
+  String _fmtDate(DateTime? dt) {
+    if (dt == null) return '—';
+    return '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _compact(double v) {
+    if (v >= 10000000) return '${(v / 10000000).toStringAsFixed(1)}Cr';
+    if (v >= 100000) return '${(v / 100000).toStringAsFixed(1)}L';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}k';
+    return v.toStringAsFixed(0);
   }
 
   Widget _buildSliverAppBar(
@@ -1693,6 +3414,79 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         icon: const Icon(Icons.keyboard_arrow_down_rounded),
         dropdownColor: isDark ? AppColors.elevatedDark : Colors.white,
         borderRadius: BorderRadius.circular(16),
+      ),
+    );
+  }
+}
+
+
+// =============================================================================
+// ADMIN — small private value classes / cards
+// =============================================================================
+
+class _KvRow {
+  final String label;
+  final String value;
+  const _KvRow(this.label, this.value);
+}
+
+/// A consistent admin-section card: header (icon + title + optional trailing)
+/// followed by [child] body. All admin sections use this so they look
+/// uniform and clearly belong together.
+class _AdminCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color accent;
+  final bool isDark;
+  final Widget child;
+  final Widget? trailing;
+
+  const _AdminCard({
+    required this.title,
+    required this.icon,
+    required this.accent,
+    required this.isDark,
+    required this.child,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.18), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900, letterSpacing: -0.2)),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
       ),
     );
   }

@@ -479,4 +479,314 @@ class UserRepository {
     }
     return users;
   }
+
+  // ---------------------------------------------------------------------------
+  // ADMIN: AUDIT LOG WRITE / READ
+  // ---------------------------------------------------------------------------
+
+  /// Append a row to `audit_logs` describing an admin action.
+  /// Best-effort: failures are swallowed so a logging hiccup never blocks
+  /// the actual admin operation.
+  Future<void> logAdminAction({
+    required String action,
+    String? entityType,
+    String? entityId,
+    Map<String, dynamic>? details,
+  }) async {
+    try {
+      await _client.from('audit_logs').insert({
+        'org_id': _orgId,
+        'user_id': _client.auth.currentUser?.id,
+        'action': action,
+        'entity_type': entityType,
+        'entity_id': entityId,
+        'details': details ?? <String, dynamic>{},
+      });
+    } catch (e) {
+      debugPrint('logAdminAction error: $e');
+    }
+  }
+
+  /// Fetch admin-relevant audit_logs entries that target the given user.
+  /// Looks up by both:
+  ///   - rows where the user IS the actor (audit_logs.user_id == authUserId)
+  ///   - rows where the user IS the entity (entity_type='profile' AND
+  ///     entity_id == profileId)
+  Future<List<Map<String, dynamic>>> getAuditLogsForUser({
+    required String profileId,
+    String? authUserId,
+    int limit = 100,
+  }) async {
+    try {
+      final orParts = <String>['entity_id.eq.$profileId'];
+      if (authUserId != null && authUserId.isNotEmpty) {
+        orParts.add('user_id.eq.$authUserId');
+      }
+      final res = await _client
+          .from('audit_logs')
+          .select()
+          .eq('org_id', _orgId)
+          .or(orParts.join(','))
+          .order('created_at', ascending: false)
+          .limit(limit);
+      return List<Map<String, dynamic>>.from(res as List? ?? const []);
+    } catch (e) {
+      debugPrint('getAuditLogsForUser error: $e');
+      return const [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADMIN: ADMIN NOTES (admin-only annotations on a user profile)
+  // ---------------------------------------------------------------------------
+
+  /// All notes attached to [profileId], newest first.
+  Future<List<Map<String, dynamic>>> getAdminNotes(String profileId) async {
+    try {
+      final res = await _client
+          .from('admin_notes')
+          .select(
+              '*, author:profiles!admin_notes_author_profile_id_fkey(id, full_name, role)')
+          .eq('user_profile_id', profileId)
+          .order('pinned', ascending: false)
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(res as List? ?? const []);
+    } catch (e) {
+      debugPrint('getAdminNotes error: $e');
+      // Fall back to a plain select if the join above isn't available
+      try {
+        final res = await _client
+            .from('admin_notes')
+            .select()
+            .eq('user_profile_id', profileId)
+            .order('created_at', ascending: false);
+        return List<Map<String, dynamic>>.from(res as List? ?? const []);
+      } catch (e2) {
+        debugPrint('getAdminNotes fallback error: $e2');
+        return const [];
+      }
+    }
+  }
+
+  /// Insert a new admin note. Returns the created row.
+  Future<Map<String, dynamic>?> addAdminNote({
+    required String profileId,
+    required String body,
+    bool pinned = false,
+  }) async {
+    final trimmed = body.trim();
+    if (trimmed.isEmpty) {
+      throw Exception('Note body cannot be empty');
+    }
+    // Find the author's profile id from the current auth user.
+    String? authorProfileId;
+    final authUserId = _client.auth.currentUser?.id;
+    if (authUserId != null) {
+      try {
+        final p = await _client
+            .from('profiles')
+            .select('id')
+            .eq('user_id', authUserId)
+            .eq('org_id', _orgId)
+            .maybeSingle();
+        authorProfileId = p?['id'] as String?;
+      } catch (e) {
+        debugPrint('addAdminNote author lookup error: $e');
+      }
+    }
+    final row = await _client
+        .from('admin_notes')
+        .insert({
+          'org_id': _orgId,
+          'user_profile_id': profileId,
+          'author_profile_id': authorProfileId,
+          'body': trimmed,
+          'pinned': pinned,
+        })
+        .select()
+        .maybeSingle();
+    await logAdminAction(
+      action: 'admin_note.created',
+      entityType: 'profile',
+      entityId: profileId,
+      details: {'note_id': row?['id'], 'pinned': pinned},
+    );
+    return row == null ? null : Map<String, dynamic>.from(row);
+  }
+
+  /// Toggle the pinned flag on an existing note.
+  Future<void> setAdminNotePinned(String noteId, bool pinned) async {
+    await _client
+        .from('admin_notes')
+        .update({'pinned': pinned}).eq('id', noteId);
+  }
+
+  /// Delete an admin note. Author or super-admin only (enforced by RLS).
+  Future<void> deleteAdminNote(String noteId, {String? profileId}) async {
+    await _client.from('admin_notes').delete().eq('id', noteId);
+    await logAdminAction(
+      action: 'admin_note.deleted',
+      entityType: 'profile',
+      entityId: profileId,
+      details: {'note_id': noteId},
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADMIN: COMPLIANCE — DATA EXPORT REQUESTS
+  // ---------------------------------------------------------------------------
+
+  /// Queue a data-export request for one user. Writes a row into the
+  /// existing `data_exports` table (which already has RLS for org isolation).
+  /// A backend worker / Edge Function (admin-export-user-data) is expected
+  /// to pick up rows with status='pending' and produce the file.
+  Future<Map<String, dynamic>?> requestUserDataExport({
+    required String profileId,
+    String format = 'json',
+  }) async {
+    String? createdById;
+    final authUserId = _client.auth.currentUser?.id;
+    if (authUserId != null) {
+      try {
+        final p = await _client
+            .from('profiles')
+            .select('id')
+            .eq('user_id', authUserId)
+            .eq('org_id', _orgId)
+            .maybeSingle();
+        createdById = p?['id'] as String?;
+      } catch (_) {}
+    }
+
+    final row = await _client
+        .from('data_exports')
+        .insert({
+          'org_id': _orgId,
+          // 'full_backup' is the only generic value supported by the
+          // data_exports.type CHECK constraint that fits "everything for
+          // one user". The user is identified via filters.
+          'type': 'full_backup',
+          'format': format,
+          'status': 'pending',
+          'filters': {
+            'scope': 'single_user',
+            'profile_id': profileId,
+          },
+          'created_by': createdById,
+        })
+        .select()
+        .maybeSingle();
+
+    await logAdminAction(
+      action: 'data_export.requested',
+      entityType: 'profile',
+      entityId: profileId,
+      details: {'export_id': row?['id'], 'format': format},
+    );
+
+    return row == null ? null : Map<String, dynamic>.from(row);
+  }
+
+  /// List recent export requests scoped to a single user.
+  Future<List<Map<String, dynamic>>> listUserDataExports(
+      String profileId) async {
+    try {
+      final res = await _client
+          .from('data_exports')
+          .select()
+          .eq('org_id', _orgId)
+          // PostgREST JSON contains operator
+          .contains('filters', {'profile_id': profileId})
+          .order('created_at', ascending: false)
+          .limit(20);
+      return List<Map<String, dynamic>>.from(res as List? ?? const []);
+    } catch (e) {
+      debugPrint('listUserDataExports error: $e');
+      return const [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADMIN: DELETE WITH REASON (audit-logged)
+  // ---------------------------------------------------------------------------
+
+  /// Audit-logged version of [deleteUser]. The reason is required and is
+  /// stored in audit_logs.details.reason for compliance.
+  Future<void> deleteUserWithReason({
+    required String profileId,
+    required String reason,
+  }) async {
+    final r = reason.trim();
+    if (r.isEmpty) {
+      throw Exception('A reason is required to permanently delete a user.');
+    }
+    // Snapshot a few useful fields before the row disappears.
+    Map<String, dynamic>? snapshot;
+    try {
+      snapshot = await _client
+          .from('profiles')
+          .select('id, full_name, email, phone, role, branch_id')
+          .eq('id', profileId)
+          .maybeSingle();
+    } catch (_) {}
+
+    await logAdminAction(
+      action: 'profile.deleted',
+      entityType: 'profile',
+      entityId: profileId,
+      details: {
+        'reason': r,
+        if (snapshot != null) 'snapshot': snapshot,
+      },
+    );
+    await deleteUser(profileId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADMIN: ROLE CHANGE (audit-logged wrapper)
+  // ---------------------------------------------------------------------------
+
+  Future<void> changeUserRole({
+    required String profileId,
+    required UserRole oldRole,
+    required UserRole newRole,
+    String? reason,
+  }) async {
+    if (oldRole == newRole) return;
+    await updateUserRole(profileId, newRole);
+    await logAdminAction(
+      action: 'profile.role_changed',
+      entityType: 'profile',
+      entityId: profileId,
+      details: {
+        'from': oldRole.name,
+        'to': newRole.name,
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADMIN: STATUS CHANGE (audit-logged wrapper)
+  // ---------------------------------------------------------------------------
+
+  Future<void> changeUserStatus({
+    required String profileId,
+    required AccountStatus oldStatus,
+    required AccountStatus newStatus,
+    String? reason,
+  }) async {
+    if (oldStatus == newStatus) return;
+    await updateUserStatus(profileId, newStatus);
+    await logAdminAction(
+      action: 'profile.status_changed',
+      entityType: 'profile',
+      entityId: profileId,
+      details: {
+        'from': oldStatus.wireValue,
+        'to': newStatus.wireValue,
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+  }
 }

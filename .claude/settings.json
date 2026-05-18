@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git --no-pager diff --cached lib/features/users/presentation/pages/user_details_page.dart)",
+      "Bash(git --no-pager diff --cached lib/core/services/avatar_upload_service.dart)"
+    ]
+  }
+}

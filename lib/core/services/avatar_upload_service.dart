@@ -64,7 +64,7 @@ class AvatarUploadService {
       return await _uploadBytes(compressed, userId);
     } catch (e) {
       debugPrint('AvatarUploadService.pickAndUploadAvatar error: $e');
-      return null;
+      rethrow;
     }
   }
 
@@ -91,7 +91,7 @@ class AvatarUploadService {
       return publicUrl;
     } catch (e) {
       debugPrint('AvatarUploadService._uploadBytes error: $e');
-      return null;
+      rethrow;
     }
   }
 
@@ -106,7 +106,7 @@ class AvatarUploadService {
       return true;
     } catch (e) {
       debugPrint('AvatarUploadService.updateProfileAvatarUrl error: $e');
-      return false;
+      rethrow;
     }
   }
 

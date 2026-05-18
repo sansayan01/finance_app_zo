@@ -641,6 +641,15 @@ class HomePage extends ConsumerWidget {
                             builder: (_) => const BranchManagementPage())),
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.location_on_rounded,
+                    label: 'Live Map',
+                    color: const Color(0xFF00BFA5),
+                    onTap: () => context.push('/live-map'),
+                  ),
+                ),
                 if (!hasManager) ...[
                   const SizedBox(width: 12),
                   Expanded(

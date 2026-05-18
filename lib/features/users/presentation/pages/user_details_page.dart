@@ -1984,6 +1984,19 @@ class UserDetailsPage extends ConsumerWidget {
     final hasAvatar =
         user.avatarUrl != null && user.avatarUrl!.trim().isNotEmpty;
 
+    ref.listen<AsyncValue<String?>>(avatarUploadNotifierProvider,
+        (prev, next) {
+      next.whenOrNull(
+        error: (e, _) => _toast(context, 'Avatar update failed: $e',
+            error: true),
+        data: (url) {
+          if (url != null && prev is AsyncLoading) {
+            _toast(context, 'Avatar updated.');
+          }
+        },
+      );
+    });
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -2959,17 +2972,52 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     setState(() => _isLoading = true);
     try {
       final repository = ref.read(userRepositoryProvider);
-      await repository.updateUser(widget.user.id, {
-        'full_name': _nameController.text,
-        'phone': _phoneController.text,
-        'aadhar': _aadharController.text,
-        'pan': _panController.text,
-        'email': _emailController.text,
-        'employee_id': _employeeIdController.text,
-        'assigned_zone': _zoneController.text,
-        'address': _addressController.text,
-        'branch_id': _selectedBranchId,
-      });
+
+      // Build update data with only non-empty fields
+      final data = <String, dynamic>{};
+
+      if (_nameController.text.trim().isNotEmpty) {
+        data['full_name'] = _nameController.text.trim();
+      }
+      if (_phoneController.text.trim().isNotEmpty) {
+        data['phone'] = _phoneController.text.trim();
+      }
+      if (_emailController.text.trim().isNotEmpty) {
+        data['email'] = _emailController.text.trim();
+      }
+      if (_selectedBranchId != null &&
+          _selectedBranchId!.trim().isNotEmpty) {
+        data['branch_id'] = _selectedBranchId;
+      }
+
+      // These columns may or may not exist depending on the DB schema version.
+      // We include them only if they have values, and catch errors gracefully.
+      final extraFields = <String, String>{
+        'aadhar': _aadharController.text.trim(),
+        'pan': _panController.text.trim(),
+        'employee_id': _employeeIdController.text.trim(),
+        'assigned_zone': _zoneController.text.trim(),
+        'address': _addressController.text.trim(),
+      };
+
+      for (final entry in extraFields.entries) {
+        if (entry.value.isNotEmpty) {
+          data[entry.key] = entry.value;
+        }
+      }
+
+      if (data.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('No changes to save'),
+                behavior: SnackBarBehavior.floating),
+          );
+        }
+        return;
+      }
+
+      await repository.updateUser(widget.user.id, data);
 
       ref.invalidate(userListProvider);
       ref.invalidate(userDetailsProvider(widget.user.id));

@@ -27,7 +27,8 @@ import '../features/auth/data/models/user_model.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/loans/presentation/pages/loans_page.dart';
 import '../features/savings/presentation/pages/savings_page.dart';
-import '../features/settings/presentation/pages/settings_page.dart';
+import '../features/settings/presentation/pages/settings_page_v2.dart';
+import '../features/settings/presentation/pages/organization_profile_page.dart';
 import '../features/settings/presentation/pages/profile_page.dart';
 import '../features/settings/presentation/pages/activity_logs_page.dart';
 import '../features/settings/presentation/pages/app_update_page.dart';
@@ -99,13 +100,8 @@ import '../features/billing/presentation/pages/billing_page.dart';
 import '../features/billing/presentation/pages/invoices_page.dart';
 import '../features/billing/presentation/pages/usage_limits_page.dart';
 
-// Branch Manager Portal - NEW
-// import '../features/branch_manager/presentation/pages/branch_manager_shell.dart';
-// import '../features/branch_manager/presentation/pages/branch_manager_dashboard.dart';
-// import '../features/branch_manager/presentation/pages/staff_management_page.dart';
-// import '../features/branch_manager/presentation/pages/branch_collections_page.dart';
-// import '../features/branch_manager/presentation/pages/pending_approvals_page.dart';
-// import '../features/branch_manager/presentation/pages/branch_cash_page.dart';
+// Branch Manager Portal
+import '../features/branch_manager/presentation/pages/manager_live_map_page.dart';
 
 // =====================================================
 // AUTH REDIRECT LISTENER
@@ -469,11 +465,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/settings',
-            builder: (context, state) => const SettingsPage(),
+            builder: (context, state) => const SettingsPageV2(),
             routes: [
               GoRoute(
                 path: 'profile',
                 builder: (context, state) => const ProfilePage(),
+              ),
+              GoRoute(
+                path: 'organization',
+                builder: (context, state) => const OrganizationProfilePage(),
               ),
               GoRoute(
                 path: 'logs',
@@ -508,6 +508,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/branches',
             builder: (context, state) => const BranchManagementPage(),
+          ),
+          GoRoute(
+            path: '/live-map',
+            builder: (context, state) => const ManagerLiveMapPage(),
           ),
         ],
       ),

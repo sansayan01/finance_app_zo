@@ -12,7 +12,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 const RESEND_API_URL = 'https://api.resend.com/emails'
 const FROM_EMAIL = 'MicroFlow Pro <noreply@microflowpro.com>'
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS for preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: getCorsHeaders() })
@@ -68,11 +68,11 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('Error sending welcome email:', error)
-    
+    const message = error instanceof Error ? error.message : String(error)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        message: error.message || 'Failed to send welcome email' 
+        message: message 
       }),
       { 
         headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
@@ -86,6 +86,6 @@ function getCorsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   }
 }

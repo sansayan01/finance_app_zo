@@ -453,7 +453,7 @@ class UserDetailsPage extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () =>
-                      _handlePasswordReset(context, ref, user),
+                      _showPasswordOptions(context, ref, user, theme),
                   icon: const Icon(Icons.password_rounded, size: 16),
                   label: const Text('Reset Password'),
                   style: OutlinedButton.styleFrom(
@@ -1023,6 +1023,302 @@ class UserDetailsPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) _toast(context, 'Failed: $e', error: true);
     }
+  }
+
+  /// Shows a bottom sheet with password management options.
+  void _showPasswordOptions(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme) {
+    final primary = theme.colorScheme.primary;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Password Management',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w900)),
+              const SizedBox(height: 4),
+              Text(
+                user.fullName ?? 'User',
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.6)),
+              ),
+              const SizedBox(height: 24),
+              // Option 1: Set new password directly
+              _buildPasswordOption(
+                icon: Icons.lock_reset_rounded,
+                title: 'Set New Password',
+                subtitle: 'Immediately change the password',
+                color: primary,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showSetPasswordDialog(context, ref, user, theme);
+                },
+              ),
+              const SizedBox(height: 12),
+              // Option 2: Send reset email
+              _buildPasswordOption(
+                icon: Icons.email_rounded,
+                title: 'Send Reset Link',
+                subtitle: 'Email a password reset link to the user',
+                color: AppColors.warning,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _handlePasswordReset(context, ref, user);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 14)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: Colors.grey.shade400, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Shows a dialog to directly set a new password for the user.
+  Future<void> _showSetPasswordDialog(BuildContext context, WidgetRef ref,
+      ProfileModel user, ThemeData theme) async {
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    bool obscurePassword = true;
+    bool isLoading = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          final primary = theme.colorScheme.primary;
+          final passwordsMatch =
+              passwordController.text == confirmController.text;
+          final isValid = passwordController.text.length >= 6 && passwordsMatch;
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Icon(Icons.lock_reset_rounded, color: primary, size: 22),
+                const SizedBox(width: 10),
+                const Text('Set New Password'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded,
+                            size: 16, color: AppColors.warning),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'This will immediately change the password for '
+                            '${user.fullName ?? "this user"}. They will need '
+                            'to use the new password on next login.',
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      hintText: 'Min 6 characters',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      prefixIcon: const Icon(Icons.lock_rounded, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          size: 20,
+                        ),
+                        onPressed: () =>
+                            setState(() => obscurePassword = !obscurePassword),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: confirmController,
+                    obscureText: obscurePassword,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: 'Confirm Password',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      prefixIcon:
+                          const Icon(Icons.lock_outline_rounded, size: 20),
+                      errorText: confirmController.text.isNotEmpty &&
+                              !passwordsMatch
+                          ? 'Passwords do not match'
+                          : null,
+                    ),
+                  ),
+                  if (passwordController.text.isNotEmpty &&
+                      passwordController.text.length < 6) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Password must be at least 6 characters',
+                      style: TextStyle(
+                          color: theme.colorScheme.error, fontSize: 11),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pop(ctx),
+                child: const Text('CANCEL'),
+              ),
+              ElevatedButton(
+                onPressed: (isValid && !isLoading)
+                    ? () async {
+                        setState(() => isLoading = true);
+                        try {
+                          await ref
+                              .read(userRepositoryProvider)
+                              .adminSetUserPassword(
+                                targetUserId: user.userId ?? user.id,
+                                newPassword: passwordController.text,
+                              );
+                          // Log the action
+                          await ref
+                              .read(userRepositoryProvider)
+                              .logAdminAction(
+                                action: 'admin.password_force_reset',
+                                entityType: 'profile',
+                                entityId: user.id,
+                                details: {
+                                  'target_name': user.fullName,
+                                  'method': 'direct_set',
+                                },
+                              );
+                          ref.invalidate(userAuditLogsProvider(UserAuditQuery(
+                              profileId: user.id,
+                              authUserId: user.userId)));
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            _toast(context,
+                                'Password updated for ${user.fullName ?? "user"}.');
+                          }
+                        } catch (e) {
+                          setState(() => isLoading = false);
+                          if (ctx.mounted) {
+                            _toast(context, 'Failed: $e', error: true);
+                          }
+                        }
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text('SET PASSWORD'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    passwordController.dispose();
+    confirmController.dispose();
   }
 
   Future<void> _handleForceLogout(

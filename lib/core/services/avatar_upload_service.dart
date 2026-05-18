@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,35 +32,54 @@ class AvatarUploadService {
 
       if (picked == null) return null;
 
-      // 2. Compress
-      final file = File(picked.path);
-      final compressed = await ImageCompressService.compressFile(
-        file,
-        maxDimension: 256,
-        quality: 35,
-      );
+      // 2. Read bytes (fully cross-platform, no dart:io dependency!)
+      final originalBytes = await picked.readAsBytes();
 
-      if (compressed == null) {
-        debugPrint('AvatarUpload: compression failed, using original');
-        // Fallback: try with bytes directly
-        final bytes = await file.readAsBytes();
-        return await _uploadBytes(bytes, userId);
+      Uint8List? compressed;
+      // 3. Compress if not on Web (native compression is highly performant)
+      if (!kIsWeb) {
+        try {
+          compressed = await ImageCompressService.compressBytes(
+            originalBytes,
+            maxDimension: 256,
+            quality: 35,
+          );
+        } catch (e) {
+          debugPrint('AvatarUpload: native compression failed: $e');
+        }
+      } else {
+        // On Web, try compression but degrade gracefully if unsupported by browser
+        try {
+          compressed = await ImageCompressService.compressBytes(
+            originalBytes,
+            maxDimension: 256,
+            quality: 35,
+          );
+        } catch (e) {
+          debugPrint('AvatarUpload: web compression failed: $e');
+        }
       }
 
-      // 3. Check size cap
-      if (compressed.length > _maxFileSizeBytes) {
+      final finalBytes = compressed ?? originalBytes;
+
+      // 4. Check size cap
+      if (finalBytes.length > _maxFileSizeBytes) {
         debugPrint(
-            'AvatarUpload: still too large (${compressed.length} bytes), '
+            'AvatarUpload: still too large (${finalBytes.length} bytes), '
             're-compressing at lower quality');
-        final recompressed = await ImageCompressService.compressBytes(
-          compressed,
-          maxDimension: 200,
-          quality: 20,
-        );
-        return await _uploadBytes(recompressed ?? compressed, userId);
+        try {
+          final recompressed = await ImageCompressService.compressBytes(
+            finalBytes,
+            maxDimension: 200,
+            quality: 20,
+          );
+          return await _uploadBytes(recompressed ?? finalBytes, userId);
+        } catch (e) {
+          debugPrint('AvatarUpload: re-compression failed: $e');
+        }
       }
 
-      return await _uploadBytes(compressed, userId);
+      return await _uploadBytes(finalBytes, userId);
     } catch (e) {
       debugPrint('AvatarUploadService.pickAndUploadAvatar error: $e');
       rethrow;

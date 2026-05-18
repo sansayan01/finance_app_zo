@@ -235,6 +235,35 @@ class UserRepository {
     await _client.auth.resetPasswordForEmail(email.trim());
   }
 
+  /// Forcefully set a new password for a user via the admin Edge Function.
+  /// Only executive admins and managers can use this.
+  /// The Edge Function validates org isolation and role hierarchy.
+  Future<void> adminSetUserPassword({
+    required String targetUserId,
+    required String newPassword,
+  }) async {
+    if (targetUserId.isEmpty) {
+      throw Exception('Target user ID is required.');
+    }
+    if (newPassword.length < 6) {
+      throw Exception('Password must be at least 6 characters.');
+    }
+
+    final response = await _client.functions.invoke(
+      'set-user-password',
+      body: {
+        'target_user_id': targetUserId,
+        'new_password': newPassword,
+      },
+    );
+
+    if (response.status != 200) {
+      final data = response.data;
+      final message = data is Map ? data['message'] : 'Failed to set password';
+      throw Exception(message);
+    }
+  }
+
   /// Force-logout a user. Tries the `force-logout` edge function first;
   /// falls back to flipping the profile's status to `inactive`, which
   /// will be picked up by the next session refresh.

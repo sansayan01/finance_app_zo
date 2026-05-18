@@ -3,7 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
@@ -35,7 +36,7 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
   final _accentColorCtrl = TextEditingController();
 
   String? _logoUrl;
-  File? _selectedLogo;
+  Uint8List? _selectedLogoBytes;
   bool _isSaving = false;
   bool _isLoading = true;
   bool _isUploadingLogo = false;
@@ -76,13 +77,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     );
 
     if (pickedFile != null) {
-      setState(() => _selectedLogo = File(pickedFile.path));
+      final bytes = await pickedFile.readAsBytes();
+      setState(() => _selectedLogoBytes = bytes);
       await _uploadLogo();
     }
   }
 
   Future<void> _uploadLogo() async {
-    if (_selectedLogo == null) return;
+    if (_selectedLogoBytes == null) return;
 
     setState(() => _isUploadingLogo = true);
     try {
@@ -93,7 +95,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
 
       await client.storage
           .from('organization-assets')
-          .upload(fileName, _selectedLogo!);
+          .uploadBinary(
+            fileName,
+            _selectedLogoBytes!,
+            fileOptions: const FileOptions(
+              contentType: 'image/png',
+              upsert: true,
+            ),
+          );
 
       final publicUrl =
           client.storage.from('organization-assets').getPublicUrl(fileName);
@@ -393,9 +402,9 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                   border: Border.all(
                       color: AppColors.primary.withValues(alpha: 0.2),
                       width: 2),
-                  image: _selectedLogo != null
+                  image: _selectedLogoBytes != null
                       ? DecorationImage(
-                          image: FileImage(_selectedLogo!), fit: BoxFit.cover)
+                          image: MemoryImage(_selectedLogoBytes!), fit: BoxFit.cover)
                       : _logoUrl != null
                           ? DecorationImage(
                               image: NetworkImage(_logoUrl!), fit: BoxFit.cover)
@@ -403,7 +412,7 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                 ),
                 child: _isUploadingLogo
                     ? const Center(child: CircularProgressIndicator())
-                    : _selectedLogo == null && _logoUrl == null
+                    : _selectedLogoBytes == null && _logoUrl == null
                         ? Icon(Icons.add_photo_alternate_rounded,
                             size: 40,
                             color: AppColors.primary.withValues(alpha: 0.5))

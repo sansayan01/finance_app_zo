@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/providers/branch_manager_providers.dart';
+import '../../../../core/constants/layout.dart';
 
 class StaffManagementPage extends ConsumerWidget {
   const StaffManagementPage({super.key});
@@ -44,10 +45,13 @@ class StaffManagementPage extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(child: Text('Error: $error')),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/branch-manager/staff/add'),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add Staff'),
+      floatingActionButton: Padding(
+        padding: kFabSafeAreaPadding,
+        child: FloatingActionButton.extended(
+          onPressed: () => context.push('/branch-manager/staff/add'),
+          icon: const Icon(Icons.person_add),
+          label: const Text('Add Staff'),
+        ),
       ),
     );
   }

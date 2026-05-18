@@ -32,6 +32,9 @@ import '../features/settings/presentation/pages/organization_profile_page.dart';
 import '../features/settings/presentation/pages/profile_page.dart';
 import '../features/settings/presentation/pages/activity_logs_page.dart';
 import '../features/settings/presentation/pages/app_update_page.dart';
+import '../features/settings/presentation/pages/branding_settings_page.dart';
+import '../features/settings/presentation/pages/integrations_settings_page.dart';
+import '../features/settings/presentation/pages/security_compliance_page.dart';
 import '../core/widgets/hud_navigation.dart';
 import '../features/loans/presentation/pages/loan_detail_page.dart';
 import '../features/loans/presentation/pages/new_loan_page.dart';
@@ -71,6 +74,7 @@ import '../features/staff/presentation/pages/staff_map_page.dart';
 import '../features/staff/presentation/pages/analytics_dashboard.dart';
 import '../features/staff/presentation/providers/sync_status_provider.dart';
 import '../core/services/haptic_service.dart';
+import '../core/constants/layout.dart';
 
 // Super Admin Portal
 import '../features/super_admin/presentation/widgets/super_admin_shell.dart';
@@ -480,6 +484,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const OrganizationProfilePage(),
               ),
               GoRoute(
+                path: 'branding',
+                builder: (context, state) => const BrandingSettingsPage(),
+              ),
+              GoRoute(
+                path: 'integrations',
+                builder: (context, state) => const IntegrationsSettingsPage(),
+              ),
+              GoRoute(
+                path: 'security',
+                builder: (context, state) => const SecurityCompliancePage(),
+              ),
+              GoRoute(
                 path: 'logs',
                 builder: (context, state) => const ActivityLogsPage(),
               ),
@@ -716,7 +732,11 @@ class AdminShell extends StatelessWidget {
       extendBody: true,
       body: Stack(
         children: [
-          child,
+          // Inject inflated MediaQuery so SafeArea(bottom: true) and any
+          // widget that reads MediaQuery.padding.bottom inside the page
+          // automatically clears the floating glass navbar. Only applied
+          // when the bottom navbar is actually shown (mobile layout).
+          useHudNav ? child : _NavSafeArea(child: child),
           if (useHudNav)
             Positioned(
               left: 0,
@@ -816,7 +836,7 @@ class StaffShell extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
-      body: child,
+      body: _NavSafeArea(child: child),
       bottomNavigationBar: StaffBottomBar(
         currentIndex: currentIndex,
         onTap: (index) => _onItemTapped(index, context),
@@ -1147,6 +1167,35 @@ class _PremiumBottomBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// =====================================================
+// _NavSafeArea
+// Inflates MediaQuery so pages inside Admin/Staff shells reserve room
+// for the floating glass bottom nav. Any widget that uses
+// SafeArea(bottom: true) or reads MediaQuery.padding.bottom now sees
+// (system inset + navbar height). Pages without those widgets can use
+// kBottomNavSafeArea directly.
+// =====================================================
+class _NavSafeArea extends StatelessWidget {
+  final Widget child;
+  const _NavSafeArea({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    return MediaQuery(
+      data: mq.copyWith(
+        padding: mq.padding.copyWith(
+          bottom: mq.padding.bottom + kBottomNavSafeArea,
+        ),
+        viewPadding: mq.viewPadding.copyWith(
+          bottom: mq.viewPadding.bottom + kBottomNavSafeArea,
+        ),
+      ),
+      child: child,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/layout.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/providers/customer_portal_providers.dart';
@@ -89,10 +90,13 @@ class CustomerSavingsPage extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(child: Text('Error: $error')),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showDepositDialog(context, ref),
-        icon: const Icon(Icons.add),
-        label: const Text('Deposit'),
+      floatingActionButton: Padding(
+        padding: kFabSafeAreaPadding,
+        child: FloatingActionButton.extended(
+          onPressed: () => _showDepositDialog(context, ref),
+          icon: const Icon(Icons.add),
+          label: const Text('Deposit'),
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(context, 2),
     );

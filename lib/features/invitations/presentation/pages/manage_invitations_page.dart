@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/constants/layout.dart';
 import '../../data/providers/invitation_providers.dart';
 import '../../data/models/org_invitation_model.dart';
 
@@ -98,10 +99,13 @@ class ManageInvitationsPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showInviteDialog(context, ref),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Invite'),
+      floatingActionButton: Padding(
+        padding: kFabSafeAreaPadding,
+        child: FloatingActionButton.extended(
+          onPressed: () => _showInviteDialog(context, ref),
+          icon: const Icon(Icons.person_add),
+          label: const Text('Invite'),
+        ),
       ),
     );
   }

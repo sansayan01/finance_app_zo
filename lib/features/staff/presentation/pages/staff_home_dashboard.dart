@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/staff_providers.dart';
 import '../../data/providers/collection_providers.dart';
@@ -114,16 +115,19 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          HapticFeedback.mediumImpact();
-          context.push('/staff/collections');
-        },
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Quick Collect',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+      floatingActionButton: Padding(
+        padding: kFabSafeAreaPadding,
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            context.push('/staff/collections');
+          },
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Quick Collect',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+        ),
       ),
     );
   }

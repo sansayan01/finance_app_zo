@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../home/data/providers/dashboard_providers.dart';
@@ -60,7 +61,8 @@ class TransactionsPage extends ConsumerWidget {
             return ListView.builder(
               physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics()),
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(
+                  20, 20, 20, 20 + kBottomNavSafeArea),
               itemCount: transactions.length,
               itemBuilder: (context, index) {
                 final tx = transactions[index];

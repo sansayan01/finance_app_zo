@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/data/models/user_model.dart';
@@ -138,32 +139,35 @@ class _UsersPageState extends ConsumerState<UsersPage>
       backgroundColor: theme.scaffoldBackgroundColor,
       floatingActionButton: _selectionMode
           ? null
-          : _SpeedDialFab(
-              isExecAdmin: isExecAdmin,
-              isOpen: _fabOpen,
-              onToggle: () => setState(() => _fabOpen = !_fabOpen),
-              onAdd: () {
-                setState(() => _fabOpen = false);
-                context.push('/users/new');
-              },
-              onImport: () {
-                setState(() => _fabOpen = false);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const BulkImportMembersPage(),
-                  ),
+          : Padding(
+              padding: kFabSafeAreaPadding,
+              child: _SpeedDialFab(
+                isExecAdmin: isExecAdmin,
+                isOpen: _fabOpen,
+                onToggle: () => setState(() => _fabOpen = !_fabOpen),
+                onAdd: () {
+                  setState(() => _fabOpen = false);
+                  context.push('/users/new');
+                },
+                onImport: () {
+                  setState(() => _fabOpen = false);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const BulkImportMembersPage(),
+                    ),
+                  );
+                },
+                onExport: () {
+                  setState(() => _fabOpen = false);
+                  _exportCurrentTab();
+                },
+                onOrgChart: () {
+                  setState(() => _fabOpen = false);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const OrgChartPage()),
                 );
               },
-              onExport: () {
-                setState(() => _fabOpen = false);
-                _exportCurrentTab();
-              },
-              onOrgChart: () {
-                setState(() => _fabOpen = false);
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const OrgChartPage()),
-                );
-              },
+            ),
             ),
       body: _SelectionScope(
         selected: _selected,

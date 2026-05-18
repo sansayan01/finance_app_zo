@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../data/providers/branch_providers.dart';
 import '../../models/branch_model.dart';
@@ -73,16 +74,19 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
           final currentCount = branchesAsync.valueOrNull?.length ?? 0;
           final canAdd = currentCount < maxBranches;
 
-          return FloatingActionButton.extended(
-            onPressed: canAdd ? () => _showBranchDialog(context) : null,
-            backgroundColor: canAdd ? AppColors.primary : Colors.grey,
-            icon: const Icon(Icons.add_business_rounded, color: Colors.white),
-            label: Text(
-              'Add Branch',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-          ).animate().scale(delay: 300.ms);
+          return Padding(
+            padding: kFabSafeAreaPadding,
+            child: FloatingActionButton.extended(
+              onPressed: canAdd ? () => _showBranchDialog(context) : null,
+              backgroundColor: canAdd ? AppColors.primary : Colors.grey,
+              icon: const Icon(Icons.add_business_rounded, color: Colors.white),
+              label: Text(
+                'Add Branch',
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            ).animate().scale(delay: 300.ms),
+          );
         },
         loading: () => const SizedBox.shrink(),
         error: (_, __) => const SizedBox.shrink(),

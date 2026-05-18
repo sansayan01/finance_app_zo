@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/widgets/async_value_widget.dart';
 import '../../data/providers/super_admin_providers.dart';
 
@@ -72,11 +73,14 @@ class _OrganizationsManagementPageState
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _create,
-        backgroundColor: D.accent,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: kFabSafeAreaPadding,
+        child: FloatingActionButton(
+          onPressed: _create,
+          backgroundColor: D.accent,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

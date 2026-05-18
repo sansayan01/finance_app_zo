@@ -52,9 +52,13 @@ class BrandNotifier extends StateNotifier<BrandModel> {
     }
   }
 
-  Future<void> updateBrand({String? name, String? logoUrl}) async {
+  Future<void> updateBrand({String? name, String? logoUrl, String? primaryColor}) async {
     final oldName = state.name;
-    final newState = state.copyWith(name: name, logoUrl: logoUrl);
+    final newState = state.copyWith(
+      name: name,
+      logoUrl: logoUrl,
+      primaryColor: primaryColor,
+    );
     state = newState;
 
     try {
@@ -68,7 +72,7 @@ class BrandNotifier extends StateNotifier<BrandModel> {
       // Log the activity
       await _ref.read(activityLogRepositoryProvider).log(
             action: 'System Branding Updated',
-            details: 'Changed brand name from "$oldName" to "${newState.name}"',
+            details: 'Changed brand name from "$oldName" to "${newState.name}" and color to "${newState.primaryColor}"',
             type: ActivityType.systemUpdate,
           );
     } catch (e) {

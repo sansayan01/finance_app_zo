@@ -11,32 +11,60 @@ class TransactionsRepository {
 
   Future<List<TransactionModel>> getRecentTransactions({int limit = 10}) async {
     try {
+      // RLS enforces org isolation — no need for client-side org_id filter
       final response = await _client
           .from('transactions')
           .select()
-          .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
 
       final list = response as List;
       if (list.isEmpty) return [];
 
-      // Skip orphan filtering if it causes issues — return all transactions
-      try {
-        final filtered = await _filterOrphanedTransactions(list);
-        return filtered
-            .map((json) => TransactionModel.fromJson(
-                Map<String, dynamic>.from(json as Map)))
-            .toList();
-      } catch (_) {
-        // If filtering fails, return unfiltered
-        return list
-            .map((json) => TransactionModel.fromJson(
-                Map<String, dynamic>.from(json as Map)))
-            .toList();
-      }
+      return list
+          .map((json) =>
+              TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
     } catch (e) {
       debugPrint('getRecentTransactions error: $e');
+      return [];
+    }
+  }
+
+  /// Paginated fetch for the transaction history page.
+  /// Uses offset-based pagination.
+  Future<List<TransactionModel>> getTransactionsPaginated({
+    int offset = 0,
+    int limit = 20,
+    TransactionType? typeFilter,
+    String? searchQuery,
+  }) async {
+    try {
+      var query = _client
+          .from('transactions')
+          .select();
+
+      if (typeFilter != null) {
+        query = query.eq('type', typeFilter.name);
+      }
+
+      if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+        query = query.ilike('member_name', '%${searchQuery.trim()}%');
+      }
+
+      final response = await query
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      final list = response as List;
+      if (list.isEmpty) return [];
+
+      return list
+          .map((json) =>
+              TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
+    } catch (e) {
+      debugPrint('getTransactionsPaginated error: $e');
       return [];
     }
   }
@@ -48,18 +76,23 @@ class TransactionsRepository {
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final response = await _client
-        .from('transactions')
-        .select()
-        .eq('org_id', _orgId)
-        .filter('created_at', 'gte', startOfDay.toIso8601String())
-        .filter('created_at', 'lt', endOfDay.toIso8601String())
-        .order('created_at', ascending: false)
-        .limit(limit);
+    try {
+      final response = await _client
+          .from('transactions')
+          .select()
+          .filter('created_at', 'gte', startOfDay.toIso8601String())
+          .filter('created_at', 'lt', endOfDay.toIso8601String())
+          .order('created_at', ascending: false)
+          .limit(limit);
 
-    final filtered = await _filterOrphanedTransactions(response as List);
-
-    return filtered.map((json) => TransactionModel.fromJson(json)).toList();
+      return (response as List)
+          .map((json) =>
+              TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
+    } catch (e) {
+      debugPrint('getTransactionsByDate error: $e');
+      return [];
+    }
   }
 
   Future<List<TransactionModel>> getTransactionsBySavingsId(
@@ -71,7 +104,6 @@ class TransactionsRepository {
       final response = await _client
           .from('transactions')
           .select()
-          .eq('org_id', _orgId)
           .eq('savings_id', savingsId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
@@ -138,18 +170,17 @@ class TransactionsRepository {
       final response = await _client
           .from('transactions')
           .select()
-          .eq('org_id', _orgId)
           .filter('created_at', 'gte', startOfDay.toIso8601String())
           .filter('created_at', 'lt', endOfDay.toIso8601String());
 
-      final filtered = await _filterOrphanedTransactions(response as List);
+      final list = response as List;
 
       double collected = 0;
       double disbursed = 0;
       int collectionCount = 0;
       int totalDue = 0;
 
-      for (final t in filtered) {
+      for (final t in list) {
         final type = t['type'] as String;
         final amount = (t['amount'] as num).toDouble();
         if (type == 'emiPayment' || type == 'savingsDeposit') {
@@ -174,71 +205,5 @@ class TransactionsRepository {
         'totalDue': 0,
       };
     }
-  }
-
-  Future<List<dynamic>> _filterOrphanedTransactions(
-      List<dynamic> transactions) async {
-    if (transactions.isEmpty) return [];
-
-    final loanIds = transactions
-        .map((t) => t['loan_id'] as String?)
-        .where((id) => id != null)
-        .cast<String>()
-        .toSet()
-        .toList();
-
-    final savingsIds = transactions
-        .map((t) => t['savings_id'] as String?)
-        .where((id) => id != null)
-        .cast<String>()
-        .toSet()
-        .toList();
-
-    final Map<String, bool> existingLoans = {};
-    if (loanIds.isNotEmpty) {
-      try {
-        final loansResponse =
-            await _client.from('loans').select('id').inFilter('id', loanIds);
-        for (final l in loansResponse as List) {
-          existingLoans[l['id'] as String] = true;
-        }
-      } catch (_) {}
-    }
-
-    final Map<String, bool> existingSavings = {};
-    if (savingsIds.isNotEmpty) {
-      try {
-        final savingsResponse = await _client
-            .from('savings_plans')
-            .select('id')
-            .inFilter('id', savingsIds);
-        for (final s in savingsResponse as List) {
-          existingSavings[s['id'].toString()] = true;
-        }
-      } catch (_) {
-        try {
-          final savingsResponse = await _client
-              .from('savings')
-              .select('id')
-              .inFilter('id', savingsIds);
-          for (final s in savingsResponse as List) {
-            existingSavings[s['id'].toString()] = true;
-          }
-        } catch (_) {}
-      }
-    }
-
-    return transactions.where((t) {
-      final loanId = t['loan_id'] as String?;
-      final savingsId = t['savings_id'] as String?;
-
-      if (loanId != null && !existingLoans.containsKey(loanId)) {
-        return false;
-      }
-      if (savingsId != null && !existingSavings.containsKey(savingsId)) {
-        return false;
-      }
-      return true;
-    }).toList();
   }
 }

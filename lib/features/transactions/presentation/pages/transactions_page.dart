@@ -20,39 +20,83 @@ class TransactionsPage extends ConsumerStatefulWidget {
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   TransactionType? _filterType;
   String _searchQuery = '';
+  final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
+
+  // Pagination state
+  final List<TransactionModel> _transactions = [];
+  bool _isLoading = false;
+  bool _hasMore = true;
+  bool _initialLoaded = false;
+  static const _pageSize = 20;
 
   final List<Map<String, dynamic>> _filters = [
     {'label': 'All', 'type': null, 'icon': Icons.receipt_long_rounded},
-    {
-      'label': 'EMI',
-      'type': TransactionType.emiPayment,
-      'icon': Icons.payments_rounded
-    },
-    {
-      'label': 'Savings',
-      'type': TransactionType.savingsDeposit,
-      'icon': Icons.savings_rounded
-    },
-    {
-      'label': 'Disbursed',
-      'type': TransactionType.loanDisbursement,
-      'icon': Icons.account_balance_rounded
-    },
-    {
-      'label': 'Withdrawal',
-      'type': TransactionType.savingsWithdrawal,
-      'icon': Icons.money_off_rounded
-    },
-    {
-      'label': 'Penalty',
-      'type': TransactionType.penalty,
-      'icon': Icons.warning_rounded
-    },
+    {'label': 'EMI', 'type': TransactionType.emiPayment, 'icon': Icons.payments_rounded},
+    {'label': 'Savings', 'type': TransactionType.savingsDeposit, 'icon': Icons.savings_rounded},
+    {'label': 'Disbursed', 'type': TransactionType.loanDisbursement, 'icon': Icons.account_balance_rounded},
+    {'label': 'Withdrawal', 'type': TransactionType.savingsWithdrawal, 'icon': Icons.money_off_rounded},
+    {'label': 'Penalty', 'type': TransactionType.penalty, 'icon': Icons.warning_rounded},
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadPage());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadPage();
+    }
+  }
+
+  Future<void> _loadPage() async {
+    if (_isLoading || !_hasMore) return;
+    setState(() => _isLoading = true);
+
+    final repo = ref.read(transactionsRepositoryProvider);
+    final results = await repo.getTransactionsPaginated(
+      offset: _transactions.length,
+      limit: _pageSize,
+      typeFilter: _filterType,
+      searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _transactions.addAll(results);
+      _hasMore = results.length >= _pageSize;
+      _isLoading = false;
+      _initialLoaded = true;
+    });
+  }
+
+  void _resetAndReload() {
+    setState(() {
+      _transactions.clear();
+      _hasMore = true;
+      _initialLoaded = false;
+    });
+    _loadPage();
+  }
+
+  Future<void> _onRefresh() async {
+    ref.invalidate(todayStatsProvider);
+    _resetAndReload();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final transactionsAsync = ref.watch(recentTransactionsProvider);
     final todayStats = ref.watch(todayStatsProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -64,14 +108,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         child: SafeArea(
           bottom: false,
           child: RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(recentTransactionsProvider);
-              ref.invalidate(todayStatsProvider);
-            },
+            onRefresh: _onRefresh,
             displacement: 20,
             color: primary,
             backgroundColor: theme.cardColor,
             child: CustomScrollView(
+              controller: _scrollController,
               physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics()),
               slivers: [
@@ -79,51 +121,44 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.arrow_back_rounded,
+                                color: primary, size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'FINANCIAL TIMELINE',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                  fontSize: 10,
+                                  color: primary,
                                 ),
-                                child: Icon(Icons.arrow_back_rounded,
-                                    color: primary, size: 20),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'FINANCIAL TIMELINE',
-                                    style:
-                                        theme.textTheme.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 2,
-                                      fontSize: 10,
-                                      color: primary,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Transaction History',
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: -0.8,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                'Transaction History',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.8,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -132,7 +167,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-                // Today's Stats Summary
+                // Today's Stats
                 SliverToBoxAdapter(
                   child: todayStats.when(
                     data: (stats) => _buildTodayStats(stats, theme, isDark),
@@ -150,21 +185,39 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     child: Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.fillDark
-                            : AppColors.fillLight,
+                        color: isDark ? AppColors.fillDark : AppColors.fillLight,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                             color: theme.dividerColor.withValues(alpha: 0.1)),
                       ),
                       child: TextField(
-                        onChanged: (v) => setState(() => _searchQuery = v),
+                        controller: _searchController,
+                        onSubmitted: (v) {
+                          _searchQuery = v;
+                          _resetAndReload();
+                        },
+                        onChanged: (v) {
+                          // Debounce: only search on submit or after clearing
+                          if (v.isEmpty && _searchQuery.isNotEmpty) {
+                            _searchQuery = '';
+                            _resetAndReload();
+                          }
+                        },
                         decoration: InputDecoration(
                           hintText: 'Search by member name...',
                           hintStyle: theme.textTheme.bodySmall,
                           prefixIcon: Icon(Icons.search_rounded,
-                              color: primary.withValues(alpha: 0.6),
-                              size: 20),
+                              color: primary.withValues(alpha: 0.6), size: 20),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 18),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _searchQuery = '';
+                                    _resetAndReload();
+                                  },
+                                )
+                              : null,
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 14),
@@ -186,15 +239,15 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       itemCount: _filters.length,
                       itemBuilder: (context, index) {
                         final filter = _filters[index];
-                        final isSelected =
-                            _filterType == filter['type'];
+                        final isSelected = _filterType == filter['type'];
                         return Padding(
                           padding: const EdgeInsets.only(right: 10),
                           child: GestureDetector(
                             onTap: () {
                               HapticFeedback.selectionClick();
-                              setState(() => _filterType =
-                                  filter['type'] as TransactionType?);
+                              setState(() =>
+                                  _filterType = filter['type'] as TransactionType?);
+                              _resetAndReload();
                             },
                             child: AnimatedContainer(
                               duration: 200.ms,
@@ -210,14 +263,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                                 border: Border.all(
                                   color: isSelected
                                       ? primary
-                                      : theme.dividerColor
-                                          .withValues(alpha: 0.1),
+                                      : theme.dividerColor.withValues(alpha: 0.1),
                                 ),
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                            color: primary
-                                                .withValues(alpha: 0.3),
+                                            color: primary.withValues(alpha: 0.3),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2))
                                       ]
@@ -242,8 +293,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                                           : FontWeight.w600,
                                       color: isSelected
                                           ? Colors.white
-                                          : theme
-                                              .textTheme.bodyMedium?.color,
+                                          : theme.textTheme.bodyMedium?.color,
                                     ),
                                   ),
                                 ],
@@ -258,58 +308,69 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-                // Transaction List
-                transactionsAsync.when(
-                  data: (transactions) {
-                    var filtered = transactions.where((t) {
-                      if (_filterType != null && t.type != _filterType) {
-                        return false;
-                      }
-                      if (_searchQuery.isNotEmpty) {
-                        return t.memberName
-                            .toLowerCase()
-                            .contains(_searchQuery.toLowerCase());
-                      }
-                      return true;
-                    }).toList();
-
-                    if (filtered.isEmpty) {
-                      return SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: _buildEmptyState(theme, primary),
-                      );
-                    }
-
-                    // Group by date
-                    final grouped = _groupByDate(filtered);
-
-                    return SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final entry =
-                                grouped.entries.elementAt(index);
-                            return _buildDateGroup(
-                                entry.key, entry.value, theme, isDark)
-                                .animate()
-                                .fadeIn(delay: (index * 60).ms)
-                                .slideY(begin: 0.05, end: 0);
-                          },
-                          childCount: grouped.length,
+                // Transaction List (paginated)
+                if (!_initialLoaded)
+                  const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_transactions.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _buildEmptyState(theme, primary),
+                  )
+                else ...[
+                  _buildTransactionSliver(theme, isDark),
+                  // Loading indicator at bottom
+                  if (_isLoading)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
                       ),
-                    );
-                  },
-                  loading: () => const SliverFillRemaining(
-                      child:
-                          Center(child: CircularProgressIndicator())),
-                  error: (e, _) => SliverFillRemaining(
-                      child: Center(child: Text('Error: $e'))),
-                ),
+                    ),
+                  if (!_hasMore && _transactions.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                        child: Center(
+                          child: Text(
+                            '— All ${_transactions.length} transactions loaded —',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withValues(alpha: 0.4),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionSliver(ThemeData theme, bool isDark) {
+    final grouped = _groupByDate(_transactions);
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final entry = grouped.entries.elementAt(index);
+            return _buildDateGroup(entry.key, entry.value, theme, isDark);
+          },
+          childCount: grouped.length,
         ),
       ),
     );
@@ -464,20 +525,17 @@ class _TransactionCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Type Icon
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
               color: config.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: config.color.withValues(alpha: 0.15)),
+              border: Border.all(color: config.color.withValues(alpha: 0.15)),
             ),
             child: Icon(config.icon, color: config.color, size: 22),
           ),
           const SizedBox(width: 14),
-          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,8 +571,7 @@ class _TransactionCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: 0.08),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -541,7 +598,6 @@ class _TransactionCard extends StatelessWidget {
               ],
             ),
           ),
-          // Amount
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -578,54 +634,26 @@ class _TransactionCard extends StatelessWidget {
   _TypeConfig _getTypeConfig(TransactionType type, bool isDark) {
     switch (type) {
       case TransactionType.emiPayment:
-        return _TypeConfig(
-          icon: Icons.payments_rounded,
-          label: 'EMI Payment',
-          color: isDark ? AppColors.successDark : AppColors.success,
-          isInflow: true,
-        );
+        return _TypeConfig(Icons.payments_rounded, 'EMI Payment',
+            isDark ? AppColors.successDark : AppColors.success, true);
       case TransactionType.savingsDeposit:
-        return _TypeConfig(
-          icon: Icons.savings_rounded,
-          label: 'Savings Deposit',
-          color: isDark ? AppColors.successDark : AppColors.success,
-          isInflow: true,
-        );
+        return _TypeConfig(Icons.savings_rounded, 'Savings Deposit',
+            isDark ? AppColors.successDark : AppColors.success, true);
       case TransactionType.loanDisbursement:
-        return _TypeConfig(
-          icon: Icons.account_balance_rounded,
-          label: 'Loan Disbursed',
-          color: isDark ? AppColors.errorDark : AppColors.error,
-          isInflow: false,
-        );
+        return _TypeConfig(Icons.account_balance_rounded, 'Loan Disbursed',
+            isDark ? AppColors.errorDark : AppColors.error, false);
       case TransactionType.savingsWithdrawal:
-        return _TypeConfig(
-          icon: Icons.money_off_rounded,
-          label: 'Withdrawal',
-          color: isDark ? AppColors.warningDark : AppColors.warning,
-          isInflow: false,
-        );
+        return _TypeConfig(Icons.money_off_rounded, 'Withdrawal',
+            isDark ? AppColors.warningDark : AppColors.warning, false);
       case TransactionType.penalty:
-        return _TypeConfig(
-          icon: Icons.warning_amber_rounded,
-          label: 'Penalty',
-          color: isDark ? AppColors.errorDark : AppColors.error,
-          isInflow: true,
-        );
+        return _TypeConfig(Icons.warning_amber_rounded, 'Penalty',
+            isDark ? AppColors.errorDark : AppColors.error, true);
       case TransactionType.staffCashDeposit:
-        return _TypeConfig(
-          icon: Icons.account_balance_wallet_rounded,
-          label: 'Cash Deposit',
-          color: isDark ? AppColors.successDark : AppColors.success,
-          isInflow: true,
-        );
+        return _TypeConfig(Icons.account_balance_wallet_rounded, 'Cash Deposit',
+            isDark ? AppColors.successDark : AppColors.success, true);
       default:
-        return _TypeConfig(
-          icon: Icons.swap_horiz_rounded,
-          label: 'Transaction',
-          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-          isInflow: true,
-        );
+        return _TypeConfig(Icons.swap_horiz_rounded, 'Transaction',
+            isDark ? Colors.grey.shade400 : Colors.grey.shade600, true);
     }
   }
 
@@ -650,13 +678,7 @@ class _TypeConfig {
   final String label;
   final Color color;
   final bool isInflow;
-
-  _TypeConfig({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.isInflow,
-  });
+  _TypeConfig(this.icon, this.label, this.color, this.isInflow);
 }
 
 // ─── Stats Mini Card ───

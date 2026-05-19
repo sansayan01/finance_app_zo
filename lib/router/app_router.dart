@@ -9,6 +9,7 @@ import '../features/setup/presentation/pages/setup_wizard_page.dart';
 // Quick Tour (onboarding)
 import '../features/onboarding/data/tour_provider.dart';
 import '../features/onboarding/presentation/pages/quick_tour_page.dart';
+import '../features/onboarding/presentation/pages/splash_page.dart';
 
 // Org / Setup completion
 import '../core/providers/org_provider.dart';
@@ -155,9 +156,15 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authListener = ref.watch(authRedirectListenerProvider);
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     refreshListenable: authListener,
     redirect: (context, state) {
+      // 1. Allow splash screen to display without redirection
+      final isSplashPath = state.matchedLocation == '/splash';
+      if (isSplashPath) {
+        return null;
+      }
+
       final authState = ref.read(authProvider);
       final authStatus = authState.status;
       final isAuthenticated = authStatus == AuthStatus.authenticated;
@@ -234,7 +241,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         // Admin role trying to access staff pages → redirect to admin
         // Exception: executiveAdmin can access /staff/collection for payment recording
-        if (role == UserRole.executiveAdmin && (isStaffPath || isBranchPath || isCustomerPath)) {
+        if (role == UserRole.executiveAdmin &&
+            (isStaffPath || isBranchPath || isCustomerPath)) {
           final isCollectionRoute =
               state.matchedLocation.startsWith('/staff/collection');
           if (!isCollectionRoute) {
@@ -248,6 +256,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // Splash Screen (Initial Brand Animation)
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashPage(),
+      ),
+
       // Auth Shell
       GoRoute(
         path: '/auth',
@@ -1048,11 +1062,15 @@ class BranchManagerShell extends StatelessWidget {
         isDark: isDark,
         primary: primary,
         items: const [
-          _SimpleNavData(Icons.dashboard_outlined, Icons.dashboard_rounded, 'Home'),
+          _SimpleNavData(
+              Icons.dashboard_outlined, Icons.dashboard_rounded, 'Home'),
           _SimpleNavData(Icons.people_outlined, Icons.people_rounded, 'Staff'),
-          _SimpleNavData(Icons.approval_outlined, Icons.approval_rounded, 'Approvals'),
-          _SimpleNavData(Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Reports'),
-          _SimpleNavData(Icons.person_outlined, Icons.person_rounded, 'Profile'),
+          _SimpleNavData(
+              Icons.approval_outlined, Icons.approval_rounded, 'Approvals'),
+          _SimpleNavData(
+              Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Reports'),
+          _SimpleNavData(
+              Icons.person_outlined, Icons.person_rounded, 'Profile'),
         ],
       ),
     );
@@ -1108,9 +1126,12 @@ class CustomerShell extends StatelessWidget {
         primary: primary,
         items: const [
           _SimpleNavData(Icons.home_outlined, Icons.home_rounded, 'Home'),
-          _SimpleNavData(Icons.account_balance_outlined, Icons.account_balance_rounded, 'Loans'),
-          _SimpleNavData(Icons.savings_outlined, Icons.savings_rounded, 'Savings'),
-          _SimpleNavData(Icons.person_outlined, Icons.person_rounded, 'Profile'),
+          _SimpleNavData(Icons.account_balance_outlined,
+              Icons.account_balance_rounded, 'Loans'),
+          _SimpleNavData(
+              Icons.savings_outlined, Icons.savings_rounded, 'Savings'),
+          _SimpleNavData(
+              Icons.person_outlined, Icons.person_rounded, 'Profile'),
         ],
       ),
     );
@@ -1182,7 +1203,8 @@ class _SimpleBottomBar extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? primary.withValues(alpha: isDark ? 0.2 : 0.1)
@@ -1203,7 +1225,8 @@ class _SimpleBottomBar extends StatelessWidget {
                         style: TextStyle(
                           color: isSelected ? primary : inactiveColor,
                           fontSize: 10,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
                         ),
                       ),
                     ],

@@ -41,9 +41,33 @@ class EMIRepository {
         'paid_date': now.toUtc().toIso8601String(),
       }).eq('id', emiId);
 
-      // 2. Create Transaction Record (using base schema columns)
+      // 2. Look up borrower info from the loan
+      String? memberId;
+      String? memberName;
+      try {
+        final loan = await _client
+            .from('loans')
+            .select('customer_id, member_id, member_name')
+            .eq('id', loanId)
+            .single();
+        memberId = loan['customer_id']?.toString() ?? loan['member_id']?.toString();
+        memberName = loan['member_name']?.toString();
+        // If member_name is null on loan, look up from members table
+        if (memberName == null && memberId != null) {
+          final member = await _client
+              .from('members')
+              .select('full_name')
+              .eq('id', memberId)
+              .maybeSingle();
+          memberName = member?['full_name']?.toString();
+        }
+      } catch (_) {}
+
+      // 3. Create Transaction Record
       await _client.from('transactions').insert({
         'loan_id': loanId,
+        'member_id': memberId,
+        'member_name': memberName ?? 'Unknown',
         'type': TransactionType.emiPayment.name,
         'amount': amount,
         'description':
@@ -96,9 +120,32 @@ class EMIRepository {
     try {
       final now = DateTime.now();
 
-      // 1. Create Transaction Record (using base schema columns)
+      // 1. Look up borrower info from the loan
+      String? memberId;
+      String? memberName;
+      try {
+        final loan = await _client
+            .from('loans')
+            .select('customer_id, member_id, member_name')
+            .eq('id', loanId)
+            .single();
+        memberId = loan['customer_id']?.toString() ?? loan['member_id']?.toString();
+        memberName = loan['member_name']?.toString();
+        if (memberName == null && memberId != null) {
+          final member = await _client
+              .from('members')
+              .select('full_name')
+              .eq('id', memberId)
+              .maybeSingle();
+          memberName = member?['full_name']?.toString();
+        }
+      } catch (_) {}
+
+      // 2. Create Transaction Record
       await _client.from('transactions').insert({
         'loan_id': loanId,
+        'member_id': memberId,
+        'member_name': memberName ?? 'Unknown',
         'type': TransactionType.emiPayment.name,
         'amount': amount,
         'description':

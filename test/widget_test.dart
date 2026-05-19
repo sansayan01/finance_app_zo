@@ -26,7 +26,9 @@ void main() {
       ),
     );
 
-    // Just verify no crash - give it a moment to initialize
+    // Just verify no crash - pump enough to let splash screen navigate and dispose of its timers
+    await tester.pump(const Duration(seconds: 3));
+    // Pump another frame to process any animations/timers initiated by the navigated page
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byType(MaterialApp), findsOneWidget);

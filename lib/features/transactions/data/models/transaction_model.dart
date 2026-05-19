@@ -29,28 +29,36 @@ class TransactionModel {
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
-      id: json['id'] as String,
-      memberId: json['member_id'] as String,
-      memberName: json['member_name'] as String? ?? '',
+      id: json['id']?.toString() ?? '',
+      memberId: json['member_id']?.toString() ?? '',
+      memberName: json['member_name']?.toString() ?? '',
       type: TransactionType.values.firstWhere(
         (e) =>
             e.name == json['type'] ||
-            _toCamel(json['type'] as String) == e.name,
+            _toCamel(json['type']?.toString() ?? '') == e.name,
         orElse: () => TransactionType.other,
       ),
-      amount: (json['amount'] as num).toDouble(),
-      loanId: json['loan_id'] as String?,
-      savingsId: json['savings_id'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      description: json['description'] as String?,
+      amount: _parseAmount(json['amount']),
+      loanId: json['loan_id']?.toString(),
+      savingsId: json['savings_id']?.toString(),
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+      description: json['description']?.toString(),
       paymentMode: json['payment_mode'] != null
           ? PaymentMode.values.firstWhere(
               (e) => e.name == json['payment_mode'],
               orElse: () => PaymentMode.cash,
             )
           : null,
-      agentId: json['agent_id'] as String?,
+      agentId: json['agent_id']?.toString(),
     );
+  }
+
+  static double _parseAmount(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 
   static String _toCamel(String snake) {

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../savings/data/providers/savings_providers.dart';
 import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
+import '../../../../core/utils/kyc_validators.dart';
 
 import '../providers/user_list_provider.dart';
 import '../../../../core/services/haptic_service.dart';
@@ -3250,8 +3252,23 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.user.fullName);
-    _phoneController = TextEditingController(text: widget.user.phone);
-    _aadharController = TextEditingController(text: widget.user.aadhar);
+    
+    final rawPhone = widget.user.phone?.replaceAll(RegExp(r'\D'), '') ?? '';
+    if (rawPhone.length == 10) {
+      _phoneController = TextEditingController(
+          text: '${rawPhone.substring(0, 5)} ${rawPhone.substring(5)}');
+    } else {
+      _phoneController = TextEditingController(text: rawPhone);
+    }
+
+    final rawAadhar = widget.user.aadhar?.replaceAll(RegExp(r'\D'), '') ?? '';
+    if (rawAadhar.length == 12) {
+      _aadharController = TextEditingController(
+          text: '${rawAadhar.substring(0, 4)} ${rawAadhar.substring(4, 8)} ${rawAadhar.substring(8)}');
+    } else {
+      _aadharController = TextEditingController(text: widget.user.aadhar ?? '');
+    }
+
     _panController = TextEditingController(text: widget.user.pan);
     _emailController = TextEditingController(text: widget.user.email ?? '');
     _employeeIdController =
@@ -3279,29 +3296,105 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     setState(() => _isLoading = true);
     try {
       final repository = ref.read(userRepositoryProvider);
+      final theme = Theme.of(context);
 
       // Build update data with only non-empty fields
       final data = <String, dynamic>{};
 
-      if (_nameController.text.trim().isNotEmpty) {
-        data['full_name'] = _nameController.text.trim();
+      if (_nameController.text.trim().isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Full name is required'),
+                behavior: SnackBarBehavior.floating),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
       }
+      data['full_name'] = _nameController.text.trim();
+
       if (_phoneController.text.trim().isNotEmpty) {
-        data['phone'] = _phoneController.text.trim();
+        final rawPhone = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+        final phoneError = KYCValidators.validatePhone(rawPhone);
+        if (phoneError != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(phoneError),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: theme.colorScheme.error),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+        data['phone'] = rawPhone;
       }
+
       if (_emailController.text.trim().isNotEmpty) {
+        final emailError = KYCValidators.validateEmail(_emailController.text.trim());
+        if (emailError != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(emailError),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: theme.colorScheme.error),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
         data['email'] = _emailController.text.trim();
       }
+
       if (_selectedBranchId != null &&
           _selectedBranchId!.trim().isNotEmpty) {
         data['branch_id'] = _selectedBranchId;
       }
 
+      // Validate Aadhar if provided
+      final aadharVal = _aadharController.text.trim().replaceAll(' ', '');
+      if (aadharVal.isNotEmpty) {
+        final aadharError = KYCValidators.validateAadhar(aadharVal);
+        if (aadharError != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(aadharError),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: theme.colorScheme.error),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      // Validate PAN if provided
+      final panVal = _panController.text.trim().toUpperCase();
+      if (panVal.isNotEmpty) {
+        final panError = KYCValidators.validatePAN(panVal);
+        if (panError != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(panError),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: theme.colorScheme.error),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
       // These columns may or may not exist depending on the DB schema version.
       // We include them only if they have values, and catch errors gracefully.
       final extraFields = <String, String>{
-        'aadhar': _aadharController.text.trim(),
-        'pan': _panController.text.trim(),
+        'aadhar': aadharVal,
+        'pan': panVal,
         'employee_id': _employeeIdController.text.trim(),
         'assigned_zone': _zoneController.text.trim(),
         'address': _addressController.text.trim(),
@@ -3504,10 +3597,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           ),
                           second: _buildInputField(
                             label: 'MOBILE NUMBER',
-                            hint: '+91 XXXXXXXXXX',
+                            hint: '98765 43210',
                             icon: Icons.phone_android_outlined,
+                            prefixText: '+91 ',
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(11),
+                              _MobileFormatter(),
+                            ],
                             theme: theme,
                             isDark: isDark,
                             primary: primary,
@@ -3648,6 +3746,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                             icon: Icons.fingerprint_outlined,
                             controller: _aadharController,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(14),
+                              _AadharFormatter(),
+                            ],
                             theme: theme,
                             isDark: isDark,
                             primary: primary,
@@ -3658,6 +3760,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                             icon: Icons.credit_card_outlined,
                             controller: _panController,
                             textCapitalization: TextCapitalization.characters,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(10),
+                              _PanFormatter(),
+                            ],
                             theme: theme,
                             isDark: isDark,
                             primary: primary,
@@ -3800,8 +3906,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     required bool isDark,
     required Color primary,
     IconData? icon,
+    String? prefixText,
     TextInputType? keyboardType,
     TextCapitalization textCapitalization = TextCapitalization.none,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3818,11 +3926,17 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           controller: controller,
           keyboardType: keyboardType,
           textCapitalization: textCapitalization,
+          inputFormatters: inputFormatters,
           style:
               theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: icon != null ? Icon(icon, size: 18) : null,
+            prefixText: prefixText,
+            prefixStyle: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.textTheme.bodySmall?.color,
+            ),
             filled: true,
             fillColor: isDark ? AppColors.fillDark : AppColors.fillLight,
             border: OutlineInputBorder(
@@ -4026,6 +4140,71 @@ class _AdminCard extends StatelessWidget {
           child,
         ],
       ),
+    );
+  }
+}
+
+class _PanFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    String text = newValue.text.toUpperCase();
+    String formatted = '';
+
+    for (int i = 0; i < text.length; i++) {
+      String char = text[i];
+      if (i < 5) {
+        if (RegExp(r'[A-Z]').hasMatch(char)) formatted += char;
+      } else if (i < 9) {
+        if (RegExp(r'[0-9]').hasMatch(char)) formatted += char;
+      } else if (i < 10) {
+        if (RegExp(r'[A-Z]').hasMatch(char)) formatted += char;
+      }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+class _AadharFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    String digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > 12) digits = digits.substring(0, 12);
+
+    StringBuffer formatted = StringBuffer();
+    for (int i = 0; i < digits.length; i++) {
+      if (i > 0 && i % 4 == 0) formatted.write(' ');
+      formatted.write(digits[i]);
+    }
+
+    return TextEditingValue(
+      text: formatted.toString(),
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+class _MobileFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    String digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > 10) digits = digits.substring(0, 10);
+
+    StringBuffer formatted = StringBuffer();
+    for (int i = 0; i < digits.length; i++) {
+      if (i > 0 && i % 5 == 0) formatted.write(' ');
+      formatted.write(digits[i]);
+    }
+
+    return TextEditingValue(
+      text: formatted.toString(),
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

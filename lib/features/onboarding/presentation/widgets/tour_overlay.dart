@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../../core/constants/app_colors.dart';
 
 /// A single step in the quick tour.
 class TourStep {
@@ -226,7 +225,8 @@ class TourOverlay extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text('Back', style: TextStyle(fontWeight: FontWeight.w600)),
+              child: const Text('Back',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
             ),
           ),
         if (!isFirst) const SizedBox(width: 12),

@@ -7,6 +7,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../onboarding/data/tour_provider.dart';
 import '../../data/providers/brand_provider.dart';
 import '../providers/settings_provider.dart';
 
@@ -111,6 +112,16 @@ class SettingsPageV2 extends ConsumerWidget {
 
                     _buildMenuCard(
                       theme: theme,
+                      icon: Icons.auto_fix_high_rounded,
+                      title: 'Organization Setup Wizard',
+                      subtitle: 'Re-run the guided setup to add branches, managers, and agents',
+                      color: Colors.teal,
+                      onTap: () => context.push('/setup'),
+                    ).animate().fadeIn(delay: 140.ms).slideY(begin: 0.05, end: 0),
+                    const SizedBox(height: 12),
+
+                    _buildMenuCard(
+                      theme: theme,
                       icon: Icons.account_balance_outlined,
                       title: 'Loan & Savings Products',
                       subtitle: 'Setup loan schemes, savings rules, yield rates, and limits',
@@ -155,6 +166,18 @@ class SettingsPageV2 extends ConsumerWidget {
 
                   // ─── SECTION 5: UTILITIES & SUPPORT ──────────────────
                   _buildSectionHeader(theme, 'UTILITIES & SUPPORT'),
+                  _buildMenuCard(
+                    theme: theme,
+                    icon: Icons.tour_rounded,
+                    title: 'Replay Quick Tour',
+                    subtitle: 'Walk through the app features again',
+                    color: AppColors.primary,
+                    onTap: () {
+                      ref.read(tourControllerProvider.notifier).resetTour();
+                      context.go('/');
+                    },
+                  ).animate().fadeIn(delay: 230.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 12),
                   _buildMenuCard(
                     theme: theme,
                     icon: Icons.support_agent_rounded,

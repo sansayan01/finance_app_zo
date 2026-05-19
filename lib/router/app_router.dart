@@ -6,6 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Setup Wizard
 import '../features/setup/presentation/pages/setup_wizard_page.dart';
 
+// Quick Tour (onboarding)
+import '../features/onboarding/data/tour_provider.dart';
+import '../features/onboarding/presentation/pages/quick_tour_page.dart';
+
 // Org / Setup completion
 import '../core/providers/org_provider.dart';
 
@@ -172,7 +176,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated) {
         final user = ref.read(currentUserProvider);
         final role = user?.role;
-        final isSetupPath = state.matchedLocation == '/setup';
         final isAdminPath = state.matchedLocation == '/' ||
             state.matchedLocation.startsWith('/loans') ||
             state.matchedLocation.startsWith('/savings') ||
@@ -189,17 +192,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         final isBranchPath = state.matchedLocation.startsWith('/branch');
         final isCustomerPath = state.matchedLocation.startsWith('/customer');
 
-        // Force setup for executive admins if setup is not complete
-        if (role == UserRole.executiveAdmin) {
-          final setupStatus =
-              ref.read(setupCompleteProvider).valueOrNull ?? false;
-          if (!setupStatus && !isSetupPath) {
-            return '/setup';
-          }
-          if (setupStatus && isSetupPath) {
-            return '/';
-          }
-        }
+        // Executive admins go straight to dashboard on login.
+        // The quick tour overlay handles first-time onboarding.
+        // The setup wizard is still accessible from Settings.
 
         // After login, route to correct portal based on role
         if (isAuthPath) {
@@ -793,10 +788,17 @@ class HomePageContent extends ConsumerWidget {
 // =====================================================
 // ADMIN SHELL
 // =====================================================
-class AdminShell extends StatelessWidget {
+class AdminShell extends ConsumerStatefulWidget {
   final Widget child;
 
   const AdminShell({super.key, required this.child});
+
+  @override
+  ConsumerState<AdminShell> createState() => _AdminShellState();
+}
+
+class _AdminShellState extends ConsumerState<AdminShell> {
+  bool _tourTriggered = false;
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
@@ -828,6 +830,23 @@ class AdminShell extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowTour();
+    });
+  }
+
+  void _maybeShowTour() {
+    if (_tourTriggered) return;
+    final controller = ref.read(tourControllerProvider.notifier);
+    if (!controller.isTourDone) {
+      _tourTriggered = true;
+      showQuickTour(context, ref);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final useHudNav = MediaQuery.of(context).size.width >= 600;
     final currentIndex = _calculateSelectedIndex(context);
@@ -841,7 +860,7 @@ class AdminShell extends StatelessWidget {
           // widget that reads MediaQuery.padding.bottom inside the page
           // automatically clears the floating glass navbar. Only applied
           // when the bottom navbar is actually shown (mobile layout).
-          useHudNav ? child : _NavSafeArea(child: child),
+          useHudNav ? widget.child : _NavSafeArea(child: widget.child),
           if (useHudNav)
             Positioned(
               left: 0,
@@ -891,10 +910,17 @@ class AdminShell extends StatelessWidget {
 // =====================================================
 // STAFF SHELL - NEW
 // =====================================================
-class StaffShell extends ConsumerWidget {
+class StaffShell extends ConsumerStatefulWidget {
   final Widget child;
 
   const StaffShell({super.key, required this.child});
+
+  @override
+  ConsumerState<StaffShell> createState() => _StaffShellState();
+}
+
+class _StaffShellState extends ConsumerState<StaffShell> {
+  bool _tourTriggered = false;
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
@@ -929,7 +955,24 @@ class StaffShell extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowTour();
+    });
+  }
+
+  void _maybeShowTour() {
+    if (_tourTriggered) return;
+    final controller = ref.read(tourControllerProvider.notifier);
+    if (!controller.isTourDone) {
+      _tourTriggered = true;
+      showQuickTour(context, ref);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentIndex = _calculateSelectedIndex(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.primary;
@@ -941,7 +984,7 @@ class StaffShell extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
-      body: _NavSafeArea(child: child),
+      body: _NavSafeArea(child: widget.child),
       bottomNavigationBar: StaffBottomBar(
         currentIndex: currentIndex,
         onTap: (index) => _onItemTapped(index, context),

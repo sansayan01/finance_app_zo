@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 
@@ -41,24 +40,9 @@ final hasBranchManagerProvider = FutureProvider<bool>((ref) async {
   }
 });
 
-/// Checks if setup is complete. Uses SharedPreferences flag + DB fallback.
+/// Setup is always considered complete now — the wizard has been replaced
+/// by a quick tour. Kept for backwards compatibility with any code that
+/// still reads this provider.
 final setupCompleteProvider = FutureProvider<bool>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
-  if (prefs.getBool('wizard_completed') == true) return true;
-
-  final orgId = ref.watch(currentOrgIdProvider);
-  if (orgId == null) return false;
-  final client = ref.watch(supabaseClientProvider);
-  try {
-    final result = await client.rpc('check_setup_complete');
-    if (result is List && result.isNotEmpty) {
-      final row = result[0];
-      if (row is Map) return row['is_complete'] == true;
-      return row == true;
-    }
-    if (result is Map) return result['is_complete'] == true;
-    return result == true;
-  } catch (_) {
-    return false;
-  }
+  return true;
 });

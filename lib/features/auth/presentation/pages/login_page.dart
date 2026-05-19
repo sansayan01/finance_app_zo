@@ -9,6 +9,7 @@ import '../providers/auth_provider.dart';
 
 import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/services/haptic_service.dart';
+import '../../../../core/widgets/powered_by_badge.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   final VoidCallback onSignUpTap;
@@ -144,6 +145,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           letterSpacing: 1.0,
                         ),
                       ).animate().fadeIn(delay: 1.seconds),
+
+                      const SizedBox(height: 16),
+
+                      // Powered by badge
+                      PoweredByBadge(
+                        compact: true,
+                        textColor: isDark ? Colors.white24 : Colors.black26,
+                      ).animate().fadeIn(delay: 1200.ms),
                     ],
                   ),
                 ),

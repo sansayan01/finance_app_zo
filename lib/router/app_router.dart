@@ -33,11 +33,10 @@ import '../features/home/presentation/pages/home_page.dart';
 import '../features/loans/presentation/pages/loans_page.dart';
 import '../features/savings/presentation/pages/savings_page.dart';
 import '../features/settings/presentation/pages/settings_page_v2.dart';
-import '../features/settings/presentation/pages/organization_profile_page.dart';
+import '../features/settings/presentation/pages/organization_settings_page.dart';
 import '../features/settings/presentation/pages/profile_page.dart';
 import '../features/settings/presentation/pages/activity_logs_page.dart';
 import '../features/settings/presentation/pages/app_update_page.dart';
-import '../features/settings/presentation/pages/branding_settings_page.dart';
 import '../features/settings/presentation/pages/integrations_settings_page.dart';
 import '../features/settings/presentation/pages/security_compliance_page.dart';
 import '../core/widgets/hud_navigation.dart';
@@ -514,11 +513,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'organization',
-                builder: (context, state) => const OrganizationProfilePage(),
+                builder: (context, state) => const OrganizationSettingsPage(),
               ),
               GoRoute(
                 path: 'branding',
-                builder: (context, state) => const BrandingSettingsPage(),
+                builder: (context, state) => const OrganizationSettingsPage(),
               ),
               GoRoute(
                 path: 'integrations',

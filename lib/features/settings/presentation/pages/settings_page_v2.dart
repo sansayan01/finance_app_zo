@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/powered_by_badge.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
@@ -93,21 +94,11 @@ class SettingsPageV2 extends ConsumerWidget {
                     _buildMenuCard(
                       theme: theme,
                       icon: Icons.business_outlined,
-                      title: 'Organization Legal Profile',
-                      subtitle: 'Address, legal names, timezones, and GST/PAN profiles',
+                      title: 'Organization Settings',
+                      subtitle: 'Brand identity, legal profile, address, compliance, and home screen icon',
                       color: Colors.blue,
                       onTap: () => context.push('/settings/organization'),
                     ).animate().fadeIn(delay: 110.ms).slideY(begin: 0.05, end: 0),
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuCard(
-                      theme: theme,
-                      icon: Icons.palette_outlined,
-                      title: 'System Custom Branding',
-                      subtitle: 'Organization brand name, logos, and custom color palettes',
-                      color: Colors.purple,
-                      onTap: () => context.push('/settings/branding'),
-                    ).animate().fadeIn(delay: 130.ms).slideY(begin: 0.05, end: 0),
                     const SizedBox(height: 12),
 
                     _buildMenuCard(
@@ -217,6 +208,8 @@ class SettingsPageV2 extends ConsumerWidget {
                             color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        const PoweredByBadge(compact: true),
                       ],
                     ),
                   ).animate().fadeIn(delay: 300.ms),

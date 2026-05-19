@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/brand_model.dart';
 import 'activity_log_repository_provider.dart';
 import '../models/activity_log_model.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
+import 'package:microflow_pro/core/services/app_icon_service.dart';
 
 class BrandNotifier extends StateNotifier<BrandModel> {
   final Ref _ref;
@@ -24,17 +26,22 @@ class BrandNotifier extends StateNotifier<BrandModel> {
         if (profile != null && profile['org_id'] != null) {
           final org = await client
               .from('organizations')
-              .select('display_name, name, logo_url, primary_color')
+              .select('display_name, name, logo_url, primary_color, icon_preset')
               .eq('id', profile['org_id'])
               .maybeSingle();
           if (org != null) {
+            final iconPreset = org['icon_preset'] as String? ?? 'default';
             state = BrandModel(
               name: org['display_name'] as String? ??
                   org['name'] as String? ??
                   'MicroFlow Pro',
               logoUrl: org['logo_url'] as String?,
               primaryColor: org['primary_color'] as String?,
+              iconPreset: iconPreset,
             );
+
+            // Apply the org's icon preset to this device
+            _applyIconPreset(iconPreset);
             return;
           }
         }
@@ -45,36 +52,105 @@ class BrandNotifier extends StateNotifier<BrandModel> {
           .eq('key', 'branding')
           .maybeSingle();
       if (response != null) {
-        state = BrandModel.fromJson(response['value']);
+        final brand = BrandModel.fromJson(response['value']);
+        state = brand;
+        _applyIconPreset(brand.iconPreset);
       }
     } catch (e) {
       // Keep default
     }
   }
 
-  Future<void> updateBrand({String? name, String? logoUrl, String? primaryColor}) async {
+  /// Apply the icon preset on the device (non-blocking).
+  Future<void> _applyIconPreset(String presetId) async {
+    try {
+      final supported = await AppIconService.isSupported();
+      if (!supported) return;
+
+      final current = await AppIconService.getCurrentIcon();
+      if (current != presetId) {
+        await AppIconService.setIcon(presetId);
+        debugPrint('🎨 App icon switched to: $presetId');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Icon switch failed: $e');
+    }
+  }
+
+  /// Update brand settings including icon preset.
+  /// Called by the executive admin from the branding settings page.
+  Future<void> updateBrand({
+    String? name,
+    String? logoUrl,
+    String? primaryColor,
+    String? iconPreset,
+  }) async {
     final oldName = state.name;
+    final oldPreset = state.iconPreset;
     final newState = state.copyWith(
       name: name,
       logoUrl: logoUrl,
       primaryColor: primaryColor,
+      iconPreset: iconPreset,
     );
     state = newState;
 
     try {
       final client = _ref.read(supabaseClientProvider);
+      final currentUser = client.auth.currentUser;
+
+      // Persist to system_settings (legacy)
       await client.from('system_settings').upsert({
         'key': 'branding',
         'value': newState.toJson(),
         'updated_at': DateTime.now().toIso8601String(),
       });
 
+      // Also persist icon_preset to the organizations table so all org members get it
+      if (currentUser != null) {
+        final profile = await client
+            .from('profiles')
+            .select('org_id')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+        if (profile != null && profile['org_id'] != null) {
+          final orgId = profile['org_id'] as String;
+          final updateData = <String, dynamic>{
+            'updated_at': DateTime.now().toIso8601String(),
+          };
+          if (name != null) updateData['display_name'] = name;
+          if (logoUrl != null) updateData['logo_url'] = logoUrl;
+          if (primaryColor != null) updateData['primary_color'] = primaryColor;
+          if (iconPreset != null) updateData['icon_preset'] = iconPreset;
+
+          await client.from('organizations').update(updateData).eq('id', orgId);
+        }
+      }
+
+      // Apply icon change on this device
+      if (iconPreset != null && iconPreset != oldPreset) {
+        await _applyIconPreset(iconPreset);
+      }
+
       // Log the activity
-      await _ref.read(activityLogRepositoryProvider).log(
-            action: 'System Branding Updated',
-            details: 'Changed brand name from "$oldName" to "${newState.name}" and color to "${newState.primaryColor}"',
-            type: ActivityType.systemUpdate,
-          );
+      final changes = <String>[];
+      if (name != null && name != oldName) {
+        changes.add('brand name from "$oldName" to "$name"');
+      }
+      if (primaryColor != null) {
+        changes.add('color to "$primaryColor"');
+      }
+      if (iconPreset != null && iconPreset != oldPreset) {
+        changes.add('home screen icon to "$iconPreset"');
+      }
+
+      if (changes.isNotEmpty) {
+        await _ref.read(activityLogRepositoryProvider).log(
+              action: 'System Branding Updated',
+              details: 'Changed ${changes.join(", ")}',
+              type: ActivityType.systemUpdate,
+            );
+      }
     } catch (e) {
       // Local only if DB fails
     }

@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/powered_by_badge.dart';
 import '../../data/providers/brand_provider.dart';
+import '../widgets/icon_preset_picker.dart';
 
 class BrandingSettingsPage extends ConsumerStatefulWidget {
   const BrandingSettingsPage({super.key});
@@ -18,6 +20,7 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
   late TextEditingController _nameCtrl;
   late TextEditingController _logoCtrl;
   late TextEditingController _colorCtrl;
+  late String _selectedIconPreset;
   bool _saving = false;
 
   @override
@@ -27,6 +30,7 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
     _nameCtrl = TextEditingController(text: brand.name);
     _logoCtrl = TextEditingController(text: brand.logoUrl ?? '');
     _colorCtrl = TextEditingController(text: brand.primaryColor ?? '#0066FF');
+    _selectedIconPreset = brand.iconPreset;
   }
 
   @override
@@ -58,20 +62,24 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
             name: _nameCtrl.text.trim(),
             logoUrl: _logoCtrl.text.trim().isEmpty ? null : _logoCtrl.text.trim(),
             primaryColor: _colorCtrl.text.trim(),
+            iconPreset: _selectedIconPreset,
           );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
+        SnackBar(
+          content: const Row(
             children: [
               Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
               SizedBox(width: 12),
-              Text('Branding settings updated successfully'),
+              Expanded(
+                child: Text('Branding applied for all organization members'),
+              ),
             ],
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       context.pop();
@@ -125,7 +133,8 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                 ).animate().fadeIn(),
                 const SizedBox(height: 4),
                 Text(
-                  'Customize the brand assets that represent your organization to customers and staff.',
+                  'Customize the brand assets that represent your organization to all members — '
+                  'branch managers, staff, and customers.',
                   style: theme.textTheme.bodySmall?.copyWith(fontSize: 14),
                 ).animate().fadeIn(delay: 50.ms),
                 const SizedBox(height: 24),
@@ -221,17 +230,31 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                         },
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'This color is used for action buttons, navigation indicators, highlight headers, and structural UI elements.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      Text(
+                        'This color is used for action buttons, navigation indicators, '
+                        'highlight headers, and structural UI elements across the app.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                       ),
                     ],
                   ),
                 ).animate(delay: 150.ms).fadeIn(),
 
+                const SizedBox(height: 24),
+
+                // ─── 3. ICON PRESET PICKER ───────────────────────────────
+                GlassCard(
+                  padding: const EdgeInsets.all(24),
+                  child: IconPresetPicker(
+                    currentPreset: _selectedIconPreset,
+                    onPresetSelected: (presetId) {
+                      setState(() => _selectedIconPreset = presetId);
+                    },
+                  ),
+                ).animate(delay: 180.ms).fadeIn(),
+
                 const SizedBox(height: 32),
 
-                // ─── 3. SAVE BUTTON ──────────────────────────────────────
+                // ─── 4. SAVE BUTTON ──────────────────────────────────────
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -248,7 +271,7 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                           )
                         : const Icon(Icons.save_rounded),
                     label: Text(
-                      _saving ? 'Applying branding…' : 'Apply Brand Settings',
+                      _saving ? 'Applying to all members…' : 'Apply Brand Settings',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -257,9 +280,19 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: previewColor,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ).animate(delay: 200.ms).fadeIn(),
+
+                const SizedBox(height: 32),
+
+                // ─── 5. POWERED BY BADGE ─────────────────────────────────
+                const Center(child: PoweredByBadge())
+                    .animate(delay: 250.ms)
+                    .fadeIn(),
               ],
             ),
           ),

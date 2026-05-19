@@ -66,6 +66,13 @@ class IconPresets {
       colorValue: 0xFF0D9488,
       assetPreview: 'assets/icons/preset_field_teal.png',
     ),
+    IconPreset(
+      id: 'future_swarupnagar',
+      label: 'Future Swarupnagar',
+      description: 'Future Swarupnagar branding',
+      colorValue: 0xFF2563EB,
+      assetPreview: 'assets/icons/preset_future_swarupnagar.png',
+    ),
   ];
 
   static IconPreset getById(String id) {

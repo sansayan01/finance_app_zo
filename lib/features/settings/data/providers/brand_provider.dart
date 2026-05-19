@@ -26,7 +26,7 @@ class BrandNotifier extends StateNotifier<BrandModel> {
         if (profile != null && profile['org_id'] != null) {
           final org = await client
               .from('organizations')
-              .select('display_name, name, logo_url, primary_color, icon_preset')
+              .select('display_name, name, icon_preset')
               .eq('id', profile['org_id'])
               .maybeSingle();
           if (org != null) {
@@ -35,11 +35,8 @@ class BrandNotifier extends StateNotifier<BrandModel> {
               name: org['display_name'] as String? ??
                   org['name'] as String? ??
                   'MicroFlow Pro',
-              logoUrl: org['logo_url'] as String?,
-              primaryColor: org['primary_color'] as String?,
               iconPreset: iconPreset,
             );
-
             // Apply the org's icon preset to this device
             _applyIconPreset(iconPreset);
             return;
@@ -78,19 +75,15 @@ class BrandNotifier extends StateNotifier<BrandModel> {
   }
 
   /// Update brand settings including icon preset.
-  /// Called by the executive admin from the branding settings page.
+  /// Called by the executive admin from the organization settings page.
   Future<void> updateBrand({
     String? name,
-    String? logoUrl,
-    String? primaryColor,
     String? iconPreset,
   }) async {
     final oldName = state.name;
     final oldPreset = state.iconPreset;
     final newState = state.copyWith(
       name: name,
-      logoUrl: logoUrl,
-      primaryColor: primaryColor,
       iconPreset: iconPreset,
     );
     state = newState;
@@ -106,7 +99,8 @@ class BrandNotifier extends StateNotifier<BrandModel> {
         'updated_at': DateTime.now().toIso8601String(),
       });
 
-      // Also persist icon_preset to the organizations table so all org members get it
+      // Also persist icon_preset to the organizations table
+      // so all org members get it on next login
       if (currentUser != null) {
         final profile = await client
             .from('profiles')
@@ -119,8 +113,6 @@ class BrandNotifier extends StateNotifier<BrandModel> {
             'updated_at': DateTime.now().toIso8601String(),
           };
           if (name != null) updateData['display_name'] = name;
-          if (logoUrl != null) updateData['logo_url'] = logoUrl;
-          if (primaryColor != null) updateData['primary_color'] = primaryColor;
           if (iconPreset != null) updateData['icon_preset'] = iconPreset;
 
           await client.from('organizations').update(updateData).eq('id', orgId);
@@ -136,9 +128,6 @@ class BrandNotifier extends StateNotifier<BrandModel> {
       final changes = <String>[];
       if (name != null && name != oldName) {
         changes.add('brand name from "$oldName" to "$name"');
-      }
-      if (primaryColor != null) {
-        changes.add('color to "$primaryColor"');
       }
       if (iconPreset != null && iconPreset != oldPreset) {
         changes.add('home screen icon to "$iconPreset"');

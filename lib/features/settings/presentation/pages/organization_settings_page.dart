@@ -38,8 +38,6 @@ class _OrganizationSettingsPageState
   final _legalNameCtrl = TextEditingController();
   final _displayNameCtrl = TextEditingController();
   final _domainCtrl = TextEditingController();
-  final _logoUrlCtrl = TextEditingController();
-  final _primaryColorCtrl = TextEditingController();
   String _selectedIconPreset = 'default';
 
   // ─── Compliance ───
@@ -84,8 +82,6 @@ class _OrganizationSettingsPageState
     _legalNameCtrl.dispose();
     _displayNameCtrl.dispose();
     _domainCtrl.dispose();
-    _logoUrlCtrl.dispose();
-    _primaryColorCtrl.dispose();
     _gstCtrl.dispose();
     _panCtrl.dispose();
     _licenseCtrl.dispose();
@@ -103,8 +99,6 @@ class _OrganizationSettingsPageState
     _legalNameCtrl.text = (org['name'] as String?) ?? '';
     _displayNameCtrl.text = (org['display_name'] as String?) ?? '';
     _domainCtrl.text = (org['domain'] as String?) ?? '';
-    _logoUrlCtrl.text = (org['logo_url'] as String?) ?? '';
-    _primaryColorCtrl.text = (org['primary_color'] as String?) ?? '#4F46E5';
     _selectedIconPreset = (org['icon_preset'] as String?) ?? 'default';
     _gstCtrl.text = (org['gst_number'] as String?) ?? '';
     _addressCtrl.text = (org['address'] as String?) ?? '';
@@ -126,15 +120,6 @@ class _OrganizationSettingsPageState
     _fyStartMonth = fy is int ? fy : (fy is num ? fy.toInt() : 4);
 
     _initialized = true;
-  }
-
-  Color _parseColor(String hex) {
-    try {
-      final clean = hex.replaceAll('#', '').trim();
-      if (clean.length == 6) return Color(int.parse('FF$clean', radix: 16));
-      if (clean.length == 8) return Color(int.parse(clean, radix: 16));
-    } catch (_) {}
-    return AppColors.primary;
   }
 
   Future<void> _save() async {
@@ -174,9 +159,6 @@ class _OrganizationSettingsPageState
             : _displayNameCtrl.text.trim(),
         'domain':
             _domainCtrl.text.trim().isEmpty ? null : _domainCtrl.text.trim(),
-        'logo_url':
-            _logoUrlCtrl.text.trim().isEmpty ? null : _logoUrlCtrl.text.trim(),
-        'primary_color': _primaryColorCtrl.text.trim(),
         'icon_preset': _selectedIconPreset,
         'gst_number':
             _gstCtrl.text.trim().isEmpty ? null : _gstCtrl.text.trim(),
@@ -197,10 +179,6 @@ class _OrganizationSettingsPageState
             name: _displayNameCtrl.text.trim().isEmpty
                 ? _legalNameCtrl.text.trim()
                 : _displayNameCtrl.text.trim(),
-            logoUrl: _logoUrlCtrl.text.trim().isEmpty
-                ? null
-                : _logoUrlCtrl.text.trim(),
-            primaryColor: _primaryColorCtrl.text.trim(),
             iconPreset: _selectedIconPreset,
           );
 
@@ -237,7 +215,6 @@ class _OrganizationSettingsPageState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final asyncOrg = ref.watch(_orgSettingsProvider);
 
     return Scaffold(
@@ -262,7 +239,6 @@ class _OrganizationSettingsPageState
         ),
         data: (org) {
           _hydrate(org);
-          final previewColor = _parseColor(_primaryColorCtrl.text);
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
             child: Form(
@@ -271,7 +247,7 @@ class _OrganizationSettingsPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ─── SECTION 1: BRAND IDENTITY ─────────────────────
-                  _buildBrandSection(theme, isDark, previewColor),
+                  _buildBrandSection(theme),
                   const SizedBox(height: 14),
                   // ─── SECTION 2: ICON PRESET ────────────────────────
                   _buildIconSection(theme),
@@ -289,7 +265,7 @@ class _OrganizationSettingsPageState
                   _buildLocaleSection(theme),
                   const SizedBox(height: 28),
                   // ─── SAVE BUTTON ───────────────────────────────────
-                  _buildSaveButton(previewColor),
+                  _buildSaveButton(),
                   const SizedBox(height: 24),
                   const Center(child: PoweredByBadge()),
                   const SizedBox(height: 16),
@@ -302,20 +278,19 @@ class _OrganizationSettingsPageState
     );
   }
 
-  Widget _buildBrandSection(ThemeData theme, bool isDark, Color previewColor) {
+  Widget _buildBrandSection(ThemeData theme) {
     return _Section(
       title: 'Brand Identity',
       icon: Icons.palette_outlined,
-      color: previewColor,
       children: [
         // Live preview mini-card
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: previewColor.withValues(alpha: 0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: previewColor.withValues(alpha: 0.15)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
           ),
           child: Row(
             children: [
@@ -323,23 +298,10 @@ class _OrganizationSettingsPageState
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: previewColor.withValues(alpha: 0.15),
+                  color: AppColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: _logoUrlCtrl.text.trim().isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          _logoUrlCtrl.text.trim(),
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.business_rounded,
-                            size: 20,
-                            color: previewColor,
-                          ),
-                        ),
-                      )
-                    : Icon(Icons.business_rounded, size: 20, color: previewColor),
+                child: Icon(Icons.business_rounded, size: 20, color: AppColors.primary),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -358,7 +320,7 @@ class _OrganizationSettingsPageState
                     ),
                     Text(
                       'Live brand preview',
-                      style: TextStyle(fontSize: 11, color: previewColor),
+                      style: TextStyle(fontSize: 11, color: AppColors.primary),
                     ),
                   ],
                 ),
@@ -380,35 +342,6 @@ class _OrganizationSettingsPageState
           label: 'Display / Brand Name',
           hint: 'Friendly name shown to all members',
           onChanged: (_) => setState(() {}),
-        ),
-        _OrgTextField(
-          controller: _logoUrlCtrl,
-          label: 'Logo URL',
-          hint: 'https://example.com/logo.png',
-          keyboardType: TextInputType.url,
-          onChanged: (_) => setState(() {}),
-        ),
-        _OrgTextField(
-          controller: _primaryColorCtrl,
-          label: 'Primary Brand Color (Hex)',
-          hint: '#4F46E5',
-          onChanged: (_) => setState(() {}),
-          validator: (v) {
-            if (v == null || v.isEmpty) return 'Required';
-            final match =
-                RegExp(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$').hasMatch(v.trim());
-            return match ? null : 'Invalid hex (e.g. #0066FF)';
-          },
-          suffixWidget: Container(
-            margin: const EdgeInsets.all(8),
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: _parseColor(_primaryColorCtrl.text),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-            ),
-          ),
         ),
         _OrgTextField(
           controller: _domainCtrl,
@@ -563,7 +496,7 @@ class _OrganizationSettingsPageState
     ).animate(delay: 250.ms).fadeIn().slideY(begin: 0.04, end: 0);
   }
 
-  Widget _buildSaveButton(Color previewColor) {
+  Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
       height: 56,
@@ -585,7 +518,7 @@ class _OrganizationSettingsPageState
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: previewColor,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -601,19 +534,17 @@ class _OrganizationSettingsPageState
 class _Section extends StatelessWidget {
   final String title;
   final IconData icon;
-  final Color? color;
   final List<Widget> children;
   const _Section({
     required this.title,
     required this.icon,
     required this.children,
-    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final sectionColor = color ?? AppColors.primary;
+    final sectionColor = AppColors.primary;
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -657,7 +588,6 @@ class _OrgTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
-  final Widget? suffixWidget;
 
   const _OrgTextField({
     required this.controller,
@@ -670,7 +600,6 @@ class _OrgTextField extends StatelessWidget {
     this.validator,
     this.inputFormatters,
     this.onChanged,
-    this.suffixWidget,
   });
 
   @override
@@ -691,7 +620,6 @@ class _OrgTextField extends StatelessWidget {
           hintText: hint,
           counterText: maxLength != null ? '' : null,
           border: const OutlineInputBorder(),
-          suffixIcon: suffixWidget,
         ),
       ),
     );

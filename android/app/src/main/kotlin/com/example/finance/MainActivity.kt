@@ -19,6 +19,7 @@ class MainActivity : FlutterFragmentActivity() {
         "micro_orange" to ".MainActivityMicroOrange",
         "trust_purple" to ".MainActivityTrustPurple",
         "field_teal" to ".MainActivityFieldTeal",
+        "future_swarupnagar" to ".MainActivityFutureSwarupnagar",
     )
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

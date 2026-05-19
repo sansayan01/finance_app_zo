@@ -81,6 +81,14 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
+            // Listen to progress changes and rebuild dialog
+            _progressSub?.cancel();
+            _progressSub = service.progressStream.listen((p) {
+              if (ctx.mounted) {
+                setDialogState(() => _downloadProgress = p);
+              }
+            });
+
             final isDownloading =
                 _downloadProgress.state == DownloadState.downloading;
             final isCompleted =
@@ -153,12 +161,12 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                       const SizedBox(height: 8),
                       Text(
                         isCompleted
-                            ? 'Tap install to apply the update.'
+                            ? 'Tap Install to apply the update.'
                             : isFailed
                                 ? _downloadProgress.error ??
                                     'Something went wrong.'
                                 : isDownloading
-                                    ? 'Downloading the latest version ($pct%)'
+                                    ? 'Downloading the latest version...'
                                     : result.message ??
                                         'A new version is available.',
                         textAlign: TextAlign.center,
@@ -178,7 +186,7 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '$pct%  •  ${_formatSize(progress)}',
+                          '$pct%',
                           style: theme.textTheme.bodySmall
                               ?.copyWith(fontSize: 11, color: Colors.grey),
                         ),
@@ -189,8 +197,10 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                         child: isCompleted
                             ? ElevatedButton.icon(
                                 onPressed: () {
-                                  if (result.updateUrl != null) {
-                                    _startDownload(service, result.updateUrl!);
+                                  // Install the already-downloaded file
+                                  final path = _downloadProgress.filePath;
+                                  if (path != null) {
+                                    service.installFromPath(path);
                                   }
                                   Navigator.pop(ctx);
                                 },
@@ -200,7 +210,7 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12)),
                                 ),
-                                icon: const Icon(Icons.download_done_rounded,
+                                icon: const Icon(Icons.install_mobile_rounded,
                                     size: 18),
                                 label: const Text('Install Now'),
                               )
@@ -224,11 +234,16 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                     label: const Text('Retry'),
                                   )
                                 : isDownloading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2.5),
+                                    ? OutlinedButton(
+                                        onPressed: () => service.cancelDownload(),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 14),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12)),
+                                        ),
+                                        child: const Text('Cancel'),
                                       )
                                     : ElevatedButton.icon(
                                         onPressed: () {
@@ -266,10 +281,6 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
         );
       },
     );
-  }
-
-  String _formatSize(double fraction) {
-    return '${(fraction * 100).toInt()}%';
   }
 }
 

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'core/providers/storage_providers.dart';
 import 'core/config/env_config.dart';
 import 'features/onboarding/data/tour_service.dart';
@@ -16,15 +15,7 @@ Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
     debugPrint('🚀 App starting...');
 
-    // 1. Initialize FlutterDownloader (Fail-safe)
-    try {
-      await FlutterDownloader.initialize(ignoreSsl: true);
-      debugPrint('✅ FlutterDownloader initialized');
-    } catch (e) {
-      debugPrint('⚠️ FlutterDownloader initialization failed: $e');
-    }
-
-    // 2. Set orientations
+    // 1. Set orientations
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -35,7 +26,7 @@ Future<void> main() async {
       overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
     );
 
-    // 3. Initialize Supabase
+    // 2. Initialize Supabase
     try {
       debugPrint('🔗 Connecting to Supabase: ${EnvConfig.supabaseUrl}');
       await Supabase.initialize(
@@ -48,11 +39,11 @@ Future<void> main() async {
       debugPrint('❌ Supabase initialization failed: $e');
     }
 
-    // 4. Initialize SharedPreferences
+    // 3. Initialize SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     debugPrint('✅ SharedPreferences initialized');
 
-    // 5. Setup Global Error Handler for Production
+    // 4. Setup Global Error Handler for Production
     ErrorWidget.builder = (FlutterErrorDetails details) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -88,7 +79,7 @@ Future<void> main() async {
       );
     };
 
-    // 6. Initialize Sentry & Run App
+    // 5. Initialize Sentry & Run App
     if (EnvConfig.sentryDsn.isNotEmpty) {
       debugPrint('🛰️ Initializing Sentry...');
       await SentryFlutter.init(

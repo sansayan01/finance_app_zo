@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/providers/storage_providers.dart';
+import 'core/providers/system_config_provider.dart';
 import 'core/config/env_config.dart';
 import 'features/onboarding/data/tour_service.dart';
 import 'features/onboarding/data/tour_provider.dart';
@@ -42,6 +43,9 @@ Future<void> main() async {
     // 3. Initialize SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     debugPrint('✅ SharedPreferences initialized');
+
+    // 3b. Cache app version for update checks
+    await initAppVersion();
 
     // 4. Setup Global Error Handler for Production
     ErrorWidget.builder = (FlutterErrorDetails details) {

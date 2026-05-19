@@ -1,29 +1,73 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/system_config.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 
-final systemConfigProvider = FutureProvider<SystemConfig>((ref) async {
+/// Streams system_config changes in real-time via Supabase Realtime.
+/// Falls back to a one-time fetch if realtime isn't available.
+final systemConfigProvider = StreamProvider<SystemConfig>((ref) {
   final client = ref.watch(supabaseClientProvider);
 
-  final response =
-      await client.from('system_config').select().limit(1).maybeSingle();
+  final controller = StreamController<SystemConfig>();
 
-  if (response == null) {
-    return const SystemConfig(
-      currentVersionAndroid: '1.0.0',
-      minVersionAndroid: '1.0.0',
-      currentVersionIos: '1.0.0',
-      minVersionIos: '1.0.0',
-      updateMessage: '',
-      isUnderMaintenance: false,
-      maintenanceMessage: '',
-    );
+  // 1. Fetch initial value immediately
+  Future<void> fetchInitial() async {
+    try {
+      final response =
+          await client.from('system_config').select().limit(1).maybeSingle();
+      if (response != null) {
+        controller.add(SystemConfig.fromJson(response));
+      } else {
+        controller.add(_defaultConfig);
+      }
+    } catch (e) {
+      debugPrint('⚠️ system_config fetch error: $e');
+      controller.add(_defaultConfig);
+    }
   }
 
-  return SystemConfig.fromJson(response);
+  fetchInitial();
+
+  // 2. Subscribe to realtime changes on system_config
+  final channel = client
+      .channel('system_config_changes')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'public',
+        table: 'system_config',
+        callback: (payload) {
+          debugPrint('🔔 system_config updated via Realtime');
+          final newData = payload.newRecord;
+          if (newData.isNotEmpty) {
+            controller.add(SystemConfig.fromJson(newData));
+          }
+        },
+      )
+      .subscribe();
+
+  ref.onDispose(() {
+    client.removeChannel(channel);
+    controller.close();
+  });
+
+  return controller.stream;
 });
+
+const _defaultConfig = SystemConfig(
+  currentVersionAndroid: '1.0.0',
+  minVersionAndroid: '1.0.0',
+  currentVersionIos: '1.0.0',
+  minVersionIos: '1.0.0',
+  updateMessage: '',
+  isUnderMaintenance: false,
+  maintenanceMessage: '',
+);
+
+// ─── Update Check ───────────────────────────────────────────────────────────
 
 enum UpdateStatus {
   noUpdate,
@@ -44,16 +88,37 @@ class UpdateCheckResult {
   });
 }
 
-final updateCheckProvider = FutureProvider<UpdateCheckResult>((ref) async {
-  final config = await ref.watch(systemConfigProvider.future);
-  final packageInfo = await PackageInfo.fromPlatform();
-  final currentAppVersion = packageInfo.version;
+/// Derives the update status from the live system_config stream.
+/// Automatically re-evaluates whenever system_config changes via Realtime.
+final updateCheckProvider = Provider<AsyncValue<UpdateCheckResult>>((ref) {
+  final configAsync = ref.watch(systemConfigProvider);
 
+  return configAsync.when(
+    data: (config) {
+      final result = _checkUpdate(config);
+      return AsyncValue.data(result);
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (e, st) => AsyncValue.error(e, st),
+  );
+});
+
+UpdateCheckResult _checkUpdate(SystemConfig config) {
   if (config.isUnderMaintenance) {
     return UpdateCheckResult(
       status: UpdateStatus.maintenance,
       message: config.maintenanceMessage,
     );
+  }
+
+  // Skip version check on non-mobile platforms (Windows/Web during dev)
+  if (!_isMobile) {
+    return UpdateCheckResult(status: UpdateStatus.noUpdate);
+  }
+
+  final currentAppVersion = _cachedAppVersion;
+  if (currentAppVersion == null) {
+    return UpdateCheckResult(status: UpdateStatus.noUpdate);
   }
 
   String targetMinVersion;
@@ -89,7 +154,22 @@ final updateCheckProvider = FutureProvider<UpdateCheckResult>((ref) async {
   }
 
   return UpdateCheckResult(status: UpdateStatus.noUpdate);
-});
+}
+
+bool get _isMobile {
+  if (kIsWeb) return false;
+  return Platform.isAndroid || Platform.isIOS;
+}
+
+// Cache the app version so we don't need async in the synchronous provider
+String? _cachedAppVersion;
+
+/// Call this once at app startup to cache the version string.
+Future<void> initAppVersion() async {
+  final info = await PackageInfo.fromPlatform();
+  _cachedAppVersion = info.version;
+  debugPrint('📱 App version: $_cachedAppVersion');
+}
 
 bool _isVersionLower(String current, String target) {
   try {

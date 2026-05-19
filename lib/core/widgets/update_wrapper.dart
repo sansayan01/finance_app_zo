@@ -13,15 +13,31 @@ class UpdateWrapper extends ConsumerStatefulWidget {
   ConsumerState<UpdateWrapper> createState() => _UpdateWrapperState();
 }
 
-class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
+class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
+    with WidgetsBindingObserver {
   StreamSubscription? _progressSub;
   DownloadProgress _downloadProgress = const DownloadProgress();
   bool _dialogShown = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _progressSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-check when app comes back to foreground
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(systemConfigProvider);
+    }
   }
 
   void _startListening(AppUpdateService service) {
@@ -39,9 +55,9 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    final updateCheck = ref.watch(updateCheckProvider);
+    final updateCheckAsync = ref.watch(updateCheckProvider);
 
-    return updateCheck.when(
+    return updateCheckAsync.when(
       data: (result) {
         if (result.status == UpdateStatus.noUpdate) {
           _dialogShown = false;
@@ -57,7 +73,9 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
         if (!_dialogShown) {
           _dialogShown = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showTelegramUpdateDialog(context, result, isForce);
+            if (mounted) {
+              _showTelegramUpdateDialog(context, result, isForce);
+            }
           });
         }
 
@@ -197,7 +215,6 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                         child: isCompleted
                             ? ElevatedButton.icon(
                                 onPressed: () {
-                                  // Install the already-downloaded file
                                   final path = _downloadProgress.filePath;
                                   if (path != null) {
                                     service.installFromPath(path);
@@ -235,7 +252,8 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                   )
                                 : isDownloading
                                     ? OutlinedButton(
-                                        onPressed: () => service.cancelDownload(),
+                                        onPressed: () =>
+                                            service.cancelDownload(),
                                         style: OutlinedButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 14),

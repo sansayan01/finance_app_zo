@@ -152,9 +152,8 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
 
       setState(() => _uploadProgress = 1.0);
 
-      // Invalidate providers so the app picks up the new version
+      // Invalidate the config stream so realtime picks up immediately
       ref.invalidate(systemConfigProvider);
-      ref.invalidate(updateCheckProvider);
 
       setState(() {
         _success =

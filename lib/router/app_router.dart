@@ -105,7 +105,16 @@ import '../features/billing/presentation/pages/invoices_page.dart';
 import '../features/billing/presentation/pages/usage_limits_page.dart';
 
 // Branch Manager Portal
+import '../features/branch_manager/presentation/pages/branch_manager_dashboard.dart';
+import '../features/branch_manager/presentation/pages/staff_management_page.dart';
+import '../features/branch_manager/presentation/pages/pending_approvals_page.dart';
+import '../features/branch_manager/presentation/pages/branch_reports_page.dart';
 import '../features/branch_manager/presentation/pages/manager_live_map_page.dart';
+
+// Customer Portal
+import '../features/customer_portal/presentation/pages/customer_dashboard.dart';
+import '../features/customer_portal/presentation/pages/customer_loans_page.dart';
+import '../features/customer_portal/presentation/pages/customer_savings_page.dart';
 
 // =====================================================
 // AUTH REDIRECT LISTENER
@@ -177,6 +186,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             state.matchedLocation.startsWith('/branches') ||
             state.matchedLocation.startsWith('/super-admin');
         final isStaffPath = state.matchedLocation.startsWith('/staff');
+        final isBranchPath = state.matchedLocation.startsWith('/branch');
+        final isCustomerPath = state.matchedLocation.startsWith('/customer');
 
         // Force setup for executive admins if setup is not complete
         if (role == UserRole.executiveAdmin) {
@@ -198,24 +209,37 @@ final routerProvider = Provider<GoRouter>((ref) {
             case UserRole.executiveAdmin:
               return '/';
             case UserRole.manager:
+              return '/branch';
             case UserRole.collectionAgent:
               return '/staff';
             case UserRole.customer:
-              return '/';
+              return '/customer';
             default:
               return '/';
           }
         }
 
         // Staff role trying to access admin pages → redirect to staff
-        if ((role == UserRole.manager || role == UserRole.collectionAgent) &&
-            isAdminPath) {
+        if (role == UserRole.collectionAgent &&
+            (isAdminPath || isBranchPath || isCustomerPath)) {
           return '/staff';
+        }
+
+        // Branch manager trying to access wrong pages → redirect to branch
+        if (role == UserRole.manager &&
+            (isAdminPath || isStaffPath || isCustomerPath)) {
+          return '/branch';
+        }
+
+        // Customer trying to access wrong pages → redirect to customer
+        if (role == UserRole.customer &&
+            (isAdminPath || isStaffPath || isBranchPath)) {
+          return '/customer';
         }
 
         // Admin role trying to access staff pages → redirect to admin
         // Exception: executiveAdmin can access /staff/collection for payment recording
-        if (role == UserRole.executiveAdmin && isStaffPath) {
+        if (role == UserRole.executiveAdmin && (isStaffPath || isBranchPath || isCustomerPath)) {
           final isCollectionRoute =
               state.matchedLocation.startsWith('/staff/collection');
           if (!isCollectionRoute) {
@@ -532,6 +556,72 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
+      // Branch Manager Shell
+      ShellRoute(
+        builder: (context, state, child) {
+          final user = ref.read(currentUserProvider);
+          if (user?.role != UserRole.manager) {
+            return const Scaffold(body: Center(child: Text('Access denied')));
+          }
+          return BranchManagerShell(child: child);
+        },
+        routes: [
+          GoRoute(
+            path: '/branch',
+            builder: (context, state) => const BranchManagerDashboard(),
+          ),
+          GoRoute(
+            path: '/branch/staff',
+            builder: (context, state) => const StaffManagementPage(),
+          ),
+          GoRoute(
+            path: '/branch/approvals',
+            builder: (context, state) => const PendingApprovalsPage(),
+          ),
+          GoRoute(
+            path: '/branch/reports',
+            builder: (context, state) => const BranchReportsPage(),
+          ),
+          GoRoute(
+            path: '/branch/map',
+            builder: (context, state) => const ManagerLiveMapPage(),
+          ),
+          GoRoute(
+            path: '/branch/profile',
+            builder: (context, state) => const ProfilePage(),
+          ),
+        ],
+      ),
+
+      // Customer Portal Shell
+      ShellRoute(
+        builder: (context, state, child) {
+          final user = ref.read(currentUserProvider);
+          if (user?.role != UserRole.customer) {
+            return const Scaffold(body: Center(child: Text('Access denied')));
+          }
+          return CustomerShell(child: child);
+        },
+        routes: [
+          GoRoute(
+            path: '/customer',
+            builder: (context, state) => const CustomerDashboard(),
+          ),
+          GoRoute(
+            path: '/customer/loans',
+            builder: (context, state) => const CustomerLoansPage(),
+          ),
+          GoRoute(
+            path: '/customer/savings',
+            builder: (context, state) => const CustomerSavingsPage(),
+          ),
+          GoRoute(
+            path: '/customer/profile',
+            builder: (context, state) => const ProfilePage(),
+          ),
+        ],
+      ),
+
       // Staff Shell (for field collectors) - NEW
       ShellRoute(
         builder: (context, state, child) {
@@ -667,11 +757,26 @@ class HomePageContent extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Redirect branch manager to their dashboard
+    if (user?.role == UserRole.manager) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/branch');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     // Redirect staff to their dashboard
-    if (user?.role == UserRole.collectionAgent ||
-        user?.role == UserRole.manager) {
+    if (user?.role == UserRole.collectionAgent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go('/staff');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Redirect customer to their portal
+    if (user?.role == UserRole.customer) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/customer');
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -843,6 +948,228 @@ class StaffShell extends ConsumerWidget {
         pendingCount: pendingCount,
         isDark: isDark,
         primary: primary,
+      ),
+    );
+  }
+}
+
+// =====================================================
+// BRANCH MANAGER SHELL
+// =====================================================
+class BranchManagerShell extends StatelessWidget {
+  final Widget child;
+  const BranchManagerShell({super.key, required this.child});
+
+  int _calculateSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/branch/staff')) return 1;
+    if (location.startsWith('/branch/approvals')) return 2;
+    if (location.startsWith('/branch/reports')) return 3;
+    if (location.startsWith('/branch/profile')) return 4;
+    return 0;
+  }
+
+  void _onItemTapped(int index, BuildContext context) {
+    switch (index) {
+      case 0:
+        context.go('/branch');
+        break;
+      case 1:
+        context.go('/branch/staff');
+        break;
+      case 2:
+        context.go('/branch/approvals');
+        break;
+      case 3:
+        context.go('/branch/reports');
+        break;
+      case 4:
+        context.go('/branch/profile');
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentIndex = _calculateSelectedIndex(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBody: true,
+      body: _NavSafeArea(child: child),
+      bottomNavigationBar: _SimpleBottomBar(
+        currentIndex: currentIndex,
+        onTap: (index) => _onItemTapped(index, context),
+        isDark: isDark,
+        primary: primary,
+        items: const [
+          _SimpleNavData(Icons.dashboard_outlined, Icons.dashboard_rounded, 'Home'),
+          _SimpleNavData(Icons.people_outlined, Icons.people_rounded, 'Staff'),
+          _SimpleNavData(Icons.approval_outlined, Icons.approval_rounded, 'Approvals'),
+          _SimpleNavData(Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Reports'),
+          _SimpleNavData(Icons.person_outlined, Icons.person_rounded, 'Profile'),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================
+// CUSTOMER SHELL
+// =====================================================
+class CustomerShell extends StatelessWidget {
+  final Widget child;
+  const CustomerShell({super.key, required this.child});
+
+  int _calculateSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/customer/loans')) return 1;
+    if (location.startsWith('/customer/savings')) return 2;
+    if (location.startsWith('/customer/profile')) return 3;
+    return 0;
+  }
+
+  void _onItemTapped(int index, BuildContext context) {
+    switch (index) {
+      case 0:
+        context.go('/customer');
+        break;
+      case 1:
+        context.go('/customer/loans');
+        break;
+      case 2:
+        context.go('/customer/savings');
+        break;
+      case 3:
+        context.go('/customer/profile');
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentIndex = _calculateSelectedIndex(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBody: true,
+      body: _NavSafeArea(child: child),
+      bottomNavigationBar: _SimpleBottomBar(
+        currentIndex: currentIndex,
+        onTap: (index) => _onItemTapped(index, context),
+        isDark: isDark,
+        primary: primary,
+        items: const [
+          _SimpleNavData(Icons.home_outlined, Icons.home_rounded, 'Home'),
+          _SimpleNavData(Icons.account_balance_outlined, Icons.account_balance_rounded, 'Loans'),
+          _SimpleNavData(Icons.savings_outlined, Icons.savings_rounded, 'Savings'),
+          _SimpleNavData(Icons.person_outlined, Icons.person_rounded, 'Profile'),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================
+// SIMPLE BOTTOM BAR (shared by Branch Manager & Customer shells)
+// =====================================================
+class _SimpleNavData {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _SimpleNavData(this.icon, this.activeIcon, this.label);
+}
+
+class _SimpleBottomBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final bool isDark;
+  final Color primary;
+  final List<_SimpleNavData> items;
+
+  const _SimpleBottomBar({
+    required this.currentIndex,
+    required this.onTap,
+    required this.isDark,
+    required this.primary,
+    required this.items,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      minimum: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF1E1E2A).withValues(alpha: 0.95)
+                : Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (i) {
+              final item = items[i];
+              final isSelected = currentIndex == i;
+              final inactiveColor = isDark
+                  ? Colors.white.withValues(alpha: 0.4)
+                  : Colors.black.withValues(alpha: 0.4);
+              return GestureDetector(
+                onTap: () => onTap(i),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? primary.withValues(alpha: isDark ? 0.2 : 0.1)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isSelected ? item.activeIcon : item.icon,
+                        color: isSelected ? primary : inactiveColor,
+                        size: 22,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          color: isSelected ? primary : inactiveColor,
+                          fontSize: 10,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }

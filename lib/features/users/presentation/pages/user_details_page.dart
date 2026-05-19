@@ -1292,7 +1292,18 @@ class UserDetailsPage extends ConsumerWidget {
                         } catch (e) {
                           setState(() => isLoading = false);
                           if (ctx.mounted) {
-                            _toast(context, 'Failed: $e', error: true);
+                            final raw = e.toString();
+                            // Extract the message portion after "Exception: "
+                            final clean = raw.startsWith('Exception: ')
+                                ? raw.substring('Exception: '.length)
+                                : raw;
+                            final friendly = clean.contains('does not have a login account')
+                                || clean.contains('missing user_id')
+                                  ? 'This user does not have a login account yet. '
+                                      'An auth account will be created automatically — '
+                                      'please try again or contact support.'
+                                  : clean;
+                            _toast(context, friendly, error: true);
                           }
                         }
                       }

@@ -14,7 +14,7 @@ class CollectionRepository {
     final response = await _client
         .from('loans')
         .select('''
-          id,
+           id,
           member_id,
           member_name,
           outstanding_balance,
@@ -28,17 +28,17 @@ class CollectionRepository {
             gps_lng,
             gps_address
           ),
-          loan_schedules(
+          emi_schedule(
             id,
-            period,
+            installment_number AS period,
             due_date,
-            emi,
+            emi_amount,
             principal,
             interest,
-            balance,
+            balance_after,
             is_paid,
             is_overdue,
-            penalty
+            penalty_amount
           )
         ''')
         .eq('agent_id', staffId)
@@ -48,7 +48,7 @@ class CollectionRepository {
     // Filter schedules for today
     final result = <Map<String, dynamic>>[];
     for (final loan in response) {
-      final schedules = loan['loan_schedules'] as List?;
+      final schedules = loan['emi_schedule'] as List?;
       if (schedules != null) {
         for (final schedule in schedules) {
           if (schedule['due_date']?.toString().startsWith(today) == true &&
@@ -315,11 +315,11 @@ class CollectionRepository {
             start_date,
             paid_emis,
             total_emis,
-            loan_schedules(
+            emi_schedule(
               id,
-              period,
+              installment_number AS period,
               due_date,
-              emi,
+              emi_amount AS emi,
               is_paid,
               is_overdue
             )
@@ -354,7 +354,7 @@ class CollectionRepository {
             (loan['tenure'] as num?)?.toInt() ??
             0;
 
-        final schedules = loan['loan_schedules'] as List? ?? [];
+        final schedules = loan['emi_schedule'] as List? ?? [];
         for (final schedule in schedules) {
           if (schedule['is_overdue'] == true) {
             overdueAmount += (schedule['emi'] as num?)?.toDouble() ?? 0;
@@ -395,21 +395,21 @@ class CollectionRepository {
           emi,
           outstanding_balance,
           status,
-          start_date,
+           start_date,
           paid_emis,
           total_emis,
-          loan_schedules(
+          emi_schedule(
             id,
-            period,
+            installment_number AS period,
             due_date,
-            emi,
+            emi_amount AS emi,
             principal,
             interest,
-            balance,
+            balance_after AS balance,
             is_paid,
             is_overdue,
             paid_on,
-            penalty
+            penalty_amount AS penalty
           )
         ''').eq('member_id', customerId).order('created_at', ascending: false);
 

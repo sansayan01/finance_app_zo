@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
 import '../models/transaction_model.dart';
@@ -17,10 +18,25 @@ class TransactionsRepository {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      final filtered = await _filterOrphanedTransactions(response as List);
+      final list = response as List;
+      if (list.isEmpty) return [];
 
-      return filtered.map((json) => TransactionModel.fromJson(json)).toList();
+      // Skip orphan filtering if it causes issues — return all transactions
+      try {
+        final filtered = await _filterOrphanedTransactions(list);
+        return filtered
+            .map((json) => TransactionModel.fromJson(
+                Map<String, dynamic>.from(json as Map)))
+            .toList();
+      } catch (_) {
+        // If filtering fails, return unfiltered
+        return list
+            .map((json) => TransactionModel.fromJson(
+                Map<String, dynamic>.from(json as Map)))
+            .toList();
+      }
     } catch (e) {
+      debugPrint('getRecentTransactions error: $e');
       return [];
     }
   }

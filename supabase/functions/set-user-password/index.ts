@@ -62,65 +62,190 @@ serve(async (req: Request) => {
     }
 
     // 4. Verify the target user belongs to the same organization
+    // Lookup by either profile ID or auth user_id to handle client inconsistencies
     const { data: targetProfile, error: targetError } = await supabaseAdmin
       .from('profiles')
       .select('id, user_id, org_id, role, full_name')
-      .eq('user_id', target_user_id)
+      .or(`id.eq.${target_user_id},user_id.eq.${target_user_id}`)
       .single()
 
     if (targetError || !targetProfile) {
       return errorResponse('Target user not found', 404)
     }
 
-    // Org isolation: can only reset passwords within your own org
+    // 5. Handle the two cases: profile has no auth account yet, or account exists
+    if (targetProfile.user_id) {
+      // --- CASE A: auth account already linked — just update the password ---
+      if (targetProfile.org_id !== callerProfile.org_id) {
+        return errorResponse('Forbidden: target user is in a different organization', 403)
+      }
+
+      // Prevent managers from resetting admin passwords
+      if (callerProfile.role === 'manager' &&
+          ['superAdmin', 'executiveAdmin'].includes(targetProfile.role)) {
+        return errorResponse('Forbidden: managers cannot reset admin passwords', 403)
+      }
+
+      const { error: updateError, data: updateData } =
+        await supabaseAdmin.auth.admin.updateUserById(
+          targetProfile.user_id,
+          { password: new_password }
+        )
+
+      if (updateError) {
+        console.error('Password update error:', updateError)
+        const msg = updateError.message ?? 'Unknown error'
+        // GoTrue may return HTTP 400 if the auth user record is in a bad state
+        if (msg.includes('missing') || msg.includes('not found') || msg.includes('invalid')) {
+          return errorResponse(
+            `Auth account for ${targetProfile.full_name ?? 'this user'} is in an unrecoverable state. ` +
+            `Please delete and recreate the user. Details: ${msg}`,
+            400
+          )
+        }
+        return errorResponse(`Failed to update password: ${msg}`, 500)
+      }
+
+      try {
+        await supabaseAdmin.from('audit_logs').insert({
+          org_id: callerProfile.org_id,
+          user_id: caller.id,
+          action: 'admin.password_reset',
+          entity_type: 'profile',
+          entity_id: targetProfile.id,
+          details: {
+            target_name: targetProfile.full_name,
+            target_role: targetProfile.role,
+            reset_by: callerProfile.role,
+          }
+        })
+      } catch (e) {
+        console.error('Audit log error:', e)
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Password updated for ${targetProfile.full_name ?? 'user'}`
+        }),
+        {
+          headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
+          status: 200
+        }
+      )
+    }
+
+    // --- CASE B: profile has no auth account — try to create and link one ---
     if (targetProfile.org_id !== callerProfile.org_id) {
       return errorResponse('Forbidden: target user is in a different organization', 403)
     }
 
-    // Prevent managers from resetting admin passwords
-    if (callerProfile.role === 'manager' && 
-        ['superAdmin', 'executiveAdmin'].includes(targetProfile.role)) {
-      return errorResponse('Forbidden: managers cannot reset admin passwords', 403)
+    const { data: fullProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('email')
+      .eq('id', targetProfile.id)
+      .single()
+
+    const email = fullProfile?.email
+    if (!email) {
+      return errorResponse('Target user has no email address — cannot create a login account. Please add an email to their profile first.', 400)
     }
 
-    // 5. Reset the password using admin API
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      target_user_id,
-      { password: new_password }
+    // Look up any existing auth user by email so we can link to it
+    const { data: existingAuthUsers } =
+      await supabaseAdmin.auth.admin.listUsers({ email, perPage: 1 })
+
+    const foundUser = (existingAuthUsers?.users ?? []).find(
+      (u) => u.email === email
     )
 
-    if (updateError) {
-      console.error('Password update error:', updateError)
-      return errorResponse(`Failed to update password: ${updateError.message}`, 500)
+    if (foundUser) {
+      // Auth account exists but was never linked to this profile — link it now
+      const { error: linkError } = await supabaseAdmin
+        .from('profiles')
+        .update({ user_id: foundUser.id })
+        .eq('id', targetProfile.id)
+
+      if (linkError) {
+        console.error('Failed to link auth account:', linkError)
+        return errorResponse(
+          `An auth account already exists for this email but could not be linked. ` +
+          `Error: ${linkError.message}`,
+          500
+        )
+      }
+
+      // Now update the password for the linked account
+      const { error: updateError2 } =
+        await supabaseAdmin.auth.admin.updateUserById(
+          foundUser.id,
+          { password: new_password }
+        )
+
+      if (updateError2) {
+        console.error('Password update after link error:', updateError2)
+        return errorResponse(
+          `Auth account was linked but password could not be set: ${updateError2.message}`,
+          500
+        )
+      }
+    } else {
+      // No existing auth account — create one
+      const { data: newAuthUser, error: createError } =
+        await supabaseAdmin.auth.admin.createUser({
+          email,
+          password: new_password,
+          email_confirm: true,
+        })
+
+      if (createError || !newAuthUser?.user) {
+        console.error('Failed to create auth account:', createError)
+        return errorResponse(
+          `Failed to create login account: ${createError?.message ?? 'unknown error'}`,
+          400
+        )
+      }
+
+      // Link the new auth user to the profile
+      const { error: linkError2 } = await supabaseAdmin
+        .from('profiles')
+        .update({ user_id: newAuthUser.user.id })
+        .eq('id', targetProfile.id)
+
+      if (linkError2) {
+        console.error('Failed to link auth account:', linkError2)
+        return errorResponse(
+          `Auth account created but could not be linked to profile: ${linkError2.message}`,
+          500
+        )
+      }
     }
 
-    // 6. Log the action in audit_logs
     try {
       await supabaseAdmin.from('audit_logs').insert({
         org_id: callerProfile.org_id,
         user_id: caller.id,
-        action: 'admin.password_reset',
+        action: 'admin.account_created_and_password_set',
         entity_type: 'profile',
         entity_id: targetProfile.id,
         details: {
           target_name: targetProfile.full_name,
           target_role: targetProfile.role,
-          reset_by: callerProfile.role,
+          created_by: callerProfile.role,
         }
       })
     } catch (e) {
-      // Don't fail the operation if audit logging fails
       console.error('Audit log error:', e)
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Password updated for ${targetProfile.full_name || 'user'}` 
+      JSON.stringify({
+        success: true,
+        message: `Login account created and password set for ${targetProfile.full_name ?? 'user'}`
       }),
-      { 
+      {
         headers: { ...getCorsHeaders(), 'Content-Type': 'application/json' },
-        status: 200 
+        status: 200
       }
     )
   } catch (error) {

@@ -298,17 +298,10 @@ class LoansRepository {
       // 1. Delete transactions
       await _client.from('transactions').delete().eq('loan_id', loanId);
 
-      // 2. Delete EMI schedules
+      // 2. Delete EMI schedules (covers all schedule records via streaming)
       await _client.from('emi_schedule').delete().eq('loan_id', loanId);
 
-      // 3. Delete loan_schedules if table exists
-      try {
-        await _client.from('loan_schedules').delete().eq('loan_id', loanId);
-      } catch (_) {
-        // Ignore if table doesn't exist
-      }
-
-      // 4. Delete collections (not just nullify)
+      // 3. Delete collections (not just nullify)
       await _client.from('collections').delete().eq('loan_id', loanId);
 
       // 5. Delete customer payment requests if table exists

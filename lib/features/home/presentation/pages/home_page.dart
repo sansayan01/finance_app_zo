@@ -1038,6 +1038,7 @@ class HomePage extends ConsumerWidget {
   Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(dashboardTransactionsProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1048,7 +1049,7 @@ class HomePage extends ConsumerWidget {
             Text(
               'Recent Transactions',
               style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+                  ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.3),
             ),
             GestureDetector(
               onTap: () => context.push('/transactions'),
@@ -1056,15 +1057,23 @@ class HomePage extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.orange.withValues(alpha: 0.08),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(
-                  'View All',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.orange,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'View All',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded,
+                        size: 12, color: theme.colorScheme.primary),
+                  ],
                 ),
               ),
             ),
@@ -1077,24 +1086,36 @@ class HomePage extends ConsumerWidget {
               return GlassCard(
                 padding: const EdgeInsets.all(32),
                 child: Center(
-                  child: Text('No recent transactions',
-                      style: theme.textTheme.bodySmall),
+                  child: Column(
+                    children: [
+                      Icon(Icons.receipt_long_rounded,
+                          size: 40,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.2)),
+                      const SizedBox(height: 12),
+                      Text('No recent transactions',
+                          style: theme.textTheme.bodySmall),
+                    ],
+                  ),
                 ),
               );
             }
             return GlassCard(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: transactions.asMap().entries.map((entry) {
                   final index = entry.key;
                   final transaction = entry.value;
                   return Column(
                     children: [
-                      _buildTransactionItem(context, transaction),
+                      _buildTransactionItem(context, transaction, isDark),
                       if (index < transactions.length - 1)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Divider(height: 1),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(
+                              height: 1,
+                              color:
+                                  theme.dividerColor.withValues(alpha: 0.08)),
                         ),
                     ],
                   );
@@ -1116,79 +1137,159 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildTransactionItem(
-      BuildContext context, TransactionModel transaction) {
+      BuildContext context, TransactionModel transaction, bool isDark) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isDeposit = transaction.type == TransactionType.emiPayment ||
-        transaction.type == TransactionType.savingsDeposit;
-    final icon =
-        isDeposit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded;
-    final iconColor = isDeposit
-        ? (isDark ? AppColors.successDark : AppColors.success)
-        : (isDark ? AppColors.errorDark : AppColors.error);
 
-    String title;
+    // Type-specific config
+    IconData icon;
+    Color color;
+    String typeLabel;
+    bool isInflow;
+
     switch (transaction.type) {
       case TransactionType.emiPayment:
-        title = 'EMI Payment - ${transaction.memberName}';
-        break;
-      case TransactionType.loanDisbursement:
-        title = 'Loan Disbursement - ${transaction.memberName}';
+        icon = Icons.payments_rounded;
+        color = isDark ? AppColors.successDark : AppColors.success;
+        typeLabel = 'EMI Payment';
+        isInflow = true;
         break;
       case TransactionType.savingsDeposit:
-        title = 'Savings Deposit - ${transaction.memberName}';
+        icon = Icons.savings_rounded;
+        color = isDark ? AppColors.successDark : AppColors.success;
+        typeLabel = 'Savings Deposit';
+        isInflow = true;
+        break;
+      case TransactionType.loanDisbursement:
+        icon = Icons.account_balance_rounded;
+        color = isDark ? AppColors.errorDark : AppColors.error;
+        typeLabel = 'Loan Disbursed';
+        isInflow = false;
         break;
       case TransactionType.savingsWithdrawal:
-        title = 'Savings Withdrawal - ${transaction.memberName}';
+        icon = Icons.money_off_rounded;
+        color = isDark ? AppColors.warningDark : AppColors.warning;
+        typeLabel = 'Withdrawal';
+        isInflow = false;
         break;
       case TransactionType.penalty:
-        title = 'Penalty - ${transaction.memberName}';
+        icon = Icons.warning_amber_rounded;
+        color = isDark ? AppColors.errorDark : AppColors.error;
+        typeLabel = 'Penalty';
+        isInflow = true;
+        break;
+      case TransactionType.staffCashDeposit:
+        icon = Icons.account_balance_wallet_rounded;
+        color = isDark ? AppColors.successDark : AppColors.success;
+        typeLabel = 'Cash Deposit';
+        isInflow = true;
         break;
       default:
-        title = transaction.description ?? 'Transaction';
+        icon = Icons.swap_horiz_rounded;
+        color = Colors.grey;
+        typeLabel = 'Transaction';
+        isInflow = true;
     }
 
-    return Row(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
+    return InkWell(
+      onTap: () => context.push('/transactions'),
+      borderRadius: BorderRadius.circular(12),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color.withValues(alpha: 0.15)),
+            ),
+            child: Icon(icon, color: color, size: 20),
           ),
-          child: Icon(icon, color: iconColor, size: 22),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaction.memberName.isNotEmpty
+                      ? transaction.memberName
+                      : 'Unknown',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                AppFormatters.formatRelativeTime(transaction.createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
-              ),
-            ],
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(
+                      typeLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                    if (transaction.paymentMode != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 3,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        transaction.paymentMode!.name.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 3,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      AppFormatters.formatRelativeTime(transaction.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        Text(
-          AppFormatters.formatCurrency(transaction.amount),
-          style: TextStyle(
-            color: iconColor,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
+          Text(
+            '${isInflow ? '+' : '-'}${AppFormatters.formatCurrency(transaction.amount)}',
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.3,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

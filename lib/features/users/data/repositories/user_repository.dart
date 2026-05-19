@@ -181,7 +181,11 @@ class UserRepository {
     }
 
     try {
-      final r = await _client.from('members').select('id').eq('org_id', _orgId);
+      final r = await _client
+          .from('members')
+          .select('id')
+          .eq('org_id', _orgId)
+          .isFilter('profile_id', null);
       stats['members'] = (stats['members'] ?? 0) + ((r as List?)?.length ?? 0);
     } catch (e) {
       debugPrint('getUserStats members error: $e');
@@ -238,6 +242,8 @@ class UserRepository {
   /// Forcefully set a new password for a user via the admin Edge Function.
   /// Only executive admins and managers can use this.
   /// The Edge Function validates org isolation and role hierarchy.
+  /// Pass either the profile UUID (if user has no auth account yet) –
+  /// the Edge Function will create and link the auth account automatically.
   Future<void> adminSetUserPassword({
     required String targetUserId,
     required String newPassword,
@@ -249,17 +255,71 @@ class UserRepository {
       throw Exception('Password must be at least 6 characters.');
     }
 
+    // Quick pre-check: try to read the profile to confirm it exists.
+    // If the target is a member (no profile yet), create a profile first
+    // so the Edge Function can link an auth account to it.
+    String effectiveTargetId = targetUserId;
+    try {
+      var profileQuery = _client
+          .from('profiles')
+          .select('id, full_name, user_id, org_id');
+      if (targetUserId.isNotEmpty) {
+        profileQuery = profileQuery.or(
+          'id.eq.$targetUserId,user_id.eq.$targetUserId',
+        );
+      }
+      final profile = await profileQuery.maybeSingle();
+      if (profile == null) {
+        // Profile not found — check if this is a member without a profile
+        final member = await _client
+            .from('members')
+            .select('id, full_name, phone, email, org_id')
+            .eq('id', targetUserId)
+            .maybeSingle();
+        if (member == null) {
+          throw Exception('Target user profile not found.');
+        }
+        // Verify org isolation
+        if ((member['org_id'] as String?) != _orgId) {
+          throw Exception('Forbidden: target user belongs to a different organization.');
+        }
+        // Create a profile for this member so the Edge Function can work with it
+        final newProfile = await _client.from('profiles').insert({
+          'full_name': member['full_name'],
+          'phone': member['phone'],
+          'email': member['email'],
+          'org_id': member['org_id'],
+          'role': 'customer',
+          'status': 'active',
+        }).select('id').single();
+        // Link the member to the new profile
+        await _client
+            .from('members')
+            .update({'profile_id': newProfile['id']})
+            .eq('id', targetUserId);
+        effectiveTargetId = newProfile['id'] as String;
+      } else {
+        final uid = profile['user_id'] as String?;
+        if (uid == null && (profile['org_id'] as String?) != _orgId) {
+          throw Exception('Forbidden: target user belongs to a different organization.');
+        }
+      }
+    } catch (_) {
+      // Re-throw only pre-check errors; let the edge function do the heavy lift
+      rethrow;
+    }
+
     final response = await _client.functions.invoke(
       'set-user-password',
       body: {
-        'target_user_id': targetUserId,
+        'target_user_id': effectiveTargetId,
         'new_password': newPassword,
       },
     );
 
     if (response.status != 200) {
       final data = response.data;
-      final message = data is Map ? data['message'] : 'Failed to set password';
+      final message = data is Map ? (data['message']?.toString() ?? 'Failed to set password') : 'Failed to set password';
       throw Exception(message);
     }
   }
@@ -435,35 +495,35 @@ class UserRepository {
       }
     }
 
-    try {
-      await _client.functions.invoke('create-user', body: {
-        'email': email,
-        'password': password,
-        'full_name': fullName,
-        'phone': phone,
-        'role': role.name,
-        'aadhar': aadhar,
-        'pan': pan,
-        'employee_id': employeeId,
-        'assigned_zone': assignedZone,
-        'branch_id': branchId,
-        'org_id': _orgId,
-      });
-    } catch (_) {
-      await _client.from('profiles').insert({
-        'user_id': _client.auth.currentUser?.id,
-        'full_name': fullName,
-        'email': email,
-        'phone': phone,
-        'role': role.name,
-        'aadhar': aadhar,
-        'pan': pan,
-        'employee_id': employeeId,
-        'assigned_zone': assignedZone,
-        'branch_id': branchId,
-        'org_id': _orgId,
-        'status': 'active',
-      });
+    // Create profile row first — select back both id and user_id
+    final profileData = await _client.from('profiles').insert({
+      'full_name': fullName,
+      'email': email,
+      'phone': phone,
+      'role': role.name,
+      'aadhar': aadhar,
+      'pan': pan,
+      'employee_id': employeeId,
+      'assigned_zone': assignedZone,
+      'branch_id': branchId,
+      'org_id': _orgId,
+      'status': 'active',
+    }).select('id, user_id').single();
+
+    final profileId = profileData['id'] as String;
+
+    // Create auth account via edge function so the user can login
+    if (password.isNotEmpty && email.isNotEmpty) {
+      try {
+        await adminSetUserPassword(
+          targetUserId: profileId,
+          newPassword: password,
+        );
+      } catch (e) {
+        debugPrint('Failed to create auth account for new user "$fullName" ($email): '
+            'profile saved but login account not created. Error: $e\n'
+            'Profile ID: $profileId — retry via admin "Set New Password".');
+      }
     }
   }
 
@@ -511,7 +571,14 @@ class UserRepository {
     }
     try {
       final members = await getMembersPaginated(limit: 1000);
-      users.addAll(members);
+      // Only add members that don't already have a linked profile
+      // (those are already included from the profiles query above)
+      final profileIds = users.map((u) => u.id).toSet();
+      for (final m in members) {
+        if (!profileIds.contains(m.id)) {
+          users.add(m);
+        }
+      }
     } catch (e) {
       debugPrint('getUsers members error: $e');
     }

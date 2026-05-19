@@ -109,11 +109,13 @@ class BackgroundSyncService {
             interest_rate,
             status,
             outstanding_balance,
-            loan_schedules(
+            emi_schedule(
               id,
+              installment_number AS period,
               due_date,
-              emi,
-              is_paid
+              emi_amount AS emi,
+              is_paid,
+              is_overdue
             )
           ),
           savings(

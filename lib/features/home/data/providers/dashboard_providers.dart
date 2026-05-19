@@ -48,7 +48,7 @@ final pendingDepositsProvider = FutureProvider<List<SavingsModel>>((ref) async {
 final recentTransactionsProvider =
     FutureProvider<List<TransactionModel>>((ref) async {
   final repository = ref.watch(transactionsRepositoryProvider);
-  return repository.getRecentTransactions(limit: 10);
+  return repository.getRecentTransactions(limit: 50);
 });
 
 final todayStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
@@ -70,7 +70,7 @@ final dashboardSavingsProvider =
 final dashboardTransactionsProvider =
     FutureProvider<List<TransactionModel>>((ref) async {
   final repository = ref.watch(transactionsRepositoryProvider);
-  return repository.getRecentTransactions(limit: 3);
+  return repository.getRecentTransactions(limit: 5);
 });
 
 final overdueLoansProvider = FutureProvider<List<LoanModel>>((ref) async {

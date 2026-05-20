@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/loans_repository.dart';
 import 'loan_providers.dart';
@@ -363,7 +364,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
 
     state = state.copyWith(isLoading: true);
     try {
-      await _repository.createLoan(
+      final loanId = await _repository.createLoan(
         borrowerId: state.borrowerId!,
         principal: state.principalAmount,
         interestRate: state.interestMode == InterestMode.rate
@@ -390,6 +391,24 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
         tenureValue: state.tenureValue,
         tenureUnit: state.tenureUnit.name,
       );
+
+      // Generate EMI schedule for the newly created loan
+      try {
+        final emiRepo = _ref.read(emiRepositoryProvider);
+        await emiRepo.generateSchedule(
+          loanId,
+          principal: state.principalAmount,
+          interestRate: state.interestMode == InterestMode.rate
+              ? state.interestRate
+              : _calculateEquivalentAPR(),
+          tenureMonths: state.tenureValue,
+          interestType: state.interestLogic.name,
+          startDate: state.firstInstallmentDate ?? DateTime.now(),
+          emiAmount: state.estimatedInstallment,
+        );
+      } catch (e) {
+        debugPrint('Warning: EMI schedule generation failed: $e');
+      }
 
       _ref.invalidate(loansProvider);
 

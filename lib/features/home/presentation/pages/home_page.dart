@@ -235,12 +235,31 @@ class HomePage extends ConsumerWidget {
             return Column(
               children: items.map((item) {
                 final isLoan = item is LoanModel;
+                final isMap = item is Map<String, dynamic>;
+                final String displayName;
+                final double displayAmount;
+
+                if (isMap) {
+                  final loan = item['loans'] as Map<String, dynamic>?;
+                  final member = loan?['members'] as Map<String, dynamic>?;
+                  displayName = member?['full_name'] ?? 'Unknown';
+                  displayAmount = (item['emi_amount'] as num?)?.toDouble() ?? 0;
+                } else if (isLoan) {
+                  displayName = item.customerName ?? 'Unknown';
+                  displayAmount = item.emiAmount;
+                } else {
+                  displayName = (item as SavingsModel).memberName;
+                  displayAmount = item.monthlyDeposit;
+                }
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: GlassCard(
                     padding: const EdgeInsets.all(16),
                     onTap: () {
-                      if (isLoan) {
+                      if (isMap) {
+                        context.push('/payments');
+                      } else if (isLoan) {
                         context.push('/loans/${item.id}');
                       } else {
                         context.push('/savings/${item.id}');
@@ -252,16 +271,16 @@ class HomePage extends ConsumerWidget {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color:
-                                (isLoan ? AppColors.primary : AppColors.orange)
+                                (isLoan || isMap ? AppColors.primary : AppColors.orange)
                                     .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            isLoan
+                            isLoan || isMap
                                 ? Icons.payments_rounded
                                 : Icons.savings_rounded,
                             color:
-                                isLoan ? AppColors.primary : AppColors.orange,
+                                isLoan || isMap ? AppColors.primary : AppColors.orange,
                             size: 20,
                           ),
                         ),
@@ -271,15 +290,13 @@ class HomePage extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isLoan
-                                    ? item.customerName ?? 'Unknown'
-                                    : item.memberName,
+                                displayName,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                               Text(
-                                isLoan ? 'Loan EMI Due' : 'Savings Installment',
+                                isMap ? 'Loan EMI Due' : (isLoan ? 'Loan EMI Due' : 'Savings Installment'),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontSize: 11,
                                 ),
@@ -291,9 +308,7 @@ class HomePage extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              AppFormatters.formatCurrency(
-                                isLoan ? item.emiAmount : item.monthlyDeposit,
-                              ),
+                              AppFormatters.formatCurrency(displayAmount),
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: theme.colorScheme.onSurface,

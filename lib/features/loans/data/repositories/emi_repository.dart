@@ -231,14 +231,12 @@ class EMIRepository {
             'loan_id': loanId,
             'org_id': _orgId,
             'emi_number': i,
-            'due_date': DateTime(
-                    startDate.year, startDate.month + (i - 1), startDate.day)
-                .toIso8601String(),
+            'due_date': startDate.add(Duration(days: i - 1)).toIso8601String(),
             'emi_amount': emiAmount,
             'principal': principalPaid,
             'interest': interest,
             'balance_after': balance,
-            'status': 'upcoming',
+            'status': 'pending',
           });
         }
 
@@ -283,7 +281,7 @@ class EMIRepository {
           .select()
           .filter('due_date', 'gte', startOfDay.toIso8601String())
           .filter('due_date', 'lt', endOfDay.toIso8601String())
-          .inFilter('status', ['upcoming', 'overdue', 'pendingPayment']);
+          .inFilter('status', ['pending', 'overdue']);
 
       return (response as List)
           .map((json) => EMIScheduleModel.fromJson(json))

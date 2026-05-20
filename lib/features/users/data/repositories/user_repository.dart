@@ -576,7 +576,7 @@ class UserRepository {
     }
 
     // Step 2: Create profile with the auth user ID
-    await _client.from('profiles').upsert({
+    final profileResult = await _client.from('profiles').upsert({
       'user_id': authUserId,
       'full_name': fullName,
       'email': email,
@@ -589,7 +589,9 @@ class UserRepository {
       'branch_id': branchId,
       'org_id': _orgId,
       'status': 'active',
-    }, onConflict: 'user_id');
+    }, onConflict: 'user_id').select('id').single();
+
+    final profileId = profileResult['id'] as String;
 
     // Step 3: For customers, also create a members record
     if (role == UserRole.customer) {
@@ -604,7 +606,7 @@ class UserRepository {
           'branch_id': branchId,
           'kyc_status': 'pending',
           'member_id': memberId,
-          'profile_id': authUserId,
+          'profile_id': profileId,
         });
       } catch (e) {
         debugPrint('Failed to create customer in members table: $e');

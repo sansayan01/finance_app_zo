@@ -8,7 +8,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../users/presentation/providers/user_list_provider.dart';
+import '../../../members/data/models/member_model.dart';
+import '../../../members/presentation/providers/member_providers.dart';
 import '../providers/new_loan_provider.dart';
 import '../providers/loan_providers.dart';
 import '../../data/models/loan_model.dart';
@@ -118,7 +119,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
-    final usersAsync = ref.watch(customerListProvider);
+    final usersAsync = ref.watch(membersProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -403,7 +404,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
   }
 
   Widget _buildFacilityDetails(NewLoanState state, ThemeData theme, bool isDark,
-      Color primary, bool isNarrow, AsyncValue<List<dynamic>> usersAsync) {
+      Color primary, bool isNarrow, AsyncValue<List<MemberModel>> usersAsync) {
     return GlassCard(
       padding: EdgeInsets.all(isNarrow ? 18 : 24),
       child: Column(
@@ -472,8 +473,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               hint: users.isEmpty
                   ? 'No users found'
                   : 'Select registered customer',
-              items: users.map((u) => u.id as String).toList(),
-              itemLabels: users.map((u) => u.fullName as String).toList(),
+              items: users.map((u) => u.id).toList(),
+              itemLabels: users.map((u) => u.fullName).toList(),
               onChanged: (val) =>
                   ref.read(newLoanProvider.notifier).updateBorrower(val),
               theme: theme,

@@ -40,7 +40,7 @@ class SavingsRepository {
     try {
       final response = await _client
           .from('savings_plans')
-          .select('*, profiles:member_id(full_name)')
+          .select('*, members:member_id(full_name)')
           .eq('org_id', _orgId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
@@ -56,7 +56,7 @@ class SavingsRepository {
     try {
       final response = await _client
           .from('savings_plans')
-          .select('*, profiles:member_id(full_name)')
+          .select('*, members:member_id(full_name)')
           .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -72,7 +72,7 @@ class SavingsRepository {
       return SavingsModel(
         id: json['id']?.toString() ?? '',
         memberId: json['member_id']?.toString() ?? '',
-        memberName: json['profiles']?['full_name']?.toString() ?? 'Unknown',
+        memberName: json['members']?['full_name']?.toString() ?? 'Unknown',
         planName: json['plan_name']?.toString() ?? 'Recurring Deposit',
         targetAmount: (json['target_amount'] as num?)?.toDouble() ?? 0,
         currentAmount: (json['current_amount'] as num?)?.toDouble() ?? 0,
@@ -97,7 +97,7 @@ class SavingsRepository {
     try {
       final response = await _client
           .from('savings_plans')
-          .select('*, profiles:member_id(full_name)')
+          .select('*, members:member_id(full_name)')
           .eq('id', id)
           .single();
 

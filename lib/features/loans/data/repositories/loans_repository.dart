@@ -138,7 +138,7 @@ class LoansRepository {
     }
   }
 
-  Future<void> createLoan({
+  Future<String> createLoan({
     required String borrowerId,
     required double principal,
     required double interestRate,
@@ -162,7 +162,7 @@ class LoansRepository {
 
     double totalInterest = totalExposure - principal;
 
-    await _client.from('loans').insert({
+    final result = await _client.from('loans').insert({
       'customer_id': borrowerId,
       'loan_number': loanNumber,
       'amount': principal,
@@ -192,7 +192,9 @@ class LoansRepository {
       if (interestBasis != null) 'interest_basis': interestBasis,
       if (tenureValue != null) 'tenure_value': tenureValue,
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
-    });
+    }).select('id').single();
+
+    return result['id'] as String;
   }
 
   Future<void> createLoanFromMap(Map<String, dynamic> data) async {

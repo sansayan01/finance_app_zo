@@ -175,7 +175,7 @@ final todayPaymentsProvider =
   final List<TodayPayment> payments = [];
 
   try {
-    // 1. Fetch EMI dues for the selected date
+    // 1. Fetch EMI dues for the selected date (due on that day + overdue)
     final emiDues = await client
         .from('emi_schedule')
         .select('''
@@ -188,25 +188,61 @@ final todayPaymentsProvider =
           penalty_amount,
           paid_on,
           payment_mode,
-          amount_paid,
-          loans!inner(
+          loans!fk_emi_loan(
             id,
             loan_number,
             org_id,
             branch_id,
             customer_id,
             agent_id,
-            members!inner(id, full_name, phone),
+            members!fk_loans_customer(id, full_name, phone),
             branches(id, name),
-            profiles!loans_agent_id_fkey(id, full_name)
+            profiles!fk_loans_agent(id, full_name)
           )
         ''')
-        .eq('loans.org_id', orgId)
-        .lte('due_date', dateStr)
-        .inFilter('status', ['upcoming', 'overdue', 'pendingPayment'])
+        .eq('org_id', orgId)
+        .eq('due_date', dateStr)
         .order('due_date', ascending: true);
 
-    for (final emi in emiDues) {
+    // Also fetch overdue EMIs (due before selected date, still unpaid)
+    List<dynamic> overdueEmis = [];
+    try {
+      overdueEmis = await client
+          .from('emi_schedule')
+          .select('''
+            id,
+            emi_number,
+            due_date,
+            emi_amount,
+            is_paid,
+            status,
+            penalty_amount,
+            paid_on,
+            payment_mode,
+            loans!fk_emi_loan(
+              id,
+              loan_number,
+              org_id,
+              branch_id,
+              customer_id,
+              agent_id,
+              members!fk_loans_customer(id, full_name, phone),
+              branches(id, name),
+              profiles!fk_loans_agent(id, full_name)
+            )
+          ''')
+          .eq('org_id', orgId)
+          .lt('due_date', dateStr)
+          .eq('is_paid', false)
+          .order('due_date', ascending: true);
+    } catch (e) {
+      debugPrint('Error fetching overdue EMIs: $e');
+    }
+
+    // Combine both lists
+    final allEmiDues = [...emiDues, ...overdueEmis];
+
+    for (final emi in allEmiDues) {
       final loan = emi['loans'];
       if (loan == null) continue;
 
@@ -282,7 +318,7 @@ final todayPaymentsProvider =
           member_id,
           staff_id,
           remarks,
-          loans(id, loan_number, branch_id, members(id, full_name, phone)),
+          loans!fk_collections_loan(id, loan_number, branch_id, members!fk_loans_customer(id, full_name, phone)),
           profiles!fk_collections_staff(id, full_name),
           branches(name)
         ''')

@@ -13,7 +13,7 @@ import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../providers/loan_providers.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
-    show overdueLoansProvider, dashboardLoansProvider, activeLoansProvider;
+    show overdueLoansProvider, dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
 import '../../data/models/loan_model.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../widgets/collection_sheet.dart';
@@ -1626,6 +1626,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(

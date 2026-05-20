@@ -7,6 +7,7 @@ import 'staff_providers.dart';
 import 'sync_providers.dart';
 
 import '../../../../core/providers/org_provider.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show dashboardLoansProvider, loanSummaryProvider, todayAgendaProvider;
 
 // Collection repository provider
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
@@ -157,8 +158,9 @@ final frequentCustomersProvider =
 class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
   final CollectionRepository _repository;
   final SyncStatusNotifier _syncNotifier;
+  final Ref _ref;
 
-  CollectionNotifier(this._repository, this._syncNotifier)
+  CollectionNotifier(this._ref, this._repository, this._syncNotifier)
       : super(const AsyncValue.data(null));
 
   Future<void> recordCollection({
@@ -204,6 +206,17 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
           remarks: remarks,
         );
         state = AsyncValue.data(result);
+
+        // Invalidate all related providers for real-time UI updates
+        _ref.invalidate(todayDueEmisProvider);
+        _ref.invalidate(todayCollectionsProvider);
+        _ref.invalidate(todayCollectionStatsProvider);
+        _ref.invalidate(recentCollectionsProvider);
+        _ref.invalidate(staffWalletProvider);
+        _ref.invalidate(dashboardLoansProvider);
+        _ref.invalidate(loanSummaryProvider);
+        _ref.invalidate(todayStatsProvider);
+        _ref.invalidate(todayAgendaProvider);
       } catch (e) {
         // Fallback to offline queue
         await _syncNotifier.queueOperation(
@@ -229,7 +242,7 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
             'remarks': remarks,
             'collection_date':
                 DateTime.now().toIso8601String().split('T').first,
-            'collection_time': DateTime.now().toUtc().toIso8601String(),
+            'collection_time': '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')}',
             'sync_status': 'pending',
           },
         );
@@ -267,5 +280,5 @@ final collectionNotifierProvider =
         (ref) {
   final repository = ref.watch(collectionRepositoryProvider);
   final syncNotifier = ref.watch(syncStatusProvider.notifier);
-  return CollectionNotifier(repository, syncNotifier);
+  return CollectionNotifier(ref, repository, syncNotifier);
 });

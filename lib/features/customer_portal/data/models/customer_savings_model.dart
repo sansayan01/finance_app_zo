@@ -1,0 +1,46 @@
+class CustomerSavingsModel {
+  final String id;
+  final String? planName;
+  final double targetAmount;
+  final double currentAmount;
+  final double monthlyDeposit;
+  final double interestRate;
+  final int? tenureMonths;
+  final DateTime? maturityDate;
+  final String status;
+
+  CustomerSavingsModel({
+    required this.id,
+    this.planName,
+    required this.targetAmount,
+    required this.currentAmount,
+    required this.monthlyDeposit,
+    required this.interestRate,
+    this.tenureMonths,
+    this.maturityDate,
+    required this.status,
+  });
+
+  factory CustomerSavingsModel.fromJson(Map<String, dynamic> json) {
+    return CustomerSavingsModel(
+      id: json['id']?.toString() ?? '',
+      planName: json['plan_name']?.toString(),
+      targetAmount: (json['target_amount'] ?? 0).toDouble(),
+      currentAmount: (json['current_amount'] ?? 0).toDouble(),
+      monthlyDeposit: (json['monthly_deposit'] ?? 0).toDouble(),
+      interestRate: (json['interest_rate'] ?? 0).toDouble(),
+      tenureMonths: json['total_installments'] as int?,
+      maturityDate: json['maturity_date'] != null
+          ? DateTime.tryParse(json['maturity_date'].toString())
+          : null,
+      status: json['status']?.toString() ?? 'active',
+    );
+  }
+
+  String get displayName => planName ?? 'Savings Account';
+
+  double get progressPercentage {
+    if (targetAmount <= 0) return 0;
+    return (currentAmount / targetAmount * 100).clamp(0, 100);
+  }
+}

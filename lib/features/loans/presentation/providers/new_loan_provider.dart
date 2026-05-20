@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/loans_repository.dart';
 import 'loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider, dashboardLoansProvider, todayStatsProvider, todayAgendaProvider;
 
 enum InterestLogic { reducingBalance, flat }
 
@@ -405,12 +406,17 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
           interestType: state.interestLogic.name,
           startDate: state.firstInstallmentDate ?? DateTime.now(),
           emiAmount: state.estimatedInstallment,
+          memberId: state.borrowerId,
         );
       } catch (e) {
         debugPrint('Warning: EMI schedule generation failed: $e');
       }
 
       _ref.invalidate(loansProvider);
+      _ref.invalidate(loanSummaryProvider);
+      _ref.invalidate(dashboardLoansProvider);
+      _ref.invalidate(todayStatsProvider);
+      _ref.invalidate(todayAgendaProvider);
 
       state = state.copyWith(isLoading: false);
     } catch (e) {

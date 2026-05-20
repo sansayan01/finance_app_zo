@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/savings_repository.dart';
 import '../../data/providers/savings_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart'
+    show pendingDepositsProvider, dashboardSavingsProvider, activeSavingsProvider;
 
 enum CollectionType { daily, weekly, monthly }
 
@@ -118,6 +120,9 @@ class NewRecurringSavingNotifier
       // Invalidate providers to refresh the list
       _ref.invalidate(allSavingsProvider);
       _ref.invalidate(savingsSummaryProvider);
+      _ref.invalidate(pendingDepositsProvider);
+      _ref.invalidate(dashboardSavingsProvider);
+      _ref.invalidate(activeSavingsProvider);
 
       state = state.copyWith(isLoading: false);
     } catch (e) {

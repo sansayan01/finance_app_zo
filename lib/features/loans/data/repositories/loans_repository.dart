@@ -306,17 +306,7 @@ class LoansRepository {
       // 3. Delete collections (not just nullify)
       await _client.from('collections').delete().eq('loan_id', loanId);
 
-      // 5. Delete customer payment requests if table exists
-      try {
-        await _client
-            .from('customer_payment_requests')
-            .delete()
-            .eq('loan_id', loanId);
-      } catch (_) {
-        // Ignore if table doesn't exist
-      }
-
-      // 6. Delete the loan itself
+      // 5. Delete the loan itself
       await _client.from('loans').delete().eq('id', loanId);
 
       // 7. Verify deletion

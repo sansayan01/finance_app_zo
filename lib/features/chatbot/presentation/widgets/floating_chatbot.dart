@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/models/chat_message.dart';
 import '../providers/chat_provider.dart';
-import '../../../loans/data/providers/loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 
 class FloatingChatbot extends ConsumerStatefulWidget {
   const FloatingChatbot({super.key});

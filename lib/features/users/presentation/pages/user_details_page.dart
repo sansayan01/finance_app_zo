@@ -827,6 +827,7 @@ class UserDetailsPage extends ConsumerWidget {
                               );
                           ref.invalidate(userListProvider);
                           ref.invalidate(userDetailsProvider(user.id));
+                          ref.invalidate(userStatsProvider);
                           ref.invalidate(userAuditLogsProvider(
                               UserAuditQuery(
                                   profileId: user.id,
@@ -994,6 +995,7 @@ class UserDetailsPage extends ConsumerWidget {
           );
       ref.invalidate(userListProvider);
       ref.invalidate(userDetailsProvider(user.id));
+      ref.invalidate(userStatsProvider);
       ref.invalidate(userAuditLogsProvider(
           UserAuditQuery(profileId: user.id, authUserId: user.userId)));
       if (context.mounted) _toast(context, 'Status updated.');
@@ -1034,6 +1036,7 @@ class UserDetailsPage extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -2482,6 +2485,7 @@ class UserDetailsPage extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -3421,6 +3425,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
       ref.invalidate(userListProvider);
       ref.invalidate(userDetailsProvider(widget.user.id));
+      ref.invalidate(userStatsProvider);
 
       if (mounted) {
         Navigator.pop(context);

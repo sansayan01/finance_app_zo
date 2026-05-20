@@ -178,28 +178,7 @@ final todayPaymentsProvider =
     // 1. Fetch EMI dues for the selected date (due on that day + overdue)
     final emiDues = await client
         .from('emi_schedule')
-        .select('''
-          id,
-          emi_number,
-          due_date,
-          emi_amount,
-          is_paid,
-          status,
-          penalty_amount,
-          paid_on,
-          payment_mode,
-          loans!fk_emi_loan(
-            id,
-            loan_number,
-            org_id,
-            branch_id,
-            customer_id,
-            agent_id,
-            members!fk_loans_customer(id, full_name, phone),
-            branches(id, name),
-            profiles!fk_loans_agent(id, full_name)
-          )
-        ''')
+        .select('id, emi_number, due_date, emi_amount, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
         .eq('org_id', orgId)
         .eq('due_date', dateStr)
         .order('due_date', ascending: true);
@@ -209,28 +188,7 @@ final todayPaymentsProvider =
     try {
       overdueEmis = await client
           .from('emi_schedule')
-          .select('''
-            id,
-            emi_number,
-            due_date,
-            emi_amount,
-            is_paid,
-            status,
-            penalty_amount,
-            paid_on,
-            payment_mode,
-            loans!fk_emi_loan(
-              id,
-              loan_number,
-              org_id,
-              branch_id,
-              customer_id,
-              agent_id,
-              members!fk_loans_customer(id, full_name, phone),
-              branches(id, name),
-              profiles!fk_loans_agent(id, full_name)
-            )
-          ''')
+          .select('id, emi_number, due_date, emi_amount, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
           .eq('org_id', orgId)
           .lt('due_date', dateStr)
           .eq('is_paid', false)
@@ -242,13 +200,46 @@ final todayPaymentsProvider =
     // Combine both lists
     final allEmiDues = [...emiDues, ...overdueEmis];
 
-    for (final emi in allEmiDues) {
-      final loan = emi['loans'];
-      if (loan == null) continue;
+    // Collect unique loan IDs
+    final loanIds = allEmiDues.map((e) => e['loan_id']).where((id) => id != null).toSet().toList();
 
-      final member = loan['members'];
-      final branch = loan['branches'];
-      final agent = loan['profiles'];
+    // Fetch loan details
+    Map<String, Map<String, dynamic>> loansMap = {};
+    if (loanIds.isNotEmpty) {
+      final loans = await client
+          .from('loans')
+          .select('id, loan_number, branch_id, customer_id, agent_id')
+          .inFilter('id', loanIds);
+      for (final loan in loans) {
+        loansMap[loan['id']] = loan;
+      }
+    }
+
+    // Collect unique customer IDs for member details
+    final customerIds = loansMap.values
+        .map((l) => l['customer_id'])
+        .where((id) => id != null)
+        .toSet()
+        .toList();
+
+    // Fetch member details
+    Map<String, Map<String, dynamic>> membersMap = {};
+    if (customerIds.isNotEmpty) {
+      final members = await client
+          .from('members')
+          .select('id, full_name, phone')
+          .inFilter('id', customerIds);
+      for (final member in members) {
+        membersMap[member['id']] = member;
+      }
+    }
+
+    for (final emi in allEmiDues) {
+      final loanId = emi['loan_id'];
+      if (loanId == null || loansMap[loanId] == null) continue;
+
+      final loan = loansMap[loanId]!;
+      final member = membersMap[loan['customer_id']];
 
       // Apply branch filter
       if (filters.branchId != null && loan['branch_id'] != filters.branchId) {
@@ -276,9 +267,9 @@ final todayPaymentsProvider =
         memberPhone: member?['phone'],
         memberId: member?['id'],
         branchId: loan['branch_id'],
-        branchName: branch?['name'],
-        agentId: agent?['id'],
-        agentName: agent?['full_name'],
+        branchName: null,
+        agentId: loan['agent_id'],
+        agentName: null,
         amountExpected: (emi['emi_amount'] as num?)?.toDouble() ?? 0,
         penaltyAmount: (emi['penalty_amount'] as num?)?.toDouble() ?? 0,
         amountCollected: isPaid
@@ -303,36 +294,12 @@ final todayPaymentsProvider =
     // 2. Fetch collections for the selected date
     final collections = await client
         .from('collections')
-        .select('''
-          id,
-          amount_expected,
-          amount_collected,
-          collection_type,
-          payment_mode,
-          collection_date,
-          collection_time,
-          member_name,
-          member_phone,
-          loan_number,
-          loan_id,
-          member_id,
-          staff_id,
-          remarks,
-          loans!fk_collections_loan(id, loan_number, branch_id, members!fk_loans_customer(id, full_name, phone)),
-          profiles!fk_collections_staff(id, full_name),
-          branches(name)
-        ''')
+        .select('id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, member_id, staff_id, remarks')
         .eq('org_id', orgId)
         .eq('collection_date', dateStr)
         .order('collection_time', ascending: false);
 
     for (final col in collections) {
-      // Apply branch filter
-      if (filters.branchId != null &&
-          col['loans']?['branch_id'] != filters.branchId) {
-        continue;
-      }
-
       // Apply agent filter
       if (filters.agentId != null && col['staff_id'] != filters.agentId) {
         continue;
@@ -342,23 +309,19 @@ final todayPaymentsProvider =
           (p) => p.loanNumber == col['loan_number'] && p.isCollected);
 
       if (existingIdx == -1) {
-        final member = col['loans']?['members'];
-        final agent = col['profiles'];
-
         payments.add(TodayPayment(
           id: col['id'],
           type: col['collection_type'] == 'savings'
               ? PaymentType.savings
               : PaymentType.emi,
           status: PaymentStatus.collected,
-          memberName:
-              col['member_name'] ?? member?['full_name'] ?? 'Unknown',
-          memberPhone: col['member_phone'] ?? member?['phone'],
-          memberId: col['member_id'] ?? member?['id'],
-          branchId: col['loans']?['branch_id'],
-          branchName: col['branches']?['name'],
+          memberName: col['member_name'] ?? 'Unknown',
+          memberPhone: col['member_phone'],
+          memberId: col['member_id'],
+          branchId: null,
+          branchName: null,
           agentId: col['staff_id'],
-          agentName: agent?['full_name'],
+          agentName: null,
           amountExpected:
               (col['amount_expected'] as num?)?.toDouble() ?? 0,
           amountCollected:
@@ -378,6 +341,97 @@ final todayPaymentsProvider =
     debugPrint('Error fetching collections: $e');
   }
 
+  // 3. Fetch savings plans due on the selected date
+  try {
+    final selectedDate = filters.selectedDate;
+    final dayOfWeek = selectedDate.weekday - 1; // 0=Mon, 6=Sun
+    final dayOfMonth = selectedDate.day;
+
+    // First fetch savings plans
+    final allActivePlans = await client
+        .from('savings_plans')
+        .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id')
+        .eq('org_id', orgId)
+        .eq('status', 'active');
+
+    // Filter plans that are due on the selected date
+    final savingsDues = (allActivePlans as List).where((plan) {
+      final nextDue = plan['next_due_date'];
+      final collectionType = plan['collection_type'] ?? 'daily';
+      if (nextDue == dateStr) return true;
+      if (nextDue == null) {
+        switch (collectionType) {
+          case 'weekly':
+            return plan['collection_day_of_week'] == dayOfWeek;
+          case 'monthly':
+            return plan['collection_day_of_month'] == dayOfMonth;
+          default:
+            return true;
+        }
+      }
+      return false;
+    }).toList();
+
+    // Fetch member details for each plan
+    for (final plan in savingsDues) {
+      final memberId = plan['member_id'];
+      if (memberId == null) continue;
+
+      final member = await client
+          .from('members')
+          .select('id, full_name, phone, branch_id, agent_id')
+          .eq('id', memberId)
+          .maybeSingle();
+
+      if (member == null) continue;
+
+      // Apply branch filter
+      if (filters.branchId != null && member['branch_id'] != filters.branchId) {
+        continue;
+      }
+
+      // Apply agent filter
+      if (filters.agentId != null && member['agent_id'] != filters.agentId) {
+        continue;
+      }
+
+      // Check if already collected today
+      final existingCollection = await client
+          .from('savings_collections')
+          .select('id, amount_collected, payment_mode, created_at')
+          .eq('savings_plan_id', plan['id'])
+          .eq('collection_date', dateStr)
+          .maybeSingle();
+
+      final isCollected = existingCollection != null;
+
+      payments.add(TodayPayment(
+        id: plan['id'],
+        type: PaymentType.savings,
+        status: isCollected ? PaymentStatus.collected : PaymentStatus.pending,
+        memberName: member['full_name'] ?? 'Unknown',
+        memberPhone: member['phone'],
+        memberId: member['id'],
+        branchId: member['branch_id'],
+        branchName: null,
+        agentId: member['agent_id'],
+        agentName: null,
+        amountExpected: (plan['monthly_deposit'] as num?)?.toDouble() ?? 0,
+        amountCollected: isCollected
+            ? (existingCollection['amount_collected'] as num?)?.toDouble()
+            : null,
+        dueDate: DateTime.parse(dateStr),
+        planName: plan['plan_name'],
+        paymentMode: isCollected ? existingCollection['payment_mode'] : null,
+        collectedAt: isCollected && existingCollection['created_at'] != null
+            ? DateTime.tryParse(existingCollection['created_at'])
+            : null,
+      ));
+    }
+  } catch (e) {
+    debugPrint('Error fetching savings dues: $e');
+  }
+
   // Apply search filter
   List<TodayPayment> filtered = payments;
   if (filters.searchQuery.isNotEmpty) {
@@ -386,6 +440,7 @@ final todayPaymentsProvider =
       return p.memberName.toLowerCase().contains(query) ||
           (p.memberPhone?.contains(query) ?? false) ||
           (p.loanNumber?.toLowerCase().contains(query) ?? false) ||
+          (p.planName?.toLowerCase().contains(query) ?? false) ||
           (p.branchName?.toLowerCase().contains(query) ?? false) ||
           (p.agentName?.toLowerCase().contains(query) ?? false);
     }).toList();

@@ -3,6 +3,7 @@ import 'package:microflow_pro/core/constants/enums.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/member_model.dart';
 import '../../data/repositories/members_repository.dart';
+import 'member_providers.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/providers/org_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
@@ -54,8 +55,9 @@ class OnboardingState {
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
   final MembersRepository _repository;
   final LocationService _locationService;
+  final Ref _ref;
 
-  OnboardingNotifier(this._repository, this._locationService)
+  OnboardingNotifier(this._ref, this._repository, this._locationService)
       : super(OnboardingState());
 
   void updateFullName(String val) => state = state.copyWith(fullName: val);
@@ -101,6 +103,11 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       );
 
       await _repository.createMember(member);
+
+      // Invalidate member-related providers
+      _ref.invalidate(membersProvider);
+      _ref.invalidate(memberSummaryProvider);
+
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
@@ -125,6 +132,7 @@ final locationServiceProvider = Provider<LocationService>((ref) {
 final onboardingProvider =
     StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
   return OnboardingNotifier(
+    ref,
     ref.watch(membersRepositoryProvider),
     ref.watch(locationServiceProvider),
   );

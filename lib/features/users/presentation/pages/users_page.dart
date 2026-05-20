@@ -98,6 +98,13 @@ class _UsersPageState extends ConsumerState<UsersPage>
         () => _maybeLoadMore(_customersScroll, UserHubTab.customers));
     _suspendedScroll.addListener(
         () => _maybeLoadMore(_suspendedScroll, UserHubTab.suspended));
+    // Invalidate all user providers for fresh data
+    Future.microtask(() {
+      ref.invalidate(userStatsProvider);
+      for (final tab in UserHubTab.values) {
+        ref.invalidate(userHubPageProvider(tab));
+      }
+    });
   }
 
   @override

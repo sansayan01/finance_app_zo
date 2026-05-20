@@ -84,6 +84,10 @@ class TodayPayment {
   IconData get typeIcon =>
       type == PaymentType.emi ? Icons.receipt_long : Icons.savings;
 
+  // Type-specific colors for visual differentiation
+  Color get typeColor =>
+      type == PaymentType.emi ? const Color(0xFF5B6ABF) : const Color(0xFF00897B);
+
   Color get statusColor {
     switch (status) {
       case PaymentStatus.collected:
@@ -91,7 +95,7 @@ class TodayPayment {
       case PaymentStatus.overdue:
         return Colors.red;
       case PaymentStatus.pending:
-        return Colors.orange;
+        return type == PaymentType.emi ? Colors.orange : const Color(0xFF00897B);
     }
   }
 

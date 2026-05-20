@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/wallet_model.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../data/providers/collection_providers.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 
 class CashDepositPage extends ConsumerStatefulWidget {
@@ -416,6 +417,8 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
         ));
         ref.invalidate(staffWalletProvider);
         ref.invalidate(recentActivitiesProvider);
+        ref.invalidate(todayCollectionStatsProvider);
+        ref.invalidate(todayCollectionsProvider);
         context.pop();
       }
     } catch (e) {

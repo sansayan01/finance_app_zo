@@ -113,9 +113,15 @@ import '../features/branch_manager/presentation/pages/branch_reports_page.dart';
 import '../features/branch_manager/presentation/pages/manager_live_map_page.dart';
 
 // Customer Portal
-import '../features/customer_portal/presentation/pages/customer_dashboard.dart';
+import '../features/customer_portal/presentation/pages/customer_home_page.dart';
 import '../features/customer_portal/presentation/pages/customer_loans_page.dart';
+import '../features/customer_portal/presentation/pages/customer_loan_detail_page.dart';
+import '../features/customer_portal/presentation/pages/customer_emi_schedule_page.dart';
 import '../features/customer_portal/presentation/pages/customer_savings_page.dart';
+import '../features/customer_portal/presentation/pages/customer_savings_detail_page.dart';
+import '../features/customer_portal/presentation/pages/customer_transactions_page.dart';
+import '../features/customer_portal/presentation/pages/customer_notifications_page.dart';
+import '../features/customer_portal/presentation/pages/customer_support_page.dart';
 
 // =====================================================
 // AUTH REDIRECT LISTENER
@@ -614,15 +620,48 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/customer',
-            builder: (context, state) => const CustomerDashboard(),
+            builder: (context, state) => const CustomerHomePage(),
           ),
           GoRoute(
             path: '/customer/loans',
             builder: (context, state) => const CustomerLoansPage(),
           ),
           GoRoute(
+            path: '/customer/loans/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CustomerLoanDetailPage(loanId: id);
+            },
+          ),
+          GoRoute(
+            path: '/customer/loans/:id/schedule',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CustomerEmiSchedulePage(loanId: id);
+            },
+          ),
+          GoRoute(
             path: '/customer/savings',
             builder: (context, state) => const CustomerSavingsPage(),
+          ),
+          GoRoute(
+            path: '/customer/savings/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CustomerSavingsDetailPage(savingsId: id);
+            },
+          ),
+          GoRoute(
+            path: '/customer/transactions',
+            builder: (context, state) => const CustomerTransactionsPage(),
+          ),
+          GoRoute(
+            path: '/customer/notifications',
+            builder: (context, state) => const CustomerNotificationsPage(),
+          ),
+          GoRoute(
+            path: '/customer/support',
+            builder: (context, state) => const CustomerSupportPage(),
           ),
           GoRoute(
             path: '/customer/profile',
@@ -1042,15 +1081,25 @@ class BranchManagerShell extends StatelessWidget {
 // =====================================================
 // CUSTOMER SHELL
 // =====================================================
-class CustomerShell extends StatelessWidget {
+class CustomerShell extends ConsumerStatefulWidget {
   final Widget child;
   const CustomerShell({super.key, required this.child});
 
+  @override
+  ConsumerState<CustomerShell> createState() => _CustomerShellState();
+}
+
+class _CustomerShellState extends ConsumerState<CustomerShell> {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/customer/loans')) return 1;
     if (location.startsWith('/customer/savings')) return 2;
-    if (location.startsWith('/customer/profile')) return 3;
+    if (location.startsWith('/customer/transactions') ||
+        location.startsWith('/customer/notifications') ||
+        location.startsWith('/customer/support') ||
+        location.startsWith('/customer/profile')) {
+      return 3;
+    }
     return 0;
   }
 
@@ -1066,9 +1115,68 @@ class CustomerShell extends StatelessWidget {
         context.go('/customer/savings');
         break;
       case 3:
-        context.go('/customer/profile');
+        _showMoreMenu(context);
         break;
     }
+  }
+
+  void _showMoreMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.receipt_long_rounded),
+                title: const Text('Transactions'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/customer/transactions');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.notifications_rounded),
+                title: const Text('Notifications'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/customer/notifications');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.support_agent_rounded),
+                title: const Text('Support'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/customer/support');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_rounded),
+                title: const Text('Profile'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/customer/profile');
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(Icons.logout_rounded,
+                    color: Theme.of(context).colorScheme.error),
+                title: Text('Logout',
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await ref.read(authProvider.notifier).signOut();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -1080,7 +1188,7 @@ class CustomerShell extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
-      body: _NavSafeArea(child: child),
+      body: _NavSafeArea(child: widget.child),
       bottomNavigationBar: _SimpleBottomBar(
         currentIndex: currentIndex,
         onTap: (index) => _onItemTapped(index, context),
@@ -1093,7 +1201,7 @@ class CustomerShell extends StatelessWidget {
           _SimpleNavData(
               Icons.savings_outlined, Icons.savings_rounded, 'Savings'),
           _SimpleNavData(
-              Icons.person_outlined, Icons.person_rounded, 'Profile'),
+              Icons.more_horiz_outlined, Icons.more_horiz_rounded, 'More'),
         ],
       ),
     );

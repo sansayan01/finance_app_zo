@@ -487,6 +487,7 @@ class _CollectionHistoryPageState extends ConsumerState<CollectionHistoryPage> {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),

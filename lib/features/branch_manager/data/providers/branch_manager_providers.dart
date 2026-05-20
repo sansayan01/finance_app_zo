@@ -118,6 +118,7 @@ class ApprovalNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _repository.approveRequest(requestId, managerId, notes: notes);
       _ref.invalidate(pendingApprovalsProvider);
+      _ref.invalidate(branchManagerDashboardProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -129,6 +130,7 @@ class ApprovalNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _repository.rejectRequest(requestId, managerId, reason);
       _ref.invalidate(pendingApprovalsProvider);
+      _ref.invalidate(branchManagerDashboardProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

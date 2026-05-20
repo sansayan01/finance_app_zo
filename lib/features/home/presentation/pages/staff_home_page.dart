@@ -1118,10 +1118,11 @@ class StaffHomePage extends ConsumerWidget {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) {
         return Container(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xxl + 24,
+            bottom: MediaQuery.of(ctx).padding.bottom + AppSpacing.xxl + 24,
             left: 24,
             right: 24,
             top: 24,

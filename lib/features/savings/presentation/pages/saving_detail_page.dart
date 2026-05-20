@@ -13,6 +13,8 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../features/transactions/data/models/transaction_model.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart'
+    show pendingDepositsProvider;
 
 class SavingDetailPage extends ConsumerStatefulWidget {
   final String savingId;
@@ -514,6 +516,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       if (!mounted) return;
       ref.invalidate(savingDetailProvider(saving.id));
       ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(pendingDepositsProvider);
       HapticFeedback.lightImpact();
       messenger.showSnackBar(
         SnackBar(
@@ -584,6 +588,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
               if (!mounted) return;
               ref.invalidate(allSavingsProvider);
+              ref.invalidate(savingsSummaryProvider);
+              ref.invalidate(pendingDepositsProvider);
               navigator.pop(); // Pop dialog
               if (mounted) {
                 Navigator.of(this.context).pop(); // Pop page
@@ -696,6 +702,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                                   ref.invalidate(savingDetailProvider(widget.savingId));
                                   ref.invalidate(savingTransactionsProvider(widget.savingId));
                                   ref.invalidate(allSavingsProvider);
+                                  ref.invalidate(savingsSummaryProvider);
+                                  ref.invalidate(pendingDepositsProvider);
                                   
                                   if (dialogContext.mounted) {
                                     Navigator.of(dialogContext).pop();
@@ -1206,6 +1214,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   void _showTransactionActionsSheet(TransactionModel tx) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetCtx) {
         return SafeArea(
@@ -1374,6 +1383,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       ref.invalidate(savingDetailProvider(widget.savingId));
       ref.invalidate(savingTransactionsProvider(widget.savingId));
       ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
       ref
           .read(savingTxPagerProvider(widget.savingId).notifier)
           .refresh();
@@ -1433,6 +1443,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       ref.invalidate(savingDetailProvider(widget.savingId));
       ref.invalidate(savingTransactionsProvider(widget.savingId));
       ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
       ref
           .read(savingTxPagerProvider(widget.savingId).notifier)
           .refresh();

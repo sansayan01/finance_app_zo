@@ -124,6 +124,7 @@ class BranchNotifier extends StateNotifier<AsyncValue<void>> {
       _ref.invalidate(branchesProvider);
       _ref.invalidate(activeBranchesProvider);
       _ref.invalidate(branchProvider(id));
+      _ref.invalidate(potentialManagersProvider);
       state = const AsyncValue.data(null);
       return branch;
     } catch (e, st) {

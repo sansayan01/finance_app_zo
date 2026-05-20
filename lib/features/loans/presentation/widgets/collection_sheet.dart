@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
-import '../providers/loan_providers.dart' hide loanSummaryProvider;
+import '../providers/loan_providers.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../../data/models/loan_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';

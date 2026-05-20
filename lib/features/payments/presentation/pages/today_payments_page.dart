@@ -3,8 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show dashboardLoansProvider, loanSummaryProvider, todayAgendaProvider;
+import '../../../staff/data/providers/collection_providers.dart';
 import '../../data/models/today_payment_model.dart';
 import '../../data/providers/payment_providers.dart';
 import '../../data/utils/payment_export.dart';
@@ -63,6 +67,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     final filters = ref.read(paymentFilterProvider);
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -214,6 +219,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     final filters = ref.read(paymentFilterProvider);
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -311,6 +317,403 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         ],
       ),
     );
+  }
+
+  void _showQuickCollect(TodayPayment payment) {
+    final amountController = TextEditingController(
+        text: payment.amountExpected.toStringAsFixed(0));
+    String selectedMode = 'cash';
+    bool isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final currencyFormat =
+              NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom +
+                  MediaQuery.of(ctx).padding.bottom +
+                  20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.payment_rounded,
+                          color: AppColors.success, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Quick Collect',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '${payment.memberName} · ${payment.typeLabel}'
+                            '${payment.loanNumber != null ? ' · ${payment.loanNumber}' : ''}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Amount field
+                const Text('Amount',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    prefixText: '₹ ',
+                    prefixStyle: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
+                      fontSize: 18,
+                    ),
+                    hintText: 'Enter amount',
+                    filled: true,
+                    fillColor: AppColors.success.withValues(alpha: 0.06),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: AppColors.success, width: 2),
+                    ),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Payment mode
+                const Text('Payment Mode',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _ModeChip(
+                      icon: Icons.money_rounded,
+                      label: 'Cash',
+                      isSelected: selectedMode == 'cash',
+                      onTap: () =>
+                          setSheetState(() => selectedMode = 'cash'),
+                    ),
+                    _ModeChip(
+                      icon: Icons.qr_code_rounded,
+                      label: 'UPI',
+                      isSelected: selectedMode == 'upi',
+                      onTap: () =>
+                          setSheetState(() => selectedMode = 'upi'),
+                    ),
+                    _ModeChip(
+                      icon: Icons.account_balance_rounded,
+                      label: 'Bank',
+                      isSelected: selectedMode == 'bank_transfer',
+                      onTap: () =>
+                          setSheetState(() => selectedMode = 'bank_transfer'),
+                    ),
+                    _ModeChip(
+                      icon: Icons.receipt_rounded,
+                      label: 'Cheque',
+                      isSelected: selectedMode == 'cheque',
+                      onTap: () =>
+                          setSheetState(() => selectedMode = 'cheque'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Summary
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Collecting from ${payment.memberName}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      Text(
+                        currencyFormat.format(
+                            double.tryParse(amountController.text) ?? 0),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                final amount = double.tryParse(
+                                        amountController.text) ??
+                                    0;
+                                if (amount <= 0) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    content: Text('Enter a valid amount'),
+                                    backgroundColor: Colors.redAccent,
+                                  ));
+                                  return;
+                                }
+
+                                setSheetState(() => isSubmitting = true);
+
+                                try {
+                                  await _recordCollection(
+                                    payment: payment,
+                                    amount: amount,
+                                    paymentMode: selectedMode,
+                                  );
+
+                                  if (mounted) {
+                                    Navigator.pop(ctx);
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text(
+                                          '₹${amount.toStringAsFixed(0)} collected from ${payment.memberName}'),
+                                      backgroundColor: Colors.green,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16)),
+                                    ));
+                                    ref.invalidate(todayPaymentsProvider);
+                                    // Invalidate related providers for real-time updates
+                                    try {
+                                      ref.invalidate(todayCollectionsProvider);
+                                      ref.invalidate(todayCollectionStatsProvider);
+                                      ref.invalidate(todayDueEmisProvider);
+                                      ref.invalidate(dashboardLoansProvider);
+                                      ref.invalidate(loanSummaryProvider);
+                                      ref.invalidate(todayStatsProvider);
+                                      ref.invalidate(todayAgendaProvider);
+                                    } catch (_) {
+                                      // Providers may not be available in all contexts
+                                    }
+                                  }
+                                } catch (e) {
+                                  setSheetState(
+                                      () => isSubmitting = false);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text('Collection failed: $e'),
+                                      backgroundColor: Colors.redAccent,
+                                    ));
+                                  }
+                                }
+                              },
+                        icon: isSubmitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.check_circle_rounded,
+                                size: 18),
+                        label: Text(
+                          isSubmitting
+                              ? 'Processing...'
+                              : 'Collect ${currencyFormat.format(double.tryParse(amountController.text) ?? 0)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, 50),
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _recordCollection({
+    required TodayPayment payment,
+    required double amount,
+    required String paymentMode,
+  }) async {
+    final client = Supabase.instance.client;
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.orgId == null) {
+      throw Exception('User not found');
+    }
+
+    // Resolve profile ID (FK references profiles.id, not auth.uid)
+    final profile = await client
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+    final staffId = profile?['id'] as String?;
+    if (staffId == null) {
+      throw Exception('Staff profile not found');
+    }
+
+    final now = DateTime.now();
+    final today = now.toIso8601String().split('T').first;
+
+    if (payment.type == PaymentType.savings) {
+      // Record savings collection
+      await client.from('savings_collections').insert({
+        'org_id': user.orgId!,
+        'savings_plan_id': payment.id,
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'member_phone': payment.memberPhone,
+        'amount_expected': payment.amountExpected,
+        'amount_collected': amount,
+        'is_partial': amount < payment.amountExpected,
+        'payment_mode': paymentMode,
+        'collection_date': today,
+        'staff_id': staffId,
+        'sync_status': 'synced',
+      });
+
+      // Update next_due_date on savings plan
+      final plan = await client
+          .from('savings_plans')
+          .select('collection_type, collection_day_of_week, collection_day_of_month')
+          .eq('id', payment.id)
+          .maybeSingle();
+
+      DateTime nextDue;
+      final collectionType = plan?['collection_type'] ?? 'daily';
+      switch (collectionType) {
+        case 'weekly':
+          // Advance to same day next week
+          nextDue = now.add(const Duration(days: 7));
+          break;
+        case 'monthly':
+          // Advance to same day next month, handle month-end overflow
+          final targetDay = plan?['collection_day_of_month'] ?? now.day;
+          final nextMonth = now.month + 1;
+          final nextYear = nextMonth > 12 ? now.year + 1 : now.year;
+          final adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
+          final daysInMonth = DateTime(nextYear, adjustedMonth + 1, 0).day;
+          nextDue = DateTime(nextYear, adjustedMonth, targetDay > daysInMonth ? daysInMonth : targetDay);
+          break;
+        default: // daily
+          nextDue = now.add(const Duration(days: 1));
+      }
+
+      await client.from('savings_plans').update({
+        'next_due_date': nextDue.toIso8601String().split('T').first,
+        'updated_at': now.toIso8601String(),
+      }).eq('id', payment.id);
+    } else {
+      // Create EMI collection record
+      await client.from('collections').insert({
+        'org_id': user.orgId!,
+        'staff_id': staffId,
+        'loan_id': payment.loanId,
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'member_phone': payment.memberPhone,
+        'loan_number': payment.loanNumber,
+        'amount_expected': payment.amountExpected,
+        'amount_collected': amount,
+        'is_partial': amount < payment.amountExpected,
+        'collection_type': 'emi',
+        'payment_mode': paymentMode,
+        'collection_date': today,
+        'collection_time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
+        'sync_status': 'synced',
+      });
+
+      // Update EMI schedule
+      await client.from('emi_schedule').update({
+        'is_paid': true,
+        'status': 'paid',
+        'paid_on': now.toIso8601String(),
+        'payment_mode': paymentMode,
+        'updated_at': now.toIso8601String(),
+      }).eq('id', payment.id);
+    }
   }
 
   @override
@@ -787,6 +1190,9 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 : null,
             onRemind: () => _sendReminder(payments[index]),
             onTap: () => _showPaymentDetails(payments[index]),
+            onCollect: !payments[index].isCollected
+                ? () => _showQuickCollect(payments[index])
+                : null,
           );
         },
       ),
@@ -829,11 +1235,11 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: payment.statusColor.withValues(alpha: 0.12),
+                      color: payment.typeColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(payment.typeIcon,
-                        color: payment.statusColor, size: 24),
+                        color: payment.typeColor, size: 24),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -884,6 +1290,8 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 _DetailRow('Loan Number', payment.loanNumber!),
               if (payment.emiNumber != null)
                 _DetailRow('EMI Number', '#${payment.emiNumber}'),
+              if (payment.planName != null)
+                _DetailRow('Savings Plan', payment.planName!),
               _DetailRow('Due Date', dateFormat.format(payment.dueDate)),
               if (payment.isOverdue)
                 _DetailRow('Overdue', payment.overdueLabel,
@@ -1068,6 +1476,7 @@ class _PaymentCard extends StatelessWidget {
   final VoidCallback? onCall;
   final VoidCallback onRemind;
   final VoidCallback onTap;
+  final VoidCallback? onCollect;
 
   const _PaymentCard({
     required this.payment,
@@ -1075,6 +1484,7 @@ class _PaymentCard extends StatelessWidget {
     this.onCall,
     required this.onRemind,
     required this.onTap,
+    this.onCollect,
   });
 
   @override
@@ -1091,7 +1501,7 @@ class _PaymentCard extends StatelessWidget {
           color: isDark ? const Color(0xFF1A1D2E) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: payment.statusColor.withValues(alpha: 0.3),
+            color: payment.typeColor.withValues(alpha: 0.3),
             width: 1,
           ),
           boxShadow: [
@@ -1111,12 +1521,12 @@ class _PaymentCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: payment.statusColor.withValues(alpha: 0.12),
+                  color: payment.typeColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   payment.typeIcon,
-                  color: payment.statusColor,
+                  color: payment.typeColor,
                   size: 22,
                 ),
               ),
@@ -1166,7 +1576,8 @@ class _PaymentCard extends StatelessWidget {
                     Text(
                       '${payment.typeLabel}'
                       '${payment.loanNumber != null ? ' · ${payment.loanNumber}' : ''}'
-                      '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}',
+                      '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
+                      '${payment.planName != null ? ' · ${payment.planName}' : ''}',
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark ? Colors.white54 : Colors.black54,
@@ -1247,6 +1658,15 @@ class _PaymentCard extends StatelessWidget {
                             color: Colors.orange,
                             onTap: onRemind,
                           ),
+                          if (onCollect != null) ...[
+                            const SizedBox(width: 8),
+                            _ActionButton(
+                              icon: Icons.payment_rounded,
+                              label: 'Collect',
+                              color: AppColors.success,
+                              onTap: onCollect!,
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -1347,6 +1767,59 @@ class _ActionButton extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ModeChip({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.success.withValues(alpha: 0.12)
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? AppColors.success : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? AppColors.success : Colors.grey.shade600,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? AppColors.success : Colors.grey.shade700,
               ),
             ),
           ],

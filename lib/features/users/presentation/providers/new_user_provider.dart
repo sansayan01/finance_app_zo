@@ -3,6 +3,7 @@ import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
+import 'user_list_provider.dart';
 
 class NewUserState {
   final String fullName;
@@ -67,8 +68,9 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
 
 class NewUserNotifier extends StateNotifier<NewUserState> {
   final UserRepository _repository;
+  final Ref _ref;
 
-  NewUserNotifier(this._repository) : super(NewUserState());
+  NewUserNotifier(this._ref, this._repository) : super(NewUserState());
 
   void updateFullName(String value) => state = state.copyWith(fullName: value);
   void updateEmail(String value) => state = state.copyWith(email: value);
@@ -101,6 +103,13 @@ class NewUserNotifier extends StateNotifier<NewUserState> {
         branchId: state.branchId,
         password: state.password,
       );
+      // Invalidate all user-related providers
+      _ref.invalidate(userListProvider);
+      _ref.invalidate(userStatsProvider);
+      for (final tab in UserHubTab.values) {
+        _ref.invalidate(userHubPageProvider(tab));
+      }
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false);
@@ -113,5 +122,5 @@ class NewUserNotifier extends StateNotifier<NewUserState> {
 
 final newUserProvider =
     StateNotifierProvider<NewUserNotifier, NewUserState>((ref) {
-  return NewUserNotifier(ref.watch(userRepositoryProvider));
+  return NewUserNotifier(ref, ref.watch(userRepositoryProvider));
 });

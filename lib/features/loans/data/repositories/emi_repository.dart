@@ -196,6 +196,7 @@ class EMIRepository {
     required String interestType,
     required DateTime startDate,
     required double emiAmount,
+    String? memberId,
   }) async {
     try {
       // Try RPC first
@@ -227,16 +228,24 @@ class EMIRepository {
           balance -= principalPaid;
           if (balance < 0) balance = 0;
 
+          // Calculate monthly due date
+          final dueDate = DateTime(startDate.year, startDate.month + (i - 1), startDate.day);
+
           schedule.add({
             'loan_id': loanId,
             'org_id': _orgId,
+            'member_id': memberId,
             'emi_number': i,
-            'due_date': startDate.add(Duration(days: i - 1)).toIso8601String(),
+            'period': i,
+            'due_date': dueDate.toIso8601String().split('T').first,
             'emi_amount': emiAmount,
+            'emi': emiAmount,
             'principal': principalPaid,
             'interest': interest,
             'balance_after': balance,
             'status': 'pending',
+            'is_paid': false,
+            'is_overdue': false,
           });
         }
 

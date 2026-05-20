@@ -4,7 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/repositories/chatbot_repository.dart';
 import 'chat_config_provider.dart';
-import '../../../loans/data/providers/loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 import '../../../../router/app_router.dart';
 import '../../../../core/providers/branding_provider.dart';
 

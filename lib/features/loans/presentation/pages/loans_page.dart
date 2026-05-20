@@ -15,6 +15,7 @@ import '../../../../core/widgets/glass_button.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../data/models/loan_model.dart';
 import '../providers/loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 
 class LoansPage extends ConsumerStatefulWidget {
   const LoansPage({super.key});
@@ -51,6 +52,15 @@ class _LoansPageState extends ConsumerState<LoansPage>
       'icon': Icons.verified_rounded
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.invalidate(loansProvider);
+      ref.invalidate(loanSummaryProvider);
+    });
+  }
 
   @override
   void dispose() {

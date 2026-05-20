@@ -18,7 +18,7 @@ import '../../../transactions/data/models/transaction_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../data/providers/dashboard_providers.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   final VoidCallback onViewAllLoans;
   final VoidCallback onViewAllSavings;
   final VoidCallback onQuickAction;
@@ -31,7 +31,30 @@ class HomePage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Invalidate all dashboard providers on page creation for fresh data
+    Future.microtask(() {
+      ref.invalidate(loanSummaryProvider);
+      ref.invalidate(dashboardLoansProvider);
+      ref.invalidate(dashboardSavingsProvider);
+      ref.invalidate(dashboardTransactionsProvider);
+      ref.invalidate(todayStatsProvider);
+      ref.invalidate(todayAgendaProvider);
+      ref.invalidate(activeLoansProvider);
+      ref.invalidate(activeSavingsProvider);
+      ref.invalidate(pendingDepositsProvider);
+      ref.invalidate(overdueLoansProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AuroraBackground(
@@ -44,6 +67,11 @@ class HomePage extends ConsumerWidget {
               ref.invalidate(dashboardSavingsProvider);
               ref.invalidate(dashboardTransactionsProvider);
               ref.invalidate(todayStatsProvider);
+              ref.invalidate(todayAgendaProvider);
+              ref.invalidate(activeLoansProvider);
+              ref.invalidate(activeSavingsProvider);
+              ref.invalidate(pendingDepositsProvider);
+              ref.invalidate(overdueLoansProvider);
             },
             displacement: 20,
             color: Theme.of(context).colorScheme.primary,
@@ -696,7 +724,7 @@ class HomePage extends ConsumerWidget {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             GestureDetector(
-              onTap: onViewAllLoans,
+              onTap: widget.onViewAllLoans,
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -812,7 +840,7 @@ class HomePage extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
-                  onTap: onViewAllSavings,
+                  onTap: widget.onViewAllSavings,
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

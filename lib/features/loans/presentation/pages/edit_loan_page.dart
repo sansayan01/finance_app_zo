@@ -12,6 +12,7 @@ import '../../../members/data/models/member_model.dart';
 import '../../../members/presentation/providers/member_providers.dart';
 import '../providers/new_loan_provider.dart';
 import '../providers/loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 import '../../data/models/loan_model.dart';
 
 class EditLoanPage extends ConsumerStatefulWidget {
@@ -314,6 +315,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
 
       ref.invalidate(loansProvider);
       ref.invalidate(loanDetailProvider(widget.loanId));
+      ref.invalidate(loanSummaryProvider);
+      ref.invalidate(emiScheduleProvider(widget.loanId));
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

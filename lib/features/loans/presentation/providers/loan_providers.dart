@@ -91,8 +91,3 @@ final userLoansProvider =
 
 // Backward compatibility and aliases
 final loansProvider = allLoansProvider;
-
-final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
-  final repository = ref.watch(loansRepositoryProvider);
-  return repository.getLoanSummary();
-});

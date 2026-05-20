@@ -543,6 +543,7 @@ class _OverdueListPageState extends ConsumerState<OverdueListPage> {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),

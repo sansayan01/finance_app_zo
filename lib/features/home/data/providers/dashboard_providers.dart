@@ -3,6 +3,7 @@ import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../loans/data/repositories/loans_repository.dart';
 import '../../../loans/data/models/loan_model.dart';
+import '../../../loans/data/models/loan_model.dart' show LoanSummary;
 import '../../../savings/data/models/savings_model.dart';
 import '../../../savings/data/providers/savings_providers.dart';
 import '../../../transactions/data/repositories/transactions_repository.dart';

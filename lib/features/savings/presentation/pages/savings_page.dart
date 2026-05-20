@@ -27,6 +27,16 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
   String _searchQuery = '';
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.invalidate(savingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(pendingDepositsProvider);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final savingsAsync = ref.watch(savingsProvider);
     final theme = Theme.of(context);

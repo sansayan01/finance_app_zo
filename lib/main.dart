@@ -7,8 +7,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/providers/storage_providers.dart';
 import 'core/providers/system_config_provider.dart';
 import 'core/config/env_config.dart';
-import 'features/onboarding/data/tour_service.dart';
-import 'features/onboarding/data/tour_provider.dart';
 import 'app.dart';
 
 Future<void> main() async {
@@ -121,7 +119,6 @@ void _runMicroFlowApp(SharedPreferences prefs) {
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        tourServiceProvider.overrideWithValue(TourService(prefs)),
       ],
       child: const MicroFlowApp(),
     ),

@@ -129,7 +129,7 @@ class CollectionModel extends Equatable {
       'amount_collected': amountCollected,
       'is_partial': isPartial,
       'is_advance': isAdvance,
-      'payment_mode': paymentMode.name,
+      'payment_mode': _paymentModeToWire(paymentMode),
       'reference_number': referenceNumber,
       'gps_lat': gpsLat,
       'gps_lng': gpsLng,
@@ -160,7 +160,7 @@ class CollectionModel extends Equatable {
       'amount_collected': amountCollected,
       'is_partial': isPartial,
       'is_advance': isAdvance,
-      'payment_mode': paymentMode.name,
+      'payment_mode': _paymentModeToWire(paymentMode),
       'reference_number': referenceNumber,
       'gps_lat': gpsLat,
       'gps_lng': gpsLng,
@@ -172,6 +172,21 @@ class CollectionModel extends Equatable {
       'local_id': localId,
       'remarks': remarks,
     };
+  }
+
+  static String _paymentModeToWire(PaymentMode mode) {
+    switch (mode) {
+      case PaymentMode.cash:
+        return 'cash';
+      case PaymentMode.upi:
+        return 'upi';
+      case PaymentMode.bankTransfer:
+        return 'bank_transfer';
+      case PaymentMode.cheque:
+        return 'cheque';
+      case PaymentMode.card:
+        return 'card';
+    }
   }
 
   static PaymentMode _parsePaymentMode(String? value) {

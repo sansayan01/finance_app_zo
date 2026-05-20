@@ -12,8 +12,8 @@ import '../../../../core/services/haptic_service.dart';
 import '../../../../core/widgets/powered_by_badge.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
-  final VoidCallback onSignUpTap;
-  const LoginPage({super.key, required this.onSignUpTap});
+  final VoidCallback? onSignUpTap;
+  const LoginPage({super.key, this.onSignUpTap});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -250,8 +250,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 32),
                 _buildActionButton(isLoading, primary),
-                const SizedBox(height: 20),
-                _buildSignUpLink(primary),
+                const SizedBox(height: 16),
+                _buildForgotPasswordLink(isDark),
+                const SizedBox(height: 24),
+                _buildDivider(isDark),
+                const SizedBox(height: 24),
+                _buildCreateOrgButton(primary),
               ],
             ),
           ),
@@ -377,47 +381,119 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildSignUpLink(Color primary) {
+  Widget _buildForgotPasswordLink(bool isDark) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         HapticService.selection();
-        widget.onSignUpTap();
+        final email = _emailController.text.trim();
+        if (email.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text('Enter your email first, then tap Forgot Password'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ));
+          return;
+        }
+
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Reset Password'),
+            content:
+                Text('Send password reset email to ${email.toLowerCase()}?'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Send')),
+            ],
+          ),
+        );
+
+        if (confirmed == true && mounted) {
+          final success =
+              await ref.read(authProvider.notifier).resetPassword(email.toLowerCase());
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(success
+                  ? 'Password reset email sent! Check your inbox.'
+                  : 'Failed to send reset email. Try again.'),
+              backgroundColor: success ? Colors.green : Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+            ));
+          }
+        }
       },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [
-            AppColors.success.withValues(alpha: 0.06),
-            AppColors.primary.withValues(alpha: 0.03),
-          ]),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.success.withValues(alpha: 0.15)),
+      child: Text(
+        'Forgot Password?',
+        style: TextStyle(
+          color: isDark ? Colors.white54 : Colors.black54,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.underline,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.free_breakfast_rounded,
-                  color: AppColors.success, size: 16),
+      ),
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            color: isDark ? Colors.white12 : Colors.black12,
+            thickness: 1,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'OR',
+            style: TextStyle(
+              color: isDark ? Colors.white38 : Colors.black38,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
             ),
-            const SizedBox(width: 10),
-            Text('New here? ',
-                style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
-            Text('Start 14-Day Free Trial',
-                style: TextStyle(
-                    color: primary, fontSize: 13, fontWeight: FontWeight.w700)),
-            const Icon(Icons.arrow_forward_rounded,
-                size: 16, color: AppColors.success),
-          ],
+          ),
+        ),
+        Expanded(
+          child: Divider(
+            color: isDark ? Colors.white12 : Colors.black12,
+            thickness: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCreateOrgButton(Color primary) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: widget.onSignUpTap,
+        icon: const Icon(Icons.business_outlined, size: 20),
+        label: const Text(
+          'Create Organization',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            letterSpacing: -0.2,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primary,
+          side: BorderSide(color: primary.withValues(alpha: 0.4), width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
     );

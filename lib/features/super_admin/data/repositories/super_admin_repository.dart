@@ -89,7 +89,7 @@ class SuperAdminRepository {
     try {
       final response = await _client.from('organizations').select('''
             *,
-            profiles:profiles(id, name, email, role, created_at),
+            profiles:profiles(id, full_name, email, role, created_at),
             branches:branches(*),
             subscriptions:subscriptions(*)
           ''').eq('id', orgId).single();
@@ -164,7 +164,7 @@ class SuperAdminRepository {
     try {
       var query = _client.from('profiles').select('''
             id,
-            name,
+            full_name,
             email,
             phone,
             role,
@@ -175,7 +175,7 @@ class SuperAdminRepository {
           ''');
 
       if (search != null && search.isNotEmpty) {
-        query = query.or('name.ilike.%$search%,email.ilike.%$search%');
+        query = query.or('full_name.ilike.%$search%,email.ilike.%$search%');
       }
 
       if (role != null && role.isNotEmpty) {
@@ -392,7 +392,7 @@ class SuperAdminRepository {
     DateTime? endDate,
   }) async {
     try {
-      var query = _client.from('system_audit_logs').select();
+      var query = _client.from('audit_logs').select();
 
       if (action != null) {
         query = query.eq('action', action);
@@ -430,7 +430,7 @@ class SuperAdminRepository {
     String? orgId,
   }) async {
     try {
-      await _client.from('system_audit_logs').insert({
+      await _client.from('audit_logs').insert({
         'action': action,
         'entity_type': entityType,
         'entity_id': entityId,
@@ -772,6 +772,38 @@ class SuperAdminRepository {
   }
 
   // =====================================================
+  // DASHBOARD COUNTS
+  // =====================================================
+
+  /// Get count of open support tickets
+  Future<int> getOpenTicketsCount() async {
+    try {
+      final response = await _client
+          .from('support_tickets')
+          .select('id')
+          .inFilter('status', ['open', 'in_progress']);
+      return (response as List).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Get count of at-risk organizations (trial ending soon or suspended)
+  Future<int> getAtRiskOrgsCount() async {
+    try {
+      final now = DateTime.now();
+      final soon = now.add(const Duration(days: 7));
+      final response = await _client
+          .from('organizations')
+          .select('id')
+          .or('status.eq.suspended,trial_ends_at.lte.${soon.toIso8601String()}');
+      return (response as List).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // =====================================================
   // REAL-TIME ACTIVITY
   // =====================================================
 
@@ -780,7 +812,7 @@ class SuperAdminRepository {
     try {
       final response = await _client.from('platform_activity_feed').select('''
             *,
-            profiles:user_id(name, email),
+            profiles:user_id(full_name, email),
             organizations:org_id(name)
           ''').order('created_at', ascending: false).limit(limit);
 

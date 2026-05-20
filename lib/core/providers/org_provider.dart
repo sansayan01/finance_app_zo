@@ -20,29 +20,3 @@ final currentOrgProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
       await client.from('organizations').select().eq('id', orgId).maybeSingle();
   return response;
 });
-
-/// Whether at least one branch manager exists for the org.
-/// Hides Quick Setup tile once a manager is created.
-final hasBranchManagerProvider = FutureProvider<bool>((ref) async {
-  final orgId = ref.watch(currentOrgIdProvider);
-  if (orgId == null) return false;
-  final client = ref.watch(supabaseClientProvider);
-  try {
-    final result = await client
-        .from('profiles')
-        .select('id')
-        .eq('org_id', orgId)
-        .eq('role', 'manager')
-        .limit(1);
-    return (result as List).isNotEmpty;
-  } catch (_) {
-    return false;
-  }
-});
-
-/// Setup is always considered complete now — the wizard has been replaced
-/// by a quick tour. Kept for backwards compatibility with any code that
-/// still reads this provider.
-final setupCompleteProvider = FutureProvider<bool>((ref) async {
-  return true;
-});

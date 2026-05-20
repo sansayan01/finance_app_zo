@@ -132,7 +132,7 @@ class _UsersManagementPageState extends ConsumerState<UsersManagementPage> {
               CircleAvatar(
                 radius: 20,
                 backgroundColor: rc.withValues(alpha: 0.12),
-                child: Text(((u['name'] as String? ?? '?')[0]).toUpperCase(),
+                child: Text(((u['full_name'] as String? ?? '?')[0]).toUpperCase(),
                     style: TextStyle(
                         fontWeight: FontWeight.w700, color: rc, fontSize: 16)),
               ),
@@ -141,7 +141,7 @@ class _UsersManagementPageState extends ConsumerState<UsersManagementPage> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text(u['name'] as String? ?? '',
+                    Text(u['full_name'] as String? ?? '',
                         style: D.titleStyle(isDark)),
                     const SizedBox(height: 2),
                     Text(u['email'] as String? ?? '',
@@ -234,7 +234,7 @@ class _UsersManagementPageState extends ConsumerState<UsersManagementPage> {
                               color: D.dim(context),
                               borderRadius: BorderRadius.circular(2)))),
                   const SizedBox(height: 20),
-                  Text(u['name'] as String? ?? '', style: D.h2(isDark)),
+                  Text(u['full_name'] as String? ?? '', style: D.h2(isDark)),
                   const SizedBox(height: 4),
                   Text(u['email'] as String? ?? '',
                       style: D.subtitleStyle(isDark)),

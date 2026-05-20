@@ -16,7 +16,6 @@ import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/providers/org_provider.dart';
 import '../../data/providers/dashboard_providers.dart';
 
 class HomePage extends ConsumerWidget {
@@ -572,7 +571,6 @@ class HomePage extends ConsumerWidget {
   Widget _buildQuickActions(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hasManager = ref.watch(hasBranchManagerProvider).valueOrNull ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -650,17 +648,6 @@ class HomePage extends ConsumerWidget {
                     onTap: () => context.push('/live-map'),
                   ),
                 ),
-                if (!hasManager) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _QuickActionBtn(
-                      icon: Icons.rocket_launch_rounded,
-                      label: 'Quick Setup',
-                      color: Colors.green,
-                      onTap: () => context.push('/setup'),
-                    ),
-                  ),
-                ],
               ],
             ),
           ],

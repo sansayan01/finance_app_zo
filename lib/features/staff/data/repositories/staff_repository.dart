@@ -160,11 +160,8 @@ class StaffRepository {
     await _client.from('staff_wallet').update({
       'cash_in_hand': wallet.cashInHand - amount,
       'total_deposited_today': wallet.totalDepositedToday + amount,
-      'last_deposit_amount': amount,
-      'last_deposit_at': now.toIso8601String(),
-      'last_deposit_mode': depositMode,
       'is_over_limit': (wallet.cashInHand - amount) > wallet.safeLimit,
-      'updated_at': now.toIso8601String(),
+      'last_updated': now.toIso8601String(),
     }).eq('staff_id', staffId);
 
     // Create wallet transaction
@@ -175,10 +172,6 @@ class StaffRepository {
       'direction': 'out',
       'payment_mode': depositMode,
       'balance_after': wallet.cashInHand - amount,
-      'gps_lat': gpsLat,
-      'gps_lng': gpsLng,
-      'transaction_time': now.toIso8601String(),
-      'sync_status': 'synced',
       'org_id': _orgId,
     });
   }
@@ -234,7 +227,7 @@ class StaffRepository {
         'battery_level': batteryLevel,
         'is_charging': isCharging,
         'recorded_at': DateTime.now().toIso8601String(),
-        'sync_status': 'synced',
+        'org_id': _orgId,
       });
     } catch (e) {
       // Location tracking is non-critical
@@ -257,13 +250,11 @@ class StaffRepository {
         'member_id': customerId,
         'purpose': purpose,
         'check_in_time': DateTime.now().toIso8601String(),
-        'check_in_at': DateTime.now().toIso8601String(),
         'check_in_lat': checkInLat,
         'check_in_lng': checkInLng,
         'notes': notes,
         'status': 'in_progress',
-        'visit_type': 'collection',
-        'sync_status': 'synced',
+        'org_id': _orgId,
       });
 
       // Log activity
@@ -298,7 +289,7 @@ class StaffRepository {
           .select()
           .eq('staff_id', staffId)
           .eq('status', 'in_progress')
-          .order('check_in_at', ascending: false)
+          .order('check_in_time', ascending: false)
           .limit(1)
           .maybeSingle();
 
@@ -306,13 +297,11 @@ class StaffRepository {
 
       await _client.from('visit_logs').update({
         'check_out_time': now.toIso8601String(),
-        'check_out_at': now.toIso8601String(),
         'check_out_lat': checkOutLat,
         'check_out_lng': checkOutLng,
         'status': 'completed',
         'outcome': outcome ?? 'collected',
         'notes': notes,
-        'sync_status': 'synced',
       }).eq('id', activeVisit['id']);
 
       // Log activity
@@ -344,12 +333,13 @@ class StaffRepository {
       await _client.from('cash_deposits').insert({
         'staff_id': staffId,
         'amount': amount,
-        'deposit_method': method,
+        'bank_name': method,
         'reference_number': reference,
         'notes': notes,
-        'deposit_time': now.toIso8601String(),
+        'deposit_date': now.toIso8601String().split('T').first,
+        'deposit_time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
         'status': 'pending_verification',
-        'sync_status': 'synced',
+        'org_id': _orgId,
       });
 
       // Update wallet
@@ -358,9 +348,7 @@ class StaffRepository {
         await _client.from('staff_wallet').update({
           'cash_in_hand': wallet.cashInHand - amount,
           'total_deposited_today': wallet.totalDepositedToday + amount,
-          'last_deposit_amount': amount,
-          'last_deposit_at': now.toIso8601String(),
-          'updated_at': now.toIso8601String(),
+          'last_updated': now.toIso8601String(),
         }).eq('staff_id', staffId);
       }
 
@@ -386,10 +374,8 @@ class StaffRepository {
       await _client.from('staff_breaks').insert({
         'staff_id': staffId,
         'break_type': breakType,
-        'start_time': DateTime.now().toIso8601String(),
+        'break_start': DateTime.now().toIso8601String(),
         'notes': notes,
-        'status': 'in_progress',
-        'sync_status': 'synced',
       });
 
       // Log activity
@@ -413,17 +399,19 @@ class StaffRepository {
           .from('staff_breaks')
           .select()
           .eq('staff_id', staffId)
-          .eq('status', 'in_progress')
-          .order('start_time', ascending: false)
+          .isFilter('break_end', null)
+          .order('break_start', ascending: false)
           .limit(1)
           .maybeSingle();
 
       if (activeBreak == null) return;
 
+      final breakStart = DateTime.parse(activeBreak['break_start']);
+      final duration = now.difference(breakStart).inMinutes;
+
       await _client.from('staff_breaks').update({
-        'end_time': now.toIso8601String(),
-        'status': 'completed',
-        'sync_status': 'synced',
+        'break_end': now.toIso8601String(),
+        'duration_minutes': duration,
       }).eq('id', activeBreak['id']);
 
       // Log activity
@@ -438,14 +426,14 @@ class StaffRepository {
     }
   }
 
-  /// Get current break
+  /// Get current break (break_end is null means break is active)
   Future<Map<String, dynamic>?> getCurrentBreak(String staffId) async {
     return await _client
         .from('staff_breaks')
         .select()
         .eq('staff_id', staffId)
-        .eq('status', 'in_progress')
-        .order('start_time', ascending: false)
+        .isFilter('break_end', null)
+        .order('break_start', ascending: false)
         .limit(1)
         .maybeSingle();
   }
@@ -458,8 +446,8 @@ class StaffRepository {
         .from('staff_breaks')
         .select()
         .eq('staff_id', staffId)
-        .filter('start_time', 'gte', today)
-        .order('start_time', ascending: false);
+        .gte('break_start', '${today}T00:00:00')
+        .order('break_start', ascending: false);
   }
 
   /// Get daily summary for a specific date
@@ -472,16 +460,15 @@ class StaffRepository {
         .from('collections')
         .select()
         .eq('staff_id', staffId)
-        .filter('collection_time', 'gte', dateStr)
-        .filter('collection_time', 'lt', '${dateStr}T23:59:59');
+        .eq('collection_date', dateStr);
 
     // Get visits for the date
     final visits = await _client
         .from('visit_logs')
         .select()
         .eq('staff_id', staffId)
-        .filter('check_in_at', 'gte', dateStr)
-        .filter('check_in_at', 'lt', '${dateStr}T23:59:59');
+        .gte('check_in_time', '${dateStr}T00:00:00')
+        .lt('check_in_time', '${dateStr}T23:59:59');
 
     // Calculate summary
     double totalCollected = 0;
@@ -589,7 +576,7 @@ class StaffRepository {
           .select()
           .eq('staff_id', staffId)
           .eq('status', 'in_progress')
-          .order('check_in_at', ascending: false)
+          .order('check_in_time', ascending: false)
           .limit(1)
           .maybeSingle();
     } catch (_) {

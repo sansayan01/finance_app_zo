@@ -105,29 +105,50 @@ class AuthRepository {
           .replaceAll(RegExp(r'^-|-$'), '');
       final trialEnd =
           DateTime.now().add(const Duration(days: 14)).toIso8601String();
-      final orgResponse = await _client
-          .from('organizations')
-          .insert({
-            'name': orgName,
-            'slug': slug,
-            'status': 'trial',
-            'trial_ends_at': trialEnd,
-            'max_branches': 2,
-            'max_staff': 5,
-            'max_members': 100,
-          })
-          .select('id')
-          .single();
-      orgId = orgResponse['id'].toString();
+      try {
+        final orgResponse = await _client
+            .from('organizations')
+            .insert({
+              'name': orgName,
+              'slug': slug,
+              'status': 'trial',
+              'trial_ends_at': trialEnd,
+              'max_branches': 10,
+              'max_staff': 5,
+              'max_members': 100,
+            })
+            .select('id')
+            .single();
+        orgId = orgResponse['id'].toString();
+      } catch (e) {
+        // Org creation failed (e.g., slug conflict or RLS) — try to find existing org
+        try {
+          final existing = await _client
+              .from('organizations')
+              .select('id')
+              .eq('slug', slug)
+              .maybeSingle();
+          if (existing != null) {
+            orgId = existing['id'].toString();
+          }
+        } catch (_) {
+          // Use default org as last resort
+        }
+      }
 
-      await _client.from('profiles').insert({
-        'user_id': user.id,
-        'full_name': fullName,
-        'email': email,
-        'phone': phone,
-        'role': 'executiveAdmin',
-        'org_id': orgId,
-      });
+      // Create profile — use upsert to handle race conditions
+      try {
+        await _client.from('profiles').upsert({
+          'user_id': user.id,
+          'full_name': fullName,
+          'email': email,
+          'phone': phone,
+          'role': 'executiveAdmin',
+          'org_id': orgId,
+        }, onConflict: 'user_id');
+      } catch (_) {
+        // Profile creation failed — will be retried on next login
+      }
     }
 
     final parsedDate = DateTime.tryParse(user.createdAt);

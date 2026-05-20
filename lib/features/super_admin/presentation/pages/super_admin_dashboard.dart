@@ -15,6 +15,8 @@ class SuperAdminDashboard extends ConsumerWidget {
     final metrics = ref.watch(platformMetricsProvider);
     final revenue = ref.watch(revenueSummaryProvider);
     final activity = ref.watch(activityFeedProvider);
+    final openTickets = ref.watch(openTicketsCountProvider);
+    final atRiskOrgs = ref.watch(atRiskOrgsCountProvider);
     final fmt = NumberFormat.compactCurrency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(
@@ -30,7 +32,7 @@ class SuperAdminDashboard extends ConsumerWidget {
                   children: [
                     _header(context, isDark),
                     const SizedBox(height: 24),
-                    _alertBanner(context, isDark),
+                    _alertBanner(context, isDark, openTickets, atRiskOrgs),
                     const SizedBox(height: 24),
                     _sectionArea(
                         context,
@@ -193,12 +195,17 @@ class SuperAdminDashboard extends ConsumerWidget {
   }
 
   // ── Section 2: Alert Banner ──────────────────────────────
-  Widget _alertBanner(BuildContext context, bool isDark) {
+  Widget _alertBanner(BuildContext context, bool isDark,
+      AsyncValue<int> openTickets, AsyncValue<int> atRiskOrgs) {
+    final ticketsCount = openTickets.valueOrNull ?? 0;
+    final riskCount = atRiskOrgs.valueOrNull ?? 0;
     final alerts = [
       _AlertPill('🚀', 'System Running', 'All good', const Color(0xFF10B981)),
-      _AlertPill('📊', 'Orgs at risk', '3', const Color(0xFFF59E0B)),
-      _AlertPill('⚠️', 'Tickets open', '12', const Color(0xFFEF4444)),
-      _AlertPill('📈', 'Revenue up', '18%', const Color(0xFF10B981)),
+      _AlertPill('📊', 'Orgs at risk', '$riskCount',
+          riskCount > 0 ? const Color(0xFFF59E0B) : const Color(0xFF10B981)),
+      _AlertPill('⚠️', 'Tickets open', '$ticketsCount',
+          ticketsCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
+      _AlertPill('📈', 'Revenue', 'Live', const Color(0xFF10B981)),
     ];
     return SizedBox(
       height: 80,
@@ -421,7 +428,9 @@ class SuperAdminDashboard extends ConsumerWidget {
     final total = (r['total_revenue'] ?? 0).toDouble();
     final avg = (r['avg_monthly_revenue'] ?? 0).toDouble();
     final count = r['transaction_count'] ?? 0;
-    final vsLastMonth = 18.0;
+    final vsLastMonth = total > 0 && avg > 0
+        ? ((total - avg) / avg * 100).clamp(-100, 999)
+        : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(20),

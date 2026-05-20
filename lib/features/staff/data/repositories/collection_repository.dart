@@ -30,7 +30,7 @@ class CollectionRepository {
           ),
           emi_schedule(
             id,
-            installment_number AS period,
+            period,
             due_date,
             emi_amount,
             principal,
@@ -317,9 +317,9 @@ class CollectionRepository {
             total_emis,
             emi_schedule(
               id,
-              installment_number AS period,
+              period,
               due_date,
-              emi_amount AS emi,
+              emi_amount,
               is_paid,
               is_overdue
             )
@@ -400,16 +400,16 @@ class CollectionRepository {
           total_emis,
           emi_schedule(
             id,
-            installment_number AS period,
+            period,
             due_date,
-            emi_amount AS emi,
+            emi_amount,
             principal,
             interest,
-            balance_after AS balance,
+            balance_after,
             is_paid,
             is_overdue,
             paid_on,
-            penalty_amount AS penalty
+            penalty_amount
           )
         ''').eq('member_id', customerId).order('created_at', ascending: false);
 

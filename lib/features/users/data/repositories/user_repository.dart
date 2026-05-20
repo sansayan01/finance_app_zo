@@ -83,6 +83,9 @@ class UserRepository {
   }
 
   /// Server-side paginated query against the `members` table (customers).
+  /// Server-side paginated query for customers.
+  /// Fetches from BOTH the `members` table and `profiles` table (role=customer)
+  /// to ensure all customers are shown regardless of where they were created.
   Future<List<ProfileModel>> getMembersPaginated({
     String? branchId,
     String? search,
@@ -91,29 +94,73 @@ class UserRepository {
     int limit = 25,
   }) async {
     try {
-      var query = _client
-          .from('members')
+      final List<ProfileModel> results = [];
+
+      // 1. Fetch from profiles table (customers with role = 'customer')
+      var profileQuery = _client
+          .from('profiles')
           .select('*, branch:branches(id, name)')
-          .eq('org_id', _orgId);
+          .eq('org_id', _orgId)
+          .eq('role', 'customer');
 
       if (branchId != null && branchId.isNotEmpty) {
-        query = query.eq('branch_id', branchId);
+        profileQuery = profileQuery.eq('branch_id', branchId);
       }
       if (search != null && search.trim().isNotEmpty) {
         final s = search.trim().replaceAll('%', r'\%');
-        query = query.or(
-          'full_name.ilike.%$s%,email.ilike.%$s%,phone.ilike.%$s%,member_id.ilike.%$s%',
+        profileQuery = profileQuery.or(
+          'full_name.ilike.%$s%,email.ilike.%$s%,phone.ilike.%$s%',
         );
       }
 
-      final response = await _applyOrder(query, sortBy)
+      final profileResponse = await _applyOrder(profileQuery, sortBy)
           .range(offset, offset + limit - 1) as List;
 
-      return response
-          .whereType<Map>()
-          .map((j) =>
-              ProfileModel.fromMembersJson(Map<String, dynamic>.from(j)))
-          .toList();
+      // Collect profile_ids to exclude from members query
+      final profileIds = <String>{};
+      for (final j in profileResponse.whereType<Map>()) {
+        final profile = ProfileModel.fromJson(Map<String, dynamic>.from(j));
+        results.add(profile);
+        profileIds.add(profile.id);
+      }
+
+      // 2. Fetch from members table (members without a linked profile already fetched)
+      if (results.length < limit) {
+        final membersLimit = limit - results.length;
+        var membersQuery = _client
+            .from('members')
+            .select('*, branch:branches(id, name)')
+            .eq('org_id', _orgId);
+
+        if (branchId != null && branchId.isNotEmpty) {
+          membersQuery = membersQuery.eq('branch_id', branchId);
+        }
+        if (search != null && search.trim().isNotEmpty) {
+          final s = search.trim().replaceAll('%', r'\%');
+          membersQuery = membersQuery.or(
+            'full_name.ilike.%$s%,email.ilike.%$s%,phone.ilike.%$s%,member_id.ilike.%$s%',
+          );
+        }
+        // Exclude members that already have a profile we fetched
+        if (profileIds.isNotEmpty) {
+          final quotedIds = profileIds.map((id) => '"$id"').join(',');
+          membersQuery = membersQuery.not(
+            'profile_id',
+            'in',
+            '($quotedIds)',
+          );
+        }
+
+        final membersResponse = await _applyOrder(membersQuery, sortBy)
+            .range(0, membersLimit - 1) as List;
+
+        for (final j in membersResponse.whereType<Map>()) {
+          results.add(
+              ProfileModel.fromMembersJson(Map<String, dynamic>.from(j)));
+        }
+      }
+
+      return results;
     } catch (e) {
       debugPrint('getMembersPaginated error: $e');
       rethrow;

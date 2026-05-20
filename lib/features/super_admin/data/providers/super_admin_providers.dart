@@ -149,6 +149,18 @@ final activityFeedProvider =
   return repository.getActivityFeed();
 });
 
+/// Open Tickets Count Provider
+final openTicketsCountProvider = FutureProvider<int>((ref) async {
+  final repository = ref.watch(superAdminRepositoryProvider);
+  return repository.getOpenTicketsCount();
+});
+
+/// At Risk Orgs Count Provider
+final atRiskOrgsCountProvider = FutureProvider<int>((ref) async {
+  final repository = ref.watch(superAdminRepositoryProvider);
+  return repository.getAtRiskOrgsCount();
+});
+
 /// Super Admin Actions Notifier
 class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final SuperAdminRepository _repository;

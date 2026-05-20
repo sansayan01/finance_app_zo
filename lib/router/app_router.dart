@@ -3,17 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Setup Wizard
-import '../features/setup/presentation/pages/setup_wizard_page.dart';
-
-// Quick Tour (onboarding)
-import '../features/onboarding/data/tour_provider.dart';
-import '../features/onboarding/presentation/pages/quick_tour_page.dart';
-import '../features/onboarding/presentation/pages/splash_page.dart';
-
-// Org / Setup completion
-import '../core/providers/org_provider.dart';
-
 // Branches
 import '../features/branches/presentation/pages/branch_management_page.dart';
 
@@ -24,6 +13,7 @@ import '../features/admin/presentation/pages/admin_org_settings_page.dart';
 // Auth
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
+import '../features/auth/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/data/models/user_model.dart';
@@ -131,13 +121,6 @@ class AuthRedirectListener extends ChangeNotifier {
     ref.listen<AuthState>(authProvider, (previous, next) {
       notifyListeners();
     });
-
-    // Listen to Setup completion status changes
-    ref.listen<AsyncValue<bool>>(setupCompleteProvider, (previous, next) {
-      if (next.hasValue) {
-        notifyListeners();
-      }
-    });
   }
 
   bool get isAuthenticated =>
@@ -197,10 +180,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         final isStaffPath = state.matchedLocation.startsWith('/staff');
         final isBranchPath = state.matchedLocation.startsWith('/branch');
         final isCustomerPath = state.matchedLocation.startsWith('/customer');
-
-        // Executive admins go straight to dashboard on login.
-        // The quick tour overlay handles first-time onboarding.
-        // The setup wizard is still accessible from Settings.
 
         // After login, route to correct portal based on role
         if (isAuthPath) {
@@ -271,12 +250,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const VerifyEmailPage(),
           ),
         ],
-      ),
-
-      // Setup Wizard (for new organizations)
-      GoRoute(
-        path: '/setup',
-        builder: (context, state) => const SetupWizardPage(),
       ),
 
       // Super Admin Panel
@@ -811,8 +784,6 @@ class AdminShell extends ConsumerStatefulWidget {
 }
 
 class _AdminShellState extends ConsumerState<AdminShell> {
-  bool _tourTriggered = false;
-
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/loans')) return 1;
@@ -839,23 +810,6 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       case 4:
         context.go('/settings');
         break;
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowTour();
-    });
-  }
-
-  void _maybeShowTour() {
-    if (_tourTriggered) return;
-    final controller = ref.read(tourControllerProvider.notifier);
-    if (!controller.isTourDone) {
-      _tourTriggered = true;
-      showQuickTour(context, ref);
     }
   }
 
@@ -933,8 +887,6 @@ class StaffShell extends ConsumerStatefulWidget {
 }
 
 class _StaffShellState extends ConsumerState<StaffShell> {
-  bool _tourTriggered = false;
-
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/staff/collections') ||
@@ -964,23 +916,6 @@ class _StaffShellState extends ConsumerState<StaffShell> {
       case 4:
         context.go('/staff/settings');
         break;
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowTour();
-    });
-  }
-
-  void _maybeShowTour() {
-    if (_tourTriggered) return;
-    final controller = ref.read(tourControllerProvider.notifier);
-    if (!controller.isTourDone) {
-      _tourTriggered = true;
-      showQuickTour(context, ref);
     }
   }
 

@@ -70,14 +70,26 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
       ),
       floatingActionButton: orgAsync.when(
         data: (org) {
-          final maxBranches = org?['max_branches'] ?? 5;
+          final maxBranches = org?['max_branches'] ?? 10;
           final currentCount = branchesAsync.valueOrNull?.length ?? 0;
           final canAdd = currentCount < maxBranches;
 
           return Padding(
             padding: kFabSafeAreaPadding,
             child: FloatingActionButton.extended(
-              onPressed: canAdd ? () => _showBranchDialog(context) : null,
+              onPressed: canAdd
+                  ? () => _showBranchDialog(context)
+                  : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Branch limit reached ($maxBranches). Contact support to increase your limit.'),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      );
+                    },
               backgroundColor: canAdd ? AppColors.primary : Colors.grey,
               icon: const Icon(Icons.add_business_rounded, color: Colors.white),
               label: Text(
@@ -458,9 +470,14 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
         onSave: (data) async {
           final notifier = ref.read(branchNotifierProvider.notifier);
           if (branch != null) {
-            await notifier.updateBranch(branch.id, data);
+            final result = await notifier.updateBranch(branch.id, data);
+            if (result == null) {
+              final errorState = ref.read(branchNotifierProvider);
+              final errorMsg = errorState.error?.toString() ?? 'Update failed';
+              throw Exception(errorMsg);
+            }
           } else {
-            await notifier.createBranch(
+            final result = await notifier.createBranch(
               name: data['name'],
               code: data['code'],
               address: data['address'],
@@ -471,6 +488,11 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
               email: data['email'],
               managerId: data['manager_id'],
             );
+            if (result == null) {
+              final errorState = ref.read(branchNotifierProvider);
+              final errorMsg = errorState.error?.toString() ?? 'Creation failed';
+              throw Exception(errorMsg);
+            }
           }
         },
       ),

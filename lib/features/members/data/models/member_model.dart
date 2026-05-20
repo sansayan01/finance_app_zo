@@ -63,7 +63,7 @@ class MemberModel {
       'full_name': fullName,
       'phone': phone,
       'member_id': memberId,
-      'kyc_status': kycStatus.name,
+      'kyc_status': kycStatus == KYCStatus.notSubmitted ? 'pending' : kycStatus.name,
       'active_loans': activeLoans,
       'total_savings': totalSavings,
       'org_id': orgId,

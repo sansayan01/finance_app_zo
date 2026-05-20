@@ -122,12 +122,17 @@ class BranchRepository {
 
   /// Delete a branch
   Future<void> deleteBranch(String id) async {
-    // First, unassign all staff from this branch
+    // First, unassign all profiles from this branch (handles fk_profiles_branch)
+    await _client
+        .from('profiles')
+        .update({'branch_id': null}).eq('branch_id', id);
+
+    // Then, unassign all staff from this branch
     await _client
         .from('staff_profiles')
         .update({'branch_id': null}).eq('branch_id', id);
 
-    // Then delete the branch
+    // Finally delete the branch
     await _client.from('branches').delete().eq('id', id).eq('org_id', _orgId);
   }
 

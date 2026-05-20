@@ -55,6 +55,27 @@ class AuthRepository {
     String? phone,
     String? orgName,
   }) async {
+    // Check if email already exists in profiles or members
+    final existingProfile = await _client
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+
+    if (existingProfile != null) {
+      throw Exception('This email is already registered. Please sign in instead.');
+    }
+
+    final existingMember = await _client
+        .from('members')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+
+    if (existingMember != null) {
+      throw Exception('This email is already registered. Please sign in instead.');
+    }
+
     final metadata = <String, dynamic>{
       'full_name': fullName,
       'phone': phone,
@@ -69,7 +90,7 @@ class AuthRepository {
 
     final user = response.user;
     if (user == null) {
-      throw Exception('Sign up failed');
+      throw Exception('Sign up failed. This email may already be registered.');
     }
 
     // If email confirmation is disabled and we have a session, create org + profile now

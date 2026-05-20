@@ -527,6 +527,28 @@ class UserRepository {
       throw Exception('Email and password are required to create a user.');
     }
 
+    // Check if email already exists in profiles
+    final existingProfile = await _client
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+
+    if (existingProfile != null) {
+      throw Exception('This email is already registered. Please use a different email.');
+    }
+
+    // Check if email already exists in members
+    final existingMember = await _client
+        .from('members')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+
+    if (existingMember != null) {
+      throw Exception('This email is already registered. Please use a different email.');
+    }
+
     // Step 1: Create auth user via edge function
     final response = await _client.functions.invoke(
       'create-user',

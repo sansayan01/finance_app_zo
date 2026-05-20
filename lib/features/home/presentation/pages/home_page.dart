@@ -642,6 +642,15 @@ class HomePage extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _QuickActionBtn(
+                    icon: Icons.payments_rounded,
+                    label: 'Today\'s Pay',
+                    color: const Color(0xFFFF6B35),
+                    onTap: () => context.push('/payments'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
                     icon: Icons.location_on_rounded,
                     label: 'Live Map',
                     color: const Color(0xFF00BFA5),

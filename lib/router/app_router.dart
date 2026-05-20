@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Branches
 import '../features/branches/presentation/pages/branch_management_page.dart';
 
+// Payments
+import '../features/payments/presentation/pages/today_payments_page.dart';
+
 // Super Admin (Admin pages still in use)
 import '../features/admin/presentation/pages/admin_org_detail_page.dart';
 import '../features/admin/presentation/pages/admin_org_settings_page.dart';
@@ -416,6 +419,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/',
             builder: (context, state) => const HomePageContent(),
+          ),
+          GoRoute(
+            path: '/payments',
+            builder: (context, state) => const TodayPaymentsPage(),
           ),
           GoRoute(
             path: '/loans',

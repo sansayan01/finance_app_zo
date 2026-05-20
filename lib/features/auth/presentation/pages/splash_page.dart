@@ -20,7 +20,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   Future<void> _navigateToLogin() async {
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
-      context.go('/login');
+      context.go('/auth');
     }
   }
 

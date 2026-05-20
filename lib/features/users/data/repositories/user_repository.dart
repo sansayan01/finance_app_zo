@@ -522,6 +522,54 @@ class UserRepository {
     debugPrint(
         'createUser called: name=$fullName, role=${role.name}, org_id=$_orgId');
 
+    // All users must have email and password to create auth account
+    if (email.isEmpty || password.isEmpty) {
+      throw Exception('Email and password are required to create a user.');
+    }
+
+    // Step 1: Create auth user via edge function
+    final response = await _client.functions.invoke(
+      'create-user',
+      body: {
+        'email': email,
+        'password': password,
+        'full_name': fullName,
+        'phone': phone,
+        'role': role.name,
+        'aadhar': aadhar,
+        'pan': pan,
+        'employee_id': employeeId,
+        'assigned_zone': assignedZone,
+      },
+    );
+
+    if (response.status != 200) {
+      throw Exception(response.data?['error'] ?? 'Failed to create user account.');
+    }
+
+    final authUserId = response.data['user_id'] as String?;
+
+    if (authUserId == null) {
+      throw Exception('Failed to get user ID from auth response.');
+    }
+
+    // Step 2: Create profile with the auth user ID
+    await _client.from('profiles').upsert({
+      'user_id': authUserId,
+      'full_name': fullName,
+      'email': email,
+      'phone': phone,
+      'role': role.name,
+      'aadhar': aadhar.isEmpty ? null : aadhar,
+      'pan': pan.isEmpty ? null : pan,
+      'employee_id': employeeId,
+      'assigned_zone': assignedZone,
+      'branch_id': branchId,
+      'org_id': _orgId,
+      'status': 'active',
+    }, onConflict: 'user_id');
+
+    // Step 3: For customers, also create a members record
     if (role == UserRole.customer) {
       try {
         final memberId =
@@ -530,46 +578,15 @@ class UserRepository {
           'org_id': _orgId,
           'full_name': fullName,
           'phone': phone,
-          'email': email.isNotEmpty ? email : null,
+          'email': email,
           'branch_id': branchId,
           'kyc_status': 'pending',
           'member_id': memberId,
+          'profile_id': authUserId,
         });
-        return;
       } catch (e) {
         debugPrint('Failed to create customer in members table: $e');
-        rethrow;
-      }
-    }
-
-    // Create profile row first — select back both id and user_id
-    final profileData = await _client.from('profiles').insert({
-      'full_name': fullName,
-      'email': email,
-      'phone': phone,
-      'role': role.name,
-      'aadhar': aadhar,
-      'pan': pan,
-      'employee_id': employeeId,
-      'assigned_zone': assignedZone,
-      'branch_id': branchId,
-      'org_id': _orgId,
-      'status': 'active',
-    }).select('id, user_id').single();
-
-    final profileId = profileData['id'] as String;
-
-    // Create auth account via edge function so the user can login
-    if (password.isNotEmpty && email.isNotEmpty) {
-      try {
-        await adminSetUserPassword(
-          targetUserId: profileId,
-          newPassword: password,
-        );
-      } catch (e) {
-        debugPrint('Failed to create auth account for new user "$fullName" ($email): '
-            'profile saved but login account not created. Error: $e\n'
-            'Profile ID: $profileId — retry via admin "Set New Password".');
+        // Don't throw - auth user and profile are already created
       }
     }
   }

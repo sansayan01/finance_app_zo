@@ -18,6 +18,10 @@ import '../features/auth/presentation/pages/verify_email_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/data/models/user_model.dart';
 
+// Setup
+import '../features/setup/presentation/pages/setup_wizard_page.dart';
+import '../features/setup/data/providers/setup_provider.dart';
+
 // Admin Portal
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/loans/presentation/pages/loans_page.dart';
@@ -165,6 +169,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated) {
         final user = ref.read(currentUserProvider);
         final role = user?.role;
+        final isSetupPath = state.matchedLocation == '/setup';
+
+        // Force setup wizard for executiveAdmin if setup not complete
+        if (role == UserRole.executiveAdmin && !isSetupPath) {
+          final setupAsync = ref.read(setupCompleteProvider);
+          final isSetupComplete = setupAsync.valueOrNull ?? true;
+          if (!isSetupComplete) {
+            return '/setup';
+          }
+        }
+
         final isAdminPath = state.matchedLocation == '/' ||
             state.matchedLocation.startsWith('/loans') ||
             state.matchedLocation.startsWith('/savings') ||
@@ -250,6 +265,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const VerifyEmailPage(),
           ),
         ],
+      ),
+
+      // Setup Wizard (for new organizations)
+      GoRoute(
+        path: '/setup',
+        builder: (context, state) => const SetupWizardPage(),
       ),
 
       // Super Admin Panel

@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../auth/data/repositories/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SetupWizardPage extends ConsumerStatefulWidget {
@@ -60,11 +58,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     final user = ref.read(currentUserProvider);
     if (user != null) {
       _ownerPhoneController.text = user.phone ?? '';
-      _ownerAddressController.text = user.address ?? '';
-      _ownerCityController.text = user.city ?? '';
-      _ownerStateController.text = user.state ?? '';
-      _ownerPincodeController.text = user.pincode ?? '';
-      _orgEmailController.text = user.email ?? '';
+      _orgEmailController.text = user.email;
       _orgPhoneController.text = user.phone ?? '';
     }
   }
@@ -233,8 +227,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
-    final user = ref.watch(currentUserProvider);
-    final orgName = user?.orgName ?? 'Your Organization';
+    final orgName = 'Your Organization';
 
     return Scaffold(
       backgroundColor:
@@ -316,8 +309,6 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   }
 
   Widget _buildProgressIndicator(Color primary, bool isDark) {
-    final steps = ['Organization', 'Your Details', 'First Branch'];
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(

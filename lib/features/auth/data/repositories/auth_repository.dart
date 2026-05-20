@@ -116,6 +116,7 @@ class AuthRepository {
               'max_branches': 10,
               'max_staff': 5,
               'max_members': 100,
+              'created_by': user.id,
             })
             .select('id')
             .single();

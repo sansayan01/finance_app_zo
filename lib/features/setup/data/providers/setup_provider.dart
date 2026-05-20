@@ -10,10 +10,10 @@ final setupCompleteProvider = FutureProvider<bool>((ref) async {
   final user = ref.watch(currentUserProvider);
 
   // Super admin doesn't need setup
-  if (user == null || user.role.name == 'superAdmin') return true;
+  if (user == null || user.role?.name == 'superAdmin') return true;
 
   // ExecutiveAdmin must complete setup
-  if (user.role.name != 'executiveAdmin') return true;
+  if (user.role?.name != 'executiveAdmin') return true;
 
   final orgId = user.orgId;
   if (orgId == null) return true;

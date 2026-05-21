@@ -397,6 +397,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
   }
 
   void _showQuickCollect(TodayPayment payment) {
+    int installmentCount = 1;
     final amountController = TextEditingController(
         text: payment.amountExpected.toStringAsFixed(0));
     String selectedMode = 'cash';
@@ -413,6 +414,11 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         builder: (ctx, setSheetState) {
           final currencyFormat =
               NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+
+          void updateAmount() {
+            amountController.text =
+                (payment.amountExpected * installmentCount).toStringAsFixed(0);
+          }
 
           return Padding(
             padding: EdgeInsets.only(
@@ -482,8 +488,87 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 ),
                 const SizedBox(height: 24),
 
+                // Installment count selector
+                const Text('Number of Installments',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: installmentCount > 1
+                            ? () => setSheetState(() {
+                                  installmentCount--;
+                                  updateAmount();
+                                })
+                            : null,
+                        icon: const Icon(Icons.remove_circle_outline_rounded),
+                        color: AppColors.primary,
+                        disabledColor: Colors.grey.shade300,
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            '$installmentCount',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          Text(
+                            installmentCount == 1
+                                ? 'installment'
+                                : 'installments',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: installmentCount < 12
+                            ? () => setSheetState(() {
+                                  installmentCount++;
+                                  updateAmount();
+                                })
+                            : null,
+                        icon: const Icon(Icons.add_circle_outline_rounded),
+                        color: AppColors.primary,
+                        disabledColor: Colors.grey.shade300,
+                      ),
+                    ],
+                  ),
+                ),
+                if (installmentCount > 1) ...[
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '$installmentCount × ${currencyFormat.format(payment.amountExpected)} = ${currencyFormat.format(payment.amountExpected * installmentCount)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+
                 // Amount field
-                const Text('Amount',
+                const Text('Total Amount',
                     style:
                         TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 const SizedBox(height: 8),
@@ -612,12 +697,13 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                                     payment: payment,
                                     amount: amount,
                                     paymentMode: selectedMode,
+                                    installmentCount: installmentCount,
                                   );
 
                                   navigator.pop();
                                   messenger.showSnackBar(SnackBar(
                                     content: Text(
-                                        '\u20b9${amount.toStringAsFixed(0)} collected from ${payment.memberName}'),
+                                        '${installmentCount > 1 ? '$installmentCount installments · ' : ''}\u20b9${amount.toStringAsFixed(0)} collected from ${payment.memberName}'),
                                     backgroundColor: AppColors.success,
                                     behavior: SnackBarBehavior.floating,
                                     shape: RoundedRectangleBorder(
@@ -705,6 +791,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     required TodayPayment payment,
     required double amount,
     required String paymentMode,
+    int installmentCount = 1,
   }) async {
     final client = Supabase.instance.client;
     final user = ref.read(currentUserProvider);
@@ -726,23 +813,23 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     final today = now.toIso8601String().split('T').first;
 
     if (payment.type == PaymentType.savings) {
-      // 1. Record collection log in savings_collections
+      // 1. Record collection log
       await client.from('savings_collections').insert({
         'org_id': user.orgId!,
         'savings_plan_id': payment.id,
         'member_id': payment.memberId,
         'member_name': payment.memberName,
         'member_phone': payment.memberPhone,
-        'amount_expected': payment.amountExpected,
+        'amount_expected': payment.amountExpected * installmentCount,
         'amount_collected': amount,
-        'is_partial': amount < payment.amountExpected,
+        'is_partial': amount < (payment.amountExpected * installmentCount),
         'payment_mode': paymentMode,
         'collection_date': today,
         'staff_id': staffId,
         'sync_status': 'synced',
       });
 
-      // 2. Fetch current savings balance & collection type to calculate next due date
+      // 2. Advance next_due_date by installmentCount periods
       final plan = await client
           .from('savings_plans')
           .select('collection_type, collection_day_of_week, collection_day_of_month, current_amount')
@@ -753,31 +840,32 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       final collectionType = plan?['collection_type'] ?? 'daily';
       switch (collectionType) {
         case 'weekly':
-          nextDue = now.add(const Duration(days: 7));
+          nextDue = now.add(Duration(days: 7 * installmentCount));
           break;
         case 'monthly':
           final targetDay = plan?['collection_day_of_month'] ?? now.day;
-          final nextMonth = now.month + 1;
-          final nextYear = nextMonth > 12 ? now.year + 1 : now.year;
-          final adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
-          final daysInMonth = DateTime(nextYear, adjustedMonth + 1, 0).day;
-          nextDue = DateTime(nextYear, adjustedMonth, targetDay > daysInMonth ? daysInMonth : targetDay);
+          final targetMonth = now.month + installmentCount;
+          final targetYear = now.year + ((targetMonth - 1) ~/ 12);
+          final adjustedMonth = ((targetMonth - 1) % 12) + 1;
+          final daysInMonth = DateTime(targetYear, adjustedMonth + 1, 0).day;
+          nextDue = DateTime(targetYear, adjustedMonth,
+              targetDay > daysInMonth ? daysInMonth : targetDay);
           break;
-        default:
-          nextDue = now.add(const Duration(days: 1));
+        default: // daily
+          nextDue = now.add(Duration(days: installmentCount));
       }
 
-      final currentBalance = ((plan?['current_amount']) as num?)?.toDouble() ?? 0.0;
-      final newSavingsAmount = currentBalance + amount;
+      final currentBalance =
+          ((plan?['current_amount']) as num?)?.toDouble() ?? 0.0;
 
-      // 3. Update savings plan status/balance/due date
+      // 3. Update savings plan
       await client.from('savings_plans').update({
         'next_due_date': nextDue.toIso8601String().split('T').first,
-        'current_amount': newSavingsAmount,
+        'current_amount': currentBalance + amount,
         'updated_at': now.toIso8601String(),
       }).eq('id', payment.id);
 
-      // 4. Create Transaction Record
+      // 4. Transaction record
       await client.from('transactions').insert({
         'member_id': payment.memberId,
         'member_name': payment.memberName,
@@ -785,12 +873,16 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         'amount': amount,
         'type': 'savingsDeposit',
         'payment_mode': paymentMode,
-        'description': 'Deposit into Savings Vault (Quick Collect)',
+        'description': installmentCount > 1
+            ? '$installmentCount installments deposited via $paymentMode'
+            : 'Savings deposit via $paymentMode',
         'org_id': user.orgId!,
-        'created_at': now.toUtc().toIso8601String(),
+        'created_at': now.toIso8601String(),
       });
     } else {
-      // 1. Record collection log in collections
+      // EMI Payment flow
+
+      // 1. Record collection log
       await client.from('collections').insert({
         'org_id': user.orgId!,
         'staff_id': staffId,
@@ -799,29 +891,39 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         'member_name': payment.memberName,
         'member_phone': payment.memberPhone,
         'loan_number': payment.loanNumber,
-        'amount_expected': payment.amountExpected,
+        'amount_expected': payment.amountExpected * installmentCount,
         'amount_collected': amount,
-        'is_partial': amount < payment.amountExpected,
+        'is_partial': amount < (payment.amountExpected * installmentCount),
         'collection_type': 'emi',
         'payment_mode': paymentMode,
         'collection_date': today,
-        'collection_time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
+        'collection_time':
+            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
         'sync_status': 'synced',
       });
 
-      // 2. Update EMI Schedule row
-      await client.from('emi_schedule').update({
-        'is_paid': true,
-        'status': 'paid',
-        'paid_on': now.toIso8601String(),
-        'paid_date': now.toUtc().toIso8601String(),
-        'payment_mode': paymentMode,
-        'amount_paid': amount,
-        'updated_at': now.toIso8601String(),
-      }).eq('id', payment.id);
-
-      // 3. Update loan outstanding balance & auto-close if paid
+      // 2. Mark multiple EMIs as paid
       if (payment.loanId != null) {
+        final unpaidEmis = await client
+            .from('emi_schedule')
+            .select('id')
+            .eq('loan_id', payment.loanId!)
+            .eq('is_paid', false)
+            .order('due_date', ascending: true)
+            .limit(installmentCount);
+
+        for (final emi in (unpaidEmis as List)) {
+          await client.from('emi_schedule').update({
+            'is_paid': true,
+            'status': 'paid',
+            'paid_on': now.toIso8601String(),
+            'payment_mode': paymentMode,
+            'amount_paid': payment.amountExpected,
+            'updated_at': now.toIso8601String(),
+          }).eq('id', emi['id']);
+        }
+
+        // 3. Update loan outstanding balance
         final loan = await client
             .from('loans')
             .select('outstanding_amount, outstanding_balance')
@@ -833,39 +935,41 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                       loan['outstanding_balance']) as num?)
                   ?.toDouble() ??
               0.0;
-          final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
+          final newBalance =
+              (currentBalance - amount).clamp(0.0, currentBalance);
 
-          await client.from('loans').update({
+          final updateData = <String, dynamic>{
             'outstanding_amount': newBalance,
             'outstanding_balance': newBalance,
             'updated_at': now.toIso8601String(),
-          }).eq('id', payment.loanId!);
+          };
 
           if (newBalance <= 0) {
-            await client.from('loans').update({
-              'status': 'closed',
-              'closed_date': today,
-              'outstanding_amount': 0.0,
-              'outstanding_balance': 0.0,
-              'updated_at': now.toIso8601String(),
-            }).eq('id', payment.loanId!);
+            updateData['status'] = 'closed';
+            updateData['closed_date'] = today;
           }
-        }
 
-        // 4. Create Transaction Record
-        await client.from('transactions').insert({
-          'loan_id': payment.loanId,
-          'member_id': payment.memberId,
-          'member_name': payment.memberName,
-          'type': 'emiPayment',
-          'amount': amount,
-          'payment_mode': paymentMode,
-          'description': 'EMI payment via $paymentMode (Quick Collect)',
-          'org_id': user.orgId!,
-          'entered_at': now.toUtc().toIso8601String(),
-          'created_at': now.toUtc().toIso8601String(),
-        });
+          await client
+              .from('loans')
+              .update(updateData)
+              .eq('id', payment.loanId!);
+        }
       }
+
+      // 4. Transaction record
+      await client.from('transactions').insert({
+        'loan_id': payment.loanId,
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'type': 'emiPayment',
+        'amount': amount,
+        'payment_mode': paymentMode,
+        'description': installmentCount > 1
+            ? '$installmentCount EMIs paid via $paymentMode'
+            : 'EMI payment via $paymentMode',
+        'org_id': user.orgId!,
+        'created_at': now.toIso8601String(),
+      });
     }
   }
 

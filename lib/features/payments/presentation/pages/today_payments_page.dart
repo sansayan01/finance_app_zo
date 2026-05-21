@@ -56,7 +56,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       context: context,
       initialDate: filters.selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
       ref.read(paymentFilterProvider.notifier).setDate(picked);
@@ -600,6 +600,9 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                                   return;
                                 }
 
+                                final navigator = Navigator.of(ctx);
+                                final messenger = ScaffoldMessenger.of(context);
+
                                 setSheetState(() => isSubmitting = true);
 
                                 try {
@@ -609,19 +612,17 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                                     paymentMode: selectedMode,
                                   );
 
-                                  if (mounted) {
-                                    Navigator.pop(ctx);
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: Text(
-                                          '\u20b9${amount.toStringAsFixed(0)} collected from ${payment.memberName}'),
-                                      backgroundColor: AppColors.success,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                    ));
-                                    ref.invalidate(todayPaymentsProvider);
+                                  navigator.pop();
+                                  messenger.showSnackBar(SnackBar(
+                                    content: Text(
+                                        '\u20b9${amount.toStringAsFixed(0)} collected from ${payment.memberName}'),
+                                    backgroundColor: AppColors.success,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                  ));
+                                  ref.invalidate(todayPaymentsProvider);
                                     try {
                                       ref.invalidate(todayCollectionsProvider);
                                       ref.invalidate(todayCollectionStatsProvider);
@@ -631,8 +632,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                                       ref.invalidate(todayStatsProvider);
                                       ref.invalidate(todayAgendaProvider);
                                     } catch (_) {}
-                                  }
-                                } catch (e) {
+                                  } catch (e) {
                                   setSheetState(
                                       () => isSubmitting = false);
                                   if (mounted) {

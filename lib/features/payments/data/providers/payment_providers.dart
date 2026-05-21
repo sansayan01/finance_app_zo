@@ -163,7 +163,10 @@ final paymentAgentsProvider =
 final todayPaymentsProvider =
     FutureProvider<TodayPaymentData>((ref) async {
   final user = ref.watch(currentUserProvider);
+  debugPrint('todayPaymentsProvider: user = $user');
+  debugPrint('todayPaymentsProvider: user.orgId = ${user?.orgId}');
   if (user == null || user.orgId == null) {
+    debugPrint('todayPaymentsProvider: user or orgId is null, returning empty payments');
     return const TodayPaymentData(payments: []);
   }
 
@@ -171,6 +174,7 @@ final todayPaymentsProvider =
   final orgId = user.orgId!;
   final filters = ref.watch(paymentFilterProvider);
   final dateStr = filters.selectedDate.toIso8601String().split('T').first;
+  debugPrint('todayPaymentsProvider: orgId = $orgId, dateStr = $dateStr');
 
   final List<TodayPayment> payments = [];
 
@@ -178,7 +182,7 @@ final todayPaymentsProvider =
     // 1. Fetch EMI dues for the selected date (due on that day + overdue)
     final emiDues = await client
         .from('emi_schedule')
-        .select('id, emi_number, due_date, emi_amount, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
+        .select('id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
         .eq('org_id', orgId)
         .eq('due_date', dateStr)
         .order('due_date', ascending: true);
@@ -188,7 +192,7 @@ final todayPaymentsProvider =
     try {
       overdueEmis = await client
           .from('emi_schedule')
-          .select('id, emi_number, due_date, emi_amount, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
+          .select('id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
           .eq('org_id', orgId)
           .lt('due_date', dateStr)
           .eq('is_paid', false)
@@ -286,8 +290,9 @@ final todayPaymentsProvider =
             : null,
       ));
     }
-  } catch (e) {
+  } catch (e, stack) {
     debugPrint('Error fetching EMI dues: $e');
+    debugPrint(stack.toString());
   }
 
   try {
@@ -331,14 +336,15 @@ final todayPaymentsProvider =
           loanId: col['loan_id'],
           paymentMode: col['payment_mode'],
           collectedAt: col['collection_time'] != null
-              ? DateTime.tryParse(col['collection_time'])
+              ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')
               : null,
           remarks: col['remarks'],
         ));
       }
     }
-  } catch (e) {
+  } catch (e, stack) {
     debugPrint('Error fetching collections: $e');
+    debugPrint(stack.toString());
   }
 
   // 3. Fetch savings plans due on the selected date
@@ -447,8 +453,9 @@ final todayPaymentsProvider =
             : null,
       ));
     }
-  } catch (e) {
+  } catch (e, stack) {
     debugPrint('Error fetching savings dues: $e');
+    debugPrint(stack.toString());
   }
 
   // Apply search filter

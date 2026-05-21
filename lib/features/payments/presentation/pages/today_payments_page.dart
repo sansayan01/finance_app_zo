@@ -13,6 +13,8 @@ import '../../../staff/data/providers/collection_providers.dart';
 import '../../data/models/today_payment_model.dart';
 import '../../data/providers/payment_providers.dart';
 import '../../data/utils/payment_export.dart';
+import '../../../loans/presentation/providers/loan_providers.dart';
+import '../../../savings/data/providers/savings_providers.dart';
 
 class TodayPaymentsPage extends ConsumerStatefulWidget {
   const TodayPaymentsPage({super.key});
@@ -623,15 +625,32 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                                             BorderRadius.circular(12)),
                                   ));
                                   ref.invalidate(todayPaymentsProvider);
-                                    try {
-                                      ref.invalidate(todayCollectionsProvider);
-                                      ref.invalidate(todayCollectionStatsProvider);
-                                      ref.invalidate(todayDueEmisProvider);
-                                      ref.invalidate(dashboardLoansProvider);
-                                      ref.invalidate(loanSummaryProvider);
-                                      ref.invalidate(todayStatsProvider);
-                                      ref.invalidate(todayAgendaProvider);
-                                    } catch (_) {}
+                                  try {
+                                    ref.invalidate(todayCollectionsProvider);
+                                    ref.invalidate(todayCollectionStatsProvider);
+                                    ref.invalidate(todayDueEmisProvider);
+                                    ref.invalidate(dashboardLoansProvider);
+                                    ref.invalidate(loanSummaryProvider);
+                                    ref.invalidate(todayStatsProvider);
+                                    ref.invalidate(todayAgendaProvider);
+                                    
+                                    // Invalidate specific loan providers if loanId exists
+                                    if (payment.loanId != null) {
+                                      ref.invalidate(loansProvider);
+                                      ref.invalidate(loanDetailProvider(payment.loanId!));
+                                      ref.invalidate(emiScheduleProvider(payment.loanId!));
+                                      ref.invalidate(paymentHistoryProvider(payment.loanId!));
+                                    }
+                                    
+                                    // Invalidate savings providers
+                                    if (payment.type == PaymentType.savings) {
+                                      ref.invalidate(allSavingsProvider);
+                                      ref.invalidate(savingsSummaryProvider);
+                                      ref.invalidate(savingDetailProvider(payment.id));
+                                      ref.invalidate(savingTransactionsProvider(payment.id));
+                                      ref.invalidate(savingTxPagerProvider(payment.id));
+                                    }
+                                  } catch (_) {}
                                   } catch (e) {
                                   setSheetState(
                                       () => isSubmitting = false);
@@ -707,6 +726,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     final today = now.toIso8601String().split('T').first;
 
     if (payment.type == PaymentType.savings) {
+      // 1. Record collection log in savings_collections
       await client.from('savings_collections').insert({
         'org_id': user.orgId!,
         'savings_plan_id': payment.id,
@@ -722,9 +742,10 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         'sync_status': 'synced',
       });
 
+      // 2. Fetch current savings balance & collection type to calculate next due date
       final plan = await client
           .from('savings_plans')
-          .select('collection_type, collection_day_of_week, collection_day_of_month')
+          .select('collection_type, collection_day_of_week, collection_day_of_month, current_amount')
           .eq('id', payment.id)
           .maybeSingle();
 
@@ -746,11 +767,30 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
           nextDue = now.add(const Duration(days: 1));
       }
 
+      final currentBalance = ((plan?['current_amount']) as num?)?.toDouble() ?? 0.0;
+      final newSavingsAmount = currentBalance + amount;
+
+      // 3. Update savings plan status/balance/due date
       await client.from('savings_plans').update({
         'next_due_date': nextDue.toIso8601String().split('T').first,
+        'current_amount': newSavingsAmount,
         'updated_at': now.toIso8601String(),
       }).eq('id', payment.id);
+
+      // 4. Create Transaction Record
+      await client.from('transactions').insert({
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'savings_id': payment.id,
+        'amount': amount,
+        'type': 'savingsDeposit',
+        'payment_mode': paymentMode,
+        'description': 'Deposit into Savings Vault (Quick Collect)',
+        'org_id': user.orgId!,
+        'created_at': now.toUtc().toIso8601String(),
+      });
     } else {
+      // 1. Record collection log in collections
       await client.from('collections').insert({
         'org_id': user.orgId!,
         'staff_id': staffId,
@@ -769,13 +809,63 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         'sync_status': 'synced',
       });
 
+      // 2. Update EMI Schedule row
       await client.from('emi_schedule').update({
         'is_paid': true,
         'status': 'paid',
         'paid_on': now.toIso8601String(),
+        'paid_date': now.toUtc().toIso8601String(),
         'payment_mode': paymentMode,
+        'amount_paid': amount,
         'updated_at': now.toIso8601String(),
       }).eq('id', payment.id);
+
+      // 3. Update loan outstanding balance & auto-close if paid
+      if (payment.loanId != null) {
+        final loan = await client
+            .from('loans')
+            .select('outstanding_amount, outstanding_balance')
+            .eq('id', payment.loanId!)
+            .maybeSingle();
+
+        if (loan != null) {
+          final currentBalance = ((loan['outstanding_amount'] ??
+                      loan['outstanding_balance']) as num?)
+                  ?.toDouble() ??
+              0.0;
+          final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
+
+          await client.from('loans').update({
+            'outstanding_amount': newBalance,
+            'outstanding_balance': newBalance,
+            'updated_at': now.toIso8601String(),
+          }).eq('id', payment.loanId!);
+
+          if (newBalance <= 0) {
+            await client.from('loans').update({
+              'status': 'closed',
+              'closed_date': today,
+              'outstanding_amount': 0.0,
+              'outstanding_balance': 0.0,
+              'updated_at': now.toIso8601String(),
+            }).eq('id', payment.loanId!);
+          }
+        }
+
+        // 4. Create Transaction Record
+        await client.from('transactions').insert({
+          'loan_id': payment.loanId,
+          'member_id': payment.memberId,
+          'member_name': payment.memberName,
+          'type': 'emiPayment',
+          'amount': amount,
+          'payment_mode': paymentMode,
+          'description': 'EMI payment via $paymentMode (Quick Collect)',
+          'org_id': user.orgId!,
+          'entered_at': now.toUtc().toIso8601String(),
+          'created_at': now.toUtc().toIso8601String(),
+        });
+      }
     }
   }
 

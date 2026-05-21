@@ -356,20 +356,30 @@ final todayPaymentsProvider =
 
     // Filter plans that are due on the selected date
     final savingsDues = (allActivePlans as List).where((plan) {
-      final nextDue = plan['next_due_date'];
+      final nextDue = plan['next_due_date'] as String?;
       final collectionType = plan['collection_type'] ?? 'daily';
+
+      // If next_due_date matches exactly, it's due
       if (nextDue == dateStr) return true;
-      if (nextDue == null) {
-        switch (collectionType) {
-          case 'weekly':
-            return plan['collection_day_of_week'] == dayOfWeek;
-          case 'monthly':
-            return plan['collection_day_of_month'] == dayOfMonth;
-          default:
-            return true;
+
+      // If next_due_date is before or on the selected date, it's overdue/due
+      if (nextDue != null) {
+        final nextDueDate = DateTime.tryParse(nextDue);
+        if (nextDueDate != null && !nextDueDate.isAfter(selectedDate)) {
+          return true;
         }
+        return false;
       }
-      return false;
+
+      // If next_due_date is null, determine by collection schedule
+      switch (collectionType) {
+        case 'weekly':
+          return plan['collection_day_of_week'] == dayOfWeek;
+        case 'monthly':
+          return plan['collection_day_of_month'] == dayOfMonth;
+        default: // daily
+          return true;
+      }
     }).toList();
 
     // Fetch member details for each plan
@@ -405,10 +415,19 @@ final todayPaymentsProvider =
 
       final isCollected = existingCollection != null;
 
+      // Determine if overdue (next_due_date is before today's date)
+      final nextDueStr = plan['next_due_date'] as String?;
+      final isOverdue = !isCollected &&
+          nextDueStr != null &&
+          DateTime.parse(nextDueStr).isBefore(
+              DateTime(selectedDate.year, selectedDate.month, selectedDate.day));
+
       payments.add(TodayPayment(
         id: plan['id'],
         type: PaymentType.savings,
-        status: isCollected ? PaymentStatus.collected : PaymentStatus.pending,
+        status: isCollected
+            ? PaymentStatus.collected
+            : (isOverdue ? PaymentStatus.overdue : PaymentStatus.pending),
         memberName: member['full_name'] ?? 'Unknown',
         memberPhone: member['phone'],
         memberId: member['id'],
@@ -420,7 +439,7 @@ final todayPaymentsProvider =
         amountCollected: isCollected
             ? (existingCollection['amount_collected'] as num?)?.toDouble()
             : null,
-        dueDate: DateTime.parse(dateStr),
+        dueDate: nextDueStr != null ? DateTime.parse(nextDueStr) : DateTime.parse(dateStr),
         planName: plan['plan_name'],
         paymentMode: isCollected ? existingCollection['payment_mode'] : null,
         collectedAt: isCollected && existingCollection['created_at'] != null

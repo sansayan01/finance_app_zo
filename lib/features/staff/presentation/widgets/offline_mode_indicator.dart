@@ -138,6 +138,7 @@ class OfflineModeIndicator extends ConsumerWidget {
   void _showSyncOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (context) {
         return Consumer(

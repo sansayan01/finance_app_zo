@@ -113,6 +113,7 @@ class ManageInvitationsPage extends ConsumerWidget {
   void _showInviteDialog(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) => const _InviteMemberSheet(),
     );

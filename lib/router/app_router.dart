@@ -1123,6 +1123,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
   void _showMoreMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       builder: (context) {
         return SafeArea(
           child: Column(

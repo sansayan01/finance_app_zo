@@ -544,6 +544,7 @@ class _OverdueListPageState extends ConsumerState<OverdueListPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(28, 20, 28, 40),

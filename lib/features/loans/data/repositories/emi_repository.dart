@@ -10,11 +10,53 @@ class EMIRepository {
 
   Future<List<EMIScheduleModel>> getByLoanId(String loanId) async {
     try {
-      final response = await _client
+      var response = await _client
           .from('emi_schedule')
           .select()
           .eq('loan_id', loanId)
           .order('emi_number', ascending: true);
+
+      if ((response as List).isEmpty) {
+        try {
+          final loanResponse = await _client
+              .from('loans')
+              .select()
+              .eq('id', loanId)
+              .maybeSingle();
+          if (loanResponse != null) {
+            final double amount = ((loanResponse['amount'] ?? loanResponse['principal_amount']) as num?)?.toDouble() ?? 0.0;
+            final double interestRate = ((loanResponse['interest_rate']) as num?)?.toDouble() ?? 0.0;
+            final int tenureMonths = loanResponse['tenure_months'] as int? ?? 12;
+            final String interestType = loanResponse['interest_type'] as String? ?? 'flat';
+            final double emiAmount = ((loanResponse['emi_amount'] ?? loanResponse['estimated_installment']) as num?)?.toDouble() ?? 0.0;
+            final String? memberId = loanResponse['customer_id']?.toString() ?? loanResponse['member_id']?.toString();
+            final String? frequency = loanResponse['frequency'] as String?;
+            final DateTime startDate = (loanResponse['first_emi_date'] ?? loanResponse['first_installment_date']) != null
+                ? DateTime.parse((loanResponse['first_emi_date'] ?? loanResponse['first_installment_date']) as String)
+                : (loanResponse['disbursement_date'] != null
+                    ? DateTime.parse(loanResponse['disbursement_date'] as String)
+                    : DateTime.now());
+
+            await generateSchedule(
+              loanId,
+              principal: amount,
+              interestRate: interestRate,
+              tenureMonths: tenureMonths,
+              interestType: interestType,
+              startDate: startDate,
+              emiAmount: emiAmount,
+              memberId: memberId,
+              frequency: frequency,
+            );
+
+            response = await _client
+                .from('emi_schedule')
+                .select()
+                .eq('loan_id', loanId)
+                .order('emi_number', ascending: true);
+          }
+        } catch (_) {}
+      }
 
       return (response as List)
           .map((json) => EMIScheduleModel.fromJson(json))
@@ -197,49 +239,113 @@ class EMIRepository {
     required DateTime startDate,
     required double emiAmount,
     String? memberId,
+    String? frequency,
   }) async {
     try {
-      // Try RPC first
+      // Try RPC first, verify it actually created rows
+      bool rpcWorked = false;
       try {
         await _client
             .rpc('generate_emi_schedule', params: {'p_loan_id': loanId});
-        return;
+        // Verify rows were created
+        final check = await _client
+            .from('emi_schedule')
+            .select('id')
+            .eq('loan_id', loanId)
+            .limit(1);
+        if ((check as List).isNotEmpty) {
+          rpcWorked = true;
+        }
       } catch (e) {
-        // Fallback to manual generation if RPC fails
+        // RPC failed, will use manual generation
+      }
+
+      if (!rpcWorked) {
+        // Manual generation fallback
         final List<Map<String, dynamic>> schedule = [];
         double balance = principal;
         final annualRate = interestRate / 100;
         final monthlyRate = annualRate / 12;
 
-        for (int i = 1; i <= tenureMonths; i++) {
+        // Determine number of installments based on frequency
+        final freq = frequency ?? 'monthly';
+        int numberOfInstallments;
+        switch (freq) {
+          case 'daily':
+            numberOfInstallments = tenureMonths * 30;
+            break;
+          case 'weekly':
+            numberOfInstallments = (tenureMonths * 30 / 7).round();
+            break;
+          case 'yearly':
+            numberOfInstallments = (tenureMonths / 12).round().clamp(1, 100);
+            break;
+          default: // monthly
+            numberOfInstallments = tenureMonths;
+        }
+
+        // Recalculate EMI for the actual number of installments
+        final actualEmi = (principal + (principal * annualRate * (tenureMonths / 12))) / numberOfInstallments;
+        final emiToUse = emiAmount > 0 ? emiAmount : actualEmi;
+
+        for (int i = 1; i <= numberOfInstallments; i++) {
           double interest;
           double principalPaid;
 
-          if (interestType == 'reducing') {
-            interest = balance * monthlyRate;
-            principalPaid = emiAmount - interest;
+          if (interestType == 'reducing' || interestType == 'reducingBalance') {
+            // Adjust rate per period
+            double ratePerPeriod;
+            switch (freq) {
+              case 'daily':
+                ratePerPeriod = annualRate / 365;
+                break;
+              case 'weekly':
+                ratePerPeriod = annualRate / 52;
+                break;
+              case 'yearly':
+                ratePerPeriod = annualRate;
+                break;
+              default:
+                ratePerPeriod = monthlyRate;
+            }
+            interest = balance * ratePerPeriod;
+            principalPaid = emiToUse - interest;
           } else {
             // Flat rate
             interest =
-                (principal * annualRate * (tenureMonths / 12)) / tenureMonths;
-            principalPaid = emiAmount - interest;
+                (principal * annualRate * (tenureMonths / 12)) / numberOfInstallments;
+            principalPaid = emiToUse - interest;
           }
 
           balance -= principalPaid;
           if (balance < 0) balance = 0;
 
-          // Calculate monthly due date
-          final dueDate = DateTime(startDate.year, startDate.month + (i - 1), startDate.day);
+          // Calculate due date based on frequency
+          DateTime dueDate;
+          switch (freq) {
+            case 'daily':
+              dueDate = startDate.add(Duration(days: i - 1));
+              break;
+            case 'weekly':
+              dueDate = startDate.add(Duration(days: (i - 1) * 7));
+              break;
+            case 'yearly':
+              dueDate = DateTime(startDate.year + (i - 1), startDate.month, startDate.day);
+              break;
+            default: // monthly
+              dueDate = DateTime(startDate.year, startDate.month + (i - 1), startDate.day);
+          }
 
           schedule.add({
             'loan_id': loanId,
             'org_id': _orgId,
             'member_id': memberId,
             'emi_number': i,
+            'installment_number': i,
             'period': i,
             'due_date': dueDate.toIso8601String().split('T').first,
-            'emi_amount': emiAmount,
-            'emi': emiAmount,
+            'emi_amount': emiToUse,
+            'emi': emiToUse,
             'principal': principalPaid,
             'interest': interest,
             'balance_after': balance,

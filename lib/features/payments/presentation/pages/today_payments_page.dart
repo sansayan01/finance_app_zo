@@ -68,6 +68,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -114,6 +115,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -249,6 +251,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -400,6 +403,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -787,239 +791,237 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: CustomScrollView(
-        slivers: [
-          // ─── App Bar ───
-          SliverAppBar(
-            pinned: true,
-            floating: true,
-            backgroundColor:
-                isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-            elevation: 0,
-            leading: _showSearch
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    onPressed: _clearSearch,
-                  )
-                : null,
-            title: _showSearch
-                ? TextField(
-                    controller: _searchController,
-                    autofocus: true,
-                    onChanged: _onSearchChanged,
-                    decoration: InputDecoration(
-                      hintText: 'Search customer, phone, loan...',
-                      border: InputBorder.none,
-                      hintStyle: TextStyle(
-                          color: isDark ? Colors.white38 : Colors.black38),
-                    ),
-                    style:
-                        TextStyle(color: isDark ? Colors.white : Colors.black),
-                  )
-                : GestureDetector(
-                    onTap: _pickDate,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          filters.isToday
-                              ? "Today's Payments"
-                              : 'Payments - ${filters.dateLabel}',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 20,
-                          color: isDark ? Colors.white54 : Colors.black54,
-                        ),
-                      ],
-                    ),
-                  ),
-            actions: [
-              if (!_showSearch) ...[
-                IconButton(
-                  icon: const Icon(Icons.search_rounded),
-                  onPressed: () => setState(() => _showSearch = true),
+      appBar: AppBar(
+        backgroundColor:
+            isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        leading: _showSearch
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: _clearSearch,
+              )
+            : null,
+        title: _showSearch
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search customer, phone, loan...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.filter_list_rounded,
-                    color: (filters.branchId != null || filters.agentId != null)
-                        ? AppColors.primary
-                        : null,
-                  ),
-                  onPressed: _showFilterSheet,
-                ),
-                PopupMenuButton(
-                  icon: const Icon(Icons.more_vert_rounded),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  itemBuilder: (ctx) => [
-                    PopupMenuItem(
-                      child: ListTile(
-                        leading: Icon(
-                          filters.autoRefresh
-                              ? Icons.pause_circle_outline
-                              : Icons.play_circle_outline,
-                          size: 20,
-                        ),
-                        title: Text(filters.autoRefresh
-                            ? 'Pause Auto-refresh'
-                            : 'Enable Auto-refresh'),
-                        dense: true,
-                      ),
-                      onTap: () =>
-                          ref.read(paymentFilterProvider.notifier).toggleAutoRefresh(),
-                    ),
-                    PopupMenuItem(
-                      child: const ListTile(
-                        leading: Icon(Icons.sort_rounded, size: 20),
-                        title: Text('Sort'),
-                        dense: true,
-                      ),
-                      onTap: () => Future.delayed(
-                          Duration.zero, () => _showSortSheet()),
-                    ),
-                    PopupMenuItem(
-                      child: const ListTile(
-                        leading: Icon(Icons.refresh_rounded, size: 20),
-                        title: Text('Refresh'),
-                        dense: true,
-                      ),
-                      onTap: () => ref.invalidate(todayPaymentsProvider),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-
-          // ─── Body Content ───
-          paymentsAsync.when(
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                style:
+                    TextStyle(color: isDark ? Colors.white : Colors.black),
+              )
+            : GestureDetector(
+                onTap: _pickDate,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.error_outline,
-                          size: 48, color: AppColors.error),
+                    Text(
+                      filters.isToday
+                          ? "Today's Payments"
+                          : 'Payments - ${filters.dateLabel}',
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w700),
                     ),
-                    const SizedBox(height: 16),
-                    Text('Something went wrong',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? AppColors.textPrimaryDark
-                                : AppColors.textPrimaryLight)),
-                    const SizedBox(height: 8),
-                    Text('$e',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.textTertiaryDark
-                                : AppColors.textTertiaryLight)),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () => ref.invalidate(todayPaymentsProvider),
-                      icon: const Icon(Icons.refresh_rounded, size: 18),
-                      label: const Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: isDark ? Colors.white54 : Colors.black54,
                     ),
                   ],
                 ),
               ),
+        actions: [
+          if (!_showSearch) ...[
+            IconButton(
+              icon: const Icon(Icons.search_rounded),
+              onPressed: () => setState(() => _showSearch = true),
             ),
-            data: (data) {
-              final summary = data.summary;
-              final pending = data.pendingPayments;
-              final collected = data.collectedPayments;
-              final overdue = data.overduePayments;
-
-              return SliverList(
-                delegate: SliverChildListDelegate([
-                  // ─── Summary Hero Card ───
-                  _buildSummaryHero(summary, isDark),
-
-                  // ─── Quick Stats Row ───
-                  _buildQuickStats(summary, isDark),
-
-                  // ─── Active filters ───
-                  if (filters.branchId != null || filters.agentId != null)
-                    _buildActiveFilters(filters, isDark),
-
-                  const SizedBox(height: 8),
-
-                  // ─── Tab Bar ───
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.fillDark
-                          : AppColors.fillLight,
-                      borderRadius: BorderRadius.circular(12),
+            IconButton(
+              icon: Icon(
+                Icons.filter_list_rounded,
+                color: (filters.branchId != null || filters.agentId != null)
+                    ? AppColors.primary
+                    : null,
+              ),
+              onPressed: _showFilterSheet,
+            ),
+            PopupMenuButton(
+              icon: const Icon(Icons.more_vert_rounded),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              itemBuilder: (ctx) => [
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(
+                      filters.autoRefresh
+                          ? Icons.pause_circle_outline
+                          : Icons.play_circle_outline,
+                      size: 20,
                     ),
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: Colors.white,
-                      unselectedLabelColor:
-                          isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      indicator: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      dividerColor: Colors.transparent,
-                      labelStyle: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13),
-                      unselectedLabelStyle: const TextStyle(
-                          fontWeight: FontWeight.w500, fontSize: 13),
-                      tabs: [
-                        Tab(text: 'Pending (${pending.length})'),
-                        Tab(text: 'Overdue (${overdue.length})'),
-                        Tab(text: 'Collected (${collected.length})'),
-                      ],
-                    ),
+                    title: Text(filters.autoRefresh
+                        ? 'Pause Auto-refresh'
+                        : 'Enable Auto-refresh'),
+                    dense: true,
                   ),
-                  const SizedBox(height: 8),
-
-                  // ─── Tab Content ───
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.5,
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildPaymentList(
-                            pending, isDark, 'No pending payments', Icons.schedule_rounded),
-                        _buildPaymentList(
-                            overdue, isDark, 'No overdue payments', Icons.warning_amber_rounded),
-                        _buildPaymentList(
-                            collected, isDark, 'No collections yet', Icons.check_circle_outline_rounded),
-                      ],
-                    ),
+                  onTap: () => ref
+                      .read(paymentFilterProvider.notifier)
+                      .toggleAutoRefresh(),
+                ),
+                PopupMenuItem(
+                  child: const ListTile(
+                    leading: Icon(Icons.sort_rounded, size: 20),
+                    title: Text('Sort'),
+                    dense: true,
                   ),
-                ]),
-              );
-            },
-          ),
+                  onTap: () =>
+                      Future.delayed(Duration.zero, () => _showSortSheet()),
+                ),
+                PopupMenuItem(
+                  child: const ListTile(
+                    leading: Icon(Icons.refresh_rounded, size: 20),
+                    title: Text('Refresh'),
+                    dense: true,
+                  ),
+                  onTap: () => ref.invalidate(todayPaymentsProvider),
+                ),
+              ],
+            ),
+          ],
         ],
+      ),
+      body: paymentsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.error_outline,
+                      size: 48, color: AppColors.error),
+                ),
+                const SizedBox(height: 16),
+                Text('Something went wrong',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimaryLight)),
+                const SizedBox(height: 8),
+                Text('$e',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? AppColors.textTertiaryDark
+                            : AppColors.textTertiaryLight)),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () => ref.invalidate(todayPaymentsProvider),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        data: (data) {
+          final summary = data.summary;
+          final pending = data.pendingPayments;
+          final collected = data.collectedPayments;
+          final overdue = data.overduePayments;
+
+          return Column(
+            children: [
+              // ─── Scrollable header ───
+              Flexible(
+                fit: FlexFit.loose,
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildSummaryHero(summary, isDark),
+                      _buildQuickStats(summary, isDark),
+                      if (filters.branchId != null ||
+                          filters.agentId != null)
+                        _buildActiveFilters(filters, isDark),
+                      const SizedBox(height: 8),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.fillDark
+                              : AppColors.fillLight,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: isDark
+                              ? AppColors.textTertiaryDark
+                              : AppColors.textTertiaryLight,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicator: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          dividerColor: Colors.transparent,
+                          labelStyle: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13),
+                          unselectedLabelStyle: const TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 13),
+                          tabs: [
+                            Tab(text: 'Pending (${pending.length})'),
+                            Tab(text: 'Overdue (${overdue.length})'),
+                            Tab(text: 'Collected (${collected.length})'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ─── Tab content fills remaining space ───
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildPaymentList(pending, isDark, 'No pending payments',
+                        Icons.schedule_rounded),
+                    _buildPaymentList(overdue, isDark, 'No overdue payments',
+                        Icons.warning_amber_rounded),
+                    _buildPaymentList(collected, isDark, 'No collections yet',
+                        Icons.check_circle_outline_rounded),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
       floatingActionButton: paymentsAsync.maybeWhen(
         data: (data) => FloatingActionButton.extended(
@@ -1347,6 +1349,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

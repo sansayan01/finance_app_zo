@@ -207,6 +207,7 @@ class _SupportTicketsPageState extends ConsumerState<SupportTicketsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
         context: context,
+        useRootNavigator: true,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
         builder: (ctx) => DraggableScrollableSheet(

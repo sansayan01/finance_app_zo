@@ -516,6 +516,7 @@ class StaffHomePage extends ConsumerWidget {
     // Fetch loan and EMI details, then show collection sheet
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
@@ -579,6 +580,7 @@ class StaffHomePage extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
@@ -949,6 +951,7 @@ class StaffHomePage extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => Container(
@@ -1118,6 +1121,7 @@ class StaffHomePage extends ConsumerWidget {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) {
         return Container(

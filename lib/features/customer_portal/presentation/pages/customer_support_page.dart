@@ -148,6 +148,7 @@ class CustomerSupportPage extends ConsumerWidget {
       BuildContext context, WidgetRef ref, CustomerTicketModel ticket) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (context) => _TicketDetailSheet(ticket: ticket),

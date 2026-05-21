@@ -1033,6 +1033,17 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
           const SizedBox(height: 12),
           _buildInfoRow('Maturity Date',
               AppFormatters.formatDate(saving.maturityDate), theme),
+          if (saving.nextDueDate != null) ...[
+            const SizedBox(height: 12),
+            _buildInfoRow(
+                'Next Installment',
+                AppFormatters.formatDate(saving.nextDueDate!),
+                theme,
+                valueColor: saving.nextDueDate!.isBefore(DateTime.now())
+                    ? AppColors.error
+                    : AppColors.primary,
+                isBold: true),
+          ],
           const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Divider(height: 1)),
@@ -1215,6 +1226,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       showDragHandle: true,
       builder: (sheetCtx) {
         return SafeArea(

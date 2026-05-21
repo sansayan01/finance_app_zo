@@ -502,6 +502,7 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
   void _showBranchDetails(BranchModel branch) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => BranchDetailSheet(branch: branch),

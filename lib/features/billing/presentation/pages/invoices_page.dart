@@ -193,6 +193,7 @@ class _InvoiceCard extends StatelessWidget {
   void _showInvoiceDetail(BuildContext context, InvoiceModel invoice) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) => DraggableScrollableSheet(
         initialChildSize: 0.7,

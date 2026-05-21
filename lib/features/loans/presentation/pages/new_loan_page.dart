@@ -1279,6 +1279,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _AmortizationPreviewSheet(
         schedule: schedule,

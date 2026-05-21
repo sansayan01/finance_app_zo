@@ -16,20 +16,55 @@ class SavingsRepository {
     required double penalty,
     required int totalInstallments,
   }) async {
+    // Calculate the first next_due_date based on collection type
+    final now = DateTime.now();
+    DateTime nextDueDate;
+    int? collectionDayOfWeek;
+    int? collectionDayOfMonth;
+
+    switch (collectionType) {
+      case 'daily':
+        nextDueDate = DateTime(now.year, now.month, now.day)
+            .add(const Duration(days: 1));
+        break;
+      case 'weekly':
+        nextDueDate = DateTime(now.year, now.month, now.day)
+            .add(const Duration(days: 7));
+        collectionDayOfWeek = nextDueDate.weekday - 1; // 0=Mon, 6=Sun
+        break;
+      case 'monthly':
+        nextDueDate = DateTime(now.year, now.month + 1, now.day);
+        collectionDayOfMonth = now.day;
+        break;
+      default:
+        nextDueDate = DateTime(now.year, now.month, now.day)
+            .add(const Duration(days: 1));
+    }
+
+    final insertData = <String, dynamic>{
+      'member_id': memberId,
+      'org_id': _orgId,
+      'monthly_deposit': installmentAmount,
+      'maturity_amount': maturityAmount,
+      'maturity_date': maturityDate.toIso8601String().split('T')[0],
+      'collection_type': collectionType,
+      'premature_penalty': penalty,
+      'total_installments': totalInstallments,
+      'target_amount': maturityAmount,
+      'status': 'active',
+      'next_due_date': nextDueDate.toIso8601String().split('T')[0],
+    };
+
+    if (collectionDayOfWeek != null) {
+      insertData['collection_day_of_week'] = collectionDayOfWeek;
+    }
+    if (collectionDayOfMonth != null) {
+      insertData['collection_day_of_month'] = collectionDayOfMonth;
+    }
+
     final response = await _client
         .from('savings_plans')
-        .insert({
-          'member_id': memberId,
-          'org_id': _orgId,
-          'monthly_deposit': installmentAmount,
-          'maturity_amount': maturityAmount,
-          'maturity_date': maturityDate.toIso8601String().split('T')[0],
-          'collection_type': collectionType,
-          'premature_penalty': penalty,
-          'total_installments': totalInstallments,
-          'target_amount': maturityAmount,
-          'status': 'active',
-        })
+        .insert(insertData)
         .select('id')
         .single();
 
@@ -89,6 +124,9 @@ class SavingsRepository {
             (json['premature_penalty'] as num?)?.toDouble() ?? 2.0,
         totalInstallments: (json['total_installments'] as num?)?.toInt() ?? 12,
         maturityAmount: (json['maturity_amount'] as num?)?.toDouble() ?? 0.0,
+        nextDueDate: json['next_due_date'] != null
+            ? DateTime.tryParse(json['next_due_date'].toString())
+            : null,
       );
     }).toList();
   }

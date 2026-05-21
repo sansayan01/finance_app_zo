@@ -950,6 +950,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) => Container(

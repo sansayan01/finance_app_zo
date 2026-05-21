@@ -11,14 +11,68 @@ class AuthRepository {
 
   SupabaseClient get client => _client;
 
+  /// Check if an email exists in profiles table OR auth metadata.
+  /// Uses two checks for reliability — the email may exist in auth.users
+  /// without a matching profiles row, or vice versa.
+  Future<bool> _checkEmailInProfiles(String email) async {
+    final normalized = email.toLowerCase().trim();
+    try {
+      // Check 1: profiles table (our app's user records)
+      final profile = await _client
+          .from('profiles')
+          .select('id')
+          .eq('email', normalized)
+          .maybeSingle();
+      if (profile != null) return true;
+
+      // Check 2: auth.users via RPC — any user with this email
+      // The user may have an auth account but no profile yet
+      final authCheck = await _client.rpc('check_email_exists', params: {
+        'p_email': normalized,
+      });
+      if (authCheck == true) return true;
+
+      return false;
+    } catch (_) {
+      // If queries fail, assume email exists (don't leak info)
+      return true;
+    }
+  }
+
   Future<UserModel> signInWithEmail({
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    final AuthResponse response;
+    try {
+      response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      // Network/connection errors — rethrow as-is so the provider can show the right message
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('socket') ||
+          errStr.contains('network') ||
+          errStr.contains('connection') ||
+          errStr.contains('timeout')) {
+        rethrow;
+      }
+      // Sign-in failed — now check if the email exists in profiles
+      // to distinguish "email not found" from "wrong password"
+      final emailExists = await _checkEmailInProfiles(email);
+      if (emailExists) {
+        throw AuthException(
+          'Incorrect password. Please check your password and try again.',
+          statusCode: 'invalid_password',
+        );
+      } else {
+        throw AuthException(
+          'No account found with this email. Please check your email address.',
+          statusCode: 'email_not_found',
+        );
+      }
+    }
 
     final user = response.user;
     if (user == null) {

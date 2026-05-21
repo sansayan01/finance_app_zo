@@ -846,6 +846,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
@@ -1627,6 +1628,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
@@ -1755,6 +1757,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
@@ -2219,6 +2222,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
@@ -3358,6 +3362,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => CollectionSheet(loan: loan, emi: emi),
     );

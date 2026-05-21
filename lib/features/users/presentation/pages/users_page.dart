@@ -410,6 +410,7 @@ class _UsersPageState extends ConsumerState<UsersPage>
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -2159,6 +2160,7 @@ class _RowActions extends ConsumerWidget {
     return showModalBottomSheet<UserRole>(
       context: context,
       showDragHandle: true,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),

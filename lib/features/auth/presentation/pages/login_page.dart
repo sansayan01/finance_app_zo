@@ -56,14 +56,81 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       context.go('/');
     } else if (mounted) {
       HapticService.error();
-      final error = ref.read(authProvider).errorMessage;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(error ?? 'Authentication failed'),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ));
+      final authState = ref.read(authProvider);
+      _showErrorPopup(
+        context,
+        message: authState.errorMessage ?? 'Authentication failed',
+        errorType: authState.errorType,
+      );
     }
+  }
+
+  void _showErrorPopup(
+    BuildContext context, {
+    required String message,
+    AuthErrorType? errorType,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    IconData icon;
+    String title;
+    String hint;
+    Color accentColor;
+
+    switch (errorType) {
+      case AuthErrorType.emailNotFound:
+        icon = Icons.alternate_email_rounded;
+        title = 'Email Not Found';
+        hint = 'We couldn\'t find an account with this email. Please double-check your email address and try again.';
+        accentColor = const Color(0xFFFF6B6B);
+        break;
+      case AuthErrorType.invalidPassword:
+        icon = Icons.lock_outline_rounded;
+        title = 'Incorrect Password';
+        hint = 'The password you entered doesn\'t match. Please check and try again, or use Forgot Password to reset it.';
+        accentColor = const Color(0xFFFF9F43);
+        break;
+      default:
+        icon = Icons.error_outline_rounded;
+        title = 'Login Failed';
+        hint = message;
+        accentColor = const Color(0xFFFF6B6B);
+    }
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 350),
+      pageBuilder: (ctx, anim, secondaryAnim) => const SizedBox.shrink(),
+      transitionBuilder: (ctx, anim, secondaryAnim, child) {
+        final curved = CurvedAnimation(
+          parent: anim,
+          curve: Curves.easeOutBack,
+          reverseCurve: Curves.easeInBack,
+        );
+        return ScaleTransition(
+          scale: curved,
+          child: FadeTransition(
+            opacity: anim,
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: _ErrorPopupContent(
+                icon: icon,
+                title: title,
+                message: message,
+                hint: hint,
+                accentColor: accentColor,
+                isDark: isDark,
+                onDismiss: () => Navigator.of(ctx).pop(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -495,6 +562,123 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorPopupContent extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  final String hint;
+  final Color accentColor;
+  final bool isDark;
+  final VoidCallback onDismiss;
+
+  const _ErrorPopupContent({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.hint,
+    required this.accentColor,
+    required this.isDark,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.15),
+            blurRadius: 40,
+            spreadRadius: -5,
+            offset: const Offset(0, 20),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icon with glow ring
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accentColor.withValues(alpha: 0.1),
+              border: Border.all(
+                color: accentColor.withValues(alpha: 0.3),
+                width: 2,
+              ),
+            ),
+            child: Icon(icon, color: accentColor, size: 28),
+          ),
+          const SizedBox(height: 20),
+          // Title
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : Colors.black87,
+              letterSpacing: -0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          // Hint text
+          Text(
+            hint,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white60 : Colors.black54,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          // Got it button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: onDismiss,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Got it',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -40,112 +40,112 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\package_config.json": {
-    "mtime": 1779192295.194,
-    "ast_hash": "7145fbcef820fc5fb5d691b07288c7c5",
+    "mtime": 1779199556.3275375,
+    "ast_hash": "d7113e11ef1165962f72b85bbeed1e05",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\package_graph.json": {
-    "mtime": 1779192289.6578023,
-    "ast_hash": "17e8a70f572aee0fdb4a7ec1bb0eea83",
+    "mtime": 1779199701.5342493,
+    "ast_hash": "0c66d922331d1a02dc4277b739ce690a",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\arbitration_service_config.json": {
-    "mtime": 1779182123.3737893,
+    "mtime": 1779349342.5012312,
     "ast_hash": "2bc75c7f326d217b8e3d9cc72e1639f2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\DualEngine\\SiteList-Consumer.json": {
-    "mtime": 1779182123.5121214,
+    "mtime": 1779349342.736106,
     "ast_hash": "99914b932bd37a50b983c5e7c90ae93b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\DualEngine\\SiteList-Enterprise.json": {
-    "mtime": 1779182123.5141227,
+    "mtime": 1779349342.7370775,
     "ast_hash": "99914b932bd37a50b983c5e7c90ae93b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\EntityExtraction\\domains_config.json": {
-    "mtime": 1779182123.6354887,
-    "ast_hash": "eab5acb0d9b9ef5ace6bf7a1d4517b5f",
+    "mtime": 1779349342.9654038,
+    "ast_hash": "187de2a0c7fca81a4ee20eb87c722851",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\DevToolsPlugin.js": {
-    "mtime": 1779182123.8407683,
+    "mtime": 1779316252.654066,
     "ast_hash": "7f32ca5d3f52675f538b041bd67c0444",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\manifest.json": {
-    "mtime": 1779182123.8658803,
+    "mtime": 1779316252.677286,
     "ast_hash": "c447a41c21cbb2bf5411029cb0936e13",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\NamedFunctionRange.js": {
-    "mtime": 1779182123.885497,
+    "mtime": 1779316252.6929417,
     "ast_hash": "fae98d8d75b2ddab58eb531d3c08a8f6",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\third_party\\typescript\\typescript-tsconfig.json": {
-    "mtime": 1779182123.922415,
+    "mtime": 1779316252.7277677,
     "ast_hash": "40d3e3fbfc100769071a2a27040e33f9",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\third_party\\typescript\\typescript.d.ts": {
-    "mtime": 1779182123.9642904,
+    "mtime": 1779316252.7549913,
     "ast_hash": "9f7f369b169033ee919dba043b424a83",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\third_party\\typescript\\typescript.js": {
-    "mtime": 1779182124.2966409,
+    "mtime": 1779316253.1289377,
     "ast_hash": "fb1c951f849bca76b6aeec81fafb1ee4",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\_metadata\\computed_hashes.json": {
-    "mtime": 1779182124.3345227,
+    "mtime": 1779316253.1687248,
     "ast_hash": "c44785ed27cd0a3074ddd1835095efe3",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\_metadata\\verified_contents.json": {
-    "mtime": 1779182124.3441103,
+    "mtime": 1779316253.1807811,
     "ast_hash": "70f58c8151600335b5ec548cade5b98b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\manifest.json": {
-    "mtime": 1779182124.3622675,
+    "mtime": 1779316253.199471,
     "ast_hash": "2cf796650e5ad5bfb6c4a421d81734be",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\third_party\\babylon\\babylon.js": {
-    "mtime": 1779182124.5977254,
+    "mtime": 1779316253.4376917,
     "ast_hash": "e1adfd8f62854c2d9ce65f13268c1ac1",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\third_party\\typescript\\typescript.js": {
-    "mtime": 1779182124.9290445,
+    "mtime": 1779316253.7927406,
     "ast_hash": "d931cf27eb964f239e5bec661810abf5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\_metadata\\computed_hashes.json": {
-    "mtime": 1779182124.9445345,
+    "mtime": 1779316253.8063188,
     "ast_hash": "ac2ddefbff0bfa96528175820a0a3f87",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\_metadata\\verified_contents.json": {
-    "mtime": 1779182124.9536238,
+    "mtime": 1779316253.816845,
     "ast_hash": "c7182c4ef7a2cd6a57e48d44bfd4af9b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\dartpad\\web_plugin_registrant.dart": {
-    "mtime": 1779091553.1701548,
-    "ast_hash": "ee472acedd3717838aa4836800a28574",
+    "mtime": 1779199702.2220418,
+    "ast_hash": "8ffe6cac39c0615d74acd88e44523a7d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\extension_discovery\\vs_code.json": {
-    "mtime": 1779166964.3714685,
+    "mtime": 1779199547.1744027,
     "ast_hash": "972a4e65f335d9919b2a7a38ebd3b09d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\dart_plugin_registrant.dart": {
-    "mtime": 1779195484.4454312,
+    "mtime": 1779350667.5647535,
     "ast_hash": "6cd5ffa33b681107d45a933b83e7bfa8",
     "semantic_hash": ""
   },
@@ -165,33 +165,33 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\295388484fb25808c94afe4dce5188a9\\dart_build_result.json": {
-    "mtime": 1779102467.8055017,
-    "ast_hash": "a689e48b2eb74a4bda634b886294003f",
+    "mtime": 1779200823.3848743,
+    "ast_hash": "b3bae4c52e99492052d9de024f21e859",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\295388484fb25808c94afe4dce5188a9\\native_assets.json": {
-    "mtime": 1779102467.8751597,
+    "mtime": 1779200823.416161,
     "ast_hash": "f3a664e105b4f792c6c7fe4e4d22c398",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\295388484fb25808c94afe4dce5188a9\\outputs.json": {
-    "mtime": 1779102650.8137162,
-    "ast_hash": "495abd93140cb9e6d4accc685e7771d3",
+    "mtime": 1779259152.7759218,
+    "ast_hash": "b2442c521a46966d4c3c874c33f8a1b5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\3aa4ec73d6475c8dc4da529a8a8d4955\\dart_build_result.json": {
-    "mtime": 1779193227.7270112,
-    "ast_hash": "65405f84affc74b4064b0276b4f8fe20",
+    "mtime": 1779199985.2394283,
+    "ast_hash": "b895b95eb46d53d1a61222e7ce0520e8",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\3aa4ec73d6475c8dc4da529a8a8d4955\\native_assets.json": {
-    "mtime": 1779098512.0055816,
+    "mtime": 1779199985.2798824,
     "ast_hash": "f3a664e105b4f792c6c7fe4e4d22c398",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\3aa4ec73d6475c8dc4da529a8a8d4955\\outputs.json": {
-    "mtime": 1779195529.563168,
-    "ast_hash": "0dfd288097c3a226293081b7a8c16973",
+    "mtime": 1779341746.7416394,
+    "ast_hash": "d677cdfb6d8467b7a0a2880371dffceb",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\69d0bd6a3c8ab8c9a4e0607ad156abfc\\dart_build_result.json": {
@@ -230,103 +230,103 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6fc0f1e266\\dependencies.dependencies_hash_file.json": {
-    "mtime": 1779102466.3591769,
-    "ast_hash": "0c15f7e532acf7c2279426f9115ede3d",
+    "mtime": 1779200819.0558274,
+    "ast_hash": "2239a9fc363f697539155406e1a3c560",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6fc0f1e266\\hook.dependencies_hash_file.json": {
-    "mtime": 1779102369.6841376,
-    "ast_hash": "2b3f2cb4cfaa178ca6235e421c7a0ffb",
+    "mtime": 1779200818.7107434,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6fc0f1e266\\input.json": {
-    "mtime": 1779102465.254045,
+    "mtime": 1779200818.7151585,
     "ast_hash": "54937db1223677a595ead8181b183a9c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6fc0f1e266\\output.json": {
-    "mtime": 1779102465.999064,
-    "ast_hash": "f55901ab6bfe24709a509b99aee8ed6a",
+    "mtime": 1779200818.9692712,
+    "ast_hash": "5ed7e7d6ad06b3a486652f34654a86ca",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\8e04c28b44\\dependencies.dependencies_hash_file.json": {
-    "mtime": 1779192644.47926,
-    "ast_hash": "f8edcd167faf3a65db62b70da4cc2171",
+    "mtime": 1779251409.9708002,
+    "ast_hash": "a381693384d57ce04a71674742a8ce6f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\8e04c28b44\\hook.dependencies_hash_file.json": {
-    "mtime": 1779187872.435302,
-    "ast_hash": "749b56f9e9400ecf1f4fbe80dec4ed2a",
+    "mtime": 1779219214.271109,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\8e04c28b44\\input.json": {
-    "mtime": 1779192644.1619906,
+    "mtime": 1779251409.7041311,
     "ast_hash": "9a5d5604df870bde9c3b501e19db6942",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\8e04c28b44\\output.json": {
-    "mtime": 1779192644.4299042,
-    "ast_hash": "2a444d923969156475f57ae52add00a1",
+    "mtime": 1779251409.908811,
+    "ast_hash": "fc3992f5452894e77f47c5c7dc368e0b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\b378e85151\\dependencies.dependencies_hash_file.json": {
-    "mtime": 1779102467.7999206,
-    "ast_hash": "0c15f7e532acf7c2279426f9115ede3d",
+    "mtime": 1779200823.3808303,
+    "ast_hash": "2239a9fc363f697539155406e1a3c560",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\b378e85151\\hook.dependencies_hash_file.json": {
-    "mtime": 1779102376.4280698,
-    "ast_hash": "2b3f2cb4cfaa178ca6235e421c7a0ffb",
+    "mtime": 1779200822.9806454,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\b378e85151\\input.json": {
-    "mtime": 1779102467.1613915,
+    "mtime": 1779200822.9866102,
     "ast_hash": "5932ba7e2afb2fb18a2bb026360349d4",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\b378e85151\\output.json": {
-    "mtime": 1779102467.7013364,
-    "ast_hash": "5b0d02416e28fd39836879bd08e5e30e",
+    "mtime": 1779200823.347185,
+    "ast_hash": "071a060a46b4668b9238f2428475c288",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\cc849c0ef2\\dependencies.dependencies_hash_file.json": {
-    "mtime": 1779102467.1171794,
-    "ast_hash": "0c15f7e532acf7c2279426f9115ede3d",
+    "mtime": 1779200821.257442,
+    "ast_hash": "2239a9fc363f697539155406e1a3c560",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\cc849c0ef2\\hook.dependencies_hash_file.json": {
-    "mtime": 1779102372.8034472,
-    "ast_hash": "2b3f2cb4cfaa178ca6235e421c7a0ffb",
+    "mtime": 1779200820.8477697,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\cc849c0ef2\\input.json": {
-    "mtime": 1779102466.4387937,
+    "mtime": 1779200820.8521802,
     "ast_hash": "2ffa989d8f549884589ed68f51ef7675",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\cc849c0ef2\\output.json": {
-    "mtime": 1779102467.0136452,
-    "ast_hash": "004f876e091efcd5ff82823f80affe28",
+    "mtime": 1779200821.225504,
+    "ast_hash": "a695bca091eab3cd3ee9370a1d919b2d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\f5fb13e8b0\\dependencies.dependencies_hash_file.json": {
-    "mtime": 1779193227.7220247,
-    "ast_hash": "0d696cc550bb27081c15840aef3a8b74",
+    "mtime": 1779200167.8419328,
+    "ast_hash": "2e5df439e5c2d9f43bc9134be3cd750d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\f5fb13e8b0\\hook.dependencies_hash_file.json": {
-    "mtime": 1779098511.5863063,
-    "ast_hash": "2b3f2cb4cfaa178ca6235e421c7a0ffb",
+    "mtime": 1779199795.2438054,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\f5fb13e8b0\\input.json": {
-    "mtime": 1779193227.2027783,
+    "mtime": 1779200167.5259464,
     "ast_hash": "30e4e7699d86221f250c603c9eedf98a",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\f5fb13e8b0\\output.json": {
-    "mtime": 1779193227.6080918,
-    "ast_hash": "f33c07cd878ce51ad0e4e40cd1b68fb6",
+    "mtime": 1779200167.7819095,
+    "ast_hash": "097a1beb8f289523ecd259a116fa86da",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.kilo\\kilo.json": {
@@ -375,7 +375,7 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.vscode\\settings.json": {
-    "mtime": 1779109791.2709103,
+    "mtime": 1779256454.3146958,
     "ast_hash": "eecedd232fac7f6184da2fadace3b6fe",
     "semantic_hash": ""
   },
@@ -400,13 +400,13 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\android\\app\\src\\main\\java\\io\\flutter\\plugins\\GeneratedPluginRegistrant.java": {
-    "mtime": 1779107028.9375918,
-    "ast_hash": "079e746c85857fdfedeb6eb35925887c",
+    "mtime": 1779346331.731592,
+    "ast_hash": "d80eb7fd69a21fb931083b8e1a332c9a",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\android\\app\\src\\main\\kotlin\\com\\example\\finance\\MainActivity.kt": {
-    "mtime": 1779190859.9972813,
-    "ast_hash": "a3bb6cd4ad91ee931ab4f9e191a7bedc",
+    "mtime": 1779196561.7889256,
+    "ast_hash": "002e7fa1567b94c1cf6a5b9242a29642",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\integration_test\\app_test.dart": {
@@ -435,8 +435,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\ios\\Runner\\GeneratedPluginRegistrant.m": {
-    "mtime": 1779091553.8048756,
-    "ast_hash": "2069e3ff80ea18bf3c34c15f124efe0d",
+    "mtime": 1779199702.6701677,
+    "ast_hash": "07094a28cdd5bd5a8862e8f607e9664d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\ios\\Runner\\Runner-Bridging-Header.h": {
@@ -470,8 +470,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\main.dart": {
-    "mtime": 1779183318.5780792,
-    "ast_hash": "0b74fc419254add847f44bed92372072",
+    "mtime": 1779223409.6476307,
+    "ast_hash": "89569acbc078a3bc963332c0130f702b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\config\\env_config.dart": {
@@ -515,8 +515,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\providers\\org_provider.dart": {
-    "mtime": 1779183390.8612401,
-    "ast_hash": "d2cc10c4a6152d49adea5560b3fdcae8",
+    "mtime": 1779224761.7105346,
+    "ast_hash": "7b01ca6bc1cf43dfa52e337704c8a310",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\providers\\storage_providers.dart": {
@@ -525,18 +525,18 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\providers\\system_config_provider.dart": {
-    "mtime": 1779016680.7993853,
-    "ast_hash": "ea3b6c081b518998c9953c3165274cb4",
+    "mtime": 1779201540.4532986,
+    "ast_hash": "608b2d4fd5512fc7aa7114f58941301d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\services\\app_icon_service.dart": {
-    "mtime": 1779191849.4580424,
-    "ast_hash": "98ffdace4739e51272e083066d0991fa",
+    "mtime": 1779196542.6961586,
+    "ast_hash": "b5ed12a526f5174de7471fcbed4c9756",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\services\\app_update_service.dart": {
-    "mtime": 1778770025.8682017,
-    "ast_hash": "f0f9c16d16f0596db74ccf32f0170775",
+    "mtime": 1779199508.9373674,
+    "ast_hash": "13dadafea652127d28839e79e4844660",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\services\\avatar_upload_service.dart": {
@@ -685,8 +685,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\core\\widgets\\update_wrapper.dart": {
-    "mtime": 1779016681.064829,
-    "ast_hash": "8aa279ae7ad421e77f28f24d80aebe1b",
+    "mtime": 1779201611.862091,
+    "ast_hash": "d4f905af6cd18f400f4b78809d4175bb",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\admin\\presentation\\pages\\admin_dashboard_page.dart": {
@@ -750,18 +750,18 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\auth\\data\\repositories\\auth_repository.dart": {
-    "mtime": 1779044270.2128613,
-    "ast_hash": "17decb2734ba4e67cc201bee4bcc7d1b",
+    "mtime": 1779344921.4701908,
+    "ast_hash": "b6cfb7676f24fb0640deb0d52f0c384c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\auth\\presentation\\pages\\login_page.dart": {
-    "mtime": 1779192034.2356877,
-    "ast_hash": "c85478a5ac595c21b584a371a28ac14c",
+    "mtime": 1779344418.1751058,
+    "ast_hash": "4e20d5cb88ee72bc700e3a2d179679c2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\auth\\presentation\\pages\\signup_page.dart": {
-    "mtime": 1779016681.590466,
-    "ast_hash": "82ab2bc8d901434dea86429ec4fbae08",
+    "mtime": 1779227032.413975,
+    "ast_hash": "47fdd7e6e7d3a99373e37cb46e967988",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\auth\\presentation\\pages\\verify_email_page.dart": {
@@ -770,8 +770,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\auth\\presentation\\providers\\auth_provider.dart": {
-    "mtime": 1779044270.2166376,
-    "ast_hash": "d06cb880cfb48785eaace57357a829ca",
+    "mtime": 1779343830.7041564,
+    "ast_hash": "c1043e80f56614e7aa05de87dbb197b5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\billing\\data\\models\\invoice_model.dart": {
@@ -805,8 +805,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\billing\\presentation\\pages\\invoices_page.dart": {
-    "mtime": 1779016681.7933877,
-    "ast_hash": "1cca172de76361763d126532d1b9cdc0",
+    "mtime": 1779360662.0488162,
+    "ast_hash": "8c3bb493c08575f07928f9a122b595ab",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\billing\\presentation\\pages\\usage_limits_page.dart": {
@@ -815,13 +815,13 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\branches\\data\\providers\\branch_providers.dart": {
-    "mtime": 1779016682.01535,
-    "ast_hash": "cb7b335f4bf8a49f3124d0b371122423",
+    "mtime": 1779300301.966617,
+    "ast_hash": "ee1bcc9e22df3b666d4c0d7bfaebc816",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\branches\\data\\repositories\\branch_repository.dart": {
-    "mtime": 1779016682.0647259,
-    "ast_hash": "ef6215e2e59e6e2cf857a99b1c6ceb3b",
+    "mtime": 1779219528.3581893,
+    "ast_hash": "ad9d6b75e5980cf3a4c445f3a920fa61",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\branches\\models\\branch_model.dart": {
@@ -830,8 +830,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\branches\\presentation\\pages\\branch_management_page.dart": {
-    "mtime": 1779106693.5713885,
-    "ast_hash": "1542db2ba9f01a6b73c7a4fda289ef2c",
+    "mtime": 1779360655.571769,
+    "ast_hash": "5624c43db08be49a02b73cd9fb53fdde",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\branch_manager\\data\\models\\branch_stats_model.dart": {
@@ -840,8 +840,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\branch_manager\\data\\providers\\branch_manager_providers.dart": {
-    "mtime": 1779016681.9159284,
-    "ast_hash": "7b9ccb0f43fa6f2bafab5d7f0589da5e",
+    "mtime": 1779300263.010847,
+    "ast_hash": "8aed7ae4d246ac9d32093bc161a717bd",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\branch_manager\\data\\repositories\\branch_manager_repository.dart": {
@@ -910,43 +910,23 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\chatbot\\presentation\\providers\\chat_provider.dart": {
-    "mtime": 1778768689.7735434,
-    "ast_hash": "7d08140ebe3637f2ef46c21ba2df0478",
+    "mtime": 1779306657.0525925,
+    "ast_hash": "8f9fc962d7b956f66475f44e6d55f154",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\chatbot\\presentation\\widgets\\floating_chatbot.dart": {
-    "mtime": 1778568899.4065619,
-    "ast_hash": "d66b4f0ff097283a8151333a29998241",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\models\\customer_portal_models.dart": {
-    "mtime": 1779016682.4750297,
-    "ast_hash": "41f5dbfa4abd3443aa09fa689f024d0e",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\providers\\customer_portal_providers.dart": {
-    "mtime": 1779016682.4929917,
-    "ast_hash": "9b32aca875c66fac8041249a570eb849",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\repositories\\customer_portal_repository.dart": {
-    "mtime": 1779019819.9085925,
-    "ast_hash": "3fd3332d432cd944c23ffcf68ee49958",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_dashboard.dart": {
-    "mtime": 1779016682.56059,
-    "ast_hash": "cd248be7025d79c4a92faf3cf299643b",
+    "mtime": 1779306568.8268597,
+    "ast_hash": "6a0a664eb7e2fa5b3a410f287fdb96d6",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_loans_page.dart": {
-    "mtime": 1779016682.57962,
-    "ast_hash": "2923b0e62f334d23a22635ab95cc81f9",
+    "mtime": 1779303739.24583,
+    "ast_hash": "443ad84931b5b7c77b18bc4c0a3d9075",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_savings_page.dart": {
-    "mtime": 1779107204.6724296,
-    "ast_hash": "062fb6d8f336dae66e9e4168c1c83554",
+    "mtime": 1779303739.455327,
+    "ast_hash": "89d1c00e18a91c273897f4a4aab96866",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\enterprise\\data\\providers\\enterprise_providers.dart": {
@@ -975,8 +955,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\home\\data\\providers\\dashboard_providers.dart": {
-    "mtime": 1779172263.839959,
-    "ast_hash": "8119e2f48adf4cb883741a7c546f96b9",
+    "mtime": 1779303897.7743132,
+    "ast_hash": "458ebe3b16f5dbce7567e1d9578f536e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\home\\data\\providers\\notification_providers.dart": {
@@ -985,8 +965,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\home\\presentation\\pages\\home_page.dart": {
-    "mtime": 1779171328.712362,
-    "ast_hash": "facf2d08f5b0e3c3c120b82a08aa8958",
+    "mtime": 1779304673.368237,
+    "ast_hash": "741ef8e8a9319cf9e0bdc311753adb41",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\home\\presentation\\pages\\notifications_page.dart": {
@@ -1000,8 +980,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\home\\presentation\\pages\\staff_home_page.dart": {
-    "mtime": 1779019104.4266977,
-    "ast_hash": "75c87d1676f2afb682d8c336a36e5d37",
+    "mtime": 1779360672.7512143,
+    "ast_hash": "39ad2f659fd62542610f8406b81b4e12",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\home\\presentation\\providers\\staff_providers.dart": {
@@ -1030,8 +1010,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\invitations\\presentation\\pages\\manage_invitations_page.dart": {
-    "mtime": 1779107204.721869,
-    "ast_hash": "edd3f549a39e77c3d17fd224fa4bd96c",
+    "mtime": 1779360642.8738356,
+    "ast_hash": "2d39e9c98517ff84629793b902c39b7b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\data\\models\\emi_schedule_model.dart": {
@@ -1045,18 +1025,18 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\data\\providers\\loan_providers.dart": {
-    "mtime": 1779016683.2823958,
-    "ast_hash": "d5d44e4a38b0f3bf1425d0f232060149",
+    "mtime": 1779306492.487223,
+    "ast_hash": "7950e9e12f13ba1e9970c61e9ed23e2f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\data\\repositories\\emi_repository.dart": {
-    "mtime": 1779189302.9526932,
-    "ast_hash": "17057e9887664c9f1debedbfe15f9171",
+    "mtime": 1779360123.5019155,
+    "ast_hash": "0758403d5956f6bc6bc62db9ccd65fe6",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\data\\repositories\\loans_repository.dart": {
-    "mtime": 1779172132.9034026,
-    "ast_hash": "01d4a2902bbcd4449f7c9978140e9412",
+    "mtime": 1779303898.1659896,
+    "ast_hash": "86767d0c68c1907b98fab96ff7c47a03",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\data\\repositories\\loan_repository.dart": {
@@ -1065,43 +1045,43 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\presentation\\pages\\edit_loan_page.dart": {
-    "mtime": 1779016683.4536045,
-    "ast_hash": "97e1a98dc8907ffb0707137a314bc37c",
+    "mtime": 1779360380.2652712,
+    "ast_hash": "e0b72dbfc4eba0c765f82fa5b05234a6",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\presentation\\pages\\loans_page.dart": {
-    "mtime": 1779046492.1502807,
-    "ast_hash": "bab5ab04142c8cb349ea268b001c6637",
+    "mtime": 1779305165.6128888,
+    "ast_hash": "c8bf46712973133ac1b054484bef4b94",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\presentation\\pages\\loan_detail_page.dart": {
-    "mtime": 1779016683.9439793,
-    "ast_hash": "0bd13f2ba969774b5f4461f556b78134",
+    "mtime": 1779360370.9387207,
+    "ast_hash": "6e91f1ef14602a3f9b03f59a62125d70",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\presentation\\pages\\new_loan_page.dart": {
-    "mtime": 1779016684.0575674,
-    "ast_hash": "a0b81f9fd458903485b0dde92da9de7b",
+    "mtime": 1779360375.9686093,
+    "ast_hash": "f437efe7508c8d6935027454fb6f6f7b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\presentation\\providers\\loan_providers.dart": {
-    "mtime": 1779016684.0993288,
-    "ast_hash": "283851a500fd0d8d487b050873594c24",
+    "mtime": 1779304074.1974494,
+    "ast_hash": "8e29bc012fdad445e997590fb2143342",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\presentation\\providers\\new_loan_provider.dart": {
-    "mtime": 1779016684.1371324,
-    "ast_hash": "707fe81020bbb055cd16c88f0741331c",
+    "mtime": 1779356204.7884877,
+    "ast_hash": "48712f173b3940a706c807abf78112f9",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\loans\\presentation\\widgets\\collection_sheet.dart": {
-    "mtime": 1779019118.818776,
-    "ast_hash": "952297083c66f0085ab7c16eca138377",
+    "mtime": 1779304143.4706156,
+    "ast_hash": "b2b44ad7cf6a368a41d17415a4d8f13f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\members\\data\\models\\member_model.dart": {
-    "mtime": 1778644194.369562,
-    "ast_hash": "473288927cf03919e6e5a1fd83c3983b",
+    "mtime": 1779221374.538572,
+    "ast_hash": "da32cb34d440bfa9636fc2c83987e87d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\members\\data\\repositories\\members_repository.dart": {
@@ -1120,38 +1100,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\members\\presentation\\providers\\onboarding_provider.dart": {
-    "mtime": 1779016684.3801687,
-    "ast_hash": "bea82125cce740fd5bac9601938f30cd",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\onboarding\\data\\tour_provider.dart": {
-    "mtime": 1779188113.592611,
-    "ast_hash": "c211d8e0085db7790380e8cebedb6fbc",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\onboarding\\data\\tour_service.dart": {
-    "mtime": 1779183110.505056,
-    "ast_hash": "84a3b294c9a88ccaafb415fe37e4c08e",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\onboarding\\data\\tour_steps.dart": {
-    "mtime": 1779183186.0306437,
-    "ast_hash": "6604994cb9552741a98cc1547a1d1f3f",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\onboarding\\presentation\\pages\\quick_tour_page.dart": {
-    "mtime": 1779183205.2377834,
-    "ast_hash": "aa1f6f15efde38eb0df6529edc269662",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\onboarding\\presentation\\pages\\splash_page.dart": {
-    "mtime": 1779188186.5477693,
-    "ast_hash": "2f5791537eef8907044a67894f12c4c6",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\onboarding\\presentation\\widgets\\tour_overlay.dart": {
-    "mtime": 1779188186.5598953,
-    "ast_hash": "acae394d94d5b98ea957e22340cfa5b9",
+    "mtime": 1779301521.0681775,
+    "ast_hash": "bab7e5fdd3a76db87c0e8fd0cacaa159",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\operations\\models\\operations_models.dart": {
@@ -1170,8 +1120,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\data\\models\\savings_model.dart": {
-    "mtime": 1779016603.7120228,
-    "ast_hash": "b9ec2d2281d31cd4a50f3f0f0c08f3a2",
+    "mtime": 1779355743.1048791,
+    "ast_hash": "63fc50aea33c02a5158e93df955aacf0",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\data\\providers\\savings_providers.dart": {
@@ -1180,8 +1130,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\data\\repositories\\savings_repository.dart": {
-    "mtime": 1779039396.9224973,
-    "ast_hash": "b730b9c80e160c8eba2f4144c0865af2",
+    "mtime": 1779356143.6581476,
+    "ast_hash": "9129a2b5a77ec5cc51d0e82edc749230",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\presentation\\pages\\edit_savings_vault_page.dart": {
@@ -1190,23 +1140,23 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\presentation\\pages\\new_recurring_saving_page.dart": {
-    "mtime": 1778764307.4384944,
-    "ast_hash": "6adde46dfe43a85ad05d371442d70b66",
+    "mtime": 1779273810.442407,
+    "ast_hash": "737d079aebf9a875536aaac078ac0d14",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\presentation\\pages\\savings_page.dart": {
-    "mtime": 1779017580.3778183,
-    "ast_hash": "86a8eae62a104627f31c566e91a9c16b",
+    "mtime": 1779305202.4975297,
+    "ast_hash": "3f4b99ff99b56bd9c6f0dab66c2db3a7",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\presentation\\pages\\saving_detail_page.dart": {
-    "mtime": 1779039692.8864954,
-    "ast_hash": "c05b97a1cbc99021114a072995728418",
+    "mtime": 1779360541.3695638,
+    "ast_hash": "8921d11f4fd2d264e30cd4e4d29c4511",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\savings\\presentation\\providers\\new_recurring_saving_provider.dart": {
-    "mtime": 1778568899.4168694,
-    "ast_hash": "17fc1a3d4b081dc5afe29546a57700f2",
+    "mtime": 1779300964.5099573,
+    "ast_hash": "4b5924e9c1ae7a55d7ed602ea1745d14",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\data\\models\\activity_log_model.dart": {
@@ -1215,8 +1165,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\data\\models\\brand_model.dart": {
-    "mtime": 1779191859.0261126,
-    "ast_hash": "3acc10072cc23a64a6a33424b6a4ad3b",
+    "mtime": 1779195850.1440258,
+    "ast_hash": "6de585a2b9187795759d91c9bd61ed09",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\data\\providers\\activity_logs_provider.dart": {
@@ -1230,8 +1180,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\data\\providers\\brand_provider.dart": {
-    "mtime": 1779191886.0069022,
-    "ast_hash": "b16aaf11dea712431446d679b390a8d4",
+    "mtime": 1779195885.5287058,
+    "ast_hash": "25ae22c8cfe2cdd716bb6dba798340ab",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\data\\repositories\\activity_log_repository.dart": {
@@ -1245,13 +1195,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\presentation\\pages\\app_update_page.dart": {
-    "mtime": 1779016685.051689,
-    "ast_hash": "5b8d53ad5b8c04f3bfa7558289e5b6e5",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\presentation\\pages\\branding_settings_page.dart": {
-    "mtime": 1779192016.8854115,
-    "ast_hash": "17c4eb7aef13f6cf97fd1a0cc8ed41ef",
+    "mtime": 1779201629.44588,
+    "ast_hash": "5c8733d97bdbe49f373eddeab65652e1",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\presentation\\pages\\integrations_settings_page.dart": {
@@ -1280,8 +1225,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\presentation\\pages\\settings_page_v2.dart": {
-    "mtime": 1779193911.6301425,
-    "ast_hash": "e121c59495db3664f7e00476ed1c5698",
+    "mtime": 1779360636.9974976,
+    "ast_hash": "658b9c06157cd95b206bdb0697e6fa71",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\presentation\\providers\\settings_provider.dart": {
@@ -1290,18 +1235,13 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\settings\\presentation\\widgets\\icon_preset_picker.dart": {
-    "mtime": 1779191956.2887363,
-    "ast_hash": "808c3893bfd23f0ce7c3d73e5a72239d",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\finance_app_zo\\lib\\features\\setup\\presentation\\pages\\branch_management_page.dart": {
-    "mtime": 1779016990.5513973,
-    "ast_hash": "5f95149a4cae10b64f558a5ae3d20ddc",
+    "mtime": 1779196855.1132812,
+    "ast_hash": "fe7743b96e06f1260bef2b744d1d7824",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\setup\\presentation\\pages\\setup_wizard_page.dart": {
-    "mtime": 1779016685.3021054,
-    "ast_hash": "2c243728bad5b8fa5bae4ccb6411ef60",
+    "mtime": 1779251281.0991156,
+    "ast_hash": "925014379561a7bce25053aae885f17c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\models\\achievement_model.dart": {
@@ -1320,8 +1260,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\models\\collection_model.dart": {
-    "mtime": 1779016685.4051378,
-    "ast_hash": "a1121860437319236663d8a35f4b3894",
+    "mtime": 1779312633.1364331,
+    "ast_hash": "8f0b8d22dbf7c7e7c6a7a151b638e196",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\models\\leaderboard_model.dart": {
@@ -1360,8 +1300,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\providers\\collection_providers.dart": {
-    "mtime": 1779016685.506383,
-    "ast_hash": "768b827a6d799b742e5ae8758c67944a",
+    "mtime": 1779312610.6596267,
+    "ast_hash": "2ad885b5b76a7d7bef37b7a591d0483e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\providers\\gamification_providers.dart": {
@@ -1385,8 +1325,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\repositories\\collection_repository.dart": {
-    "mtime": 1779172490.187721,
-    "ast_hash": "5e24103b46d1234f7701b695936fadd3",
+    "mtime": 1779312612.173729,
+    "ast_hash": "0be0cf7c4d02833781f6ceef48166d9a",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\repositories\\gamification_repository.dart": {
@@ -1400,8 +1340,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\repositories\\staff_repository.dart": {
-    "mtime": 1779016685.604872,
-    "ast_hash": "4d0e5012ce6e89987cf8a23afc96a44b",
+    "mtime": 1779221012.7096171,
+    "ast_hash": "9132a1001aa70cb17c9399b7d6621d03",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\data\\services\\background_sync_service.dart": {
@@ -1440,8 +1380,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\cash_deposit_page.dart": {
-    "mtime": 1779016685.8343112,
-    "ast_hash": "050b9d5539117c6efe63837969bd8e53",
+    "mtime": 1779300181.2077892,
+    "ast_hash": "0ce84780833423e0558d18d56415c57b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\collection_form_page.dart": {
@@ -1450,8 +1390,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\collection_history_page.dart": {
-    "mtime": 1779016685.8825092,
-    "ast_hash": "f45df5ae4d783af7d13a61f20b9a0ce2",
+    "mtime": 1779360575.6493127,
+    "ast_hash": "d850b2fa42e6e52320e89e1d13a6c410",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\collection_list_page.dart": {
@@ -1480,8 +1420,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\overdue_list_page.dart": {
-    "mtime": 1779016686.1494017,
-    "ast_hash": "082d2691033fc3fd38abfc5001c61f0a",
+    "mtime": 1779360581.6076758,
+    "ast_hash": "0f0fd7e89580e8ff938a097d33049bd6",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\pending_operations_page.dart": {
@@ -1490,13 +1430,13 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\staff_home_dashboard.dart": {
-    "mtime": 1779106722.5469415,
-    "ast_hash": "906a62d8b5d5a6ed4bd00ca899983dfc",
+    "mtime": 1779360587.7103148,
+    "ast_hash": "13d655e0b53838e468dc8a353a7308cc",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\staff_map_page.dart": {
-    "mtime": 1779016990.5621707,
-    "ast_hash": "ac6d34451ec0fa641135bf8265b5f773",
+    "mtime": 1779360593.6572213,
+    "ast_hash": "4ec71c14c7e73da2a96b0938bbbabece",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\pages\\staff_settings_page.dart": {
@@ -1570,8 +1510,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\widgets\\offline_mode_indicator.dart": {
-    "mtime": 1779016686.6408515,
-    "ast_hash": "f3fcd611e011c48ee13e9b771441aa3d",
+    "mtime": 1779360630.1027367,
+    "ast_hash": "d778eb686a5af4adad434f248f5aac5c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\staff\\presentation\\widgets\\receipt_generator.dart": {
@@ -1615,13 +1555,13 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\data\\providers\\super_admin_providers.dart": {
-    "mtime": 1779016686.768253,
-    "ast_hash": "382cf7019cd977d0d7b78879a77d3383",
+    "mtime": 1779223992.546682,
+    "ast_hash": "680089ba4ecbb59488aaf899fe9ea895",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\data\\repositories\\super_admin_repository.dart": {
-    "mtime": 1779016990.5641754,
-    "ast_hash": "68c9c362f423fc6470a79793008566e8",
+    "mtime": 1779224218.463223,
+    "ast_hash": "003e661710412d4208f4a884072fc624",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\presentation\\pages\\announcements_page.dart": {
@@ -1715,13 +1655,13 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\presentation\\pages\\super_admin_dashboard.dart": {
-    "mtime": 1779016687.625945,
-    "ast_hash": "8d5dcef31bab0bb74620fc40594a975f",
+    "mtime": 1779224038.1179366,
+    "ast_hash": "5a5433e5e784d9a67b190e4974c39497",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\presentation\\pages\\support_tickets_page.dart": {
-    "mtime": 1779016687.7463815,
-    "ast_hash": "58d8aed722cdb46413eff1e62505b3f9",
+    "mtime": 1779360617.7570336,
+    "ast_hash": "3f20803f8979db81478a48c00e452e67",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\presentation\\pages\\system_controls_page.dart": {
@@ -1730,8 +1670,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\presentation\\pages\\users_management_page.dart": {
-    "mtime": 1779016687.7971497,
-    "ast_hash": "70ece651824fec9490fdae9a65819100",
+    "mtime": 1779360624.0644524,
+    "ast_hash": "8cd6b4763504e86fdafa95d2f50b70a1",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\super_admin\\presentation\\widgets\\super_admin_shell.dart": {
@@ -1760,8 +1700,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\data\\repositories\\user_repository.dart": {
-    "mtime": 1779182380.5879672,
-    "ast_hash": "ad727e0c0bbc7b8a00704d82588687bb",
+    "mtime": 1779274148.21305,
+    "ast_hash": "12f7b86e855bf93c77e69b9c435fcae9",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\presentation\\pages\\bulk_import_members_page.dart": {
@@ -1780,8 +1720,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\presentation\\pages\\users_page.dart": {
-    "mtime": 1779107089.726292,
-    "ast_hash": "8761824beb380fd1e8b1391c878cfd26",
+    "mtime": 1779360569.4022646,
+    "ast_hash": "3c85d921f4e58fe46e39c7ad7f0434c9",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\presentation\\pages\\user_audit_page.dart": {
@@ -1790,8 +1730,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\presentation\\pages\\user_details_page.dart": {
-    "mtime": 1779190638.786606,
-    "ast_hash": "558e4249be634e18ff2a771e2930a8ee",
+    "mtime": 1779360559.854851,
+    "ast_hash": "a33a6292869415c1619cb78ec5cca9eb",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\presentation\\providers\\admin_user_actions_provider.dart": {
@@ -1805,8 +1745,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\presentation\\providers\\new_user_provider.dart": {
-    "mtime": 1779016688.208149,
-    "ast_hash": "ed8e8a59a9866e7063484e4d726be45f",
+    "mtime": 1779300811.8865197,
+    "ast_hash": "efcfbbf88a40f1ecc0f8347af35cc0ae",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\features\\users\\presentation\\providers\\user_list_provider.dart": {
@@ -1820,8 +1760,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\lib\\router\\app_router.dart": {
-    "mtime": 1779193896.2157536,
-    "ast_hash": "c454cea3e359e941798f56f980ac4fba",
+    "mtime": 1779360535.0441594,
+    "ast_hash": "36b70c39df1dbee86702af039b845bb0",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\linux\\flutter\\generated_plugin_registrant.cc": {
@@ -2160,8 +2100,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\windows\\flutter\\generated_plugin_registrant.cc": {
-    "mtime": 1778761302.223801,
-    "ast_hash": "8fe4878a191fbd42a3b45b16fd9a1ef9",
+    "mtime": 1779199702.6621103,
+    "ast_hash": "28100cef95440bd9e371c83fd2f90523",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\windows\\flutter\\generated_plugin_registrant.h": {
@@ -2235,8 +2175,8 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\pubspec.yaml": {
-    "mtime": 1779192261.8336525,
-    "ast_hash": "720400800a6811e4ba1a1b0f21d50160",
+    "mtime": 1779199487.4337664,
+    "ast_hash": "e99823773e72779db768d4bf4f282406",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\README.md": {
@@ -2480,27 +2420,27 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\DevToolsPlugin.html": {
-    "mtime": 1779182123.7754116,
+    "mtime": 1779316252.6226754,
     "ast_hash": "0d09cc16eebaeae80fe58be258501fc8",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\cgjgjfacjflmgphhhepmbhhbgjieaecn\\135.0.3176.0_0\\third_party\\typescript\\LICENSE.txt": {
-    "mtime": 1779182123.9108474,
+    "mtime": 1779316252.7202556,
     "ast_hash": "f632dfdde0adc0da86f701c6f2df38af",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\filelist.txt": {
-    "mtime": 1779182124.353748,
+    "mtime": 1779316253.1919055,
     "ast_hash": "3bf6b4eae5af15288bf0d79702f9cb78",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\third_party\\babylon\\LICENSE.md": {
-    "mtime": 1779182124.6087773,
+    "mtime": 1779316253.4492583,
     "ast_hash": "e57b8dbca804bf4a2db759fa1a70b3cc",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Extensions\\kfbdpdaobnofkbopebjglnaadopfikhh\\113.0.1765.0_0\\third_party\\typescript\\LICENSE.txt": {
-    "mtime": 1779182124.6214547,
+    "mtime": 1779316253.462857,
     "ast_hash": "f632dfdde0adc0da86f701c6f2df38af",
     "semantic_hash": ""
   },
@@ -2515,53 +2455,53 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6fc0f1e266\\stderr.txt": {
-    "mtime": 1779102465.2682233,
+    "mtime": 1779200818.7204394,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6fc0f1e266\\stdout.txt": {
-    "mtime": 1779102465.2810144,
-    "ast_hash": "4dfb37e2fef320a2995740c4e8dd06c3",
+    "mtime": 1779200818.7243712,
+    "ast_hash": "fd7c800ec3d0e8554d501533ed9b0b97",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\8e04c28b44\\stderr.txt": {
-    "mtime": 1779192644.1629944,
+    "mtime": 1779251409.707114,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\8e04c28b44\\stdout.txt": {
-    "mtime": 1779192644.1629944,
-    "ast_hash": "b71c58d5170afaf03329736ece617ff8",
+    "mtime": 1779251409.7091053,
+    "ast_hash": "da2ec957e1d052436504938402b59505",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\b378e85151\\stderr.txt": {
-    "mtime": 1779102467.1688974,
+    "mtime": 1779200822.9956763,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\b378e85151\\stdout.txt": {
-    "mtime": 1779102467.171944,
-    "ast_hash": "d4b9b18c4c79839704847f0afd3c8356",
+    "mtime": 1779200822.9966776,
+    "ast_hash": "d0a551e9b56856fad87976aad7a97ad7",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\cc849c0ef2\\stderr.txt": {
-    "mtime": 1779102466.4469867,
+    "mtime": 1779200820.8617635,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\cc849c0ef2\\stdout.txt": {
-    "mtime": 1779102466.4500124,
-    "ast_hash": "f562a1773b851eef94095337c65ff8f5",
+    "mtime": 1779200820.8648202,
+    "ast_hash": "88661c360c8c94e105c9cb14174288cf",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\f5fb13e8b0\\stderr.txt": {
-    "mtime": 1779193227.2294428,
+    "mtime": 1779200167.5311084,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\f5fb13e8b0\\stdout.txt": {
-    "mtime": 1779193227.2415345,
-    "ast_hash": "c648d649e81d3a565e91c6d4a79b57ae",
+    "mtime": 1779200167.5336318,
+    "ast_hash": "8bbdffaf143b3d31dd84d73846ce7914",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.github\\workflows\\flutter-tests.yml": {
@@ -2660,322 +2600,322 @@
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\edge_browser_predefined_image.jpg": {
-    "mtime": 1779182123.6201713,
-    "ast_hash": "8b17632f970dbf8b5c785ccc2e1cd9c6",
+    "mtime": 1779349342.9417427,
+    "ast_hash": "d4bebab6a1dec7e56bca5c762aca1489",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\128.png": {
-    "mtime": 1779182125.7841,
+    "mtime": 1779349344.8081737,
     "ast_hash": "04de93818a6dd282d4c12085c10f0448",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\144.png": {
-    "mtime": 1779182125.7958922,
+    "mtime": 1779349344.8181722,
     "ast_hash": "74458d8902de61f7141c724bae21cad7",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\192.png": {
-    "mtime": 1779182125.8069842,
+    "mtime": 1779349344.83017,
     "ast_hash": "e86b7c637631b0516e980444f1f3c250",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\256.png": {
-    "mtime": 1779182125.815195,
+    "mtime": 1779349344.8411827,
     "ast_hash": "80c776d714991af63d0f078e1b7d9b19",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\32.png": {
-    "mtime": 1779182125.8235075,
+    "mtime": 1779349344.851819,
     "ast_hash": "2c49932088b57c031cbd6bc685e86182",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\48.png": {
-    "mtime": 1779182125.8303378,
+    "mtime": 1779349344.8623736,
     "ast_hash": "2faea9ba3d84dc2bd736917f78f2c31b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\64.png": {
-    "mtime": 1779182125.8384345,
+    "mtime": 1779349344.872437,
     "ast_hash": "27d9f67582f5fa95afa163a508fd4d05",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons\\96.png": {
-    "mtime": 1779182125.8460753,
+    "mtime": 1779349344.8804364,
     "ast_hash": "a20f561f016c5606925a20a02e7dd10c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons Maskable\\192.png": {
-    "mtime": 1779182125.856353,
+    "mtime": 1779349344.893435,
     "ast_hash": "6a6c504b5189b146c98e639132d39b4d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons Maskable\\512.png": {
-    "mtime": 1779182125.8623683,
+    "mtime": 1779349344.9084327,
     "ast_hash": "b833ca87c65f2b92bb681b6cb0941140",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons Monochrome\\16.png": {
-    "mtime": 1779182125.8724332,
+    "mtime": 1779349344.921708,
     "ast_hash": "4eb2ebdb91abea26e5bf427737888212",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons Monochrome\\32.png": {
-    "mtime": 1779182125.88008,
+    "mtime": 1779349344.9332283,
     "ast_hash": "8fd844a83ece77b9122281b501d35de3",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons Monochrome\\48.png": {
-    "mtime": 1779182125.8886983,
+    "mtime": 1779349344.945317,
     "ast_hash": "fcb382fbd189f02bac84a929786e3fb2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Icons Monochrome\\512.png": {
-    "mtime": 1779182125.8947482,
+    "mtime": 1779349344.955822,
     "ast_hash": "01cd1e42eb5af7366dc59f78d2579ae2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\128.png": {
-    "mtime": 1779182125.9052584,
+    "mtime": 1779349344.9715035,
     "ast_hash": "02a646c1a1c5da4c88dddf83d0c1bf90",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\192.png": {
-    "mtime": 1779182125.907266,
+    "mtime": 1779349344.974007,
     "ast_hash": "e86b7c637631b0516e980444f1f3c250",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\256.png": {
-    "mtime": 1779182125.9137807,
+    "mtime": 1779349344.9825385,
     "ast_hash": "80c776d714991af63d0f078e1b7d9b19",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\32.png": {
-    "mtime": 1779182125.9226608,
+    "mtime": 1779349344.9917774,
     "ast_hash": "05b52b47d031e86450364707b8ab792c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\48.png": {
-    "mtime": 1779182125.9303522,
+    "mtime": 1779349345.000779,
     "ast_hash": "c5c3c5b18fea15d21bcfae5a9990d63b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\64.png": {
-    "mtime": 1779182125.9379542,
+    "mtime": 1779349345.0117714,
     "ast_hash": "e4f7464f381e35ca4779ddd9db75914f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\agimnkijcaahngcdmfeangaknmldooml\\Trusted Icons\\Icons\\96.png": {
-    "mtime": 1779182125.9444864,
+    "mtime": 1779349345.0247793,
     "ast_hash": "101584efc0eb8b1e354b93acb2ee662c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\bnlcekfcconpgihaghcidklmoeeiinol\\Icons\\128.png": {
-    "mtime": 1779182125.9558527,
+    "mtime": 1779349345.0409245,
     "ast_hash": "6b6cba2ab973fef1b119116aee0a5f3f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\bnlcekfcconpgihaghcidklmoeeiinol\\Icons\\256.png": {
-    "mtime": 1779182125.9629076,
+    "mtime": 1779349345.049945,
     "ast_hash": "305ea927b8c8e14d1ff2059273f3519e",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\bnlcekfcconpgihaghcidklmoeeiinol\\Icons\\32.png": {
-    "mtime": 1779182125.9696107,
+    "mtime": 1779349345.0602288,
     "ast_hash": "cf4accf893ef7e45bef3bad7e32f15e0",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\bnlcekfcconpgihaghcidklmoeeiinol\\Icons\\48.png": {
-    "mtime": 1779182125.9766955,
+    "mtime": 1779349345.0677564,
     "ast_hash": "2b143ae48b5e0de19e6d05a67b2e44e7",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\bnlcekfcconpgihaghcidklmoeeiinol\\Icons\\64.png": {
-    "mtime": 1779182125.983284,
+    "mtime": 1779349345.076266,
     "ast_hash": "65f88369ec67107d9467df953be71499",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\bnlcekfcconpgihaghcidklmoeeiinol\\Icons\\96.png": {
-    "mtime": 1779182125.9909592,
+    "mtime": 1779349345.0848546,
     "ast_hash": "9a40da4524fcbcd5d8db96d6359b2b5f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Icons\\128.png": {
-    "mtime": 1779182126.002167,
+    "mtime": 1779349345.0948656,
     "ast_hash": "e2bb371f6b07b10305ca24291cff483b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Icons\\256.png": {
-    "mtime": 1779182126.009209,
+    "mtime": 1779349345.1068642,
     "ast_hash": "4fdb581e6cf5bfd83934b4061422fa9b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Icons\\32.png": {
-    "mtime": 1779182126.016232,
+    "mtime": 1779349345.1169362,
     "ast_hash": "4bbecb0a6051a77f04e4ccfa8f5ba05b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Icons\\48.png": {
-    "mtime": 1779182126.023812,
+    "mtime": 1779349345.126471,
     "ast_hash": "681266d3462da0e54b9271951daf37f2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Icons\\512.png": {
-    "mtime": 1779182126.031439,
+    "mtime": 1779349345.138498,
     "ast_hash": "58aabdee6a822e036f293ec80fcdddf5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Icons\\64.png": {
-    "mtime": 1779182126.0396202,
+    "mtime": 1779349345.1464872,
     "ast_hash": "25d71158c67729a5dbcf539f288a64b0",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Icons\\96.png": {
-    "mtime": 1779182126.0462599,
+    "mtime": 1779349345.1575987,
     "ast_hash": "6dbbef80b2099fd554ffb545634eb63d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Trusted Icons\\Icons\\128.png": {
-    "mtime": 1779182126.0569494,
+    "mtime": 1779349345.1695964,
     "ast_hash": "e2bb371f6b07b10305ca24291cff483b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Trusted Icons\\Icons\\256.png": {
-    "mtime": 1779182126.0649986,
+    "mtime": 1779349345.1765966,
     "ast_hash": "4fdb581e6cf5bfd83934b4061422fa9b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Trusted Icons\\Icons\\32.png": {
-    "mtime": 1779182126.0683646,
+    "mtime": 1779349345.1795998,
     "ast_hash": "4bbecb0a6051a77f04e4ccfa8f5ba05b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Trusted Icons\\Icons\\48.png": {
-    "mtime": 1779182126.0710547,
+    "mtime": 1779349345.1826034,
     "ast_hash": "681266d3462da0e54b9271951daf37f2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Trusted Icons\\Icons\\512.png": {
-    "mtime": 1779182126.0777495,
+    "mtime": 1779349345.1935973,
     "ast_hash": "58aabdee6a822e036f293ec80fcdddf5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Trusted Icons\\Icons\\64.png": {
-    "mtime": 1779182126.0802743,
+    "mtime": 1779349345.1960652,
     "ast_hash": "25d71158c67729a5dbcf539f288a64b0",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\cmkncekebbebpfilplodngbpllndjkfo\\Trusted Icons\\Icons\\96.png": {
-    "mtime": 1779182126.0824485,
+    "mtime": 1779349345.1980648,
     "ast_hash": "6dbbef80b2099fd554ffb545634eb63d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\efmjfjelnicpmdcmfikempdhlmainjcb\\Icons\\128.png": {
-    "mtime": 1779182126.0945945,
+    "mtime": 1779349345.2140627,
     "ast_hash": "e2bb371f6b07b10305ca24291cff483b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\efmjfjelnicpmdcmfikempdhlmainjcb\\Icons\\256.png": {
-    "mtime": 1779182126.101186,
+    "mtime": 1779349345.2230651,
     "ast_hash": "4fdb581e6cf5bfd83934b4061422fa9b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\efmjfjelnicpmdcmfikempdhlmainjcb\\Icons\\32.png": {
-    "mtime": 1779182126.1048663,
+    "mtime": 1779349345.2260678,
     "ast_hash": "4bbecb0a6051a77f04e4ccfa8f5ba05b",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\efmjfjelnicpmdcmfikempdhlmainjcb\\Icons\\48.png": {
-    "mtime": 1779182126.106431,
+    "mtime": 1779349345.2300658,
     "ast_hash": "681266d3462da0e54b9271951daf37f2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\efmjfjelnicpmdcmfikempdhlmainjcb\\Icons\\512.png": {
-    "mtime": 1779182126.112429,
+    "mtime": 1779349345.2410626,
     "ast_hash": "58aabdee6a822e036f293ec80fcdddf5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\efmjfjelnicpmdcmfikempdhlmainjcb\\Icons\\64.png": {
-    "mtime": 1779182126.113433,
+    "mtime": 1779349345.2430706,
     "ast_hash": "25d71158c67729a5dbcf539f288a64b0",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\efmjfjelnicpmdcmfikempdhlmainjcb\\Icons\\96.png": {
-    "mtime": 1779182126.1171348,
+    "mtime": 1779349345.2450671,
     "ast_hash": "6dbbef80b2099fd554ffb545634eb63d",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\odgpifffoffbmoignhipgelbnofjnbal\\Icons\\128.png": {
-    "mtime": 1779182126.1290915,
+    "mtime": 1779349345.2601101,
     "ast_hash": "22f77db18ec9ea967d5cd97d39039191",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\odgpifffoffbmoignhipgelbnofjnbal\\Icons\\256.png": {
-    "mtime": 1779182126.1371768,
+    "mtime": 1779349345.2686372,
     "ast_hash": "056b4c036e925f973684286c3f38fe4f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\odgpifffoffbmoignhipgelbnofjnbal\\Icons\\32.png": {
-    "mtime": 1779182126.1440105,
+    "mtime": 1779349345.2786343,
     "ast_hash": "8c16c5bc5e0024587a99baf18fbd613c",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\odgpifffoffbmoignhipgelbnofjnbal\\Icons\\48.png": {
-    "mtime": 1779182126.1511314,
+    "mtime": 1779349345.287639,
     "ast_hash": "37b9a8d9a7d6f783df34bcaf455b562f",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\odgpifffoffbmoignhipgelbnofjnbal\\Icons\\64.png": {
-    "mtime": 1779182126.1588702,
+    "mtime": 1779349345.2976406,
     "ast_hash": "68256a878399dd8a63b99914054131d2",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\odgpifffoffbmoignhipgelbnofjnbal\\Icons\\96.png": {
-    "mtime": 1779182126.1643796,
+    "mtime": 1779349345.3101854,
     "ast_hash": "8653c223b91ec293f684b6554c5f58a3",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\1024.png": {
-    "mtime": 1779182126.177921,
+    "mtime": 1779349345.3251967,
     "ast_hash": "7da67462a9fc34187dcbccbce3b097e5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\128.png": {
-    "mtime": 1779182126.1861784,
+    "mtime": 1779349345.3370235,
     "ast_hash": "20aade695266ab83c4eea1ed4697d6f5",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\16.png": {
-    "mtime": 1779182126.1941018,
+    "mtime": 1779349345.3499758,
     "ast_hash": "82ad418a47e36bdf5bbb2dbd293a6dce",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\256.png": {
-    "mtime": 1779182126.202134,
+    "mtime": 1779349345.3619945,
     "ast_hash": "a6e049a58c275be8ac2828be90bebf00",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\32.png": {
-    "mtime": 1779182126.2106552,
+    "mtime": 1779349345.3725562,
     "ast_hash": "20939fe763a3d9e08ffd16661d2e3c13",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\48.png": {
-    "mtime": 1779182126.2173479,
+    "mtime": 1779349345.3841066,
     "ast_hash": "215686ba566214543ef0a3d4a561f1f4",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\512.png": {
-    "mtime": 1779182126.2254887,
+    "mtime": 1779349345.3971052,
     "ast_hash": "1292979a99785791398c83666170ec15",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\64.png": {
-    "mtime": 1779182126.2330847,
+    "mtime": 1779349345.408928,
     "ast_hash": "3ce29d3fad6a3930a1ca5ba897b4c577",
     "semantic_hash": ""
   },
   "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Web Applications\\Manifest Resources\\pjibgclleladliembfgfagdaldikeohf\\Icons\\96.png": {
-    "mtime": 1779182126.2407281,
+    "mtime": 1779349345.4189427,
     "ast_hash": "a1bb08c9e72b16721fcaac5393221096",
     "semantic_hash": ""
   },
@@ -3327,6 +3267,761 @@
   "D:\\Projects\\finance_app_zo\\web_portal\\src\\assets\\vite.svg": {
     "mtime": 1778770808.5929523,
     "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\Copilot Tips\\CopilotTipsCache.json": {
+    "mtime": 1779349342.7073834,
+    "ast_hash": "b89c700851fe3bb9747a51de6db47faf",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\67029a0f3d2263c7e1b525f3d7904700\\dart_build_result.json": {
+    "mtime": 1779199903.0889091,
+    "ast_hash": "d22b322c291ebac3025e0487565a2c24",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\67029a0f3d2263c7e1b525f3d7904700\\native_assets.json": {
+    "mtime": 1779199903.3803256,
+    "ast_hash": "f3a664e105b4f792c6c7fe4e4d22c398",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\67029a0f3d2263c7e1b525f3d7904700\\outputs.json": {
+    "mtime": 1779199948.2295253,
+    "ast_hash": "d677cdfb6d8467b7a0a2880371dffceb",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\aca59f34831b1b90f0d572d9c2be0d1b\\dart_build_result.json": {
+    "mtime": 1779199798.264379,
+    "ast_hash": "a202805042a54d51315f9cd93ec12624",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\aca59f34831b1b90f0d572d9c2be0d1b\\native_assets.json": {
+    "mtime": 1779199798.3108613,
+    "ast_hash": "f3a664e105b4f792c6c7fe4e4d22c398",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\aca59f34831b1b90f0d572d9c2be0d1b\\outputs.json": {
+    "mtime": 1779354965.2308948,
+    "ast_hash": "d677cdfb6d8467b7a0a2880371dffceb",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\be9b479434006cc4f85239bb1f856d5b\\dart_build_result.json": {
+    "mtime": 1779345162.7468789,
+    "ast_hash": "35a9dff223759536379c126f9803e568",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\be9b479434006cc4f85239bb1f856d5b\\main.dart": {
+    "mtime": 1779345152.4931211,
+    "ast_hash": "601140d85fd800e8e25d30b4d8281c68",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\be9b479434006cc4f85239bb1f856d5b\\main.dart.js": {
+    "mtime": 1779345380.0669303,
+    "ast_hash": "859d8998b0ef0653e42c37e16dc3d11b",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\be9b479434006cc4f85239bb1f856d5b\\outputs.json": {
+    "mtime": 1779345545.5144022,
+    "ast_hash": "a64ad3b6533ff8f923dcfaab19100c71",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\flutter_build\\be9b479434006cc4f85239bb1f856d5b\\web_plugin_registrant.dart": {
+    "mtime": 1779345152.492118,
+    "ast_hash": "8ffe6cac39c0615d74acd88e44523a7d",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6782ff62a0\\dependencies.dependencies_hash_file.json": {
+    "mtime": 1779345162.7358692,
+    "ast_hash": "5875608ae264d9fb7eb52932869622df",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6782ff62a0\\hook.dependencies_hash_file.json": {
+    "mtime": 1779345161.4442768,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6782ff62a0\\input.json": {
+    "mtime": 1779345161.4688861,
+    "ast_hash": "f4d6dded43cd9ed1357bf25fdcba950a",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6782ff62a0\\output.json": {
+    "mtime": 1779345162.5188098,
+    "ast_hash": "0d8859ba43c1c9c3417c31c3d2e05344",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\965f1d63a0\\dependencies.dependencies_hash_file.json": {
+    "mtime": 1779199793.3498151,
+    "ast_hash": "2239a9fc363f697539155406e1a3c560",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\965f1d63a0\\hook.dependencies_hash_file.json": {
+    "mtime": 1779199792.474265,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\965f1d63a0\\input.json": {
+    "mtime": 1779199792.4822278,
+    "ast_hash": "01098b0349787cdf30aa6257d3d4f764",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\965f1d63a0\\output.json": {
+    "mtime": 1779199793.2373505,
+    "ast_hash": "ba3c3b93c5105116865a25a906795d82",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\98a16ff122\\dependencies.dependencies_hash_file.json": {
+    "mtime": 1779199798.261087,
+    "ast_hash": "2239a9fc363f697539155406e1a3c560",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\98a16ff122\\hook.dependencies_hash_file.json": {
+    "mtime": 1779199797.9431152,
+    "ast_hash": "0078994071a3a0626c6e1ce90c898539",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\98a16ff122\\input.json": {
+    "mtime": 1779199797.9451268,
+    "ast_hash": "56a0c751c67c9f5e5b83381f570d6b06",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\98a16ff122\\output.json": {
+    "mtime": 1779199798.228022,
+    "ast_hash": "005cbdb7242dd7f6de878d0a6408e7f2",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.openclaude\\settings.local.json": {
+    "mtime": 1779354509.0884602,
+    "ast_hash": "9e14f75686262124802acaad90cd7a2a",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\core\\utils\\auto_refresh_mixin.dart": {
+    "mtime": 1779304397.921173,
+    "ast_hash": "3c717d1708740478a29ab167d457775a",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\auth\\presentation\\pages\\splash_page.dart": {
+    "mtime": 1779252129.173519,
+    "ast_hash": "f8852c5b9748245785a9e14557f08ea0",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\models\\customer_emi_model.dart": {
+    "mtime": 1779311646.07883,
+    "ast_hash": "5c527dd9bae40e10043f6c645fc4ec55",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\models\\customer_loan_model.dart": {
+    "mtime": 1779311645.4595876,
+    "ast_hash": "7877d82518550074d82adf5ef96c8ad9",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\models\\customer_notification_model.dart": {
+    "mtime": 1779303525.961589,
+    "ast_hash": "a39c8369cf67e3884658148b4b70603d",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\models\\customer_savings_model.dart": {
+    "mtime": 1779311841.220839,
+    "ast_hash": "7773ea6d35bc147c3ff517a39a61cf97",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\models\\customer_ticket_model.dart": {
+    "mtime": 1779303526.0667262,
+    "ast_hash": "3a55f0be6fe0f6f4067bf85d7830b989",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\models\\customer_transaction_model.dart": {
+    "mtime": 1779311634.3162892,
+    "ast_hash": "e35c7120fedf574da723669c38c194de",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\providers\\customer_home_providers.dart": {
+    "mtime": 1779304599.592531,
+    "ast_hash": "274f607b61a7961763965ce445749cde",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\providers\\customer_loans_providers.dart": {
+    "mtime": 1779303983.454656,
+    "ast_hash": "ae0323f5abd54cf9a411defda19bec53",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\providers\\customer_member_provider.dart": {
+    "mtime": 1779309868.634392,
+    "ast_hash": "d57256d42afda6e97063a300b2369b18",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\providers\\customer_notifications_providers.dart": {
+    "mtime": 1779303601.6814234,
+    "ast_hash": "23767c5b1048caa9bf7277acfc1a5377",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\providers\\customer_savings_providers.dart": {
+    "mtime": 1779311685.919889,
+    "ast_hash": "cd336577e260dc7054b47e294236b47a",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\providers\\customer_support_providers.dart": {
+    "mtime": 1779303983.6099174,
+    "ast_hash": "985ec9c1420573816e22ed492cf068bc",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\repositories\\customer_home_repository.dart": {
+    "mtime": 1779307664.629057,
+    "ast_hash": "9b84413cacb89214436f56d8717cbb52",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\repositories\\customer_loans_repository.dart": {
+    "mtime": 1779304079.4658597,
+    "ast_hash": "1095c50043ce373c5a6983c77f7c10a0",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\repositories\\customer_notifications_repository.dart": {
+    "mtime": 1779303569.2381015,
+    "ast_hash": "d24651457a505ae0fc849a8bc9f3bd0f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\repositories\\customer_savings_repository.dart": {
+    "mtime": 1779311680.2633657,
+    "ast_hash": "bafc7163dcb8cedadb1c5c30b810c3de",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\data\\repositories\\customer_support_repository.dart": {
+    "mtime": 1779303569.297206,
+    "ast_hash": "6f97fbf3757b4341369f66c63a00d878",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_emi_schedule_page.dart": {
+    "mtime": 1779304002.6518986,
+    "ast_hash": "c728ab1074d61f01e65a3ce6d6916555",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_home_page.dart": {
+    "mtime": 1779307696.3022137,
+    "ast_hash": "0915cc8d6e60670f6d7bb1539a535bc7",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_loan_detail_page.dart": {
+    "mtime": 1779303992.6965177,
+    "ast_hash": "cb4a79e2618af60151651f9d799b1827",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_notifications_page.dart": {
+    "mtime": 1779304002.819975,
+    "ast_hash": "42a57e0bdbd7c8e08cdc12ff81c91f77",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_savings_detail_page.dart": {
+    "mtime": 1779311663.7082772,
+    "ast_hash": "2665643cd34edc2df2c4b3a83012df10",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_support_page.dart": {
+    "mtime": 1779360649.0101476,
+    "ast_hash": "da5594fd83162e8852883ec60ee279b9",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\pages\\customer_transactions_page.dart": {
+    "mtime": 1779304607.9103348,
+    "ast_hash": "70fa304e39e87adf69ac62533a770cdc",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_emi_tile.dart": {
+    "mtime": 1779303660.18649,
+    "ast_hash": "f7827b09dd66e1b87ece626ebeee1cea",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_empty_state.dart": {
+    "mtime": 1779303660.454689,
+    "ast_hash": "9eaaa95ac8428e0e6fe20587826b7e24",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_loan_card.dart": {
+    "mtime": 1779303992.51168,
+    "ast_hash": "b45090db3011b0ae52eecff32acb0a3b",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_notification_tile.dart": {
+    "mtime": 1779303660.3193388,
+    "ast_hash": "859db6e9c4fa9ed9ba2906a3e234e704",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_savings_card.dart": {
+    "mtime": 1779311663.569291,
+    "ast_hash": "aaaee20a40ea63866a85f0179c73c92e",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_stats_card.dart": {
+    "mtime": 1779303659.9552057,
+    "ast_hash": "8026bf0c7e8a1135ae4c16dd1e039dd2",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_ticket_card.dart": {
+    "mtime": 1779303660.3876529,
+    "ast_hash": "4b95eafc5792a5d88d0d5b89e13cefdd",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\customer_portal\\presentation\\widgets\\customer_transaction_tile.dart": {
+    "mtime": 1779303660.2525172,
+    "ast_hash": "d5a885a1857523112b0c27dce740dc26",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\payments\\data\\models\\today_payment_model.dart": {
+    "mtime": 1779314130.9041648,
+    "ast_hash": "c1c3cdf3af36ba942897b58477e7944c",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\payments\\data\\providers\\payment_providers.dart": {
+    "mtime": 1779342233.1368222,
+    "ast_hash": "b2bbdce8f9d9b649e5071334fbcc5a31",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\payments\\data\\utils\\payment_export.dart": {
+    "mtime": 1779272121.627774,
+    "ast_hash": "458e21dde950c4c5c32e78b6d57a3de7",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\payments\\presentation\\pages\\today_payments_page.dart": {
+    "mtime": 1779360386.574301,
+    "ast_hash": "1cc274f284342cafe08d917a682cefea",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\lib\\features\\setup\\data\\providers\\setup_provider.dart": {
+    "mtime": 1779251231.137883,
+    "ast_hash": "df450ce3736b232132b0b6b52630f907",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\middleware.ts": {
+    "mtime": 1779262898.448817,
+    "ast_hash": "f56ac7f711de2bb3593edadbae7137ee",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\next-env.d.ts": {
+    "mtime": 1779264597.4032235,
+    "ast_hash": "187b4b5b507c358a018aeeadd81abe57",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\next.config.mjs": {
+    "mtime": 1779256426.7019308,
+    "ast_hash": "51086e2bbacd5db2b3b84a7cae1c060c",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\package.json": {
+    "mtime": 1779263320.471447,
+    "ast_hash": "06a7fbdae5afd298434737cdade764c0",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\postcss.config.mjs": {
+    "mtime": 1779256430.9942722,
+    "ast_hash": "d1283e7566e136247b268494a6a545eb",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\tailwind.config.ts": {
+    "mtime": 1779259330.7411437,
+    "ast_hash": "f6e33a39ed9beb773aac85ca1bfa0454",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\tsconfig.json": {
+    "mtime": 1779256414.8350186,
+    "ast_hash": "59d04a5c98b0cc2f594d0091f435cca9",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\vercel.json": {
+    "mtime": 1779262468.3422565,
+    "ast_hash": "b2e954d99ee83424033ef273c8ff1c00",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\layout.tsx": {
+    "mtime": 1779264685.2071311,
+    "ast_hash": "a564f8e65e440fb8cc0ce45fa971999d",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\not-found.tsx": {
+    "mtime": 1779262898.5285983,
+    "ast_hash": "029070dbffe103c0fa92f71b23df131e",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\opengraph-image.tsx": {
+    "mtime": 1779262898.3658893,
+    "ast_hash": "865ec5e795302aac542d920cef171e8b",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\robots.ts": {
+    "mtime": 1779262898.2730358,
+    "ast_hash": "36be3eb2dbdaa587b1c62f5bd7904535",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\sitemap.ts": {
+    "mtime": 1779262898.1739297,
+    "ast_hash": "dba7432a201bafbbc0699ba98b4f4e37",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\layout.tsx": {
+    "mtime": 1779262247.6421654,
+    "ast_hash": "d976822965364dd43a6aceca677f47b2",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\page.tsx": {
+    "mtime": 1779262954.3046432,
+    "ast_hash": "46ade6ee3ff4c235c61e2cc66a6ae7ac",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\about\\page.tsx": {
+    "mtime": 1779262954.6163125,
+    "ast_hash": "9102b8653728618da86b43b8ad39c932",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\contact\\page.tsx": {
+    "mtime": 1779264659.3880894,
+    "ast_hash": "91c26638ec05e9c2cac9ab98e8462446",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\features\\page.tsx": {
+    "mtime": 1779262954.4038608,
+    "ast_hash": "f567c718413969ac04aec0a83d23be5f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\pricing\\page.tsx": {
+    "mtime": 1779262954.5252833,
+    "ast_hash": "c6d18a598f026d083c8824707935a46d",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\privacy\\page.tsx": {
+    "mtime": 1779262998.0945494,
+    "ast_hash": "740a8ad278c61c0648ca7d5e6aabcfe8",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\(marketing)\\terms\\page.tsx": {
+    "mtime": 1779262998.1849833,
+    "ast_hash": "6a5c1c5f592ce1c1abf9fb5c69a64f88",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\actions\\submit-lead.ts": {
+    "mtime": 1779262784.892128,
+    "ast_hash": "030cb6ad3f767a7aeef702ece8f06168",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\blog\\page.tsx": {
+    "mtime": 1779262954.7840028,
+    "ast_hash": "5e08990884d6fbb3ffdb99e83f601b9d",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\app\\blog\\[slug]\\page.tsx": {
+    "mtime": 1779262954.909802,
+    "ast_hash": "d6cb2193fa4c3d27fc40722cfcc0c80d",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\blog\\ArticleJsonLd.tsx": {
+    "mtime": 1779262467.5386257,
+    "ast_hash": "e7c169c2ec860ff2dadab754cdfef791",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\blog\\PostBody.tsx": {
+    "mtime": 1779262466.8667917,
+    "ast_hash": "3da57eff4cc4417f7450f5e2ddaae841",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\blog\\PostCard.tsx": {
+    "mtime": 1779262466.4480493,
+    "ast_hash": "2b9f9e626efc1a045769b1a0cf5f627e",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\blog\\PostHeader.tsx": {
+    "mtime": 1779262466.660246,
+    "ast_hash": "3351755eb4b24e1591cebe828c26b842",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\demo\\DemoBookingTrigger.tsx": {
+    "mtime": 1779262465.7091012,
+    "ast_hash": "1b706ffebbd6866b6c4fd22ab373930f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\demo\\DemoModal.tsx": {
+    "mtime": 1779262465.9575171,
+    "ast_hash": "37024e696cdc0576d9d6e657452540e4",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\forms\\ContactForm.tsx": {
+    "mtime": 1779262841.116656,
+    "ast_hash": "1baf9cf966e477d005239f6f2b61aa63",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\layout\\Footer.tsx": {
+    "mtime": 1779262247.5658734,
+    "ast_hash": "59f14dc783dee18309a74d90e4126a52",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\layout\\MobileMenu.tsx": {
+    "mtime": 1779262247.4978166,
+    "ast_hash": "f1088b0010bf501c88cd4b5110959a2f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\layout\\Nav.tsx": {
+    "mtime": 1779262247.417905,
+    "ast_hash": "1960f856b6add02929c6d619205371e7",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\layout\\SkipLink.tsx": {
+    "mtime": 1779262166.5404081,
+    "ast_hash": "bf33235991cff655b5e518ff47f51b95",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\layout\\ThemeProvider.tsx": {
+    "mtime": 1779262166.315081,
+    "ast_hash": "cf44cb8d24f02d0b9551e2a4b511ee7a",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\layout\\ThemeToggle.tsx": {
+    "mtime": 1779262166.3834994,
+    "ast_hash": "c8d5ad0e1bcff6e793e75870dec0b5c9",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\CtaBand.tsx": {
+    "mtime": 1779262464.8928037,
+    "ast_hash": "f0404e2ad4b1535bd44013a15a98bdcb",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\FaqAccordion.tsx": {
+    "mtime": 1779262465.4589758,
+    "ast_hash": "e69c031feb26a77f6006fa935468bb04",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\FeatureComparisonTable.tsx": {
+    "mtime": 1779262465.2730367,
+    "ast_hash": "db124f2f680c7e7c2bea667cf0356a07",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\FeatureHighlights.tsx": {
+    "mtime": 1779262464.1914914,
+    "ast_hash": "92120173de729ee4c8ddbfc67bc65326",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\Hero.tsx": {
+    "mtime": 1779262463.9737744,
+    "ast_hash": "d6ede095dd4c9ee80ee1a152fe7079b7",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\MfiWorkflowVisual.tsx": {
+    "mtime": 1779262464.7778716,
+    "ast_hash": "68f2ee7033f7b90e904e7f88e81eefec",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\NumbersStrip.tsx": {
+    "mtime": 1779262464.5546198,
+    "ast_hash": "b913b5e1cf96571ffa4d3176d163833e",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\PainPoints.tsx": {
+    "mtime": 1779262464.0695655,
+    "ast_hash": "aaf62043295d0b0e0716223a02482396",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\PricingCards.tsx": {
+    "mtime": 1779262465.015137,
+    "ast_hash": "ebcff9959a86f46de6fcc286ca1d0920",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\sections\\RolePivot.tsx": {
+    "mtime": 1779262464.3891945,
+    "ast_hash": "d5032e70265a0d89f51d79bd038e8199",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\seo\\buildMetadata.ts": {
+    "mtime": 1779262166.2360365,
+    "ast_hash": "16eca6d758312866143cb41c38ae1ec9",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\badge.tsx": {
+    "mtime": 1779262167.224019,
+    "ast_hash": "667cf20220dbb11ca2f4d02aa668d546",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\button.tsx": {
+    "mtime": 1779262166.6198626,
+    "ast_hash": "587e9f341ba822167723d67070d36e72",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\card.tsx": {
+    "mtime": 1779262167.1170554,
+    "ast_hash": "8186046366efc803979eb81e9b6f84d2",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\container.tsx": {
+    "mtime": 1779262167.2938354,
+    "ast_hash": "da44c1fa8c306a95d0431aa478f14e0a",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\field-error.tsx": {
+    "mtime": 1779262167.0472255,
+    "ast_hash": "507b86b4c63905be44a43ff040751486",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\input.tsx": {
+    "mtime": 1779262166.761325,
+    "ast_hash": "b02f25b1923ac68eefe20e49e6dc72ef",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\label.tsx": {
+    "mtime": 1779262166.9524426,
+    "ast_hash": "facabad4ea082773da0beaa87d2dbbb0",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\section.tsx": {
+    "mtime": 1779262167.3959286,
+    "ast_hash": "5b77162ee5bab9d7b333ae0f67ef39d6",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\select.tsx": {
+    "mtime": 1779262166.8950117,
+    "ast_hash": "340617bf677c2a983546286e5c108af4",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\components\\ui\\textarea.tsx": {
+    "mtime": 1779262166.835142,
+    "ast_hash": "265cf1e6c549b2cf1513bcdea0684ac8",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\lib\\env.ts": {
+    "mtime": 1779259401.4438906,
+    "ast_hash": "0a63bbe886f19dbdd6280f0954a224aa",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\lib\\mdx.ts": {
+    "mtime": 1779262466.1695497,
+    "ast_hash": "1e257f606547ff1a3da4da0d38b096e9",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\lib\\pricing.ts": {
+    "mtime": 1779259389.351462,
+    "ast_hash": "52797331dbb19ebc515881a1f47f67c4",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\lib\\site-config.ts": {
+    "mtime": 1779259331.0439005,
+    "ast_hash": "455c1bc2b5313c942160372b9a827c73",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\lib\\utils.ts": {
+    "mtime": 1779262166.0539892,
+    "ast_hash": "cc7470c32185bc8be14962356442f649",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\lib\\supabase\\server.ts": {
+    "mtime": 1779262166.1262472,
+    "ast_hash": "0e02078ad62a6618d55fac25d5d50e3b",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\lib\\supabase\\types.ts": {
+    "mtime": 1779259401.4438906,
+    "ast_hash": "0eaaacdb4acd1f3550fd0587c12c88be",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\supabase\\migrations\\20240101000000_marketing_leads.sql": {
+    "mtime": 1779259389.6837754,
+    "ast_hash": "b36fdf28dd9eb090645349c54f4a6b91",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\supabase\\customer_portal_rebuild.sql": {
+    "mtime": 1779305224.589026,
+    "ast_hash": "a51843cec7841f25c0c24f69444c0f44",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\chrome-device\\Default\\WebStorage\\3\\CacheStorage\\index.txt": {
+    "mtime": 1779349345.5021818,
+    "ast_hash": "ed522e1d3238207449abb82b326a4365",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6782ff62a0\\stderr.txt": {
+    "mtime": 1779345161.4788399,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\6782ff62a0\\stdout.txt": {
+    "mtime": 1779345161.4893837,
+    "ast_hash": "c54f8221d7b72258f742e011bcf04504",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\965f1d63a0\\stderr.txt": {
+    "mtime": 1779199792.487215,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\965f1d63a0\\stdout.txt": {
+    "mtime": 1779199792.498511,
+    "ast_hash": "dabde74ef8a650b92f2242de504007bc",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\98a16ff122\\stderr.txt": {
+    "mtime": 1779199797.9476373,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.dart_tool\\hooks_runner\\objective_c\\98a16ff122\\stdout.txt": {
+    "mtime": 1779199797.9532726,
+    "ast_hash": "830ec65bd960757951cb03c3eee8eab1",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.kiro\\specs\\marketing-landing-site\\design.md": {
+    "mtime": 1779255113.760075,
+    "ast_hash": "4a2f3827e7a9af5a2ad0374212742dec",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.kiro\\specs\\marketing-landing-site\\requirements.md": {
+    "mtime": 1779254501.9873798,
+    "ast_hash": "621b7496cb695f4c85b12148158543ca",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\.kiro\\specs\\marketing-landing-site\\tasks.md": {
+    "mtime": 1779265046.5725467,
+    "ast_hash": "2d7fee090b726af171d635c78e39f8f7",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\README.md": {
+    "mtime": 1779259364.030761,
+    "ast_hash": "4bec0951b2b86fc92bf2f1b2f0b0591a",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\content\\blog\\2026-01-mfi-collections.mdx": {
+    "mtime": 1779262468.078112,
+    "ast_hash": "643d5b48fd72c1602c339b5c69df184c",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\marketing_site\\content\\blog\\2026-02-staff-gamification.mdx": {
+    "mtime": 1779262468.2204144,
+    "ast_hash": "1d753c7ee6cc85581c532c89070bb947",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\fs-removebg-preview.png": {
+    "mtime": 1779195987.739364,
+    "ast_hash": "8303af8bfea0a35e0fc71a7117ffa77f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher_future_swarupnagar.png": {
+    "mtime": 1779195987.739364,
+    "ast_hash": "8303af8bfea0a35e0fc71a7117ffa77f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher_future_swarupnagar.png": {
+    "mtime": 1779195987.739364,
+    "ast_hash": "8303af8bfea0a35e0fc71a7117ffa77f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher_future_swarupnagar.png": {
+    "mtime": 1779195987.739364,
+    "ast_hash": "8303af8bfea0a35e0fc71a7117ffa77f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher_future_swarupnagar.png": {
+    "mtime": 1779195987.739364,
+    "ast_hash": "8303af8bfea0a35e0fc71a7117ffa77f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher_future_swarupnagar.png": {
+    "mtime": 1779195987.739364,
+    "ast_hash": "8303af8bfea0a35e0fc71a7117ffa77f",
+    "semantic_hash": ""
+  },
+  "D:\\Projects\\finance_app_zo\\assets\\icons\\preset_future_swarupnagar.png": {
+    "mtime": 1779195987.739364,
+    "ast_hash": "8303af8bfea0a35e0fc71a7117ffa77f",
     "semantic_hash": ""
   }
 }

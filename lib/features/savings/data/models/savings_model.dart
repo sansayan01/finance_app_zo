@@ -14,6 +14,7 @@ class SavingsModel {
   final double prematurePenalty;
   final int totalInstallments;
   final double maturityAmount;
+  final DateTime? nextDueDate;
 
   SavingsModel({
     required this.id,
@@ -31,6 +32,7 @@ class SavingsModel {
     this.prematurePenalty = 2.0,
     this.totalInstallments = 12,
     this.maturityAmount = 0.0,
+    this.nextDueDate,
   });
 
   factory SavingsModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +52,9 @@ class SavingsModel {
       prematurePenalty: (json['premature_penalty'] as num?)?.toDouble() ?? 2.0,
       totalInstallments: (json['total_installments'] as num?)?.toInt() ?? 12,
       maturityAmount: (json['maturity_amount'] as num?)?.toDouble() ?? 0.0,
+      nextDueDate: json['next_due_date'] != null
+          ? DateTime.tryParse(json['next_due_date'] as String)
+          : null,
     );
   }
 

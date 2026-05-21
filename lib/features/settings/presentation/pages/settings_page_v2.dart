@@ -412,6 +412,7 @@ class SettingsPageV2 extends ConsumerWidget {
   void _showComingSoon(BuildContext context, String title, String description, Color color) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       showDragHandle: true,
       backgroundColor: Theme.of(context).cardColor,
@@ -481,6 +482,7 @@ class SettingsPageV2 extends ConsumerWidget {
   void _showSupportDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       showDragHandle: true,
       backgroundColor: Theme.of(context).cardColor,

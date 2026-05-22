@@ -45,7 +45,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       ref.invalidate(dashboardSavingsProvider);
       ref.invalidate(dashboardTransactionsProvider);
       ref.invalidate(todayStatsProvider);
-      ref.invalidate(todayAgendaProvider);
       ref.invalidate(activeLoansProvider);
       ref.invalidate(activeSavingsProvider);
       ref.invalidate(pendingDepositsProvider);
@@ -67,7 +66,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               ref.invalidate(dashboardSavingsProvider);
               ref.invalidate(dashboardTransactionsProvider);
               ref.invalidate(todayStatsProvider);
-              ref.invalidate(todayAgendaProvider);
               ref.invalidate(activeLoansProvider);
               ref.invalidate(activeSavingsProvider);
               ref.invalidate(pendingDepositsProvider);
@@ -92,8 +90,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                   _buildFinancialSummaryStrip(context, ref),
                   const SizedBox(height: 28),
                   _buildQuickActions(context, ref),
-                  const SizedBox(height: 28),
-                  _buildTodayAgenda(context, ref),
                   const SizedBox(height: 28),
                   _buildActiveLoansSection(context, ref),
                   const SizedBox(height: 28),
@@ -214,156 +210,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
     );
-  }
-
-  Widget _buildTodayAgenda(BuildContext context, WidgetRef ref) {
-    final agendaAsync = ref.watch(todayAgendaProvider);
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Today's Agenda",
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Due Today',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        agendaAsync.when(
-          data: (items) {
-            if (items.isEmpty) {
-              return GlassCard(
-                padding: const EdgeInsets.all(24),
-                child: Center(
-                  child: Text('No collections due today',
-                      style: theme.textTheme.bodySmall),
-                ),
-              );
-            }
-            return Column(
-              children: items.map((item) {
-                final isLoan = item is LoanModel;
-                final isMap = item is Map<String, dynamic>;
-                final String displayName;
-                final double displayAmount;
-
-                if (isMap) {
-                  final loan = item['loans'] as Map<String, dynamic>?;
-                  final member = loan?['members'] as Map<String, dynamic>?;
-                  displayName = member?['full_name'] ?? 'Unknown';
-                  displayAmount = (item['emi_amount'] as num?)?.toDouble() ?? 0;
-                } else if (isLoan) {
-                  displayName = item.customerName ?? 'Unknown';
-                  displayAmount = item.emiAmount;
-                } else {
-                  displayName = (item as SavingsModel).memberName;
-                  displayAmount = item.monthlyDeposit;
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(16),
-                    onTap: () {
-                      if (isMap) {
-                        context.push('/payments');
-                      } else if (isLoan) {
-                        context.push('/loans/${item.id}');
-                      } else {
-                        context.push('/savings/${item.id}');
-                      }
-                    },
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color:
-                                (isLoan || isMap ? AppColors.primary : AppColors.orange)
-                                    .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            isLoan || isMap
-                                ? Icons.payments_rounded
-                                : Icons.savings_rounded,
-                            color:
-                                isLoan || isMap ? AppColors.primary : AppColors.orange,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                displayName,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                isMap ? 'Loan EMI Due' : (isLoan ? 'Loan EMI Due' : 'Savings Installment'),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              AppFormatters.formatCurrency(displayAmount),
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                            Text(
-                              'Tap to collect',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            );
-          },
-          loading: () => ShimmerCard(height: 150),
-          error: (_, __) => const SizedBox.shrink(),
-        ),
-      ],
-    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.05, end: 0);
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {

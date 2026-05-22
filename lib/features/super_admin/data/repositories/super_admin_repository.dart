@@ -673,10 +673,11 @@ class SuperAdminRepository {
   /// Update platform setting
   Future<bool> updatePlatformSetting(String key, dynamic value) async {
     try {
-      await _client.from('platform_settings').update({
+      await _client.from('platform_settings').upsert({
+        'key': key,
         'value': value,
         'updated_at': DateTime.now().toIso8601String(),
-      }).eq('key', key);
+      }, onConflict: 'key');
       return true;
     } catch (e) {
       return false;

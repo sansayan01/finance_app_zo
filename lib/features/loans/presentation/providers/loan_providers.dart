@@ -7,6 +7,7 @@ import '../../../../core/constants/enums.dart';
 
 import '../../data/repositories/emi_repository.dart';
 import '../../data/models/emi_schedule_model.dart';
+import '../../data/services/loan_statement_archive_service.dart';
 
 final loansRepositoryProvider = Provider<LoansRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
@@ -16,6 +17,19 @@ final loansRepositoryProvider = Provider<LoansRepository>((ref) {
 final emiRepositoryProvider = Provider<EMIRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return EMIRepository(ref.watch(supabaseClientProvider), orgId);
+});
+
+final loanStatementArchiveServiceProvider =
+    Provider<LoanStatementArchiveService>((ref) {
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return LoanStatementArchiveService(
+      ref.watch(supabaseClientProvider), orgId);
+});
+
+final pastLoanStatementsProvider = FutureProvider.autoDispose
+    .family<List<LoanStatementArchive>, String>((ref, loanId) async {
+  final svc = ref.watch(loanStatementArchiveServiceProvider);
+  return svc.listForLoan(loanId);
 });
 
 final allLoansProvider = FutureProvider<List<LoanModel>>((ref) async {

@@ -2,21 +2,31 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:open_filex/open_filex.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/providers/branding_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../providers/loan_providers.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show overdueLoansProvider, dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
 import '../../data/models/loan_model.dart';
 import '../../data/models/emi_schedule_model.dart';
+import '../../data/services/loan_statement_pdf_service.dart';
+import '../../data/services/loan_statement_excel_service.dart';
+import '../../data/services/loan_statement_csv_service.dart';
+import '../../data/services/loan_statement_archive_service.dart';
+import '../../data/services/qr_png.dart';
 import '../widgets/collection_sheet.dart';
+import '../widgets/statement_options_sheet.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class LoanDetailPage extends ConsumerStatefulWidget {
@@ -218,6 +228,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   if (val == 'statement') {
                     _handlePdfExport();
                   }
+                  if (val == 'past_statements') {
+                    _showPastStatements();
+                  }
                   if (val == 'default') {
                     _handleStatusChange(LoanStatus.defaultStatus);
                   }
@@ -288,6 +301,16 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         Icon(Icons.description_outlined, size: 18),
                         SizedBox(width: 12),
                         Text('Download Statement'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'past_statements',
+                    child: Row(
+                      children: [
+                        Icon(Icons.history_rounded, size: 18),
+                        SizedBox(width: 12),
+                        Text('Past Statements'),
                       ],
                     ),
                   ),
@@ -3370,93 +3393,520 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Future<void> _handlePdfExport() async {
     HapticFeedback.mediumImpact();
+    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
+    if (loan == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Loan not loaded yet')));
+      return;
+    }
+
+    final options = await showModalBottomSheet<StatementOptions>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => StatementOptionsSheet(
+        loanStart: loan.disbursementDate ?? loan.createdAt,
+      ),
+    );
+    if (options == null || !mounted) return;
+
     final messenger = ScaffoldMessenger.of(context);
-    messenger
-        .showSnackBar(const SnackBar(content: Text('Generating statement...')));
+    messenger.showSnackBar(
+        const SnackBar(content: Text('Generating statement…')));
 
     try {
-      final loan = ref.read(loanDetailProvider(widget.loanId)).value;
-      if (loan == null) return;
+      final schedule = await ref.read(emiScheduleProvider(widget.loanId).future);
+      final payments = await ref.read(paymentHistoryProvider(widget.loanId).future);
+      final orgRaw = await ref.read(currentOrgProvider.future);
+      final brandingState = ref.read(brandingProvider);
+      final logoBytes = brandingState.value != null
+          ? ref.read(brandingProvider.notifier).cachedLogoBytes
+          : null;
 
-      final schedule =
-          await ref.read(emiScheduleProvider(widget.loanId).future);
-      final payments =
-          await ref.read(paymentHistoryProvider(widget.loanId).future);
+      final org = LoanStatementOrgInfo(
+        name: (orgRaw?['display_name'] ??
+                orgRaw?['name'] ??
+                'MicroFlow Pro')
+            .toString(),
+        address: orgRaw?['address'] as String?,
+        city: orgRaw?['city'] as String?,
+        state: orgRaw?['state'] as String?,
+        pincode: orgRaw?['pincode'] as String?,
+        phone: orgRaw?['phone'] as String?,
+        email: orgRaw?['email'] as String?,
+        gstNumber: orgRaw?['gst_number'] as String?,
+        logoBytes: logoBytes,
+      );
 
-      final sb = StringBuffer();
-      sb.writeln('========================================');
-      sb.writeln('        LOAN STATEMENT');
-      sb.writeln('========================================');
-      sb.writeln('');
-      sb.writeln('Loan Number: ${loan.loanNumber}');
-      sb.writeln('Customer: ${loan.customerName ?? 'N/A'}');
-      sb.writeln('Phone: ${loan.customerPhone ?? 'N/A'}');
-      sb.writeln(
-          'Generated: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}');
-      sb.writeln('');
-      sb.writeln('----------------------------------------');
-      sb.writeln('LOAN DETAILS');
-      sb.writeln('----------------------------------------');
-      sb.writeln('Principal: ${AppFormatters.formatCurrency(loan.amount)}');
-      sb.writeln('Interest Rate: ${loan.interestRate}%');
-      sb.writeln('Interest Type: ${loan.interestType.name.toUpperCase()}');
-      sb.writeln('Tenure: ${loan.formattedTenure}');
-      sb.writeln('EMI Amount: ${AppFormatters.formatCurrency(loan.emiAmount)}');
-      sb.writeln(
-          'Total Interest: ${AppFormatters.formatCurrency(loan.totalInterest)}');
-      sb.writeln(
-          'Total Repayable: ${AppFormatters.formatCurrency(loan.totalRepayable)}');
-      sb.writeln(
-          'Outstanding: ${AppFormatters.formatCurrency(loan.outstandingBalance)}');
-      sb.writeln('Status: ${loan.status.name.toUpperCase()}');
-      sb.writeln('');
-      sb.writeln('----------------------------------------');
-      sb.writeln('EMI SCHEDULE');
-      sb.writeln('----------------------------------------');
-      for (final emi in schedule) {
-        sb.writeln(
-            'EMI #${emi.emiNumber} | Due: ${emi.dueDate.day}/${emi.dueDate.month}/${emi.dueDate.year} | Amount: ${AppFormatters.formatCurrency(emi.emiAmount)} | Principal: ${AppFormatters.formatCurrency(emi.principal)} | Interest: ${AppFormatters.formatCurrency(emi.interest)} | Balance: ${AppFormatters.formatCurrency(emi.balanceAfter)} | Status: ${emi.status.name.toUpperCase()}');
-        if (emi.paidOn != null) {
-          sb.writeln(
-              '   Paid on: ${emi.paidOn!.day}/${emi.paidOn!.month}/${emi.paidOn!.year} via ${emi.paymentMode?.name ?? 'N/A'}');
-        }
+      final mappedPayments = payments.map((p) {
+        return LoanStatementPayment(
+          date: _getPaymentDate(p),
+          amount: (p['amount'] as num?)?.toDouble() ?? 0.0,
+          mode: (p['payment_mode'] as String?) ?? 'cash',
+          referenceNumber: p['reference_number'] as String?,
+          notes: p['notes'] as String?,
+          collectedByName: p['collected_by_name'] as String?,
+          collectedByRole: p['collected_by_role'] as String?,
+        );
+      }).toList();
+
+      final now = DateTime.now();
+      final ref0 =
+          'STMT-${loan.loanNumber}-${now.millisecondsSinceEpoch.toRadixString(36).toUpperCase()}';
+
+      // QR code links to a verification URL containing the ref. The PDF
+      // embeds the QR; verifying scans match the hash in the archive row.
+      final verifyUrl =
+          'https://verify.microflow.app/statement/$ref0';
+      final qrBytes = options.format == StatementFormat.pdf
+          ? await QrPng.generate(verifyUrl, size: 200)
+          : null;
+
+      late final Uint8List bytes;
+      late final String ext;
+      late final String mime;
+
+      switch (options.format) {
+        case StatementFormat.pdf:
+          bytes = await LoanStatementPdfService.build(
+            loan: loan,
+            schedule: schedule,
+            payments: mappedPayments,
+            org: org,
+            periodStart: options.periodStart,
+            periodEnd: options.periodEnd,
+            variant: options.variant,
+            generatedByName: ref.read(currentUserProvider)?.fullName,
+            statementRef: ref0,
+            qrPngBytes: qrBytes,
+          );
+          ext = 'pdf';
+          mime = 'application/pdf';
+          break;
+        case StatementFormat.excel:
+          bytes = LoanStatementExcelService.build(
+            loan: loan,
+            schedule: schedule,
+            payments: mappedPayments,
+            org: org,
+            periodStart: options.periodStart,
+            periodEnd: options.periodEnd,
+            variant: options.variant,
+            statementRef: ref0,
+          );
+          ext = 'xlsx';
+          mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case StatementFormat.csv:
+          bytes = LoanStatementCsvService.build(
+            loan: loan,
+            schedule: schedule,
+            payments: mappedPayments,
+            periodStart: options.periodStart,
+            periodEnd: options.periodEnd,
+            variant: options.variant,
+          );
+          ext = 'csv';
+          mime = 'text/csv';
+          break;
       }
-      sb.writeln('');
-      sb.writeln('----------------------------------------');
-      sb.writeln('PAYMENT HISTORY');
-      sb.writeln('----------------------------------------');
-      if (payments.isEmpty) {
-        sb.writeln('No payments recorded yet.');
-      } else {
-        for (final payment in payments) {
-          final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
-          final mode = payment['payment_mode'] as String? ?? 'cash';
-          final date = _getPaymentDate(payment);
-          final notes = payment['notes'] as String?;
-          sb.writeln(
-              '${date.day}/${date.month}/${date.year} | $mode | ${AppFormatters.formatCurrency(amount)}${notes != null ? ' | $notes' : ''}');
-        }
-      }
-      sb.writeln('');
-      sb.writeln('========================================');
-      sb.writeln('End of Statement');
-      sb.writeln('========================================');
 
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/loan_statement_${loan.loanNumber}.txt');
-      await file.writeAsString(sb.toString());
+      final file = File(
+          '${dir.path}/loan_statement_${loan.loanNumber}_${now.millisecondsSinceEpoch}.$ext');
+      await file.writeAsBytes(bytes);
+
+      // Archive: upload to Supabase Storage + insert metadata row with SHA-256
+      try {
+        final me = ref.read(currentUserProvider);
+        // Look up profile id from auth user id
+        final supa = ref.read(supabaseClientProvider);
+        String? profileId;
+        if (me != null) {
+          final p = await supa
+              .from('profiles')
+              .select('id')
+              .eq('user_id', me.id)
+              .maybeSingle();
+          profileId = p?['id'] as String?;
+        }
+
+        await ref
+            .read(loanStatementArchiveServiceProvider)
+            .archive(
+              loanId: loan.id,
+              bytes: bytes,
+              statementRef: ref0,
+              periodStart: options.periodStart,
+              periodEnd: options.periodEnd,
+              variant: options.variant.name,
+              format: options.format.name,
+              fileExtension: ext,
+              mimeType: mime,
+              generatedByUserId: profileId,
+              generatedByName: me?.fullName,
+            );
+        ref.invalidate(pastLoanStatementsProvider(loan.id));
+      } catch (e) {
+        // Archival is best-effort — the user still gets their file.
+        debugPrint('Statement archive failed: $e');
+      }
 
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
-      await SharePlus.instance.share(ShareParams(
-        files: [XFile(file.path)],
-        text: 'Loan Statement - ${loan.loanNumber}',
-      ));
+
+      await showModalBottomSheet(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.open_in_new_rounded),
+                title: Text('Open ${ext.toUpperCase()}'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  OpenFilex.open(file.path);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.ios_share_rounded),
+                title: const Text('Share'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await SharePlus.instance.share(ShareParams(
+                    files: [XFile(file.path, mimeType: mime)],
+                    text: 'Loan Statement - ${loan.loanNumber}',
+                  ));
+                },
+              ),
+            ],
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-          SnackBar(content: Text('Failed to generate statement: $e')));
+      messenger.showSnackBar(SnackBar(
+        content: Text('Failed to generate statement: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    }
+  }
+
+  Future<void> _showPastStatements() async {
+    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
+    if (loan == null) return;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Consumer(builder: (ctx, ref, _) {
+          final past = ref.watch(pastLoanStatementsProvider(loan.id));
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(ctx).dividerColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Past Statements',
+                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          )),
+                  const SizedBox(height: 12),
+                  past.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (e, _) => Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text('Failed to load: $e'),
+                    ),
+                    data: (rows) {
+                      if (rows.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Text(
+                              'No statements generated yet for this loan.',
+                              textAlign: TextAlign.center),
+                        );
+                      }
+                      return Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: rows.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (_, i) {
+                            final r = rows[i];
+                            return ListTile(
+                              dense: true,
+                              leading: Icon(_iconForFormat(r.format)),
+                              title: Text(
+                                  '${r.format.toUpperCase()} • ${r.variant}'),
+                              subtitle: Text(
+                                '${r.periodStart.toIso8601String().split('T').first} → ${r.periodEnd.toIso8601String().split('T').first}\n'
+                                'Generated: ${r.generatedAt.toLocal()} by ${r.generatedByName ?? '—'}\n'
+                                'Ref: ${r.statementRef}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                              isThreeLine: true,
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (v) async {
+                                  if (v == 'download') {
+                                    await _downloadArchived(r);
+                                  } else if (v == 'share') {
+                                    await _shareArchived(r);
+                                  } else if (v == 'email') {
+                                    await _emailArchived(r);
+                                  } else if (v == 'verify') {
+                                    await _verifyArchived(r);
+                                  } else if (v == 'delete') {
+                                    await _deleteArchived(r);
+                                  }
+                                },
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(
+                                      value: 'download',
+                                      child: Text('Open')),
+                                  PopupMenuItem(
+                                      value: 'share', child: Text('Share')),
+                                  PopupMenuItem(
+                                      value: 'email',
+                                      child: Text('Email to customer')),
+                                  PopupMenuItem(
+                                      value: 'verify',
+                                      child: Text('Verify integrity')),
+                                  PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Delete',
+                                          style:
+                                              TextStyle(color: Colors.red))),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  IconData _iconForFormat(String f) {
+    switch (f) {
+      case 'pdf':
+        return Icons.picture_as_pdf_rounded;
+      case 'excel':
+        return Icons.grid_on_rounded;
+      case 'csv':
+        return Icons.table_chart_rounded;
+      default:
+        return Icons.insert_drive_file_outlined;
+    }
+  }
+
+  Future<File> _downloadToTempAndReturn(LoanStatementArchive r) async {
+    final bytes = await ref
+        .read(loanStatementArchiveServiceProvider)
+        .download(r.filePath);
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/${r.statementRef}.${r.format == 'excel' ? 'xlsx' : r.format}');
+    await file.writeAsBytes(bytes);
+    return file;
+  }
+
+  Future<void> _downloadArchived(LoanStatementArchive r) async {
+    try {
+      final file = await _downloadToTempAndReturn(r);
+      await OpenFilex.open(file.path);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Download failed: $e')));
+    }
+  }
+
+  Future<void> _emailArchived(LoanStatementArchive r) async {
+    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
+    final defaultEmail = loan?.customerName != null
+        ? '' // we don't have email on LoanModel; let the user type / paste
+        : '';
+    final controller = TextEditingController(text: defaultEmail);
+
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Email statement'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Send ${r.statementRef} as an attachment.',
+                style: Theme.of(ctx).textTheme.bodySmall),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Recipient email',
+                hintText: 'customer@example.com',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              final v = controller.text.trim();
+              if (v.contains('@')) Navigator.pop(ctx, v);
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+    if (email == null || email.isEmpty || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text('Sending to $email…')));
+
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final res = await client.functions.invoke(
+        'send-loan-statement',
+        body: {
+          'statement_id': r.id,
+          'recipient_email': email,
+        },
+      );
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+
+      final data = res.data;
+      if (data is Map && data['ok'] == true) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text('Statement emailed.')));
+      } else {
+        final err = (data is Map ? data['error'] : null) ?? 'Unknown error';
+        messenger.showSnackBar(SnackBar(
+          content: Text('Email failed: $err'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(
+        content: Text('Email failed: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    }
+  }
+
+  Future<void> _shareArchived(LoanStatementArchive r) async {
+    try {
+      final file = await _downloadToTempAndReturn(r);
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(file.path)],
+        text: 'Loan Statement - ${r.statementRef}',
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Share failed: $e')));
+    }
+  }
+
+  Future<void> _verifyArchived(LoanStatementArchive r) async {
+    try {
+      final bytes = await ref
+          .read(loanStatementArchiveServiceProvider)
+          .download(r.filePath);
+      final hash = LoanStatementArchiveService.hashBytes(bytes);
+      if (!mounted) return;
+      final matches = hash == r.sha256Hash;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          icon: Icon(
+            matches
+                ? Icons.verified_rounded
+                : Icons.warning_amber_rounded,
+            color: matches ? Colors.green : Colors.red,
+            size: 40,
+          ),
+          title: Text(matches ? 'Integrity verified' : 'Hash mismatch!'),
+          content: Text(matches
+              ? 'The archived file matches the SHA-256 hash recorded at generation time.\n\n'
+                  'SHA-256: ${r.sha256Hash}'
+              : 'The file does NOT match the recorded hash. It may have been tampered with.\n\n'
+                  'Expected: ${r.sha256Hash}\nActual:    $hash'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK')),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Verify failed: $e')));
+    }
+  }
+
+  Future<void> _deleteArchived(LoanStatementArchive r) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete archived statement?'),
+        content: Text('This will remove the file and metadata for ${r.statementRef}.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await ref
+          .read(loanStatementArchiveServiceProvider)
+          .delete(r.id, r.filePath);
+      ref.invalidate(pastLoanStatementsProvider(widget.loanId));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Delete failed: $e')));
     }
   }
 

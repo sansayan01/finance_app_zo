@@ -203,6 +203,45 @@ class SavingsRepository {
     await _client.from('savings_plans').delete().eq('id', id);
   }
 
+  /// Permanently deletes an RD/savings plan along with all of its
+  /// dependent rows. Use with care — this is irreversible and removes
+  /// the entire transaction history for the plan.
+  Future<void> deleteSavingPlanCascade(String id) async {
+    // 1. Detach transactions (FK is ON DELETE SET NULL but we delete
+    //    them outright since they belong to this plan's history).
+    await _client.from('transactions').delete().eq('savings_id', id);
+
+    // 2. Delete collection records (FK is NO ACTION — must go first).
+    await _client.from('savings_collections').delete().eq('savings_plan_id', id);
+
+    // 3. Delete the plan itself.
+    await _client.from('savings_plans').delete().eq('id', id);
+  }
+
+  /// Closes a savings/RD plan.
+  ///
+  /// Plans with any collection history cannot be hard-deleted (FK from
+  /// `savings_collections` would block it), so we soft-close by setting
+  /// status = 'closed'. If the plan has no history, we hard-delete to
+  /// keep the table clean.
+  Future<void> closeSavingPlan(String id) async {
+    final collections = await _client
+        .from('savings_collections')
+        .select('id')
+        .eq('savings_plan_id', id)
+        .limit(1);
+
+    final hasHistory = (collections as List).isNotEmpty;
+
+    if (hasHistory) {
+      await _client
+          .from('savings_plans')
+          .update({'status': 'closed'}).eq('id', id);
+    } else {
+      await _client.from('savings_plans').delete().eq('id', id);
+    }
+  }
+
   Future<void> setSavingStatus(String id, String status) async {
     await _client.from('savings_plans').update({'status': status}).eq('id', id);
   }

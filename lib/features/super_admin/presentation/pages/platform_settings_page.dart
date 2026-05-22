@@ -120,6 +120,8 @@ class _PlatformSettingsPageState extends ConsumerState<PlatformSettingsPage> {
                           D.accent,
                           isDark),
                     ]),
+                    const SizedBox(height: 16),
+                    _buildPlatformAISection(isDark, cardBg, s),
                     const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -222,6 +224,209 @@ class _PlatformSettingsPageState extends ConsumerState<PlatformSettingsPage> {
         ...tiles,
       ]),
     );
+  }
+
+  Widget _buildPlatformAISection(
+      bool isDark, Color cardBg, Map<String, dynamic> s) {
+    final chatbotConfig =
+        s['chatbot_config'] as Map<String, dynamic>? ?? {};
+    final hasApiKey = (chatbotConfig['api_key'] as String?)?.isNotEmpty == true;
+    final modelId =
+        (chatbotConfig['model_id'] as String?) ?? 'meta/llama-3.1-70b-instruct';
+    final chatbotEnabled = chatbotConfig['enabled'] != false;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(D.radiusLg),
+        border: Border.all(color: D.border(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child:
+                    const Icon(Icons.auto_awesome, color: Colors.deepPurple, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text('Platform AI', style: D.titleStyle(isDark)),
+              const Spacer(),
+              IconButton(
+                icon: Icon(Icons.edit_rounded,
+                    size: 18, color: D.iconMuted(context)),
+                onPressed: () => _showAIConfigDialog(
+                    isDark, chatbotConfig, hasApiKey, modelId, chatbotEnabled),
+                tooltip: 'Edit AI Settings',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _tile(
+              Icons.key,
+              'API Key',
+              hasApiKey
+                  ? 'nvapi••••••••'
+                  : 'Not configured',
+              hasApiKey ? Colors.green : Colors.orange,
+              isDark),
+          _tile(Icons.smart_toy, 'Model', modelId, D.accent, isDark),
+          _tile(
+              Icons.chat_bubble_outline,
+              'Chatbot',
+              chatbotEnabled ? 'Enabled for all users' : 'Disabled',
+              chatbotEnabled ? Colors.green : Colors.red,
+              isDark),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showAIConfigDialog(
+    bool isDark,
+    Map<String, dynamic> current,
+    bool hasApiKey,
+    String modelId,
+    bool chatbotEnabled,
+  ) async {
+    final apiKeyCtrl =
+        TextEditingController(text: current['api_key'] as String? ?? '');
+    final modelCtrl = TextEditingController(text: modelId);
+    bool enabled = chatbotEnabled;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Colors.deepPurple),
+              SizedBox(width: 10),
+              Text('Platform AI Settings',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'These settings apply to all users across the platform.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: apiKeyCtrl,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'NVIDIA NIM API Key',
+                    hintText: 'nvapi-****************',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.key_rounded),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 18),
+                      onPressed: () {
+                        // Copy current key to clipboard if needed
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: modelCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Model ID',
+                    hintText: 'meta/llama-3.1-70b-instruct',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.smart_toy_rounded),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Enable Chatbot',
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  subtitle: Text(
+                    enabled
+                        ? 'Chatbot is active for all users'
+                        : 'Chatbot is disabled platform-wide',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  value: enabled,
+                  onChanged: (v) => setDialogState(() => enabled = v),
+                  activeThumbColor: Colors.deepPurple,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved == true && mounted) {
+      final newConfig = {
+        'api_key': apiKeyCtrl.text.trim(),
+        'model_id': modelCtrl.text.trim(),
+        'enabled': enabled,
+      };
+
+      final repo = ref.read(superAdminRepositoryProvider);
+      final success = await repo.updatePlatformSetting(
+          'chatbot_config', newConfig);
+
+      if (success) {
+        ref.invalidate(platformSettingsProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 12),
+                  Text('AI settings updated for all users'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update AI settings'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _tile(IconData icon, String label, String value, Color valueColor,

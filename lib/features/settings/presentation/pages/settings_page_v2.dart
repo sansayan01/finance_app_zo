@@ -10,6 +10,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/providers/brand_provider.dart';
 import '../providers/settings_provider.dart';
+import '../../../chatbot/presentation/providers/chat_config_provider.dart';
 
 class SettingsPageV2 extends ConsumerWidget {
   const SettingsPageV2({super.key});
@@ -379,6 +380,34 @@ class SettingsPageV2 extends ConsumerWidget {
                 activeTrackColor: AppColors.primary,
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+
+          // AI Chatbot Toggle
+          Builder(
+            builder: (context) {
+              final chatConfig = ref.watch(chatConfigProvider);
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('AI Assistant', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      Text(
+                        chatConfig.chatbotEnabled ? 'Floating chatbot is active' : 'Chatbot is hidden',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  Switch.adaptive(
+                    value: chatConfig.chatbotEnabled,
+                    onChanged: (_) => ref.read(chatConfigProvider.notifier).toggleChatbot(),
+                    activeTrackColor: AppColors.primary,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

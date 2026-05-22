@@ -1,114 +1,92 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_message.dart';
+import '../../../../core/config/env_config.dart';
 
+/// Calls the Supabase edge function which proxies to NVIDIA NIM.
+/// API key and model are managed server-side by the super admin.
 class ChatbotRepository {
-  final String _apiKey;
-  final String _model;
+  final SupabaseClient _supabase;
 
-  ChatbotRepository({required String apiKey, required String model})
-      : _apiKey = apiKey,
-        _model = model;
+  ChatbotRepository({SupabaseClient? supabase})
+      : _supabase = supabase ?? Supabase.instance.client;
 
   Stream<String> streamChatResponse(List<ChatMessage> history,
-      {String? contextRoute, String? businessContext, String? orgName}) async* {
+      {String? orgName}) async* {
+    final session = _supabase.auth.currentSession;
+    if (session == null) {
+      yield* Stream.error('Not authenticated. Please log in again.');
+      return;
+    }
+
     final messages = history.map((m) => m.toJson()).toList();
 
-    final name = orgName ?? 'MicroFlow Pro';
-    String systemContext =
-        'You are the $name Assistant, a concise multilingual financial expert. '
-        'If asked about your creation, state that you were created by Sayan Mondal (Charlie). '
-        'Your answers MUST be direct, short (1-2 sentences), and informative. '
-        'CRITICAL: DO NOT include internal thoughts or <thought> tags. Provide ONLY the final answer. '
-        'If the user asks for a loan summary, use the [UI:LOAN_SUMMARY] tag.';
-
-    if (contextRoute != null) {
-      systemContext += ' \nPage Context: $contextRoute';
-    }
-    if (businessContext != null) {
-      systemContext += ' \nLive Data: $businessContext';
-    }
-
-    final requestBody = {
-      'model': _model,
-      'messages': [
-        {'role': 'system', 'content': systemContext},
-        ...messages,
-      ],
-      'temperature': 0.5,
-      'top_p': 0.7,
-      'max_tokens': 1024,
-      'stream': true,
-    };
-
-    final baseUrl = 'https://integrate.api.nvidia.com/v1/chat/completions';
-    final url = kIsWeb
-        ? 'https://corsproxy.io/?${Uri.encodeComponent(baseUrl)}'
-        : baseUrl;
+    final url = '${EnvConfig.supabaseUrl}/functions/v1/chat-proxy';
 
     try {
       final request = http.Request('POST', Uri.parse(url));
       request.headers.addAll({
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_apiKey',
+        'Authorization': 'Bearer ${session.accessToken}',
+        'apikey': EnvConfig.supabaseAnonKey,
       });
-      request.body = jsonEncode(requestBody);
+      request.body = jsonEncode({
+        'messages': messages,
+        if (orgName != null) 'orgName': orgName,
+      });
 
-      final client = http.Client();
-      final response = await client.send(request);
+      final response = await http.Client().send(request);
 
       if (response.statusCode != 200) {
-        final errorBody = await response.stream.bytesToString();
-        if (errorBody.contains('image') ||
-            errorBody.contains('vision') ||
-            errorBody.contains('image.png')) {
-          yield 'Error: This model does not support image input. Please send text messages only.';
-        } else {
-          yield 'Error: ${response.statusCode}\nDetails: $errorBody';
+        final body = await response.stream.bytesToString();
+        String errorMessage;
+        try {
+          final json = jsonDecode(body);
+          errorMessage = json['error'] ?? 'AI service error';
+        } catch (_) {
+          errorMessage = 'AI service returned ${response.statusCode}';
         }
+        yield* Stream.error(errorMessage);
         return;
       }
 
-      String fullResponse = '';
-      bool isThinking = false;
+      // Stream SSE response from edge function
+      String buffer = '';
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        buffer += chunk;
+        final lines = buffer.split('\n');
+        buffer = lines.removeLast(); // Keep incomplete line in buffer
 
-      await for (final chunk in response.stream
-          .transform(utf8.decoder)
-          .transform(const LineSplitter())) {
-        if (chunk.trim().isEmpty) continue;
-        if (chunk.startsWith('data: ')) {
-          final data = chunk.substring(6).trim();
-          if (data == '[DONE]') break;
+        for (final line in lines) {
+          final trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          final data = trimmed.substring(5).trim();
+          if (data == '[DONE]') return;
+          if (data.isEmpty) continue;
+
           try {
             final json = jsonDecode(data);
-            final content = json['choices'][0]['delta']['content'] as String?;
-            if (content != null) {
-              fullResponse += content;
-
-              // Filter logic for <think> blocks
-              String filteredResponse = fullResponse;
-              if (filteredResponse.contains('<think>')) {
-                isThinking = true;
-                final parts = filteredResponse.split('</think>');
-                if (parts.length > 1) {
-                  isThinking = false;
-                  filteredResponse = parts.last.trim();
-                } else {
-                  filteredResponse = ''; // Still thinking, show nothing yet
-                }
-              }
-
-              if (!isThinking && filteredResponse.isNotEmpty) {
-                yield filteredResponse;
+            final choices = json['choices'] as List?;
+            if (choices != null && choices.isNotEmpty) {
+              final delta = choices[0]['delta'];
+              if (delta != null && delta['content'] != null) {
+                yield delta['content'] as String;
               }
             }
-          } catch (_) {}
+          } catch (_) {
+            // Skip malformed JSON chunks
+          }
         }
       }
-      client.close();
     } catch (e) {
-      yield 'Failed to connect: $e';
+      if (e is http.ClientException) {
+        yield* Stream.error(
+            'Connection failed. Check your internet and try again.');
+      } else {
+        yield* Stream.error('Unexpected error: ${e.toString()}');
+      }
     }
   }
 }

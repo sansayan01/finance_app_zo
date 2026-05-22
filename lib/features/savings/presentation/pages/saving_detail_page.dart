@@ -13,8 +13,10 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../features/transactions/data/models/transaction_model.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
-    show pendingDepositsProvider;
+    show pendingDepositsProvider, recentTransactionsProvider,
+        dashboardTransactionsProvider, todayStatsProvider;
 
 class SavingDetailPage extends ConsumerStatefulWidget {
   final String savingId;
@@ -421,40 +423,62 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                     case 'delete':
                       _showDeleteDialog();
                       break;
+                    case 'delete_permanent':
+                      _showHardDeleteDialog();
+                      break;
                   }
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit Vault')),
-                  PopupMenuItem(
-                    value: isPaused ? 'resume' : 'pause',
-                    child: Row(
-                      children: [
-                        Icon(
-                          isPaused
-                              ? Icons.play_arrow_rounded
-                              : Icons.pause_rounded,
-                          size: 18,
+                itemBuilder: (context) {
+                  final isExecAdmin = ref.read(currentUserProvider)?.role ==
+                      UserRole.executiveAdmin;
+                  return [
+                    const PopupMenuItem(value: 'edit', child: Text('Edit Vault')),
+                    PopupMenuItem(
+                      value: isPaused ? 'resume' : 'pause',
+                      child: Row(
+                        children: [
+                          Icon(
+                            isPaused
+                                ? Icons.play_arrow_rounded
+                                : Icons.pause_rounded,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(isPaused ? 'Resume Vault' : 'Pause Vault'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'share',
+                      child: Row(
+                        children: [
+                          Icon(Icons.ios_share_rounded, size: 18),
+                          SizedBox(width: 8),
+                          Text('Share Summary'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Close Account',
+                            style: TextStyle(color: Colors.red))),
+                    if (isExecAdmin)
+                      const PopupMenuItem(
+                        value: 'delete_permanent',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_forever_rounded,
+                                size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete Permanently',
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w700)),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Text(isPaused ? 'Resume Vault' : 'Pause Vault'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'share',
-                    child: Row(
-                      children: [
-                        Icon(Icons.ios_share_rounded, size: 18),
-                        SizedBox(width: 8),
-                        Text('Share Summary'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Close Account',
-                          style: TextStyle(color: Colors.red))),
-                ],
+                      ),
+                  ];
+                },
               ),
             ],
           ),
@@ -582,21 +606,93 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
           TextButton(
             onPressed: () async {
               final navigator = Navigator.of(context);
-              await ref
-                  .read(savingsRepositoryProvider)
-                  .deleteSavingPlan(widget.savingId);
+              final messenger = ScaffoldMessenger.of(this.context);
+              navigator.pop(); // Pop dialog first so user sees feedback
+              try {
+                await ref
+                    .read(savingsRepositoryProvider)
+                    .closeSavingPlan(widget.savingId);
 
-              if (!mounted) return;
-              ref.invalidate(allSavingsProvider);
-              ref.invalidate(savingsSummaryProvider);
-              ref.invalidate(pendingDepositsProvider);
-              navigator.pop(); // Pop dialog
-              if (mounted) {
-                Navigator.of(this.context).pop(); // Pop page
+                if (!mounted) return;
+                ref.invalidate(allSavingsProvider);
+                ref.invalidate(savingsSummaryProvider);
+                ref.invalidate(pendingDepositsProvider);
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Savings vault closed')),
+                );
+                if (mounted) {
+                  Navigator.of(this.context).pop(); // Pop page
+                }
+              } catch (e) {
+                if (!mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to close vault: $e'),
+                    backgroundColor: Theme.of(this.context).colorScheme.error,
+                  ),
+                );
               }
             },
             child: const Text('Close Account',
                 style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHardDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded,
+            color: Colors.red, size: 36),
+        title: const Text('Delete Permanently?'),
+        content: const Text(
+          'This will permanently delete this RD/savings vault AND all of its '
+          'collection records and transactions. This action cannot be undone '
+          'and may affect financial reports.\n\nProceed?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(this.context);
+              navigator.pop();
+              try {
+                await ref
+                    .read(savingsRepositoryProvider)
+                    .deleteSavingPlanCascade(widget.savingId);
+
+                if (!mounted) return;
+                ref.invalidate(allSavingsProvider);
+                ref.invalidate(savingsSummaryProvider);
+                ref.invalidate(pendingDepositsProvider);
+                ref.invalidate(recentTransactionsProvider);
+                ref.invalidate(dashboardTransactionsProvider);
+                ref.invalidate(todayStatsProvider);
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Vault deleted permanently')),
+                );
+                if (mounted) {
+                  Navigator.of(this.context).pop();
+                }
+              } catch (e) {
+                if (!mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Delete failed: $e'),
+                    backgroundColor: Theme.of(this.context).colorScheme.error,
+                  ),
+                );
+              }
+            },
+            child: const Text('Delete Forever'),
           ),
         ],
       ),

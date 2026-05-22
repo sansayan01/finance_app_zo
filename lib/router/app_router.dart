@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// Chatbot
+import '../features/chatbot/presentation/widgets/floating_chatbot.dart';
+
 // Branches
 import '../features/branches/presentation/pages/branch_management_page.dart';
 
@@ -929,6 +932,8 @@ class _AdminShellState extends ConsumerState<AdminShell> {
                 ),
               ),
             ),
+          // Draggable AI Chatbot overlay
+          const FloatingChatbot(),
         ],
       ),
       bottomNavigationBar: useHudNav

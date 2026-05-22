@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../chatbot/presentation/providers/chat_config_provider.dart';
 
 class IntegrationsSettingsPage extends ConsumerStatefulWidget {
   const IntegrationsSettingsPage({super.key});
@@ -15,66 +14,17 @@ class IntegrationsSettingsPage extends ConsumerStatefulWidget {
 
 class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final _aiFormKey = GlobalKey<FormState>();
-  
-  late TextEditingController _aiApiKeyCtrl;
-  late TextEditingController _aiModelCtrl;
-  bool _savingAI = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    
-    final chatConfig = ref.read(chatConfigProvider);
-    _aiApiKeyCtrl = TextEditingController(text: chatConfig.apiKey);
-    _aiModelCtrl = TextEditingController(text: chatConfig.modelId);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _aiApiKeyCtrl.dispose();
-    _aiModelCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _saveAIConfig() async {
-    if (!_aiFormKey.currentState!.validate()) return;
-    setState(() => _savingAI = true);
-
-    try {
-      await ref.read(chatConfigProvider.notifier).updateConfig(
-            apiKey: _aiApiKeyCtrl.text.trim(),
-            modelId: _aiModelCtrl.text.trim(),
-          );
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 12),
-              Text('AI Chatbot configuration saved'),
-            ],
-          ),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save AI configuration: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _savingAI = false);
-    }
   }
 
   @override
@@ -99,7 +49,6 @@ class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsP
           unselectedLabelColor: isDark ? Colors.white54 : Colors.black54,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           tabs: const [
-            Tab(icon: Icon(Icons.psychology_outlined, size: 20), text: 'AI Chatbot'),
             Tab(icon: Icon(Icons.forum_outlined, size: 20), text: 'Communication'),
             Tab(icon: Icon(Icons.payment_rounded, size: 20), text: 'Gateways'),
           ],
@@ -109,13 +58,10 @@ class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsP
         child: TabBarView(
           controller: _tabController,
           children: [
-            // Tab 1: AI Chatbot Settings
-            _buildAIChatbotTab(theme, isDark),
-            
-            // Tab 2: Communications Gateway Roadmap
+            // Tab 1: Communications Gateway Roadmap
             _buildCommunicationsTab(theme, isDark),
-            
-            // Tab 3: Payment Gateways Roadmap
+
+            // Tab 2: Payment Gateways Roadmap
             _buildPaymentGatewaysTab(theme, isDark),
           ],
         ),
@@ -123,100 +69,7 @@ class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsP
     );
   }
 
-  // ─── TAB 1: AI CHATBOT ───────────────────────────────────────────────
-  Widget _buildAIChatbotTab(ThemeData theme, bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Form(
-        key: _aiFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Cognitive Assistant Configuration',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ).animate().fadeIn(),
-            const SizedBox(height: 6),
-            const Text(
-              'Power the field operations chatbot with advanced Language Models using NVIDIA NIM. Enter your endpoint credentials below.',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ).animate(delay: 50.ms).fadeIn(),
-            const SizedBox(height: 24),
-            
-            GlassCard(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.terminal_rounded, color: AppColors.primary),
-                      SizedBox(width: 12),
-                      Text(
-                        'NVIDIA NIM Settings',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _aiApiKeyCtrl,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'NVIDIA NIM API Key',
-                      hintText: 'nvapi-****************',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.key_rounded),
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'API key is required' : null,
-                  ),
-                  const SizedBox(height: 20),
-
-                  TextFormField(
-                    controller: _aiModelCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Model ID',
-                      hintText: 'meta/llama-3.1-70b-instruct',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.model_training_rounded),
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Model ID is required' : null,
-                  ),
-                ],
-              ),
-            ).animate(delay: 100.ms).fadeIn(),
-            
-            const SizedBox(height: 32),
-            
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton.icon(
-                onPressed: _savingAI ? null : _saveAIConfig,
-                icon: _savingAI
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                      )
-                    : const Icon(Icons.save_rounded),
-                label: const Text('Save AI Configuration', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ).animate(delay: 150.ms).fadeIn(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── TAB 2: COMMUNICATIONS ROADMAP ───────────────────────────────────
+  // ─── TAB 1: COMMUNICATIONS ROADMAP ───────────────────────────────────
   Widget _buildCommunicationsTab(ThemeData theme, bool isDark) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -276,7 +129,7 @@ class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsP
     );
   }
 
-  // ─── TAB 3: GATEWAYS ROADMAP ─────────────────────────────────────────
+  // ─── TAB 2: GATEWAYS ROADMAP ─────────────────────────────────────────
   Widget _buildPaymentGatewaysTab(ThemeData theme, bool isDark) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),

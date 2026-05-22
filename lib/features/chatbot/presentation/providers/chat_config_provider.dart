@@ -1,52 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// User-facing chatbot configuration.
+/// API key and model are managed server-side by super admin.
+/// Users only control whether the chatbot is visible.
 class ChatConfig {
-  final String apiKey;
-  final String modelId;
+  final bool chatbotEnabled;
 
-  ChatConfig({
-    required this.apiKey,
-    required this.modelId,
-  });
+  ChatConfig({this.chatbotEnabled = true});
 
-  ChatConfig copyWith({
-    String? apiKey,
-    String? modelId,
-  }) {
+  ChatConfig copyWith({bool? chatbotEnabled}) {
     return ChatConfig(
-      apiKey: apiKey ?? this.apiKey,
-      modelId: modelId ?? this.modelId,
+      chatbotEnabled: chatbotEnabled ?? this.chatbotEnabled,
     );
   }
 }
 
 class ChatConfigNotifier extends StateNotifier<ChatConfig> {
-  static const _apiKeyKey = 'chatbot_api_key';
-  static const _modelIdKey = 'chatbot_model_id';
+  static const _enabledKey = 'chatbot_enabled';
 
-  ChatConfigNotifier()
-      : super(ChatConfig(
-          apiKey: '',
-          modelId: 'meta/llama-3.1-70b-instruct',
-        )) {
+  ChatConfigNotifier() : super(ChatConfig(chatbotEnabled: true)) {
     _loadConfig();
   }
 
   Future<void> _loadConfig() async {
     final prefs = await SharedPreferences.getInstance();
-    state = state.copyWith(
-      apiKey: prefs.getString(_apiKeyKey) ?? '',
-      modelId: prefs.getString(_modelIdKey) ?? 'meta/llama-3.1-70b-instruct',
-    );
+    // Default to true (enabled) if no value is stored
+    final enabled = prefs.getBool(_enabledKey);
+    state = ChatConfig(chatbotEnabled: enabled ?? true);
   }
 
-  Future<void> updateConfig(
-      {required String apiKey, required String modelId}) async {
+  Future<void> toggleChatbot() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_apiKeyKey, apiKey);
-    await prefs.setString(_modelIdKey, modelId);
-    state = state.copyWith(apiKey: apiKey, modelId: modelId);
+    final newValue = !state.chatbotEnabled;
+    await prefs.setBool(_enabledKey, newValue);
+    state = ChatConfig(chatbotEnabled: newValue);
   }
 }
 

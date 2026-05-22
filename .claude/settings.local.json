@@ -23,7 +23,10 @@
       "Bash(node -e \"const fs=require\\('fs'\\); const d=JSON.parse\\(fs.readFileSync\\('C:/Users/msaya/.claude/projects/d--Projects-finance-app-zo/63dcfb41-1112-42fa-a301-2dc285c4ac92/tool-results/toolu_01MDzP96yL6NbpoTd71ViJSi.json','utf8'\\)\\); const r=JSON.parse\\(d[0].text\\).result.result; r.filter\\(x=>x.status_code>=400\\).forEach\\(x=>console.log\\(x.status_code,x.method,x.path\\)\\)\")",
       "Bash(node -e \"const fs=require\\('fs'\\); const d=JSON.parse\\(fs.readFileSync\\('C:/Users/msaya/.claude/projects/d--Projects-finance-app-zo/63dcfb41-1112-42fa-a301-2dc285c4ac92/tool-results/toolu_01MDzP96yL6NbpoTd71ViJSi.json','utf8'\\)\\); const r=JSON.parse\\(d[0].text\\).result.result; r.filter\\(x=>x.path && x.path.includes\\('profile'\\)\\).forEach\\(x=>console.log\\(x.status_code,x.method,x.path.substring\\(0,150\\)\\)\\)\")",
       "Bash(node -e \"const fs=require\\('fs'\\); const d=JSON.parse\\(fs.readFileSync\\('C:/Users/msaya/.claude/projects/d--Projects-finance-app-zo/63dcfb41-1112-42fa-a301-2dc285c4ac92/tool-results/toolu_01MDzP96yL6NbpoTd71ViJSi.json','utf8'\\)\\); const r=JSON.parse\\(d[0].text\\).result.result; r.filter\\(x=>['PATCH','PUT','POST','DELETE'].includes\\(x.method\\)\\).forEach\\(x=>console.log\\(x.status_code,x.method,x.path.substring\\(0,150\\)\\)\\)\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(flutter pub *)",
+      "mcp__supabase__list_edge_functions",
+      "mcp__supabase__deploy_edge_function"
     ]
   },
   "enabledMcpjsonServers": [

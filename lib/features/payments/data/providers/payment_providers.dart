@@ -360,8 +360,25 @@ final todayPaymentsProvider =
         .eq('org_id', orgId)
         .eq('status', 'active');
 
-    // Filter plans that are due on the selected date
+    // Fetch all savings collections for the selected date
+    final collectionsToday = await client
+        .from('savings_collections')
+        .select('id, savings_plan_id, amount_collected, payment_mode, created_at')
+        .eq('org_id', orgId)
+        .eq('collection_date', dateStr);
+
+    final collectionsMap = {
+      for (final col in collectionsToday as List)
+        if (col['savings_plan_id'] != null)
+          col['savings_plan_id'] as String: col
+    };
+    final collectedPlanIds = collectionsMap.keys.toSet();
+
+    // Filter plans that are due on the selected date OR were already collected today
     final savingsDues = (allActivePlans as List).where((plan) {
+      final planId = plan['id'] as String;
+      if (collectedPlanIds.contains(planId)) return true;
+
       final nextDue = plan['next_due_date'] as String?;
       final collectionType = plan['collection_type'] ?? 'daily';
 
@@ -388,18 +405,29 @@ final todayPaymentsProvider =
       }
     }).toList();
 
-    // Fetch member details for each plan
-    for (final plan in savingsDues) {
-      final memberId = plan['member_id'];
-      if (memberId == null) continue;
+    // Fetch member details in bulk for each plan
+    final memberIds = savingsDues
+        .map((p) => p['member_id'])
+        .where((id) => id != null)
+        .toSet()
+        .toList();
 
-      final member = await client
+    final Map<String, Map<String, dynamic>> savingsMembersMap = {};
+    if (memberIds.isNotEmpty) {
+      final members = await client
           .from('members')
           .select('id, full_name, phone, branch_id, agent_id')
-          .eq('id', memberId)
-          .maybeSingle();
+          .inFilter('id', memberIds);
+      for (final member in members) {
+        savingsMembersMap[member['id']] = member;
+      }
+    }
 
-      if (member == null) continue;
+    for (final plan in savingsDues) {
+      final memberId = plan['member_id'];
+      if (memberId == null || savingsMembersMap[memberId] == null) continue;
+
+      final member = savingsMembersMap[memberId]!;
 
       // Apply branch filter
       if (filters.branchId != null && member['branch_id'] != filters.branchId) {
@@ -411,14 +439,7 @@ final todayPaymentsProvider =
         continue;
       }
 
-      // Check if already collected today
-      final existingCollection = await client
-          .from('savings_collections')
-          .select('id, amount_collected, payment_mode, created_at')
-          .eq('savings_plan_id', plan['id'])
-          .eq('collection_date', dateStr)
-          .maybeSingle();
-
+      final existingCollection = collectionsMap[plan['id']];
       final isCollected = existingCollection != null;
 
       // Determine if overdue (next_due_date is before today's date)
@@ -445,7 +466,9 @@ final todayPaymentsProvider =
         amountCollected: isCollected
             ? (existingCollection['amount_collected'] as num?)?.toDouble()
             : null,
-        dueDate: nextDueStr != null ? DateTime.parse(nextDueStr) : DateTime.parse(dateStr),
+        dueDate: isCollected
+            ? DateTime.parse(dateStr)
+            : (nextDueStr != null ? DateTime.parse(nextDueStr) : DateTime.parse(dateStr)),
         planName: plan['plan_name'],
         paymentMode: isCollected ? existingCollection['payment_mode'] : null,
         collectedAt: isCollected && existingCollection['created_at'] != null

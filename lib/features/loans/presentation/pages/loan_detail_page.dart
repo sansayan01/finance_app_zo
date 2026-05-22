@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../core/widgets/shimmer_card.dart';
+import '../../../../core/widgets/progress_gauge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
@@ -40,6 +41,7 @@ class LoanDetailPage extends ConsumerStatefulWidget {
 class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   final ScrollController _scrollController = ScrollController();
   double _scrollOffset = 0;
+  String _selectedEmiFilter = 'all';
 
   @override
   void initState() {
@@ -151,8 +153,12 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               const SizedBox(height: 40),
                               _buildSectionHeader('EMI Breakdown', theme),
                               const SizedBox(height: 16),
-                              _buildEMIBreakdownTable(
-                                  scheduleAsync, theme, loan),
+                              _buildEMISummaryHero(scheduleAsync, theme),
+                              const SizedBox(height: 20),
+                              _buildPrincipalInterestBreakdown(
+                                  scheduleAsync, theme),
+                              const SizedBox(height: 20),
+                              _buildEMIList(scheduleAsync, theme, loan),
                               const SizedBox(height: 40),
                               _buildSectionHeader('Financial Health', theme),
                               const SizedBox(height: 16),
@@ -1951,10 +1957,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildEMIBreakdownTable(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync,
-      ThemeData theme,
-      LoanModel loan) {
+  // ─── EMI Summary Hero ───────────────────────────────────────────
+  Widget _buildEMISummaryHero(
+      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
     return scheduleAsync.when(
       data: (schedule) {
         if (schedule.isEmpty) {
@@ -1967,236 +1972,476 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             ),
             child: Text('No EMI schedule available',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                    color:
+                        theme.colorScheme.onSurface.withValues(alpha: 0.5))),
           );
         }
 
-        int paidCount =
+        final totalEmis = schedule.length;
+        final paidCount =
             schedule.where((e) => e.status == EMIStatus.paid).length;
-        int overdueCount = schedule
+        final overdueCount = schedule
             .where((e) =>
                 e.status == EMIStatus.overdue ||
                 e.status == EMIStatus.defaulted)
             .length;
-        int upcomingCount =
+        final upcomingCount =
             schedule.where((e) => e.status == EMIStatus.upcoming).length;
-
-        double totalPrincipal =
-            schedule.fold<double>(0, (s, e) => s + e.principal);
-        double totalInterest =
-            schedule.fold<double>(0, (s, e) => s + e.interest);
-        double totalPaid = schedule
+        final totalPaid = schedule
             .where((e) => e.status == EMIStatus.paid)
             .fold<double>(0, (s, e) => s + e.emiAmount);
+        final totalAmount =
+            schedule.fold<double>(0, (s, e) => s + e.emiAmount);
+        final progress = totalAmount > 0 ? totalPaid / totalAmount : 0.0;
+        final isDark = theme.brightness == Brightness.dark;
 
-        return Column(
-          children: [
-            // Stats badges
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.06),
+                theme.colorScheme.surfaceContainerHighest
                     .withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(20),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
                 children: [
-                  _buildStatBadge('Paid', paidCount, Colors.green, theme),
-                  _buildStatBadge('Overdue', overdueCount, Colors.red, theme),
-                  _buildStatBadge('Upcoming', upcomingCount,
-                      theme.colorScheme.primary, theme),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
+                  // Progress gauge
+                  ProgressGauge(
+                    value: progress.clamp(0.0, 1.0),
+                    size: 90,
+                    strokeWidth: 8,
+                    progressColor: Colors.green,
+                    center: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Collected',
+                        Text(
+                          '${(progress * 100).toInt()}%',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.green,
+                          ),
+                        ),
+                        Text('paid',
                             style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5))),
-                        Text(AppFormatters.formatCurrency(totalPaid),
-                            style: theme.textTheme.labelMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF5E5CE6))),
+                                    .withValues(alpha: 0.4),
+                                fontSize: 9)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  // Stats grid
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            _buildMiniStat(
+                                'Paid', '$paidCount', Colors.green, theme),
+                            const SizedBox(width: 12),
+                            _buildMiniStat(
+                                'Overdue', '$overdueCount', Colors.red, theme),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _buildMiniStat('Upcoming', '$upcomingCount',
+                                theme.colorScheme.primary, theme),
+                            const SizedBox(width: 12),
+                            _buildMiniStat('Total', '$totalEmis',
+                                const Color(0xFF5E5CE6), theme),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 20),
+              // Collected amount + progress bar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Collected',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5))),
+                  Text(
+                    '${AppFormatters.formatCurrency(totalPaid)} / ${AppFormatters.formatCurrency(totalAmount)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              LinearProgressBar(
+                value: progress.clamp(0.0, 1.0),
+                height: 6,
+                progressColor: Colors.green,
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const ShimmerCard(height: 180),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
 
+  Widget _buildMiniStat(
+      String label, String value, Color color, ThemeData theme) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.12)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900, color: color)),
+            Text(label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                    color:
+                        theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Principal vs Interest Breakdown ────────────────────────────
+  Widget _buildPrincipalInterestBreakdown(
+      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
+    return scheduleAsync.when(
+      data: (schedule) {
+        if (schedule.isEmpty) return const SizedBox.shrink();
+
+        final totalPrincipal =
+            schedule.fold<double>(0, (s, e) => s + e.principal);
+        final totalInterest =
+            schedule.fold<double>(0, (s, e) => s + e.interest);
+        final total = totalPrincipal + totalInterest;
+        final principalPct = total > 0 ? totalPrincipal / total : 0.5;
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Cost Breakdown',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.6))),
+              const SizedBox(height: 16),
+              // Stacked bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: SizedBox(
+                  height: 14,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: (principalPct * 1000).toInt(),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary,
+                                theme.colorScheme.primary
+                                    .withValues(alpha: 0.7),
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: ((1 - principalPct) * 1000).toInt(),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.amber.shade600,
+                                Colors.amber.shade400,
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.amber
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Labels
+              Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Principal',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.5))),
+                            Text(AppFormatters.formatCurrency(totalPrincipal),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w800)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 28,
+                    color: theme.dividerColor.withValues(alpha: 0.3),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade600,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Interest',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.5))),
+                              Text(AppFormatters.formatCurrency(totalInterest),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w800)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Percentage badges
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                        '${(principalPct * 100).toInt()}/${((1 - principalPct) * 100).toInt()}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: theme.colorScheme.primary)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const ShimmerCard(height: 120),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  // ─── EMI Card List ──────────────────────────────────────────────
+  Widget _buildEMIList(
+      AsyncValue<List<EMIScheduleModel>> scheduleAsync,
+      ThemeData theme,
+      LoanModel loan) {
+    return scheduleAsync.when(
+      data: (schedule) {
+        if (schedule.isEmpty) return const SizedBox.shrink();
+
+        // Apply filter
+        List<EMIScheduleModel> filtered;
+        switch (_selectedEmiFilter) {
+          case 'paid':
+            filtered =
+                schedule.where((e) => e.status == EMIStatus.paid).toList();
+            break;
+          case 'overdue':
+            filtered = schedule
+                .where((e) =>
+                    e.status == EMIStatus.overdue ||
+                    e.status == EMIStatus.defaulted)
+                .toList();
+            break;
+          case 'upcoming':
+            filtered = schedule
+                .where((e) => e.status == EMIStatus.upcoming)
+                .toList();
+            break;
+          default:
+            filtered = schedule;
+        }
+
+        final paidCount =
+            schedule.where((e) => e.status == EMIStatus.paid).length;
+        final overdueCount = schedule
+            .where((e) =>
+                e.status == EMIStatus.overdue ||
+                e.status == EMIStatus.defaulted)
+            .length;
+        final upcomingCount =
+            schedule.where((e) => e.status == EMIStatus.upcoming).length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             // Filter chips
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               child: Row(
                 children: [
-                  _buildEMIFilterChip('All', true, theme),
+                  _buildEMIFilterChip(
+                      'All (${schedule.length})', 'all', theme),
                   const SizedBox(width: 8),
-                  _buildEMIFilterChip('Paid', false, theme,
+                  _buildEMIFilterChip(
+                      'Paid ($paidCount)', 'paid', theme,
                       color: Colors.green),
                   const SizedBox(width: 8),
-                  _buildEMIFilterChip('Overdue', false, theme,
+                  _buildEMIFilterChip(
+                      'Overdue ($overdueCount)', 'overdue', theme,
                       color: Colors.red),
                   const SizedBox(width: 8),
-                  _buildEMIFilterChip('Upcoming', false, theme,
+                  _buildEMIFilterChip(
+                      'Upcoming ($upcomingCount)', 'upcoming', theme,
                       color: theme.colorScheme.primary),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Table
-            Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
+            // EMI cards
+            if (filtered.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text('No EMIs in this category',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4))),
+                ),
+              )
+            else ...[
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filtered.length > 5 ? 5 : filtered.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final emi = filtered[index];
+                  return _buildEMICard(emi, theme, loan, index);
+                },
               ),
-              child: Column(
-                children: [
-                  // Header
-                  Padding(
+              // View All button
+              if (filtered.length > 5) ...[
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () =>
+                      _showFullEMISchedule(filtered, loan, theme),
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                            flex: 1,
-                            child: Text('#',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5)))),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Due Date',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5)))),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Principal',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5)))),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Interest',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5)))),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Amount',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5)))),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Balance',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5)))),
-                        Expanded(
-                            flex: 1,
-                            child: Text('Status',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5)))),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-
-                  // Rows - limited to 20 with "View All" option
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: schedule.length > 20 ? 20 : schedule.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final emi = schedule[index];
-                      return InkWell(
-                        onTap: () => _showEMIDetailSheet(emi, loan, theme),
-                        child: _buildEMIRow(emi, theme),
-                      );
-                    },
-                  ),
-
-                  // View All button if more than 20
-                  if (schedule.length > 20)
-                    InkWell(
-                      onTap: () => _showFullEMISchedule(schedule, loan, theme),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('View All ${schedule.length} EMIs',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.w700)),
-                            const SizedBox(width: 4),
-                            Icon(Icons.arrow_forward_rounded,
-                                size: 16, color: theme.colorScheme.primary),
-                          ],
-                        ),
+                        vertical: 14, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary
+                          .withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: theme.colorScheme.primary
+                            .withValues(alpha: 0.15),
                       ),
                     ),
-
-                  const Divider(height: 1),
-
-                  // Totals
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Expanded(flex: 1, child: Text('')),
-                        Expanded(
-                            flex: 2,
-                            child: Text('Total',
-                                style: theme.textTheme.labelMedium
-                                    ?.copyWith(fontWeight: FontWeight.w900))),
-                        Expanded(
-                            flex: 2,
-                            child: Text(
-                                AppFormatters.formatCurrency(totalPrincipal),
-                                style: theme.textTheme.labelMedium
-                                    ?.copyWith(fontWeight: FontWeight.w900))),
-                        Expanded(
-                            flex: 2,
-                            child: Text(
-                                AppFormatters.formatCurrency(totalInterest),
-                                style: theme.textTheme.labelMedium
-                                    ?.copyWith(fontWeight: FontWeight.w900))),
-                        Expanded(
-                            flex: 2,
-                            child: Text(
-                                AppFormatters.formatCurrency(
-                                    totalPrincipal + totalInterest),
-                                style: theme.textTheme.labelMedium
-                                    ?.copyWith(fontWeight: FontWeight.w900))),
-                        const Expanded(flex: 2, child: Text('')),
-                        const Expanded(flex: 1, child: Text('')),
+                        Text('View All ${filtered.length} EMIs',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w700)),
+                        const SizedBox(width: 8),
+                        Icon(Icons.arrow_forward_rounded,
+                            size: 18, color: theme.colorScheme.primary),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              ],
+            ],
           ],
         );
       },
@@ -2204,8 +2449,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       error: (_, __) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          color: theme.colorScheme.surfaceContainerHighest
+              .withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(24),
         ),
         child: Center(
@@ -2217,26 +2462,212 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildEMIFilterChip(String label, bool isSelected, ThemeData theme,
+  Widget _buildEMICard(
+      EMIScheduleModel emi, ThemeData theme, LoanModel loan, int index) {
+    final isPaid = emi.status == EMIStatus.paid;
+    final isOverdue =
+        emi.status == EMIStatus.overdue || emi.status == EMIStatus.defaulted;
+    final accentColor = isPaid
+        ? Colors.green
+        : (isOverdue ? Colors.red : theme.colorScheme.primary);
+    final isDark = theme.brightness == Brightness.dark;
+    final emiRatio =
+        emi.emiAmount > 0 ? emi.principal / emi.emiAmount : 0.5;
+
+    return GestureDetector(
+      onTap: () => _showEMIDetailSheet(emi, loan, theme),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300 + (index * 40)),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest
+              .withValues(alpha: isDark ? 0.25 : 0.35),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: accentColor.withValues(alpha: 0.12),
+            width: 1,
+          ),
+          boxShadow: isOverdue
+              ? [
+                  BoxShadow(
+                    color: Colors.red.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            // Left accent bar
+            Container(
+              width: 4,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    accentColor,
+                    accentColor.withValues(alpha: 0.4),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 14),
+            // Main content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text('EMI #${emi.emiNumber}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w800)),
+                          if (isOverdue) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text('OVERDUE',
+                                  style: TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.red)),
+                            ),
+                          ],
+                        ],
+                      ),
+                      // Status badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                            isPaid
+                                ? 'PAID'
+                                : isOverdue
+                                    ? 'OD'
+                                    : 'DUE',
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: accentColor)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Amount + date row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(AppFormatters.formatCurrency(emi.emiAmount),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: accentColor)),
+                      Text(AppFormatters.formatDate(emi.dueDate),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.5))),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Principal/Interest mini bar
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: SizedBox(
+                            height: 4,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: (emiRatio * 100).toInt().clamp(1, 99),
+                                  child: Container(
+                                      color: theme.colorScheme.primary),
+                                ),
+                                Expanded(
+                                  flex:
+                                      ((1 - emiRatio) * 100).toInt().clamp(1, 99),
+                                  child: Container(
+                                      color: Colors.amber.shade400),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                          'P: ${AppFormatters.formatCompactCurrency(emi.principal)}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 6),
+                      Text(
+                          'I: ${AppFormatters.formatCompactCurrency(emi.interest)}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.amber.shade700,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded,
+                size: 20,
+                color:
+                    theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(
+          duration: Duration(milliseconds: 400 + (index * 50)),
+          delay: Duration(milliseconds: index * 60),
+          curve: Curves.easeOutCubic,
+        );
+  }
+
+  Widget _buildEMIFilterChip(String label, String filterKey, ThemeData theme,
       {Color? color}) {
     final chipColor = color ?? theme.colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? chipColor.withValues(alpha: 0.15)
-            : chipColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-            color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
+    final isSelected = _selectedEmiFilter == filterKey;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedEmiFilter = filterKey),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? chipColor.withValues(alpha: 0.15)
+              : chipColor.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+              color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected
+                    ? chipColor
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isSelected
-                  ? chipColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
     );
   }
 
@@ -2329,27 +2760,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatBadge(
-      String label, int count, Color color, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-          Text('$count',
-              style: theme.textTheme.labelMedium
-                  ?.copyWith(fontWeight: FontWeight.w900, color: color)),
-        ],
       ),
     );
   }
@@ -3438,15 +3848,23 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       );
 
       final mappedPayments = payments.map((p) {
-        return LoanStatementPayment(
-          date: _getPaymentDate(p),
-          amount: (p['amount'] as num?)?.toDouble() ?? 0.0,
-          mode: (p['payment_mode'] as String?) ?? 'cash',
-          referenceNumber: p['reference_number'] as String?,
-          notes: p['notes'] as String?,
-          collectedByName: p['collected_by_name'] as String?,
-          collectedByRole: p['collected_by_role'] as String?,
-        );
+        try {
+          return LoanStatementPayment(
+            date: _getPaymentDate(p),
+            amount: (p['amount'] as num?)?.toDouble() ?? 0.0,
+            mode: (p['payment_mode']?.toString()) ?? 'cash',
+            referenceNumber: p['reference_number']?.toString(),
+            notes: p['notes']?.toString(),
+            collectedByName: p['collected_by_name']?.toString(),
+            collectedByRole: p['collected_by_role']?.toString(),
+          );
+        } catch (_) {
+          return LoanStatementPayment(
+            date: DateTime.now(),
+            amount: 0,
+            mode: 'cash',
+          );
+        }
       }).toList();
 
       final now = DateTime.now();
@@ -3583,12 +4001,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           ),
         ),
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('Statement generation failed: $e\n$st');
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(SnackBar(
         content: Text('Failed to generate statement: $e'),
         backgroundColor: Theme.of(context).colorScheme.error,
+        duration: const Duration(seconds: 6),
       ));
     }
   }

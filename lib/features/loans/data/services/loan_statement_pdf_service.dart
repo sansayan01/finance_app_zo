@@ -1,13 +1,11 @@
-import 'package:flutter/services.dart';
+import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../core/constants/enums.dart';
 import '../models/loan_model.dart';
-import '../models/emi_schedule_model.dart';
-
-class LoanStatementOrgInfo {
+import '../models/emi_schedule_model.dart';class LoanStatementOrgInfo {
   final String name;
   final String? address;
   final String? city;
@@ -65,11 +63,72 @@ enum StatementVariant { fullSchedule, activityOnly, taxStatement }
 
 class LoanStatementPdfService {
   static final _dateFmt = DateFormat('dd MMM yyyy');
-  static final _currencyFmt =
-      NumberFormat.currency(locale: 'en_IN', symbol: 'Rs. ', decimalDigits: 2);
 
-  static String _money(num v) => _currencyFmt.format(v);
+  /// Manual Indian-style grouping so we don't need any locale data loaded
+  /// (NumberFormat.currency with locale 'en_IN' throws when intl locale data
+  /// isn't initialized, surfacing as "Unexpected null value").
+  static String _money(num v) {
+    final negative = v < 0;
+    final n = v.abs();
+    final whole = n.truncate();
+    final fraction = ((n - whole) * 100).round();
+    final wholeStr = whole.toString();
+
+    String grouped;
+    if (wholeStr.length <= 3) {
+      grouped = wholeStr;
+    } else {
+      final last3 = wholeStr.substring(wholeStr.length - 3);
+      final rest = wholeStr.substring(0, wholeStr.length - 3);
+      final restRev = rest.split('').reversed.join();
+      final buf = StringBuffer();
+      for (var i = 0; i < restRev.length; i++) {
+        if (i > 0 && i % 2 == 0) buf.write(',');
+        buf.write(restRev[i]);
+      }
+      grouped = '${buf.toString().split('').reversed.join()},$last3';
+    }
+    final fracStr = fraction.toString().padLeft(2, '0');
+    return '${negative ? '-' : ''}Rs. $grouped.$fracStr';
+  }
+
   static String _date(DateTime d) => _dateFmt.format(d);
+
+  /// Returns true only if [bytes] looks like a real PNG or JPEG image.
+  /// pw.MemoryImage throws "Unexpected null value" deep inside the renderer
+  /// when fed garbage bytes (e.g. empty buffer, SVG, downloaded HTML error
+  /// page) — so we sniff the magic numbers before embedding.
+  static bool _isValidImage(Uint8List? bytes) {
+    if (bytes == null || bytes.length < 8) return false;
+    // PNG: 89 50 4E 47 0D 0A 1A 0A
+    final isPng = bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0D &&
+        bytes[5] == 0x0A &&
+        bytes[6] == 0x1A &&
+        bytes[7] == 0x0A;
+    if (isPng) return true;
+    // JPEG: FF D8 FF
+    final isJpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
+    return isJpeg;
+  }
+
+  static pw.Widget? _safeImage(Uint8List? bytes,
+      {required double width, required double height, pw.EdgeInsets? margin}) {
+    if (!_isValidImage(bytes)) return null;
+    try {
+      return pw.Container(
+        width: width,
+        height: height,
+        margin: margin,
+        child: pw.Image(pw.MemoryImage(bytes!)),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Future<Uint8List> build({
     required LoanModel loan,
@@ -90,10 +149,6 @@ class LoanStatementPdfService {
       subject: 'Loan Statement',
     );
 
-    final baseFont = await PdfGoogleFonts.interRegular();
-    final boldFont = await PdfGoogleFonts.interBold();
-    final theme = pw.ThemeData.withFont(base: baseFont, bold: boldFont);
-
     final ledger = _buildLedger(
       loan: loan,
       schedule: schedule,
@@ -105,7 +160,6 @@ class LoanStatementPdfService {
 
     pdf.addPage(
       pw.MultiPage(
-        theme: theme,
         pageFormat: PdfPageFormat.a4.copyWith(
           marginLeft: 28,
           marginRight: 28,
@@ -148,19 +202,20 @@ class LoanStatementPdfService {
     DateTime periodEnd,
     Uint8List? qrPngBytes,
   ) {
+    final logoWidget = _safeImage(org.logoBytes,
+        width: 56,
+        height: 56,
+        margin: const pw.EdgeInsets.only(right: 12));
+    final qrWidget =
+        _safeImage(qrPngBytes, width: 56, height: 56);
+
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            if (org.logoBytes != null)
-              pw.Container(
-                width: 56,
-                height: 56,
-                margin: const pw.EdgeInsets.only(right: 12),
-                child: pw.Image(pw.MemoryImage(org.logoBytes!)),
-              ),
+            if (logoWidget != null) logoWidget,
             pw.Expanded(
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -191,12 +246,7 @@ class LoanStatementPdfService {
                 ],
               ),
             ),
-            if (qrPngBytes != null)
-              pw.Container(
-                width: 56,
-                height: 56,
-                child: pw.Image(pw.MemoryImage(qrPngBytes)),
-              ),
+            if (qrWidget != null) qrWidget,
           ],
         ),
         pw.SizedBox(height: 10),
@@ -669,30 +719,4 @@ class _LedgerResult {
     required this.totalPrincipalPaid,
     required this.closingBalance,
   });
-}
-
-/// Helper to load Google Fonts as PDF font assets.
-class PdfGoogleFonts {
-  static Future<pw.Font> interRegular() async {
-    final data = await rootBundle.load('packages/pdf/fonts/Roboto-Regular.ttf')
-        .catchError((_) async {
-      // Fallback: built-in font
-      return ByteData(0);
-    });
-    if (data.lengthInBytes == 0) {
-      return pw.Font.helvetica();
-    }
-    return pw.Font.ttf(data);
-  }
-
-  static Future<pw.Font> interBold() async {
-    final data = await rootBundle.load('packages/pdf/fonts/Roboto-Bold.ttf')
-        .catchError((_) async {
-      return ByteData(0);
-    });
-    if (data.lengthInBytes == 0) {
-      return pw.Font.helveticaBold();
-    }
-    return pw.Font.ttf(data);
-  }
 }

@@ -375,7 +375,7 @@ class EMIRepository {
           .select()
           .eq('loan_id', loanId)
           .eq('type', TransactionType.emiPayment.name)
-          .order('entered_at', ascending: false);
+          .order('created_at', ascending: false);
 
       return (response as List)
           .map((json) => json as Map<String, dynamic>)

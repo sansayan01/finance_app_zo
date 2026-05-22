@@ -84,6 +84,8 @@ class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
         return 'Activity Only';
       case StatementVariant.taxStatement:
         return 'Tax Statement';
+      case StatementVariant.customerStatement:
+        return 'Customer Statement';
     }
   }
 
@@ -263,6 +265,8 @@ class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
         return 'Only actual transactions — paid, late, and disbursements.';
       case StatementVariant.taxStatement:
         return 'Interest and principal paid in the period for tax filing.';
+      case StatementVariant.customerStatement:
+        return 'Simple statement for the customer — payments made, balance remaining, next due.';
     }
   }
 

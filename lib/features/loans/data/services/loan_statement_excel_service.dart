@@ -226,6 +226,8 @@ class LoanStatementExcelService {
         return 'LOAN STATEMENT — ACTIVITY ONLY';
       case StatementVariant.taxStatement:
         return 'LOAN STATEMENT — TAX SUMMARY';
+      case StatementVariant.customerStatement:
+        return 'LOAN REPAYMENT STATEMENT';
     }
   }
 }

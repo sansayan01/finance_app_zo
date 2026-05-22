@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
+import '../../../../core/utils/file_download.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/progress_gauge.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +27,6 @@ import '../../data/services/loan_statement_pdf_service.dart';
 import '../../data/services/loan_statement_excel_service.dart';
 import '../../data/services/loan_statement_csv_service.dart';
 import '../../data/services/loan_statement_archive_service.dart';
-import '../../data/services/qr_png.dart';
 import '../widgets/collection_sheet.dart';
 import '../widgets/statement_options_sheet.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -3871,32 +3872,34 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       final ref0 =
           'STMT-${loan.loanNumber}-${now.millisecondsSinceEpoch.toRadixString(36).toUpperCase()}';
 
-      // QR code links to a verification URL containing the ref. The PDF
-      // embeds the QR; verifying scans match the hash in the archive row.
-      final verifyUrl =
-          'https://verify.microflow.app/statement/$ref0';
-      final qrBytes = options.format == StatementFormat.pdf
-          ? await QrPng.generate(verifyUrl, size: 200)
-          : null;
-
       late final Uint8List bytes;
       late final String ext;
       late final String mime;
 
       switch (options.format) {
         case StatementFormat.pdf:
-          bytes = await LoanStatementPdfService.build(
-            loan: loan,
-            schedule: schedule,
-            payments: mappedPayments,
-            org: org,
-            periodStart: options.periodStart,
-            periodEnd: options.periodEnd,
-            variant: options.variant,
-            generatedByName: ref.read(currentUserProvider)?.fullName,
-            statementRef: ref0,
-            qrPngBytes: qrBytes,
-          );
+          if (options.variant == StatementVariant.customerStatement) {
+            bytes = await LoanStatementPdfService.buildCustomerStatement(
+              loan: loan,
+              schedule: schedule,
+              payments: mappedPayments,
+              org: org,
+              generatedByName: ref.read(currentUserProvider)?.fullName,
+            );
+          } else {
+            bytes = await LoanStatementPdfService.build(
+              loan: loan,
+              schedule: schedule,
+              payments: mappedPayments,
+              org: org,
+              periodStart: options.periodStart,
+              periodEnd: options.periodEnd,
+              variant: options.variant,
+              generatedByName: ref.read(currentUserProvider)?.fullName,
+              statementRef: ref0,
+              qrPngBytes: null,
+            );
+          }
           ext = 'pdf';
           mime = 'application/pdf';
           break;
@@ -3928,87 +3931,132 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           break;
       }
 
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File(
-          '${dir.path}/loan_statement_${loan.loanNumber}_${now.millisecondsSinceEpoch}.$ext');
-      await file.writeAsBytes(bytes);
+      // Save/download the file
+      final fileName = 'loan_statement_${loan.loanNumber}_${now.millisecondsSinceEpoch}.$ext';
 
-      // Archive: upload to Supabase Storage + insert metadata row with SHA-256
-      try {
-        final me = ref.read(currentUserProvider);
-        // Look up profile id from auth user id
-        final supa = ref.read(supabaseClientProvider);
-        String? profileId;
-        if (me != null) {
-          final p = await supa
-              .from('profiles')
-              .select('id')
-              .eq('user_id', me.id)
-              .maybeSingle();
-          profileId = p?['id'] as String?;
+      if (kIsWeb) {
+        // Web: trigger browser download
+        downloadFileForWeb(bytes, fileName, mime);
+
+        // Archive (best-effort)
+        try {
+          final me = ref.read(currentUserProvider);
+          final supa = ref.read(supabaseClientProvider);
+          String? profileId;
+          if (me != null) {
+            final p = await supa
+                .from('profiles')
+                .select('id')
+                .eq('user_id', me.id)
+                .maybeSingle();
+            profileId = p?['id'] as String?;
+          }
+          await ref
+              .read(loanStatementArchiveServiceProvider)
+              .archive(
+                loanId: loan.id,
+                bytes: bytes,
+                statementRef: ref0,
+                periodStart: options.periodStart,
+                periodEnd: options.periodEnd,
+                variant: options.variant.name,
+                format: options.format.name,
+                fileExtension: ext,
+                mimeType: mime,
+                generatedByUserId: profileId,
+                generatedByName: me?.fullName,
+              );
+          ref.invalidate(pastLoanStatementsProvider(loan.id));
+        } catch (e) {
+          debugPrint('Statement archive failed: $e');
         }
 
-        await ref
-            .read(loanStatementArchiveServiceProvider)
-            .archive(
-              loanId: loan.id,
-              bytes: bytes,
-              statementRef: ref0,
-              periodStart: options.periodStart,
-              periodEnd: options.periodEnd,
-              variant: options.variant.name,
-              format: options.format.name,
-              fileExtension: ext,
-              mimeType: mime,
-              generatedByUserId: profileId,
-              generatedByName: me?.fullName,
-            );
-        ref.invalidate(pastLoanStatementsProvider(loan.id));
-      } catch (e) {
-        // Archival is best-effort — the user still gets their file.
-        debugPrint('Statement archive failed: $e');
-      }
+        if (!mounted) return;
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(
+          content: Text('Statement downloaded: $fileName'),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        // Mobile/Desktop: save to documents directory
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(bytes);
 
-      if (!mounted) return;
-      messenger.hideCurrentSnackBar();
+        // Archive (best-effort)
+        try {
+          final me = ref.read(currentUserProvider);
+          final supa = ref.read(supabaseClientProvider);
+          String? profileId;
+          if (me != null) {
+            final p = await supa
+                .from('profiles')
+                .select('id')
+                .eq('user_id', me.id)
+                .maybeSingle();
+            profileId = p?['id'] as String?;
+          }
+          await ref
+              .read(loanStatementArchiveServiceProvider)
+              .archive(
+                loanId: loan.id,
+                bytes: bytes,
+                statementRef: ref0,
+                periodStart: options.periodStart,
+                periodEnd: options.periodEnd,
+                variant: options.variant.name,
+                format: options.format.name,
+                fileExtension: ext,
+                mimeType: mime,
+                generatedByUserId: profileId,
+                generatedByName: me?.fullName,
+              );
+          ref.invalidate(pastLoanStatementsProvider(loan.id));
+        } catch (e) {
+          debugPrint('Statement archive failed: $e');
+        }
 
-      await showModalBottomSheet(
-        context: context,
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.open_in_new_rounded),
-                title: Text('Open ${ext.toUpperCase()}'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  OpenFilex.open(file.path);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.ios_share_rounded),
-                title: const Text('Share'),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await SharePlus.instance.share(ShareParams(
-                    files: [XFile(file.path, mimeType: mime)],
-                    text: 'Loan Statement - ${loan.loanNumber}',
-                  ));
-                },
-              ),
-            ],
+        if (!mounted) return;
+        messenger.hideCurrentSnackBar();
+
+        await showModalBottomSheet(
+          context: context,
+          builder: (ctx) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.open_in_new_rounded),
+                  title: Text('Open ${ext.toUpperCase()}'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    OpenFilex.open(file.path);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.ios_share_rounded),
+                  title: const Text('Share'),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await SharePlus.instance.share(ShareParams(
+                      files: [XFile(file.path, mimeType: mime)],
+                      text: 'Loan Statement - ${loan.loanNumber}',
+                    ));
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e, st) {
       debugPrint('Statement generation failed: $e\n$st');
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(SnackBar(
-        content: Text('Failed to generate statement: $e'),
+        content: Text('Failed: $e\n$st', maxLines: 6),
         backgroundColor: Theme.of(context).colorScheme.error,
-        duration: const Duration(seconds: 6),
+        duration: const Duration(seconds: 15),
       ));
     }
   }
@@ -4144,12 +4192,24 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     }
   }
 
-  Future<File> _downloadToTempAndReturn(LoanStatementArchive r) async {
+  Future<File?> _downloadToTempAndReturn(LoanStatementArchive r) async {
     final bytes = await ref
         .read(loanStatementArchiveServiceProvider)
         .download(r.filePath);
+    final fileName = '${r.statementRef}.${r.format == 'excel' ? 'xlsx' : r.format}';
+    final mimeType = r.format == 'pdf'
+        ? 'application/pdf'
+        : r.format == 'excel'
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'text/csv';
+
+    if (kIsWeb) {
+      downloadFileForWeb(bytes, fileName, mimeType);
+      return null;
+    }
+
     final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/${r.statementRef}.${r.format == 'excel' ? 'xlsx' : r.format}');
+    final file = File('${dir.path}/$fileName');
     await file.writeAsBytes(bytes);
     return file;
   }
@@ -4157,6 +4217,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Future<void> _downloadArchived(LoanStatementArchive r) async {
     try {
       final file = await _downloadToTempAndReturn(r);
+      if (file == null) return; // Web handled via browser download
       await OpenFilex.open(file.path);
     } catch (e) {
       if (!mounted) return;
@@ -4250,6 +4311,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Future<void> _shareArchived(LoanStatementArchive r) async {
     try {
       final file = await _downloadToTempAndReturn(r);
+      if (file == null) return; // Web handled via browser download
       await SharePlus.instance.share(ShareParams(
         files: [XFile(file.path)],
         text: 'Loan Statement - ${r.statementRef}',

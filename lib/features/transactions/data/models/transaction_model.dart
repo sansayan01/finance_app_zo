@@ -12,6 +12,11 @@ class TransactionModel {
   final String? description;
   final PaymentMode? paymentMode;
   final String? agentId;
+  final String? collectedByUserId;
+  final String? collectedByName;
+  final String? collectedByRole;
+  final DateTime? collectedAt;
+  final String? collectionMethod;
 
   TransactionModel({
     required this.id,
@@ -25,6 +30,11 @@ class TransactionModel {
     this.description,
     this.paymentMode,
     this.agentId,
+    this.collectedByUserId,
+    this.collectedByName,
+    this.collectedByRole,
+    this.collectedAt,
+    this.collectionMethod,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +61,13 @@ class TransactionModel {
             )
           : null,
       agentId: json['agent_id']?.toString(),
+      collectedByUserId: json['collected_by_user_id']?.toString(),
+      collectedByName: json['collected_by_name']?.toString(),
+      collectedByRole: json['collected_by_role']?.toString(),
+      collectedAt: json['collected_at'] != null
+          ? DateTime.tryParse(json['collected_at'].toString())
+          : null,
+      collectionMethod: json['collection_method']?.toString(),
     );
   }
 
@@ -84,6 +101,11 @@ class TransactionModel {
       'description': description,
       'payment_mode': paymentMode?.name,
       'agent_id': agentId,
+      'collected_by_user_id': collectedByUserId,
+      'collected_by_name': collectedByName,
+      'collected_by_role': collectedByRole,
+      'collected_at': collectedAt?.toIso8601String(),
+      'collection_method': collectionMethod,
     };
   }
 }

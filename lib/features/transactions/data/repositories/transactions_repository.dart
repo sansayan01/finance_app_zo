@@ -137,6 +137,12 @@ class TransactionsRepository {
     await _client.from('transactions').delete().eq('id', id);
   }
 
+  Future<int> deleteTransactions(List<String> ids) async {
+    if (ids.isEmpty) return 0;
+    await _client.from('transactions').delete().inFilter('id', ids);
+    return ids.length;
+  }
+
   Future<void> createTransaction({
     required String memberId,
     required String memberName,

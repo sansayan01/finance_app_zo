@@ -8,6 +8,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../home/data/providers/dashboard_providers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/transaction_model.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
@@ -29,6 +30,102 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   bool _hasMore = true;
   bool _initialLoaded = false;
   static const _pageSize = 20;
+
+  // Selection state (executiveAdmin only)
+  bool _selectionMode = false;
+  final Set<String> _selectedIds = {};
+
+  bool get _canBulkDelete {
+    final user = ref.read(currentUserProvider);
+    return user?.role == UserRole.executiveAdmin;
+  }
+
+  void _toggleSelect(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+        if (_selectedIds.isEmpty) _selectionMode = false;
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _enterSelection(String firstId) {
+    if (!_canBulkDelete) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _selectionMode = true;
+      _selectedIds.add(firstId);
+    });
+  }
+
+  void _exitSelection() {
+    setState(() {
+      _selectionMode = false;
+      _selectedIds.clear();
+    });
+  }
+
+  void _selectAllLoaded() {
+    setState(() {
+      _selectedIds.addAll(_transactions.map((t) => t.id));
+    });
+  }
+
+  Future<void> _confirmAndDeleteSelected() async {
+    final count = _selectedIds.length;
+    if (count == 0) return;
+    final theme = Theme.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete transactions?'),
+        content: Text(
+          'This will permanently delete $count transaction${count == 1 ? '' : 's'}. '
+          'This action cannot be undone and may affect loan/savings balances.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Delete $count'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final ids = _selectedIds.toList();
+    final repo = ref.read(transactionsRepositoryProvider);
+    try {
+      await repo.deleteTransactions(ids);
+      if (!mounted) return;
+      _exitSelection();
+      _resetAndReload();
+      // Refresh every home/dashboard widget that derives from transactions
+      ref.invalidate(todayStatsProvider);
+      ref.invalidate(recentTransactionsProvider);
+      ref.invalidate(dashboardTransactionsProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Deleted ${ids.length} transaction${ids.length == 1 ? '' : 's'}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Delete failed: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
 
   final List<Map<String, dynamic>> _filters = [
     {'label': 'All', 'type': null, 'icon': Icons.receipt_long_rounded},
@@ -102,9 +199,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: AuroraBackground(
+    return PopScope(
+      canPop: !_selectionMode,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _selectionMode) _exitSelection();
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: AuroraBackground(
         child: SafeArea(
           bottom: false,
           child: RefreshIndicator(
@@ -121,47 +223,49 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(Icons.arrow_back_rounded,
-                                color: primary, size: 20),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    child: _selectionMode
+                        ? _buildSelectionBar(theme, primary)
+                        : Row(
                             children: [
-                              Text(
-                                'FINANCIAL TIMELINE',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 2,
-                                  fontSize: 10,
-                                  color: primary,
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(Icons.arrow_back_rounded,
+                                      color: primary, size: 20),
                                 ),
                               ),
-                              Text(
-                                'Transaction History',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.8,
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'FINANCIAL TIMELINE',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 2,
+                                        fontSize: 10,
+                                        color: primary,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Transaction History',
+                                      style: theme.textTheme.headlineSmall?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: -0.8,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
                   ).animate().fadeIn(duration: 400.ms),
                 ),
 
@@ -357,6 +461,53 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           ),
         ),
       ),
+     ),
+    );
+  }
+
+  Widget _buildSelectionBar(ThemeData theme, Color primary) {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: _exitSelection,
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.close_rounded,
+                color: theme.colorScheme.error, size: 20),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            '${_selectedIds.length} selected',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: 'Select all loaded',
+          onPressed: _selectAllLoaded,
+          icon: Icon(Icons.select_all_rounded, color: primary),
+        ),
+        const SizedBox(width: 4),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colorScheme.error,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          ),
+          onPressed: _selectedIds.isEmpty ? null : _confirmAndDeleteSelected,
+          icon: const Icon(Icons.delete_outline_rounded, size: 18),
+          label: const Text('Delete',
+              style: TextStyle(fontWeight: FontWeight.w800)),
+        ),
+      ],
     );
   }
 
@@ -476,7 +627,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
         ...transactions.map((t) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _TransactionCard(transaction: t),
+              child: _TransactionCard(
+                transaction: t,
+                selectionMode: _selectionMode,
+                selected: _selectedIds.contains(t.id),
+                canSelect: _canBulkDelete,
+                onTap: _selectionMode ? () => _toggleSelect(t.id) : null,
+                onLongPress: _canBulkDelete && !_selectionMode
+                    ? () => _enterSelection(t.id)
+                    : null,
+              ),
             )),
       ],
     );
@@ -513,7 +673,20 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
 class _TransactionCard extends StatelessWidget {
   final TransactionModel transaction;
-  const _TransactionCard({required this.transaction});
+  final bool selectionMode;
+  final bool selected;
+  final bool canSelect;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+
+  const _TransactionCard({
+    required this.transaction,
+    this.selectionMode = false,
+    this.selected = false,
+    this.canSelect = false,
+    this.onTap,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -521,10 +694,22 @@ class _TransactionCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final config = _getTypeConfig(transaction.type, isDark);
 
-    return GlassCard(
+    final card = GlassCard(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
+          if (selectionMode) ...[
+            Icon(
+              selected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.dividerColor,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+          ],
           Container(
             width: 48,
             height: 48,
@@ -595,6 +780,32 @@ class _TransactionCard extends StatelessWidget {
                         ?.withValues(alpha: 0.6),
                   ),
                 ),
+                if ((transaction.collectedByName ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(Icons.person_outline_rounded,
+                          size: 11,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.6)),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          'Collected by ${transaction.collectedByName}'
+                          '${transaction.collectedByRole != null ? ' (${_roleLabel(transaction.collectedByRole!)})' : ''}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: theme.textTheme.bodySmall?.color
+                                ?.withValues(alpha: 0.7),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -628,6 +839,14 @@ class _TransactionCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null && onLongPress == null) return card;
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      behavior: HitTestBehavior.opaque,
+      child: card,
     );
   }
 
@@ -679,6 +898,27 @@ class _TypeConfig {
   final Color color;
   final bool isInflow;
   _TypeConfig(this.icon, this.label, this.color, this.isInflow);
+}
+
+String _roleLabel(String role) {
+  switch (role) {
+    case 'superAdmin':
+      return 'Super Admin';
+    case 'executiveAdmin':
+      return 'Executive Admin';
+    case 'manager':
+      return 'Branch Manager';
+    case 'collectionAgent':
+      return 'Collection Agent';
+    case 'fieldStaff':
+      return 'Field Staff';
+    case 'customer':
+      return 'Customer';
+    case 'retailMember':
+      return 'Member';
+    default:
+      return role;
+  }
 }
 
 // ─── Stats Mini Card ───

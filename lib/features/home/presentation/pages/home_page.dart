@@ -17,6 +17,7 @@ import '../../../savings/data/models/savings_model.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../data/providers/dashboard_providers.dart';
+import '../widgets/live_agents_map_card.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   final VoidCallback onViewAllLoans;
@@ -90,6 +91,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   _buildFinancialSummaryStrip(context, ref),
                   const SizedBox(height: 28),
                   _buildQuickActions(context, ref),
+                  const SizedBox(height: 28),
+                  const LiveAgentsMapCard(),
                   const SizedBox(height: 28),
                   _buildActiveLoansSection(context, ref),
                   const SizedBox(height: 28),

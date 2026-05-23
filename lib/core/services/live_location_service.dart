@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,6 +11,8 @@ class LiveLocationService {
   final SupabaseClient _client;
 
   LiveLocationService(this._client);
+
+  final Battery _battery = Battery();
 
   Timer? _timer;
   StreamSubscription<Position>? _positionSub;
@@ -92,6 +95,18 @@ class LiveLocationService {
       // Determine activity type based on speed
       final String activityType = _detectActivity(position.speed);
 
+      // Battery (best-effort; failure shouldn't block location upload)
+      int? batteryLevel;
+      bool isCharging = false;
+      try {
+        batteryLevel = await _battery.batteryLevel;
+        final state = await _battery.batteryState;
+        isCharging = state == BatteryState.charging ||
+            state == BatteryState.full;
+      } catch (e) {
+        debugPrint('[LiveLocation] Battery read failed: $e');
+      }
+
       await _client.from('staff_locations').insert({
         'staff_id': _currentStaffId,
         'org_id': _currentOrgId,
@@ -102,6 +117,8 @@ class LiveLocationService {
         'speed': position.speed,
         'heading': position.heading,
         'activity_type': activityType,
+        'battery_level': batteryLevel,
+        'is_charging': isCharging,
         'is_active': true,
         'session_id': _sessionId,
         'recorded_at': DateTime.now().toIso8601String(),

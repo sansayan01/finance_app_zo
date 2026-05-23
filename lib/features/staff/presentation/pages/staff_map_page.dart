@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/location_service.dart';
 import '../../data/providers/collection_providers.dart';
+import '../../data/providers/live_tracking_providers.dart';
 
 class StaffMapPage extends ConsumerStatefulWidget {
   const StaffMapPage({super.key});
@@ -18,23 +21,23 @@ class StaffMapPage extends ConsumerStatefulWidget {
 }
 
 class _StaffMapPageState extends ConsumerState<StaffMapPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   Position? _pos;
   String _filter = 'all';
-  late AnimationController _radarCtrl;
+  bool _showList = true;
+  bool _isMapReady = false;
+  late MapController _mapController;
 
   @override
   void initState() {
     super.initState();
-    _radarCtrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 4))
-          ..repeat();
+    _mapController = MapController();
     _locate();
   }
 
   @override
   void dispose() {
-    _radarCtrl.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
@@ -45,16 +48,50 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
         setState(() {
           _pos = p;
         });
+        if (_isMapReady && p != null) {
+          _mapController.move(LatLng(p.latitude, p.longitude), 14);
+        }
       }
     } catch (_) {
       if (mounted) setState(() {});
     }
   }
 
+  void _fitAllStops(List<Map<String, dynamic>> items) {
+    if (!_isMapReady) return;
+    final points = <LatLng>[];
+    if (_pos != null) {
+      points.add(LatLng(_pos!.latitude, _pos!.longitude));
+    }
+    for (final item in items) {
+      final m = item['members'] as Map? ?? {};
+      final lat = m['gps_lat'];
+      final lng = m['gps_lng'];
+      if (lat != null && lng != null) {
+        points.add(LatLng((lat as num).toDouble(), (lng as num).toDouble()));
+      }
+    }
+    if (points.isEmpty) return;
+    if (points.length == 1) {
+      _mapController.move(points.first, 14);
+      return;
+    }
+    final lats = points.map((p) => p.latitude).toList();
+    final lngs = points.map((p) => p.longitude).toList();
+    final bounds = LatLngBounds(
+      LatLng(lats.reduce(math.min), lngs.reduce(math.min)),
+      LatLng(lats.reduce(math.max), lngs.reduce(math.max)),
+    );
+    _mapController.fitCamera(
+      CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(60)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final agents = ref.watch(liveAgentLocationsProvider);
 
     return Scaffold(
       backgroundColor:
@@ -104,17 +141,19 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
                   style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color:
-                          _pos != null ? AppColors.success : AppColors.error)),
+                      color: _pos != null
+                          ? AppColors.success
+                          : AppColors.error)),
             ]),
           ),
         ],
       ),
-      body: _content(theme, isDark),
+      body: _content(theme, isDark, agents),
     );
   }
 
-  Widget _content(ThemeData theme, bool isDark) {
+  Widget _content(ThemeData theme, bool isDark,
+      Map<String, Map<String, dynamic>> agents) {
     return ref.watch(todayDueEmisProvider).when(
           data: (due) {
             final items = _sortFilter(due);
@@ -147,26 +186,26 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
                   ]));
             }
 
-            return RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(todayDueEmisProvider);
-                await _locate();
-              },
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-                children: [
-                  _radar(theme, isDark, items),
-                  const SizedBox(height: 24),
-                  _routeBar(theme, items),
-                  const SizedBox(height: 24),
-                  _missionProgress(theme, items.length,
-                      0), // Mocking 0 for now as we don't have 'done' flag in items
-                  ...items
-                      .asMap()
-                      .entries
-                      .map((e) => _stopCard(theme, isDark, e.key, e.value)),
-                ],
-              ),
+            return Stack(
+              children: [
+                // Map section (top half)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 280,
+                  child: _buildMap(theme, isDark, items, agents),
+                ),
+
+                // Bottom sheet with stop list
+                Positioned(
+                  top: 260,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildBottomSheet(theme, isDark, items),
+                ),
+              ],
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -176,113 +215,178 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
         );
   }
 
-  Widget _radar(
-      ThemeData theme, bool isDark, List<Map<String, dynamic>> items) {
-    return Container(
-      height: 240,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF181C24) : Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
-              blurRadius: 24,
-              offset: const Offset(0, 10)),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Center(
-            child: AnimatedBuilder(
-              animation: _radarCtrl,
-              builder: (_, __) => CustomPaint(
-                size: const Size(180, 180),
-                painter: _RadarPainter(
-                    isDark: isDark, angle: _radarCtrl.value * 2 * math.pi),
-              ),
-            ),
-          ),
-          ...items.take(6).toList().asMap().entries.map((e) {
-            final a = (e.key * 60.0 + 30.0) * math.pi / 180.0;
-            final r = 40.0 + (e.key % 2) * 25.0;
-            return Positioned(
-              left: 180 / 2 +
-                  r * math.cos(a) +
-                  (MediaQuery.of(context).size.width - 40) / 2 -
-                  180 / 2 -
-                  12,
-              top: 120 + r * math.sin(a) - 12,
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.4),
-                          blurRadius: 8)
-                    ]),
-                child: Center(
-                    child: Text('${e.key + 1}',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900))),
-              ),
-            );
-          }),
-          Positioned(
-            left: 24,
-            bottom: 24,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Row(children: [
-                    Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                            color: AppColors.primary, shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    Text('SCANNING AREA',
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary,
-                            letterSpacing: 0.5)),
-                  ]),
+  Widget _buildMap(ThemeData theme, bool isDark, List<Map<String, dynamic>> items,
+      Map<String, Map<String, dynamic>> agents) {
+    final markers = <Marker>[];
+
+    // Agent's own location
+    if (_pos != null) {
+      markers.add(
+        Marker(
+          point: LatLng(_pos!.latitude, _pos!.longitude),
+          width: 28,
+          height: 28,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 8,
                 ),
-                const SizedBox(height: 8),
-                Text('6 points detected in 5km radius',
-                    style: TextStyle(
-                        fontSize: 9,
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                        fontWeight: FontWeight.w600)),
               ],
             ),
-          ),
-          Positioned(
-            right: 24,
-            bottom: 24,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: 0.05),
-                  shape: BoxShape.circle),
-              child: Icon(Icons.fullscreen_rounded,
-                  size: 20,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+            child: const Center(
+              child: Icon(Icons.my_location, color: Colors.white, size: 14),
             ),
+          ),
+        ),
+      );
+    }
+
+    // Due stop markers
+    for (var i = 0; i < items.length; i++) {
+      final m = items[i]['members'] as Map? ?? {};
+      final lat = m['gps_lat'];
+      final lng = m['gps_lng'];
+      if (lat == null || lng == null) continue;
+      markers.add(
+        Marker(
+          point: LatLng((lat as num).toDouble(), (lng as num).toDouble()),
+          width: 30,
+          height: 30,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    blurRadius: 6),
+              ],
+            ),
+            child: Center(
+              child: Text('${i + 1}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Agent's own breadcrumb trail from live tracking
+    final breadcrumbPoints = <LatLng>[];
+    if (_pos != null) {
+      final ownAgent = agents.values.where((a) =>
+          a['latitude'] != null &&
+          a['longitude'] != null &&
+          a['is_active'] == true);
+      for (final a in ownAgent) {
+        breadcrumbPoints.add(LatLng(
+          (a['latitude'] as num).toDouble(),
+          (a['longitude'] as num).toDouble(),
+        ));
+      }
+    }
+
+    return GestureDetector(
+      onDoubleTap: () => _fitAllStops(items),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+        child: FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            initialCenter: _pos != null
+                ? LatLng(_pos!.latitude, _pos!.longitude)
+                : const LatLng(20.5937, 78.9629),
+            initialZoom: 13,
+            onMapReady: () {
+              setState(() => _isMapReady = true);
+              _fitAllStops(items);
+            },
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: isDark
+                  ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                  : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+              subdomains: const ['a', 'b', 'c', 'd'],
+              userAgentPackageName: 'com.microflow.pro',
+            ),
+            if (breadcrumbPoints.length > 1)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: breadcrumbPoints,
+                    strokeWidth: 3,
+                    color: AppColors.primary.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
+            MarkerLayer(markers: markers),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomSheet(
+      ThemeData theme, bool isDark, List<Map<String, dynamic>> items) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F1117) : Colors.white,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, -4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Drag handle
+          Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 6),
+            child: GestureDetector(
+              onTap: () => setState(() => _showList = !_showList),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+          // Header: route bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _routeBar(theme, items),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _showList
+                ? ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                    children: [
+                      _missionProgress(theme, items.length, 0),
+                      ...items
+                          .asMap()
+                          .entries
+                          .map((e) =>
+                              _stopCard(theme, isDark, e.key, e.value)),
+                    ],
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -315,14 +419,14 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
                 Icons.map_rounded)),
         const SizedBox(width: 12),
         Container(
-          width: 64,
-          height: 64,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
                 colors: [AppColors.primary, AppColors.accent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
                   color: AppColors.primary.withValues(alpha: 0.3),
@@ -333,7 +437,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
           child: IconButton(
               onPressed: _openMaps,
               icon: const Icon(Icons.navigation_rounded,
-                  color: Colors.white, size: 28)),
+                  color: Colors.white, size: 24)),
         ),
       ],
     );
@@ -349,6 +453,9 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
             ? const Color(0xFF181C24)
             : Colors.white,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,7 +510,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF181C24) : Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.05)
@@ -458,8 +565,8 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
                     shape: BoxShape.circle,
                     border: Border.all(
                         color: isDark
-                            ? const Color(0xFF0A0A0B)
-                            : const Color(0xFFF8F9FE),
+                            ? const Color(0xFF0F1117)
+                            : Colors.white,
                         width: 4)),
               ),
               Expanded(
@@ -706,64 +813,4 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
-}
-
-class _RadarPainter extends CustomPainter {
-  final bool isDark;
-  final double angle;
-  _RadarPainter({required this.isDark, required this.angle});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    final p = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    // Draw concentric circles
-    for (int i = 1; i <= 3; i++) {
-      canvas.drawCircle(c, radius * (i / 3), p);
-    }
-
-    // Draw sweep
-    final sweepPaint = Paint()
-      ..shader = SweepGradient(
-        colors: [
-          AppColors.primary.withValues(alpha: 0.2),
-          AppColors.primary.withValues(alpha: 0)
-        ],
-        stops: const [0.0, 0.2],
-        transform: GradientRotation(angle - 1.2),
-      ).createShader(Rect.fromCircle(center: c, radius: radius));
-
-    canvas.drawCircle(c, radius, sweepPaint..style = PaintingStyle.fill);
-
-    // Draw crosshair
-    final crossPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.15)
-      ..strokeWidth = 1;
-    canvas.drawLine(
-        Offset(c.dx - radius, c.dy), Offset(c.dx + radius, c.dy), crossPaint);
-    canvas.drawLine(
-        Offset(c.dx, c.dy - radius), Offset(c.dx, c.dy + radius), crossPaint);
-
-    // Center point
-    canvas.drawCircle(
-        c,
-        6,
-        Paint()
-          ..color = AppColors.primary
-          ..style = PaintingStyle.fill);
-    canvas.drawCircle(
-        c,
-        10,
-        Paint()
-          ..color = AppColors.primary.withValues(alpha: 0.2)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
-  }
-
-  @override
-  bool shouldRepaint(covariant _RadarPainter o) => true;
 }

@@ -26,7 +26,9 @@
       "Bash(node *)",
       "Bash(flutter pub *)",
       "mcp__supabase__list_edge_functions",
-      "mcp__supabase__deploy_edge_function"
+      "mcp__supabase__deploy_edge_function",
+      "Bash(grep -q \"^\\\\.mcp\\\\.json$\" .gitignore)",
+      "Skill(update-config)"
     ]
   },
   "enabledMcpjsonServers": [

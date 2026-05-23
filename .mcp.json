@@ -1,12 +1,16 @@
 {
   "mcpServers": {
     "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=tccwdpsnuudzfyxfoohk&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
-      "headers": {
-        "Authorization": "Bearer sbp_65e5721cce74581386ca56ea2707c8ed1e38c760"
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=tccwdpsnuudzfyxfoohk",
+        "--features=docs,account,database,debugging,development,functions,branching,storage"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_65e5721cce74581386ca56ea2707c8ed1e38c760"
       }
     }
   }
 }
-

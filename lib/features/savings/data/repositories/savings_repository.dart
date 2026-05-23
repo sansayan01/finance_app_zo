@@ -131,6 +131,21 @@ class SavingsRepository {
     }).toList();
   }
 
+  Future<List<SavingsModel>> getPlansByMemberId(String memberId) async {
+    try {
+      final response = await _client
+          .from('savings_plans')
+          .select('*, members:member_id(full_name)')
+          .eq('org_id', _orgId)
+          .eq('member_id', memberId)
+          .order('created_at', ascending: false);
+
+      return _mapSavingsList(response);
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<SavingsModel?> getSavingPlanById(String id) async {
     try {
       final response = await _client

@@ -95,6 +95,30 @@ class TransactionsRepository {
     }
   }
 
+  Future<List<TransactionModel>> getMemberSavingsTransactions({
+    required String memberId,
+    required DateTime periodEnd,
+  }) async {
+    try {
+      final response = await _client
+          .from('transactions')
+          .select()
+          .eq('member_id', memberId)
+          .inFilter('type', [
+        TransactionType.savingsDeposit.name,
+        TransactionType.savingsWithdrawal.name,
+      ])
+          .filter('created_at', 'lt', periodEnd.toIso8601String())
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((json) => TransactionModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<List<TransactionModel>> getTransactionsBySavingsId(
     String savingsId, {
     int limit = 50,

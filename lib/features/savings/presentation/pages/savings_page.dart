@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:ui';
-import '../../../../core/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,10 +8,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
-    hide savingsSummaryProvider;
+    hide savingsSummaryProvider, transactionsRepositoryProvider;
 
 class SavingsPage extends ConsumerStatefulWidget {
   const SavingsPage({super.key});
@@ -108,6 +108,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
         ),
       ),
       actions: [
+
         Padding(
           padding: const EdgeInsets.only(right: 16, top: 12),
           child: Container(
@@ -550,6 +551,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
       ),
     );
   }
+
 }
 
 class _PremiumSavingCard extends StatelessWidget {
@@ -706,6 +708,8 @@ class _PremiumSavingCard extends StatelessWidget {
     );
   }
 
+
+
   Widget _buildMaturityBadge(SavingsModel saving, ThemeData theme) {
     final isMatured = saving.status == 'completed';
     return Container(
@@ -754,3 +758,6 @@ class _FilterDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
 }
+
+
+

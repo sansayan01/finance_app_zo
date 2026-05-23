@@ -1,19 +1,31 @@
+import 'dart:io';
 import 'dart:ui';
+import '../../../../core/utils/file_download.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/providers/branding_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/transactions/data/models/transaction_model.dart';
+import '../../../../providers/supabase_provider.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/services/savings_statement_models.dart';
+import '../../data/services/savings_statement_pdf_service.dart';
+import '../../data/services/savings_statement_excel_service.dart';
+import '../../data/services/savings_statement_csv_service.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show pendingDepositsProvider, recentTransactionsProvider,
         dashboardTransactionsProvider, todayStatsProvider;
@@ -400,6 +412,11 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             ),
             actions: [
               IconButton(
+                icon: const Icon(Icons.description_rounded),
+                tooltip: 'Statement',
+                onPressed: () => _generateStatement(saving),
+              ),
+              IconButton(
                 icon: const Icon(Icons.ios_share_rounded),
                 tooltip: 'Share vault summary',
                 onPressed: () => _shareVaultSummary(saving),
@@ -590,6 +607,229 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         subject: 'Savings Vault: ${saving.planName}',
       ),
     );
+  }
+
+  Future<void> _generateStatement(SavingsModel saving) async {
+    final options = await showModalBottomSheet<_SavingsStatementOptions>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const _SavingsStatementOptionsSheet(),
+    );
+    if (options == null || !mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 18, height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            ),
+            SizedBox(width: 12),
+            Text('Generating statement…'),
+          ],
+        ),
+        duration: Duration(seconds: 30),
+      ),
+    );
+
+    try {
+      final memberId = saving.memberId;
+
+      final plansFuture = ref.read(memberSavingsProvider(memberId).future);
+      final txnsFuture = ref.read(transactionsRepositoryProvider).getMemberSavingsTransactions(
+        memberId: memberId,
+        periodEnd: options.periodEnd,
+      );
+      final memberResponseFuture = ref.read(supabaseClientProvider)
+          .from('members')
+          .select('phone, member_id')
+          .eq('id', memberId)
+          .maybeSingle();
+
+      final orgRaw = await ref.read(currentOrgProvider.future);
+      final brandingState = ref.read(brandingProvider);
+      final logoBytes = brandingState.value != null
+          ? ref.read(brandingProvider.notifier).cachedLogoBytes
+          : null;
+
+      final org = SavingsStatementOrgInfo(
+        name: (orgRaw?['display_name'] ?? orgRaw?['name'] ?? 'MicroFlow Pro').toString(),
+        address: orgRaw?['address'] as String?,
+        city: orgRaw?['city'] as String?,
+        state: orgRaw?['state'] as String?,
+        pincode: orgRaw?['pincode'] as String?,
+        phone: orgRaw?['phone'] as String?,
+        email: orgRaw?['email'] as String?,
+        gstNumber: orgRaw?['gst_number'] as String?,
+        logoBytes: logoBytes,
+      );
+
+      final results = await Future.wait([plansFuture, txnsFuture, memberResponseFuture]);
+      final plans = results[0] as List<SavingsModel>;
+      final txns = results[1] as List<TransactionModel>;
+      final memberResponse = results[2] as Map<String, dynamic>?;
+
+      final phone = memberResponse?['phone'] as String? ?? '';
+      final humanReadableMemberId = memberResponse?['member_id'] as String? ?? '';
+
+      final customer = SavingsStatementCustomer(
+        id: memberId,
+        memberId: humanReadableMemberId.isNotEmpty ? humanReadableMemberId : memberId,
+        fullName: saving.memberName,
+        phone: phone,
+      );
+
+      double totalOpeningBalance = 0;
+      double totalDeposits = 0;
+      double totalWithdrawals = 0;
+
+      final planBlocks = plans.map((p) {
+        double openingBalance = 0;
+        final deposits = <SavingsStatementTx>[];
+        final withdrawals = <SavingsStatementTx>[];
+
+        for (final t in txns) {
+          if (t.savingsId == p.id) {
+            final date = t.collectedAt ?? t.createdAt;
+            final isBeforePeriod = date.isBefore(options.periodStart);
+
+            if (isBeforePeriod) {
+              if (t.type == TransactionType.savingsDeposit) {
+                openingBalance += t.amount;
+              } else if (t.type == TransactionType.savingsWithdrawal) {
+                openingBalance -= t.amount;
+              }
+            } else {
+              final stx = SavingsStatementTx(
+                date: date,
+                amount: t.amount,
+                description: t.description ?? '${t.type.name} transaction',
+                paymentMode: t.paymentMode?.name,
+                collectedByName: t.collectedByName,
+              );
+              if (t.type == TransactionType.savingsDeposit) {
+                deposits.add(stx);
+                totalDeposits += t.amount;
+              } else if (t.type == TransactionType.savingsWithdrawal) {
+                withdrawals.add(stx);
+                totalWithdrawals += t.amount;
+              }
+            }
+          }
+        }
+
+        final planClosingBalance = openingBalance +
+            deposits.fold<double>(0, (sum, t) => sum + t.amount) -
+            withdrawals.fold<double>(0, (sum, t) => sum + t.amount);
+
+        totalOpeningBalance += openingBalance;
+
+        return SavingsStatementPlanBlock(
+          planId: p.id,
+          planName: p.planName,
+          status: p.status,
+          targetAmount: p.targetAmount,
+          currentAmount: p.currentAmount,
+          openingBalance: openingBalance,
+          closingBalance: planClosingBalance,
+          interestRate: p.interestRate,
+          maturityDate: p.maturityDate,
+          collectionType: p.collectionType,
+          monthlyDeposit: p.monthlyDeposit,
+          maturityAmount: p.maturityAmount,
+          deposits: deposits,
+          withdrawals: withdrawals,
+        );
+      }).toList();
+
+      final activePlans = plans.where((p) => p.status == 'active').length;
+      final closingBalance = totalOpeningBalance + totalDeposits - totalWithdrawals;
+      final interestEarned = planBlocks.fold<double>(0, (sum, p) => sum + p.interestAccrued);
+
+      final portfolio = SavingsStatementPortfolioSummary(
+        openingBalance: totalOpeningBalance,
+        totalDeposits: totalDeposits,
+        totalWithdrawals: totalWithdrawals,
+        interestEarned: interestEarned,
+        closingBalance: closingBalance,
+        activePlans: activePlans,
+        totalPlans: plans.length,
+      );
+
+      final statementData = SavingsStatementData(
+        customer: customer,
+        periodStart: options.periodStart,
+        periodEnd: options.periodEnd,
+        plans: planBlocks,
+        portfolio: portfolio,
+      );
+
+      final now = DateTime.now();
+      final statementRef =
+          'SAV-STMT-${now.millisecondsSinceEpoch.toRadixString(36).toUpperCase()}';
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      Uint8List bytes;
+      String ext;
+      String mimeType;
+
+      switch (options.format) {
+        case SavingsFormat.pdf:
+          bytes = await SavingsStatementPdfService.build(
+            data: statementData,
+            org: org,
+            statementRef: statementRef,
+            generatedByName: ref.read(currentUserProvider)?.fullName,
+          );
+          ext = 'pdf';
+          mimeType = 'application/pdf';
+        case SavingsFormat.excel:
+          bytes = SavingsStatementExcelService.build(
+            data: statementData,
+            orgName: org.name,
+            statementRef: statementRef,
+          );
+          ext = 'xlsx';
+          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        case SavingsFormat.csv:
+          bytes = SavingsStatementCsvService.build(
+            data: statementData,
+            orgName: org.name,
+            statementRef: statementRef,
+          );
+          ext = 'csv';
+          mimeType = 'text/csv';
+      }
+
+      final filename = 'savings_statement_${saving.memberId}.$ext';
+
+      if (kIsWeb) {
+        downloadFileForWeb(bytes, filename, mimeType);
+      } else {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/$filename');
+        await file.writeAsBytes(bytes);
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path)],
+            subject: 'Savings Statement - ${saving.memberName}',
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate statement: $e')),
+        );
+      }
+    }
   }
 
   void _showDeleteDialog() {
@@ -1567,6 +1807,238 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       messenger.showSnackBar(
         SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
       );
+    }
+  }
+}
+
+class _SavingsStatementOptions {
+  final DateTime periodStart;
+  final DateTime periodEnd;
+  final SavingsFormat format;
+
+  const _SavingsStatementOptions({
+    required this.periodStart,
+    required this.periodEnd,
+    required this.format,
+  });
+}
+
+enum _RangePreset { thisMonth, last3M, last6M, thisFY, custom }
+
+class _SavingsStatementOptionsSheet extends StatefulWidget {
+  const _SavingsStatementOptionsSheet();
+
+  @override
+  State<_SavingsStatementOptionsSheet> createState() =>
+      _SavingsStatementOptionsSheetState();
+}
+
+class _SavingsStatementOptionsSheetState
+    extends State<_SavingsStatementOptionsSheet> {
+  _RangePreset _preset = _RangePreset.thisFY;
+  SavingsFormat _format = SavingsFormat.pdf;
+  late DateTime _customStart;
+  late DateTime _customEnd;
+
+  @override
+  void initState() {
+    super.initState();
+    _customStart = DateTime(2000);
+    _customEnd = DateTime.now();
+  }
+
+  (DateTime, DateTime) _resolveRange() {
+    final now = DateTime.now();
+    switch (_preset) {
+      case _RangePreset.thisMonth:
+        return (DateTime(now.year, now.month, 1), now);
+      case _RangePreset.last3M:
+        return (DateTime(now.year, now.month - 3, now.day), now);
+      case _RangePreset.last6M:
+        return (DateTime(now.year, now.month - 6, now.day), now);
+      case _RangePreset.thisFY:
+        final fyStartYear = now.month >= 4 ? now.year : now.year - 1;
+        return (DateTime(fyStartYear, 4, 1), now);
+      case _RangePreset.custom:
+        return (_customStart, _customEnd);
+    }
+  }
+
+  Future<void> _pickCustomRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      initialDateRange: DateTimeRange(start: _customStart, end: _customEnd),
+    );
+    if (picked != null) {
+      setState(() {
+        _customStart = picked.start;
+        _customEnd = picked.end;
+        _preset = _RangePreset.custom;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final (start, end) = _resolveRange();
+    final fmt = DateFormat('dd MMM yyyy');
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text('Generate Savings Statement',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 4),
+            Text('Choose the period and format.',
+                style: theme.textTheme.bodySmall),
+            const SizedBox(height: 20),
+            Text('PERIOD',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w900,
+                  color: theme.textTheme.bodySmall?.color
+                      ?.withValues(alpha: 0.6),
+                )),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _RangePreset.values.map((p) {
+                final selected = _preset == p;
+                return GestureDetector(
+                  onTap: () async {
+                    if (p == _RangePreset.custom) {
+                      await _pickCustomRange();
+                    } else {
+                      setState(() => _preset = p);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _presetLabel(p),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        color: selected
+                            ? Colors.white
+                            : theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 6),
+            Text('${fmt.format(start)}  →  ${fmt.format(end)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.textTheme.bodySmall?.color
+                      ?.withValues(alpha: 0.7),
+                )),
+            const SizedBox(height: 20),
+            Text('FORMAT',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w900,
+                  color: theme.textTheme.bodySmall?.color
+                      ?.withValues(alpha: 0.6),
+                )),
+            const SizedBox(height: 8),
+            SegmentedButton<SavingsFormat>(
+              segments: [
+                ButtonSegment(
+                  value: SavingsFormat.pdf,
+                  label: const Text('PDF'),
+                  icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                ),
+                ButtonSegment(
+                  value: SavingsFormat.excel,
+                  label: const Text('Excel'),
+                  icon: const Icon(Icons.grid_on_rounded, size: 18),
+                ),
+                ButtonSegment(
+                  value: SavingsFormat.csv,
+                  label: const Text('CSV'),
+                  icon: const Icon(Icons.table_chart_rounded, size: 18),
+                ),
+              ],
+              selected: {_format},
+              onSelectionChanged: (s) => setState(() => _format = s.first),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  Navigator.pop(
+                    context,
+                    _SavingsStatementOptions(
+                      periodStart: start,
+                      periodEnd: end,
+                      format: _format,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.download_rounded),
+                label: const Text('Generate',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _presetLabel(_RangePreset p) {
+    switch (p) {
+      case _RangePreset.thisMonth:
+        return 'This Month';
+      case _RangePreset.last3M:
+        return 'Last 3 Months';
+      case _RangePreset.last6M:
+        return 'Last 6 Months';
+      case _RangePreset.thisFY:
+        return 'This FY';
+      case _RangePreset.custom:
+        return 'Custom';
     }
   }
 }

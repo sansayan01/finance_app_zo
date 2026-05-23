@@ -199,19 +199,23 @@ class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
 
             // ── Variant ──
             _SectionLabel(label: 'STATEMENT TYPE'),
-            ...StatementVariant.values.map((v) {
-              return RadioListTile<StatementVariant>(
-                value: v,
-                groupValue: _variant,
-                onChanged: (val) => setState(() => _variant = val!),
-                title: Text(_variantLabel(v),
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
-                subtitle: Text(_variantSubtitle(v),
-                    style: theme.textTheme.bodySmall),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              );
-            }),
+            RadioGroup<StatementVariant>(
+              groupValue: _variant,
+              onChanged: (val) => setState(() => _variant = val!),
+              child: Column(
+                children: StatementVariant.values.map((v) {
+                  return RadioListTile<StatementVariant>(
+                    value: v,
+                    title: Text(_variantLabel(v),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Text(_variantSubtitle(v),
+                        style: theme.textTheme.bodySmall),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  );
+                }).toList(),
+              ),
+            ),
             const SizedBox(height: 16),
 
             // ── Format ──

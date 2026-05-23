@@ -11,8 +11,14 @@ class QrPng {
         data: data,
         version: QrVersions.auto,
         gapless: true,
-        color: const Color(0xFF000000),
-        emptyColor: const Color(0xFFFFFFFF),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: Color(0xFF000000),
+        ),
+        eyeStyle: const QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: Color(0xFF000000),
+        ),
       );
       final image = await painter.toImage(size);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);

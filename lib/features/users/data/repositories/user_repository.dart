@@ -143,11 +143,11 @@ class UserRepository {
         }
         // Exclude members that already have a profile we fetched
         if (profileIds.isNotEmpty) {
+          // Use .or() to include members with null profile_id OR profile_id not in the set
+          // because NOT IN doesn't match NULL values in PostgreSQL
           final quotedIds = profileIds.map((id) => '"$id"').join(',');
-          membersQuery = membersQuery.not(
-            'profile_id',
-            'in',
-            '($quotedIds)',
+          membersQuery = membersQuery.or(
+            'profile_id.is.null,profile_id.not.in.($quotedIds)',
           );
         }
 

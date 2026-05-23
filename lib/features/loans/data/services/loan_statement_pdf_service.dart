@@ -702,12 +702,25 @@ class LoanStatementPdfService {
       author: org.name,
     );
 
-    final paidEmis = schedule.where((e) => e.status == EMIStatus.paid).toList();
-    final nextEmi = schedule
-        .where((e) => e.status != EMIStatus.paid)
-        .toList();
-    final totalPaid = paidEmis.fold<double>(0, (s, e) => s + e.emiAmount);
-    final emisRemaining = schedule.length - paidEmis.length;
+    final sortedPayments = List<LoanStatementPayment>.from(payments)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final totalPaid = sortedPayments.fold<double>(0, (s, p) => s + p.amount);
+    final emisRemaining = (schedule.length - sortedPayments.length).clamp(0, schedule.length);
+    final nextEmi = schedule.skip(sortedPayments.length).toList();
+
+    double runningOutstanding = loan.totalRepayable;
+    int idx = 1;
+    final tableData = sortedPayments.map((p) {
+      runningOutstanding -= p.amount;
+      return [
+        '${idx++}',
+        _date(p.date),
+        _money(p.amount),
+        p.mode,
+        _money(runningOutstanding),
+      ];
+    }).toList();
 
     pdf.addPage(
       pw.MultiPage(
@@ -855,7 +868,7 @@ class LoanStatementPdfService {
               children: [
                 _summaryItem('Total Paid', _money(totalPaid), PdfColors.green800),
                 _summaryItem('Outstanding', _money(loan.outstandingBalance), PdfColors.red800),
-                _summaryItem('EMIs Paid', '${paidEmis.length} / ${schedule.length}', PdfColors.indigo800),
+                _summaryItem('EMIs Paid', '${sortedPayments.length} / ${schedule.length}', PdfColors.indigo800),
                 _summaryItem('Next Due', nextEmi.isNotEmpty ? _date(nextEmi.first.dueDate) : 'Completed', PdfColors.orange800),
               ],
             ),
@@ -870,7 +883,7 @@ class LoanStatementPdfService {
                   letterSpacing: 0.5)),
           pw.SizedBox(height: 8),
 
-          if (paidEmis.isEmpty)
+          if (sortedPayments.isEmpty)
             pw.Container(
               padding: const pw.EdgeInsets.all(16),
               alignment: pw.Alignment.center,
@@ -881,15 +894,7 @@ class LoanStatementPdfService {
           else
             pw.TableHelper.fromTextArray(
               headers: ['#', 'Date', 'Amount', 'Mode', 'Balance After'],
-              data: paidEmis.map((emi) {
-                return [
-                  '${emi.emiNumber}',
-                  emi.paidOn != null ? _date(emi.paidOn!) : _date(emi.dueDate),
-                  _money(emi.emiAmount),
-                  emi.paymentMode?.name ?? 'cash',
-                  _money(emi.balanceAfter),
-                ];
-              }).toList(),
+              data: tableData,
               headerStyle: pw.TextStyle(
                 fontSize: 9,
                 fontWeight: pw.FontWeight.bold,

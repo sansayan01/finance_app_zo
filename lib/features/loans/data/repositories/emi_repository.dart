@@ -112,6 +112,7 @@ class EMIRepository {
         'member_name': memberName ?? 'Unknown',
         'type': TransactionType.emiPayment.name,
         'amount': amount,
+        'payment_mode': paymentMode,
         'description':
             'EMI payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
@@ -190,6 +191,7 @@ class EMIRepository {
         'member_name': memberName ?? 'Unknown',
         'type': TransactionType.emiPayment.name,
         'amount': amount,
+        'payment_mode': paymentMode,
         'description':
             'Manual payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
@@ -370,16 +372,108 @@ class EMIRepository {
 
   Future<List<Map<String, dynamic>>> getPaymentHistory(String loanId) async {
     try {
-      final response = await _client
+      // 1. Fetch collections for this loan
+      final collectionsResponse = await _client
+          .from('collections')
+          .select('''
+            id,
+            loan_id,
+            amount_collected,
+            amount_expected,
+            payment_mode,
+            collection_date,
+            collection_time,
+            remarks,
+            reference_number,
+            profiles!fk_collections_staff(full_name, role)
+          ''')
+          .eq('loan_id', loanId);
+
+      final List<Map<String, dynamic>> collections = [];
+      for (final json in collectionsResponse) {
+        final item = Map<String, dynamic>.from(json);
+        final staff = item['profiles'] as Map<String, dynamic>?;
+        collections.add({
+          'id': item['id']?.toString() ?? '',
+          'transaction_id': item['id']?.toString() ?? '',
+          'loan_id': item['loan_id']?.toString() ?? '',
+          'amount': ((item['amount_collected'] ?? item['amount_expected']) as num?)?.toDouble() ?? 0.0,
+          'payment_mode': item['payment_mode']?.toString() ?? 'cash',
+          'reference_number': item['reference_number']?.toString(),
+          'notes': item['remarks']?.toString(),
+          'created_at': item['collection_time']?.toString() ?? item['collection_date']?.toString() ?? '',
+          'collected_by_name': staff?['full_name']?.toString(),
+          'collected_by_role': staff?['role']?.toString(),
+          'source': 'collection',
+        });
+      }
+
+      // 2. Fetch transactions for this loan
+      final transactionsResponse = await _client
           .from('transactions')
           .select()
           .eq('loan_id', loanId)
-          .eq('type', TransactionType.emiPayment.name)
-          .order('created_at', ascending: false);
+          .eq('type', TransactionType.emiPayment.name);
 
-      return (response as List)
-          .map((json) => json as Map<String, dynamic>)
-          .toList();
+      final List<Map<String, dynamic>> transactions = [];
+      for (final json in transactionsResponse) {
+        final item = Map<String, dynamic>.from(json);
+        transactions.add({
+          'id': item['id']?.toString() ?? '',
+          'transaction_id': item['id']?.toString() ?? '',
+          'loan_id': item['loan_id']?.toString() ?? '',
+          'amount': (item['amount'] as num?)?.toDouble() ?? 0.0,
+          'payment_mode': item['payment_mode']?.toString() ?? 'cash',
+          'reference_number': item['reference_number']?.toString(),
+          'notes': item['description']?.toString(),
+          'created_at': item['created_at']?.toString() ?? '',
+          'source': 'transaction',
+        });
+      }
+
+      // 3. Merge and deduplicate
+      final List<Map<String, dynamic>> merged = [];
+      merged.addAll(collections);
+
+      for (final tx in transactions) {
+        final txTimeStr = tx['created_at']?.toString() ?? '';
+        final txTime = DateTime.tryParse(txTimeStr);
+        final txAmount = tx['amount'] as double;
+        final txMode = tx['payment_mode']?.toString();
+
+        bool isDuplicate = false;
+        if (txTime != null) {
+          for (final col in collections) {
+            final colTimeStr = col['created_at']?.toString() ?? '';
+            final colTime = DateTime.tryParse(colTimeStr);
+            final colAmount = col['amount'] as double;
+            final colMode = col['payment_mode']?.toString();
+
+            if (colTime != null && 
+                (txAmount - colAmount).abs() < 0.01 && 
+                txMode == colMode) {
+              final diff = txTime.difference(colTime).inMinutes.abs();
+              if (diff <= 5) {
+                isDuplicate = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (!isDuplicate) {
+          merged.add(tx);
+        }
+      }
+
+      // 4. Sort by date descending
+      merged.sort((a, b) {
+        final dateA = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final dateB = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return dateB.compareTo(dateA);
+      });
+
+      return merged;
     } catch (e) {
       return [];
     }

@@ -80,6 +80,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 onRefresh: () async {
                   ref.invalidate(loanDetailProvider(widget.loanId));
                   ref.invalidate(emiScheduleProvider(widget.loanId));
+                  ref.invalidate(paymentHistoryProvider(widget.loanId));
                 },
                 displacement: 20,
                 color: theme.colorScheme.primary,

@@ -94,6 +94,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       // Invalidate providers to refresh UI
       ref.invalidate(emiScheduleProvider(widget.loan.id));
       ref.invalidate(loanDetailProvider(widget.loan.id));
+      ref.invalidate(paymentHistoryProvider(widget.loan.id));
       ref.invalidate(loansProvider);
       ref.invalidate(dashboardLoansProvider);
       ref.invalidate(activeLoansProvider);

@@ -132,6 +132,43 @@ class SavingsStatementPdfService {
           _buildPortfolioSummary(data),
           pw.SizedBox(height: 20),
           ...data.plans.map((p) => _buildPlanSection(p, org)),
+          // Customer-friendly footer note
+          pw.Container(
+            width: double.infinity,
+            padding: pw.EdgeInsets.all(10),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.blueGrey50,
+              borderRadius: pw.BorderRadius.circular(4),
+              border: pw.Border.all(color: PdfColors.blueGrey200, width: 0.5),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('Important:',
+                    style: pw.TextStyle(
+                        fontSize: 8, fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.blueGrey700)),
+                pw.SizedBox(height: 3),
+                pw.Text(
+                    '• This is a computer-generated statement and does not require a signature.',
+                    style: pw.TextStyle(fontSize: 7.5, color: PdfColors.blueGrey600)),
+                pw.Text(
+                    '• Please contact us immediately if you notice any discrepancy.',
+                    style: pw.TextStyle(fontSize: 7.5, color: PdfColors.blueGrey600)),
+                if (org.phone != null && org.phone!.isNotEmpty)
+                  pw.Text(
+                      '• For queries, call: ${org.phone}',
+                      style: pw.TextStyle(fontSize: 7.5, color: PdfColors.blueGrey600)),
+                pw.SizedBox(height: 4),
+                pw.Text(
+                    'Keep saving! Your financial discipline today builds your security tomorrow.',
+                    style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.green800)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -189,7 +226,7 @@ class SavingsStatementPdfService {
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text('SAVINGS ACCOUNT STATEMENT',
+              pw.Text('SAVINGS PASSBOOK STATEMENT',
                   style: pw.TextStyle(
                       fontSize: 14,
                       fontWeight: pw.FontWeight.bold,
@@ -326,7 +363,7 @@ class SavingsStatementPdfService {
   static pw.Widget _buildPortfolioSummary(SavingsStatementData data) {
     final p = data.portfolio;
     return pw.Container(
-      padding: pw.EdgeInsets.all(12),
+      padding: pw.EdgeInsets.all(14),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.green300, width: 0.5),
         borderRadius: pw.BorderRadius.circular(4),
@@ -335,24 +372,26 @@ class SavingsStatementPdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('PORTFOLIO SUMMARY',
+          pw.Text('YOUR SAVINGS OVERVIEW',
               style: pw.TextStyle(
-                  fontSize: 9,
+                  fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                   color: PdfColors.green800)),
-          pw.SizedBox(height: 8),
+          pw.SizedBox(height: 10),
           pw.Row(
             children: [
               _metricBox('Opening Balance', _money(p.openingBalance)),
-              _metricBox('Total Deposits', _money(p.totalDeposits)),
-              _metricBox('Total Withdrawals', _money(p.totalWithdrawals)),
+              _metricBox('Total Deposited', _money(p.totalDeposits),
+                  color: PdfColors.green700),
+              _metricBox('Total Withdrawn', _money(p.totalWithdrawals),
+                  color: PdfColors.red700),
               _metricBox('Interest Earned', _money(p.interestEarned),
                   color: PdfColors.green700),
-              _metricBox('Closing Balance', _money(p.closingBalance),
+              _metricBox('Current Balance', _money(p.closingBalance),
                   color: PdfColors.blueGrey900),
             ],
           ),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: 8),
           pw.Text('Active Plans: ${p.activePlans} of ${p.totalPlans}',
               style: pw.TextStyle(fontSize: 8, color: PdfColors.blueGrey600)),
         ],
@@ -407,14 +446,19 @@ class SavingsStatementPdfService {
       allTxs[i].balance = running;
     }
 
+    final daysToMaturity = plan.maturityDate.difference(DateTime.now()).inDays;
+    final collectionLabel = _collectionLabel(plan.collectionType);
+
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
+        // Plan header
         pw.Container(
-          padding: pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+          padding: pw.EdgeInsets.symmetric(vertical: 8, horizontal: 10),
           decoration: pw.BoxDecoration(
-            color: PdfColors.blueGrey100,
-            borderRadius: pw.BorderRadius.circular(3),
+            color: PdfColors.indigo50,
+            borderRadius: pw.BorderRadius.circular(4),
+            border: pw.Border.all(color: PdfColors.indigo200, width: 0.5),
           ),
           child: pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -424,28 +468,29 @@ class SavingsStatementPdfService {
                 children: [
                   pw.Text(plan.planName,
                       style: pw.TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.blueGrey900)),
+                          color: PdfColors.indigo900)),
+                  pw.SizedBox(height: 2),
                   pw.Text(
-                    '${plan.collectionType.toUpperCase()} · ${_date(plan.maturityDate)}',
+                    'Collection: $collectionLabel  |  Maturity: ${_date(plan.maturityDate)}',
                     style: pw.TextStyle(
-                        fontSize: 7, color: PdfColors.blueGrey500),
+                        fontSize: 8, color: PdfColors.blueGrey600),
                   ),
                 ],
               ),
               pw.Container(
                 padding:
-                    pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: pw.BoxDecoration(
                   color: plan.status == 'active'
                       ? PdfColors.green100
                       : PdfColors.blueGrey100,
-                  borderRadius: pw.BorderRadius.circular(2),
+                  borderRadius: pw.BorderRadius.circular(3),
                 ),
                 child: pw.Text(plan.status.toUpperCase(),
                     style: pw.TextStyle(
-                        fontSize: 7,
+                        fontSize: 8,
                         fontWeight: pw.FontWeight.bold,
                         color: plan.status == 'active'
                             ? PdfColors.green800
@@ -454,32 +499,82 @@ class SavingsStatementPdfService {
             ],
           ),
         ),
-        pw.SizedBox(height: 6),
-        pw.Row(
-          children: [
-            _planMetric('Target Amount', _money(plan.targetAmount)),
-            _planMetric('Opening Balance', _money(plan.openingBalance)),
-            _planMetric('Deposits in Period', _money(plan.totalDeposited)),
-            _planMetric('Withdrawals in Period', _money(plan.totalWithdrawn)),
-            _planMetric('Interest Accrued', _money(plan.interestAccrued),
-                color: PdfColors.green700),
-            _planMetric('Closing Balance', _money(plan.closingBalance),
-                color: PdfColors.blueGrey900),
-          ],
+        pw.SizedBox(height: 10),
+
+        // Key info for customer (2 rows)
+        pw.Container(
+          padding: pw.EdgeInsets.all(10),
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColors.blueGrey200, width: 0.5),
+            borderRadius: pw.BorderRadius.circular(4),
+          ),
+          child: pw.Column(
+            children: [
+              pw.Row(
+                children: [
+                  _planMetric('Target Amount', _money(plan.targetAmount)),
+                  _planMetric('Installment', '${_money(plan.monthlyDeposit)} / $collectionLabel'),
+                  _planMetric('Current Balance', _money(plan.closingBalance),
+                      color: PdfColors.green800),
+                ],
+              ),
+              pw.SizedBox(height: 8),
+              pw.Row(
+                children: [
+                  _planMetric(
+                      'Progress',
+                      '${plan.progressPercent.toStringAsFixed(1)}% of target'),
+                  if (plan.nextDueDate != null)
+                    _planMetric('Next Due', _date(plan.nextDueDate!),
+                        color: PdfColors.orange800)
+                  else
+                    _planMetric('Next Due', '—'),
+                  _planMetric(
+                      'Days to Maturity',
+                      daysToMaturity > 0
+                          ? '$daysToMaturity days'
+                          : 'Matured'),
+                ],
+              ),
+            ],
+          ),
         ),
-        pw.SizedBox(height: 8),
+        pw.SizedBox(height: 10),
+
+        // Transaction history
+        pw.Text('DEPOSIT HISTORY',
+            style: pw.TextStyle(
+                fontSize: 9,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.blueGrey700)),
+        pw.SizedBox(height: 6),
         if (allTxs.isNotEmpty)
           _buildLedgerTable(allTxs, plan)
         else
           pw.Padding(
-            padding: pw.EdgeInsets.all(8),
+            padding: pw.EdgeInsets.all(10),
             child: pw.Text('No transactions in this period.',
                 style: pw.TextStyle(
                     fontSize: 8, color: PdfColors.blueGrey400)),
           ),
-        pw.SizedBox(height: 16),
+        pw.SizedBox(height: 20),
       ],
     );
+  }
+
+  static String _collectionLabel(String type) {
+    switch (type.toLowerCase()) {
+      case 'daily':
+        return 'Daily';
+      case 'weekly':
+        return 'Weekly';
+      case 'monthly':
+        return 'Monthly';
+      case 'yearly':
+        return 'Yearly';
+      default:
+        return type;
+    }
   }
 
   static pw.Widget _planMetric(String label, String value,
@@ -505,7 +600,7 @@ class SavingsStatementPdfService {
 
   static pw.Widget _buildLedgerTable(
       List<_LedgerRow> rows, SavingsStatementPlanBlock plan) {
-    final headers = ['Date', 'Description', 'Deposit', 'Withdrawal', 'Balance'];
+    final headers = ['Date', 'Description', 'Deposited', 'Withdrawn', 'Balance'];
     final colWidths = [.15, .35, .17, .17, .16];
 
     return pw.Table(

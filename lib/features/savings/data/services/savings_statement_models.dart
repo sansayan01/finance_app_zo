@@ -27,6 +27,9 @@ class SavingsStatementPlanBlock {
   final String collectionType;
   final double monthlyDeposit;
   final double maturityAmount;
+  final DateTime? nextDueDate;
+  final int? totalInstallments;
+  final int? paidInstallments;
   final List<SavingsStatementTx> deposits;
   final List<SavingsStatementTx> withdrawals;
 
@@ -43,6 +46,9 @@ class SavingsStatementPlanBlock {
     required this.collectionType,
     required this.monthlyDeposit,
     required this.maturityAmount,
+    this.nextDueDate,
+    this.totalInstallments,
+    this.paidInstallments,
     required this.deposits,
     required this.withdrawals,
   });
@@ -52,6 +58,10 @@ class SavingsStatementPlanBlock {
   double get totalWithdrawn =>
       withdrawals.fold(0.0, (sum, t) => sum + t.amount);
   double get interestAccrued => closingBalance * interestRate / 100;
+  double get progressPercent =>
+      targetAmount > 0 ? (currentAmount / targetAmount * 100).clamp(0, 100) : 0;
+  int get installmentsRemaining =>
+      (totalInstallments ?? 0) - (paidInstallments ?? 0);
 }
 
 class SavingsStatementTx {

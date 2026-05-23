@@ -668,7 +668,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         logoBytes: logoBytes,
       );
 
-      final results = await Future.wait([plansFuture, txnsFuture, memberResponseFuture]);
+      final results = await Future.wait<dynamic>([plansFuture, txnsFuture, memberResponseFuture]);
       final plans = results[0] as List<SavingsModel>;
       final txns = results[1] as List<TransactionModel>;
       final memberResponse = results[2] as Map<String, dynamic>?;
@@ -741,6 +741,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
           collectionType: p.collectionType,
           monthlyDeposit: p.monthlyDeposit,
           maturityAmount: p.maturityAmount,
+          nextDueDate: p.nextDueDate,
+          totalInstallments: p.totalInstallments,
+          paidInstallments: deposits.length,
           deposits: deposits,
           withdrawals: withdrawals,
         );

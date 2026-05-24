@@ -215,7 +215,11 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
           )
         : AppColors.primaryGradient;
 
-    return Container(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
         20,
@@ -261,6 +265,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
           ],
         ),
       ),
+    ),
     );
   }
 

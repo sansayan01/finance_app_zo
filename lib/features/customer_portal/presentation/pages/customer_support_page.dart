@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -253,7 +254,11 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
         .length;
     final resolvedCount = tickets.where((t) => t.isResolved).length;
 
-    return FadeTransition(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: FadeTransition(
       opacity: _headerFade,
       child: SlideTransition(
         position: _headerSlide,
@@ -282,11 +287,9 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
               ),
             ],
           ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.lg),
+          child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md, MediaQuery.of(context).padding.top + AppSpacing.sm, AppSpacing.md, AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

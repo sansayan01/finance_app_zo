@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/layout.dart';
@@ -14,6 +16,7 @@ import '../../../../core/widgets/status_badge.dart';
 import '../../data/models/customer_savings_model.dart';
 import '../../data/models/customer_transaction_model.dart';
 import '../../data/providers/customer_savings_providers.dart';
+import '../../data/services/customer_statement_service.dart';
 import '../widgets/customer_empty_state.dart';
 import '../widgets/customer_payment_trend_chart.dart' show MonthlyPaymentData;
 import '../widgets/customer_savings_growth_chart.dart';
@@ -203,6 +206,8 @@ class _CustomerSavingsDetailPageState
     String selectedFormat = 'pdf'; // pdf, excel, csv
     String selectedRange = '30'; // 30, 90, all
     String step = 'input'; // input, loading, success
+    pw.Document? generatedDoc;
+    String? statementFilename;
 
     showModalBottomSheet(
       context: context,
@@ -368,14 +373,63 @@ class _CustomerSavingsDetailPageState
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                onTap: () {
+                                onTap: () async {
                                   HapticFeedback.lightImpact();
                                   setSheetState(() => step = 'loading');
-                                  Future.delayed(const Duration(milliseconds: 1800), () {
+                                  try {
+                                    // Get transactions from the provider
+                                    final transactionsAsync = ref.read(customerSavingsTransactionsProvider(widget.savingsId));
+                                    final transactions = transactionsAsync.valueOrNull ?? [];
+
+                                    // Map transactions to the format expected by the service
+                                    final txMaps = transactions.map((t) => {
+                                      'date': t.transactionDate,
+                                      'type': t.type,
+                                      'amount': t.amount,
+                                      'description': t.description ?? '',
+                                    }).toList();
+
+                                    // Filter by date range
+                                    final now = DateTime.now();
+                                    DateTime? cutoff;
+                                    if (selectedRange == '30') {
+                                      cutoff = now.subtract(const Duration(days: 30));
+                                    } else if (selectedRange == '90') {
+                                      cutoff = now.subtract(const Duration(days: 90));
+                                    }
+                                    final filteredTx = cutoff != null
+                                        ? txMaps.where((t) => (t['date'] as DateTime?)?.isAfter(cutoff!) ?? false).toList()
+                                        : txMaps;
+
+                                    // Generate PDF
+                                    final doc = await CustomerStatementService.generateSavingsStatement(
+                                      memberName: savings.displayName,
+                                      planName: savings.planName ?? 'Savings Account',
+                                      targetAmount: savings.targetAmount,
+                                      currentAmount: savings.currentAmount,
+                                      monthlyDeposit: savings.monthlyDeposit,
+                                      interestRate: savings.interestRate,
+                                      maturityDate: savings.maturityDate,
+                                      transactions: filteredTx,
+                                    );
+
+                                    // Download
+                                    final filename = 'savings_statement_${savings.id}.pdf';
+                                    await CustomerStatementService.downloadStatement(doc, filename);
+                                    generatedDoc = doc;
+                                    statementFilename = filename;
+
                                     if (ctx.mounted) {
                                       setSheetState(() => step = 'success');
                                     }
-                                  });
+                                  } catch (e) {
+                                    if (ctx.mounted) {
+                                      setSheetState(() => step = 'input');
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Failed to generate statement: $e')),
+                                      );
+                                    }
+                                  }
                                 },
                                 borderRadius: BorderRadius.circular(16),
                                 child: const Padding(
@@ -452,35 +506,93 @@ class _CustomerSavingsDetailPageState
                           ),
                         ),
                         const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.of(ctx).pop();
-                                },
-                                borderRadius: BorderRadius.circular(16),
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: Center(
-                                    child: Text(
-                                      'Close',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.3),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () async {
+                                      HapticFeedback.lightImpact();
+                                      if (generatedDoc != null) {
+                                        await Printing.layoutPdf(onLayout: (format) async => generatedDoc!.save());
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.open_in_new_rounded, color: Colors.white, size: 18),
+                                          SizedBox(width: 8),
+                                          Text('Open', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08)),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () async {
+                                      HapticFeedback.lightImpact();
+                                      if (generatedDoc != null) {
+                                        await CustomerStatementService.shareStatement(generatedDoc!, statementFilename ?? 'statement.pdf');
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.share_rounded, color: AppColors.primary, size: 18),
+                                          const SizedBox(width: 8),
+                                          Text('Share', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w700)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.of(ctx).pop();
+                          },
+                          child: Text(
+                            'Close',
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.black45,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),

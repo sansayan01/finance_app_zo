@@ -66,25 +66,36 @@ class StaffProfileModel extends Equatable {
   });
 
   factory StaffProfileModel.fromJson(Map<String, dynamic> json) {
+    // staff_code may come as 'staff_code' (profiles) or 'employee_id' (staff_profiles)
+    final rawStaffCode = json['staff_code'] as String? ??
+        json['employee_id'] as String? ??
+        '';
+    // role may come as 'role' or 'designation'
+    final rawRole = json['role'] as String? ?? json['designation'] as String?;
+    // hire_date may come as 'hire_date' or 'date_of_joining'
+    final rawHireDate = json['hire_date'] as String? ??
+        json['date_of_joining'] as String?;
+    // assigned_areas may be a list or a single 'area' string
+    final rawAreas = json['assigned_areas'] as List<dynamic>?;
+    final rawArea = json['area'] as String?;
+
     return StaffProfileModel(
       id: json['id'] as String,
       orgId: json['org_id'] as String?,
       userId: json['user_id'] as String?,
-      staffCode: json['staff_code'] as String,
-      fullName: json['full_name'] as String,
-      phone: json['phone'] as String,
+      staffCode: rawStaffCode,
+      fullName: json['full_name'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
       email: json['email'] as String?,
-      role: _parseRole(json['role'] as String?),
+      role: _parseRole(rawRole),
       branchId: json['branch_id'] as String?,
       branchName: json['branches']?['name'] as String?,
       status: _parseStatus(json['status'] as String?),
-      assignedAreas: (json['assigned_areas'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      assignedAreas: rawAreas?.map((e) => e.toString()).toList() ??
+          (rawArea != null ? [rawArea] : []),
       shift: _parseShift(json['shift'] as String?),
-      hireDate: json['hire_date'] != null
-          ? DateTime.parse(json['hire_date'] as String)
+      hireDate: rawHireDate != null
+          ? DateTime.tryParse(rawHireDate)
           : null,
       dailyCollectionTarget:
           (json['daily_collection_target'] as num?)?.toDouble() ?? 50000.0,
@@ -92,8 +103,12 @@ class StaffProfileModel extends Equatable {
           (json['monthly_collection_target'] as num?)?.toDouble() ?? 1500000.0,
       supervisorId: json['supervisor_id'] as String?,
       supervisorName: json['supervisor']?['full_name'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(),
     );
   }
 

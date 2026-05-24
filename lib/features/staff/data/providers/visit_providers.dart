@@ -17,6 +17,7 @@ class VisitCheckInNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<bool> checkIn({
     required String staffId,
+    required String orgId,
     String? customerId,
     required String purpose,
     required double lat,
@@ -27,6 +28,7 @@ class VisitCheckInNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _repository.logVisit(
         staffId: staffId,
+        orgId: orgId,
         customerId: customerId,
         purpose: purpose,
         checkInLat: lat,

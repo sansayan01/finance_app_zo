@@ -1,7 +1,9 @@
--- RPC: get_latest_staff_locations
+-- =============================================================
+-- RPC 1: get_latest_staff_locations
 -- Returns the most recent location row per staff for an org, joined with
 -- staff_profiles (full_name, employee_id as staff_code) and branches (name).
 -- Consumed by lib/features/staff/data/repositories/live_tracking_repository.dart
+-- =============================================================
 
 CREATE OR REPLACE FUNCTION public.get_latest_staff_locations(p_org_id UUID)
 RETURNS TABLE (
@@ -42,4 +44,26 @@ RETURNS TABLE (
     LEFT JOIN public.branches b       ON b.id = sp.branch_id
     WHERE sl.org_id = p_org_id
     ORDER BY sl.staff_id, sl.recorded_at DESC;
+$$;
+
+-- =============================================================
+-- RPC 2: get_my_staff_profile
+-- SECURITY DEFINER — bypasses RLS on staff_profiles.
+-- Finds the caller's staff_profile row by auth.uid().
+-- Returns the row as JSON so the client can deserialize it directly.
+-- Consumed by lib/features/staff/data/repositories/staff_repository.dart
+-- =============================================================
+
+CREATE OR REPLACE FUNCTION public.get_my_staff_profile()
+RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER AS $$
+    SELECT to_jsonb(sp.*) || jsonb_build_object(
+        'branch_name', b.name,
+        'supervisor_name', sup.full_name
+    )
+    FROM public.staff_profiles sp
+    LEFT JOIN public.branches b   ON b.id = sp.branch_id
+    LEFT JOIN public.staff_profiles sup ON sup.id = sp.supervisor_id
+    WHERE sp.user_id = auth.uid()
+    LIMIT 1;
 $$;

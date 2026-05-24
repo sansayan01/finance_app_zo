@@ -476,10 +476,14 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
     setState(() => _isLoading = true);
     try {
       final profile = await ref.read(staffProfileProvider.future);
-      if (profile == null) throw Exception('No profile');
+      if (profile == null) {
+        throw Exception(
+            'Staff profile not found. Please contact your manager.');
+      }
       final repo = ref.read(staffRepositoryProvider);
       await repo.logVisit(
         staffId: profile.id,
+        orgId: profile.orgId ?? '',
         customerId: widget.customerId,
         purpose: _visitPurpose!,
         checkInLat: _currentPosition!.latitude,
@@ -499,7 +503,8 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
       ref.invalidate(activeVisitProvider);
       ref.invalidate(recentActivitiesProvider);
     } catch (e) {
-      if (mounted) _showError('Failed to check in: $e');
+      debugPrint('[CheckIn] Error: $e');
+      if (mounted) _showError(e.toString());
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -527,7 +532,10 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
       ref.invalidate(activeVisitProvider);
       ref.invalidate(recentActivitiesProvider);
     } catch (e) {
-      if (mounted) _showError('Failed to check out: $e');
+      final msg = e.toString().contains('No active visit')
+          ? 'No active visit found to check out from.'
+          : 'Failed to check out. Please try again.';
+      if (mounted) _showError(msg);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

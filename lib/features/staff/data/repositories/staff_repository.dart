@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/staff_profile_model.dart';
 import '../models/wallet_model.dart';
@@ -10,22 +11,53 @@ class StaffRepository {
 
   StaffRepository(this._client, this._orgId);
 
-  /// Get current staff profile from user ID
+  /// Get current staff profile from user ID.
+  /// Tries staff_profiles first, falls back to profiles table since
+  /// user creation (UserRepository.createUser) only creates a profiles row,
+  /// not a staff_profiles row.
   Future<StaffProfileModel?> getStaffProfile(String userId,
       [String? fullName, String? email]) async {
     try {
-      final response = await _client.from('staff_profiles').select('''
-            *,
-            branches(name),
-            supervisor:staff_profiles!fk_sp_supervisor(full_name)
-          ''').eq('user_id', userId).eq('org_id', _orgId).maybeSingle();
+      // Try staff_profiles first
+      final spResponse = await _client
+          .from('staff_profiles')
+          .select('*, branches(name)')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      if (response != null) {
-        return StaffProfileModel.fromJson(response);
+      if (spResponse != null) {
+        // Fetch supervisor name separately
+        final supervisorId = spResponse['supervisor_id'] as String?;
+        if (supervisorId != null) {
+          try {
+            final sup = await _client
+                .from('staff_profiles')
+                .select('full_name')
+                .eq('id', supervisorId)
+                .maybeSingle();
+            spResponse['supervisor'] = {'full_name': sup?['full_name']};
+          } catch (_) {
+            spResponse['supervisor'] = null;
+          }
+        }
+        return StaffProfileModel.fromJson(spResponse);
+      }
+
+      // Fallback: profiles table (created by UserRepository.createUser)
+      final pResponse = await _client
+          .from('profiles')
+          .select('*, branches(name)')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (pResponse != null) {
+        pResponse['supervisor'] = null;
+        return StaffProfileModel.fromJson(pResponse);
       }
 
       return null;
     } catch (e) {
+      debugPrint('[StaffRepository] getStaffProfile error: $e');
       return null;
     }
   }
@@ -35,12 +67,27 @@ class StaffRepository {
     try {
       final response = await _client.from('staff_profiles').select('''
             *,
-            branches(name),
-            supervisor:staff_profiles!fk_sp_supervisor(full_name)
+            branches(name)
           ''').eq('id', staffId).single();
+
+      // Fetch supervisor name separately
+      final supervisorId = response['supervisor_id'] as String?;
+      String? supervisorName;
+      if (supervisorId != null) {
+        try {
+          final sup = await _client
+              .from('staff_profiles')
+              .select('full_name')
+              .eq('id', supervisorId)
+              .maybeSingle();
+          supervisorName = sup?['full_name'] as String?;
+        } catch (_) {}
+      }
+      response['supervisor'] = {'full_name': supervisorName};
 
       return StaffProfileModel.fromJson(response);
     } catch (e) {
+      debugPrint('[StaffRepository] getStaffById error: $e');
       return null;
     }
   }
@@ -234,30 +281,32 @@ class StaffRepository {
     }
   }
 
-  /// Log a visit (check-in)
+  /// Log a visit (check-in).
+  /// [orgId] should be the staff profile's org_id (verified by RLS SELECT).
   Future<void> logVisit({
     required String staffId,
+    required String orgId,
     String? customerId,
     required String purpose,
     required double checkInLat,
     required double checkInLng,
     String? notes,
   }) async {
-    try {
-      await _client.from('visit_logs').insert({
-        'staff_id': staffId,
-        'customer_id': customerId,
-        'member_id': customerId,
-        'purpose': purpose,
-        'check_in_time': DateTime.now().toIso8601String(),
-        'check_in_lat': checkInLat,
-        'check_in_lng': checkInLng,
-        'notes': notes,
-        'status': 'in_progress',
-        'org_id': _orgId,
-      });
+    await _client.from('visit_logs').insert({
+      'staff_id': staffId,
+      'customer_id': customerId,
+      'member_id': customerId,
+      'purpose': purpose,
+      'check_in_time': DateTime.now().toIso8601String(),
+      'check_in_lat': checkInLat,
+      'check_in_lng': checkInLng,
+      'notes': notes,
+      'status': 'in_progress',
+      'org_id': orgId,
+    });
 
-      // Log activity
+    // Log activity (best-effort, don't fail the check-in if this fails)
+    try {
       await logActivity(
         staffId: staffId,
         action: 'visit_check_in',
@@ -268,7 +317,7 @@ class StaffRepository {
         gpsLng: checkInLng,
       );
     } catch (e) {
-      // Log failure silently - visitor log is non-critical
+      debugPrint('[StaffRepository] logActivity failed: $e');
     }
   }
 
@@ -280,31 +329,31 @@ class StaffRepository {
     String? outcome,
     String? notes,
   }) async {
+    final now = DateTime.now();
+
+    // Find active visit
+    final activeVisit = await _client
+        .from('visit_logs')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('status', 'in_progress')
+        .order('check_in_time', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (activeVisit == null) throw Exception('No active visit found');
+
+    await _client.from('visit_logs').update({
+      'check_out_time': now.toIso8601String(),
+      'check_out_lat': checkOutLat,
+      'check_out_lng': checkOutLng,
+      'status': 'completed',
+      'outcome': outcome ?? 'collected',
+      'notes': notes,
+    }).eq('id', activeVisit['id']);
+
+    // Log activity (best-effort)
     try {
-      final now = DateTime.now();
-
-      // Find active visit
-      final activeVisit = await _client
-          .from('visit_logs')
-          .select()
-          .eq('staff_id', staffId)
-          .eq('status', 'in_progress')
-          .order('check_in_time', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
-      if (activeVisit == null) throw Exception('No active visit found');
-
-      await _client.from('visit_logs').update({
-        'check_out_time': now.toIso8601String(),
-        'check_out_lat': checkOutLat,
-        'check_out_lng': checkOutLng,
-        'status': 'completed',
-        'outcome': outcome ?? 'collected',
-        'notes': notes,
-      }).eq('id', activeVisit['id']);
-
-      // Log activity
       await logActivity(
         staffId: staffId,
         action: 'visit_check_out',
@@ -314,7 +363,7 @@ class StaffRepository {
         gpsLng: checkOutLng,
       );
     } catch (e) {
-      // Log failure silently
+      debugPrint('[StaffRepository] logActivity failed: $e');
     }
   }
 
@@ -573,7 +622,7 @@ class StaffRepository {
     try {
       return await _client
           .from('visit_logs')
-          .select()
+          .select('*, members(full_name, phone)')
           .eq('staff_id', staffId)
           .eq('status', 'in_progress')
           .order('check_in_time', ascending: false)

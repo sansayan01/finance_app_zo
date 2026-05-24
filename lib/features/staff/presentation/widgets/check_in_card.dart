@@ -56,6 +56,7 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
       } else {
         await repo.logVisit(
           staffId: profile.id,
+          orgId: profile.orgId ?? '',
           purpose: 'collection',
           checkInLat: position.latitude,
           checkInLng: position.longitude,

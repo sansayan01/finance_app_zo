@@ -10,6 +10,7 @@ import '../../data/models/customer_savings_model.dart';
 import '../../data/providers/customer_savings_providers.dart';
 import '../widgets/customer_transaction_tile.dart';
 import '../widgets/customer_empty_state.dart';
+import '../widgets/customer_savings_milestones.dart';
 
 class CustomerSavingsDetailPage extends ConsumerStatefulWidget {
   final String savingsId;
@@ -229,6 +230,24 @@ class _CustomerSavingsDetailPageState
                             ),
                           ],
                         ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Savings Milestones widget
+                SliverToBoxAdapter(
+                  child: FadeTransition(
+                    opacity: _contentController,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm / 2,
+                      ),
+                      child: CustomerSavingsMilestones(
+                        currentAmount: savings.currentAmount,
+                        targetAmount: savings.targetAmount,
+                        planName: savings.displayName,
                       ),
                     ),
                   ),

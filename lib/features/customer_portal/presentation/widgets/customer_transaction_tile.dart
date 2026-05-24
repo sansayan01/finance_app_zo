@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/customer_transaction_model.dart';
@@ -17,103 +18,121 @@ class CustomerTransactionTile extends StatelessWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
-          child: Row(
-            children: [
-              // Rounded square icon with gradient
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      accentColor.withValues(alpha: isDark ? 0.25 : 0.15),
-                      accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
+        InkWell(
+          onTap: () {
+            context.push(
+              '/customer/receipt',
+              extra: {
+                'transactionId': transaction.id,
+                'amount': transaction.amount,
+                'type': transaction.type,
+                'date': transaction.transactionDate ?? DateTime.now(),
+                'memberName': transaction.memberName,
+                'paymentMode': transaction.paymentMode,
+                'referenceNumber': transaction.referenceNumber,
+                'description': transaction.description,
+                'status': transaction.status,
+              },
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm + 2,
+            ),
+            child: Row(
+              children: [
+                // Rounded square icon with gradient
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        accentColor.withValues(alpha: isDark ? 0.25 : 0.15),
+                        accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  child: Icon(
+                    _getIcon(),
+                    color: accentColor,
+                    size: 20,
+                  ),
                 ),
-                child: Icon(
-                  _getIcon(),
-                  color: accentColor,
-                  size: 20,
+                const SizedBox(width: AppSpacing.sm + 4),
+                // Title + description
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getTitle(),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.1,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (transaction.description != null &&
+                          transaction.description!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 3),
+                          child: Text(
+                            transaction.description!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDark
+                                  ? AppColors.textTertiaryDark
+                                  : AppColors.textTertiaryLight,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm + 4),
-              // Title + description
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // Amount + date
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _getTitle(),
+                      '${isCredit ? '+' : '-'}\u20b9${transaction.amount.toStringAsFixed(0)}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.1,
+                        fontWeight: FontWeight.w700,
+                        color: accentColor,
+                        letterSpacing: -0.3,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (transaction.description != null &&
-                        transaction.description!.isNotEmpty)
+                    if (transaction.transactionDate != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 3),
                         child: Text(
-                          transaction.description!,
+                          _formatDate(transaction.transactionDate!),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isDark
                                 ? AppColors.textTertiaryDark
                                 : AppColors.textTertiaryLight,
+                            fontSize: 11,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                   ],
                 ),
-              ),
-              // Amount + date
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${isCredit ? '+' : '-'}\u20b9${transaction.amount.toStringAsFixed(0)}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: accentColor,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  if (transaction.transactionDate != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Text(
-                        _formatDate(transaction.transactionDate!),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark
-                              ? AppColors.textTertiaryDark
-                              : AppColors.textTertiaryLight,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         // Divider line

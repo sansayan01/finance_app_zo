@@ -126,6 +126,11 @@ import '../features/customer_portal/presentation/pages/customer_savings_detail_p
 import '../features/customer_portal/presentation/pages/customer_transactions_page.dart';
 import '../features/customer_portal/presentation/pages/customer_notifications_page.dart';
 import '../features/customer_portal/presentation/pages/customer_support_page.dart';
+import '../features/customer_portal/presentation/pages/customer_profile_page.dart';
+import '../features/customer_portal/presentation/pages/customer_account_settings_page.dart';
+import '../features/customer_portal/presentation/pages/customer_feedback_page.dart';
+import '../features/customer_portal/presentation/pages/customer_emi_calculator_page.dart';
+import '../features/customer_portal/presentation/pages/customer_receipt_page.dart';
 
 // =====================================================
 // AUTH REDIRECT LISTENER
@@ -669,7 +674,36 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/customer/profile',
-            builder: (context, state) => const ProfilePage(),
+            builder: (context, state) => const CustomerProfilePage(),
+          ),
+          GoRoute(
+            path: '/customer/feedback',
+            builder: (context, state) => const CustomerFeedbackPage(),
+          ),
+          GoRoute(
+            path: '/customer/emi-calculator',
+            builder: (context, state) => const CustomerEmiCalculatorPage(),
+          ),
+          GoRoute(
+            path: '/customer/account-settings',
+            builder: (context, state) => const CustomerAccountSettingsPage(),
+          ),
+          GoRoute(
+            path: '/customer/receipt',
+            builder: (context, state) {
+              final args = state.extra as Map<String, dynamic>;
+              return CustomerReceiptPage(
+                transactionId: args['transactionId'] as String,
+                amount: args['amount'] as double,
+                type: args['type'] as String,
+                date: args['date'] as DateTime,
+                memberName: args['memberName'] as String?,
+                paymentMode: args['paymentMode'] as String?,
+                referenceNumber: args['referenceNumber'] as String?,
+                description: args['description'] as String?,
+                status: (args['status'] as String?) ?? 'synced',
+              );
+            },
           ),
         ],
       ),
@@ -1185,8 +1219,23 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
                   Navigator.pop(context);
                   context.go('/customer/support');
                 }),
+                _buildMoreItem(context, Icons.calculate_rounded,
+                    'EMI Calculator', 'Plan your loan repayment', isDark, () {
+                  Navigator.pop(context);
+                  context.go('/customer/emi-calculator');
+                }),
+                _buildMoreItem(context, Icons.rate_review_rounded,
+                    'Feedback', 'Help us improve our service', isDark, () {
+                  Navigator.pop(context);
+                  context.go('/customer/feedback');
+                }),
+                _buildMoreItem(context, Icons.settings_rounded,
+                    'Account Settings', 'Preferences and security', isDark, () {
+                  Navigator.pop(context);
+                  context.go('/customer/account-settings');
+                }),
                 _buildMoreItem(context, Icons.person_rounded, 'Profile',
-                    'Account settings', isDark, () {
+                    'View your personal info', isDark, () {
                   Navigator.pop(context);
                   context.go('/customer/profile');
                 }),

@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -253,7 +254,10 @@ class _CustomerEmiCalculatorPageState
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Container(
         width: 40,
         height: 40,
@@ -437,7 +441,10 @@ class _CustomerEmiCalculatorPageState
             min: min,
             max: max,
             divisions: divisions,
-            onChanged: onChanged,
+            onChanged: (v) {
+              HapticFeedback.selectionClick();
+              onChanged(v);
+            },
           ),
         ),
       ],
@@ -777,7 +784,10 @@ class _CustomerEmiCalculatorPageState
             // ── Expand / Collapse toggle ──
             if (_schedule.length > 5)
               GestureDetector(
-                onTap: () => setState(() => _showFullSchedule = !_showFullSchedule),
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  setState(() => _showFullSchedule = !_showFullSchedule);
+                },
                 child: Container(
                   margin: const EdgeInsets.only(top: 12),
                   padding: const EdgeInsets.symmetric(vertical: 12),

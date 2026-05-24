@@ -31,7 +31,8 @@
       "Skill(update-config)",
       "Bash(xargs ls -la)",
       "Bash(xargs grep -l \"dashboard\")",
-      "Bash(xargs grep -l \"customerPortal\\\\|customer_portal\")"
+      "Bash(xargs grep -l \"customerPortal\\\\|customer_portal\")",
+      "Bash(git checkout *)"
     ]
   },
   "enabledMcpjsonServers": [

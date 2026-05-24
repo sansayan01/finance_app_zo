@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/status_badge.dart';
 import '../../data/services/customer_receipt_service.dart';
 
-/// Premium receipt viewer page with share, download, and print actions.
+/// Super-premium receipt confirmation page.
 ///
-/// Displays a custom Flutter widget that mirrors the PDF receipt layout
-/// with staggered entrance animations and a glassmorphic action bar.
+/// Hero pulse checkmark, animated counting amount with Indian currency,
+/// glass meta/member cards, dotted dividers, staggered fade+slide entrance,
+/// and gradient action row (Download / Share / Done).
 class CustomerReceiptPage extends ConsumerStatefulWidget {
   final String transactionId;
   final double amount;
@@ -43,6 +47,7 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
     with TickerProviderStateMixin {
   late AnimationController _staggerController;
   late AnimationController _pulseController;
+  late AnimationController _checkController;
   bool _isDownloading = false;
   bool _isSharing = false;
   bool _isPrinting = false;
@@ -54,27 +59,48 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
     super.initState();
     _staggerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1100),
     )..forward();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
+    _checkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..forward();
+    HapticFeedback.lightImpact();
   }
 
   @override
   void dispose() {
     _staggerController.dispose();
     _pulseController.dispose();
+    _checkController.dispose();
     super.dispose();
   }
 
-  Animation<double> _staggered(int index, {double duration = 0.5}) {
-    final start = (index * 0.08).clamp(0.0, 1.0);
-    final end = (start + duration).clamp(0.0, 1.0);
+  Animation<double> _staggered(int index) {
+    final start = (index * 0.07).clamp(0.0, 1.0);
+    final end = (start + 0.45).clamp(0.0, 1.0);
     return CurvedAnimation(
       parent: _staggerController,
       curve: Interval(start, end, curve: Curves.easeOutCubic),
+    );
+  }
+
+  Widget _animatedEntry(int index, Widget child) {
+    final anim = _staggered(index);
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (context, c) => Opacity(
+        opacity: anim.value,
+        child: Transform.translate(
+          offset: Offset(0, 22 * (1 - anim.value)),
+          child: c,
+        ),
+      ),
+      child: child,
     );
   }
 
@@ -146,7 +172,21 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
     }
   }
 
-  bool get _isSynced => widget.status.toLowerCase() == 'synced';
+  String get _statusLower => widget.status.toLowerCase();
+  bool get _isSynced => _statusLower == 'synced';
+  bool get _isFailed => _statusLower == 'failed';
+
+  StatusType get _statusType {
+    if (_isSynced) return StatusType.active;
+    if (_isFailed) return StatusType.defaultStatus;
+    return StatusType.pending;
+  }
+
+  String get _statusLabel {
+    if (_isSynced) return 'Synced';
+    if (_isFailed) return 'Failed';
+    return 'Pending';
+  }
 
   // ── Share ──
   Future<void> _share() async {
@@ -249,10 +289,16 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
     }
   }
 
-  // ── Indian-style money format ──
+  // ── Indian-style money format with L / Cr suffix ──
   String _money(num v) {
     final negative = v < 0;
     final n = v.abs();
+    if (n >= 10000000) {
+      return '${negative ? '-' : ''}₹${(n / 10000000).toStringAsFixed(2)} Cr';
+    }
+    if (n >= 100000) {
+      return '${negative ? '-' : ''}₹${(n / 100000).toStringAsFixed(2)} L';
+    }
     final whole = n.truncate();
     final fraction = ((n - whole) * 100).round();
     final wholeStr = whole.toString();
@@ -271,7 +317,7 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
       grouped = '${buf.toString().split('').reversed.join()},$last3';
     }
     final fracStr = fraction.toString().padLeft(2, '0');
-    return '${negative ? '-' : ''}\u20b9$grouped.$fracStr';
+    return '${negative ? '-' : ''}₹$grouped.$fracStr';
   }
 
   String _formatPaymentMode(String mode) {
@@ -305,412 +351,546 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  // ── Gradient Header ──
-                  _buildHeader(context, isDark),
-                  // ── Receipt Card ──
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: _buildReceiptCard(context, isDark, theme),
-                  ),
-                  // Bottom spacing for action bar
-                  const SizedBox(height: 100),
-                ],
-              ),
+          // Ambient aurora behind hero only — sits in upper portion
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 440,
+            child: IgnorePointer(
+              child: AuroraBackground(child: const SizedBox.expand()),
             ),
           ),
-          // ── Glass Action Bar ──
-          _buildActionBar(context, isDark, theme),
+          Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _buildAppBar(context, isDark, theme),
+                      _animatedEntry(0, _buildHero(context, isDark, theme)),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md, 0, AppSpacing.md, 0),
+                        child: Column(
+                          children: [
+                            _animatedEntry(
+                              1,
+                              _buildMetaCard(context, isDark, theme),
+                            ),
+                            if (widget.memberName != null &&
+                                widget.memberName!.isNotEmpty) ...[
+                              const SizedBox(height: AppSpacing.md),
+                              _animatedEntry(
+                                2,
+                                _buildMemberCard(context, isDark, theme),
+                              ),
+                            ],
+                            if (widget.description != null &&
+                                widget.description!.isNotEmpty) ...[
+                              const SizedBox(height: AppSpacing.md),
+                              _animatedEntry(
+                                3,
+                                _buildDescriptionCard(context, isDark, theme),
+                              ),
+                            ],
+                            const SizedBox(height: AppSpacing.md),
+                            _animatedEntry(
+                              4,
+                              _buildVerifyCard(context, isDark, theme),
+                            ),
+                            const SizedBox(height: 120),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Floating action bar
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _animatedEntry(
+                5, _buildActionBar(context, isDark, theme)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
-    final mq = MediaQuery.of(context);
-    final topPadding = mq.padding.top + AppSpacing.md;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  AppColors.primaryDark.withValues(alpha: 0.25),
-                  AppColors.accentDark.withValues(alpha: 0.15),
-                  AppColors.backgroundDark,
-                ]
-              : [
-                  AppColors.primary,
-                  AppColors.accent,
-                  AppColors.primaryLight,
-                ],
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-              AppSpacing.lg, topPadding, AppSpacing.lg, AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back button + Title
-              Row(
-                children: [
-                  _GlassIconButton(
-                    icon: Icons.arrow_back_ios_new_rounded,
-                    isDark: isDark,
-                    onTap: () => Navigator.of(context).maybePop(),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      'Receipt',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ),
-                  // Sync status chip
-                  _StatusChip(isSynced: _isSynced),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              // Receipt number
-              Text(
-                _receiptNumber,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontFamily: 'monospace',
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-            ],
+  // ─── App Bar ───────────────────────────────────────────────
+  Widget _buildAppBar(BuildContext context, bool isDark, ThemeData theme) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.md, topPadding + 8, AppSpacing.md, 4),
+      child: Row(
+        children: [
+          _GlassIconButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            isDark: isDark,
+            onTap: () => Navigator.of(context).maybePop(),
           ),
-        ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Receipt',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  _receiptNumber,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight)
+                        .withValues(alpha: 0.6),
+                    fontFamily: 'monospace',
+                    letterSpacing: 0.8,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          StatusBadge(label: _statusLabel, type: _statusType),
+        ],
       ),
     );
   }
 
-  Widget _buildReceiptCard(
-      BuildContext context, bool isDark, ThemeData theme) {
-    final cardBg = isDark ? AppColors.cardDark : AppColors.surfaceLight;
-    final borderColor =
-        isDark ? AppColors.separatorDark : AppColors.separatorLight;
-    final textTertiary = isDark
-        ? AppColors.textTertiaryDark
-        : AppColors.textTertiaryLight;
+  // ─── Hero ──────────────────────────────────────────────────
+  Widget _buildHero(BuildContext context, bool isDark, ThemeData theme) {
+    final heroColor = _isFailed
+        ? AppColors.error
+        : (_isSynced ? AppColors.success : AppColors.warning);
 
-    return AnimatedBuilder(
-      animation: _staggerController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _staggered(0),
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.1),
-              end: Offset.zero,
-            ).animate(_staggered(0)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor),
-          boxShadow: isDark
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: AppColors.textPrimaryLight.withValues(alpha: 0.06),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Column(
-            children: [
-              // ── Type Banner ──
-              AnimatedBuilder(
-                animation: _staggerController,
-                builder: (context, child) => FadeTransition(
-                  opacity: _staggered(1),
-                  child: child,
-                ),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  color: _typeColor.withValues(alpha: isDark ? 0.15 : 0.08),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: _typeColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(_typeIcon, size: 18, color: _typeColor),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.lg),
+      child: Column(
+        children: [
+          // Pulse + checkmark
+          AnimatedBuilder(
+            animation: Listenable.merge([_pulseController, _checkController]),
+            builder: (context, _) {
+              final pulse = _pulseController.value;
+              final check = Curves.easeOutBack.transform(_checkController.value);
+              return SizedBox(
+                width: 130,
+                height: 130,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Outer pulse ring
+                    Container(
+                      width: 110 + pulse * 18,
+                      height: 110 + pulse * 18,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: heroColor
+                            .withValues(alpha: 0.08 * (1 - pulse * 0.6)),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _typeLabel,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: _typeColor,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            Text(
-                              _dateTimeFmt.format(widget.date),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: textTertiary,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    Container(
+                      width: 96 + pulse * 10,
+                      height: 96 + pulse * 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: heroColor
+                            .withValues(alpha: 0.16 * (1 - pulse * 0.5)),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Amount Hero ──
-              AnimatedBuilder(
-                animation: _staggerController,
-                builder: (context, child) => FadeTransition(
-                  opacity: _staggered(2),
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.15),
-                      end: Offset.zero,
-                    ).animate(_staggered(2)),
-                    child: child,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 24, horizontal: 16),
-                  child: Column(
-                    children: [
-                      Text(
-                        'AMOUNT',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: textTertiary,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      AnimatedBuilder(
-                        animation: _pulseController,
-                        builder: (context, child) {
-                          final glow =
-                              (_pulseController.value * 0.15).clamp(0.0, 0.15);
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _typeColor.withValues(alpha: glow),
-                                  blurRadius: 24,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              _money(widget.amount),
-                              style: TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
-                                color: isDark
-                                    ? AppColors.textPrimaryDark
-                                    : AppColors.textPrimaryLight,
-                                letterSpacing: -1.0,
-                                height: 1.1,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Divider ──
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: List.generate(
-                    60,
-                    (i) => Expanded(
+                    ),
+                    // Inner gradient circle with check
+                    Transform.scale(
+                      scale: 0.6 + check * 0.4,
                       child: Container(
-                        height: 1,
-                        color: i.isEven
-                            ? borderColor
-                            : Colors.transparent,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // ── Details ──
-              AnimatedBuilder(
-                animation: _staggerController,
-                builder: (context, child) => FadeTransition(
-                  opacity: _staggered(3),
-                  child: child,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      if (widget.memberName != null &&
-                          widget.memberName!.isNotEmpty)
-                        _DetailRow(
-                          label: 'Member',
-                          value: widget.memberName!,
-                          isDark: isDark,
-                          icon: Icons.person_outline_rounded,
-                        ),
-                      if (widget.paymentMode != null &&
-                          widget.paymentMode!.isNotEmpty)
-                        _DetailRow(
-                          label: 'Payment Mode',
-                          value: _formatPaymentMode(widget.paymentMode!),
-                          isDark: isDark,
-                          icon: Icons.credit_card_rounded,
-                        ),
-                      if (widget.referenceNumber != null &&
-                          widget.referenceNumber!.isNotEmpty)
-                        _DetailRow(
-                          label: 'Reference No.',
-                          value: widget.referenceNumber!,
-                          isDark: isDark,
-                          icon: Icons.tag_rounded,
-                          isMonospace: true,
-                        ),
-                      if (widget.description != null &&
-                          widget.description!.isNotEmpty)
-                        _DetailRow(
-                          label: 'Description',
-                          value: widget.description!,
-                          isDark: isDark,
-                          icon: Icons.notes_rounded,
-                        ),
-                      _DetailRow(
-                        label: 'Transaction ID',
-                        value: widget.transactionId,
-                        isDark: isDark,
-                        icon: Icons.fingerprint_rounded,
-                        isMonospace: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── QR Placeholder ──
-              AnimatedBuilder(
-                animation: _staggerController,
-                builder: (context, child) => FadeTransition(
-                  opacity: _staggered(4),
-                  child: child,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
+                        width: 84,
+                        height: 84,
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.fillDark
-                              : AppColors.fillLight,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor),
-                        ),
-                        alignment: Alignment.center,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.qr_code_2_rounded,
-                              size: 28,
-                              color: textTertiary,
-                            ),
-                            Text(
-                              'QR',
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w600,
-                                color: textTertiary,
-                                letterSpacing: 0.5,
-                              ),
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              heroColor,
+                              Color.lerp(heroColor, AppColors.primary, 0.45) ??
+                                  AppColors.primary,
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: heroColor.withValues(alpha: 0.45),
+                              blurRadius: 24,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Scan to verify',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: textTertiary,
+                        child: Icon(
+                          _isFailed
+                              ? Icons.close_rounded
+                              : (_isSynced
+                                  ? Icons.check_rounded
+                                  : Icons.hourglass_top_rounded),
+                          color: Colors.white,
+                          size: 46,
                         ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            _isFailed
+                ? 'Transaction Failed'
+                : (_isSynced
+                    ? 'Payment Successful'
+                    : 'Payment Pending'),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _typeLabel,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: (isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight)
+                  .withValues(alpha: 0.6),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Counting amount
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: widget.amount),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) {
+              return ShaderMask(
+                shaderCallback: (rect) => LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary,
+                    AppColors.accent,
+                  ],
+                ).createShader(rect),
+                child: Text(
+                  _money(value),
+                  style: const TextStyle(
+                    fontSize: 44,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -1.4,
+                    height: 1.05,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        ),
+          const SizedBox(height: 6),
+          Text(
+            _dateTimeFmt.format(widget.date),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: (isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight)
+                  .withValues(alpha: 0.6),
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildActionBar(
+  // ─── Meta Card ─────────────────────────────────────────────
+  Widget _buildMetaCard(BuildContext context, bool isDark, ThemeData theme) {
+    final rows = <_MetaItem>[
+      _MetaItem(
+        icon: Icons.fingerprint_rounded,
+        label: 'Transaction ID',
+        value: widget.transactionId,
+        monospace: true,
+      ),
+      _MetaItem(
+        icon: Icons.event_rounded,
+        label: 'Date & Time',
+        value: _dateTimeFmt.format(widget.date),
+      ),
+      _MetaItem(
+        icon: _typeIcon,
+        label: 'Type',
+        value: _typeLabel,
+        valueColor: _typeColor,
+      ),
+      if (widget.paymentMode != null && widget.paymentMode!.isNotEmpty)
+        _MetaItem(
+          icon: Icons.credit_card_rounded,
+          label: 'Payment Mode',
+          value: _formatPaymentMode(widget.paymentMode!),
+        ),
+      if (widget.referenceNumber != null && widget.referenceNumber!.isNotEmpty)
+        _MetaItem(
+          icon: Icons.tag_rounded,
+          label: 'Reference No.',
+          value: widget.referenceNumber!,
+          monospace: true,
+        ),
+    ];
+
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.receipt_long_rounded,
+                    size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Transaction Details',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const Spacer(),
+              StatusBadge(label: _statusLabel, type: _statusType),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _DottedDivider(isDark: isDark),
+          const SizedBox(height: 12),
+          for (var i = 0; i < rows.length; i++) ...[
+            _MetaRow(item: rows[i], isDark: isDark),
+            if (i < rows.length - 1) ...[
+              const SizedBox(height: 12),
+              _DottedDivider(isDark: isDark),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ─── Member Card ───────────────────────────────────────────
+  Widget _buildMemberCard(BuildContext context, bool isDark, ThemeData theme) {
+    final name = widget.memberName!;
+    final initials = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((s) => s.isNotEmpty)
+        .take(2)
+        .map((s) => s[0].toUpperCase())
+        .join();
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.85),
+                  AppColors.accent.withValues(alpha: 0.85),
+                ],
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initials.isEmpty ? '?' : initials,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Member',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight)
+                        .withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  name,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.verified_rounded,
+            color: AppColors.success.withValues(alpha: 0.85),
+            size: 22,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Description Card ──────────────────────────────────────
+  Widget _buildDescriptionCard(
       BuildContext context, bool isDark, ThemeData theme) {
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.notes_rounded,
+                size: 16,
+                color: (isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight)
+                    .withValues(alpha: 0.7),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Note',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: (isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight)
+                      .withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            widget.description!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Verify QR Card ────────────────────────────────────────
+  Widget _buildVerifyCard(BuildContext context, bool isDark, ThemeData theme) {
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.fillDark : AppColors.fillLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark
+                    ? AppColors.separatorDark
+                    : AppColors.separatorLight,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.qr_code_2_rounded,
+              size: 36,
+              color: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Verify this receipt',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Scan the QR code on the printed copy to confirm authenticity.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight)
+                        .withValues(alpha: 0.6),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Action Bar ────────────────────────────────────────────
+  Widget _buildActionBar(BuildContext context, bool isDark, ThemeData theme) {
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -719,12 +899,13 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
         MediaQuery.of(context).padding.bottom + AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.surfaceDark.withValues(alpha: 0.85)
-            : AppColors.surfaceLight.withValues(alpha: 0.9),
+        color: (isDark ? AppColors.surfaceDark : AppColors.surfaceLight)
+            .withValues(alpha: 0.92),
         border: Border(
           top: BorderSide(
-            color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
+            color:
+                (isDark ? AppColors.separatorDark : AppColors.separatorLight)
+                    .withValues(alpha: 0.6),
             width: 0.5,
           ),
         ),
@@ -739,33 +920,36 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
       child: Row(
         children: [
           Expanded(
-            child: _ActionButton(
+            child: _GradientActionButton(
+              icon: Icons.download_rounded,
+              label: 'Download',
+              isLoading: _isDownloading,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.primary, AppColors.accent],
+              ),
+              onTap: _download,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: _TonalActionButton(
               icon: Icons.ios_share_rounded,
               label: 'Share',
               isLoading: _isSharing,
-              color: AppColors.primary,
+              color: AppColors.info,
               isDark: isDark,
               onTap: _share,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: _ActionButton(
-              icon: Icons.download_rounded,
-              label: 'Download',
-              isLoading: _isDownloading,
-              color: AppColors.success,
-              isDark: isDark,
-              onTap: _download,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _ActionButton(
+            child: _TonalActionButton(
               icon: Icons.print_rounded,
               label: 'Print',
               isLoading: _isPrinting,
-              color: AppColors.info,
+              color: AppColors.success,
               isDark: isDark,
               onTap: _print,
             ),
@@ -777,6 +961,124 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
 }
 
 // ─── Private helper widgets ─────────────────────────────────────────
+
+class _MetaItem {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool monospace;
+  final Color? valueColor;
+
+  const _MetaItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.monospace = false,
+    this.valueColor,
+  });
+}
+
+class _MetaRow extends StatelessWidget {
+  final _MetaItem item;
+  final bool isDark;
+
+  const _MetaRow({required this.item, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: (isDark ? AppColors.fillDark : AppColors.fillLight)
+                .withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            item.icon,
+            size: 16,
+            color: (isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight)
+                .withValues(alpha: 0.85),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: (isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight)
+                      .withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                item.value,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontFamily: item.monospace ? 'monospace' : null,
+                  fontSize: item.monospace ? 12.5 : 14,
+                  color: item.valueColor,
+                  letterSpacing: item.monospace ? 0.4 : -0.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DottedDivider extends StatelessWidget {
+  final bool isDark;
+  const _DottedDivider({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        (isDark ? AppColors.separatorDark : AppColors.separatorLight)
+            .withValues(alpha: 0.9);
+    return LayoutBuilder(
+      builder: (context, c) {
+        const dashWidth = 4.0;
+        const dashGap = 4.0;
+        final count = (c.maxWidth / (dashWidth + dashGap)).floor();
+        return Row(
+          children: List.generate(count, (i) {
+            return Padding(
+              padding: EdgeInsets.only(right: i == count - 1 ? 0 : dashGap),
+              child: Container(
+                width: dashWidth,
+                height: 1.2,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
 
 class _GlassIconButton extends StatelessWidget {
   final IconData icon;
@@ -794,149 +1096,117 @@ class _GlassIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 38,
-        height: 38,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.white.withValues(alpha: 0.2),
+          color: (isDark ? AppColors.cardDark : AppColors.surfaceLight)
+              .withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.white.withValues(alpha: 0.3),
+            color: (isDark
+                    ? AppColors.separatorDark
+                    : AppColors.separatorLight)
+                .withValues(alpha: 0.7),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Icon(icon, color: Colors.white, size: 18),
+        child: Icon(
+          icon,
+          color: isDark
+              ? AppColors.textPrimaryDark
+              : AppColors.textPrimaryLight,
+          size: 16,
+        ),
       ),
     );
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  final bool isSynced;
-
-  const _StatusChip({required this.isSynced});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: isSynced
-            ? AppColors.success.withValues(alpha: 0.2)
-            : AppColors.warning.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(AppSpacing.borderRadiusFull),
-        border: Border.all(
-          color: isSynced
-              ? AppColors.success.withValues(alpha: 0.4)
-              : AppColors.warning.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: isSynced ? AppColors.success : AppColors.warning,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            isSynced ? 'Synced' : 'Pending',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isDark;
+class _GradientActionButton extends StatefulWidget {
   final IconData icon;
-  final bool isMonospace;
+  final String label;
+  final bool isLoading;
+  final Gradient gradient;
+  final VoidCallback onTap;
 
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    required this.isDark,
+  const _GradientActionButton({
     required this.icon,
-    this.isMonospace = false,
+    required this.label,
+    required this.isLoading,
+    required this.gradient,
+    required this.onTap,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  State<_GradientActionButton> createState() => _GradientActionButtonState();
+}
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.fillDark : AppColors.fillLight,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: isDark
-                  ? AppColors.textSecondaryDark
-                  : AppColors.textSecondaryLight,
-            ),
+class _GradientActionButtonState extends State<_GradientActionButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.isLoading ? null : widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            gradient: widget.gradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppColors.textTertiaryDark
-                        : AppColors.textTertiaryLight,
-                    fontSize: 11,
+          alignment: Alignment.center,
+          child: widget.isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
                   ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(widget.icon, color: Colors.white, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: isMonospace ? 'monospace' : null,
-                    fontSize: isMonospace ? 12 : 14,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimaryLight,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _TonalActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final bool isLoading;
@@ -944,7 +1214,7 @@ class _ActionButton extends StatelessWidget {
   final bool isDark;
   final VoidCallback onTap;
 
-  const _ActionButton({
+  const _TonalActionButton({
     required this.icon,
     required this.label,
     required this.isLoading,
@@ -954,46 +1224,59 @@ class _ActionButton extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  State<_TonalActionButton> createState() => _TonalActionButtonState();
+}
 
+class _TonalActionButtonState extends State<_TonalActionButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppSpacing.animationNormal,
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isDark ? 0.15 : 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.2 : 0.15),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: color,
-                ),
-              )
-            else
-              Icon(icon, size: 20, color: color),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: color,
-                fontSize: 11,
-              ),
+      onTap: widget.isLoading ? null : widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            color: widget.color.withValues(alpha: widget.isDark ? 0.18 : 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.color
+                  .withValues(alpha: widget.isDark ? 0.28 : 0.2),
             ),
-          ],
+          ),
+          alignment: Alignment.center,
+          child: widget.isLoading
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: widget.color,
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(widget.icon, color: widget.color, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.label,
+                      style: TextStyle(
+                        color: widget.color,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );

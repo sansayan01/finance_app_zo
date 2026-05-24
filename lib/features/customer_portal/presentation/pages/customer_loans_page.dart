@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/customer_loans_providers.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../widgets/customer_loan_card.dart';
@@ -21,13 +22,16 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
   String _filter = 'all';
   late final AnimationController _staggerController;
   late final AnimationController _headerController;
-  late final Animation<double> _headerFadeAnimation;
-  late final Animation<Offset> _headerSlideAnimation;
+  late final Animation<double> _headerFade;
+  late final Animation<Offset> _headerSlide;
+
+  double _previousOutstanding = 0;
+  double _targetOutstanding = 0;
 
   static const _filterOptions = [
-    ('all', 'All Loans', Icons.layers_rounded),
+    ('all', 'All', Icons.layers_rounded),
     ('active', 'Active', Icons.play_circle_fill_rounded),
-    ('completed', 'Completed', Icons.check_circle_rounded),
+    ('completed', 'Closed', Icons.check_circle_rounded),
     ('overdue', 'Overdue', Icons.warning_amber_rounded),
   ];
 
@@ -36,18 +40,18 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     super.initState();
     _staggerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1100),
     );
     _headerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _headerFadeAnimation = CurvedAnimation(
+    _headerFade = CurvedAnimation(
       parent: _headerController,
       curve: Curves.easeOutCubic,
     );
-    _headerSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, 0.12),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _headerController,
@@ -63,9 +67,57 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     super.dispose();
   }
 
-  void _restartStagger() {
+  void _scheduleStagger(double outstanding) {
+    if (_targetOutstanding == outstanding && _staggerController.value > 0) {
+      return;
+    }
+    _previousOutstanding = _targetOutstanding;
+    _targetOutstanding = outstanding;
     _staggerController.reset();
-    _staggerController.forward();
+    Future.delayed(const Duration(milliseconds: 180), () {
+      if (mounted) _staggerController.forward();
+    });
+  }
+
+  /// Indian-style currency: ₹12,34,567 / ₹1.23 L / ₹1.23 Cr
+  String _formatCurrency(double value) {
+    if (value.abs() >= 10000000) {
+      return '₹${(value / 10000000).toStringAsFixed(2)} Cr';
+    }
+    if (value.abs() >= 100000) {
+      return '₹${(value / 100000).toStringAsFixed(2)} L';
+    }
+    final n = value.round();
+    final s = n.toString();
+    if (s.length <= 3) return '₹$s';
+    final last3 = s.substring(s.length - 3);
+    final rest = s.substring(0, s.length - 3);
+    final buf = StringBuffer();
+    for (int i = 0; i < rest.length; i++) {
+      buf.write(rest[i]);
+      final remaining = rest.length - i - 1;
+      if (remaining > 0 && remaining % 2 == 0) buf.write(',');
+    }
+    return '₹${buf.toString()},$last3';
+  }
+
+  DateTime? _nextEmiDate(List<CustomerLoanModel> loans) {
+    final now = DateTime.now();
+    final upcoming = loans
+        .where((l) => l.status == 'active' && l.firstEmiDate != null)
+        .map((l) => l.firstEmiDate!)
+        .where((d) => d.isAfter(now.subtract(const Duration(days: 1))))
+        .toList()
+      ..sort((a, b) => a.compareTo(b));
+    return upcoming.isEmpty ? null : upcoming.first;
+  }
+
+  String _formatLongDate(DateTime d) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
 
   @override
@@ -74,22 +126,41 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     final isDark = theme.brightness == Brightness.dark;
     final loansAsync = ref.watch(customerLoansProvider);
 
+    final headerGradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF1A1F3A), Color(0xFF151A30)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : AppColors.primaryGradient;
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: loansAsync.when(
-        loading: () => _buildLoadingState(theme, isDark),
-        error: (e, _) => _buildErrorState(theme, isDark, e),
-        data: (loans) {
-          final summary = CustomerLoanSummary.fromLoans(loans);
-          final filtered = _filterLoans(loans);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!_staggerController.isAnimating &&
-                _staggerController.value == 0) {
-              _staggerController.forward();
-            }
-          });
-          return _buildContent(theme, isDark, summary, filtered);
-        },
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      extendBody: true,
+      body: AuroraBackground(
+        child: loansAsync.when(
+          loading: () => _buildLoadingState(theme, isDark, headerGradient),
+          error: (e, _) => _buildErrorState(theme, isDark, e, headerGradient),
+          data: (loans) {
+            final summary = CustomerLoanSummary.fromLoans(loans);
+            final filtered = _filterLoans(loans);
+            final nextEmi = _nextEmiDate(loans);
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scheduleStagger(summary.totalOutstanding);
+            });
+
+            return _buildContent(
+              theme,
+              isDark,
+              headerGradient,
+              summary,
+              filtered,
+              nextEmi,
+            );
+          },
+        ),
       ),
     );
   }
@@ -97,13 +168,14 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
   Widget _buildContent(
     ThemeData theme,
     bool isDark,
+    LinearGradient headerGradient,
     CustomerLoanSummary summary,
     List<CustomerLoanModel> filtered,
+    DateTime? nextEmi,
   ) {
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(customerLoansProvider);
-        _restartStagger();
       },
       color: AppColors.primary,
       child: CustomScrollView(
@@ -111,20 +183,51 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
           parent: AlwaysScrollableScrollPhysics(),
         ),
         slivers: [
-          _buildSliverHeader(theme, isDark),
           SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _headerFadeAnimation,
-              child: SlideTransition(
-                position: _headerSlideAnimation,
-                child: _buildSummaryHero(theme, isDark, summary),
-              ),
+            child: _buildGradientHeader(
+              theme,
+              isDark,
+              headerGradient,
+              summary,
+              nextEmi,
             ),
           ),
           SliverToBoxAdapter(
             child: FadeTransition(
-              opacity: _headerFadeAnimation,
+              opacity: _headerFade,
               child: _buildFilterChips(theme, isDark),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Your Loans',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimaryLight,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${filtered.length} ${filtered.length == 1 ? 'loan' : 'loans'}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: (isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimaryLight)
+                          .withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           if (filtered.isEmpty)
@@ -139,26 +242,33 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
           else
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, 0, AppSpacing.md, AppSpacing.xl,
+                AppSpacing.md, 0, AppSpacing.md, 110,
               ),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final entryAnimation = _buildStaggeredAnimation(index, filtered.length);
-                    return FadeTransition(
-                      opacity: entryAnimation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.08),
-                          end: Offset.zero,
-                        ).animate(entryAnimation),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: CustomerLoanCard(
-                            loan: filtered[index],
-                            onTap: () => context.push(
-                              '/customer/loans/${filtered[index].id}',
-                            ),
+                    final delay = (index * 0.07).clamp(0.0, 0.9);
+                    return AnimatedBuilder(
+                      animation: _staggerController,
+                      builder: (context, child) {
+                        final progress = ((_staggerController.value - delay) /
+                                (1 - delay))
+                            .clamp(0.0, 1.0);
+                        final eased = Curves.easeOutCubic.transform(progress);
+                        return Opacity(
+                          opacity: eased,
+                          child: Transform.translate(
+                            offset: Offset(0, 24 * (1 - eased)),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: CustomerLoanCard(
+                          loan: filtered[index],
+                          onTap: () => context.push(
+                            '/customer/loans/${filtered[index].id}',
                           ),
                         ),
                       ),
@@ -173,83 +283,144 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     );
   }
 
-  Widget _buildSliverHeader(ThemeData theme, bool isDark) {
-    return SliverAppBar(
-      pinned: true,
-      stretch: true,
-      expandedHeight: 140,
-      backgroundColor: isDark ? AppColors.surfaceDark : AppColors.primary,
-      surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back_ios_new_rounded,
-          color: Colors.white.withValues(alpha: 0.9),
-          size: 20,
-        ),
-        onPressed: () => context.pop(),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 52, bottom: 16),
-        title: Text(
-          'My Loans',
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
+  Widget _buildGradientHeader(
+    ThemeData theme,
+    bool isDark,
+    LinearGradient gradient,
+    CustomerLoanSummary summary,
+    DateTime? nextEmi,
+  ) {
+    final mq = MediaQuery.of(context);
+
+    return FadeTransition(
+      opacity: _headerFade,
+      child: SlideTransition(
+        position: _headerSlide,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            mq.padding.top + AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.xl,
           ),
-        ),
-        background: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [
-                      AppColors.surfaceDark,
-                      AppColors.surfaceDark.withValues(alpha: 0.95),
-                    ]
-                  : [
-                      AppColors.primary,
-                      AppColors.accent,
-                    ],
+            gradient: gradient,
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(32),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.28),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Positioned(
-                top: -40,
-                right: -30,
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.06),
+              Row(
+                children: [
+                  _CircleIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    onTap: () => context.pop(),
                   ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    'My Loans',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const Spacer(),
+                  _HeaderPill(
+                    icon: Icons.account_balance_rounded,
+                    label: '${summary.activeLoans} active',
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              Text(
+                'Total Outstanding',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.2,
                 ),
               ),
-              Positioned(
-                top: 20,
-                right: 60,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.04),
-                  ),
+              const SizedBox(height: 8),
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: _previousOutstanding,
+                  end: summary.totalOutstanding,
+                ),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) {
+                  return Text(
+                    _formatCurrency(value),
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Disbursed ${_formatCurrency(summary.totalDisbursed)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.65),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              Positioned(
-                bottom: -20,
-                left: -20,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.03),
+              const SizedBox(height: AppSpacing.md),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm + 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.event_rounded,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      'Next EMI',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      nextEmi != null
+                          ? _formatLongDate(nextEmi)
+                          : 'No upcoming EMI',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -259,108 +430,9 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     );
   }
 
-  Widget _buildSummaryHero(
-    ThemeData theme,
-    bool isDark,
-    CustomerLoanSummary summary,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-      child: GlassCard(
-        elevated: true,
-        borderRadius: 20,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        backgroundColor: isDark ? AppColors.cardDark : Colors.white,
-        child: Column(
-          children: [
-            Row(
-              children: [
-                _buildSummaryStat(
-                  theme,
-                  isDark,
-                  'Total Loans',
-                  summary.activeLoans.toString(),
-                  Icons.account_balance_wallet_rounded,
-                  AppColors.primary,
-                ),
-                Container(
-                  width: 1,
-                  height: 44,
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-                ),
-                _buildSummaryStat(
-                  theme,
-                  isDark,
-                  'Outstanding',
-                  _formatCompactCurrency(summary.totalOutstanding),
-                  Icons.trending_up_rounded,
-                  AppColors.warning,
-                ),
-                Container(
-                  width: 1,
-                  height: 44,
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-                ),
-                _buildSummaryStat(
-                  theme,
-                  isDark,
-                  'Disbursed',
-                  _formatCompactCurrency(summary.totalDisbursed),
-                  Icons.payments_rounded,
-                  AppColors.success,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryStat(
-    ThemeData theme,
-    bool isDark,
-    String label,
-    String value,
-    IconData icon,
-    Color accent,
-  ) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: isDark ? 0.15 : 0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: accent, size: 20),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)
-                  .withValues(alpha: 0.7),
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFilterChips(ThemeData theme, bool isDark) {
     return SizedBox(
-      height: 56,
+      height: 52,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(
@@ -371,51 +443,61 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
           final (key, label, icon) = _filterOptions[index];
-          final isSelected = _filter == key;
-          final selectedColor = _colorForFilter(key, isDark);
+          final selected = _filter == key;
+          final color = _colorForFilter(key, isDark);
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            child: FilterChip(
-              selected: isSelected,
-              label: Row(
+          return GestureDetector(
+            onTap: () => setState(() => _filter = key),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: selected
+                    ? color.withValues(alpha: isDark ? 0.18 : 0.12)
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.035)),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: selected
+                      ? color.withValues(alpha: 0.45)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : Colors.black.withValues(alpha: 0.05)),
+                  width: selected ? 1.2 : 0.6,
+                ),
+              ),
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     icon,
-                    size: 16,
-                    color: isSelected
-                        ? selectedColor
-                        : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
+                    size: 15,
+                    color: selected
+                        ? color
+                        : (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight),
                   ),
                   const SizedBox(width: 6),
-                  Text(label),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: selected
+                          ? color
+                          : (isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight),
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
                 ],
               ),
-              labelStyle: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected
-                    ? selectedColor
-                    : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-              ),
-              selectedColor: selectedColor.withValues(alpha: isDark ? 0.15 : 0.08),
-              backgroundColor: isDark ? AppColors.fillDark : AppColors.fillLight,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-                side: BorderSide(
-                  color: isSelected
-                      ? selectedColor.withValues(alpha: 0.3)
-                      : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.04)),
-                  width: isSelected ? 1.5 : 0.5,
-                ),
-              ),
-              showCheckmark: false,
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-              onSelected: (_) {
-                setState(() => _filter = key);
-                _restartStagger();
-              },
             ),
           );
         },
@@ -436,15 +518,6 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     }
   }
 
-  Animation<double> _buildStaggeredAnimation(int index, int total) {
-    final intervalStart = (index * 0.08).clamp(0.0, 0.7);
-    final intervalEnd = (intervalStart + 0.35).clamp(0.0, 1.0);
-    return CurvedAnimation(
-      parent: _staggerController,
-      curve: Interval(intervalStart, intervalEnd, curve: Curves.easeOutCubic),
-    );
-  }
-
   IconData get _filterIcon {
     return switch (_filter) {
       'active' => Icons.play_circle_fill_rounded,
@@ -457,7 +530,7 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
   String get _filterEmptyMessage {
     return switch (_filter) {
       'active' => 'You have no active loans at the moment.',
-      'completed' => 'No completed loans to show yet.',
+      'completed' => 'No closed loans to show yet.',
       'overdue' => 'Great news! No overdue loans.',
       _ => 'You don\'t have any loans yet.',
     };
@@ -466,101 +539,40 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
   List<CustomerLoanModel> _filterLoans(List<CustomerLoanModel> loans) {
     return switch (_filter) {
       'active' => loans.where((l) => l.status == 'active').toList(),
-      'completed' =>
-        loans.where((l) => l.status == 'completed' || l.status == 'closed').toList(),
+      'completed' => loans
+          .where((l) => l.status == 'completed' || l.status == 'closed')
+          .toList(),
       'overdue' => loans.where((l) => l.isOverdue).toList(),
       _ => loans,
     };
   }
 
-  Widget _buildLoadingState(ThemeData theme, bool isDark) {
-    return CustomScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      slivers: [
-        _buildSliverHeader(theme, isDark),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-            child: GlassCard(
-              borderRadius: 20,
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              backgroundColor: isDark ? AppColors.cardDark : Colors.white,
-              child: Row(
-                children: List.generate(3, (_) => Expanded(
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Container(
-                        width: 48,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 56,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-              ),
-            ),
+  Widget _buildLoadingState(
+      ThemeData theme, bool isDark, LinearGradient gradient) {
+    return Column(
+      children: [
+        _buildGradientHeader(
+          theme,
+          isDark,
+          gradient,
+          CustomerLoanSummary(
+            activeLoans: 0,
+            totalOutstanding: 0,
+            totalDisbursed: 0,
           ),
+          null,
         ),
-        SliverToBoxAdapter(
-          child: Padding(
+        const SizedBox(height: AppSpacing.md),
+        Expanded(
+          child: ListView.builder(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            child: Row(
-              children: List.generate(4, (_) => Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: Container(
-                  width: 80,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              )),
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (_, __) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: Container(
-                  height: 140,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardDark : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04),
-                    ),
-                  ),
-                ),
-              ),
-              childCount: 3,
+            itemCount: 4,
+            itemBuilder: (_, __) => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: ShimmerCard(height: 140, borderRadius: 20),
             ),
           ),
         ),
@@ -568,64 +580,108 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     );
   }
 
-  Widget _buildErrorState(ThemeData theme, bool isDark, Object error) {
-    return CustomScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      slivers: [
-        _buildSliverHeader(theme, isDark),
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.cloud_off_rounded,
-                      size: 48,
-                      color: isDark ? AppColors.errorDark : AppColors.error,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Something went wrong',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Unable to load your loans. Pull down to retry.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight)
-                          .withValues(alpha: 0.7),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildErrorState(
+    ThemeData theme,
+    bool isDark,
+    Object error,
+    LinearGradient gradient,
+  ) {
+    return Column(
+      children: [
+        _buildGradientHeader(
+          theme,
+          isDark,
+          gradient,
+          CustomerLoanSummary(
+            activeLoans: 0,
+            totalOutstanding: 0,
+            totalDisbursed: 0,
+          ),
+          null,
+        ),
+        Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.cloud_off_rounded,
+            title: 'Couldn\'t load loans',
+            subtitle: 'Pull down to retry, or tap the button below.',
+            ctaLabel: 'Retry',
+            onCtaTap: () => ref.invalidate(customerLoansProvider),
           ),
         ),
       ],
     );
   }
+}
 
-  String _formatCompactCurrency(double amount) {
-    if (amount >= 10000000) {
-      return '\u20b9${(amount / 10000000).toStringAsFixed(1)}Cr';
-    } else if (amount >= 100000) {
-      return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
-    } else if (amount >= 1000) {
-      return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '\u20b9${amount.toStringAsFixed(0)}';
+/// Frosted circular back/header button.
+class _CircleIconButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleIconButton({required this.icon, required this.onTap});
+
+  @override
+  State<_CircleIconButton> createState() => _CircleIconButtonState();
+}
+
+class _CircleIconButtonState extends State<_CircleIconButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _pressed
+              ? Colors.white.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(widget.icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+}
+
+/// Compact frosted pill used in the gradient header.
+class _HeaderPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _HeaderPill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.9)),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

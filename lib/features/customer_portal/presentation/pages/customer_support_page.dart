@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/customer_support_providers.dart';
 import '../../data/models/customer_ticket_model.dart';
 import '../widgets/customer_ticket_card.dart';
 import '../widgets/customer_empty_state.dart';
 import '../../data/providers/customer_member_provider.dart';
+
+enum _TicketFilter { all, open, inProgress, resolved }
 
 class CustomerSupportPage extends ConsumerStatefulWidget {
   const CustomerSupportPage({super.key});
@@ -21,13 +24,14 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
   late final AnimationController _staggerController;
   late final Animation<double> _headerFade;
   late final Animation<Offset> _headerSlide;
+  _TicketFilter _filter = _TicketFilter.all;
 
   @override
   void initState() {
     super.initState();
     _staggerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1100),
     );
     _headerFade = CurvedAnimation(
       parent: _staggerController,
@@ -49,6 +53,22 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
     super.dispose();
   }
 
+  List<CustomerTicketModel> _applyFilter(List<CustomerTicketModel> tickets) {
+    switch (_filter) {
+      case _TicketFilter.all:
+        return tickets;
+      case _TicketFilter.open:
+        return tickets.where((t) => t.status == 'open').toList();
+      case _TicketFilter.inProgress:
+        return tickets
+            .where((t) =>
+                t.status == 'in_progress' || t.status == 'inProgress')
+            .toList();
+      case _TicketFilter.resolved:
+        return tickets.where((t) => t.isResolved).toList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -58,17 +78,14 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      extendBody: true,
       body: Column(
         children: [
-          _buildGradientHeader(context, isDark, theme),
+          _buildGradientHeader(context, isDark, theme, ticketsAsync),
+          _buildFilterChips(isDark),
           Expanded(
             child: ticketsAsync.when(
-              loading: () => Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.primary,
-                  strokeWidth: 2.5,
-                ),
-              ),
+              loading: () => _buildShimmer(),
               error: (e, _) => Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -82,36 +99,52 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
                         color: isDark
                             ? AppColors.textPrimaryDark
                             : AppColors.textPrimaryLight,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      e.toString(),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.textTertiaryDark
-                            : AppColors.textTertiaryLight,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg),
+                      child: Text(
+                        e.toString(),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? AppColors.textTertiaryDark
+                              : AppColors.textTertiaryLight,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
               data: (tickets) {
-                if (tickets.isEmpty) {
-                  return CustomerEmptyState(
-                    icon: Icons.support_agent_rounded,
-                    title: 'No Support Tickets',
-                    subtitle:
-                        'Need help? Tap the button below to create a new ticket.',
-                  );
-                }
-
+                final filtered = _applyFilter(tickets);
                 return RefreshIndicator(
                   onRefresh: () async =>
                       ref.invalidate(customerTicketsProvider),
                   color: AppColors.primary,
-                  child: _buildTicketList(tickets, isDark, theme),
+                  child: filtered.isEmpty
+                      ? ListView(
+                          physics:
+                              const AlwaysScrollableScrollPhysics(
+                                  parent: BouncingScrollPhysics()),
+                          children: [
+                            const SizedBox(height: 80),
+                            CustomerEmptyState(
+                              icon: Icons.support_agent_rounded,
+                              title: tickets.isEmpty
+                                  ? 'No Support Tickets'
+                                  : 'No Matching Tickets',
+                              subtitle: tickets.isEmpty
+                                  ? 'Need help? Tap + to create a new ticket.'
+                                  : 'Try a different filter to see more tickets.',
+                            ),
+                          ],
+                        )
+                      : _buildTicketList(filtered, isDark, theme),
                 );
               },
             ),
@@ -121,8 +154,104 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
     );
   }
 
+  // ── KPI Card (animated counter) ───────────────────────────────────────
+  Widget _buildKpiCard({
+    required IconData icon,
+    required String label,
+    required int value,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.14),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: value.toDouble()),
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeOutCubic,
+                    builder: (_, v, __) => Text(
+                      v.toInt().toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.6),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildGradientHeader(
-      BuildContext context, bool isDark, ThemeData theme) {
+      BuildContext context,
+      bool isDark,
+      ThemeData theme,
+      AsyncValue<List<CustomerTicketModel>> ticketsAsync) {
+    final tickets = ticketsAsync.asData?.value ?? const [];
+    final openCount = tickets
+        .where((t) =>
+            t.status == 'open' ||
+            t.status == 'in_progress' ||
+            t.status == 'inProgress')
+        .length;
+    final resolvedCount = tickets.where((t) => t.isResolved).length;
+
     return FadeTransition(
       opacity: _headerFade,
       child: SlideTransition(
@@ -135,14 +264,22 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
               end: Alignment.bottomRight,
               colors: isDark
                   ? [
-                      const Color(0xFF1A1040),
-                      const Color(0xFF0F1115),
+                      const Color(0xFF1A1F3A),
+                      const Color(0xFF151A30),
                     ]
                   : [
                       AppColors.primary,
                       AppColors.accent,
                     ],
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary
+                    .withValues(alpha: isDark ? 0.15 : 0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: SafeArea(
             bottom: false,
@@ -160,11 +297,8 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
                         isDark: isDark,
                       ),
                       const Spacer(),
-                      _HeaderIconButton(
-                        icon: Icons.add_rounded,
-                        onTap: () => _showCreateTicketSheet(context),
-                        isDark: isDark,
-                      ),
+                      _NewTicketCta(
+                          onTap: () => _showCreateTicketSheet(context)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -173,7 +307,7 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -181,7 +315,26 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
                     'We\'re here to help you',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w500,
                     ),
+                  ),
+                  const SizedBox(height: AppSpacing.md + 2),
+                  Row(
+                    children: [
+                      _buildKpiCard(
+                        icon: Icons.support_agent_rounded,
+                        label: 'Open',
+                        value: openCount,
+                        color: AppColors.warning,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildKpiCard(
+                        icon: Icons.check_circle_rounded,
+                        label: 'Resolved',
+                        value: resolvedCount,
+                        color: AppColors.success,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -192,17 +345,127 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
     );
   }
 
+  Widget _buildFilterChips(bool isDark) {
+    final chips = <(_TicketFilter, String, IconData)>[
+      (_TicketFilter.all, 'All', Icons.all_inbox_rounded),
+      (_TicketFilter.open, 'Open', Icons.mark_email_unread_rounded),
+      (_TicketFilter.inProgress, 'In Progress', Icons.hourglass_top_rounded),
+      (_TicketFilter.resolved, 'Resolved', Icons.check_circle_outline_rounded),
+    ];
+
+    return Container(
+      height: 56,
+      color:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        itemCount: chips.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final (value, label, icon) = chips[i];
+          final selected = _filter == value;
+          return GestureDetector(
+            onTap: () => setState(() => _filter = value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: selected
+                    ? const LinearGradient(
+                        colors: AppColors.premiumGradient,
+                      )
+                    : null,
+                color: selected
+                    ? null
+                    : (isDark
+                        ? AppColors.fillDark
+                        : AppColors.fillLight),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: selected
+                      ? Colors.transparent
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : Colors.black.withValues(alpha: 0.04)),
+                  width: 0.5,
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: selected
+                        ? Colors.white
+                        : (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.1,
+                      color: selected
+                          ? Colors.white
+                          : (isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimaryLight),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildShimmer() {
+    return ListView.builder(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xxl),
+      itemCount: 5,
+      itemBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.only(bottom: AppSpacing.sm),
+        child: ShimmerCard(height: 120, borderRadius: 20),
+      ),
+    );
+  }
+
   Widget _buildTicketList(
       List<CustomerTicketModel> tickets, bool isDark, ThemeData theme) {
     return ListView.builder(
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xxl),
       itemCount: tickets.length,
       itemBuilder: (context, index) {
-        final delay = (index * 0.08).clamp(0.0, 0.6);
+        final delay = (0.15 + index * 0.07).clamp(0.0, 0.85);
         final animation = CurvedAnimation(
           parent: _staggerController,
-          curve: Interval(delay, delay + 0.4, curve: Curves.easeOutCubic),
+          curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0),
+              curve: Curves.easeOutCubic),
         );
 
         return FadeTransition(
@@ -253,8 +516,62 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Header Icon Button
+// Header CTA + Icon Buttons
 // ══════════════════════════════════════════════════════════════════════════════
+
+class _NewTicketCta extends StatelessWidget {
+  final VoidCallback onTap;
+  const _NewTicketCta({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ShaderMask(
+              shaderCallback: (r) => const LinearGradient(
+                colors: AppColors.premiumGradient,
+              ).createShader(r),
+              child: const Icon(Icons.add_rounded,
+                  color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 6),
+            ShaderMask(
+              shaderCallback: (r) => const LinearGradient(
+                colors: AppColors.premiumGradient,
+              ).createShader(r),
+              child: const Text(
+                'New Ticket',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  letterSpacing: -0.1,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _HeaderIconButton extends StatelessWidget {
   final IconData icon;
@@ -386,6 +703,14 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
                         colors: AppColors.premiumGradient,
                       ),
                       borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: const Icon(Icons.headset_mic_rounded,
                         color: Colors.white, size: 22),
@@ -399,6 +724,7 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
                           'New Support Ticket',
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
                             color: isDark
                                 ? AppColors.textPrimaryDark
                                 : AppColors.textPrimaryLight,
@@ -408,9 +734,11 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
                         Text(
                           'Describe your issue and we\'ll get back to you',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: isDark
-                                ? AppColors.textTertiaryDark
-                                : AppColors.textTertiaryLight,
+                            color: (isDark
+                                    ? AppColors.textTertiaryDark
+                                    : AppColors.textTertiaryLight)
+                                .withValues(alpha: 0.85),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -518,7 +846,18 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
   Future<void> _handleSubmit() async {
     final subject = _subjectController.text.trim();
     final message = _messageController.text.trim();
-    if (subject.isEmpty || message.isEmpty) return;
+    if (subject.isEmpty || message.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please fill in subject and message'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
 
     final customerId = ref.read(currentCustomerIdSyncProvider);
     if (customerId == null) return;
@@ -536,7 +875,28 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
 
     if (mounted) {
       setState(() => _isSubmitting = false);
-      if (success) Navigator.of(context).pop();
+      if (success) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Ticket submitted successfully'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to submit ticket'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
     }
   }
 }
@@ -601,10 +961,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
           ),
           child: Column(
             children: [
-              // Premium header
               _buildDetailHeader(isDark, theme),
-
-              // Messages
               Expanded(
                 child: messagesAsync.when(
                   loading: () => Center(
@@ -643,6 +1000,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                                 color: isDark
                                     ? AppColors.textTertiaryDark
                                     : AppColors.textTertiaryLight,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xs),
@@ -662,6 +1020,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                     }
                     return ListView.builder(
                       controller: scrollController,
+                      physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.md,
                         vertical: AppSpacing.md,
@@ -682,8 +1041,6 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                   },
                 ),
               ),
-
-              // Message input
               if (!widget.ticket.isResolved)
                 _buildMessageInput(isDark, theme, bottomPadding),
             ],
@@ -724,7 +1081,6 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
           Center(
             child: Container(
               width: 40,
@@ -739,8 +1095,6 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-
-          // Title row
           Row(
             children: [
               Container(
@@ -754,6 +1108,13 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   widget.ticket.isResolved
@@ -772,6 +1133,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                       widget.ticket.subject,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
                         color: isDark
                             ? AppColors.textPrimaryDark
                             : AppColors.textPrimaryLight,
@@ -813,9 +1175,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: (isDark
-                            ? Colors.white
-                            : Colors.black)
+                    color: (isDark ? Colors.white : Colors.black)
                         .withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -828,23 +1188,17 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
               ),
             ],
           ),
-
-          // Original message
           if (widget.ticket.message.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm + 4),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(AppSpacing.sm + 4),
               decoration: BoxDecoration(
-                color: (isDark
-                        ? Colors.white
-                        : AppColors.primary)
+                color: (isDark ? Colors.white : AppColors.primary)
                     .withValues(alpha: isDark ? 0.03 : 0.04),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: (isDark
-                          ? Colors.white
-                          : AppColors.primary)
+                  color: (isDark ? Colors.white : AppColors.primary)
                       .withValues(alpha: isDark ? 0.04 : 0.08),
                   width: 0.5,
                 ),
@@ -868,9 +1222,8 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
   Widget _buildMessageInput(
       bool isDark, ThemeData theme, double bottomPadding) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-          AppSpacing.md, AppSpacing.sm, AppSpacing.md,
-          bottomPadding + AppSpacing.sm),
+      padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm,
+          AppSpacing.md, bottomPadding + AppSpacing.sm),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
         border: Border(
@@ -1023,8 +1376,9 @@ class _PremiumTextField extends StatelessWidget {
             ),
           ),
           child: Row(
-            crossAxisAlignment:
-                maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+            crossAxisAlignment: maxLines > 1
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
             children: [
               Padding(
                 padding: EdgeInsets.only(
@@ -1113,9 +1467,7 @@ class _PriorityChip extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? color.withValues(alpha: 0.5)
-                : (isDark
-                        ? Colors.white
-                        : Colors.black)
+                : (isDark ? Colors.white : Colors.black)
                     .withValues(alpha: isDark ? 0.06 : 0.04),
             width: isSelected ? 1.5 : 0.5,
           ),
@@ -1257,8 +1609,9 @@ class _GradientButton extends StatelessWidget {
                       label,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        letterSpacing: -0.1,
                       ),
                     ),
                   ],
@@ -1329,6 +1682,15 @@ class _ChatBubble extends StatelessWidget {
                             : Colors.black.withValues(alpha: 0.04),
                         width: 0.5,
                       ),
+                boxShadow: isCustomer
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Text(
                 message,

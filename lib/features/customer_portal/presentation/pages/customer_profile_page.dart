@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -144,7 +145,10 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
           child: Row(
             children: [
               IconButton(
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  context.pop();
+                },
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
               ),
               const Expanded(
@@ -246,7 +250,10 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
         ),
         if (editable && onEdit != null)
           GestureDetector(
-            onTap: onEdit,
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onEdit();
+            },
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(8)),
@@ -301,6 +308,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () async {
+                      HapticFeedback.mediumImpact();
                       final value = controller.text.trim();
                       if (value.isEmpty) return;
                       final data = <String, dynamic>{};
@@ -356,6 +364,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () async {
+                    HapticFeedback.mediumImpact();
                     await ref.read(customerProfileUpdateProvider.notifier).updateProfile(profile.memberId, {field: opt});
                     if (ctx.mounted) Navigator.pop(ctx);
                     ref.invalidate(customerProfileProvider);
@@ -390,6 +399,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
     );
     if (date != null) {
+      HapticFeedback.mediumImpact();
       await ref.read(customerProfileUpdateProvider.notifier).updateProfile(profile.memberId, {'date_of_birth': date.toIso8601String().split('T').first});
       ref.invalidate(customerProfileProvider);
     }

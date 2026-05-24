@@ -1136,8 +1136,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
     if (location.startsWith('/customer/savings')) return 2;
     if (location.startsWith('/customer/transactions') ||
         location.startsWith('/customer/notifications') ||
-        location.startsWith('/customer/support') ||
-        location.startsWith('/customer/profile')) {
+        location.startsWith('/customer/support')) {
       return 3;
     }
     return 0;
@@ -1166,10 +1165,14 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1C2030) : Colors.white,
             borderRadius: BorderRadius.circular(24),
@@ -1204,54 +1207,59 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildMoreItem(context, Icons.receipt_long_rounded,
-                    'Transactions', 'View all payment history', isDark, () {
-                  Navigator.pop(context);
-                  context.go('/customer/transactions');
-                }),
-                _buildMoreItem(context, Icons.notifications_rounded,
-                    'Notifications', 'Alerts and reminders', isDark, () {
-                  Navigator.pop(context);
-                  context.go('/customer/notifications');
-                }),
-                _buildMoreItem(context, Icons.support_agent_rounded,
-                    'Support', 'Get help and create tickets', isDark, () {
-                  Navigator.pop(context);
-                  context.go('/customer/support');
-                }),
-                _buildMoreItem(context, Icons.calculate_rounded,
-                    'EMI Calculator', 'Plan your loan repayment', isDark, () {
-                  Navigator.pop(context);
-                  context.go('/customer/emi-calculator');
-                }),
-                _buildMoreItem(context, Icons.rate_review_rounded,
-                    'Feedback', 'Help us improve our service', isDark, () {
-                  Navigator.pop(context);
-                  context.go('/customer/feedback');
-                }),
-                _buildMoreItem(context, Icons.settings_rounded,
-                    'Account Settings', 'Preferences and security', isDark, () {
-                  Navigator.pop(context);
-                  context.go('/customer/account-settings');
-                }),
-                _buildMoreItem(context, Icons.person_rounded, 'Profile',
-                    'View your personal info', isDark, () {
-                  Navigator.pop(context);
-                  context.go('/customer/profile');
-                }),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Divider(
-                      color: (isDark ? Colors.white : Colors.black)
-                          .withValues(alpha: 0.08)),
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildMoreItem(context, Icons.receipt_long_rounded,
+                            'Transactions', 'View all payment history', isDark, () {
+                          Navigator.pop(context);
+                          context.go('/customer/transactions');
+                        }),
+                        _buildMoreItem(context, Icons.notifications_rounded,
+                            'Notifications', 'Alerts and reminders', isDark, () {
+                          Navigator.pop(context);
+                          context.go('/customer/notifications');
+                        }),
+                        _buildMoreItem(context, Icons.support_agent_rounded,
+                            'Support', 'Get help and create tickets', isDark, () {
+                          Navigator.pop(context);
+                          context.go('/customer/support');
+                        }),
+                        _buildMoreItem(context, Icons.calculate_rounded,
+                            'EMI Calculator', 'Plan your loan repayment', isDark, () {
+                          Navigator.pop(context);
+                          context.go('/customer/emi-calculator');
+                        }),
+                        _buildMoreItem(context, Icons.rate_review_rounded,
+                            'Feedback', 'Help us improve our service', isDark, () {
+                          Navigator.pop(context);
+                          context.go('/customer/feedback');
+                        }),
+                        _buildMoreItem(context, Icons.settings_rounded,
+                            'Account Settings', 'Preferences and security', isDark, () {
+                          Navigator.pop(context);
+                          context.go('/customer/account-settings');
+                        }),
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          child: Divider(
+                              color: (isDark ? Colors.white : Colors.black)
+                                  .withValues(alpha: 0.08)),
+                        ),
+                        _buildMoreItem(context, Icons.logout_rounded, 'Logout',
+                            'Sign out of your account', isDark, () async {
+                          Navigator.pop(context);
+                          await ref.read(authProvider.notifier).signOut();
+                        }, isError: true),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
                 ),
-                _buildMoreItem(context, Icons.logout_rounded, 'Logout',
-                    'Sign out of your account', isDark, () async {
-                  Navigator.pop(context);
-                  await ref.read(authProvider.notifier).signOut();
-                }, isError: true),
-                const SizedBox(height: 8),
               ],
             ),
           ),
@@ -1334,20 +1342,95 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
       body: _NavSafeArea(child: widget.child),
-      bottomNavigationBar: _SimpleBottomBar(
-        currentIndex: currentIndex,
-        onTap: (index) => _onItemTapped(index, context),
-        isDark: isDark,
-        primary: primary,
-        items: const [
-          _SimpleNavData(Icons.home_outlined, Icons.home_rounded, 'Home'),
-          _SimpleNavData(Icons.account_balance_outlined,
-              Icons.account_balance_rounded, 'Loans'),
-          _SimpleNavData(
-              Icons.savings_outlined, Icons.savings_rounded, 'Savings'),
-          _SimpleNavData(
-              Icons.more_horiz_outlined, Icons.more_horiz_rounded, 'More'),
-        ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        minimum: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF3E3E4A).withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(28),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: isDark ? 0.15 : 0.4),
+                      Colors.transparent,
+                    ],
+                  ),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.25)
+                        : Colors.white.withValues(alpha: 0.5),
+                    width: 0.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.6 : 0.1),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                      spreadRadius: -2,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _NavItem(
+                        index: 0,
+                        icon: Icons.grid_view_outlined,
+                        activeIcon: Icons.grid_view_rounded,
+                        label: 'Home',
+                        currentIndex: currentIndex,
+                        primary: primary,
+                        isDark: isDark,
+                        onTap: (i) => _onItemTapped(i, context)),
+                    _NavItem(
+                        index: 1,
+                        icon: Icons.account_balance_outlined,
+                        activeIcon: Icons.account_balance_rounded,
+                        label: 'Loans',
+                        currentIndex: currentIndex,
+                        primary: primary,
+                        isDark: isDark,
+                        onTap: (i) => _onItemTapped(i, context)),
+                    _NavItem(
+                        index: 2,
+                        icon: Icons.account_balance_wallet_outlined,
+                        activeIcon: Icons.account_balance_wallet_rounded,
+                        label: 'Savings',
+                        currentIndex: currentIndex,
+                        primary: primary,
+                        isDark: isDark,
+                        onTap: (i) => _onItemTapped(i, context)),
+                    _NavItem(
+                        index: 3,
+                        icon: Icons.more_horiz_outlined,
+                        activeIcon: Icons.more_horiz_rounded,
+                        label: 'More',
+                        currentIndex: currentIndex,
+                        primary: primary,
+                        isDark: isDark,
+                        onTap: (i) => _onItemTapped(i, context)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

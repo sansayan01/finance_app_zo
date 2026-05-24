@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/progress_gauge.dart';
+import '../../../../core/widgets/shimmer_card.dart';
+import '../../../../core/widgets/sparkline_chart.dart';
+import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
-import '../widgets/customer_emi_tile.dart';
 import '../widgets/customer_empty_state.dart';
 
 class CustomerEmiSchedulePage extends ConsumerStatefulWidget {
@@ -32,7 +35,7 @@ class _CustomerEmiSchedulePageState
     );
     _staggerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1100),
     );
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
@@ -48,38 +51,221 @@ class _CustomerEmiSchedulePageState
     super.dispose();
   }
 
+  // ─── Indian currency formatting ───
+  String _formatCurrency(double value) {
+    if (value.abs() >= 10000000) {
+      return '₹${(value / 10000000).toStringAsFixed(2)} Cr';
+    }
+    if (value.abs() >= 100000) {
+      return '₹${(value / 100000).toStringAsFixed(2)} L';
+    }
+    final n = value.round();
+    final s = n.toString();
+    if (s.length <= 3) return '₹$s';
+    final last3 = s.substring(s.length - 3);
+    final rest = s.substring(0, s.length - 3);
+    final buf = StringBuffer();
+    for (int i = 0; i < rest.length; i++) {
+      buf.write(rest[i]);
+      final remaining = rest.length - i - 1;
+      if (remaining > 0 && remaining % 2 == 0) buf.write(',');
+    }
+    return '₹${buf.toString()},$last3';
+  }
+
+  String _formatPlainAmount(double value) {
+    final n = value.round();
+    final s = n.toString();
+    if (s.length <= 3) return s;
+    final last3 = s.substring(s.length - 3);
+    final rest = s.substring(0, s.length - 3);
+    final buf = StringBuffer();
+    for (int i = 0; i < rest.length; i++) {
+      buf.write(rest[i]);
+      final remaining = rest.length - i - 1;
+      if (remaining > 0 && remaining % 2 == 0) buf.write(',');
+    }
+    return '${buf.toString()},$last3';
+  }
+
+  static const _months = [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _formatPaidRelative(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final d = DateTime(date.year, date.month, date.day);
+    if (d == today) return 'today';
+    if (d == today.subtract(const Duration(days: 1))) return 'yesterday';
+    return 'on ${_months[date.month]} ${date.day}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final emiAsync = ref.watch(customerEmiScheduleProvider(widget.loanId));
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final headerGradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF1A1F3A), Color(0xFF151A30)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : const LinearGradient(
+            colors: [AppColors.primary, AppColors.accent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          );
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      extendBody: true,
       body: emiAsync.when(
-        loading: () => _buildLoadingState(isDark),
-        error: (e, _) => _buildErrorState(e, isDark),
+        loading: () => _buildLoadingState(isDark, headerGradient),
+        error: (e, _) => _buildErrorState(e, isDark, headerGradient),
         data: (emis) {
           if (emis.isEmpty) {
-            return _buildEmptyGradientWrapper(isDark);
+            return _buildEmptyState(isDark, headerGradient);
           }
 
-          final paidCount = emis.where((e) => e.isPaid).length;
-          final totalPaid =
-              emis.where((e) => e.isPaid).fold(0.0, (s, e) => s + e.amountPaid);
-          final totalRemaining = emis
+          final sorted = [...emis]
+            ..sort((a, b) {
+              final ad = a.dueDate;
+              final bd = b.dueDate;
+              if (ad == null && bd == null) return a.emiNumber - b.emiNumber;
+              if (ad == null) return 1;
+              if (bd == null) return -1;
+              return ad.compareTo(bd);
+            });
+
+          final paidCount = sorted.where((e) => e.isPaid).length;
+          final totalPaid = sorted
+              .where((e) => e.isPaid)
+              .fold(0.0, (s, e) => s + e.amountPaid);
+          final totalPending = sorted
               .where((e) => !e.isPaid)
               .fold(0.0, (s, e) => s + e.emiAmount);
-          final totalPenalty = emis.fold(
-              0.0, (s, e) => s + (e.penaltyAmount ?? 0));
-          final progress = emis.isEmpty ? 0.0 : paidCount / emis.length;
+          final totalPenalty =
+              sorted.fold(0.0, (s, e) => s + (e.penaltyAmount ?? 0));
+          final loanTotal = sorted.fold(0.0, (s, e) => s + e.emiAmount);
+          final progress =
+              sorted.isEmpty ? 0.0 : (paidCount / sorted.length).clamp(0.0, 1.0);
 
-          // Kick off stagger animation once data arrives
+          // Cumulative paid sparkline data
+          final List<double> cumulativePaid = [];
+          double running = 0;
+          for (final e in sorted) {
+            if (e.isPaid) running += e.amountPaid;
+            cumulativePaid.add(running);
+          }
+          // Ensure sparkline has at least 2 distinct points
+          if (cumulativePaid.length < 2) {
+            cumulativePaid.add(running == 0 ? 1 : running);
+          }
+          if (cumulativePaid.toSet().length == 1) {
+            cumulativePaid[cumulativePaid.length - 1] =
+                cumulativePaid.last + 0.0001;
+          }
+
+          // Group by month
+          final groups = <String, List<CustomerEmiModel>>{};
+          for (final e in sorted) {
+            final key = e.dueDate != null
+                ? '${_months[e.dueDate!.month]} ${e.dueDate!.year}'
+                : 'Unscheduled';
+            groups.putIfAbsent(key, () => []).add(e);
+          }
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (_staggerController.status == AnimationStatus.dismissed) {
               _staggerController.forward();
             }
           });
+
+          // Flat index for staggering across groups
+          int flatIndex = 0;
+          final slivers = <Widget>[];
+          slivers.add(
+            SliverToBoxAdapter(
+              child: _buildGradientHeader(
+                context: context,
+                isDark: isDark,
+                gradient: headerGradient,
+                loanTotal: loanTotal,
+                emiCount: sorted.length,
+              ),
+            ),
+          );
+          slivers.add(
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: _buildSummaryCard(
+                  isDark: isDark,
+                  theme: theme,
+                  paidCount: paidCount,
+                  totalEmis: sorted.length,
+                  totalPaid: totalPaid,
+                  totalPending: totalPending,
+                  totalPenalty: totalPenalty,
+                  progress: progress,
+                  sparkline: cumulativePaid,
+                ),
+              ),
+            ),
+          );
+
+          groups.forEach((monthKey, items) {
+            slivers.add(
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _MonthHeaderDelegate(
+                  label: monthKey,
+                  count: items.length,
+                  isDark: isDark,
+                ),
+              ),
+            );
+            for (final emi in items) {
+              final currentIndex = flatIndex++;
+              slivers.add(
+                SliverToBoxAdapter(
+                  child: _StaggeredEntry(
+                    index: currentIndex,
+                    controller: _staggerController,
+                    child: _PremiumEmiRow(
+                      emi: emi,
+                      isDark: isDark,
+                      theme: theme,
+                      formatCurrency: _formatCurrency,
+                      formatPlain: _formatPlainAmount,
+                      formatPaidRelative: _formatPaidRelative,
+                      months: _months,
+                    ),
+                  ),
+                ),
+              );
+            }
+          });
+
+          slivers.add(const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.xxl),
+          ));
 
           return RefreshIndicator(
             color: AppColors.primary,
@@ -87,63 +273,13 @@ class _CustomerEmiSchedulePageState
               _staggerController.reset();
               ref.invalidate(customerEmiScheduleProvider(widget.loanId));
               await Future.delayed(const Duration(milliseconds: 300));
-              _staggerController.forward();
+              if (mounted) _staggerController.forward();
             },
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
-              slivers: [
-                // ── Gradient Header ──
-                SliverToBoxAdapter(
-                  child: _GradientHeader(
-                    fadeAnimation: _fadeAnimation,
-                    isDark: isDark,
-                    theme: theme,
-                  ),
-                ),
-
-                // ── Summary Glass Cards ──
-                SliverToBoxAdapter(
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: _SummarySection(
-                      paidCount: paidCount,
-                      totalEmis: emis.length,
-                      totalPaid: totalPaid,
-                      totalRemaining: totalRemaining,
-                      totalPenalty: totalPenalty,
-                      progress: progress,
-                      isDark: isDark,
-                      theme: theme,
-                    ),
-                  ),
-                ),
-
-                // ── Section Label ──
-                SliverToBoxAdapter(
-                  child: _buildSectionLabel(theme, isDark),
-                ),
-
-                // ── Staggered EMI Tiles ──
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      return _StaggeredTile(
-                        index: index,
-                        controller: _staggerController,
-                        isDark: isDark,
-                        child: CustomerEmiTile(emi: emis[index]),
-                      );
-                    },
-                    childCount: emis.length,
-                  ),
-                ),
-
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: AppSpacing.xxl),
-                ),
-              ],
+              slivers: slivers,
             ),
           );
         },
@@ -151,202 +287,27 @@ class _CustomerEmiSchedulePageState
     );
   }
 
-  Widget _buildLoadingState(bool isDark) {
+  // ─── Gradient Header ───
+  Widget _buildGradientHeader({
+    required BuildContext context,
+    required bool isDark,
+    required Gradient gradient,
+    required double loanTotal,
+    required int emiCount,
+  }) {
+    final topPad = MediaQuery.of(context).padding.top + 8;
     return Container(
-      color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 48,
-              height: 48,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: AppColors.primary,
-                backgroundColor:
-                    isDark ? AppColors.fillDark : AppColors.fillLight,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Loading schedule...',
-              style: TextStyle(
-                color: isDark
-                    ? AppColors.textTertiaryDark
-                    : AppColors.textTertiaryLight,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(Object error, bool isDark) {
-    return Container(
-      color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 56,
-              color: AppColors.error.withValues(alpha: 0.6),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Something went wrong',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color:
-                    isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '$error',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark
-                    ? AppColors.textTertiaryDark
-                    : AppColors.textTertiaryLight,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyGradientWrapper(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: isDark
-              ? [const Color(0xFF1A1E2E), AppColors.backgroundDark]
-              : [AppColors.primary.withValues(alpha: 0.04), AppColors.backgroundLight],
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Back button
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8, top: 8),
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimaryLight,
-                    size: 22,
-                  ),
-                ),
-              ),
-            ),
-            const Expanded(
-              child: CustomerEmptyState(
-                icon: Icons.calendar_month_rounded,
-                title: 'No EMIs',
-                subtitle: 'No EMI schedule found for this loan.',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionLabel(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        topPad,
+        AppSpacing.md,
         AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 18,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [AppColors.primary, AppColors.accent],
-              ),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            'Payment Schedule',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: isDark
-                  ? AppColors.textPrimaryDark
-                  : AppColors.textPrimaryLight,
-              letterSpacing: -0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Gradient Header ───
-
-class _GradientHeader extends StatelessWidget {
-  final Animation<double> fadeAnimation;
-  final bool isDark;
-  final ThemeData theme;
-
-  const _GradientHeader({
-    required this.fadeAnimation,
-    required this.isDark,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 12,
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        bottom: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF1E2235),
-                  const Color(0xFF252A3A),
-                  AppColors.cardDark,
-                ]
-              : [
-                  AppColors.primary,
-                  AppColors.accent,
-                  AppColors.accent.withValues(alpha: 0.85),
-                ],
-        ),
+        gradient: gradient,
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
         boxShadow: [
           BoxShadow(
@@ -358,69 +319,20 @@ class _GradientHeader extends StatelessWidget {
         ],
       ),
       child: FadeTransition(
-        opacity: fadeAnimation,
+        opacity: _fadeAnimation,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top bar with back button
             Row(
               children: [
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
+                _circleIconButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onTap: () => Navigator.of(context).pop(),
                 ),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.schedule_rounded,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'EMI Schedule',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ],
-                  ),
+                _headerChip(
+                  icon: Icons.receipt_long_rounded,
+                  label: 'Loan #${_shortId(widget.loanId)}',
                 ),
               ],
             ),
@@ -428,114 +340,179 @@ class _GradientHeader extends StatelessWidget {
             Text(
               'Repayment',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.white.withValues(alpha: 0.7),
                 letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             const Text(
-              'Schedule',
+              'EMI Schedule',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
                 letterSpacing: -0.8,
                 height: 1.1,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Track every installment and payment milestone',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.6),
-                letterSpacing: 0.2,
-              ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.account_balance_wallet_rounded,
+                  size: 14,
+                  color: Colors.white.withValues(alpha: 0.75),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${_formatCurrency(loanTotal)} • $emiCount installments',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.75),
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
-}
 
-// ─── Summary Section ───
+  String _shortId(String id) {
+    if (id.length <= 8) return id;
+    return '${id.substring(0, 4)}…${id.substring(id.length - 4)}';
+  }
 
-class _SummarySection extends StatelessWidget {
-  final int paidCount;
-  final int totalEmis;
-  final double totalPaid;
-  final double totalRemaining;
-  final double totalPenalty;
-  final double progress;
-  final bool isDark;
-  final ThemeData theme;
-
-  const _SummarySection({
-    required this.paidCount,
-    required this.totalEmis,
-    required this.totalPaid,
-    required this.totalRemaining,
-    required this.totalPenalty,
-    required this.progress,
-    required this.isDark,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        0,
+  Widget _circleIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+          child: Icon(icon, color: Colors.white, size: 18),
+        ),
       ),
-      child: Column(
+    );
+  }
+
+  Widget _headerChip({required IconData icon, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Progress Ring Card ──
-          _GlassCard(
-            isDark: isDark,
-            child: Row(
-              children: [
-                // Progress ring
-                SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 7,
-                          backgroundColor: isDark
-                              ? AppColors.fillDark
-                              : AppColors.fillLight,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            progress >= 1.0
-                                ? AppColors.success
-                                : AppColors.primary,
-                          ),
-                          strokeCap: StrokeCap.round,
-                        ),
-                      ),
-                      Column(
+          Icon(icon, color: Colors.white.withValues(alpha: 0.9), size: 14),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.95),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Summary Card ───
+  Widget _buildSummaryCard({
+    required bool isDark,
+    required ThemeData theme,
+    required int paidCount,
+    required int totalEmis,
+    required double totalPaid,
+    required double totalPending,
+    required double totalPenalty,
+    required double progress,
+    required List<double> sparkline,
+  }) {
+    final cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
+    final borderColor =
+        isDark ? AppColors.separatorDark : AppColors.separatorLight;
+    final textPrimary =
+        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textSecondary =
+        isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textTertiary =
+        isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
+    final pct = (progress * 100).clamp(0.0, 100.0);
+
+    return Transform.translate(
+      offset: const Offset(0, -20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: borderColor, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ProgressGauge(
+                    value: progress,
+                    size: 84,
+                    strokeWidth: 8,
+                    progressColor: progress >= 1.0
+                        ? AppColors.success
+                        : AppColors.primary,
+                    backgroundColor:
+                        isDark ? AppColors.fillDark : AppColors.fillLight,
+                    center: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: pct),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeOutCubic,
+                      builder: (_, v, __) => Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            '${(progress * 100).toInt()}%',
+                            '${v.toInt()}%',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: isDark
-                                  ? AppColors.textPrimaryDark
-                                  : AppColors.textPrimaryLight,
+                              color: textPrimary,
                               letterSpacing: -0.5,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                           Text(
@@ -543,308 +520,522 @@ class _SummarySection extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
-                              color: isDark
-                                  ? AppColors.textTertiaryDark
-                                  : AppColors.textTertiaryLight,
+                              color: textTertiary,
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                // Count and label
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '$paidCount',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                                letterSpacing: -1.5,
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '$paidCount',
+                                style: const TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primary,
+                                  letterSpacing: -1.2,
+                                  fontFeatures: [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: ' / $totalEmis',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? AppColors.textTertiaryDark
-                                    : AppColors.textTertiaryLight,
+                              TextSpan(
+                                text: ' / $totalEmis',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                  color: textTertiary,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Installments completed',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: textSecondary,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _paidVsPendingPill(
+                          isDark: isDark,
+                          paid: totalPaid,
+                          pending: totalPending,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Divider(color: borderColor, height: 1),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: _miniStat(
+                      label: 'Total Paid',
+                      icon: Icons.check_circle_rounded,
+                      color: AppColors.success,
+                      isDark: isDark,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: totalPaid),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, v, __) => Text(
+                          _formatCurrency(v),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: textPrimary,
+                            letterSpacing: -0.4,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 2),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _miniStat(
+                      label: 'Pending',
+                      icon: Icons.pending_actions_rounded,
+                      color: AppColors.warning,
+                      isDark: isDark,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: totalPending),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, v, __) => Text(
+                          _formatCurrency(v),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: textPrimary,
+                            letterSpacing: -0.4,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (totalPenalty > 0) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.error,
+                        size: 18,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
-                        'EMIs Completed',
+                        'Penalties accrued',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: isDark
-                              ? AppColors.textSecondaryDark
-                              : AppColors.textSecondaryLight,
+                          color: textSecondary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        _formatCurrency(totalPenalty),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.error,
+                          letterSpacing: -0.4,
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Arrow chip
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: AppColors.primary,
-                  ),
+              ],
+              if (totalPaid > 0) ...[
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.show_chart_rounded,
+                      size: 14,
+                      color: textTertiary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Cumulative paid',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: textTertiary,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                SparklineChart(
+                  data: sparkline,
+                  color: AppColors.success,
+                  height: 38,
                 ),
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _paidVsPendingPill({
+    required bool isDark,
+    required double paid,
+    required double pending,
+  }) {
+    final total = paid + pending;
+    final paidRatio = total > 0 ? (paid / total).clamp(0.0, 1.0) : 0.0;
+    return Container(
+      height: 8,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.fillDark : AppColors.fillLight,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: (paidRatio * 1000).round().clamp(0, 1000),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.success, AppColors.primary],
+                ),
+                borderRadius: BorderRadius.circular(99),
+              ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          Expanded(
+            flex: ((1 - paidRatio) * 1000).round().clamp(0, 1000),
+            child: const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
 
-          // ── Stat Grid ──
+  Widget _miniStat({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required bool isDark,
+    required Widget child,
+  }) {
+    final textTertiary =
+        isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm + 4,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.10 : 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             children: [
-              Expanded(
-                child: _StatCard(
-                  label: 'Total Paid',
-                  value: _formatCurrency(totalPaid),
-                  icon: Icons.check_circle_outline_rounded,
-                  color: AppColors.success,
-                  isDark: isDark,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _StatCard(
-                  label: 'Remaining',
-                  value: _formatCurrency(totalRemaining),
-                  icon: Icons.pending_actions_rounded,
-                  color: AppColors.warning,
-                  isDark: isDark,
+              Icon(icon, color: color, size: 14),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: textTertiary,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],
           ),
-          if (totalPenalty > 0) ...[
-            const SizedBox(height: AppSpacing.sm),
-            _StatCard(
-              label: 'Total Penalties',
-              value: _formatCurrency(totalPenalty),
-              icon: Icons.warning_amber_rounded,
-              color: AppColors.error,
-              isDark: isDark,
-              fullWidth: true,
-            ),
-          ],
+          const SizedBox(height: 6),
+          child,
         ],
       ),
     );
   }
 
-  String _formatCurrency(double amount) {
-    if (amount >= 100000) {
-      return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
-    } else if (amount >= 1000) {
-      return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '\u20b9${amount.toStringAsFixed(0)}';
-  }
-}
-
-// ─── Glass Card ───
-
-class _GlassCard extends StatelessWidget {
-  final Widget child;
-  final bool isDark;
-
-  const _GlassCard({required this.child, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : AppColors.cardLight,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark
-              ? AppColors.separatorDark
-              : AppColors.separatorLight,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+  // ─── Loading / Error / Empty ───
+  Widget _buildLoadingState(bool isDark, Gradient gradient) {
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(
+          child: _buildGradientHeader(
+            context: context,
+            isDark: isDark,
+            gradient: gradient,
+            loanTotal: 0,
+            emiCount: 0,
           ),
-        ],
-      ),
-      child: child,
+        ),
+        SliverToBoxAdapter(
+          child: Transform.translate(
+            offset: const Offset(0, -20),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: ShimmerCard(height: 220, borderRadius: 22),
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, __) => const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                4,
+                AppSpacing.md,
+                4,
+              ),
+              child: ShimmerCard(height: 76, borderRadius: 16),
+            ),
+            childCount: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(Object error, bool isDark, Gradient gradient) {
+    final textPrimary =
+        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textTertiary =
+        isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
+    return Column(
+      children: [
+        _buildGradientHeader(
+          context: context,
+          isDark: isDark,
+          gradient: gradient,
+          loanTotal: 0,
+          emiCount: 0,
+        ),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 56,
+                    color: AppColors.error.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'Something went wrong',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '$error',
+                    style: TextStyle(fontSize: 13, color: textTertiary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(bool isDark, Gradient gradient) {
+    return Column(
+      children: [
+        _buildGradientHeader(
+          context: context,
+          isDark: isDark,
+          gradient: gradient,
+          loanTotal: 0,
+          emiCount: 0,
+        ),
+        const Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.calendar_month_rounded,
+            title: 'No EMIs',
+            subtitle: 'No EMI schedule found for this loan.',
+          ),
+        ),
+      ],
     );
   }
 }
 
-// ─── Stat Card ───
-
-class _StatCard extends StatelessWidget {
+// ─── Sticky Month Header ───
+class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
+  final int count;
   final bool isDark;
-  final bool fullWidth;
 
-  const _StatCard({
+  _MonthHeaderDelegate({
     required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
+    required this.count,
     required this.isDark,
-    this.fullWidth = false,
   });
 
   @override
-  Widget build(BuildContext context) {
+  double get minExtent => 44;
+  @override
+  double get maxExtent => 44;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final bg = isDark
+        ? AppColors.backgroundDark.withValues(alpha: 0.92)
+        : AppColors.backgroundLight.withValues(alpha: 0.92);
+    final textPrimary =
+        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textTertiary =
+        isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 14,
+      color: bg,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
       ),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : AppColors.cardLight,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.primary, AppColors.accent],
+              ),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: textPrimary,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            count == 1 ? 'EMI' : 'EMIs',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: textTertiary,
+            ),
           ),
         ],
       ),
-      child: fullWidth
-          ? Row(
-              children: [
-                _buildIconBadge(),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondaryLight,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: color,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildIconBadge(),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimaryLight,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.textTertiaryDark
-                        : AppColors.textTertiaryLight,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ),
     );
   }
 
-  Widget _buildIconBadge() {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(icon, size: 16, color: color),
-    );
-  }
+  @override
+  bool shouldRebuild(covariant _MonthHeaderDelegate old) =>
+      old.label != label || old.count != count || old.isDark != isDark;
 }
 
-// ─── Staggered Tile (single CurvedAnimation per tile, disposed properly) ───
-
-class _StaggeredTile extends StatefulWidget {
+// ─── Staggered entry wrapper ───
+class _StaggeredEntry extends StatefulWidget {
   final int index;
   final AnimationController controller;
-  final bool isDark;
   final Widget child;
 
-  const _StaggeredTile({
+  const _StaggeredEntry({
     required this.index,
     required this.controller,
-    required this.isDark,
     required this.child,
   });
 
   @override
-  State<_StaggeredTile> createState() => _StaggeredTileState();
+  State<_StaggeredEntry> createState() => _StaggeredEntryState();
 }
 
-class _StaggeredTileState extends State<_StaggeredTile> {
+class _StaggeredEntryState extends State<_StaggeredEntry> {
   late final CurvedAnimation _animation;
 
   @override
   void initState() {
     super.initState();
-    final intervalStart = (widget.index * 0.08).clamp(0.0, 0.8);
-    final intervalEnd = (intervalStart + 0.3).clamp(0.0, 1.0);
+    final start = (widget.index * 0.07).clamp(0.0, 0.85);
+    final end = (start + 0.3).clamp(0.0, 1.0);
     _animation = CurvedAnimation(
       parent: widget.controller,
-      curve: Interval(intervalStart, intervalEnd, curve: Curves.easeOutCubic),
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
     );
   }
 
@@ -860,59 +1051,376 @@ class _StaggeredTileState extends State<_StaggeredTile> {
       opacity: _animation,
       child: SlideTransition(
         position: Tween<Offset>(
-          begin: const Offset(0, 0.15),
+          begin: const Offset(0, 0.12),
           end: Offset.zero,
         ).animate(_animation),
-        child: _EmiTileWrapper(
-          isDark: widget.isDark,
-          child: widget.child,
-        ),
+        child: widget.child,
       ),
     );
   }
 }
 
-// ─── EMI Tile Wrapper (section card feel) ───
-
-class _EmiTileWrapper extends StatelessWidget {
-  final Widget child;
+// ─── Premium EMI row ───
+class _PremiumEmiRow extends StatelessWidget {
+  final CustomerEmiModel emi;
   final bool isDark;
+  final ThemeData theme;
+  final String Function(double) formatCurrency;
+  final String Function(double) formatPlain;
+  final String Function(DateTime) formatPaidRelative;
+  final List<String> months;
 
-  const _EmiTileWrapper({
-    required this.child,
+  const _PremiumEmiRow({
+    required this.emi,
     required this.isDark,
+    required this.theme,
+    required this.formatCurrency,
+    required this.formatPlain,
+    required this.formatPaidRelative,
+    required this.months,
   });
+
+  Color get _statusColor {
+    if (emi.isPaid) return AppColors.success;
+    if (emi.isOverdue) return AppColors.error;
+    return AppColors.primary;
+  }
+
+  String get _statusLabel {
+    if (emi.isPaid) return 'Paid';
+    if (emi.isOverdue) return 'Overdue';
+    return 'Upcoming';
+  }
+
+  IconData get _statusIcon {
+    if (emi.isPaid) return Icons.check_rounded;
+    if (emi.isOverdue) return Icons.error_outline_rounded;
+    return Icons.schedule_rounded;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
+    final borderColor =
+        isDark ? AppColors.separatorDark : AppColors.separatorLight;
+    final textPrimary =
+        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textSecondary =
+        isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textTertiary =
+        isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
+
+    final dueLabel = emi.dueDate != null
+        ? '${months[emi.dueDate!.month]} ${emi.dueDate!.day}, ${emi.dueDate!.year}'
+        : 'Unscheduled';
+
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 4, AppSpacing.md, 4),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.cardDark : AppColors.cardLight,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isDark
-                ? AppColors.separatorDark
-                : AppColors.separatorLight,
-            width: 0.5,
-          ),
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: child,
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              // Color status indicator (left bar)
+              Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  color: _statusColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.sm + 4,
+                    AppSpacing.md,
+                    AppSpacing.sm + 4,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // EMI number badge
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: _statusColor.withValues(
+                                alpha: isDark ? 0.18 : 0.10,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _statusColor.withValues(
+                                  alpha: isDark ? 0.3 : 0.18,
+                                ),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: emi.isPaid
+                                ? Icon(
+                                    _statusIcon,
+                                    size: 18,
+                                    color: _statusColor,
+                                  )
+                                : Text(
+                                    '${emi.emiNumber}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: _statusColor,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm + 4),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      'EMI #${emi.emiNumber}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: textPrimary,
+                                        letterSpacing: -0.2,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      width: 3,
+                                      height: 3,
+                                      decoration: BoxDecoration(
+                                        color: textTertiary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        dueLabel,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: textSecondary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (emi.isPaid && emi.paidOn != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      'Paid ${formatPaidRelative(emi.paidOn!)}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.success.withValues(
+                                          alpha: isDark ? 0.85 : 0.75,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Row(
+                                      children: [
+                                        _principalInterestChip(
+                                          label: 'P',
+                                          value: emi.principal,
+                                          color: AppColors.primary,
+                                          isDark: isDark,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _principalInterestChip(
+                                          label: 'I',
+                                          value: emi.interest,
+                                          color: AppColors.accent,
+                                          isDark: isDark,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '₹${formatPlain(emi.emiAmount)}',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: textPrimary,
+                                  letterSpacing: -0.4,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _statusColor.withValues(
+                                    alpha: isDark ? 0.18 : 0.10,
+                                  ),
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _statusIcon,
+                                      size: 10,
+                                      color: _statusColor,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      _statusLabel,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: _statusColor,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      if (emi.isPaid &&
+                          (emi.principal > 0 || emi.interest > 0)) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _principalInterestChip(
+                              label: 'Principal',
+                              value: emi.principal,
+                              color: AppColors.primary,
+                              isDark: isDark,
+                              expanded: true,
+                            ),
+                            const SizedBox(width: 6),
+                            _principalInterestChip(
+                              label: 'Interest',
+                              value: emi.interest,
+                              color: AppColors.accent,
+                              isDark: isDark,
+                              expanded: true,
+                            ),
+                          ],
+                        ),
+                      ],
+                      if ((emi.penaltyAmount ?? 0) > 0) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              size: 12,
+                              color: AppColors.error,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Penalty ₹${formatPlain(emi.penaltyAmount!)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _principalInterestChip({
+    required String label,
+    required double value,
+    required Color color,
+    required bool isDark,
+    bool expanded = false,
+  }) {
+    final content = Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: expanded ? 10 : 6,
+        vertical: expanded ? 6 : 2,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.12 : 0.07),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: expanded ? 10 : 9,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '₹${value >= 100000 ? '${(value / 100000).toStringAsFixed(1)}L' : value.round()}',
+            style: TextStyle(
+              fontSize: expanded ? 11 : 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+    return expanded ? Expanded(child: content) : content;
   }
 }

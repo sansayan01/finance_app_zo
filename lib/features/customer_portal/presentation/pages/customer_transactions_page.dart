@@ -3,11 +3,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/customer_home_providers.dart';
 import '../../data/models/customer_transaction_model.dart';
 import '../widgets/customer_transaction_tile.dart';
 import '../widgets/customer_empty_state.dart';
 
+/// Super-premium customer transactions page.
+///
+/// Features:
+///  - Gradient header with title + search-toggle
+///  - Animated KPI strip (in / out / net)
+///  - Filter chips (All / EMI / Deposit / Withdrawal / Credit / Debit)
+///  - Date-grouped list (Today / Yesterday / Month YYYY) using
+///    [CustomerTransactionTile]
+///  - Shimmer loading, refresh indicator, empty state
 class CustomerTransactionsPage extends ConsumerStatefulWidget {
   const CustomerTransactionsPage({super.key});
 
@@ -20,8 +30,13 @@ class _CustomerTransactionsPageState
     extends ConsumerState<CustomerTransactionsPage>
     with TickerProviderStateMixin {
   String _filter = 'all';
+  String _query = '';
+  bool _searchOpen = false;
+
   late AnimationController _staggerController;
   late AnimationController _chipController;
+  late AnimationController _kpiController;
+  final TextEditingController _searchCtrl = TextEditingController();
 
   static const List<_FilterChipData> _filters = [
     _FilterChipData('all', 'All', Icons.dashboard_rounded),
@@ -37,11 +52,15 @@ class _CustomerTransactionsPageState
     super.initState();
     _staggerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1100),
     )..forward();
     _chipController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
+    )..forward();
+    _kpiController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
     )..forward();
   }
 
@@ -49,11 +68,13 @@ class _CustomerTransactionsPageState
   void dispose() {
     _staggerController.dispose();
     _chipController.dispose();
+    _kpiController.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
   Animation<double> _staggered(int index, {double duration = 0.5}) {
-    final start = (index * 0.06).clamp(0.0, 1.0);
+    final start = (index * 0.07).clamp(0.0, 1.0);
     final end = (start + duration).clamp(0.0, 1.0);
     return CurvedAnimation(
       parent: _staggerController,
@@ -65,9 +86,21 @@ class _CustomerTransactionsPageState
     if (_filter == value) return;
     HapticFeedback.lightImpact();
     setState(() => _filter = value);
-    // Restart stagger for list items
     _staggerController.reset();
     _staggerController.forward();
+    _kpiController.reset();
+    _kpiController.forward();
+  }
+
+  void _toggleSearch() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _searchOpen = !_searchOpen;
+      if (!_searchOpen) {
+        _query = '';
+        _searchCtrl.clear();
+      }
+    });
   }
 
   @override
@@ -77,38 +110,14 @@ class _CustomerTransactionsPageState
     final transactionsAsync = ref.watch(customerAllTransactionsProvider);
 
     return Scaffold(
+      extendBody: true,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: transactionsAsync.when(
-        loading: () => Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primary,
-            strokeWidth: 2.5,
-          ),
-        ),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 48, color: AppColors.error),
-              const SizedBox(height: AppSpacing.md),
-              Text('Something went wrong',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: AppSpacing.xs),
-              Text('$e',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondaryLight,
-                  ),
-                  textAlign: TextAlign.center),
-            ],
-          ),
-        ),
+        loading: () => _buildLoading(context, isDark),
+        error: (e, _) => _buildError(context, isDark, e),
         data: (transactions) {
-          final filtered = _filterTransactions(transactions);
+          final filtered = _applyFilters(transactions);
 
           return RefreshIndicator(
             color: AppColors.primary,
@@ -121,62 +130,36 @@ class _CustomerTransactionsPageState
                 parent: BouncingScrollPhysics(),
               ),
               slivers: [
-                // -- Gradient Header --
                 SliverToBoxAdapter(
                   child: _buildHeader(context, isDark, transactions.length),
                 ),
-                // -- Filter Chips --
+                SliverToBoxAdapter(
+                  child: _buildKpiStrip(context, isDark, filtered),
+                ),
                 SliverToBoxAdapter(
                   child: _buildFilterChips(context, isDark),
                 ),
-                // -- Content --
                 if (filtered.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: CustomerEmptyState(
-                      icon: Icons.receipt_long_rounded,
-                      title: 'No Transactions',
-                      subtitle: _filter == 'all'
-                          ? 'Your transactions will appear here once you have activity.'
-                          : 'No transactions match this filter.',
-                    ),
-                  )
-                else ...[
-                  // -- Summary Row --
-                  SliverToBoxAdapter(
-                    child: _buildSummaryRow(
-                        context, isDark, filtered, transactions),
-                  ),
-                  // -- Transaction List --
-                  SliverPadding(
-                    padding: const EdgeInsets.only(
-                      left: AppSpacing.md,
-                      right: AppSpacing.md,
-                      bottom: AppSpacing.xxl,
-                    ),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final itemAnimation = _staggered(index + 2);
-                          return FadeTransition(
-                            opacity: itemAnimation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.15),
-                                end: Offset.zero,
-                              ).animate(itemAnimation),
-                              child: _TransactionCard(
-                                transaction: filtered[index],
-                                isDark: isDark,
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: filtered.length,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xl),
+                      child: CustomerEmptyState(
+                        icon: Icons.receipt_long_rounded,
+                        title: 'No Transactions',
+                        subtitle: _filter == 'all' && _query.isEmpty
+                            ? 'Your transactions will appear here once you have activity.'
+                            : 'No transactions match your current filters.',
                       ),
                     ),
+                  )
+                else
+                  ..._buildGroupedSlivers(context, isDark, filtered),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: MediaQuery.of(context).padding.bottom + 96,
                   ),
-                ],
+                ),
               ],
             ),
           );
@@ -185,6 +168,7 @@ class _CustomerTransactionsPageState
     );
   }
 
+  // ── Header ─────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context, bool isDark, int totalCount) {
     final theme = Theme.of(context);
     final mq = MediaQuery.of(context);
@@ -198,8 +182,8 @@ class _CustomerTransactionsPageState
           end: Alignment.bottomRight,
           colors: isDark
               ? [
-                  AppColors.primaryDark.withValues(alpha: 0.25),
-                  AppColors.accentDark.withValues(alpha: 0.15),
+                  AppColors.primaryDark.withValues(alpha: 0.32),
+                  AppColors.accentDark.withValues(alpha: 0.18),
                   AppColors.backgroundDark,
                 ]
               : [
@@ -209,9 +193,18 @@ class _CustomerTransactionsPageState
                 ],
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
       ),
       child: SafeArea(
         bottom: false,
@@ -221,7 +214,6 @@ class _CustomerTransactionsPageState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Back button + Title row
               Row(
                 children: [
                   _GlassIconButton(
@@ -240,19 +232,36 @@ class _CustomerTransactionsPageState
                       ),
                     ),
                   ),
-                  // Transaction count badge
+                  _GlassIconButton(
+                    icon: _searchOpen
+                        ? Icons.close_rounded
+                        : Icons.search_rounded,
+                    isDark: isDark,
+                    onTap: _toggleSearch,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
                   _CountBadge(count: totalCount),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              // Subtitle
               Text(
                 'Track all your financial activity',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.white.withValues(alpha: 0.75),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 240),
+                crossFadeState: _searchOpen
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                firstChild: const SizedBox(height: AppSpacing.xs),
+                secondChild: Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.md),
+                  child: _buildInlineSearch(isDark),
+                ),
+              ),
             ],
           ),
         ),
@@ -260,24 +269,114 @@ class _CustomerTransactionsPageState
     );
   }
 
-  Widget _buildFilterChips(BuildContext context, bool isDark) {
-    return AnimatedBuilder(
-      animation: _chipController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: _chipController,
-            curve: Curves.easeOut,
+  Widget _buildInlineSearch(bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+      ),
+      child: TextField(
+        controller: _searchCtrl,
+        autofocus: true,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        cursorColor: Colors.white,
+        onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+        decoration: InputDecoration(
+          hintText: 'Search by description, reference, member...',
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.65),
+            fontSize: 13,
           ),
-          child: child,
-        );
-      },
-      child: Container(
-        height: 60,
-        margin: const EdgeInsets.only(top: AppSpacing.md),
+          prefixIcon: const Icon(Icons.search_rounded,
+              color: Colors.white, size: 18),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          isDense: true,
+        ),
+      ),
+    );
+  }
+
+  // ── KPI Strip ──────────────────────────────────────────────────────
+  Widget _buildKpiStrip(BuildContext context, bool isDark,
+      List<CustomerTransactionModel> filtered) {
+    final totalIn = filtered
+        .where((t) => t.isCredit)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+    final totalOut = filtered
+        .where((t) => t.isDebit)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+    final net = totalIn - totalOut;
+    final theme = Theme.of(context);
+
+    return FadeTransition(
+      opacity: _staggered(0),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(_staggered(0)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
+          child: Row(
+            children: [
+              Expanded(
+                child: _KpiTile(
+                  label: 'In',
+                  amount: totalIn,
+                  icon: Icons.arrow_downward_rounded,
+                  color: AppColors.success,
+                  isDark: isDark,
+                  theme: theme,
+                  controller: _kpiController,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _KpiTile(
+                  label: 'Out',
+                  amount: totalOut,
+                  icon: Icons.arrow_upward_rounded,
+                  color: AppColors.warning,
+                  isDark: isDark,
+                  theme: theme,
+                  controller: _kpiController,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _KpiTile(
+                  label: 'Net',
+                  amount: net,
+                  icon: net >= 0
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  color: net >= 0 ? AppColors.primary : AppColors.error,
+                  isDark: isDark,
+                  theme: theme,
+                  controller: _kpiController,
+                  signed: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Filter Chips ───────────────────────────────────────────────────
+  Widget _buildFilterChips(BuildContext context, bool isDark) {
+    return FadeTransition(
+      opacity: _staggered(1),
+      child: SizedBox(
+        height: 52,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.sm),
           itemCount: _filters.length,
           separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
           itemBuilder: (context, index) {
@@ -295,81 +394,169 @@ class _CustomerTransactionsPageState
     );
   }
 
-  Widget _buildSummaryRow(
-    BuildContext context,
-    bool isDark,
-    List<CustomerTransactionModel> filtered,
-    List<CustomerTransactionModel> all,
-  ) {
-    final totalCredit = filtered
-        .where((t) => t.isCredit)
-        .fold<double>(0, (sum, t) => sum + t.amount);
-    final totalDebit = filtered
-        .where((t) => t.isDebit)
-        .fold<double>(0, (sum, t) => sum + t.amount);
-    final theme = Theme.of(context);
+  // ── Grouped Slivers ────────────────────────────────────────────────
+  List<Widget> _buildGroupedSlivers(BuildContext context, bool isDark,
+      List<CustomerTransactionModel> filtered) {
+    final groups = _groupByDate(filtered);
+    final widgets = <Widget>[];
+    int globalIdx = 2;
+    for (final entry in groups.entries) {
+      widgets.add(
+        SliverToBoxAdapter(
+          child: FadeTransition(
+            opacity: _staggered(globalIdx),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
+              child: _GroupHeader(label: entry.key, isDark: isDark),
+            ),
+          ),
+        ),
+      );
+      globalIdx++;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
-      child: Row(
+      final items = entry.value;
+      widgets.add(
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+                final animation = _staggered(globalIdx + i);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.1),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: _TransactionCard(
+                      transaction: items[i],
+                      isDark: isDark,
+                    ),
+                  ),
+                );
+              },
+              childCount: items.length,
+            ),
+          ),
+        ),
+      );
+      globalIdx += items.length;
+    }
+    return widgets;
+  }
+
+  Map<String, List<CustomerTransactionModel>> _groupByDate(
+      List<CustomerTransactionModel> txns) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+
+    final groups = <String, List<CustomerTransactionModel>>{};
+    // Sort newest first.
+    final sorted = [...txns]
+      ..sort((a, b) => (b.transactionDate ?? DateTime(1970))
+          .compareTo(a.transactionDate ?? DateTime(1970)));
+    for (final t in sorted) {
+      final d = t.transactionDate;
+      String key;
+      if (d == null) {
+        key = 'Earlier';
+      } else {
+        final dOnly = DateTime(d.year, d.month, d.day);
+        if (dOnly == today) {
+          key = 'Today';
+        } else if (dOnly == yesterday) {
+          key = 'Yesterday';
+        } else if (dOnly.isAfter(today.subtract(const Duration(days: 7)))) {
+          key = 'This Week';
+        } else if (d.year == now.year && d.month == now.month) {
+          key = 'This Month';
+        } else {
+          key = '${monthNames[d.month - 1]} ${d.year}';
+        }
+      }
+      groups.putIfAbsent(key, () => []).add(t);
+    }
+    return groups;
+  }
+
+  // ── Loading / Error ────────────────────────────────────────────────
+  Widget _buildLoading(BuildContext context, bool isDark) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: ListView.separated(
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 8,
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+          itemBuilder: (_, i) => ShimmerCard(
+            height: i == 0 ? 120 : 64,
+            borderRadius: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildError(BuildContext context, bool isDark, Object e) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: _SummaryPill(
-              label: 'Credits',
-              amount: totalCredit,
-              icon: Icons.arrow_downward_rounded,
-              color: AppColors.success,
-              isDark: isDark,
-              theme: theme,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _SummaryPill(
-              label: 'Debits',
-              amount: totalDebit,
-              icon: Icons.arrow_upward_rounded,
-              color: AppColors.warning,
-              isDark: isDark,
-              theme: theme,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _SummaryPill(
-              label: 'Count',
-              amount: filtered.length.toDouble(),
-              icon: Icons.receipt_long_rounded,
-              color: AppColors.info,
-              isDark: isDark,
-              theme: theme,
-              isCount: true,
-            ),
+          Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+          const SizedBox(height: AppSpacing.md),
+          Text('Something went wrong',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Text('$e',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
+                ),
+                textAlign: TextAlign.center),
           ),
         ],
       ),
     );
   }
 
-  List<CustomerTransactionModel> _filterTransactions(
+  // ── Filtering ──────────────────────────────────────────────────────
+  List<CustomerTransactionModel> _applyFilters(
       List<CustomerTransactionModel> transactions) {
-    return switch (_filter) {
-      'emi' => transactions.where((t) => t.type == 'emiPayment').toList(),
-      'deposit' => transactions
-          .where((t) =>
-              t.type == 'savingsDeposit' ||
-              t.type == 'deposit' ||
-              t.type == 'collection')
-          .toList(),
-      'withdrawal' => transactions
-          .where((t) =>
-              t.type == 'savingsWithdrawal' || t.type == 'withdrawal')
-          .toList(),
-      'credit' => transactions.where((t) => t.isCredit).toList(),
-      'debit' => transactions.where((t) => t.isDebit).toList(),
-      _ => transactions,
+    Iterable<CustomerTransactionModel> result = transactions;
+    result = switch (_filter) {
+      'emi' => result.where((t) => t.type == 'emiPayment'),
+      'deposit' => result.where((t) =>
+          t.type == 'savingsDeposit' ||
+          t.type == 'deposit' ||
+          t.type == 'collection'),
+      'withdrawal' => result.where(
+          (t) => t.type == 'savingsWithdrawal' || t.type == 'withdrawal'),
+      'credit' => result.where((t) => t.isCredit),
+      'debit' => result.where((t) => t.isDebit),
+      _ => result,
     };
+    if (_query.isNotEmpty) {
+      result = result.where((t) {
+        final q = _query;
+        return (t.description?.toLowerCase().contains(q) ?? false) ||
+            (t.memberName?.toLowerCase().contains(q) ?? false) ||
+            (t.referenceNumber?.toLowerCase().contains(q) ?? false) ||
+            t.type.toLowerCase().contains(q);
+      });
+    }
+    return result.toList();
   }
 }
 
@@ -402,14 +589,10 @@ class _GlassIconButton extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.white.withValues(alpha: 0.2),
+          color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.white.withValues(alpha: 0.3),
+            color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.3),
           ),
         ),
         child: Icon(icon, color: Colors.white, size: 18),
@@ -430,9 +613,7 @@ class _CountBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(AppSpacing.borderRadiusFull),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -447,11 +628,11 @@ class _CountBadge extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '$count txn',
-            style: TextStyle(
+            '$count',
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               letterSpacing: 0.3,
             ),
           ),
@@ -483,26 +664,33 @@ class _FilterChip extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.accent],
+                )
+              : null,
           color: isSelected
-              ? AppColors.primary
+              ? null
               : isDark
                   ? AppColors.cardDark
                   : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
+                ? Colors.transparent
                 : isDark
                     ? AppColors.separatorDark
                     : AppColors.separatorLight,
-            width: isSelected ? 1.5 : 1,
+            width: 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 14,
+                    offset: const Offset(0, 5),
                   ),
                 ]
               : [],
@@ -510,25 +698,21 @@ class _FilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedSwitcher(
-              duration: AppSpacing.animationFast,
-              child: Icon(
-                data.icon,
-                key: ValueKey(isSelected),
-                size: 16,
-                color: isSelected
-                    ? Colors.white
-                    : isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondaryLight,
-              ),
+            Icon(
+              data.icon,
+              size: 16,
+              color: isSelected
+                  ? Colors.white
+                  : isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
             ),
             const SizedBox(width: 6),
-            AnimatedDefaultTextStyle(
-              duration: AppSpacing.animationNormal,
+            Text(
+              data.label,
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
                     ? Colors.white
                     : isDark
@@ -536,7 +720,6 @@ class _FilterChip extends StatelessWidget {
                         : AppColors.textSecondaryLight,
                 letterSpacing: 0.2,
               ),
-              child: Text(data.label),
             ),
           ],
         ),
@@ -545,35 +728,46 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-class _SummaryPill extends StatelessWidget {
+class _KpiTile extends StatelessWidget {
   final String label;
   final double amount;
   final IconData icon;
   final Color color;
   final bool isDark;
   final ThemeData theme;
-  final bool isCount;
+  final AnimationController controller;
+  final bool signed;
 
-  const _SummaryPill({
+  const _KpiTile({
     required this.label,
     required this.amount,
     required this.icon,
     required this.color,
     required this.isDark,
     required this.theme,
-    this.isCount = false,
+    required this.controller,
+    this.signed = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardDark : AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
         ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -581,37 +775,110 @@ class _SummaryPill extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: isDark ? 0.18 : 0.12),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(icon, size: 13, color: color),
+              ),
+              const SizedBox(width: 5),
               Text(
                 label,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: isDark
                       ? AppColors.textTertiaryDark
                       : AppColors.textTertiaryLight,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   fontSize: 11,
+                  letterSpacing: 0.4,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            isCount
-                ? amount.toInt().toString()
-                : '\u20b9${amount.toStringAsFixed(0)}',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: isDark
-                  ? AppColors.textPrimaryDark
-                  : AppColors.textPrimaryLight,
-              letterSpacing: -0.3,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 6),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: amount),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) {
+              return Text(
+                _formatIndian(value, signed: signed),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: signed && amount < 0
+                      ? AppColors.error
+                      : isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimaryLight,
+                  letterSpacing: -0.3,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+
+  /// Indian-style compact currency: K, L, Cr.
+  String _formatIndian(double v, {bool signed = false}) {
+    final negative = v < 0;
+    final n = v.abs();
+    final sign = negative ? '-' : (signed && v > 0 ? '+' : '');
+    String body;
+    if (n >= 10000000) {
+      body = '${(n / 10000000).toStringAsFixed(2)} Cr';
+    } else if (n >= 100000) {
+      body = '${(n / 100000).toStringAsFixed(2)} L';
+    } else if (n >= 1000) {
+      body = '${(n / 1000).toStringAsFixed(1)} K';
+    } else {
+      body = n.toStringAsFixed(0);
+    }
+    return '$sign₹$body';
+  }
+}
+
+class _GroupHeader extends StatelessWidget {
+  final String label;
+  final bool isDark;
+
+  const _GroupHeader({required this.label, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tertiary = isDark
+        ? AppColors.textTertiaryDark
+        : AppColors.textTertiaryLight;
+    return Row(
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: tertiary,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: (isDark
+                    ? AppColors.separatorDark
+                    : AppColors.separatorLight)
+                .withValues(alpha: 0.6),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -631,7 +898,7 @@ class _TransactionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardDark : AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
         ),
@@ -640,13 +907,13 @@ class _TransactionCard extends StatelessWidget {
             : [
                 BoxShadow(
                   color: AppColors.textPrimaryLight.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
                 ),
               ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         child: CustomerTransactionTile(transaction: transaction),
       ),
     );

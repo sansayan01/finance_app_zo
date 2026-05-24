@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -417,7 +418,10 @@ class _CustomerFeedbackPageState extends ConsumerState<CustomerFeedbackPage>
               final isSelected = _selectedType == type.value;
               final color = isDark ? type.darkColor : type.color;
               return GestureDetector(
-                onTap: () => setState(() => _selectedType = type.value),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _selectedType = type.value);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeOutCubic,
@@ -538,6 +542,7 @@ class _CustomerFeedbackPageState extends ConsumerState<CustomerFeedbackPage>
   Future<void> _handleSubmit() async {
     if (!_canSubmit) return;
 
+    HapticFeedback.mediumImpact();
     final customerId = ref.read(currentCustomerIdSyncProvider);
     if (customerId == null) return;
 
@@ -667,6 +672,7 @@ class _StarRatingState extends State<_StarRating>
   }
 
   void _handleTap(int index) {
+    HapticFeedback.selectionClick();
     setState(() => _animatingIndex = index);
     _bounceController.forward(from: 0).then((_) {
       widget.onRatingChanged(index + 1);

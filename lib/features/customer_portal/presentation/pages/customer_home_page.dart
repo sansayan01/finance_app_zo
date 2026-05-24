@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/sparkline_chart.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../data/providers/customer_home_providers.dart';
 import '../../data/providers/customer_member_provider.dart';
 import '../../data/providers/customer_notifications_providers.dart';
@@ -27,24 +28,38 @@ class CustomerHomePage extends ConsumerStatefulWidget {
 class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     with TickerProviderStateMixin {
   late AnimationController _staggerController;
+  late AnimationController _pulseController;
+  late AnimationController _backgroundController;
 
   @override
   void initState() {
     super.initState();
     _staggerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 1400),
     )..forward();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    )..repeat(reverse: true);
+
+    _backgroundController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 15),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _staggerController.dispose();
+    _pulseController.dispose();
+    _backgroundController.dispose();
     super.dispose();
   }
 
   Animation<double> _staggered(int index, {double duration = 0.5}) {
-    final start = (index * 0.07).clamp(0.0, 1.0);
+    final start = (index * 0.08).clamp(0.0, 1.0);
     final end = (start + duration).clamp(0.0, 1.0);
     return CurvedAnimation(
       parent: _staggerController,
@@ -52,7 +67,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     );
   }
 
-  Widget _section(int index, Widget child, {double slide = 20}) {
+  Widget _section(int index, Widget child, {double slide = 24}) {
     final anim = _staggered(index);
     return AnimatedBuilder(
       animation: anim,
@@ -114,21 +129,22 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const ShimmerCard(height: 220, borderRadius: 24),
+            const ShimmerCard(height: 300, borderRadius: 32),
             const SizedBox(height: 16),
             Row(
               children: const [
-                Expanded(child: ShimmerCard(height: 96, borderRadius: 18)),
+                Expanded(child: ShimmerCard(height: 100, borderRadius: 20)),
                 SizedBox(width: 12),
-                Expanded(child: ShimmerCard(height: 96, borderRadius: 18)),
+                Expanded(child: ShimmerCard(height: 100, borderRadius: 20)),
               ],
             ),
             const SizedBox(height: 16),
-            const ShimmerCard(height: 72, borderRadius: 20),
+            const ShimmerCard(height: 76, borderRadius: 20),
             const SizedBox(height: 16),
-            const ShimmerCard(height: 110, borderRadius: 18),
+            ShimmerCard(
+                height: 120, borderRadius: 20),
             const SizedBox(height: 16),
-            const ShimmerCard(height: 180, borderRadius: 18),
+            const ShimmerCard(height: 200, borderRadius: 20),
           ],
         ),
       ),
@@ -155,19 +171,16 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
 
     final allLoans = dashboard['allLoans'] as List<CustomerLoanModel>? ?? [];
     final activeLoansList = allLoans.where((l) => l.status == 'active').toList();
-    final loanPaid = activeLoansList.fold(
-        0.0, (sum, l) => sum + (l.amount - l.outstandingBalance));
-    final loanInterest = activeLoansList.fold(
-        0.0, (sum, l) => sum + (l.amount * (l.interestRate / 100)));
 
+    final netWorth = totalSavings - totalOutstanding;
     final paymentTrend = _buildPaymentTrend(recentTransactions);
     final savingsGrowth = _buildSavingsGrowth(recentTransactions, totalSavings);
-
-    // Sparkline mini-trends derived from chart data
     final paymentSpark = paymentTrend.map((e) => e.amount).toList();
     final savingsSpark = savingsGrowth.map((e) => e.amount).toList();
 
-    return AuroraBackground(
+    return _EnhancedBackground(
+      controller: _backgroundController,
+      isDark: isDark,
       child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(customerDashboardProvider);
@@ -180,40 +193,53 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
             SliverToBoxAdapter(
               child: _section(
                 0,
-                _buildGreetingHeader(context, ref, memberName, area, isDark,
-                    kycStatus, totalSavings),
+                _buildPremiumHeader(
+                  context, ref, memberName, area, isDark,
+                  kycStatus, totalSavings, totalOutstanding,
+                ),
               ),
             ),
 
+            // Net Worth Card
             SliverToBoxAdapter(
               child: _section(
                 1,
+                _buildNetWorthCard(
+                  context, isDark, totalSavings, totalOutstanding, netWorth,
+                ),
+              ),
+            ),
+
+            // Stat Cards Row
+            SliverToBoxAdapter(
+              child: _section(
+                2,
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: Row(
                     children: [
                       Expanded(
-                        child: _AnimatedStatCard(
+                        child: _PremiumStatCard(
                           icon: Icons.account_balance_wallet_rounded,
                           label: 'Active Loans',
                           numericValue: activeLoans.toDouble(),
                           isCurrency: false,
-                          color: AppColors.info,
-                          isDark: isDark,
+                          gradientColors: [const Color(0xFF6366F1), const Color(0xFF818CF8)],
                           spark: paymentSpark,
                           onTap: () => context.push('/customer/loans'),
+                          isDark: isDark,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _AnimatedStatCard(
+                        child: _PremiumStatCard(
                           icon: Icons.trending_down_rounded,
                           label: 'Outstanding',
                           numericValue: totalOutstanding,
                           isCurrency: true,
-                          color: AppColors.orange,
-                          isDark: isDark,
+                          gradientColors: [const Color(0xFFF59E0B), const Color(0xFFF97316)],
                           spark: savingsSpark,
+                          isDark: isDark,
                         ),
                       ),
                     ],
@@ -222,69 +248,104 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
               ),
             ),
 
+            // EMI Alert
             if (nextEmi != null)
               SliverToBoxAdapter(
                 child: _section(
-                  2,
+                  3,
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: _buildEmiAlert(context, nextEmi, isDark),
+                    child: _buildPremiumEmiAlert(context, nextEmi, isDark, totalOutstanding, activeLoansList),
                   ),
                 ),
               ),
 
-            SliverToBoxAdapter(
-              child: _section(
-                3,
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                  child: _buildQuickActions(context),
-                ),
-              ),
-            ),
-
+            // Quick Actions
             SliverToBoxAdapter(
               child: _section(
                 4,
-                CustomerDashboardCharts(
-                  paymentTrend: paymentTrend,
-                  savingsGrowth: savingsGrowth,
-                  loanPaid: loanPaid,
-                  loanOutstanding: totalOutstanding,
-                  loanInterest: loanInterest,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                  child: _buildPremiumQuickActions(context),
                 ),
               ),
             ),
 
+            // Charts Section
             SliverToBoxAdapter(
               child: _section(
                 5,
+                CustomerDashboardCharts(
+                  paymentTrend: paymentTrend,
+                  savingsGrowth: savingsGrowth,
+                  loanPaid: activeLoansList.fold(0.0, (sum, l) => sum + (l.amount - l.outstandingBalance)),
+                  loanOutstanding: totalOutstanding,
+                  loanInterest: activeLoansList.fold(0.0, (sum, l) => sum + (l.amount * (l.interestRate / 100))),
+                ),
+              ),
+            ),
+
+            // Transactions Header
+            SliverToBoxAdapter(
+              child: _section(
+                6,
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Recent Transactions',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [AppColors.indigo, AppColors.accent],
+                              ),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Recent Transactions',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                        ],
                       ),
                       TextButton(
-                        onPressed: () =>
-                            context.push('/customer/transactions'),
+                        onPressed: () => context.push('/customer/transactions'),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'See All',
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'See All',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 14,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -293,6 +354,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
               ),
             ),
 
+            // Transactions List
             if (recentTransactions.isEmpty)
               const SliverToBoxAdapter(
                 child: Padding(
@@ -309,7 +371,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final itemAnim = _staggered(6 + index);
+                    final itemAnim = _staggered(7 + index);
                     return AnimatedBuilder(
                       animation: itemAnim,
                       builder: (context, child) => Opacity(
@@ -319,8 +381,15 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                           child: child,
                         ),
                       ),
-                      child: CustomerTransactionTile(
-                          transaction: recentTransactions[index]),
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: 20,
+                          right: 20,
+                          bottom: index == recentTransactions.length - 1 ? 0 : 2,
+                        ),
+                        child: CustomerTransactionTile(
+                            transaction: recentTransactions[index]),
+                      ),
                     );
                   },
                   childCount: recentTransactions.length,
@@ -329,8 +398,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
 
             SliverToBoxAdapter(
               child: SizedBox(
-                  height:
-                      120 + MediaQuery.of(context).padding.bottom),
+                  height: 120 + MediaQuery.of(context).padding.bottom),
             ),
           ],
         ),
@@ -338,7 +406,9 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     );
   }
 
-  Widget _buildGreetingHeader(
+  // ─── PREMIUM HEADER ───────────────────────────────────────────────────────
+
+  Widget _buildPremiumHeader(
     BuildContext context,
     WidgetRef ref,
     String memberName,
@@ -346,248 +416,533 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     bool isDark,
     String? kycStatus,
     double totalSavings,
+    double totalOutstanding,
   ) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1A1F3A), const Color(0xFF151A30)]
-              : [AppColors.primary, AppColors.accent],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.black : AppColors.primary)
-                .withValues(alpha: isDark ? 0.4 : 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+    final pulseValue = _pulseController;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: AnimatedBuilder(
+          animation: _backgroundController,
+          builder: (context, _) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: _buildHeaderGradient(isDark),
+              ),
+              child: Stack(
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [
-                                AppColors.primaryLight,
-                                AppColors.accentLight,
-                              ]
-                            : [Colors.white24, Colors.white12],
-                      ),
-                      border: Border.all(color: Colors.white24),
-                    ),
-                    child: Center(
-                      child: Text(
-                        memberName.isNotEmpty
-                            ? memberName[0].toUpperCase()
-                            : 'M',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
+                  // Ambient glow orbs
+                  ..._buildAmbientOrbs(isDark),
+                  // Frosted overlay
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 0.5, sigmaY: 0.5),
+                      child: Container(color: Colors.transparent),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_greeting()},',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          memberName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final count = ref
-                              .watch(customerUnreadCountProvider)
-                              .valueOrNull ??
-                          0;
-                      return Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.12),
-                          border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15)),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () =>
-                              context.push('/customer/notifications'),
-                          icon: Badge(
-                            isLabelVisible: count > 0,
-                            backgroundColor: AppColors.rose,
-                            label: Text(
-                              '$count',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 10),
-                            ),
-                            child: const Icon(
-                              Icons.notifications_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-
-              if (kycStatus != null && kycStatus != 'verified')
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.shield_rounded,
-                            color: Colors.amber, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            kycStatus == 'pending'
-                                ? 'KYC verification pending'
-                                : 'KYC rejected — update documents',
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-              const SizedBox(height: 20),
-
-              Center(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: totalSavings),
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, _) {
-                    return CustomPaint(
-                      size: const Size(120, 120),
-                      painter: _RingGaugePainter(
-                        value: totalSavings > 0
-                            ? (value / (totalSavings * 1.2)).clamp(0, 1)
-                            : 0,
-                        isDark: isDark,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  'Total Savings',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-              Center(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: totalSavings),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, _) => Text(
-                    _formatCurrency(value),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-              ),
-
-              if (area != null && area.isNotEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.15)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                  // Content
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.location_on_rounded,
-                              color: Colors.white.withValues(alpha: 0.7),
-                              size: 14),
-                          const SizedBox(width: 4),
-                          Text(
-                            area,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                          // Avatar + Greeting Row
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Premium Avatar with glow
+                              AnimatedBuilder(
+                                animation: pulseValue,
+                                builder: (context, _) {
+                                  final glow = 0.3 + (pulseValue.value * 0.2);
+                                  return Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          AppColors.primaryLight,
+                                          AppColors.accentLight,
+                                        ],
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primaryLight
+                                              .withValues(alpha: glow),
+                                          blurRadius: 16 + (pulseValue.value * 8),
+                                          spreadRadius: 2,
+                                        ),
+                                        BoxShadow(
+                                          color: AppColors.accent
+                                              .withValues(alpha: glow * 0.5),
+                                          blurRadius: 24,
+                                          spreadRadius: -2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        memberName.isNotEmpty
+                                            ? memberName[0].toUpperCase()
+                                            : 'M',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _greeting(),
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.6),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      memberName,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: -0.4,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Notification Bell
+                              Consumer(
+                                builder: (context, ref, _) {
+                                  final count = ref
+                                      .watch(customerUnreadCountProvider)
+                                      .valueOrNull ?? 0;
+                                  return GestureDetector(
+                                    onTap: () =>
+                                        context.push('/customer/notifications'),
+                                    child: Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withValues(alpha: 0.1),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.15),
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Badge(
+                                          isLabelVisible: count > 0,
+                                          backgroundColor: AppColors.rose,
+                                          textColor: Colors.white,
+                                          label: Text(
+                                            '$count',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.notifications_rounded,
+                                            color: Colors.white.withValues(alpha: 0.85),
+                                            size: 22,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+
+                          // Location badge
+                          if (area != null && area.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.location_on_rounded,
+                                        color: Colors.white.withValues(alpha: 0.6), size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      area,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.75),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                          // KYC alert
+                          if (kycStatus != null && kycStatus != 'verified')
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.amber.withValues(alpha: 0.25),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.shield_rounded,
+                                        color: Colors.amber, size: 18),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        kycStatus == 'pending'
+                                            ? 'KYC verification pending'
+                                            : 'KYC rejected — update documents',
+                                        style: const TextStyle(
+                                          color: Colors.amber,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                          const SizedBox(height: 20),
+
+                          // Savings Ring Gauge
+                          Center(
+                            child: Column(
+                              children: [
+                                TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0, end: totalSavings),
+                                  duration: const Duration(milliseconds: 1200),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, value, _) {
+                                    final ratio = totalSavings > 0
+                                        ? (value / (totalSavings * 1.2)).clamp(0.0, 1.0).toDouble()
+                                        : 0.0;
+                                    return CustomPaint(
+                                      size: const Size(130, 130),
+                                      painter: _PremiumRingGaugePainter(
+                                        value: ratio,
+                                        isDark: isDark,
+                                        pulse: _pulseController.value,
+                                        gradientColors: const [
+                                          Color(0xFF4F46E5),
+                                          Color(0xFF7C3AED),
+                                          Color(0xFFA855F7),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Total Savings',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0, end: totalSavings),
+                                  duration: const Duration(milliseconds: 1000),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, value, _) => Text(
+                                    _formatCurrency(value),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.8,
+                                      fontFeatures: [FontFeature.tabularFigures()],
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  LinearGradient _buildHeaderGradient(bool isDark) {
+    if (isDark) {
+      return LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: const [
+          Color(0xFF1A1F3A),
+          Color(0xFF1E1B3A),
+          Color(0xFF151A30),
+        ],
+      );
+    }
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: const [
+        Color(0xFF4F46E5),
+        Color(0xFF6D28D9),
+        Color(0xFF7C3AED),
+      ],
+      stops: const [0.0, 0.5, 1.0],
+    );
+  }
+
+  List<Widget> _buildAmbientOrbs(bool isDark) {
+    final baseColor = isDark
+        ? AppColors.primaryDark.withValues(alpha: 0.08)
+        : AppColors.primaryLight.withValues(alpha: 0.12);
+
+    return [
+      Positioned(
+        top: -40,
+        right: -30,
+        child: AnimatedBuilder(
+          animation: _backgroundController,
+          builder: (context, _) {
+            final dx = 10 * math.sin(_backgroundController.value * 2 * math.pi);
+            final dy = 10 * math.cos(_backgroundController.value * 3 * math.pi);
+            return Transform.translate(
+              offset: Offset(dx, dy),
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      baseColor.withValues(alpha: 0.3),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
+              ),
+            );
+          },
+        ),
+      ),
+      Positioned(
+        bottom: -50,
+        left: -40,
+        child: AnimatedBuilder(
+          animation: _backgroundController,
+          builder: (context, _) {
+            final dx = 8 * math.sin(_backgroundController.value * 2.5 * math.pi + 1);
+            final dy = 8 * math.cos(_backgroundController.value * 2 * math.pi + 1);
+            return Transform.translate(
+              offset: Offset(dx, dy),
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      (isDark ? AppColors.accentDark : AppColors.accent)
+                          .withValues(alpha: 0.15),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ];
+  }
+
+  // ─── NET WORTH CARD ──────────────────────────────────────────────────────
+
+  Widget _buildNetWorthCard(
+    BuildContext context,
+    bool isDark,
+    double totalSavings,
+    double totalOutstanding,
+    double netWorth,
+  ) {
+    final theme = Theme.of(context);
+    final netPositive = netWorth >= 0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: GlassCard(
+        borderRadius: 20,
+        padding: EdgeInsets.zero,
+        elevated: true,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      const Color(0xFF1A1F3A).withValues(alpha: 0.6),
+                      const Color(0xFF1C2030).withValues(alpha: 0.4),
+                    ]
+                  : [
+                      Colors.white.withValues(alpha: 0.95),
+                      Colors.white.withValues(alpha: 0.9),
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: netPositive
+                            ? [AppColors.success, const Color(0xFF14B8A6)]
+                            : [AppColors.rose, AppColors.orange],
+                      ),
+                    ),
+                    child: Icon(
+                      netPositive
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Financial Position',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Three metrics row
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMiniMetric(
+                      'Savings',
+                      totalSavings,
+                      AppColors.success,
+                      isDark,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: isDark
+                        ? AppColors.separatorDark
+                        : AppColors.separatorLight,
+                  ),
+                  Expanded(
+                    child: _buildMiniMetric(
+                      'Outstanding',
+                      totalOutstanding,
+                      AppColors.orange,
+                      isDark,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: isDark
+                        ? AppColors.separatorDark
+                        : AppColors.separatorLight,
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: netWorth.abs()),
+                          duration: const Duration(milliseconds: 800),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, _) => Text(
+                            '${netPositive ? '+' : '-'}${_formatSmallCurrency(value)}',
+                            style: TextStyle(
+                              color: netPositive ? AppColors.success : AppColors.rose,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'Net',
+                          style: TextStyle(
+                            color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                                .withValues(alpha: 0.5),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -595,8 +950,46 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     );
   }
 
-  Widget _buildEmiAlert(
-      BuildContext context, CustomerEmiModel emi, bool isDark) {
+  Widget _buildMiniMetric(String label, double value, Color color, bool isDark) {
+    return Column(
+      children: [
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: value),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeOutCubic,
+          builder: (context, v, _) => Text(
+            _formatSmallCurrency(v),
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                .withValues(alpha: 0.5),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── PREMIUM EMI ALERT ────────────────────────────────────────────────────
+
+  Widget _buildPremiumEmiAlert(
+    BuildContext context,
+    CustomerEmiModel emi,
+    bool isDark,
+    double totalOutstanding,
+    List<CustomerLoanModel> activeLoans,
+  ) {
     final theme = Theme.of(context);
     final isOverdue = emi.isOverdue;
     final now = DateTime.now();
@@ -604,103 +997,199 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
         ?.difference(DateTime(now.year, now.month, now.day))
         .inDays;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isOverdue
-              ? (isDark
-                  ? [const Color(0xFF3A1C1C), const Color(0xFF2D1515)]
-                  : [const Color(0xFFFFF5F5), const Color(0xFFFEE2E2)])
-              : (isDark
-                  ? [const Color(0xFF2A2440), const Color(0xFF1F1A30)]
-                  : [const Color(0xFFF5F3FF), const Color(0xFFEDE9FE)]),
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isOverdue
-              ? AppColors.rose.withValues(alpha: 0.3)
-              : AppColors.accent.withValues(alpha: 0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (isOverdue ? AppColors.rose : AppColors.accent)
-                .withValues(alpha: isDark ? 0.12 : 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
+    // Calculate overall repayment progress
+    double overallProgress = 0;
+    if (activeLoans.isNotEmpty) {
+      final totalDisbursed = activeLoans.fold(0.0, (sum, l) => sum + l.amount);
+      final totalPaid = totalDisbursed - totalOutstanding;
+      overallProgress = totalDisbursed > 0
+          ? (totalPaid / totalDisbursed).clamp(0, 1).toDouble()
+          : 0.0;
+    }
+
+    final accentColor = isOverdue ? AppColors.rose : AppColors.accent;
+
+    return GlassCard(
+      borderRadius: 20,
+      padding: const EdgeInsets.all(20),
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (isOverdue ? AppColors.rose : AppColors.accent)
-                  .withValues(alpha: 0.15),
-            ),
-            child: Icon(
-              isOverdue ? Icons.warning_rounded : Icons.schedule_rounded,
-              color: isOverdue ? AppColors.rose : AppColors.accent,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isOverdue ? 'EMI Overdue!' : 'Next EMI Due',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
-                    color: isOverdue ? AppColors.rose : AppColors.accent,
+          Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: isOverdue
+                        ? [AppColors.rose, AppColors.error]
+                        : [AppColors.accent, AppColors.primary],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: isDark ? 0.3 : 0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  isOverdue ? Icons.warning_rounded : Icons.schedule_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isOverdue ? 'EMI Overdue' : 'Next EMI Due',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                        color: accentColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      emi.dueDate != null
+                          ? '${_formatDate(emi.dueDate!)}  ·  ${_formatCurrency(emi.emiAmount)}'
+                          : _formatCurrency(emi.emiAmount),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                            .withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (daysLeft != null && !isOverdue)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        accentColor.withValues(alpha: isDark ? 0.2 : 0.12),
+                        accentColor.withValues(alpha: isDark ? 0.1 : 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: isDark ? 0.3 : 0.15),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        daysLeft == 0 ? 'Today' : '$daysLeft',
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          height: 1.1,
+                        ),
+                      ),
+                      if (daysLeft != 0)
+                        Text(
+                          'days',
+                          style: TextStyle(
+                            color: accentColor,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 2),
+            ],
+          ),
+
+          // Repayment progress bar
+          if (activeLoans.isNotEmpty && totalOutstanding > 0) ...[
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Text(
-                  emi.dueDate != null
-                      ? '${_formatDate(emi.dueDate!)}  •  ${_formatCurrency(emi.emiAmount)}'
-                      : _formatCurrency(emi.emiAmount),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color
-                        ?.withValues(alpha: 0.7),
+                  'Repayment Progress',
+                  style: TextStyle(
+                    color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                        .withValues(alpha: 0.5),
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                Text(
+                  '${(overallProgress * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: accentColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
             ),
-          ),
-          if (daysLeft != null && !isOverdue)
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                daysLeft == 0 ? 'Today' : '${daysLeft}d',
-                style: const TextStyle(
-                  color: AppColors.accent,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
+            const SizedBox(height: 8),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: overallProgress),
+              duration: const Duration(milliseconds: 1000),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.fillDark
+                        : AppColors.fillLight,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: value.clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            isOverdue ? AppColors.rose : AppColors.accent,
+                            isOverdue ? AppColors.error : AppColors.primary,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: isDark ? 0.3 : 0.2),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  // ─── PREMIUM QUICK ACTIONS ───────────────────────────────────────────────
+
+  Widget _buildPremiumQuickActions(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final actions = <(IconData, String, VoidCallback)>[
@@ -729,22 +1218,38 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-          ),
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 20,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.indigo, AppColors.accent],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Quick Actions',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.4,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: actions.map((a) {
             final (icon, label, onTap) = a;
             return Expanded(
               child: Padding(
-                padding:
-                    EdgeInsets.only(right: a != actions.last ? 10 : 0),
-                child: _PremiumActionChip(
+                padding: EdgeInsets.only(right: a != actions.last ? 10 : 0),
+                child: _SuperPremiumActionChip(
                   icon: icon,
                   label: label,
                   isDark: isDark,
@@ -758,6 +1263,8 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     );
   }
 
+  // ─── HELPERS ──────────────────────────────────────────────────────────────
+
   String _greeting() {
     final h = DateTime.now().hour;
     if (h < 12) return 'Good morning';
@@ -765,9 +1272,8 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     return 'Good evening';
   }
 
-  /// Indian-style currency: ₹, comma grouping (lakh system), L for lakh, Cr for crore.
   String _formatCurrency(double amount) {
-    const rupee = '₹';
+    const rupee = '\u20b9';
     if (amount.abs() >= 10000000) {
       return '$rupee${(amount / 10000000).toStringAsFixed(2)} Cr';
     } else if (amount.abs() >= 100000) {
@@ -778,20 +1284,20 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     return '${amount < 0 ? '-' : ''}$rupee$wholeStr';
   }
 
+  String _formatSmallCurrency(double amount) {
+    const rupee = '\u20b9';
+    if (amount.abs() >= 100000) {
+      return '$rupee${(amount / 100000).toStringAsFixed(1)}L';
+    } else if (amount.abs() >= 1000) {
+      return '$rupee${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return '$rupee${amount.toStringAsFixed(0)}';
+  }
+
   String _indianGroup(int n) {
     final s = n.toString();
     if (s.length <= 3) return s;
     final last3 = s.substring(s.length - 3);
-    var rest = s.substring(0, s.length - 3);
-    final buf = StringBuffer();
-    while (rest.length > 2) {
-      buf.write('${rest.substring(0, rest.length - 2)},');
-      rest = rest.substring(rest.length - 2);
-      // Move pair to output as we walk down.
-      // Simpler: build from right.
-      break;
-    }
-    // Rebuild correctly from right side.
     final reversed = s.substring(0, s.length - 3).split('').reversed.join();
     final groups = <String>[];
     for (var i = 0; i < reversed.length; i += 2) {
@@ -830,7 +1336,6 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
               t.transactionDate!.month == month.month &&
               (t.type == 'emiPayment' || t.type == 'collection'))
           .fold(0.0, (sum, t) => sum + t.amount);
-
       final label = _monthLabel(month.month);
       return MonthlyPaymentData(label: label, amount: total);
     }).toList();
@@ -868,23 +1373,17 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
 
     if (data.every((v) => v == 0)) {
       return [
-        MonthlyPaymentData(
-            label: _monthLabel(now.month - 5),
+        MonthlyPaymentData(label: _monthLabel(now.month - 5),
             amount: currentTotal > 0 ? currentTotal * 0.5 : 2000),
-        MonthlyPaymentData(
-            label: _monthLabel(now.month - 4),
+        MonthlyPaymentData(label: _monthLabel(now.month - 4),
             amount: currentTotal > 0 ? currentTotal * 0.6 : 2500),
-        MonthlyPaymentData(
-            label: _monthLabel(now.month - 3),
+        MonthlyPaymentData(label: _monthLabel(now.month - 3),
             amount: currentTotal > 0 ? currentTotal * 0.75 : 3200),
-        MonthlyPaymentData(
-            label: _monthLabel(now.month - 2),
+        MonthlyPaymentData(label: _monthLabel(now.month - 2),
             amount: currentTotal > 0 ? currentTotal * 0.8 : 3500),
-        MonthlyPaymentData(
-            label: _monthLabel(now.month - 1),
+        MonthlyPaymentData(label: _monthLabel(now.month - 1),
             amount: currentTotal > 0 ? currentTotal * 0.9 : 4100),
-        MonthlyPaymentData(
-            label: _monthLabel(now.month),
+        MonthlyPaymentData(label: _monthLabel(now.month),
             amount: currentTotal > 0 ? currentTotal : 5000),
       ];
     }
@@ -892,13 +1391,9 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     List<MonthlyPaymentData> list = [];
     double temp = currentTotal;
     for (int i = 5; i >= 0; i--) {
-      list.insert(
-          0,
-          MonthlyPaymentData(
-            label: _monthLabel(months[i].month),
-            amount: temp,
-          ));
-      temp = (temp - data[i]).clamp(0, double.infinity);
+      list.insert(0,
+          MonthlyPaymentData(label: _monthLabel(months[i].month), amount: temp));
+      temp = (temp - data[i]).clamp(0, double.infinity).toDouble();
     }
     return list;
   }
@@ -906,69 +1401,170 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
   String _monthLabel(int m) {
     final normalized = ((m - 1) % 12) + 1;
     const labels = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return labels[normalized < 1 ? normalized + 12 : normalized];
   }
 }
 
-// ── Ring Gauge Painter ──
-class _RingGaugePainter extends CustomPainter {
+// ─── AMBIENT BACKGROUND ───────────────────────────────────────────────────
+
+class _EnhancedBackground extends StatelessWidget {
+  final AnimationController controller;
+  final bool isDark;
+  final Widget child;
+
+  const _EnhancedBackground({
+    required this.controller,
+    required this.isDark,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        AnimatedBuilder(
+          animation: controller,
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _AmbientBlobPainter(
+                progress: controller.value,
+                isDark: isDark,
+                primaryColor: AppColors.primary.withValues(alpha: isDark ? 0.06 : 0.04),
+                accentColor: AppColors.accent.withValues(alpha: isDark ? 0.05 : 0.03),
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
+        child,
+      ],
+    );
+  }
+}
+
+class _AmbientBlobPainter extends CustomPainter {
+  final double progress;
+  final bool isDark;
+  final Color primaryColor;
+  final Color accentColor;
+
+  _AmbientBlobPainter({
+    required this.progress,
+    required this.isDark,
+    required this.primaryColor,
+    required this.accentColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 120);
+
+    // Three gently drifting blobs
+    _drawBlob(canvas, size,
+        0.15 + 0.08 * math.sin(progress * 2 * math.pi),
+        0.25 + 0.06 * math.cos(progress * 2.3 * math.pi + 1),
+        160, primaryColor, paint);
+    _drawBlob(canvas, size,
+        0.85 + 0.06 * math.cos(progress * 1.7 * math.pi),
+        0.15 + 0.08 * math.sin(progress * 2 * math.pi + 2),
+        180, accentColor, paint);
+    _drawBlob(canvas, size,
+        0.5 + 0.07 * math.sin(progress * 1.3 * math.pi + 0.5),
+        0.75 + 0.05 * math.cos(progress * 2 * math.pi + 1.5),
+        140, primaryColor.withValues(alpha: isDark ? 0.03 : 0.02), paint);
+  }
+
+  void _drawBlob(Canvas canvas, Size size, double xFactor, double yFactor,
+      double radius, Color color, Paint paint) {
+    paint.color = color;
+    canvas.drawCircle(
+      Offset(size.width * xFactor, size.height * yFactor),
+      radius,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _AmbientBlobPainter old) =>
+      old.progress != progress;
+}
+
+// ─── PREMIUM RING GAUGE PAINTER ──────────────────────────────────────────
+
+class _PremiumRingGaugePainter extends CustomPainter {
   final double value;
   final bool isDark;
+  final double pulse;
+  final List<Color> gradientColors;
 
-  _RingGaugePainter({required this.value, required this.isDark});
+  _PremiumRingGaugePainter({
+    required this.value,
+    required this.isDark,
+    required this.pulse,
+    required this.gradientColors,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 10;
+    final radius = size.width / 2 - 12;
     const startAngle = -math.pi / 2;
     final sweepAngle = 2 * math.pi * value.clamp(0.001, 1.0);
 
-    // Draw background outer ring with low opacity
-    final bgPaint = Paint()
-      ..color = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)
-      ..strokeWidth = 10
+    // Outer glow ring
+    final outerGlowPaint = Paint()
+      ..shader = SweepGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.02),
+          Colors.white.withValues(alpha: 0.05),
+          Colors.white.withValues(alpha: 0.02),
+        ],
+        transform: const GradientRotation(-math.pi / 2),
+      ).createShader(Rect.fromCircle(center: center, radius: radius + 6))
+      ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
+    canvas.drawCircle(center, radius + 6, outerGlowPaint);
+
+    // Background arc
+    final bgPaint = Paint()
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.06)
+          : Colors.black.withValues(alpha: 0.04)
+      ..strokeWidth = 10
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
     canvas.drawCircle(center, radius, bgPaint);
 
-    // Draw inner track track line
-    final innerTrackPaint = Paint()
-      ..color = isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02)
-      ..strokeWidth = 4
+    // Inner track
+    final innerPaint = Paint()
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.03)
+          : Colors.black.withValues(alpha: 0.02)
+      ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
-    canvas.drawCircle(center, radius - 6, innerTrackPaint);
+    canvas.drawCircle(center, radius - 7, innerPaint);
 
-    // Draw glow under the progress arc
+    // Deep glow behind the arc
     final glowPaint = Paint()
       ..shader = SweepGradient(
         colors: [
-          AppColors.primary.withValues(alpha: 0.01),
-          AppColors.primary.withValues(alpha: 0.35),
-          AppColors.accent.withValues(alpha: 0.45),
-          AppColors.accentLight.withValues(alpha: 0.35),
-          AppColors.primary.withValues(alpha: 0.01),
+          gradientColors[0].withValues(alpha: 0.1),
+          gradientColors[1].withValues(alpha: 0.3 + pulse * 0.15),
+          gradientColors[2].withValues(alpha: 0.4 + pulse * 0.15),
+          gradientColors[1].withValues(alpha: 0.3 + pulse * 0.15),
+          gradientColors[0].withValues(alpha: 0.1),
         ],
         stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
         transform: const GradientRotation(-math.pi / 2),
       ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..strokeWidth = 16
+      ..strokeWidth = 20
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       startAngle,
@@ -977,16 +1573,11 @@ class _RingGaugePainter extends CustomPainter {
       glowPaint,
     );
 
-    // Draw progress arc
+    // Main progress arc
     final progressPaint = Paint()
       ..shader = SweepGradient(
-        colors: const [
-          AppColors.primary,
-          AppColors.accent,
-          AppColors.accentLight,
-          AppColors.primary,
-        ],
-        stops: const [0.0, 0.4, 0.8, 1.0],
+        colors: gradientColors,
+        stops: const [0.0, 0.5, 1.0],
         transform: const GradientRotation(-math.pi / 2),
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..strokeWidth = 8
@@ -1000,151 +1591,163 @@ class _RingGaugePainter extends CustomPainter {
       progressPaint,
     );
 
-    // Draw glowing thumb/dot at the end of progress arc
-    final endX = center.dx + radius * math.cos(startAngle + sweepAngle);
-    final endY = center.dy + radius * math.sin(startAngle + sweepAngle);
-    final thumbCenter = Offset(endX, endY);
+    // Glowing thumb at the end of arc
+    if (sweepAngle > 0.1) {
+      final endX = center.dx + radius * math.cos(startAngle + sweepAngle);
+      final endY = center.dy + radius * math.sin(startAngle + sweepAngle);
+      final thumbCenter = Offset(endX, endY);
 
-    final thumbGlow = Paint()
-      ..color = AppColors.accentLight.withValues(alpha: 0.5)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-    canvas.drawCircle(thumbCenter, 10, thumbGlow);
+      // Outer glow
+      final thumbOuterGlow = Paint()
+        ..color = gradientColors.last.withValues(alpha: 0.4 + pulse * 0.2)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawCircle(thumbCenter, 12, thumbOuterGlow);
 
-    final thumbPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(thumbCenter, 5, thumbPaint);
+      // Inner glow
+      final thumbInnerGlow = Paint()
+        ..color = gradientColors.last.withValues(alpha: 0.6 + pulse * 0.2)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawCircle(thumbCenter, 8, thumbInnerGlow);
+
+      // White core
+      final thumbPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(thumbCenter, 4.5, thumbPaint);
+
+      // Subtle border
+      final thumbBorder = Paint()
+        ..color = gradientColors[1].withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5;
+      canvas.drawCircle(thumbCenter, 4.5, thumbBorder);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _RingGaugePainter old) => old.value != value;
+  bool shouldRepaint(covariant _PremiumRingGaugePainter old) =>
+      old.value != value || old.pulse != pulse;
 }
 
-// ── Animated Stat Card with Sparkline ──
-class _AnimatedStatCard extends StatelessWidget {
+// ─── PREMIUM STAT CARD ──────────────────────────────────────────────────
+
+class _PremiumStatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final double numericValue;
   final bool isCurrency;
-  final Color color;
-  final bool isDark;
+  final List<Color> gradientColors;
   final VoidCallback? onTap;
   final List<double> spark;
+  final bool isDark;
 
-  const _AnimatedStatCard({
+  const _PremiumStatCard({
     required this.icon,
     required this.label,
     required this.numericValue,
     required this.isCurrency,
-    required this.color,
-    required this.isDark,
+    required this.gradientColors,
     required this.spark,
     this.onTap,
+    required this.isDark,
   });
 
   String _format(double v) {
+    const rupee = '\u20b9';
     if (!isCurrency) return v.toInt().toString();
-    const rupee = '₹';
-    if (v.abs() >= 10000000) {
-      return '$rupee${(v / 10000000).toStringAsFixed(2)}Cr';
-    } else if (v.abs() >= 100000) {
-      return '$rupee${(v / 100000).toStringAsFixed(2)}L';
-    } else if (v.abs() >= 1000) {
-      return '$rupee${(v / 1000).toStringAsFixed(1)}K';
-    }
+    if (v.abs() >= 10000000) return '$rupee${(v / 10000000).toStringAsFixed(2)}Cr';
+    if (v.abs() >= 100000) return '$rupee${(v / 100000).toStringAsFixed(2)}L';
+    if (v.abs() >= 1000) return '$rupee${(v / 1000).toStringAsFixed(1)}K';
     return '$rupee${v.toStringAsFixed(0)}';
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return GlassCard(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C2030) : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.04),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: isDark ? 0.08 : 0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: isDark ? 0.15 : 0.1),
-                    borderRadius: BorderRadius.circular(10),
+      borderRadius: 20,
+      padding: const EdgeInsets.all(16),
+      elevated: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: gradientColors,
                   ),
-                  child: Icon(icon, color: color, size: 18),
-                ),
-                const Spacer(),
-                if (spark.isNotEmpty && spark.any((e) => e > 0))
-                  SizedBox(
-                    width: 48,
-                    height: 22,
-                    child: SparklineChart(
-                      data: spark,
-                      color: color,
-                      height: 22,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: gradientColors[0].withValues(alpha: isDark ? 0.3 : 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: numericValue),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOutCubic,
-              builder: (context, v, _) => Text(
-                _format(v),
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+                  ],
                 ),
+                child: Icon(icon, color: Colors.white, size: 18),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
+              const Spacer(),
+              if (spark.isNotEmpty && spark.any((e) => e > 0))
+                SizedBox(
+                  width: 52,
+                  height: 24,
+                  child: SparklineChart(
+                    data: spark,
+                    color: gradientColors[0],
+                    height: 24,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: numericValue),
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.easeOutCubic,
+            builder: (context, v, _) => Text(
+              _format(v),
               style: TextStyle(
-                color: (isDark ? Colors.white : const Color(0xFF0F172A))
-                    .withValues(alpha: 0.5),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                  .withValues(alpha: 0.5),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── Premium Action Chip ──
-class _PremiumActionChip extends StatefulWidget {
+// ─── SUPER PREMIUM ACTION CHIP ──────────────────────────────────────────
+
+class _SuperPremiumActionChip extends StatefulWidget {
   final IconData icon;
   final String label;
   final bool isDark;
   final VoidCallback onTap;
 
-  const _PremiumActionChip({
+  const _SuperPremiumActionChip({
     required this.icon,
     required this.label,
     required this.isDark,
@@ -1152,29 +1755,62 @@ class _PremiumActionChip extends StatefulWidget {
   });
 
   @override
-  State<_PremiumActionChip> createState() => _PremiumActionChipState();
+  State<_SuperPremiumActionChip> createState() =>
+      _SuperPremiumActionChipState();
 }
 
-class _PremiumActionChipState extends State<_PremiumActionChip> {
-  bool _pressed = false;
+class _SuperPremiumActionChipState extends State<_SuperPremiumActionChip>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pressController;
+  late Animation<double> _pressAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _pressAnimation = CurvedAnimation(
+      parent: _pressController,
+      curve: Curves.elasticOut,
+      reverseCurve: Curves.easeIn,
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
       onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOutCubic,
+      onTapDown: (_) => _pressController.forward(),
+      onTapUp: (_) => _pressController.reverse(),
+      onTapCancel: () => _pressController.reverse(),
+      child: AnimatedBuilder(
+        animation: _pressAnimation,
+        builder: (context, child) {
+          final scale = 1.0 - (_pressAnimation.value * 0.05);
+          return Transform.scale(scale: scale, child: child);
+        },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color:
-                widget.isDark ? const Color(0xFF1C2030) : Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: widget.isDark
+                  ? [
+                      const Color(0xFF1C2030),
+                      const Color(0xFF1A1F3A),
+                    ]
+                  : [Colors.white, Colors.white.withValues(alpha: 0.95)],
+            ),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: widget.isDark
                   ? Colors.white.withValues(alpha: 0.06)
@@ -1192,8 +1828,8 @@ class _PremiumActionChipState extends State<_PremiumActionChip> {
           child: Column(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
@@ -1204,14 +1840,19 @@ class _PremiumActionChipState extends State<_PremiumActionChip> {
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.35),
-                      blurRadius: 10,
+                      blurRadius: 12,
                       offset: const Offset(0, 4),
+                    ),
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.2),
+                      blurRadius: 18,
+                      spreadRadius: -4,
                     ),
                   ],
                 ),
-                child: Icon(widget.icon, color: Colors.white, size: 20),
+                child: Icon(widget.icon, color: Colors.white, size: 22),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
                 widget.label,
                 style: TextStyle(

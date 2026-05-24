@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/core/constants/app_colors.dart';
 import 'package:microflow_pro/core/constants/app_spacing.dart';
@@ -354,16 +355,20 @@ class _CustomerNotificationsPageState
     bool isDark,
     AsyncValue<int> unreadAsync,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF1A1F3A), Color(0xFF151A30)]
-              : [AppColors.primary, AppColors.accent],
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
       ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? const [Color(0xFF1A1F3A), Color(0xFF151A30)]
+                : [AppColors.primary, AppColors.accent],
+          ),
+        ),
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -449,6 +454,7 @@ class _CustomerNotificationsPageState
           ),
         ),
       ),
+    ),
     );
   }
 

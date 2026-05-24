@@ -171,12 +171,15 @@ class _CustomerTransactionsPageState
   // ── Header ─────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context, bool isDark, int totalCount) {
     final theme = Theme.of(context);
-    final mq = MediaQuery.of(context);
-    final topPadding = mq.padding.top + AppSpacing.md;
+    final topPadding = AppSpacing.md;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -266,6 +269,7 @@ class _CustomerTransactionsPageState
           ),
         ),
       ),
+    ),
     );
   }
 

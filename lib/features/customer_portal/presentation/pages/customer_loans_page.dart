@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -134,7 +135,11 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
           )
         : AppColors.primaryGradient;
 
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       extendBody: true,
@@ -161,6 +166,7 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
             );
           },
         ),
+      ),
       ),
     );
   }

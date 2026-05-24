@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../data/models/customer_notification_model.dart';
 
 class CustomerNotificationTile extends StatelessWidget {
@@ -16,87 +17,136 @@ class CustomerNotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final typeColor = _getTypeColor();
 
     return Material(
-      color: notification.isRead
-          ? Colors.transparent
-          : (isDark
-              ? theme.colorScheme.primary.withValues(alpha: 0.05)
-              : theme.colorScheme.primary.withValues(alpha: 0.03)),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
+        splashColor: typeColor.withValues(alpha: 0.06),
+        highlightColor: typeColor.withValues(alpha: 0.03),
+        child: Container(
+          decoration: BoxDecoration(
+            color: notification.isRead
+                ? Colors.transparent
+                : (isDark
+                    ? typeColor.withValues(alpha: 0.06)
+                    : typeColor.withValues(alpha: 0.03)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _getTypeColor().withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.sm),
-                ),
-                child: Icon(
-                  _getTypeIcon(),
-                  color: _getTypeColor(),
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notification.title,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: notification.isRead
-                                  ? FontWeight.w400
-                                  : FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (!notification.isRead)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
+              // Gradient bar on left for unread
+              if (!notification.isRead)
+                Container(
+                  width: 3.5,
+                  height: _estimateHeight(),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        typeColor,
+                        typeColor.withValues(alpha: 0.4),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      notification.message,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color
-                            ?.withValues(alpha: 0.7),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(2),
+                      bottomRight: Radius.circular(2),
                     ),
-                    if (notification.createdAt != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatTime(notification.createdAt!),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.textTheme.bodySmall?.color
-                              ?.withValues(alpha: 0.4),
-                          fontSize: 11,
+                  ),
+                ),
+              // Content
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: notification.isRead ? AppSpacing.md : AppSpacing.sm + 2,
+                    right: AppSpacing.md,
+                    top: AppSpacing.sm + 2,
+                    bottom: AppSpacing.sm + 2,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Rounded icon container
+                      _buildIconContainer(typeColor, isDark),
+                      const SizedBox(width: AppSpacing.sm + 2),
+                      // Title + message + time
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    notification.title,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: notification.isRead
+                                          ? FontWeight.w500
+                                          : FontWeight.w700,
+                                      letterSpacing: -0.1,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                // Unread indicator dot
+                                if (!notification.isRead)
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    margin: const EdgeInsets.only(left: 8),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          typeColor,
+                                          typeColor.withValues(alpha: 0.7),
+                                        ],
+                                      ),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: typeColor.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          blurRadius: 4,
+                                          spreadRadius: 0,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              notification.message,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isDark
+                                    ? AppColors.textSecondaryDark
+                                    : AppColors.textSecondaryLight,
+                                height: 1.4,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (notification.createdAt != null) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                _formatTime(notification.createdAt!),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isDark
+                                      ? AppColors.textTertiaryDark
+                                      : AppColors.textTertiaryLight,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -106,13 +156,52 @@ class CustomerNotificationTile extends StatelessWidget {
     );
   }
 
+  Widget _buildIconContainer(Color color, bool isDark) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: isDark ? 0.25 : 0.15),
+            color.withValues(alpha: isDark ? 0.12 : 0.06),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isDark ? 0.12 : 0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(
+        _getTypeIcon(),
+        color: color,
+        size: 18,
+      ),
+    );
+  }
+
+  double _estimateHeight() {
+    // Approximate height for the gradient bar
+    double h = 12; // padding top
+    h += 38; // icon height
+    h += 6; // spacing
+    return h;
+  }
+
   Color _getTypeColor() {
     return switch (notification.type) {
-      'payment_due' || 'emi_reminder' => Colors.orange,
-      'loan_approved' => Colors.green,
-      'savings_update' => Colors.blue,
-      'collection_visit' => Colors.purple,
-      _ => Colors.grey,
+      'payment_due' || 'emi_reminder' => AppColors.warning,
+      'loan_approved' => AppColors.success,
+      'savings_update' => AppColors.info,
+      'collection_visit' => AppColors.accent,
+      'kyc_update' => AppColors.teal,
+      _ => AppColors.primaryLight,
     };
   }
 

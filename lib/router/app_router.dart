@@ -40,6 +40,7 @@ import '../features/settings/presentation/pages/app_update_page.dart';
 import '../features/settings/presentation/pages/integrations_settings_page.dart';
 import '../features/settings/presentation/pages/security_compliance_page.dart';
 import '../core/widgets/hud_navigation.dart';
+import '../core/constants/app_colors.dart';
 import '../features/loans/presentation/pages/loan_detail_page.dart';
 import '../features/loans/presentation/pages/new_loan_page.dart';
 import '../features/loans/presentation/pages/edit_loan_page.dart';
@@ -1126,62 +1127,151 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
   }
 
   void _showMoreMenu(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.receipt_long_rounded),
-                title: const Text('Transactions'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.go('/customer/transactions');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.notifications_rounded),
-                title: const Text('Notifications'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.go('/customer/notifications');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.support_agent_rounded),
-                title: const Text('Support'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.go('/customer/support');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_rounded),
-                title: const Text('Profile'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.go('/customer/profile');
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.logout_rounded,
-                    color: Theme.of(context).colorScheme.error),
-                title: Text('Logout',
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error)),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await ref.read(authProvider.notifier).signOut();
-                },
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C2030) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
+                blurRadius: 32,
+                offset: const Offset(0, -8),
               ),
             ],
           ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: (isDark ? Colors.white : Colors.black)
+                          .withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildMoreItem(context, Icons.receipt_long_rounded,
+                    'Transactions', 'View all payment history', isDark, () {
+                  Navigator.pop(context);
+                  context.go('/customer/transactions');
+                }),
+                _buildMoreItem(context, Icons.notifications_rounded,
+                    'Notifications', 'Alerts and reminders', isDark, () {
+                  Navigator.pop(context);
+                  context.go('/customer/notifications');
+                }),
+                _buildMoreItem(context, Icons.support_agent_rounded,
+                    'Support', 'Get help and create tickets', isDark, () {
+                  Navigator.pop(context);
+                  context.go('/customer/support');
+                }),
+                _buildMoreItem(context, Icons.person_rounded, 'Profile',
+                    'Account settings', isDark, () {
+                  Navigator.pop(context);
+                  context.go('/customer/profile');
+                }),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Divider(
+                      color: (isDark ? Colors.white : Colors.black)
+                          .withValues(alpha: 0.08)),
+                ),
+                _buildMoreItem(context, Icons.logout_rounded, 'Logout',
+                    'Sign out of your account', isDark, () async {
+                  Navigator.pop(context);
+                  await ref.read(authProvider.notifier).signOut();
+                }, isError: true),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildMoreItem(BuildContext context, IconData icon, String title,
+      String subtitle, bool isDark, VoidCallback onTap,
+      {bool isError = false}) {
+    final color = isError ? const Color(0xFFEF4444) : AppColors.primary;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: isDark ? 0.15 : 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: isError
+                              ? const Color(0xFFEF4444)
+                              : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                              .withValues(alpha: 0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: (isDark ? Colors.white : Colors.black)
+                      .withValues(alpha: 0.2),
+                  size: 14,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -3,6 +3,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/widgets/progress_gauge.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../data/models/customer_loan_model.dart';
 
 class CustomerLoanCard extends StatelessWidget {
@@ -18,55 +19,141 @@ class CustomerLoanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return GlassCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  loan.loanNumber ?? 'Loan',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.borderRadiusLg),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: loan.isOverdue
+                    ? AppColors.error
+                    : AppColors.primary,
+                width: 3.5,
               ),
-              _buildStatusBadge(),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              _buildInfoColumn(context, 'Amount', _formatCurrency(loan.amount)),
-              const SizedBox(width: AppSpacing.lg),
-              _buildInfoColumn(
-                  context, 'Outstanding', _formatCurrency(loan.outstandingBalance)),
-              const SizedBox(width: AppSpacing.lg),
-              _buildInfoColumn(
-                  context, 'EMI', _formatCurrency(loan.emiAmount)),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          LinearProgressBar(
-            value: loan.paidPercentage / 100,
-            height: 6,
-            backgroundColor:
-                theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            progressColor: loan.isOverdue
-                ? Colors.red
-                : theme.colorScheme.primary,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${loan.paidPercentage.toStringAsFixed(1)}% repaid',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
             ),
           ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  children: [
+                    _buildLoanIcon(isDark),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        loan.loanNumber ?? 'Loan',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                    _buildStatusBadge(),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                // Info columns
+                Row(
+                  children: [
+                    _buildInfoColumn(
+                      context,
+                      'Amount',
+                      _formatCurrency(loan.amount),
+                      isDark,
+                    ),
+                    _buildInfoColumn(
+                      context,
+                      'Outstanding',
+                      _formatCurrency(loan.outstandingBalance),
+                      isDark,
+                    ),
+                    _buildInfoColumn(
+                      context,
+                      'EMI',
+                      _formatCurrency(loan.emiAmount),
+                      isDark,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressBar(
+                    value: loan.paidPercentage / 100,
+                    height: 7,
+                    backgroundColor: isDark
+                        ? AppColors.fillDark
+                        : AppColors.fillLight,
+                    progressColor: loan.isOverdue
+                        ? AppColors.error
+                        : AppColors.success,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${loan.paidPercentage.toStringAsFixed(1)}% repaid',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (loan.purpose != null && loan.purpose!.isNotEmpty)
+                      Text(
+                        loan.purpose!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? AppColors.textTertiaryDark
+                              : AppColors.textTertiaryLight,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoanIcon(bool isDark) {
+    final color = loan.isOverdue ? AppColors.error : AppColors.primary;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
+      ),
+      child: Icon(
+        loan.isOverdue
+            ? Icons.warning_rounded
+            : Icons.account_balance_wallet_rounded,
+        color: color,
+        size: 18,
       ),
     );
   }
@@ -85,27 +172,35 @@ class CustomerLoanCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoColumn(BuildContext context, String label, String value) {
+  Widget _buildInfoColumn(
+    BuildContext context,
+    String label,
+    String value,
+    bool isDark,
+  ) {
+    final theme = Theme.of(context);
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.color
-                      ?.withValues(alpha: 0.6),
-                ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isDark
+                  ? AppColors.textTertiaryDark
+                  : AppColors.textTertiaryLight,
+              fontWeight: FontWeight.w500,
+              fontSize: 11,
+              letterSpacing: 0.3,
+            ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

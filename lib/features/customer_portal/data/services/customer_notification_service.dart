@@ -110,7 +110,7 @@ class CustomerNotificationService {
       final loans = await _client
           .from('loans')
           .select('id, loan_number, emi_amount')
-          .eq('member_id', customerId)
+          .eq('customer_id', customerId)
           .eq('org_id', orgId)
           .eq('status', 'active');
 
@@ -310,7 +310,7 @@ class CustomerNotificationService {
       final loans = await _client
           .from('loans')
           .select('id, loan_number, amount, status, updated_at')
-          .eq('member_id', customerId)
+          .eq('customer_id', customerId)
           .eq('org_id', orgId)
           .eq('status', 'active')
           .gte('updated_at', cutoff);

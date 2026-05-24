@@ -16,7 +16,7 @@ class CustomerHomeRepository {
         _client
             .from('loans')
             .select()
-            .eq('member_id', memberId)
+            .eq('customer_id', memberId)
             .eq('org_id', _orgId),
         _client
             .from('savings_plans')

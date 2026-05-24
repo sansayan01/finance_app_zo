@@ -13,7 +13,7 @@ class CustomerLoansRepository {
       final data = await _client
           .from('loans')
           .select()
-          .eq('member_id', memberId)
+          .eq('customer_id', memberId)
           .eq('org_id', _orgId)
           .order('created_at', ascending: false);
       return (data as List)

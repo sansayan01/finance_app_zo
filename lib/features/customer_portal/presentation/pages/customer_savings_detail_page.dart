@@ -3,20 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/layout.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/progress_gauge.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../savings/data/services/savings_statement_models.dart';
+import '../../../savings/data/services/savings_statement_pdf_service.dart';
 import '../../data/models/customer_savings_model.dart';
 import '../../data/models/customer_transaction_model.dart';
+import '../../data/providers/customer_member_provider.dart';
 import '../../data/providers/customer_savings_providers.dart';
-import '../../data/services/customer_statement_service.dart';
 import '../widgets/customer_empty_state.dart';
 import '../widgets/customer_payment_trend_chart.dart' show MonthlyPaymentData;
 import '../widgets/customer_savings_growth_chart.dart';
@@ -206,7 +209,7 @@ class _CustomerSavingsDetailPageState
     String selectedFormat = 'pdf'; // pdf, excel, csv
     String selectedRange = '30'; // 30, 90, all
     String step = 'input'; // input, loading, success
-    pw.Document? generatedDoc;
+    Uint8List? generatedPdfBytes;
     String? statementFilename;
 
     showModalBottomSheet(
@@ -377,34 +380,104 @@ class _CustomerSavingsDetailPageState
                                   HapticFeedback.lightImpact();
                                   setSheetState(() => step = 'loading');
                                   try {
-                                    // Get transactions from the provider
-                                    final transactionsAsync = ref.read(customerSavingsTransactionsProvider(widget.savingsId));
-                                    final transactions = transactionsAsync.valueOrNull ?? [];
+                                    final supabase = Supabase.instance.client;
+                                    final orgId = ref.read(currentOrgProvider).valueOrNull?['id']?.toString() ?? '';
 
-                                    // Map transactions to the format expected by the service.
-                                    // Map model types to service-recognised types:
-                                    //   'savingsWithdrawal' → 'withdrawal', everything else → 'deposit'
-                                    final txMaps = transactions.map((t) => {
-                                      'date': t.transactionDate,
-                                      'type': t.type == 'savingsWithdrawal' ? 'withdrawal' : 'deposit',
-                                      'amount': t.amount,
-                                      'description': t.description ?? '',
-                                    }).toList();
-
-                                    // Generate PDF — always pass all transactions so the
-                                    // running balance and summary totals are computed correctly.
-                                    final doc = await CustomerStatementService.generateSavingsStatement(
-                                      memberName: savings.displayName,
-                                      planName: savings.planName ?? 'Savings Account',
-                                      targetAmount: savings.targetAmount,
-                                      currentAmount: savings.currentAmount,
-                                      monthlyDeposit: savings.monthlyDeposit,
-                                      interestRate: savings.interestRate,
-                                      maturityDate: savings.maturityDate,
-                                      transactions: txMaps,
+                                    // Fetch org info
+                                    final orgData = await supabase
+                                        .from('organizations')
+                                        .select('name, address, city, state, pincode, phone, email, gst_number')
+                                        .eq('id', orgId)
+                                        .maybeSingle();
+                                    final org = SavingsStatementOrgInfo(
+                                      name: orgData?['name'] ?? 'MicroFlow Pro',
+                                      address: orgData?['address'],
+                                      city: orgData?['city'],
+                                      state: orgData?['state'],
+                                      pincode: orgData?['pincode'],
+                                      phone: orgData?['phone'],
+                                      email: orgData?['email'],
+                                      gstNumber: orgData?['gst_number'],
                                     );
 
-                                    generatedDoc = doc;
+                                    // Fetch member info
+                                    final memberId = ref.read(currentCustomerIdSyncProvider) ?? '';
+                                    final memberData = await supabase
+                                        .from('members')
+                                        .select('full_name, phone, member_id')
+                                        .eq('id', memberId)
+                                        .maybeSingle();
+                                    final customer = SavingsStatementCustomer(
+                                      id: memberId,
+                                      memberId: memberData?['member_id']?.toString() ?? memberId.substring(0, memberId.length > 8 ? 8 : memberId.length),
+                                      fullName: memberData?['full_name'] ?? savings.displayName,
+                                      phone: memberData?['phone'] ?? '',
+                                    );
+
+                                    // Map transactions
+                                    final transactionsAsync = ref.read(customerSavingsTransactionsProvider(widget.savingsId));
+                                    final transactions = transactionsAsync.valueOrNull ?? [];
+                                    final deposits = <SavingsStatementTx>[];
+                                    final withdrawals = <SavingsStatementTx>[];
+                                    for (final t in transactions) {
+                                      final tx = SavingsStatementTx(
+                                        date: t.transactionDate ?? DateTime.now(),
+                                        amount: t.amount,
+                                        description: t.description ?? t.type,
+                                        paymentMode: t.paymentMode,
+                                      );
+                                      if (t.type == 'savingsWithdrawal' || t.type == 'withdrawal') {
+                                        withdrawals.add(tx);
+                                      } else {
+                                        deposits.add(tx);
+                                      }
+                                    }
+
+                                    // Build plan block
+                                    final planBlock = SavingsStatementPlanBlock(
+                                      planId: savings.id,
+                                      planName: savings.planName ?? 'Savings Account',
+                                      status: savings.status,
+                                      targetAmount: savings.targetAmount,
+                                      currentAmount: savings.currentAmount,
+                                      openingBalance: 0,
+                                      closingBalance: savings.currentAmount,
+                                      interestRate: savings.interestRate,
+                                      maturityDate: savings.maturityDate ?? DateTime.now().add(const Duration(days: 365)),
+                                      collectionType: 'monthly',
+                                      monthlyDeposit: savings.monthlyDeposit,
+                                      maturityAmount: savings.targetAmount,
+                                      deposits: deposits,
+                                      withdrawals: withdrawals,
+                                    );
+
+                                    // Build portfolio summary
+                                    final portfolio = SavingsStatementPortfolioSummary(
+                                      openingBalance: 0,
+                                      totalDeposits: deposits.fold(0.0, (s, t) => s + t.amount),
+                                      totalWithdrawals: withdrawals.fold(0.0, (s, t) => s + t.amount),
+                                      interestEarned: 0,
+                                      closingBalance: savings.currentAmount,
+                                      activePlans: savings.status == 'active' ? 1 : 0,
+                                      totalPlans: 1,
+                                    );
+
+                                    // Generate PDF using admin template
+                                    final now = DateTime.now();
+                                    final statementData = SavingsStatementData(
+                                      customer: customer,
+                                      periodStart: now.subtract(const Duration(days: 365)),
+                                      periodEnd: now,
+                                      plans: [planBlock],
+                                      portfolio: portfolio,
+                                    );
+                                    final pdfBytes = await SavingsStatementPdfService.build(
+                                      data: statementData,
+                                      org: org,
+                                      statementRef: 'SAV-STMT-${now.millisecondsSinceEpoch.toRadixString(36)}',
+                                    );
+
+                                    generatedPdfBytes = pdfBytes;
                                     statementFilename = 'savings_statement_${savings.id}.pdf';
 
                                     if (ctx.mounted) {
@@ -514,8 +587,8 @@ class _CustomerSavingsDetailPageState
                                   child: InkWell(
                                     onTap: () async {
                                       HapticFeedback.lightImpact();
-                                      if (generatedDoc != null) {
-                                        await Printing.layoutPdf(onLayout: (format) async => generatedDoc!.save());
+                                      if (generatedPdfBytes != null) {
+                                        await Printing.layoutPdf(onLayout: (format) async => generatedPdfBytes!);
                                       }
                                     },
                                     borderRadius: BorderRadius.circular(16),
@@ -547,8 +620,8 @@ class _CustomerSavingsDetailPageState
                                   child: InkWell(
                                     onTap: () async {
                                       HapticFeedback.lightImpact();
-                                      if (generatedDoc != null) {
-                                        await Printing.sharePdf(bytes: await generatedDoc!.save(), filename: statementFilename ?? 'statement.pdf');
+                                      if (generatedPdfBytes != null) {
+                                        await Printing.sharePdf(bytes: generatedPdfBytes!, filename: statementFilename ?? 'statement.pdf');
                                       }
                                     },
                                     borderRadius: BorderRadius.circular(16),

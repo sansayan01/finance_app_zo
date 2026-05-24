@@ -95,7 +95,11 @@ class _CustomerAccountSettingsPageState
     final isDark = theme.brightness == Brightness.dark;
     final user = ref.watch(currentUserProvider);
 
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -284,6 +288,7 @@ class _CustomerAccountSettingsPageState
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
       ),
+    ),
     );
   }
 

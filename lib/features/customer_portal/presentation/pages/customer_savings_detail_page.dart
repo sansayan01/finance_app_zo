@@ -597,7 +597,11 @@ class _CustomerSavingsDetailPageState
           )
         : AppColors.primaryGradient;
 
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       extendBody: true,
@@ -835,6 +839,7 @@ class _CustomerSavingsDetailPageState
           },
         ),
       ),
+    ),
     );
   }
 

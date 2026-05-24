@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -1027,7 +1028,10 @@ class _CustomerAccountSettingsPageState
             return Container(
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               padding: EdgeInsets.fromLTRB(
-                  24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+                  24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom +
+                      MediaQuery.of(ctx).viewPadding.bottom +
+                      kBottomNavBarHeight +
+                      16),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1C2030) : Colors.white,
                 borderRadius: BorderRadius.circular(24),

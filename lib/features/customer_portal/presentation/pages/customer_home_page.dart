@@ -934,50 +934,86 @@ class _RingGaugePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 8;
+    final radius = size.width / 2 - 10;
     const startAngle = -math.pi / 2;
-    final sweepAngle = 2 * math.pi * value.clamp(0, 1);
+    final sweepAngle = 2 * math.pi * value.clamp(0.001, 1.0);
 
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.15)
-        ..strokeWidth = 8
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round,
+    // Draw background outer ring with low opacity
+    final bgPaint = Paint()
+      ..color = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)
+      ..strokeWidth = 10
+      ..style = PaintingStyle.stroke;
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Draw inner track track line
+    final innerTrackPaint = Paint()
+      ..color = isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02)
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke;
+    canvas.drawCircle(center, radius - 6, innerTrackPaint);
+
+    // Draw glow under the progress arc
+    final glowPaint = Paint()
+      ..shader = SweepGradient(
+        colors: [
+          AppColors.primary.withValues(alpha: 0.01),
+          AppColors.primary.withValues(alpha: 0.35),
+          AppColors.accent.withValues(alpha: 0.45),
+          AppColors.accentLight.withValues(alpha: 0.35),
+          AppColors.primary.withValues(alpha: 0.01),
+        ],
+        stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+        transform: const GradientRotation(-math.pi / 2),
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..strokeWidth = 16
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweepAngle,
+      false,
+      glowPaint,
     );
 
-    if (value > 0) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        Paint()
-          ..shader = const SweepGradient(
-            startAngle: 0,
-            endAngle: math.pi * 2,
-            colors: [Color(0xFFFFFFFF), Color(0xFFE0E7FF)],
-          ).createShader(Rect.fromCircle(center: center, radius: radius))
-          ..strokeWidth = 8
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round,
-      );
+    // Draw progress arc
+    final progressPaint = Paint()
+      ..shader = SweepGradient(
+        colors: const [
+          AppColors.primary,
+          AppColors.accent,
+          AppColors.accentLight,
+          AppColors.primary,
+        ],
+        stops: const [0.0, 0.4, 0.8, 1.0],
+        transform: const GradientRotation(-math.pi / 2),
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..strokeWidth = 8
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweepAngle,
+      false,
+      progressPaint,
+    );
 
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.3)
-          ..strokeWidth = 14
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-      );
-    }
+    // Draw glowing thumb/dot at the end of progress arc
+    final endX = center.dx + radius * math.cos(startAngle + sweepAngle);
+    final endY = center.dy + radius * math.sin(startAngle + sweepAngle);
+    final thumbCenter = Offset(endX, endY);
+
+    final thumbGlow = Paint()
+      ..color = AppColors.accentLight.withValues(alpha: 0.5)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawCircle(thumbCenter, 10, thumbGlow);
+
+    final thumbPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(thumbCenter, 5, thumbPaint);
   }
 
   @override

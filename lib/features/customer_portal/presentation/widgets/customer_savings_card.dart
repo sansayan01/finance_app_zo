@@ -250,6 +250,8 @@ class _ProgressRingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
+    const startAngle = -math.pi / 2;
+    final sweepAngle = 2 * math.pi * progress.clamp(0.001, 1.0);
 
     // Background ring
     final bgPaint = Paint()
@@ -260,23 +262,47 @@ class _ProgressRingPainter extends CustomPainter {
 
     canvas.drawCircle(center, radius, bgPaint);
 
-    // Progress arc
-    final progressPaint = Paint()
-      ..color = progressColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    if (progress > 0) {
+      // Glow shadow
+      final glowPaint = Paint()
+        ..color = progressColor.withValues(alpha: 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth + 3
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
-    const startAngle = -math.pi / 2;
-    final sweepAngle = 2 * math.pi * progress;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        glowPaint,
+      );
 
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle,
-      false,
-      progressPaint,
-    );
+      // Progress arc with gradient shader
+      final progressPaint = Paint()
+        ..shader = SweepGradient(
+          colors: [
+            progressColor.withValues(alpha: 0.8),
+            progressColor,
+            AppColors.mint,
+            progressColor.withValues(alpha: 0.8),
+          ],
+          stops: const [0.0, 0.4, 0.8, 1.0],
+          transform: const GradientRotation(-math.pi / 2),
+        ).createShader(Rect.fromCircle(center: center, radius: radius))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        progressPaint,
+      );
+    }
   }
 
   @override

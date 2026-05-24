@@ -256,6 +256,8 @@ class _CustomerEmiSchedulePageState
                       formatPlain: _formatPlainAmount,
                       formatPaidRelative: _formatPaidRelative,
                       months: _months,
+                      isFirst: currentIndex == 0,
+                      isLast: currentIndex == sorted.length - 1,
                     ),
                   ),
                 ),
@@ -1069,6 +1071,8 @@ class _PremiumEmiRow extends StatelessWidget {
   final String Function(double) formatPlain;
   final String Function(DateTime) formatPaidRelative;
   final List<String> months;
+  final bool isFirst;
+  final bool isLast;
 
   const _PremiumEmiRow({
     required this.emi,
@@ -1078,6 +1082,8 @@ class _PremiumEmiRow extends StatelessWidget {
     required this.formatPlain,
     required this.formatPaidRelative,
     required this.months,
+    this.isFirst = false,
+    this.isLast = false,
   });
 
   Color get _statusColor {
@@ -1115,265 +1121,272 @@ class _PremiumEmiRow extends StatelessWidget {
         : 'Unscheduled';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 4, AppSpacing.md, 4),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            children: [
-              // Color status indicator (left bar)
-              Container(
-                width: 4,
-                decoration: BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 0),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Left timeline graphic column
+            SizedBox(
+              width: 32,
+              child: CustomPaint(
+                painter: _TimelinePainter(
                   color: _statusColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                  ),
+                  isFirst: isFirst,
+                  isLast: isLast,
+                  isPaid: emi.isPaid,
+                  isDark: isDark,
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    AppSpacing.sm + 4,
-                    AppSpacing.md,
-                    AppSpacing.sm + 4,
+            ),
+            const SizedBox(width: 8),
+            // Right detail card
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: borderColor, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // EMI number badge
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: _statusColor.withValues(
-                                alpha: isDark ? 0.18 : 0.10,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.sm + 4,
+                      AppSpacing.md,
+                      AppSpacing.sm + 4,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // EMI number badge
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
                                 color: _statusColor.withValues(
-                                  alpha: isDark ? 0.3 : 0.18,
+                                  alpha: isDark ? 0.18 : 0.10,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: _statusColor.withValues(
+                                    alpha: isDark ? 0.3 : 0.18,
+                                  ),
                                 ),
                               ),
-                            ),
-                            alignment: Alignment.center,
-                            child: emi.isPaid
-                                ? Icon(
-                                    _statusIcon,
-                                    size: 18,
-                                    color: _statusColor,
-                                  )
-                                : Text(
-                                    '${emi.emiNumber}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
+                              alignment: Alignment.center,
+                              child: emi.isPaid
+                                  ? Icon(
+                                      _statusIcon,
+                                      size: 18,
                                       color: _statusColor,
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                    ),
-                                  ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm + 4),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      'EMI #${emi.emiNumber}',
+                                    )
+                                  : Text(
+                                      '${emi.emiNumber}',
                                       style: TextStyle(
                                         fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: textPrimary,
-                                        letterSpacing: -0.2,
+                                        fontWeight: FontWeight.w800,
+                                        color: _statusColor,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 6),
-                                    Container(
-                                      width: 3,
-                                      height: 3,
-                                      decoration: BoxDecoration(
-                                        color: textTertiary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Flexible(
-                                      child: Text(
-                                        dueLabel,
+                            ),
+                            const SizedBox(width: AppSpacing.sm + 4),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'EMI #${emi.emiNumber}',
                                         style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: textSecondary,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (emi.isPaid && emi.paidOn != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      'Paid ${formatPaidRelative(emi.paidOn!)}',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.success.withValues(
-                                          alpha: isDark ? 0.85 : 0.75,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: textPrimary,
+                                          letterSpacing: -0.2,
                                         ),
                                       ),
-                                    ),
-                                  )
-                                else
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Row(
-                                      children: [
-                                        _principalInterestChip(
-                                          label: 'P',
-                                          value: emi.principal,
-                                          color: AppColors.primary,
-                                          isDark: isDark,
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        width: 3,
+                                        height: 3,
+                                        decoration: BoxDecoration(
+                                          color: textTertiary,
+                                          shape: BoxShape.circle,
                                         ),
-                                        const SizedBox(width: 6),
-                                        _principalInterestChip(
-                                          label: 'I',
-                                          value: emi.interest,
-                                          color: AppColors.accent,
-                                          isDark: isDark,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          dueLabel,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: textSecondary,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
+                                  if (emi.isPaid && emi.paidOn != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        'Paid ${formatPaidRelative(emi.paidOn!)}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.success.withValues(
+                                            alpha: isDark ? 0.85 : 0.75,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Row(
+                                        children: [
+                                          _principalInterestChip(
+                                            label: 'P',
+                                            value: emi.principal,
+                                            color: AppColors.primary,
+                                            isDark: isDark,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          _principalInterestChip(
+                                            label: 'I',
+                                            value: emi.interest,
+                                            color: AppColors.accent,
+                                            isDark: isDark,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '₹${formatPlain(emi.emiAmount)}',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: textPrimary,
+                                    letterSpacing: -0.4,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _statusColor.withValues(
+                                      alpha: isDark ? 0.18 : 0.10,
+                                    ),
+                                    borderRadius: BorderRadius.circular(99),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _statusIcon,
+                                        size: 10,
+                                        color: _statusColor,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        _statusLabel,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: _statusColor,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                          ],
+                        ),
+                        if (emi.isPaid &&
+                            (emi.principal > 0 || emi.interest > 0)) ...[
+                          const SizedBox(height: 8),
+                          Row(
                             children: [
+                              _principalInterestChip(
+                                label: 'Principal',
+                                value: emi.principal,
+                                color: AppColors.primary,
+                                isDark: isDark,
+                                expanded: true,
+                              ),
+                              const SizedBox(width: 6),
+                              _principalInterestChip(
+                                label: 'Interest',
+                                value: emi.interest,
+                                color: AppColors.accent,
+                                isDark: isDark,
+                                expanded: true,
+                              ),
+                            ],
+                          ),
+                        ],
+                        if ((emi.penaltyAmount ?? 0) > 0) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 12,
+                                color: AppColors.error,
+                              ),
+                              const SizedBox(width: 4),
                               Text(
-                                '₹${formatPlain(emi.emiAmount)}',
+                                'Penalty ₹${formatPlain(emi.penaltyAmount!)}',
                                 style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: textPrimary,
-                                  letterSpacing: -0.4,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.error,
                                   fontFeatures: const [
                                     FontFeature.tabularFigures(),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _statusColor.withValues(
-                                    alpha: isDark ? 0.18 : 0.10,
-                                  ),
-                                  borderRadius: BorderRadius.circular(99),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _statusIcon,
-                                      size: 10,
-                                      color: _statusColor,
-                                    ),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      _statusLabel,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: _statusColor,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
                         ],
-                      ),
-                      if (emi.isPaid &&
-                          (emi.principal > 0 || emi.interest > 0)) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _principalInterestChip(
-                              label: 'Principal',
-                              value: emi.principal,
-                              color: AppColors.primary,
-                              isDark: isDark,
-                              expanded: true,
-                            ),
-                            const SizedBox(width: 6),
-                            _principalInterestChip(
-                              label: 'Interest',
-                              value: emi.interest,
-                              color: AppColors.accent,
-                              isDark: isDark,
-                              expanded: true,
-                            ),
-                          ],
-                        ),
                       ],
-                      if ((emi.penaltyAmount ?? 0) > 0) ...[
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              size: 12,
-                              color: AppColors.error,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Penalty ₹${formatPlain(emi.penaltyAmount!)}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.error,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1423,4 +1436,70 @@ class _PremiumEmiRow extends StatelessWidget {
     );
     return expanded ? Expanded(child: content) : content;
   }
+}
+
+class _TimelinePainter extends CustomPainter {
+  final Color color;
+  final bool isFirst;
+  final bool isLast;
+  final bool isPaid;
+  final bool isDark;
+
+  _TimelinePainter({
+    required this.color,
+    required this.isFirst,
+    required this.isLast,
+    required this.isPaid,
+    required this.isDark,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final paintLine = Paint()
+      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    final paintProgressLine = Paint()
+      ..color = color.withValues(alpha: 0.4)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    // Draw background vertical line segment
+    final startY = isFirst ? center.dy : 0.0;
+    final endY = isLast ? center.dy : size.height;
+    canvas.drawLine(Offset(center.dx, startY), Offset(center.dx, endY), paintLine);
+
+    // If paid, draw progress colored line
+    if (isPaid) {
+      canvas.drawLine(Offset(center.dx, startY), Offset(center.dx, endY), paintProgressLine);
+    }
+
+    // Outer glow
+    final glowPaint = Paint()
+      ..color = color.withValues(alpha: 0.15)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, 11, glowPaint);
+
+    // Dynamic dot
+    final dotPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, 6, dotPaint);
+
+    // Inner pin
+    final innerPin = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, 2.0, innerPin);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TimelinePainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.isFirst != isFirst ||
+      oldDelegate.isLast != isLast ||
+      oldDelegate.isPaid != isPaid ||
+      oldDelegate.isDark != isDark;
 }

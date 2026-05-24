@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/customer_support_providers.dart';
 import '../../data/models/customer_ticket_model.dart';
@@ -643,6 +644,7 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final bottomViewPadding = MediaQuery.of(context).viewPadding.bottom;
 
     return Container(
       constraints: BoxConstraints(
@@ -666,7 +668,7 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
         ],
       ),
       child: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: bottomPadding),
+        padding: EdgeInsets.only(bottom: bottomPadding + bottomViewPadding + kBottomNavBarHeight),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -932,6 +934,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
     final messagesAsync =
         ref.watch(customerTicketMessagesProvider(widget.ticket.id));
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final bottomViewPadding = MediaQuery.of(context).viewPadding.bottom;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.82,
@@ -964,11 +967,25 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
               _buildDetailHeader(isDark, theme),
               Expanded(
                 child: messagesAsync.when(
-                  loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                      strokeWidth: 2.5,
-                    ),
+                  loading: () => ListView(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: const [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ShimmerCard(height: 50, width: 220, borderRadius: 16),
+                      ),
+                      SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ShimmerCard(height: 70, width: 240, borderRadius: 16),
+                      ),
+                      SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ShimmerCard(height: 50, width: 180, borderRadius: 16),
+                      ),
+                    ],
                   ),
                   error: (e, _) => Center(
                     child: Text(
@@ -1042,7 +1059,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                 ),
               ),
               if (!widget.ticket.isResolved)
-                _buildMessageInput(isDark, theme, bottomPadding),
+                _buildMessageInput(isDark, theme, bottomPadding, bottomViewPadding),
             ],
           ),
         );
@@ -1220,10 +1237,9 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
   }
 
   Widget _buildMessageInput(
-      bool isDark, ThemeData theme, double bottomPadding) {
+      bool isDark, ThemeData theme, double bottomPadding, double bottomViewPadding) {
     return Container(
-      padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm,
-          AppSpacing.md, bottomPadding + AppSpacing.sm),
+      padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm,            AppSpacing.md, bottomPadding + bottomViewPadding + kBottomNavBarHeight + AppSpacing.sm),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
         border: Border(

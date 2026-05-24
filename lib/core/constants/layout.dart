@@ -25,6 +25,19 @@ const double kBottomNavSafeArea = 15;
 /// Convenience: an [EdgeInsets] with only the bottom inflated for the navbar.
 const EdgeInsets kBottomNavInsets = EdgeInsets.only(bottom: kBottomNavSafeArea);
 
+/// The visual height of the floating glass bottom navigation bar used
+/// in [CustomerShell] (and similar shells). This excludes the system
+/// bottom inset (handled via [MediaQuery.viewPadding]).
+///
+/// Use this in bottom sheets and modals to push content above the bar.
+/// Example:
+/// ```dart
+/// MediaQuery.of(ctx).viewInsets.bottom +
+///   MediaQuery.of(ctx).viewPadding.bottom +
+///   kBottomNavBarHeight
+/// ```
+const double kBottomNavBarHeight = 72;
+
 /// Convenience: padding for a [FloatingActionButton] inside the
 /// [AdminShell] / [StaffShell] so it floats above the glass navbar
 /// instead of being eclipsed by it.

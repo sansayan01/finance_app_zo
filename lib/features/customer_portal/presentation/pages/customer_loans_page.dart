@@ -456,20 +456,39 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
                 vertical: 8,
               ),
               decoration: BoxDecoration(
+                gradient: selected
+                    ? LinearGradient(
+                        colors: [
+                          color,
+                          color.withValues(alpha: 0.85),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
                 color: selected
-                    ? color.withValues(alpha: isDark ? 0.18 : 0.12)
+                    ? null
                     : (isDark
                         ? Colors.white.withValues(alpha: 0.05)
                         : Colors.black.withValues(alpha: 0.035)),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
                   color: selected
-                      ? color.withValues(alpha: 0.45)
+                      ? Colors.transparent
                       : (isDark
                           ? Colors.white.withValues(alpha: 0.06)
                           : Colors.black.withValues(alpha: 0.05)),
-                  width: selected ? 1.2 : 0.6,
+                  width: 0.6,
                 ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -478,7 +497,7 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
                     icon,
                     size: 15,
                     color: selected
-                        ? color
+                        ? Colors.white
                         : (isDark
                             ? AppColors.textSecondaryDark
                             : AppColors.textSecondaryLight),
@@ -488,7 +507,7 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
                     label,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: selected
-                          ? color
+                          ? Colors.white
                           : (isDark
                               ? AppColors.textSecondaryDark
                               : AppColors.textSecondaryLight),

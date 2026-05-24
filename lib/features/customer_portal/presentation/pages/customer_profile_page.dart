@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/models/customer_profile_model.dart';
 import '../../data/providers/customer_profile_providers.dart';
 import '../../data/providers/customer_member_provider.dart';
+import '../widgets/customer_empty_state.dart';
 
 class CustomerProfilePage extends ConsumerStatefulWidget {
   const CustomerProfilePage({super.key});
@@ -60,27 +63,102 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(customerProfileProvider);
     final memberIdAsync = ref.watch(currentCustomerIdProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: memberIdAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => _buildLoadingState(context, isDark),
+        error: (e, _) => _buildErrorState(context, isDark, e),
         data: (memberId) {
           if (memberId == null) {
-            return const Center(child: Text('Account not linked'));
+            return _buildUnlinkedState(context, isDark);
           }
           return profileAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            loading: () => _buildLoadingState(context, isDark),
+            error: (e, _) => _buildErrorState(context, isDark, e),
             data: (profile) {
               if (profile == null) {
-                return const Center(child: Text('Profile not found'));
+                return _buildNotFoundState(context, isDark);
               }
               return _buildBody(context, profile);
             },
           );
         },
       ),
+    );
+  }
+
+  Widget _buildLoadingState(BuildContext context, bool isDark) {
+    return Column(
+      children: [
+        _buildHeader(context, isDark),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            physics: const NeverScrollableScrollPhysics(),
+            children: const [
+              ShimmerCard(height: 190, borderRadius: 22),
+              SizedBox(height: 16),
+              ShimmerCard(height: 160, borderRadius: 20),
+              SizedBox(height: 16),
+              ShimmerCard(height: 140, borderRadius: 20),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, bool isDark, Object error) {
+    return Column(
+      children: [
+        _buildHeader(context, isDark),
+        Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.error_outline_rounded,
+            title: 'Failed to load profile',
+            subtitle: error.toString(),
+            ctaLabel: 'Retry',
+            onCtaTap: () => ref.invalidate(customerProfileProvider),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnlinkedState(BuildContext context, bool isDark) {
+    return Column(
+      children: [
+        _buildHeader(context, isDark),
+        const Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.person_off_rounded,
+            title: 'Account Not Linked',
+            subtitle:
+                'Your user account is not linked to a member record. Please contact support.',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotFoundState(BuildContext context, bool isDark) {
+    return Column(
+      children: [
+        _buildHeader(context, isDark),
+        Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.search_off_rounded,
+            title: 'Profile Not Found',
+            subtitle: 'We could not find your member profile in the system.',
+            ctaLabel: 'Retry',
+            onCtaTap: () => ref.invalidate(customerProfileProvider),
+          ),
+        ),
+      ],
     );
   }
 
@@ -93,7 +171,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(child: _buildHeader(context, profile, isDark)),
+          SliverToBoxAdapter(child: _buildHeader(context, isDark)),
           SliverToBoxAdapter(child: _fadeSlide(0, _buildAvatarSection(context, profile, isDark))),
           SliverToBoxAdapter(child: _fadeSlide(1, _buildSection(context, 'Personal Info', Icons.person_rounded, isDark, [
             _infoRow(context, 'Full Name', profile.fullName, isDark, editable: true, onEdit: () => _editField(context, 'full_name', 'Full Name', profile.fullName, profile)),
@@ -126,36 +204,61 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
     );
   }
 
-  Widget _buildHeader(BuildContext context, CustomerProfileModel profile, bool isDark) {
+  Widget _buildHeader(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final mq = MediaQuery.of(context);
+    final headerGradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF1A1F3A), Color(0xFF151A30)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : AppColors.primaryGradient;
+
     return Container(
       width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        20,
+        mq.padding.top + 16,
+        20,
+        24,
+      ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1A1F3A), const Color(0xFF151A30)]
-              : [AppColors.primary, AppColors.accent],
+        gradient: headerGradient,
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(32),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.black : AppColors.primary)
+                .withValues(alpha: isDark ? 0.4 : 0.25),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: SafeArea(
+        top: false,
         bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 20, 24),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  context.pop();
-                },
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+        child: Row(
+          children: [
+            _CircleIconButton(
+              icon: Icons.arrow_back_rounded,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.pop();
+              },
+            ),
+            const SizedBox(width: 16),
+            Text(
+              'My Profile',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
               ),
-              const Expanded(
-                child: Text('My Profile', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -176,17 +279,59 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
         child: Column(
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                gradient: const SweepGradient(
+                  colors: [
+                    AppColors.primary,
+                    AppColors.accent,
+                    AppColors.accentLight,
+                    AppColors.primary,
+                  ],
+                  stops: [0.0, 0.35, 0.7, 1.0],
+                ),
                 boxShadow: [
-                  BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8)),
+                  BoxShadow(
+                    color: AppColors.accent.withValues(alpha: isDark ? 0.45 : 0.25),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
                 ],
               ),
-              child: Center(
-                child: Text(profile.initials, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700)),
+              alignment: Alignment.center,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark ? AppColors.surfaceDark : Colors.white,
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 82,
+                  height: 82,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.accent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      profile.initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -275,7 +420,13 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
       builder: (ctx) {
         return Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          padding: EdgeInsets.fromLTRB(
+            24, 16, 24,
+            MediaQuery.of(ctx).viewInsets.bottom +
+                MediaQuery.of(ctx).viewPadding.bottom +
+                kBottomNavBarHeight +
+                16,
+          ),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1C2030) : Colors.white,
             borderRadius: BorderRadius.circular(24),
@@ -409,5 +560,44 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
     if (amount >= 100000) return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
     if (amount >= 1000) return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
     return '\u20b9${amount.toStringAsFixed(0)}';
+  }
+}
+
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleIconButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.2),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
   }
 }

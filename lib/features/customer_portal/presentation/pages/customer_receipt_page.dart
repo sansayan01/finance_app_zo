@@ -662,9 +662,8 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
         ),
     ];
 
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      elevated: true,
+    return TicketCard(
+      isDark: isDark,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1281,4 +1280,157 @@ class _TonalActionButtonState extends State<_TonalActionButton> {
       ),
     );
   }
+}
+
+class TicketCard extends StatelessWidget {
+  final Widget child;
+  final bool isDark;
+
+  const TicketCard({super.key, required this.child, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = isDark ? AppColors.cardDark : AppColors.surfaceLight;
+    final borderColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04);
+    
+    return CustomPaint(
+      painter: TicketBorderPainter(
+        color: bgColor,
+        borderColor: borderColor,
+        punchRadius: 8,
+        punchPosition: 64.0,
+      ),
+      child: ClipPath(
+        clipper: TicketClipper(
+          punchRadius: 8,
+          punchPosition: 64.0,
+        ),
+        child: Container(
+          color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class TicketClipper extends CustomClipper<Path> {
+  final double punchRadius;
+  final double punchPosition;
+
+  TicketClipper({required this.punchRadius, required this.punchPosition});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(0.0, 0.0);
+    path.lineTo(0.0, punchPosition - punchRadius);
+    
+    // Left notch
+    path.arcToPoint(
+      Offset(0.0, punchPosition + punchRadius),
+      radius: Radius.circular(punchRadius),
+      clockwise: true,
+    );
+    
+    path.lineTo(0.0, size.height - 24);
+    path.quadraticBezierTo(0.0, size.height, 24, size.height);
+    path.lineTo(size.width - 24, size.height);
+    path.quadraticBezierTo(size.width, size.height, size.width, size.height - 24);
+    
+    path.lineTo(size.width, punchPosition + punchRadius);
+    
+    // Right notch
+    path.arcToPoint(
+      Offset(size.width, punchPosition - punchRadius),
+      radius: Radius.circular(punchRadius),
+      clockwise: true,
+    );
+    
+    path.lineTo(size.width, 24);
+    path.quadraticBezierTo(size.width, 0.0, size.width - 24, 0.0);
+    path.lineTo(24, 0.0);
+    path.quadraticBezierTo(0.0, 0.0, 0.0, 24);
+    
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class TicketBorderPainter extends CustomPainter {
+  final Color color;
+  final Color borderColor;
+  final double punchRadius;
+  final double punchPosition;
+
+  TicketBorderPainter({
+    required this.color,
+    required this.borderColor,
+    required this.punchRadius,
+    required this.punchPosition,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    final path = Path();
+    path.moveTo(24, 0.0);
+    path.lineTo(size.width - 24, 0.0);
+    path.quadraticBezierTo(size.width, 0.0, size.width, 24);
+    path.lineTo(size.width, punchPosition - punchRadius);
+    
+    // Right notch
+    path.arcToPoint(
+      Offset(size.width, punchPosition + punchRadius),
+      radius: Radius.circular(punchRadius),
+      clockwise: false,
+    );
+    
+    path.lineTo(size.width, size.height - 24);
+    path.quadraticBezierTo(size.width, size.height, size.width - 24, size.height);
+    path.lineTo(24, size.height);
+    path.quadraticBezierTo(0.0, size.height, 0.0, size.height - 24);
+    path.lineTo(0.0, punchPosition + punchRadius);
+    
+    // Left notch
+    path.arcToPoint(
+      Offset(0.0, punchPosition - punchRadius),
+      radius: Radius.circular(punchRadius),
+      clockwise: false,
+    );
+    
+    path.lineTo(0.0, 24);
+    path.quadraticBezierTo(0.0, 0.0, 24, 0.0);
+    path.close();
+
+    // Draw shadow
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.08)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+    );
+
+    // Draw card background
+    canvas.drawPath(path, paint);
+
+    // Draw border
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant TicketBorderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.borderColor != borderColor;
 }

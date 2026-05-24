@@ -6,11 +6,13 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/widgets/progress_gauge.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
 import '../widgets/customer_loan_breakdown_chart.dart';
 import '../widgets/customer_emi_tile.dart';
+import '../widgets/customer_empty_state.dart';
 
 class CustomerLoanDetailPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -54,10 +56,10 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       extendBody: true,
       body: loanAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _buildErrorState(context, e),
+        loading: () => _buildLoadingState(context, isDark),
+        error: (e, _) => _buildErrorState(context, isDark, e),
         data: (loan) {
-          if (loan == null) return _buildNotFound(context);
+          if (loan == null) return _buildNotFound(context, isDark);
           return _buildBody(context, loan);
         },
       ),
@@ -496,13 +498,13 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           const SizedBox(height: AppSpacing.sm),
           emisAsync.when(
             loading: () => const Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: Column(
+                children: [
+                  ShimmerCard(height: 62, borderRadius: 12),
+                  SizedBox(height: 8),
+                  ShimmerCard(height: 62, borderRadius: 12),
+                ],
               ),
             ),
             error: (e, _) => Padding(
@@ -584,14 +586,14 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           ),
           const SizedBox(height: AppSpacing.sm),
           emisAsync.when(
-            loading: () => const SizedBox(
-              height: 40,
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: Column(
+                children: [
+                  ShimmerCard(height: 62, borderRadius: 12),
+                  SizedBox(height: 8),
+                  ShimmerCard(height: 62, borderRadius: 12),
+                ],
               ),
             ),
             error: (_, __) => Padding(
@@ -888,55 +890,131 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     );
   }
 
-  Widget _buildErrorState(BuildContext context, Object error) {
+  Widget _buildHeaderLoading(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded,
-                size: 48, color: AppColors.error.withValues(alpha: 0.6)),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Something went wrong',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '$error',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.textTheme.bodySmall?.color
-                    ?.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+    final mq = MediaQuery.of(context);
+    final statusBarHeight = mq.padding.top;
+    final gradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF1A1F3A), Color(0xFF151A30)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : AppColors.primaryGradient;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        statusBarHeight + AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.xl,
+      ),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(32),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.28),
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _CircleIconButton(
+                icon: Icons.arrow_back_rounded,
+                onTap: () => Navigator.of(context).pop(),
+                isDark: isDark,
+              ),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Loan Details',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.75),
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const ShimmerCard(height: 38, width: 180, borderRadius: 8),
+        ],
       ),
     );
   }
 
-  Widget _buildNotFound(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.search_off_rounded,
-              size: 48,
-              color: theme.textTheme.bodyMedium?.color
-                  ?.withValues(alpha: 0.3)),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Loan not found',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+  Widget _buildLoadingState(BuildContext context, bool isDark) {
+    return Column(
+      children: [
+        _buildHeaderLoading(context, isDark),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.lg,
+            ),
+            physics: const NeverScrollableScrollPhysics(),
+            children: const [
+              ShimmerCard(height: 140, borderRadius: 20), // Progress section
+              SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(child: ShimmerCard(height: 90, borderRadius: 18)),
+                  SizedBox(width: AppSpacing.sm),
+                  Expanded(child: ShimmerCard(height: 90, borderRadius: 18)),
+                  SizedBox(width: AppSpacing.sm),
+                  Expanded(child: ShimmerCard(height: 90, borderRadius: 18)),
+                ],
+              ), // Key metrics
+              SizedBox(height: AppSpacing.md),
+              ShimmerCard(height: 180, borderRadius: 20), // Chart
+              SizedBox(height: AppSpacing.md),
+              ShimmerCard(height: 160, borderRadius: 20), // EMIs
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, bool isDark, Object error) {
+    return Column(
+      children: [
+        _buildHeaderLoading(context, isDark),
+        Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.error_outline_rounded,
+            title: 'Failed to load loan details',
+            subtitle: error.toString(),
+            ctaLabel: 'Retry',
+            onCtaTap: () => ref.invalidate(customerLoanDetailProvider(widget.loanId)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotFound(BuildContext context, bool isDark) {
+    return Column(
+      children: [
+        _buildHeaderLoading(context, isDark),
+        Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.search_off_rounded,
+            title: 'Loan Not Found',
+            subtitle: 'We could not find this loan in your account details.',
+          ),
+        ),
+      ],
     );
   }
 

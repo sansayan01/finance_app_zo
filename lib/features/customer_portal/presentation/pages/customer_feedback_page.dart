@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/customer_member_provider.dart';
 import '../../data/providers/customer_feedback_providers.dart';
 import '../../data/models/customer_feedback_model.dart';
@@ -132,39 +133,23 @@ class _CustomerFeedbackPageState extends ConsumerState<CustomerFeedbackPage>
           _buildGradientHeader(context, isDark, theme),
           Expanded(
             child: feedbacksAsync.when(
-              loading: () => Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.primary,
-                  strokeWidth: 2.5,
-                ),
+              loading: () => ListView(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                physics: const NeverScrollableScrollPhysics(),
+                children: const [
+                  ShimmerCard(height: 380, borderRadius: 20),
+                  SizedBox(height: AppSpacing.lg),
+                  ShimmerCard(height: 120, borderRadius: 18),
+                  SizedBox(height: AppSpacing.sm),
+                  ShimmerCard(height: 120, borderRadius: 18),
+                ],
               ),
-              error: (e, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.error_outline_rounded,
-                        size: 48, color: AppColors.errorDark),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Something went wrong',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: isDark
-                            ? AppColors.textPrimaryDark
-                            : AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      e.toString(),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.textTertiaryDark
-                            : AppColors.textTertiaryLight,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+              error: (e, _) => CustomerEmptyState(
+                icon: Icons.error_outline_rounded,
+                title: 'Failed to load feedback history',
+                subtitle: e.toString(),
+                ctaLabel: 'Retry',
+                onCtaTap: () => ref.invalidate(customerFeedbackProvider),
               ),
               data: (feedbacks) {
                 return RefreshIndicator(

@@ -317,6 +317,8 @@ class _CustomerSavingsPageState extends ConsumerState<CustomerSavingsPage>
         itemBuilder: (context, i) {
           final (key, label) = chips[i];
           final selected = _filter == key;
+          final activeColor = theme.colorScheme.primary;
+
           return GestureDetector(
             onTap: () => setState(() => _filter = key),
             child: AnimatedContainer(
@@ -326,19 +328,38 @@ class _CustomerSavingsPageState extends ConsumerState<CustomerSavingsPage>
                 vertical: 8,
               ),
               decoration: BoxDecoration(
+                gradient: selected
+                    ? LinearGradient(
+                        colors: [
+                          activeColor,
+                          activeColor.withValues(alpha: 0.85),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
                 color: selected
-                    ? theme.colorScheme.primary
+                    ? null
                     : (isDark
                         ? Colors.white.withValues(alpha: 0.06)
                         : Colors.black.withValues(alpha: 0.04)),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: selected
-                      ? theme.colorScheme.primary
+                      ? Colors.transparent
                       : (isDark
                           ? Colors.white.withValues(alpha: 0.08)
                           : Colors.black.withValues(alpha: 0.06)),
                 ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
               child: Text(
                 label,

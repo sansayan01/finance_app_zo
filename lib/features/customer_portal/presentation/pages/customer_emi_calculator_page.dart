@@ -428,7 +428,7 @@ class _CustomerEmiCalculatorPageState
         SliderTheme(
           data: SliderThemeData(
             trackHeight: 6,
-            activeTrackColor: Colors.transparent,
+            activeTrackColor: AppColors.indigo,
             inactiveTrackColor:
                 isDark ? AppColors.fillDark : AppColors.fillLight,
             thumbColor: AppColors.indigo,

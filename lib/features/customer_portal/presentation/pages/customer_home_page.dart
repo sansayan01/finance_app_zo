@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
@@ -191,11 +192,16 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
               parent: AlwaysScrollableScrollPhysics()),
           slivers: [
             SliverToBoxAdapter(
-              child: _section(
-                0,
-                _buildPremiumHeader(
-                  context, ref, memberName, area, isDark,
-                  kycStatus, totalSavings, totalOutstanding,
+              child: AnnotatedRegion<SystemUiOverlayStyle>(
+                value: SystemUiOverlayStyle.light.copyWith(
+                  statusBarColor: Colors.transparent,
+                ),
+                child: _section(
+                  0,
+                  _buildPremiumHeader(
+                    context, ref, memberName, area, isDark,
+                    kycStatus, totalSavings, totalOutstanding,
+                  ),
                 ),
               ),
             ),
@@ -421,7 +427,9 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     final pulseValue = _pulseController;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      child: Container(
+        margin: const EdgeInsets.only(top: 32),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(32),
         child: AnimatedBuilder(
@@ -446,7 +454,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                   SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -715,6 +723,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
             );
           },
         ),
+      ),
       ),
     );
   }

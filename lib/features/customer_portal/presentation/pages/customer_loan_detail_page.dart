@@ -3,22 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/layout.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/widgets/progress_gauge.dart';
 import '../../../../core/widgets/shimmer_card.dart';
+import '../../../loans/data/models/emi_schedule_model.dart';
+import '../../../loans/data/models/loan_model.dart';
+import '../../../loans/data/services/loan_statement_pdf_service.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
 import '../widgets/customer_loan_breakdown_chart.dart';
 import '../widgets/customer_emi_tile.dart';
 import '../widgets/customer_empty_state.dart';
-import '../../data/services/customer_statement_service.dart';
 
 class CustomerLoanDetailPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -33,7 +37,7 @@ class CustomerLoanDetailPage extends ConsumerStatefulWidget {
 class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     with TickerProviderStateMixin {
   late final AnimationController _staggerController;
-  pw.Document? _generatedDoc;
+  Uint8List? _generatedPdfBytes;
   String? _statementFilename;
 
   @override
@@ -1135,100 +1139,130 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                   HapticFeedback.lightImpact();
                                   setSheetState(() => step = 'loading');
                                   try {
+                                    final supabase =
+                                        Supabase.instance.client;
+                                    final orgId = ref.read(
+                                        currentOrgIdOrThrowProvider);
+
+                                    // Fetch org info
+                                    final orgData = await supabase
+                                        .from('organizations')
+                                        .select(
+                                            'name, address, city, state, pincode, phone, email, gst_number')
+                                        .eq('id', orgId)
+                                        .maybeSingle();
+
+                                    final org = LoanStatementOrgInfo(
+                                      name: orgData?['name'] ??
+                                          'MicroFlow Pro',
+                                      address: orgData?['address'],
+                                      city: orgData?['city'],
+                                      state: orgData?['state'],
+                                      pincode: orgData?['pincode'],
+                                      phone: orgData?['phone'],
+                                      email: orgData?['email'],
+                                      gstNumber: orgData?['gst_number'],
+                                    );
+
+                                    // Map CustomerLoanModel → LoanModel
+                                    final adminLoan = LoanModel(
+                                      id: loan.id,
+                                      customerId: '',
+                                      loanNumber: loan.loanNumber ??
+                                          loan.id
+                                              .substring(0, 8)
+                                              .toUpperCase(),
+                                      amount: loan.amount,
+                                      interestRate: loan.interestRate,
+                                      tenureMonths: loan.tenureMonths,
+                                      emiAmount: loan.emiAmount,
+                                      totalInterest:
+                                          (loan.emiAmount *
+                                                  loan.tenureMonths) -
+                                              loan.amount,
+                                      totalRepayable: loan.emiAmount *
+                                          loan.tenureMonths,
+                                      outstandingBalance:
+                                          loan.outstandingBalance,
+                                      interestType: InterestType.flat,
+                                      disbursementDate:
+                                          loan.disbursementDate,
+                                      firstEmiDate: loan.firstEmiDate,
+                                      status: _mapLoanStatus(loan.status),
+                                      purpose: loan.purpose,
+                                      createdAt: DateTime.now(),
+                                      updatedAt: DateTime.now(),
+                                      customerName: loan.memberName,
+                                    );
+
+                                    // Map EMI schedule
                                     final emiAsync = ref.read(
                                         customerEmiScheduleProvider(
                                             widget.loanId));
                                     final emiList =
                                         emiAsync.valueOrNull ?? [];
 
-                                    // Map EMI schedule
-                                    final emiMaps = emiList
-                                        .map((e) => {
-                                              'period': e.emiNumber,
-                                              'emi_number': e.emiNumber,
-                                              'due_date': e.dueDate,
-                                              'emi_amount': e.emiAmount,
-                                              'principal': e.principal,
-                                              'interest': e.interest,
-                                              'balance': e.balanceAfter,
-                                              'status': e.status,
-                                            })
+                                    final adminSchedule = emiList
+                                        .map((e) => EMIScheduleModel(
+                                              id: e.id,
+                                              loanId: widget.loanId,
+                                              emiNumber: e.emiNumber,
+                                              dueDate: e.dueDate ??
+                                                  DateTime.now(),
+                                              emiAmount: e.emiAmount,
+                                              principal: e.principal,
+                                              interest: e.interest,
+                                              balanceAfter:
+                                                  e.balanceAfter,
+                                              status: _mapEmiStatus(
+                                                  e.status, e.isPaid),
+                                              paidOn: e.paidOn,
+                                              penaltyAmount:
+                                                  e.penaltyAmount ?? 0,
+                                              penaltyPaid: false,
+                                              createdAt: DateTime.now(),
+                                            ))
                                         .toList();
 
-                                    // Map paid EMIs as transactions
+                                    // Map paid EMIs → payments
                                     final paidEmis = emiList
                                         .where((e) => e.isPaid)
                                         .toList();
-                                    final txMaps = paidEmis
-                                        .map((e) => {
-                                              'date': e.paidOn ?? e.dueDate,
-                                              'type': 'EMI Payment',
-                                              'amount': e.amountPaid > 0
+                                    final payments = paidEmis
+                                        .map((e) =>
+                                            LoanStatementPayment(
+                                              date: e.paidOn ??
+                                                  e.dueDate ??
+                                                  DateTime.now(),
+                                              amount: e.amountPaid > 0
                                                   ? e.amountPaid
                                                   : e.emiAmount,
-                                              'mode': '',
-                                              'description':
-                                                  'EMI #${e.emiNumber}',
-                                            })
+                                              mode: '',
+                                            ))
                                         .toList();
 
-                                    // Filter by date range
-                                    final now = DateTime.now();
-                                    DateTime? cutoff;
-                                    if (selectedRange == '30') {
-                                      cutoff = now.subtract(
-                                          const Duration(days: 30));
-                                    } else if (selectedRange == '90') {
-                                      cutoff = now.subtract(
-                                          const Duration(days: 90));
-                                    }
-                                    final filteredEmi = cutoff != null
-                                        ? emiMaps.where((e) {
-                                            final d =
-                                                e['due_date'] as DateTime?;
-                                            return d != null &&
-                                                d.isAfter(cutoff!);
-                                          }).toList()
-                                        : emiMaps;
-                                    final filteredTx = cutoff != null
-                                        ? txMaps
-                                            .where((t) =>
-                                                (t['date'] as DateTime?)
-                                                    ?.isAfter(cutoff!) ??
-                                                false)
-                                            .toList()
-                                        : txMaps;
-
-                                    // Generate PDF
-                                    final doc = await CustomerStatementService
-                                        .generateLoanStatement(
-                                      memberName:
-                                          loan.memberName ?? 'Customer',
-                                      loanNumber:
-                                          loan.loanNumber ?? loan.id,
-                                      loanAmount: loan.amount,
-                                      interestRate: loan.interestRate,
-                                      tenure: loan.tenureMonths,
-                                      disbursementDate:
-                                          loan.disbursementDate,
-                                      emiSchedule: filteredEmi,
-                                      transactions: filteredTx,
+                                    // Generate PDF with admin template
+                                    final pdfBytes =
+                                        await LoanStatementPdfService
+                                            .buildCustomerStatement(
+                                      loan: adminLoan,
+                                      schedule: adminSchedule,
+                                      payments: payments,
+                                      org: org,
                                     );
 
-                                    final filename =
-                                        'loan_statement_${loan.id}.pdf';
-                                    await CustomerStatementService
-                                        .downloadStatement(doc, filename);
-
-                                    _generatedDoc = doc;
-                                    _statementFilename = filename;
+                                    _generatedPdfBytes = pdfBytes;
+                                    _statementFilename =
+                                        'loan_statement_${loan.loanNumber ?? loan.id}.pdf';
 
                                     if (ctx.mounted) {
-                                      setSheetState(() => step = 'success');
+                                      setSheetState(
+                                          () => step = 'success');
                                     }
                                   } catch (e) {
                                     if (ctx.mounted) {
-                                      setSheetState(() => step = 'input');
+                                      setSheetState(
+                                          () => step = 'input');
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
@@ -1334,10 +1368,10 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                   child: InkWell(
                                     onTap: () async {
                                       HapticFeedback.lightImpact();
-                                      if (_generatedDoc != null) {
+                                      if (_generatedPdfBytes != null) {
                                         await Printing.layoutPdf(
                                             onLayout: (format) async =>
-                                                _generatedDoc!.save());
+                                                _generatedPdfBytes!);
                                       }
                                     },
                                     borderRadius: BorderRadius.circular(14),
@@ -1389,12 +1423,11 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                   child: InkWell(
                                     onTap: () async {
                                       HapticFeedback.lightImpact();
-                                      if (_generatedDoc != null &&
+                                      if (_generatedPdfBytes != null &&
                                           _statementFilename != null) {
-                                        await CustomerStatementService
-                                            .shareStatement(
-                                                _generatedDoc!,
-                                                _statementFilename!);
+                                        await Printing.sharePdf(
+                                            bytes: _generatedPdfBytes!,
+                                            filename: _statementFilename!);
                                       }
                                     },
                                     borderRadius: BorderRadius.circular(14),
@@ -1702,6 +1735,43 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
         ),
       ],
     );
+  }
+
+  LoanStatus _mapLoanStatus(String status) {
+    switch (status) {
+      case 'active':
+        return LoanStatus.active;
+      case 'completed':
+        return LoanStatus.closed;
+      case 'closed':
+        return LoanStatus.closed;
+      case 'defaulted':
+        return LoanStatus.defaultStatus;
+      case 'pending':
+        return LoanStatus.pending;
+      case 'approved':
+        return LoanStatus.approved;
+      case 'rejected':
+        return LoanStatus.rejected;
+      default:
+        return LoanStatus.active;
+    }
+  }
+
+  EMIStatus _mapEmiStatus(String status, bool isPaid) {
+    if (isPaid) return EMIStatus.paid;
+    switch (status) {
+      case 'paid':
+        return EMIStatus.paid;
+      case 'overdue':
+        return EMIStatus.overdue;
+      case 'upcoming':
+        return EMIStatus.upcoming;
+      case 'pending':
+        return EMIStatus.pendingPayment;
+      default:
+        return EMIStatus.upcoming;
+    }
   }
 
   StatusType _statusType(String status) {

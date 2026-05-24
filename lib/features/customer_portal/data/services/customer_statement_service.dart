@@ -246,11 +246,13 @@ class CustomerStatementService {
   }
 
   /// Download / save a generated PDF document to the app's documents directory.
-  static Future<void> downloadStatement(
+  /// Returns the saved file path.
+  static Future<String> downloadStatement(
       pw.Document doc, String filename) async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(await doc.save());
+    return file.path;
   }
 
   // =========================================================================

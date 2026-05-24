@@ -381,27 +381,18 @@ class _CustomerSavingsDetailPageState
                                     final transactionsAsync = ref.read(customerSavingsTransactionsProvider(widget.savingsId));
                                     final transactions = transactionsAsync.valueOrNull ?? [];
 
-                                    // Map transactions to the format expected by the service
+                                    // Map transactions to the format expected by the service.
+                                    // Map model types to service-recognised types:
+                                    //   'savingsWithdrawal' → 'withdrawal', everything else → 'deposit'
                                     final txMaps = transactions.map((t) => {
                                       'date': t.transactionDate,
-                                      'type': t.type,
+                                      'type': t.type == 'savingsWithdrawal' ? 'withdrawal' : 'deposit',
                                       'amount': t.amount,
                                       'description': t.description ?? '',
                                     }).toList();
 
-                                    // Filter by date range
-                                    final now = DateTime.now();
-                                    DateTime? cutoff;
-                                    if (selectedRange == '30') {
-                                      cutoff = now.subtract(const Duration(days: 30));
-                                    } else if (selectedRange == '90') {
-                                      cutoff = now.subtract(const Duration(days: 90));
-                                    }
-                                    final filteredTx = cutoff != null
-                                        ? txMaps.where((t) => (t['date'] as DateTime?)?.isAfter(cutoff!) ?? false).toList()
-                                        : txMaps;
-
-                                    // Generate PDF
+                                    // Generate PDF — always pass all transactions so the
+                                    // running balance and summary totals are computed correctly.
                                     final doc = await CustomerStatementService.generateSavingsStatement(
                                       memberName: savings.displayName,
                                       planName: savings.planName ?? 'Savings Account',
@@ -410,14 +401,11 @@ class _CustomerSavingsDetailPageState
                                       monthlyDeposit: savings.monthlyDeposit,
                                       interestRate: savings.interestRate,
                                       maturityDate: savings.maturityDate,
-                                      transactions: filteredTx,
+                                      transactions: txMaps,
                                     );
 
-                                    // Download
-                                    final filename = 'savings_statement_${savings.id}.pdf';
-                                    await CustomerStatementService.downloadStatement(doc, filename);
                                     generatedDoc = doc;
-                                    statementFilename = filename;
+                                    statementFilename = 'savings_statement_${savings.id}.pdf';
 
                                     if (ctx.mounted) {
                                       setSheetState(() => step = 'success');
@@ -560,7 +548,7 @@ class _CustomerSavingsDetailPageState
                                     onTap: () async {
                                       HapticFeedback.lightImpact();
                                       if (generatedDoc != null) {
-                                        await CustomerStatementService.shareStatement(generatedDoc!, statementFilename ?? 'statement.pdf');
+                                        await Printing.sharePdf(bytes: await generatedDoc!.save(), filename: statementFilename ?? 'statement.pdf');
                                       }
                                     },
                                     borderRadius: BorderRadius.circular(16),

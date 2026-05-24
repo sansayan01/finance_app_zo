@@ -1,8 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/layout.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/widgets/progress_gauge.dart';
@@ -13,6 +18,7 @@ import '../../data/providers/customer_loans_providers.dart';
 import '../widgets/customer_loan_breakdown_chart.dart';
 import '../widgets/customer_emi_tile.dart';
 import '../widgets/customer_empty_state.dart';
+import '../../data/services/customer_statement_service.dart';
 
 class CustomerLoanDetailPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -27,6 +33,8 @@ class CustomerLoanDetailPage extends ConsumerStatefulWidget {
 class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     with TickerProviderStateMixin {
   late final AnimationController _staggerController;
+  pw.Document? _generatedDoc;
+  String? _statementFilename;
 
   @override
   void initState() {
@@ -201,6 +209,18 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
                 child: _buildScheduleButton(context, isDark),
+              ),
+            ),
+          ),
+
+          // Statement download
+          SliverToBoxAdapter(
+            child: _buildAnimatedSection(
+              index: 8,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
+                child: _buildStatementButton(context, isDark, loan),
               ),
             ),
           ),
@@ -864,6 +884,672 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                 size: 18,
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Statement button ─────────────────────────────────────────────
+
+  Widget _buildStatementButton(BuildContext context, bool isDark, CustomerLoanModel loan) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => _showStatementSheet(context, isDark, loan),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: 14),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.035),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.05),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.description_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Download Statement',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimaryLight,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Statement bottom sheet ──────────────────────────────────────
+
+  void _showStatementSheet(BuildContext context, bool isDark, CustomerLoanModel loan) {
+    String selectedFormat = 'pdf';
+    String selectedRange = '30';
+    String step = 'input';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  16,
+                  24,
+                  MediaQuery.of(ctx).viewInsets.bottom +
+                      MediaQuery.of(ctx).viewPadding.bottom +
+                      kBottomNavBarHeight +
+                      16,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E2030).withValues(alpha: 0.9)
+                      : Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: (isDark ? Colors.white : Colors.black)
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      if (step == 'input') ...[
+                        Text(
+                          'Download Statement',
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'FILE FORMAT',
+                            style: TextStyle(
+                              color: isDark ? Colors.white38 : Colors.black38,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFormatCard(
+                                label: 'PDF Report',
+                                icon: Icons.picture_as_pdf_rounded,
+                                color: AppColors.error,
+                                isSelected: selectedFormat == 'pdf',
+                                isDark: isDark,
+                                onTap: () =>
+                                    setSheetState(() => selectedFormat = 'pdf'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildFormatCard(
+                                label: 'Excel Sheet',
+                                icon: Icons.table_view_rounded,
+                                color: AppColors.success,
+                                isSelected: selectedFormat == 'excel',
+                                isDark: isDark,
+                                onTap: () => setSheetState(
+                                    () => selectedFormat = 'excel'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildFormatCard(
+                                label: 'CSV File',
+                                icon: Icons.grid_on_rounded,
+                                color: AppColors.info,
+                                isSelected: selectedFormat == 'csv',
+                                isDark: isDark,
+                                onTap: () =>
+                                    setSheetState(() => selectedFormat = 'csv'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'DATE RANGE',
+                            style: TextStyle(
+                              color: isDark ? Colors.white38 : Colors.black38,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildRangeCard(
+                                label: '30 Days',
+                                isSelected: selectedRange == '30',
+                                isDark: isDark,
+                                onTap: () =>
+                                    setSheetState(() => selectedRange = '30'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildRangeCard(
+                                label: '90 Days',
+                                isSelected: selectedRange == '90',
+                                isDark: isDark,
+                                onTap: () =>
+                                    setSheetState(() => selectedRange = '90'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildRangeCard(
+                                label: 'All Time',
+                                isSelected: selectedRange == 'all',
+                                isDark: isDark,
+                                onTap: () =>
+                                    setSheetState(() => selectedRange = 'all'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () async {
+                                  HapticFeedback.lightImpact();
+                                  setSheetState(() => step = 'loading');
+                                  try {
+                                    final emiAsync = ref.read(
+                                        customerEmiScheduleProvider(
+                                            widget.loanId));
+                                    final emiList =
+                                        emiAsync.valueOrNull ?? [];
+
+                                    // Map EMI schedule
+                                    final emiMaps = emiList
+                                        .map((e) => {
+                                              'period': e.emiNumber,
+                                              'emi_number': e.emiNumber,
+                                              'due_date': e.dueDate,
+                                              'emi_amount': e.emiAmount,
+                                              'principal': e.principal,
+                                              'interest': e.interest,
+                                              'balance': e.balanceAfter,
+                                              'status': e.status,
+                                            })
+                                        .toList();
+
+                                    // Map paid EMIs as transactions
+                                    final paidEmis = emiList
+                                        .where((e) => e.isPaid)
+                                        .toList();
+                                    final txMaps = paidEmis
+                                        .map((e) => {
+                                              'date': e.paidOn ?? e.dueDate,
+                                              'type': 'EMI Payment',
+                                              'amount': e.amountPaid > 0
+                                                  ? e.amountPaid
+                                                  : e.emiAmount,
+                                              'mode': '',
+                                              'description':
+                                                  'EMI #${e.emiNumber}',
+                                            })
+                                        .toList();
+
+                                    // Filter by date range
+                                    final now = DateTime.now();
+                                    DateTime? cutoff;
+                                    if (selectedRange == '30') {
+                                      cutoff = now.subtract(
+                                          const Duration(days: 30));
+                                    } else if (selectedRange == '90') {
+                                      cutoff = now.subtract(
+                                          const Duration(days: 90));
+                                    }
+                                    final filteredEmi = cutoff != null
+                                        ? emiMaps.where((e) {
+                                            final d =
+                                                e['due_date'] as DateTime?;
+                                            return d != null &&
+                                                d.isAfter(cutoff!);
+                                          }).toList()
+                                        : emiMaps;
+                                    final filteredTx = cutoff != null
+                                        ? txMaps
+                                            .where((t) =>
+                                                (t['date'] as DateTime?)
+                                                    ?.isAfter(cutoff!) ??
+                                                false)
+                                            .toList()
+                                        : txMaps;
+
+                                    // Generate PDF
+                                    final doc = await CustomerStatementService
+                                        .generateLoanStatement(
+                                      memberName:
+                                          loan.memberName ?? 'Customer',
+                                      loanNumber:
+                                          loan.loanNumber ?? loan.id,
+                                      loanAmount: loan.amount,
+                                      interestRate: loan.interestRate,
+                                      tenure: loan.tenureMonths,
+                                      disbursementDate:
+                                          loan.disbursementDate,
+                                      emiSchedule: filteredEmi,
+                                      transactions: filteredTx,
+                                    );
+
+                                    final filename =
+                                        'loan_statement_${loan.id}.pdf';
+                                    await CustomerStatementService
+                                        .downloadStatement(doc, filename);
+
+                                    _generatedDoc = doc;
+                                    _statementFilename = filename;
+
+                                    if (ctx.mounted) {
+                                      setSheetState(() => step = 'success');
+                                    }
+                                  } catch (e) {
+                                    if (ctx.mounted) {
+                                      setSheetState(() => step = 'input');
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Failed to generate statement: $e')),
+                                      );
+                                    }
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: const Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(vertical: 16),
+                                  child: Center(
+                                    child: Text(
+                                      'Generate Statement',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ] else if (step == 'loading') ...[
+                        const SizedBox(height: 40),
+                        CircularProgressIndicator(
+                          color: AppColors.primary,
+                          strokeWidth: 3,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Exporting statement report...',
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                      ] else if (step == 'success') ...[
+                        const SizedBox(height: 32),
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.success.withValues(alpha: 0.15),
+                            border: Border.all(
+                              color:
+                                  AppColors.success.withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.file_download_done_rounded,
+                            color: AppColors.success,
+                            size: 38,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Statement Downloaded!',
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'The statement file has been saved to your downloads folder.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color:
+                                isDark ? Colors.white70 : Colors.black87,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Open + Share buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () async {
+                                      HapticFeedback.lightImpact();
+                                      if (_generatedDoc != null) {
+                                        await Printing.layoutPdf(
+                                            onLayout: (format) async =>
+                                                _generatedDoc!.save());
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.open_in_new_rounded,
+                                              color: Colors.white, size: 18),
+                                          SizedBox(width: 6),
+                                          Text(
+                                            'Open',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white
+                                          .withValues(alpha: 0.08)
+                                      : Colors.black
+                                          .withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white
+                                            .withValues(alpha: 0.1)
+                                        : Colors.black
+                                            .withValues(alpha: 0.08),
+                                  ),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () async {
+                                      HapticFeedback.lightImpact();
+                                      if (_generatedDoc != null &&
+                                          _statementFilename != null) {
+                                        await CustomerStatementService
+                                            .shareStatement(
+                                                _generatedDoc!,
+                                                _statementFilename!);
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.share_rounded,
+                                              color: isDark
+                                                  ? Colors.white70
+                                                  : Colors.black54,
+                                              size: 18),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Share',
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? Colors.white70
+                                                  : Colors.black87,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Close text button
+                        TextButton(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.of(ctx).pop();
+                          },
+                          child: Text(
+                            'Close',
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white54
+                                  : Colors.black45,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFormatCard({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withValues(alpha: isDark ? 0.2 : 0.12)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : Colors.black.withValues(alpha: 0.03)),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.05)),
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon,
+                color: isSelected
+                    ? color
+                    : (isDark ? Colors.white54 : Colors.black45),
+                size: 22),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRangeCard({
+    required String label,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.12)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : Colors.black.withValues(alpha: 0.03)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.05)),
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            ),
           ),
         ),
       ),

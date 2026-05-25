@@ -119,7 +119,7 @@ import '../features/branch_manager/presentation/pages/branch_members_page.dart';
 import '../features/branch_manager/presentation/pages/branch_member_detail_page.dart';
 import '../features/branch_manager/presentation/pages/branch_loans_page.dart';
 import '../features/branch_manager/presentation/pages/branch_savings_page.dart';
-import '../features/branch_manager/presentation/pages/branch_collections_page.dart';
+import '../features/branch_manager/presentation/pages/branch_today_payments_page.dart';
 import '../features/branch_manager/presentation/pages/branch_settings_page.dart';
 import '../features/branch_manager/presentation/pages/branch_analytics_page.dart';
 
@@ -655,8 +655,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
-            path: '/branch/collections',
-            builder: (context, state) => const BranchCollectionsPage(),
+            path: '/branch/payments',
+            builder: (context, state) => const BranchTodayPaymentsPage(),
           ),
           GoRoute(
             path: '/branch/analytics',

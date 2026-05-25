@@ -373,7 +373,7 @@ class _BranchManagerDashboardState
                           color: isDark
                               ? AppColors.successDark
                               : AppColors.success,
-                          onTap: () => context.push('/branch/collections'),
+                          onTap: () => context.push('/branch/payments'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -499,11 +499,11 @@ class _BranchManagerDashboardState
                 Expanded(
                   child: _QuickActionBtn(
                     icon: Icons.history_rounded,
-                    label: 'Collections',
+                    label: 'Payments',
                     color: isDark
                         ? AppColors.orange.withValues(alpha: 0.8)
                         : AppColors.orange,
-                    onTap: () => context.push('/branch/collections'),
+                    onTap: () => context.push('/branch/payments'),
                   ),
                 ),
               ],
@@ -781,7 +781,7 @@ class _BranchManagerDashboardState
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.3)),
             GestureDetector(
-              onTap: () => context.push('/branch/collections'),
+              onTap: () => context.push('/branch/payments'),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

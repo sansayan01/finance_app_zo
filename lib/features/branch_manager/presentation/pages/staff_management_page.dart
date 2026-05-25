@@ -20,7 +20,7 @@ class StaffManagementPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => context.push('/branch-manager/staff/add'),
+            onPressed: () => context.push('/branch/staff/add'),
           ),
         ],
       ),
@@ -48,7 +48,7 @@ class StaffManagementPage extends ConsumerWidget {
       floatingActionButton: Padding(
         padding: kFabSafeAreaPadding,
         child: FloatingActionButton.extended(
-          onPressed: () => context.push('/branch-manager/staff/add'),
+          onPressed: () => context.push('/branch/staff/add'),
           icon: const Icon(Icons.person_add),
           label: const Text('Add Staff'),
         ),
@@ -74,11 +74,11 @@ class StaffManagementPage extends ConsumerWidget {
         leading: CircleAvatar(
           backgroundColor: theme.colorScheme.primaryContainer,
           child: Text(
-            staff.name?.isNotEmpty == true ? staff.name![0].toUpperCase() : '?',
+            staff.fullName?.isNotEmpty == true ? staff.fullName![0].toUpperCase() : '?',
             style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
           ),
         ),
-        title: Text(staff.name ?? 'Unknown'),
+        title: Text(staff.fullName ?? 'Unknown'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -98,13 +98,13 @@ class StaffManagementPage extends ConsumerWidget {
           onSelected: (value) {
             switch (value) {
               case 'view':
-                context.push('/branch-manager/staff/${staff.id}');
+                context.push('/branch/staff/${staff.id}');
                 break;
               case 'performance':
-                context.push('/branch-manager/staff/${staff.id}/performance');
+                context.push('/branch/staff/${staff.id}/performance');
                 break;
               case 'areas':
-                context.push('/branch-manager/staff/${staff.id}/areas');
+                context.push('/branch/staff/${staff.id}/areas');
                 break;
             }
           },

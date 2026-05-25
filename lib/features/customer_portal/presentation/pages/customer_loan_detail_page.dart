@@ -193,18 +193,6 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
             ),
           ),
 
-          // Pay EMI primary CTA
-          SliverToBoxAdapter(
-            child: _buildAnimatedSection(
-              index: 6,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
-                child: _buildPayEmiButton(context, loan, isDark),
-              ),
-            ),
-          ),
-
           // Secondary CTA: full schedule
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
@@ -743,98 +731,6 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
               isDark: isDark,
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPayEmiButton(
-      BuildContext context, CustomerLoanModel loan, bool isDark) {
-    final theme = Theme.of(context);
-    final disabled =
-        loan.status == 'completed' || loan.status == 'closed';
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: disabled
-              ? [
-                  (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: 0.08),
-                  (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: 0.06),
-                ]
-              : (isDark
-                  ? [
-                      AppColors.primary.withValues(alpha: 0.9),
-                      AppColors.accent.withValues(alpha: 0.9),
-                    ]
-                  : AppColors.premiumGradient),
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: disabled
-            ? []
-            : [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.4),
-                  blurRadius: 22,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: disabled
-              ? null
-              : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('EMI payment coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-          borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg, vertical: 18),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  disabled
-                      ? Icons.check_circle_rounded
-                      : Icons.payments_rounded,
-                  color: disabled
-                      ? (isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight)
-                      : Colors.white,
-                  size: 22,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  disabled
-                      ? 'Loan Closed'
-                      : 'Pay EMI · ₹${_formatAmount(loan.emiAmount)}',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: disabled
-                        ? (isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondaryLight)
-                        : Colors.white,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

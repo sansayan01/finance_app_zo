@@ -46,7 +46,7 @@ class UserRepository {
     try {
       var query = _client
           .from('profiles')
-          .select('*, branch:branches(id, name)')
+          .select('*, branch:branches!fk_profiles_branch(id, name)')
           .eq('org_id', _orgId);
 
       if (roles.isNotEmpty) {
@@ -99,7 +99,7 @@ class UserRepository {
       // 1. Fetch from profiles table (customers with role = 'customer')
       var profileQuery = _client
           .from('profiles')
-          .select('*, branch:branches(id, name)')
+          .select('*, branch:branches!fk_profiles_branch(id, name)')
           .eq('org_id', _orgId)
           .eq('role', 'customer');
 
@@ -269,6 +269,18 @@ class UserRepository {
         'No profile was updated. The profile may belong to a different '
         'organization, have a missing org_id, or you may lack permission.',
       );
+    }
+
+    // Sync branch_id to members table if it was changed
+    if (data.containsKey('branch_id')) {
+      try {
+        await _client
+            .from('members')
+            .update({'branch_id': data['branch_id']})
+            .eq('profile_id', id);
+      } catch (_) {
+        // Member record may not exist — that's fine
+      }
     }
   }
 

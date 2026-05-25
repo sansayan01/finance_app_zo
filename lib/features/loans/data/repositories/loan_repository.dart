@@ -17,6 +17,14 @@ class LoanRepository {
     required double estimatedInstallment,
     required double totalExposure,
   }) async {
+    // Look up the member's branch_id
+    final member = await _client
+        .from('members')
+        .select('branch_id')
+        .eq('id', borrowerId)
+        .maybeSingle();
+    final branchId = member?['branch_id'] as String?;
+
     await _client.from('loans').insert({
       'customer_id': borrowerId,
       'amount': principal,
@@ -32,6 +40,7 @@ class LoanRepository {
       'total_repayable': totalExposure,
       'status': 'active',
       'org_id': _orgId,
+      if (branchId != null) 'branch_id': branchId,
     });
   }
 

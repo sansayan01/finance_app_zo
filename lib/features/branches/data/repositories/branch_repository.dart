@@ -11,7 +11,7 @@ class BranchRepository {
   Future<List<BranchModel>> getBranches() async {
     final response = await _client
         .from('branches')
-        .select()
+        .select('*, manager:manager_id(full_name)')
         .eq('org_id', _orgId)
         .order('created_at', ascending: false);
 
@@ -24,7 +24,7 @@ class BranchRepository {
   Future<List<BranchModel>> getActiveBranches() async {
     final response = await _client
         .from('branches')
-        .select()
+        .select('*, manager:manager_id(full_name)')
         .eq('org_id', _orgId)
         .eq('status', 'active')
         .order('name');
@@ -38,7 +38,7 @@ class BranchRepository {
   Future<BranchModel?> getBranch(String id) async {
     final response = await _client
         .from('branches')
-        .select()
+        .select('*, manager:manager_id(full_name)')
         .eq('id', id)
         .eq('org_id', _orgId)
         .maybeSingle();
@@ -162,14 +162,14 @@ class BranchRepository {
         .eq('org_id', _orgId);
   }
 
-  /// Get potential managers (staff with manager role)
+  /// Get potential managers (users with manager role in the same org)
   Future<List<Map<String, dynamic>>> getPotentialManagers() async {
     final response = await _client
-        .from('staff_profiles')
+        .from('profiles')
         .select('id, full_name, email')
         .eq('org_id', _orgId)
-        .inFilter('role', ['branch_manager', 'manager', 'supervisor']).order(
-            'full_name');
+        .eq('role', 'manager')
+        .order('full_name');
 
     return List<Map<String, dynamic>>.from(response);
   }

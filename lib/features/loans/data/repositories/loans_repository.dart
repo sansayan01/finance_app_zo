@@ -162,6 +162,14 @@ class LoansRepository {
 
     double totalInterest = totalExposure - principal;
 
+    // Look up the member's branch_id
+    final member = await _client
+        .from('members')
+        .select('branch_id')
+        .eq('id', borrowerId)
+        .maybeSingle();
+    final branchId = member?['branch_id'] as String?;
+
     final result = await _client.from('loans').insert({
       'customer_id': borrowerId,
       'loan_number': loanNumber,
@@ -186,6 +194,7 @@ class LoansRepository {
       'created_at': now.toIso8601String(),
       'updated_at': now.toIso8601String(),
       'org_id': _orgId,
+      if (branchId != null) 'branch_id': branchId,
       if (interestMode != null) 'interest_mode': interestMode,
       if (interestRateBasis != null) 'interest_rate_basis': interestRateBasis,
       if (interestAmount != null) 'interest_amount': interestAmount,

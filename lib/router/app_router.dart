@@ -115,6 +115,13 @@ import '../features/branch_manager/presentation/pages/staff_management_page.dart
 import '../features/branch_manager/presentation/pages/pending_approvals_page.dart';
 import '../features/branch_manager/presentation/pages/branch_reports_page.dart';
 import '../features/branch_manager/presentation/pages/manager_live_map_page.dart';
+import '../features/branch_manager/presentation/pages/branch_members_page.dart';
+import '../features/branch_manager/presentation/pages/branch_member_detail_page.dart';
+import '../features/branch_manager/presentation/pages/branch_loans_page.dart';
+import '../features/branch_manager/presentation/pages/branch_savings_page.dart';
+import '../features/branch_manager/presentation/pages/branch_collections_page.dart';
+import '../features/branch_manager/presentation/pages/branch_settings_page.dart';
+import '../features/branch_manager/presentation/pages/branch_analytics_page.dart';
 
 // Customer Portal
 import '../features/customer_portal/presentation/pages/customer_home_page.dart';
@@ -611,6 +618,55 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const ManagerLiveMapPage(),
           ),
           GoRoute(
+            path: '/branch/loans',
+            builder: (context, state) => const BranchLoansPage(),
+          ),
+          GoRoute(
+            path: '/branch/loans/new',
+            builder: (context, state) => const NewLoanPage(),
+          ),
+          GoRoute(
+            path: '/branch/loans/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return LoanDetailPage(loanId: id);
+            },
+          ),
+          GoRoute(
+            path: '/branch/savings',
+            builder: (context, state) => const BranchSavingsPage(),
+          ),
+          GoRoute(
+            path: '/branch/savings/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return SavingDetailPage(savingId: id);
+            },
+          ),
+          GoRoute(
+            path: '/branch/members',
+            builder: (context, state) => const BranchMembersPage(),
+          ),
+          GoRoute(
+            path: '/branch/members/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return BranchMemberDetailPage(memberId: id);
+            },
+          ),
+          GoRoute(
+            path: '/branch/collections',
+            builder: (context, state) => const BranchCollectionsPage(),
+          ),
+          GoRoute(
+            path: '/branch/analytics',
+            builder: (context, state) => const BranchAnalyticsPage(),
+          ),
+          GoRoute(
+            path: '/branch/settings',
+            builder: (context, state) => const BranchSettingsPage(),
+          ),
+          GoRoute(
             path: '/branch/profile',
             builder: (context, state) => const ProfilePage(),
           ),
@@ -1054,16 +1110,21 @@ class _StaffShellState extends ConsumerState<StaffShell> {
 // =====================================================
 // BRANCH MANAGER SHELL
 // =====================================================
-class BranchManagerShell extends StatelessWidget {
+class BranchManagerShell extends ConsumerStatefulWidget {
   final Widget child;
   const BranchManagerShell({super.key, required this.child});
 
+  @override
+  ConsumerState<BranchManagerShell> createState() => _BranchManagerShellState();
+}
+
+class _BranchManagerShellState extends ConsumerState<BranchManagerShell> {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith('/branch/staff')) return 1;
-    if (location.startsWith('/branch/approvals')) return 2;
-    if (location.startsWith('/branch/reports')) return 3;
-    if (location.startsWith('/branch/profile')) return 4;
+    if (location.startsWith('/branch/loans')) return 1;
+    if (location.startsWith('/branch/savings')) return 2;
+    if (location.startsWith('/branch/members')) return 3;
+    if (location.startsWith('/branch/settings')) return 4;
     return 0;
   }
 
@@ -1073,47 +1134,81 @@ class BranchManagerShell extends StatelessWidget {
         context.go('/branch');
         break;
       case 1:
-        context.go('/branch/staff');
+        context.go('/branch/loans');
         break;
       case 2:
-        context.go('/branch/approvals');
+        context.go('/branch/savings');
         break;
       case 3:
-        context.go('/branch/reports');
+        context.go('/branch/members');
         break;
       case 4:
-        context.go('/branch/profile');
+        context.go('/branch/settings');
         break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final useHudNav = MediaQuery.of(context).size.width >= 600;
     final currentIndex = _calculateSelectedIndex(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
-      body: _NavSafeArea(child: child),
-      bottomNavigationBar: _SimpleBottomBar(
-        currentIndex: currentIndex,
-        onTap: (index) => _onItemTapped(index, context),
-        isDark: isDark,
-        primary: primary,
-        items: const [
-          _SimpleNavData(
-              Icons.dashboard_outlined, Icons.dashboard_rounded, 'Home'),
-          _SimpleNavData(Icons.people_outlined, Icons.people_rounded, 'Staff'),
-          _SimpleNavData(
-              Icons.approval_outlined, Icons.approval_rounded, 'Approvals'),
-          _SimpleNavData(
-              Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Reports'),
-          _SimpleNavData(
-              Icons.person_outlined, Icons.person_rounded, 'Profile'),
+      body: Stack(
+        children: [
+          useHudNav ? widget.child : _NavSafeArea(child: widget.child),
+          if (useHudNav)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: Center(
+                child: HUDNavigation(
+                  currentIndex: currentIndex,
+                  onTap: (index) => _onItemTapped(index, context),
+                  items: const [
+                    HUDNavItem(
+                        label: 'Dashboard',
+                        icon: Icons.grid_view_outlined,
+                        activeIcon: Icons.grid_view_rounded),
+                    HUDNavItem(
+                        label: 'Loans',
+                        icon: Icons.account_balance_outlined,
+                        activeIcon: Icons.account_balance_rounded),
+                    HUDNavItem(
+                        label: 'Savings',
+                        icon: Icons.account_balance_wallet_outlined,
+                        activeIcon: Icons.account_balance_wallet_rounded),
+                    HUDNavItem(
+                        label: 'Members',
+                        icon: Icons.people_outline,
+                        activeIcon: Icons.people_rounded),
+                    HUDNavItem(
+                        label: 'Settings',
+                        icon: Icons.settings_outlined,
+                        activeIcon: Icons.settings_rounded),
+                  ],
+                ),
+              ),
+            ),
+          const FloatingChatbot(),
         ],
       ),
+      bottomNavigationBar: useHudNav
+          ? null
+          : _PremiumBottomBar(
+              currentIndex: currentIndex,
+              onTap: (index) => _onItemTapped(index, context),
+              items: const [
+                _NavData(Icons.grid_view_outlined, Icons.grid_view_rounded, 'Home'),
+                _NavData(Icons.account_balance_outlined, Icons.account_balance_rounded, 'Loans'),
+                _NavData(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Savings'),
+                _NavData(Icons.people_outline, Icons.people_rounded, 'Members'),
+                _NavData(Icons.settings_outlined, Icons.settings_rounded, 'Settings'),
+              ],
+            ),
     );
   }
 }
@@ -1437,109 +1532,6 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
 }
 
 // =====================================================
-// SIMPLE BOTTOM BAR (shared by Branch Manager & Customer shells)
-// =====================================================
-class _SimpleNavData {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  const _SimpleNavData(this.icon, this.activeIcon, this.label);
-}
-
-class _SimpleBottomBar extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-  final bool isDark;
-  final Color primary;
-  final List<_SimpleNavData> items;
-
-  const _SimpleBottomBar({
-    required this.currentIndex,
-    required this.onTap,
-    required this.isDark,
-    required this.primary,
-    required this.items,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      minimum: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF1E1E2A).withValues(alpha: 0.95)
-                : Colors.white.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(items.length, (i) {
-              final item = items[i];
-              final isSelected = currentIndex == i;
-              final inactiveColor = isDark
-                  ? Colors.white.withValues(alpha: 0.4)
-                  : Colors.black.withValues(alpha: 0.4);
-              return GestureDetector(
-                onTap: () => onTap(i),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? primary.withValues(alpha: isDark ? 0.2 : 0.1)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isSelected ? item.activeIcon : item.icon,
-                        color: isSelected ? primary : inactiveColor,
-                        size: 22,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item.label,
-                        style: TextStyle(
-                          color: isSelected ? primary : inactiveColor,
-                          fontSize: 10,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// =====================================================
 // STAFF BOTTOM BAR - NEW
 // =====================================================
 class StaffBottomBar extends StatelessWidget {
@@ -1747,13 +1739,22 @@ class _StaffNavItem extends StatelessWidget {
 }
 
 // =====================================================
+// =====================================================
 // PREMIUM BOTTOM BAR (Admin)
 // =====================================================
+class _NavData {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _NavData(this.icon, this.activeIcon, this.label);
+}
+
 class _PremiumBottomBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final List<_NavData>? items;
 
-  const _PremiumBottomBar({required this.currentIndex, required this.onTap});
+  const _PremiumBottomBar({required this.currentIndex, required this.onTap, this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -1806,53 +1807,21 @@ class _PremiumBottomBar extends StatelessWidget {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _NavItem(
-                      index: 0,
-                      icon: Icons.grid_view_outlined,
-                      activeIcon: Icons.grid_view_rounded,
-                      label: 'Home',
+                children: (items ?? [
+                  const _NavData(Icons.grid_view_outlined, Icons.grid_view_rounded, 'Home'),
+                  const _NavData(Icons.account_balance_outlined, Icons.account_balance_rounded, 'Loans'),
+                  const _NavData(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Savings'),
+                  const _NavData(Icons.manage_accounts_outlined, Icons.manage_accounts_rounded, 'Users'),
+                  const _NavData(Icons.settings_outlined, Icons.settings_rounded, 'Settings'),
+                ]).asMap().entries.map((entry) => _NavItem(
+                      index: entry.key,
+                      icon: entry.value.icon,
+                      activeIcon: entry.value.activeIcon,
+                      label: entry.value.label,
                       currentIndex: currentIndex,
                       primary: primary,
                       isDark: isDark,
-                      onTap: onTap),
-                  _NavItem(
-                      index: 1,
-                      icon: Icons.account_balance_outlined,
-                      activeIcon: Icons.account_balance_rounded,
-                      label: 'Loans',
-                      currentIndex: currentIndex,
-                      primary: primary,
-                      isDark: isDark,
-                      onTap: onTap),
-                  _NavItem(
-                      index: 2,
-                      icon: Icons.account_balance_wallet_outlined,
-                      activeIcon: Icons.account_balance_wallet_rounded,
-                      label: 'Savings',
-                      currentIndex: currentIndex,
-                      primary: primary,
-                      isDark: isDark,
-                      onTap: onTap),
-                  _NavItem(
-                      index: 3,
-                      icon: Icons.manage_accounts_outlined,
-                      activeIcon: Icons.manage_accounts_rounded,
-                      label: 'Users',
-                      currentIndex: currentIndex,
-                      primary: primary,
-                      isDark: isDark,
-                      onTap: onTap),
-                  _NavItem(
-                      index: 4,
-                      icon: Icons.settings_outlined,
-                      activeIcon: Icons.settings_rounded,
-                      label: 'Settings',
-                      currentIndex: currentIndex,
-                      primary: primary,
-                      isDark: isDark,
-                      onTap: onTap),
-                ],
+                      onTap: onTap)).toList(),
               ),
             ),
           ),

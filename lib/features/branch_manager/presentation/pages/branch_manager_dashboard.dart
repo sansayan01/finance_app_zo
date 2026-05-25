@@ -1,16 +1,20 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/shimmer_card.dart';
+import '../../../../core/widgets/sparkline_chart.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../loans/data/models/loan_model.dart';
+import '../../../savings/data/models/savings_model.dart';
+import '../../../home/presentation/widgets/live_agents_map_card.dart';
 import '../../data/providers/branch_manager_providers.dart';
 import '../../data/providers/branch_scoped_providers.dart';
 
@@ -28,10 +32,10 @@ class _BranchManagerDashboardState
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.invalidate(branchManagerDashboardProvider);
       ref.invalidate(branchStatsProvider);
       ref.invalidate(branchLoansProvider);
       ref.invalidate(branchSavingsProvider);
+      ref.invalidate(branchSavingsSummaryProvider);
       ref.invalidate(branchTodayCollectionsProvider);
       ref.invalidate(branchCollectionStatsProvider);
       ref.invalidate(branchMemberCountProvider);
@@ -60,10 +64,10 @@ class _BranchManagerDashboardState
           bottom: false,
           child: RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(branchManagerDashboardProvider);
               ref.invalidate(branchStatsProvider);
               ref.invalidate(branchLoansProvider);
               ref.invalidate(branchSavingsProvider);
+              ref.invalidate(branchSavingsSummaryProvider);
               ref.invalidate(branchTodayCollectionsProvider);
               ref.invalidate(branchCollectionStatsProvider);
               ref.invalidate(branchMemberCountProvider);
@@ -79,19 +83,23 @@ class _BranchManagerDashboardState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 24),
+                  _buildHeader(context, branchId),
+                  const SizedBox(height: 20),
                   _buildPendingAlert(context, branchId),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
                   _buildHeroCard(context, branchId),
+                  const SizedBox(height: 16),
+                  _buildFinancialSummaryStrip(context, branchId),
                   const SizedBox(height: 28),
                   _buildQuickActions(context),
                   const SizedBox(height: 28),
-                  _buildStaffPerformance(context, branchId),
+                  const LiveAgentsMapCard(),
                   const SizedBox(height: 28),
                   _buildActiveLoansSection(context, branchId),
                   const SizedBox(height: 28),
                   _buildSavingsSection(context, branchId),
+                  const SizedBox(height: 28),
+                  _buildRecentCollections(context, branchId),
                 ],
               ),
             ),
@@ -103,7 +111,7 @@ class _BranchManagerDashboardState
 
   // ─── Header ───
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, String branchId) {
     final user = ref.watch(authProvider).user;
     final theme = Theme.of(context);
     final hour = DateTime.now().hour;
@@ -126,77 +134,71 @@ class _BranchManagerDashboardState
         ? user.fullName.trim().split(RegExp(r'\s+')).first
         : 'Manager';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Flexible(
-                    child: Text(
-                      greeting,
+                  Text(greeting,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.textTheme.bodySmall?.color
                             ?.withValues(alpha: 0.6),
                         fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                      )),
                   const SizedBox(width: 6),
                   Icon(greetingIcon,
                       size: 14,
-                      color:
-                          theme.colorScheme.primary.withValues(alpha: 0.6)),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.6)),
                 ],
               ),
-            ),
-            _HeaderIconBtn(
-              icon: Icons.notifications_outlined,
-              onTap: () => context.push('/branch/approvals'),
-            ),
-            const SizedBox(width: 10),
-            _HeaderIconBtn(
-              icon: Icons.settings_outlined,
-              onTap: () => context.push('/branch/settings'),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(firstName,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.8,
+                        fontSize: 28,
+                      )),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('BRANCH MGR',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 10,
+                        )),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                firstName,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.8,
-                  fontSize: 28,
-                ),
-                overflow: TextOverflow.ellipsis,
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              _HeaderIconBtn(
+                icon: Icons.notifications_outlined,
+                onTap: () => context.push('/branch/approvals'),
               ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 12),
+              _HeaderIconBtn(
+                icon: Icons.search_rounded,
+                onTap: () => context.push('/branch/members'),
               ),
-              child: Text(
-                'BRANCH MGR',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 9,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05, end: 0);
@@ -218,12 +220,10 @@ class _BranchManagerDashboardState
             padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.warning.withValues(alpha: 0.15),
-                  AppColors.warning.withValues(alpha: 0.05),
-                ],
-              ),
+              gradient: LinearGradient(colors: [
+                AppColors.warning.withValues(alpha: 0.15),
+                AppColors.warning.withValues(alpha: 0.05),
+              ]),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                   color: AppColors.warning.withValues(alpha: 0.2)),
@@ -252,14 +252,12 @@ class _BranchManagerDashboardState
                           fontSize: 13,
                         ),
                       ),
-                      Text(
-                        'Requests awaiting your review',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.7),
-                          fontSize: 11,
-                        ),
-                      ),
+                      Text('Requests awaiting your review',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.7),
+                            fontSize: 11,
+                          )),
                     ],
                   ),
                 ),
@@ -291,6 +289,9 @@ class _BranchManagerDashboardState
                     ?.toDouble() ??
                 0
             : 0.0;
+        final parRate = stats.activeLoansCount > 0
+            ? (stats.overdueLoans / stats.activeLoansCount * 100)
+            : 0.0;
         return GlassCard(
           elevated: true,
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -316,23 +317,19 @@ class _BranchManagerDashboardState
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'refresh',
-                      child: Row(
-                        children: [
-                          Icon(Icons.refresh_rounded, size: 20),
-                          SizedBox(width: 12),
-                          Text('Refresh Dashboard'),
-                        ],
-                      ),
+                      child: Row(children: [
+                        Icon(Icons.refresh_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Refresh Dashboard'),
+                      ]),
                     ),
                     const PopupMenuItem(
                       value: 'analytics',
-                      child: Row(
-                        children: [
-                          Icon(Icons.analytics_outlined, size: 20),
-                          SizedBox(width: 12),
-                          Text('View Analytics'),
-                        ],
-                      ),
+                      child: Row(children: [
+                        Icon(Icons.analytics_outlined, size: 20),
+                        SizedBox(width: 12),
+                        Text('View Analytics'),
+                      ]),
                     ),
                   ],
                 ),
@@ -350,11 +347,8 @@ class _BranchManagerDashboardState
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Branch Outstanding',
-                    style:
-                        theme.textTheme.bodySmall?.copyWith(fontSize: 14),
-                  ),
+                  Text('Total Outstanding',
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 14)),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -386,14 +380,10 @@ class _BranchManagerDashboardState
                       Expanded(
                         child: _HeroStat(
                           label: 'PAR Rate',
-                          value: stats.totalCollections > 0
-                              ? '${((stats.overdueLoans / (stats.activeLoansCount > 0 ? stats.activeLoansCount : 1)) * 100).toStringAsFixed(1)}%'
-                              : '0%',
+                          value: '${parRate.toStringAsFixed(1)}%',
                           icon: Icons.trending_down_rounded,
-                          color: stats.overdueLoans > 3
-                              ? (isDark
-                                  ? AppColors.errorDark
-                                  : AppColors.error)
+                          color: parRate > 5
+                              ? (isDark ? AppColors.errorDark : AppColors.error)
                               : (isDark
                                   ? AppColors.warningDark
                                   : AppColors.warning),
@@ -419,6 +409,48 @@ class _BranchManagerDashboardState
     ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.06, end: 0);
   }
 
+  // ─── Financial Summary Strip ───
+
+  Widget _buildFinancialSummaryStrip(
+      BuildContext context, String branchId) {
+    final statsAsync = ref.watch(branchStatsProvider(branchId));
+
+    return statsAsync.when(
+      data: (stats) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _SummaryChip(
+              label: 'Disbursed',
+              value: AppFormatters.formatCompactCurrency(
+                  stats.totalDisbursements),
+              icon: Icons.outbond_rounded,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 10),
+            _SummaryChip(
+              label: 'Collected',
+              value: AppFormatters.formatCompactCurrency(
+                  stats.totalCollections),
+              icon: Icons.move_to_inbox_rounded,
+              color: AppColors.success,
+            ),
+            const SizedBox(width: 10),
+            _SummaryChip(
+              label: 'Members',
+              value: '${stats.totalMembers}',
+              icon: Icons.people_rounded,
+              color: AppColors.accentLight,
+            ),
+          ],
+        ),
+      ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
   // ─── Quick Actions ───
 
   Widget _buildQuickActions(BuildContext context) {
@@ -428,154 +460,98 @@ class _BranchManagerDashboardState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: theme.textTheme.titleMedium
-              ?.copyWith(fontWeight: FontWeight.w700),
-        ),
+        Text('Quick Actions',
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700)),
         const SizedBox(height: 16),
-        Row(
+        Column(
           children: [
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.request_quote_rounded,
-                label: 'New Loan',
-                color: theme.colorScheme.primary,
-                onTap: () => context.push('/branch/loans/new'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.request_quote_rounded,
+                    label: 'New Loan',
+                    color: theme.colorScheme.primary,
+                    onTap: () => context.push('/branch/loans/new'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.savings_rounded,
+                    label: 'Savings',
+                    color: theme.colorScheme.secondary,
+                    onTap: () => context.push('/branch/savings'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.person_add_alt_1_rounded,
+                    label: 'Add Member',
+                    color:
+                        isDark ? AppColors.accentDark : AppColors.accentLight,
+                    onTap: () => context.push('/branch/members'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.history_rounded,
+                    label: 'Collections',
+                    color: isDark
+                        ? AppColors.orange.withValues(alpha: 0.8)
+                        : AppColors.orange,
+                    onTap: () => context.push('/branch/collections'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.person_add_alt_1_rounded,
-                label: 'Add Member',
-                color:
-                    isDark ? AppColors.accentDark : AppColors.accentLight,
-                onTap: () => context.push('/branch/members'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.people_alt_rounded,
-                label: 'Staff',
-                color: isDark
-                    ? AppColors.orange.withValues(alpha: 0.8)
-                    : AppColors.orange,
-                onTap: () => context.push('/branch/staff'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _QuickActionBtn(
-                icon: Icons.assessment_rounded,
-                label: 'Reports',
-                color: const Color(0xFF00BFA5),
-                onTap: () => context.push('/branch/reports'),
-              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.people_alt_rounded,
+                    label: 'Staff',
+                    color: AppColors.pink,
+                    onTap: () => context.push('/branch/staff'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.approval_rounded,
+                    label: 'Approvals',
+                    color: const Color(0xFFFF6B35),
+                    onTap: () => context.push('/branch/approvals'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.location_on_rounded,
+                    label: 'Live Map',
+                    color: const Color(0xFF00BFA5),
+                    onTap: () => context.push('/branch/map'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.assessment_rounded,
+                    label: 'Reports',
+                    color: const Color(0xFF7C3AED),
+                    onTap: () => context.push('/branch/reports'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ],
     ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.05, end: 0);
-  }
-
-  // ─── Staff Performance ───
-
-  Widget _buildStaffPerformance(
-      BuildContext context, String branchId) {
-    final statsAsync = ref.watch(branchStatsProvider(branchId));
-    final _ = ref.watch(branchStaffProvider(branchId));
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Staff Performance',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            GestureDetector(
-              onTap: () => context.push('/branch/staff'),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'View All',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        GlassCard(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: _SavingsStat(
-                  label: 'Total Staff',
-                  value: statsAsync.when(
-                    data: (s) => '${s.totalStaff}',
-                    loading: () => '...',
-                    error: (_, __) => '0',
-                  ),
-                  icon: Icons.people_outline,
-                  color: AppColors.primary,
-                ),
-              ),
-              Container(
-                  height: 40,
-                  width: 1,
-                  color: theme.dividerColor.withValues(alpha: 0.2)),
-              Expanded(
-                child: _SavingsStat(
-                  label: 'Members',
-                  value: statsAsync.when(
-                    data: (s) => '${s.totalMembers}',
-                    loading: () => '...',
-                    error: (_, __) => '0',
-                  ),
-                  icon: Icons.groups_outlined,
-                  color: isDark
-                      ? AppColors.successDark
-                      : AppColors.success,
-                ),
-              ),
-              Container(
-                  height: 40,
-                  width: 1,
-                  color: theme.dividerColor.withValues(alpha: 0.2)),
-              Expanded(
-                child: _SavingsStat(
-                  label: 'Total Loans',
-                  value: statsAsync.when(
-                    data: (s) => '${s.totalLoans}',
-                    loading: () => '...',
-                    error: (_, __) => '0',
-                  ),
-                  icon: Icons.account_balance_outlined,
-                  color: AppColors.accentLight,
-                ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.05, end: 0),
-      ],
-    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.05, end: 0);
   }
 
   // ─── Active Loans Section ───
@@ -591,11 +567,9 @@ class _BranchManagerDashboardState
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Active Loans',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
+            Text('Active Loans',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
             GestureDetector(
               onTap: () => context.push('/branch/loans'),
               child: Container(
@@ -605,13 +579,11 @@ class _BranchManagerDashboardState
                   color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(
-                  'View All',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text('View All',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    )),
               ),
             ),
           ],
@@ -657,13 +629,12 @@ class _BranchManagerDashboardState
           ),
         ),
       ],
-    ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.05, end: 0);
+    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.05, end: 0);
   }
 
   // ─── Savings Section ───
 
-  Widget _buildSavingsSection(
-      BuildContext context, String branchId) {
+  Widget _buildSavingsSection(BuildContext context, String branchId) {
     final savingsAsync = ref.watch(branchSavingsProvider(branchId));
     final summaryAsync = ref.watch(branchSavingsSummaryProvider(branchId));
     final theme = Theme.of(context);
@@ -676,28 +647,28 @@ class _BranchManagerDashboardState
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Savings',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            GestureDetector(
-              onTap: () => context.push('/branch/savings'),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: successColor.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'View All',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: successColor,
-                    fontWeight: FontWeight.w600,
+            Text('Savings Dashboard',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => context.push('/branch/savings'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: successColor.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text('View All',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: successColor,
+                          fontWeight: FontWeight.w600,
+                        )),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
@@ -722,7 +693,7 @@ class _BranchManagerDashboardState
                     color: theme.dividerColor.withValues(alpha: 0.2)),
                 Expanded(
                   child: _SavingsStat(
-                    label: 'Active Plans',
+                    label: 'Active Accounts',
                     value: '${summary['active_count'] ?? 0}',
                     icon: Icons.people_outline,
                     color: AppColors.primary,
@@ -764,12 +735,7 @@ class _BranchManagerDashboardState
                   .map((saving) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _SavingsCard(
-                          memberName: saving.memberName,
-                          planName: saving.planName,
-                          currentAmount: saving.currentAmount,
-                          targetAmount: saving.targetAmount,
-                          monthlyDeposit: saving.monthlyDeposit,
-                          status: saving.status,
+                          saving: saving,
                           successColor: successColor,
                         ),
                       ))
@@ -793,11 +759,209 @@ class _BranchManagerDashboardState
           ),
         ),
       ],
+    ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.05, end: 0);
+  }
+
+  // ─── Recent Collections ───
+
+  Widget _buildRecentCollections(
+      BuildContext context, String branchId) {
+    final collectionsAsync =
+        ref.watch(branchTodayCollectionsProvider(branchId));
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Recent Collections',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.3)),
+            GestureDetector(
+              onTap: () => context.push('/branch/collections'),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('View All',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        )),
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded,
+                        size: 12, color: theme.colorScheme.primary),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        collectionsAsync.when(
+          data: (collections) {
+            if (collections.isEmpty) {
+              return GlassCard(
+                padding: const EdgeInsets.all(32),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.receipt_long_rounded,
+                          size: 40,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.2)),
+                      const SizedBox(height: 12),
+                      Text('No collections today',
+                          style: theme.textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: collections.take(5).toList().asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final c = entry.value;
+                  final collector =
+                      c['collector'] as Map<String, dynamic>?;
+                  final amount =
+                      (c['amount_collected'] as num?)?.toDouble() ?? 0;
+                  final paymentMode =
+                      (c['payment_mode'] as String?) ?? 'cash';
+
+                  return Column(
+                    children: [
+                      _CollectionItem(
+                        amount: amount,
+                        paymentMode: paymentMode,
+                        collectorName:
+                            collector?['full_name']?.toString() ?? '',
+                        isDark: isDark,
+                      ),
+                      if (index < collections.take(5).length - 1)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(
+                              height: 1,
+                              color: theme.dividerColor
+                                  .withValues(alpha: 0.08)),
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            );
+          },
+          loading: () => const ShimmerCard(height: 200),
+          error: (_, __) => GlassCard(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Text('Unable to load collections',
+                  style: theme.textTheme.bodySmall),
+            ),
+          ),
+        ),
+      ],
     ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.05, end: 0);
   }
 }
 
 // ─── Sub-Widgets ───
+
+class _CollectionItem extends StatelessWidget {
+  final double amount;
+  final String paymentMode;
+  final String collectorName;
+  final bool isDark;
+
+  const _CollectionItem({
+    required this.amount,
+    required this.paymentMode,
+    required this.collectorName,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = isDark ? AppColors.successDark : AppColors.success;
+
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
+          ),
+          child: Icon(Icons.payments_rounded, color: color, size: 20),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(collectorName.isNotEmpty ? collectorName : 'Collection',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    letterSpacing: -0.2,
+                  )),
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  Text(paymentMode.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      )),
+                  const SizedBox(width: 6),
+                  Container(
+                      width: 3,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      )),
+                  const SizedBox(width: 6),
+                  Text(
+                      AppFormatters.formatRelativeTime(DateTime.now()),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.5),
+                      )),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Text('+${AppFormatters.formatCurrency(amount)}',
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.3,
+            )),
+      ],
+    );
+  }
+}
 
 class _HeaderIconBtn extends StatelessWidget {
   final IconData icon;
@@ -883,11 +1047,12 @@ class _QuickActionBtn extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _QuickActionBtn(
-      {required this.icon,
-      required this.label,
-      required this.color,
-      required this.onTap});
+  const _QuickActionBtn({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -915,67 +1080,34 @@ class _QuickActionBtn extends StatelessWidget {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 10),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
-            textAlign: TextAlign.center,
-          ),
+          Text(label,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center),
         ],
       ),
     );
   }
 }
 
-class _SavingsStat extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _SavingsStat({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
-        ),
-      ],
-    );
-  }
-}
-
 class _LoanCard extends StatelessWidget {
-  final dynamic loan;
+  final LoanModel loan;
   const _LoanCard({required this.loan});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final progress =
-        1.0 - (loan.outstandingBalance / (loan.amount > 0 ? loan.amount : 1)).toDouble();
+        1 - (loan.outstandingBalance / (loan.amount > 0 ? loan.amount : 1));
+    final statusType = loan.status.name == 'active'
+        ? StatusType.standard
+        : loan.status.name == 'defaulted'
+            ? StatusType.defaultStatus
+            : StatusType.pending;
 
     return GlassCard(
       padding: const EdgeInsets.all(20),
+      onTap: () {},
       child: Column(
         children: [
           Row(
@@ -1010,30 +1142,22 @@ class _LoanCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      loan.customerName ?? 'Unknown',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
+                    Text(loan.customerName ?? 'Unknown',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        )),
                     const SizedBox(height: 2),
-                    Text(
-                      loan.loanNumber,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                        fontFamily: 'JetBrains Mono',
-                      ),
-                    ),
+                    Text(loan.loanNumber,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          fontFamily: 'JetBrains Mono',
+                        )),
                   ],
                 ),
               ),
               StatusBadge(
-                label: loan.status.name.toUpperCase(),
-                type: loan.status.name == 'active'
-                    ? StatusType.standard
-                    : StatusType.pending,
-              ),
+                  label: loan.status.name.toUpperCase(), type: statusType),
             ],
           ),
           const SizedBox(height: 18),
@@ -1055,8 +1179,7 @@ class _LoanCard extends StatelessWidget {
             children: [
               _LoanStat(
                   label: 'Principal',
-                  value:
-                      AppFormatters.formatCompactCurrency(loan.amount)),
+                  value: AppFormatters.formatCompactCurrency(loan.amount)),
               _LoanStat(
                   label: 'EMI',
                   value: AppFormatters.formatCurrency(loan.emiAmount)),
@@ -1095,32 +1218,24 @@ class _LoanStat extends StatelessWidget {
 }
 
 class _SavingsCard extends StatelessWidget {
-  final String memberName;
-  final String planName;
-  final double currentAmount;
-  final double targetAmount;
-  final double monthlyDeposit;
-  final String status;
+  final SavingsModel saving;
   final Color successColor;
 
-  const _SavingsCard({
-    required this.memberName,
-    required this.planName,
-    required this.currentAmount,
-    required this.targetAmount,
-    required this.monthlyDeposit,
-    required this.status,
-    required this.successColor,
-  });
+  const _SavingsCard({required this.saving, required this.successColor});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final progress = targetAmount > 0 ? currentAmount / targetAmount : 0.0;
+    final progress =
+        saving.targetAmount > 0 ? saving.currentAmount / saving.targetAmount : 0.0;
+    final daysRemaining = saving.maturityDate.difference(DateTime.now()).inDays;
+    final isCompleted = progress >= 1.0;
+    final isNearMaturity = daysRemaining <= 30;
 
     return GlassCard(
       padding: const EdgeInsets.all(20),
+      onTap: () {},
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1142,7 +1257,9 @@ class _SavingsCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    memberName.isNotEmpty ? memberName[0].toUpperCase() : '?',
+                    saving.memberName.isNotEmpty
+                        ? saving.memberName[0].toUpperCase()
+                        : '?',
                     style: TextStyle(
                       color: successColor,
                       fontSize: 20,
@@ -1156,20 +1273,19 @@ class _SavingsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      memberName,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(saving.memberName,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 2),
                     Text(
-                      planName.isNotEmpty ? planName : 'Recurring Savings',
-                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
-                    ),
+                        saving.planName.isNotEmpty
+                            ? saving.planName
+                            : 'Recurring Savings',
+                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 12)),
                   ],
                 ),
               ),
@@ -1177,19 +1293,27 @@ class _SavingsCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: status == 'active'
+                  color: isCompleted
                       ? successColor.withValues(alpha: 0.12)
-                      : theme.colorScheme.primary.withValues(alpha: 0.08),
+                      : isNearMaturity
+                          ? AppColors.orange.withValues(alpha: 0.12)
+                          : theme.colorScheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  status.toUpperCase(),
+                  isCompleted
+                      ? 'COMPLETED'
+                      : isNearMaturity
+                          ? 'MATURING'
+                          : saving.status.toUpperCase(),
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: status == 'active'
+                    color: isCompleted
                         ? successColor
-                        : theme.colorScheme.primary,
+                        : isNearMaturity
+                            ? AppColors.orange
+                            : theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -1204,26 +1328,26 @@ class _SavingsCard extends StatelessWidget {
               backgroundColor: isDark
                   ? Colors.white.withValues(alpha: 0.06)
                   : Colors.black.withValues(alpha: 0.04),
-              valueColor: AlwaysStoppedAnimation<Color>(successColor),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isCompleted ? successColor : theme.colorScheme.primary,
+              ),
             ),
           ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text('${(progress * 100).toInt()}% Complete',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isCompleted ? successColor : null,
+                  )),
               Text(
-                '${(progress * 100).toInt()}% Complete',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                '${AppFormatters.formatCompactCurrency(targetAmount - currentAmount)} remaining',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontSize: 11,
-                  color: theme.textTheme.bodySmall?.color,
-                ),
-              ),
+                  '${AppFormatters.formatCompactCurrency(saving.targetAmount - saving.currentAmount)} remaining',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 11,
+                    color: theme.textTheme.bodySmall?.color,
+                  )),
             ],
           ),
           const SizedBox(height: 16),
@@ -1232,7 +1356,8 @@ class _SavingsCard extends StatelessWidget {
               Expanded(
                 child: _SavingsMetric(
                   label: 'Current',
-                  value: AppFormatters.formatCompactCurrency(currentAmount),
+                  value: AppFormatters.formatCompactCurrency(
+                      saving.currentAmount),
                   icon: Icons.account_balance_outlined,
                   color: successColor,
                 ),
@@ -1241,7 +1366,8 @@ class _SavingsCard extends StatelessWidget {
               Expanded(
                 child: _SavingsMetric(
                   label: 'Monthly',
-                  value: AppFormatters.formatCompactCurrency(monthlyDeposit),
+                  value: AppFormatters.formatCompactCurrency(
+                      saving.monthlyDeposit),
                   icon: Icons.calendar_today_outlined,
                   color: AppColors.primary,
                 ),
@@ -1249,16 +1375,94 @@ class _SavingsCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _SavingsMetric(
-                  label: 'Target',
-                  value: AppFormatters.formatCompactCurrency(targetAmount),
-                  icon: Icons.flag_outlined,
-                  color: AppColors.accentLight,
+                  label:
+                      daysRemaining > 0 ? '$daysRemaining days' : 'Matured',
+                  value: AppFormatters.formatPercent(saving.interestRate),
+                  icon: daysRemaining > 0
+                      ? Icons.hourglass_empty_outlined
+                      : Icons.check_circle_outlined,
+                  color:
+                      daysRemaining > 0 ? AppColors.accentLight : successColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: SparklineChart(
+                  data: _generateSavingsTrend(saving),
+                  color: successColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: successColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up, size: 12, color: successColor),
+                    const SizedBox(width: 4),
+                    Text('+${saving.interestRate.toStringAsFixed(1)}%',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: successColor,
+                        )),
+                  ],
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  List<double> _generateSavingsTrend(SavingsModel saving) {
+    final baseAmount = saving.currentAmount * 0.3;
+    final growth = (saving.currentAmount - baseAmount) / 6;
+    return List.generate(
+        7,
+        (i) =>
+            baseAmount + (growth * i) + (i * saving.monthlyDeposit * 0.5));
+  }
+}
+
+class _SavingsStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _SavingsStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 8),
+        Text(value,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: color,
+            )),
+        const SizedBox(height: 2),
+        Text(label,
+            style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
+      ],
     );
   }
 }
@@ -1290,17 +1494,64 @@ class _SavingsMetric extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 16),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(fontSize: 9),
+          Text(value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: color,
+              )),
+          Text(label,
+              style: theme.textTheme.labelSmall?.copyWith(fontSize: 9)),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _SummaryChip({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(value,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  )),
+              Text(label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.6),
+                  )),
+            ],
           ),
         ],
       ),

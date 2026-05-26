@@ -27,6 +27,12 @@ class EnvConfig {
     defaultValue: '1.0.0',
   );
 
+  // Mapbox Configuration
+  static const String mapboxAccessToken = String.fromEnvironment(
+    'MAPBOX_ACCESS_TOKEN',
+    defaultValue: '',
+  );
+
   // Telemetry (Sentry & PostHog)
   static const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
   static const String posthogApiKey = String.fromEnvironment('POSTHOG_API_KEY');

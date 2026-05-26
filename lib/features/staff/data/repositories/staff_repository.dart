@@ -21,7 +21,7 @@ class StaffRepository {
       // Try staff_profiles first
       final spResponse = await _client
           .from('staff_profiles')
-          .select('*, branches(name)')
+          .select()
           .eq('user_id', userId)
           .maybeSingle();
 
@@ -40,18 +40,46 @@ class StaffRepository {
             spResponse['supervisor'] = null;
           }
         }
+        // Fetch branch name separately
+        final branchId = spResponse['branch_id'] as String?;
+        if (branchId != null) {
+          try {
+            final branch = await _client
+                .from('branches')
+                .select('name')
+                .eq('id', branchId)
+                .maybeSingle();
+            spResponse['branches'] = branch;
+          } catch (_) {
+            spResponse['branches'] = null;
+          }
+        }
         return StaffProfileModel.fromJson(spResponse);
       }
 
       // Fallback: profiles table (created by UserRepository.createUser)
       final pResponse = await _client
           .from('profiles')
-          .select('*, branches(name)')
+          .select()
           .eq('user_id', userId)
           .maybeSingle();
 
       if (pResponse != null) {
         pResponse['supervisor'] = null;
+        // Fetch branch name separately (FK join on profiles may fail)
+        final branchId = pResponse['branch_id'] as String?;
+        if (branchId != null) {
+          try {
+            final branch = await _client
+                .from('branches')
+                .select('name')
+                .eq('id', branchId)
+                .maybeSingle();
+            pResponse['branches'] = branch;
+          } catch (_) {
+            pResponse['branches'] = null;
+          }
+        }
         return StaffProfileModel.fromJson(pResponse);
       }
 
@@ -65,10 +93,8 @@ class StaffRepository {
   /// Get staff profile by staff ID
   Future<StaffProfileModel?> getStaffById(String staffId) async {
     try {
-      final response = await _client.from('staff_profiles').select('''
-            *,
-            branches(name)
-          ''').eq('id', staffId).single();
+      final response = await _client.from('staff_profiles').select()
+          .eq('id', staffId).single();
 
       // Fetch supervisor name separately
       final supervisorId = response['supervisor_id'] as String?;
@@ -84,6 +110,21 @@ class StaffRepository {
         } catch (_) {}
       }
       response['supervisor'] = {'full_name': supervisorName};
+
+      // Fetch branch name separately
+      final branchId = response['branch_id'] as String?;
+      if (branchId != null) {
+        try {
+          final branch = await _client
+              .from('branches')
+              .select('name')
+              .eq('id', branchId)
+              .maybeSingle();
+          response['branches'] = branch;
+        } catch (_) {
+          response['branches'] = null;
+        }
+      }
 
       return StaffProfileModel.fromJson(response);
     } catch (e) {

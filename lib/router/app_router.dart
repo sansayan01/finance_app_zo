@@ -59,24 +59,20 @@ import '../features/home/presentation/pages/notifications_page.dart';
 import '../features/transactions/presentation/pages/transactions_page.dart';
 import '../features/members/presentation/pages/member_onboarding_page.dart';
 
-// Staff Portal - NEW
+// Staff Portal
 import '../features/staff/presentation/pages/staff_home_dashboard.dart';
+import '../features/staff/presentation/pages/staff_today_payments_page.dart';
+import '../features/staff/presentation/pages/staff_user_hub_page.dart';
+import '../features/staff/presentation/pages/staff_timeline_page.dart';
+import '../features/staff/presentation/pages/staff_map_page.dart';
+import '../features/staff/presentation/pages/staff_settings_page.dart';
 import '../features/staff/presentation/pages/collection_form_page.dart';
-import '../features/staff/presentation/pages/collection_list_page.dart';
-import '../features/staff/presentation/pages/customer_search_page.dart';
-import '../features/staff/presentation/pages/customer_detail_page.dart';
-import '../features/staff/presentation/pages/collection_history_page.dart';
-import '../features/staff/presentation/pages/overdue_list_page.dart';
 import '../features/staff/presentation/pages/visit_checkin_page.dart';
-import '../features/staff/presentation/pages/daily_summary_page.dart';
 import '../features/staff/presentation/pages/cash_deposit_page.dart';
 import '../features/staff/presentation/pages/break_logging_page.dart';
 import '../features/staff/presentation/pages/pending_operations_page.dart';
 import '../features/staff/presentation/pages/gamification_dashboard.dart';
-import '../features/staff/presentation/pages/staff_settings_page.dart';
 import '../features/staff/presentation/pages/staff_targets_page.dart';
-import '../features/staff/presentation/pages/staff_map_page.dart';
-import '../features/staff/presentation/pages/analytics_dashboard.dart';
 import '../features/staff/presentation/providers/sync_status_provider.dart';
 import '../core/services/haptic_service.dart';
 import '../core/constants/layout.dart';
@@ -761,7 +757,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Staff Shell (for field collectors) - NEW
+      // Staff Shell (Collection Agent Portal) - 6 tabs
       ShellRoute(
         builder: (context, state, child) {
           return StaffShell(child: child);
@@ -772,9 +768,35 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const StaffHomeDashboard(),
           ),
           GoRoute(
-            path: '/staff/collections',
-            builder: (context, state) => const CollectionListPage(),
+            path: '/staff/payments',
+            builder: (context, state) => const StaffTodayPaymentsPage(),
           ),
+          GoRoute(
+            path: '/staff/user-hub',
+            builder: (context, state) => const StaffUserHubPage(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return UserDetailsPage(userId: id);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/staff/timeline',
+            builder: (context, state) => const StaffTimelinePage(),
+          ),
+          GoRoute(
+            path: '/staff/map',
+            builder: (context, state) => const StaffMapPage(),
+          ),
+          GoRoute(
+            path: '/staff/settings',
+            builder: (context, state) => const StaffSettingsPage(),
+          ),
+          // Secondary routes (from dashboard quick actions)
           GoRoute(
             path: '/staff/collection/:loanId',
             builder: (context, state) {
@@ -787,31 +809,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
-            path: '/staff/customers',
-            builder: (context, state) => const CustomerSearchPage(),
-          ),
-          GoRoute(
-            path: '/staff/customers/:id',
-            builder: (context, state) {
-              final id = state.pathParameters['id']!;
-              return CustomerDetailPage(customerId: id);
-            },
-          ),
-          GoRoute(
-            path: '/staff/history',
-            builder: (context, state) => const CollectionHistoryPage(),
-          ),
-          GoRoute(
-            path: '/staff/overdue',
-            builder: (context, state) => const OverdueListPage(),
-          ),
-          GoRoute(
             path: '/staff/visit',
             builder: (context, state) => const VisitCheckInPage(),
-          ),
-          GoRoute(
-            path: '/staff/summary',
-            builder: (context, state) => const DailySummaryPage(),
           ),
           GoRoute(
             path: '/staff/deposit',
@@ -830,20 +829,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const GamificationDashboard(),
           ),
           GoRoute(
-            path: '/staff/settings',
-            builder: (context, state) => const StaffSettingsPage(),
-          ),
-          GoRoute(
             path: '/staff/targets',
             builder: (context, state) => const StaffTargetsPage(),
-          ),
-          GoRoute(
-            path: '/staff/map',
-            builder: (context, state) => const StaffMapPage(),
-          ),
-          GoRoute(
-            path: '/staff/analytics',
-            builder: (context, state) => const AnalyticsDashboard(),
           ),
         ],
       ),
@@ -1049,13 +1036,11 @@ class StaffShell extends ConsumerStatefulWidget {
 class _StaffShellState extends ConsumerState<StaffShell> {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith('/staff/collections') ||
-        location.startsWith('/staff/collection')) {
-      return 1;
-    }
-    if (location.startsWith('/staff/customers')) return 2;
-    if (location.startsWith('/staff/history')) return 3;
-    if (location.startsWith('/staff/settings')) return 4;
+    if (location.startsWith('/staff/payments')) return 1;
+    if (location.startsWith('/staff/user-hub')) return 2;
+    if (location.startsWith('/staff/timeline')) return 3;
+    if (location.startsWith('/staff/map')) return 4;
+    if (location.startsWith('/staff/settings')) return 5;
     return 0;
   }
 
@@ -1065,15 +1050,18 @@ class _StaffShellState extends ConsumerState<StaffShell> {
         context.go('/staff');
         break;
       case 1:
-        context.go('/staff/collections');
+        context.go('/staff/payments');
         break;
       case 2:
-        context.go('/staff/customers');
+        context.go('/staff/user-hub');
         break;
       case 3:
-        context.go('/staff/history');
+        context.go('/staff/timeline');
         break;
       case 4:
+        context.go('/staff/map');
+        break;
+      case 5:
         context.go('/staff/settings');
         break;
     }
@@ -1590,9 +1578,9 @@ class StaffBottomBar extends StatelessWidget {
               ),
               _StaffNavItem(
                 index: 1,
-                icon: Icons.playlist_add_check_outlined,
-                activeIcon: Icons.playlist_add_check_rounded,
-                label: 'Today',
+                icon: Icons.receipt_long_outlined,
+                activeIcon: Icons.receipt_long_rounded,
+                label: 'Payments',
                 currentIndex: currentIndex,
                 primary: primary,
                 isDark: isDark,
@@ -1600,9 +1588,9 @@ class StaffBottomBar extends StatelessWidget {
               ),
               _StaffNavItem(
                 index: 2,
-                icon: Icons.person_search_outlined,
-                activeIcon: Icons.person_search_rounded,
-                label: 'Customers',
+                icon: Icons.people_outline,
+                activeIcon: Icons.people_rounded,
+                label: 'Users',
                 currentIndex: currentIndex,
                 primary: primary,
                 isDark: isDark,
@@ -1610,9 +1598,9 @@ class StaffBottomBar extends StatelessWidget {
               ),
               _StaffNavItem(
                 index: 3,
-                icon: Icons.history_outlined,
-                activeIcon: Icons.history_rounded,
-                label: 'History',
+                icon: Icons.timeline_outlined,
+                activeIcon: Icons.timeline_rounded,
+                label: 'Timeline',
                 currentIndex: currentIndex,
                 primary: primary,
                 isDark: isDark,
@@ -1620,6 +1608,16 @@ class StaffBottomBar extends StatelessWidget {
               ),
               _StaffNavItem(
                 index: 4,
+                icon: Icons.map_outlined,
+                activeIcon: Icons.map_rounded,
+                label: 'Map',
+                currentIndex: currentIndex,
+                primary: primary,
+                isDark: isDark,
+                onTap: onTap,
+              ),
+              _StaffNavItem(
+                index: 5,
                 icon: Icons.settings_outlined,
                 activeIcon: Icons.settings_rounded,
                 label: 'Settings',
@@ -1673,7 +1671,7 @@ class _StaffNavItem extends StatelessWidget {
       },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 60,
+        width: 52,
         child: Stack(
           clipBehavior: Clip.none,
           children: [

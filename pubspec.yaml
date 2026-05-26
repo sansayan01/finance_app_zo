@@ -64,6 +64,9 @@ dependencies:
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
 
+  # Mapbox
+  mapbox_maps_flutter: ^2.7.0
+
   # Statement generation
   pdf: ^3.11.1
   printing: ^5.13.3

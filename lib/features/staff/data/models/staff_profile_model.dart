@@ -4,7 +4,20 @@ enum StaffRole {
   collector,
   supervisor,
   branchManager,
-  areaManager,
+  areaManager;
+
+  String get displayName {
+    switch (this) {
+      case StaffRole.collector:
+        return 'Collection Agent';
+      case StaffRole.supervisor:
+        return 'Supervisor';
+      case StaffRole.branchManager:
+        return 'Branch Manager';
+      case StaffRole.areaManager:
+        return 'Area Manager';
+    }
+  }
 }
 
 enum StaffStatus {
@@ -17,7 +30,18 @@ enum StaffStatus {
 enum ShiftType {
   morning,
   evening,
-  fullDay,
+  fullDay;
+
+  String get displayName {
+    switch (this) {
+      case ShiftType.morning:
+        return 'Morning';
+      case ShiftType.evening:
+        return 'Evening';
+      case ShiftType.fullDay:
+        return 'Full Day';
+    }
+  }
 }
 
 class StaffProfileModel extends Equatable {

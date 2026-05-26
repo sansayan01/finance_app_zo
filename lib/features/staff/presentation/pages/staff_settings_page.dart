@@ -140,7 +140,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                 _buildInfoTile(
                     theme,
                     'Role',
-                    profileAsync.valueOrNull?.role.name
+                    profileAsync.valueOrNull?.role.displayName
                             .replaceAll('_', ' ')
                             .toUpperCase() ??
                         '-'),
@@ -261,7 +261,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  profile.role.name.replaceAll('_', ' ').toUpperCase(),
+                  profile.role.displayName.toUpperCase(),
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 9,

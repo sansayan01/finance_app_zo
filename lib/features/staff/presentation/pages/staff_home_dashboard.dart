@@ -120,7 +120,7 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
         child: FloatingActionButton.extended(
           onPressed: () {
             HapticFeedback.mediumImpact();
-            context.push('/staff/collections');
+            context.push('/staff/payments');
           },
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -298,16 +298,14 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: _shiftColor(profile.shift.name)
+                                    color: _shiftColor(profile.shift.displayName)
                                         .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    profile.shift.name
-                                        .replaceAll('_', ' ')
-                                        .toUpperCase(),
+                                    profile.shift.displayName.toUpperCase(),
                                     style: TextStyle(
-                                      color: _shiftColor(profile.shift.name)
+                                      color: _shiftColor(profile.shift.displayName)
                                           .withValues(alpha: 0.9),
                                       fontSize: 9,
                                       fontWeight: FontWeight.w700,
@@ -661,34 +659,34 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
           children: [
             Expanded(
                 child: _buildActionCard(
-                    icon: Icons.history_rounded,
-                    label: 'Logbook',
-                    color: const Color(0xFF6366F1),
-                    onTap: () => context.push('/staff/history'),
+                    icon: Icons.receipt_long_rounded,
+                    label: 'Payments',
+                    color: const Color(0xFF667EEA),
+                    onTap: () => context.push('/staff/payments'),
                     isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(
                 child: _buildActionCard(
-                    icon: Icons.warning_amber_rounded,
-                    label: 'Overdue',
-                    color: const Color(0xFFF59E0B),
-                    onTap: () => context.push('/staff/overdue'),
-                    isDark: isDark)),
-            const SizedBox(width: 8),
-            Expanded(
-                child: _buildActionCard(
-                    icon: Icons.map_outlined,
-                    label: 'Router',
+                    icon: Icons.people_rounded,
+                    label: 'User Hub',
                     color: const Color(0xFF10B981),
-                    onTap: () => context.push('/staff/map'),
+                    onTap: () => context.push('/staff/user-hub'),
                     isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(
                 child: _buildActionCard(
-                    icon: Icons.settings_outlined,
-                    label: 'Settings',
-                    color: const Color(0xFF64748B),
-                    onTap: () => context.push('/staff/settings'),
+                    icon: Icons.timeline_rounded,
+                    label: 'Timeline',
+                    color: const Color(0xFFF59E0B),
+                    onTap: () => context.push('/staff/timeline'),
+                    isDark: isDark)),
+            const SizedBox(width: 8),
+            Expanded(
+                child: _buildActionCard(
+                    icon: Icons.map_rounded,
+                    label: 'Map',
+                    color: const Color(0xFF06B6D4),
+                    onTap: () => context.push('/staff/map'),
                     isDark: isDark)),
           ],
         ),
@@ -713,18 +711,18 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
             const SizedBox(width: 8),
             Expanded(
                 child: _buildActionCard(
-                    icon: Icons.analytics_outlined,
-                    label: 'Analytics',
-                    color: AppColors.accent,
-                    onTap: () => context.push('/staff/analytics'),
+                    icon: Icons.emoji_events_outlined,
+                    label: 'Rewards',
+                    color: const Color(0xFFF59E0B),
+                    onTap: () => context.push('/staff/gamification'),
                     isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(
                 child: _buildActionCard(
-                    icon: Icons.emoji_events_outlined,
-                    label: 'Gamification',
-                    color: const Color(0xFFF59E0B),
-                    onTap: () => context.push('/staff/gamification'),
+                    icon: Icons.settings_outlined,
+                    label: 'Settings',
+                    color: const Color(0xFF64748B),
+                    onTap: () => context.push('/staff/settings'),
                     isDark: isDark)),
           ],
         ),

@@ -6,7 +6,18 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/staff_providers.dart';
 
-enum BreakType { lunch, tea, rest, personal, other }
+enum BreakType { lunch, tea, rest, personal, other;
+
+  String get displayName {
+    switch (this) {
+      case BreakType.lunch: return 'Lunch';
+      case BreakType.tea: return 'Tea';
+      case BreakType.rest: return 'Rest';
+      case BreakType.personal: return 'Personal';
+      case BreakType.other: return 'Other';
+    }
+  }
+}
 
 class BreakLoggingPage extends ConsumerStatefulWidget {
   const BreakLoggingPage({super.key});
@@ -48,7 +59,7 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
           _isOnBreak = true;
           _breakStartTime = DateTime.parse(currentBreak['start_time']);
           _selectedBreakType = BreakType.values.firstWhere(
-              (t) => t.name == currentBreak['break_type'],
+              (t) => t.toString().split('.').last == currentBreak['break_type'],
               orElse: () => BreakType.other);
         });
         _startTimer();
@@ -90,7 +101,7 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
       } else {
         await repo.startBreak(
             staffId: profile.id,
-            breakType: _selectedBreakType.name,
+            breakType: _selectedBreakType.toString().split('.').last,
             notes: _notesController.text.isNotEmpty
                 ? _notesController.text
                 : null);
@@ -201,7 +212,7 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
                 letterSpacing: 2),
           ),
           const SizedBox(height: 4),
-          Text(_selectedBreakType.name.toUpperCase(),
+          Text(_selectedBreakType.displayName.toUpperCase(),
               style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
           const SizedBox(height: 28),
           SizedBox(

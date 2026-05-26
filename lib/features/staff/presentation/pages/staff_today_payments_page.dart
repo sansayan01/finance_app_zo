@@ -1,24 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/glass_button.dart';
-import '../../../../core/widgets/glass_text_field.dart';
-import '../../../../core/widgets/progress_gauge.dart';
 import '../../../payments/data/models/today_payment_model.dart';
 import '../../../payments/data/providers/payment_providers.dart' show TodayPaymentData;
 import '../../../payments/data/utils/payment_export.dart';
 import '../../../branch_manager/data/providers/branch_payment_providers.dart';
-import '../../../branch_manager/data/providers/branch_scoped_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
 import '../../data/providers/staff_providers.dart';
-import '../widgets/premium_helpers.dart';
 
 class StaffTodayPaymentsPage extends ConsumerStatefulWidget {
   const StaffTodayPaymentsPage({super.key});
@@ -58,6 +52,755 @@ class _StaffTodayPaymentsPageState
     setState(() => _showSearch = false);
   }
 
+  Future<void> _pickDate() async {
+    final filters = ref.read(branchPaymentFilterProvider);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: filters.selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      ref.read(branchPaymentFilterProvider.notifier).setDate(picked);
+    }
+  }
+
+  void _showSortSheet() {
+    final filters = ref.read(branchPaymentFilterProvider);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text('Sort By',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+            ...PaymentSortBy.values.map((sort) => ListTile(
+                  title: Text(sort.label),
+                  trailing: filters.sortBy == sort
+                      ? Icon(Icons.check_circle, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    ref.read(branchPaymentFilterProvider.notifier).setSortBy(sort);
+                    Navigator.pop(ctx);
+                  },
+                )),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showShareSheet(TodayPaymentData data) {
+    final filters = ref.read(branchPaymentFilterProvider);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text('Export & Share',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.share_rounded,
+                    color: AppColors.primary, size: 20),
+              ),
+              title: const Text('Share Summary'),
+              subtitle: const Text('Share text summary via any app'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final text = PaymentExport.generateSummaryText(
+                    data, filters.dateLabel);
+                await SharePlus.instance.share(
+                  ShareParams(
+                    text: text,
+                    subject: 'Payments - ${filters.dateLabel}',
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.table_chart_rounded,
+                    color: AppColors.success, size: 20),
+              ),
+              title: const Text('Export CSV'),
+              subtitle: const Text('Download payment data as CSV file'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                try {
+                  await PaymentExport.shareCsv(
+                      data.allPayments, filters.dateLabel);
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Export failed: $e'),
+                      backgroundColor: Colors.redAccent,
+                    ));
+                  }
+                }
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.copy_rounded,
+                    color: AppColors.info, size: 20),
+              ),
+              title: const Text('Copy Summary'),
+              subtitle: const Text('Copy summary to clipboard'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final text = PaymentExport.generateSummaryText(
+                    data, filters.dateLabel);
+                await Clipboard.setData(ClipboardData(text: text));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Summary copied to clipboard'),
+                    backgroundColor: AppColors.success,
+                  ));
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _sendReminder(TodayPayment payment) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Send Reminder'),
+        content: Text('Send payment reminder to ${payment.memberName}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Reminder sent to ${payment.memberName}'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showQuickCollect(TodayPayment payment) {
+    int installmentCount = 1;
+    final amountController = TextEditingController(
+        text: payment.amountExpected.toStringAsFixed(0));
+    String selectedMode = 'cash';
+    bool isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final currencyFormat =
+              NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+
+          void updateAmount() {
+            amountController.text =
+                (payment.amountExpected * installmentCount).toStringAsFixed(0);
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom +
+                  MediaQuery.of(ctx).padding.bottom +
+                  20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: AppColors.successGradient,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.payment_rounded,
+                          color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Quick Collect',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${payment.memberName} \u00b7 ${payment.typeLabel}'
+                            '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
+                            '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Installment count selector
+                const Text('Number of Installments',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: installmentCount > 1
+                            ? () => setSheetState(() {
+                                  installmentCount--;
+                                  updateAmount();
+                                })
+                            : null,
+                        icon: const Icon(Icons.remove_circle_outline_rounded),
+                        color: AppColors.primary,
+                        disabledColor: Colors.grey.shade300,
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            '$installmentCount',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          Text(
+                            installmentCount == 1
+                                ? 'installment'
+                                : 'installments',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: installmentCount < 12
+                            ? () => setSheetState(() {
+                                  installmentCount++;
+                                  updateAmount();
+                                })
+                            : null,
+                        icon: const Icon(Icons.add_circle_outline_rounded),
+                        color: AppColors.primary,
+                        disabledColor: Colors.grey.shade300,
+                      ),
+                    ],
+                  ),
+                ),
+                if (installmentCount > 1) ...[
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '$installmentCount \u00d7 ${currencyFormat.format(payment.amountExpected)} = ${currencyFormat.format(payment.amountExpected * installmentCount)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+
+                // Amount field
+                const Text('Total Amount',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    prefixText: '\u20b9 ',
+                    prefixStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
+                      fontSize: 20,
+                    ),
+                    hintText: 'Enter amount',
+                    filled: true,
+                    fillColor: AppColors.success.withValues(alpha: 0.06),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide:
+                          const BorderSide(color: AppColors.success, width: 2),
+                    ),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Payment mode
+                const Text('Payment Mode',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ModeChip(
+                        icon: Icons.money_rounded,
+                        label: 'Cash',
+                        isSelected: selectedMode == 'cash',
+                        onTap: () =>
+                            setSheetState(() => selectedMode = 'cash'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ModeChip(
+                        icon: Icons.qr_code_rounded,
+                        label: 'UPI',
+                        isSelected: selectedMode == 'upi',
+                        onTap: () =>
+                            setSheetState(() => selectedMode = 'upi'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ModeChip(
+                        icon: Icons.account_balance_rounded,
+                        label: 'Bank',
+                        isSelected: selectedMode == 'bank_transfer',
+                        onTap: () =>
+                            setSheetState(() => selectedMode = 'bank_transfer'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ModeChip(
+                        icon: Icons.receipt_rounded,
+                        label: 'Cheque',
+                        isSelected: selectedMode == 'cheque',
+                        onTap: () =>
+                            setSheetState(() => selectedMode = 'cheque'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                final amount = double.tryParse(
+                                        amountController.text) ??
+                                    0;
+                                if (amount <= 0) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    content: Text('Enter a valid amount'),
+                                    backgroundColor: Colors.redAccent,
+                                  ));
+                                  return;
+                                }
+
+                                final navigator = Navigator.of(ctx);
+                                final messenger = ScaffoldMessenger.of(context);
+
+                                setSheetState(() => isSubmitting = true);
+
+                                try {
+                                  await _recordCollection(
+                                    payment: payment,
+                                    amount: amount,
+                                    paymentMode: selectedMode,
+                                    installmentCount: installmentCount,
+                                  );
+
+                                  navigator.pop();
+                                  messenger.showSnackBar(SnackBar(
+                                    content: Text(
+                                        '${installmentCount > 1 ? '$installmentCount installments \u00b7 ' : ''}\u20b9${amount.toStringAsFixed(0)} collected from ${payment.memberName}'),
+                                    backgroundColor: AppColors.success,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                  ));
+                                  final branchId = ref.read(currentStaffBranchIdProvider);
+                                  if (branchId != null) {
+                                    ref.invalidate(branchTodayPaymentsProvider(branchId));
+                                  }
+                                } catch (e) {
+                                  setSheetState(
+                                      () => isSubmitting = false);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text('Collection failed: $e'),
+                                      backgroundColor: Colors.redAccent,
+                                    ));
+                                  }
+                                }
+                              },
+                        icon: isSubmitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.check_circle_rounded,
+                                size: 18),
+                        label: Text(
+                          isSubmitting
+                              ? 'Processing...'
+                              : 'Collect ${currencyFormat.format(double.tryParse(amountController.text) ?? 0)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, 52),
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _recordCollection({
+    required TodayPayment payment,
+    required double amount,
+    required String paymentMode,
+    int installmentCount = 1,
+  }) async {
+    final client = ref.read(supabaseClientProvider);
+    final profile = await ref.read(staffProfileProvider.future);
+    if (profile == null) throw Exception('Staff profile not found');
+
+    final now = DateTime.now();
+    final today = now.toIso8601String().split('T').first;
+
+    if (payment.type == PaymentType.savings) {
+      // 1. Record collection log
+      await client.from('savings_collections').insert({
+        'org_id': profile.orgId,
+        'savings_plan_id': payment.id,
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'member_phone': payment.memberPhone,
+        'amount_expected': payment.amountExpected * installmentCount,
+        'amount_collected': amount,
+        'is_partial': amount < (payment.amountExpected * installmentCount),
+        'payment_mode': paymentMode,
+        'collection_date': today,
+        'staff_id': profile.id,
+        'collector_name': profile.fullName,
+        'collector_role': profile.role.displayName,
+        'sync_status': 'synced',
+      });
+
+      // 2. Advance next_due_date by installmentCount periods
+      final plan = await client
+          .from('savings_plans')
+          .select('collection_type, collection_day_of_week, collection_day_of_month, current_amount')
+          .eq('id', payment.id)
+          .maybeSingle();
+
+      DateTime nextDue;
+      final collectionType = plan?['collection_type'] ?? 'daily';
+      switch (collectionType) {
+        case 'weekly':
+          nextDue = now.add(Duration(days: 7 * installmentCount));
+          break;
+        case 'monthly':
+          final targetDay = plan?['collection_day_of_month'] ?? now.day;
+          final targetMonth = now.month + installmentCount;
+          final targetYear = now.year + ((targetMonth - 1) ~/ 12);
+          final adjustedMonth = ((targetMonth - 1) % 12) + 1;
+          final daysInMonth = DateTime(targetYear, adjustedMonth + 1, 0).day;
+          nextDue = DateTime(targetYear, adjustedMonth,
+              targetDay > daysInMonth ? daysInMonth : targetDay);
+          break;
+        default: // daily
+          nextDue = now.add(Duration(days: installmentCount));
+      }
+
+      final currentBalance =
+          ((plan?['current_amount']) as num?)?.toDouble() ?? 0.0;
+
+      // 3. Update savings plan
+      await client.from('savings_plans').update({
+        'next_due_date': nextDue.toIso8601String().split('T').first,
+        'current_amount': currentBalance + amount,
+        'updated_at': now.toIso8601String(),
+      }).eq('id', payment.id);
+
+      // 4. Transaction record
+      await client.from('transactions').insert({
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'savings_id': payment.id,
+        'amount': amount,
+        'type': 'savingsDeposit',
+        'payment_mode': paymentMode,
+        'description': installmentCount > 1
+            ? '$installmentCount installments deposited via $paymentMode'
+            : 'Savings deposit via $paymentMode',
+        'org_id': profile.orgId,
+        'created_at': now.toIso8601String(),
+      });
+    } else {
+      // EMI Payment flow
+
+      // 1. Record collection log
+      await client.from('collections').insert({
+        'org_id': profile.orgId,
+        'staff_id': profile.id,
+        'loan_id': payment.loanId,
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'member_phone': payment.memberPhone,
+        'loan_number': payment.loanNumber,
+        'amount_expected': payment.amountExpected * installmentCount,
+        'amount_collected': amount,
+        'is_partial': amount < (payment.amountExpected * installmentCount),
+        'collection_type': 'emi',
+        'payment_mode': paymentMode,
+        'collection_date': today,
+        'collection_time':
+            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
+        'collector_name': profile.fullName,
+        'collector_role': profile.role.displayName,
+        'sync_status': 'synced',
+      });
+
+      // 2. Mark multiple EMIs as paid
+      if (payment.loanId != null) {
+        final unpaidEmis = await client
+            .from('emi_schedule')
+            .select('id')
+            .eq('loan_id', payment.loanId!)
+            .eq('is_paid', false)
+            .order('due_date', ascending: true)
+            .limit(installmentCount);
+
+        for (final emi in (unpaidEmis as List)) {
+          await client.from('emi_schedule').update({
+            'is_paid': true,
+            'status': 'paid',
+            'paid_on': now.toIso8601String(),
+            'payment_mode': paymentMode,
+            'amount_paid': payment.amountExpected,
+            'updated_at': now.toIso8601String(),
+          }).eq('id', emi['id']);
+        }
+
+        // 3. Update loan outstanding balance
+        final loan = await client
+            .from('loans')
+            .select('outstanding_amount, outstanding_balance')
+            .eq('id', payment.loanId!)
+            .maybeSingle();
+
+        if (loan != null) {
+          final currentBalance = ((loan['outstanding_amount'] ??
+                      loan['outstanding_balance']) as num?)
+                  ?.toDouble() ??
+              0.0;
+          final newBalance =
+              (currentBalance - amount).clamp(0.0, currentBalance);
+
+          final updateData = <String, dynamic>{
+            'outstanding_amount': newBalance,
+            'outstanding_balance': newBalance,
+            'updated_at': now.toIso8601String(),
+          };
+
+          if (newBalance <= 0) {
+            updateData['status'] = 'closed';
+            updateData['closed_date'] = today;
+          }
+
+          await client
+              .from('loans')
+              .update(updateData)
+              .eq('id', payment.loanId!);
+        }
+      }
+
+      // 4. Transaction record
+      await client.from('transactions').insert({
+        'loan_id': payment.loanId,
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'type': 'emiPayment',
+        'amount': amount,
+        'payment_mode': paymentMode,
+        'description': installmentCount > 1
+            ? '$installmentCount EMIs paid via $paymentMode'
+            : 'EMI payment via $paymentMode',
+        'org_id': profile.orgId,
+        'created_at': now.toIso8601String(),
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -66,7 +809,9 @@ class _StaffTodayPaymentsPageState
 
     if (branchAsync.isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Payments')),
+        backgroundColor:
+            isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        appBar: AppBar(title: const Text('Today\'s Payments')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -75,13 +820,23 @@ class _StaffTodayPaymentsPageState
 
     if (branchId == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Payments')),
-        body: const Center(child: Text('No branch assigned to your profile.\nContact your admin to assign a branch.')),
+        backgroundColor:
+            isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        appBar: AppBar(title: const Text('Today\'s Payments')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Text(
+              'No branch assigned to your profile.\nContact your admin to assign a branch.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
       );
     }
 
     final paymentsAsync = ref.watch(branchTodayPaymentsProvider(branchId));
-    final filter = ref.watch(branchPaymentFilterProvider);
+    final filters = ref.watch(branchPaymentFilterProvider);
 
     // Auto-refresh timer
     ref.listen<BranchPaymentFilterState>(branchPaymentFilterProvider,
@@ -93,1452 +848,1122 @@ class _StaffTodayPaymentsPageState
 
     return Scaffold(
       backgroundColor:
-          isDark ? const Color(0xFF0A0A0C) : const Color(0xFFF2F2F7),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(branchTodayPaymentsProvider(branchId));
-          ref.invalidate(branchCollectionStatsProvider(branchId));
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          slivers: [
-            // App Bar
-            _buildAppBar(theme, isDark, filter, branchId),
-            // Hero Summary
-            SliverToBoxAdapter(
-              child: paymentsAsync.when(
-                data: (data) => _buildHeroSummary(theme, isDark, data),
-                loading: () => _buildHeroLoading(isDark),
-                error: (e, _) => _buildErrorWidget(theme, isDark, e),
-              ),
-            ),
-            // Quick Stats Row
-            SliverToBoxAdapter(
-              child: paymentsAsync.when(
-                data: (data) => _buildQuickStats(theme, isDark, data),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
-            ),
-            // Tab Bar
-            SliverToBoxAdapter(child: _buildTabBar(theme, isDark)),
-            // Search Bar (when visible)
-            if (_showSearch)
-              SliverToBoxAdapter(
-                child: _buildSearchField(theme, isDark),
-              ),
-            // Date & Sort Controls
-            SliverToBoxAdapter(
-              child: _buildDateSortRow(theme, isDark, filter, branchId),
-            ),
-            // Payment Cards
-            paymentsAsync.when(
-              data: (data) {
-                final tabData = _getTabData(data);
-                if (tabData.isEmpty) {
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _buildEmptyState(theme, isDark, _tabController.index),
-                  );
-                }
-                return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                  sliver: SliverList.builder(
-                    itemCount: tabData.length,
-                    itemBuilder: (context, index) {
-                      return _buildPaymentCard(
-                        context, theme, isDark, tabData[index], index,
-                        branchId,
-                      );
-                    },
-                  ),
-                );
-              },
-              loading: () => SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList.builder(
-                  itemCount: 6,
-                  itemBuilder: (_, __) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.04)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor:
+            isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        leading: _showSearch
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: _clearSearch,
+              )
+            : null,
+        title: _showSearch
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search customer, phone, loan...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38),
                 ),
-              ),
-              error: (e, _) => SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildErrorWidget(theme, isDark, e),
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: _buildQuickCollectFab(theme, isDark, branchId),
-    );
-  }
-
-  // ── App Bar ──
-  Widget _buildAppBar(
-      ThemeData theme, bool isDark, BranchPaymentFilterState filter, String branchId) {
-    return SliverAppBar(
-      pinned: true,
-      elevation: 0,
-      backgroundColor: isDark
-          ? const Color(0xFF0A0A0C).withValues(alpha: 0.85)
-          : const Color(0xFFF2F2F7).withValues(alpha: 0.85),
-      surfaceTintColor: Colors.transparent,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Today's Collection",
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-            ),
-          ),
-          Text(
-            filter.dateLabel,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.primary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        if (!_showSearch)
-          IconButton(
-            onPressed: () => setState(() => _showSearch = true),
-            icon: Icon(Icons.search_rounded,
-                color: isDark ? Colors.white70 : Colors.black54),
-          ),
-        if (_showSearch)
-          IconButton(
-            onPressed: _clearSearch,
-            icon: Icon(Icons.close_rounded,
-                color: isDark ? Colors.white70 : Colors.black54),
-          ),
-        IconButton(
-          onPressed: () => _showSortSheet(context, isDark),
-          icon: Icon(Icons.sort_rounded,
-              color: isDark ? Colors.white70 : Colors.black54),
-        ),
-        PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert_rounded,
-              color: isDark ? Colors.white70 : Colors.black54),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          onSelected: (value) {
-            switch (value) {
-              case 'export_csv':
-                _exportPayments(context, branchId, 'csv');
-                break;
-              case 'export_pdf':
-                _exportPayments(context, branchId, 'pdf');
-                break;
-              case 'auto_refresh':
-                ref
-                    .read(branchPaymentFilterProvider.notifier)
-                    .toggleAutoRefresh();
-                break;
-              case 'reset':
-                ref
-                    .read(branchPaymentFilterProvider.notifier)
-                    .resetFilters();
-                _searchController.clear();
-                setState(() {
-                  _showSearch = false;
-                  _tabController.index = 0;
-                });
-                break;
-            }
-          },
-          itemBuilder: (_) => [
-            PopupMenuItem(
-              value: 'export_csv',
-              child: Row(children: [
-                const Icon(Icons.file_download_outlined, size: 20),
-                const SizedBox(width: 12),
-                const Text('Export CSV'),
-              ]),
-            ),
-            PopupMenuItem(
-              value: 'export_pdf',
-              child: Row(children: [
-                const Icon(Icons.picture_as_pdf_outlined, size: 20),
-                const SizedBox(width: 12),
-                const Text('Export PDF'),
-              ]),
-            ),
-            PopupMenuItem(
-              value: 'auto_refresh',
-              child: Row(children: [
-                Icon(
-                  filter.autoRefresh
-                      ? Icons.pause_circle_outline
-                      : Icons.play_circle_outline,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Text(filter.autoRefresh
-                    ? 'Pause Auto-refresh'
-                    : 'Enable Auto-refresh'),
-              ]),
-            ),
-            const PopupMenuItem(
-              value: 'reset',
-              child: Row(children: [
-                Icon(Icons.refresh_rounded, size: 20),
-                SizedBox(width: 12),
-                Text('Reset Filters'),
-              ]),
-            ),
-          ],
-        ),
-      ],
-      systemOverlayStyle:
-          isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-    );
-  }
-
-  // ── Hero Summary ──
-  Widget _buildHeroSummary(
-      ThemeData theme, bool isDark, TodayPaymentData data) {
-    final total = data.allPayments.length;
-    final collected =
-        data.allPayments.where((p) => p.isCollected).length;
-    final pending =
-        data.allPayments.where((p) => p.isPending).length;
-    final overdue =
-        data.allPayments.where((p) => p.isOverdue).length;
-    final progress = total > 0 ? collected / total : 0.0;
-    final totalExpected = data.allPayments.fold<double>(
-        0, (sum, p) => sum + p.amountExpected);
-    final totalCollected = data.allPayments
-        .where((p) => p.isCollected)
-        .fold<double>(0, (sum, p) => sum + (p.amountCollected ?? p.amountExpected));
-    final f = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
-                : [const Color(0xFF667EEA), const Color(0xFF764BA2)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Ambient orbs
-            Positioned(
-              top: -20,
-              right: -30,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -15,
-              left: 40,
-              child: Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
-              ),
-            ),
-            // Content
-            Row(
-              children: [
-                // Progress ring
-                ProgressGauge(
-                  value: progress,
-                  size: 80,
-                  strokeWidth: 6,
-                  progressColor: Colors.white,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  center: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${(progress * 100).toInt()}%',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        '$collected/$total',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 20),
-                // Stats
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        f.format(totalExpected),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Collected: ${f.format(totalCollected)}',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _miniBadge('$pending', 'Pending',
-                              const Color(0xFFFBBF24)),
-                          const SizedBox(width: 8),
-                          _miniBadge(
-                              '$overdue', 'Overdue', const Color(0xFFEF4444)),
-                          const SizedBox(width: 8),
-                          _miniBadge(
-                              '$collected', 'Done', const Color(0xFF34D399)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
-  }
-
-  Widget _miniBadge(String count, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(count,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700)),
-          Text(label,
-              style: TextStyle(
-                  color: color.withValues(alpha: 0.7),
-                  fontSize: 9)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeroLoading(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Container(
-        height: 120,
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.04)
-              : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    );
-  }
-
-  // ── Quick Stats ──
-  Widget _buildQuickStats(
-      ThemeData theme, bool isDark, TodayPaymentData data) {
-    final emiPayments =
-        data.allPayments.where((p) => p.type == PaymentType.emi).toList();
-    final savingsPayments =
-        data.allPayments.where((p) => p.type == PaymentType.savings).toList();
-    final f = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
-    final emiTotal = emiPayments.fold<double>(0, (s, p) => s + p.amountExpected);
-    final savingsTotal =
-        savingsPayments.fold<double>(0, (s, p) => s + p.amountExpected);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PremiumHelpers.sectionHeader(theme, 'Quick Overview'),
-          Row(
-            children: [
-              Expanded(
-                  child: _statChip(theme, isDark, Icons.account_balance_rounded,
-                      'EMI', f.format(emiTotal), '${emiPayments.length} dues')),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: _statChip(
-                      theme,
-                      isDark,
-                      Icons.savings_rounded,
-                      'Savings',
-                      f.format(savingsTotal),
-                      '${savingsPayments.length} plans')),
-            ],
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 200.ms, duration: 300.ms);
-  }
-
-  Widget _statChip(ThemeData theme, bool isDark, IconData icon, String label,
-      String amount, String sub) {
-    final color = AppColors.primary;
-    return GlassCard(
-      backgroundColor: color.withValues(alpha: 0.05),
-      borderRadius: 16,
-      padding: const EdgeInsets.all(14),
-      enableScale: false,
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: AppColors.primary),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(amount,
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : Colors.black87)),
-                Text(sub,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.white38 : Colors.black38)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Tab Bar ──
-  Widget _buildTabBar(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: TabBar(
-          controller: _tabController,
-          onTap: (_) => setState(() {}),
-          indicator: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          labelColor: Colors.white,
-          unselectedLabelColor:
-              isDark ? Colors.white54 : Colors.black54,
-          labelStyle: const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w500),
-          indicatorSize: TabBarIndicatorSize.tab,
-          dividerColor: Colors.transparent,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Overdue'),
-            Tab(text: 'Collected'),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 300.ms, duration: 300.ms);
-  }
-
-  // ── Search Field ──
-  Widget _buildSearchField(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: TextField(
-        controller: _searchController,
-        autofocus: true,
-        onChanged: _onSearchChanged,
-        style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87, fontSize: 14),
-        decoration: InputDecoration(
-          hintText: 'Search member, phone, loan number...',
-          hintStyle: TextStyle(
-              color: isDark ? Colors.white30 : Colors.black38, fontSize: 14),
-          prefixIcon: Icon(Icons.search_rounded,
-              color: isDark ? Colors.white30 : Colors.black38, size: 20),
-          filled: true,
-          fillColor: isDark
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      ),
-    ).animate().fadeIn(duration: 200.ms);
-  }
-
-  // ── Date & Sort Row ──
-  Widget _buildDateSortRow(ThemeData theme, bool isDark,
-      BranchPaymentFilterState filter, String branchId) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Row(
-        children: [
-          // Date navigator
-          GestureDetector(
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: filter.selectedDate,
-                firstDate: DateTime(2024),
-                lastDate: DateTime.now().add(const Duration(days: 7)),
-              );
-              if (picked != null) {
-                ref.read(branchPaymentFilterProvider.notifier).setDate(picked);
-              }
-            },
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.06),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 28, minHeight: 28),
-                    iconSize: 18,
-                    onPressed: () {
-                      ref.read(branchPaymentFilterProvider.notifier).setDate(
-                          filter.selectedDate
-                              .subtract(const Duration(days: 1)));
-                    },
-                    icon: Icon(Icons.chevron_left,
-                        color: isDark ? Colors.white54 : Colors.black54),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    filter.isToday
-                        ? 'Today'
-                        : DateFormat('dd MMM').format(filter.selectedDate),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 28, minHeight: 28),
-                    iconSize: 18,
-                    onPressed: filter.selectedDate.isBefore(
-                            DateTime.now().add(const Duration(days: 7)))
-                        ? () {
-                            ref
-                                .read(branchPaymentFilterProvider.notifier)
-                                .setDate(filter.selectedDate
-                                    .add(const Duration(days: 1)));
-                          }
-                        : null,
-                    icon: Icon(Icons.chevron_right,
-                        color: isDark ? Colors.white54 : Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Spacer(),
-          // Sort chip
-          GestureDetector(
-            onTap: () => _showSortSheet(context, isDark),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.06),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.swap_vert,
-                      size: 16,
-                      color: isDark ? Colors.white54 : Colors.black54),
-                  const SizedBox(width: 4),
-                  Text(
-                    _sortLabel(filter.sortBy),
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.white54 : Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Payment Card ──
-  Widget _buildPaymentCard(BuildContext context, ThemeData theme, bool isDark,
-      TodayPayment payment, int index, String branchId) {
-    final f = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: GlassCard(
-        onTap: () => _showPaymentDetails(context, isDark, payment),
-        borderRadius: 16,
-        padding: const EdgeInsets.all(14),
-        borderColor: _statusBorderColor(payment.status, isDark),
-        enableScale: true,
-        child: Column(
-          children: [
-            Row(
-              children: [
-                // Type icon
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _typeColor(payment.type)
-                        .withValues(alpha: isDark ? 0.15 : 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    payment.type == PaymentType.emi
-                        ? Icons.account_balance_rounded
-                        : Icons.savings_rounded,
-                    size: 18,
-                    color: _typeColor(payment.type),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Member info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        payment.memberName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          if (payment.loanNumber != null) ...[
-                            Text(
-                              payment.loanNumber!,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? Colors.white38
-                                    : Colors.black38,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          if (payment.planName != null) ...[
-                            Text(
-                              payment.planName!,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? Colors.white38
-                                    : Colors.black38,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Amount + status
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                style:
+                    TextStyle(color: isDark ? Colors.white : Colors.black),
+              )
+            : GestureDetector(
+                onTap: _pickDate,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      f.format(payment.amountExpected),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _statusColor(payment.status),
-                      ),
+                      filters.isToday
+                          ? "Today's Payments"
+                          : 'Payments - ${filters.dateLabel}',
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w700),
                     ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: _statusColor(payment.status)
-                            .withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _statusLabel(payment.status),
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: _statusColor(payment.status),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ],
+                ),
+              ),
+        actions: [
+          if (!_showSearch) ...[
+            IconButton(
+              icon: const Icon(Icons.search_rounded),
+              onPressed: () => setState(() => _showSearch = true),
+            ),
+            PopupMenuButton(
+              icon: const Icon(Icons.more_vert_rounded),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              itemBuilder: (ctx) => [
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(
+                      filters.autoRefresh
+                          ? Icons.pause_circle_outline
+                          : Icons.play_circle_outline,
+                      size: 20,
+                    ),
+                    title: Text(filters.autoRefresh
+                        ? 'Pause Auto-refresh'
+                        : 'Enable Auto-refresh'),
+                    dense: true,
+                  ),
+                  onTap: () => ref
+                      .read(branchPaymentFilterProvider.notifier)
+                      .toggleAutoRefresh(),
+                ),
+                PopupMenuItem(
+                  child: const ListTile(
+                    leading: Icon(Icons.sort_rounded, size: 20),
+                    title: Text('Sort'),
+                    dense: true,
+                  ),
+                  onTap: () =>
+                      Future.delayed(Duration.zero, () => _showSortSheet()),
+                ),
+                PopupMenuItem(
+                  child: const ListTile(
+                    leading: Icon(Icons.refresh_rounded, size: 20),
+                    title: Text('Refresh'),
+                    dense: true,
+                  ),
+                  onTap: () {
+                    ref.invalidate(branchTodayPaymentsProvider(branchId));
+                  },
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+      body: paymentsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.error_outline,
+                      size: 48, color: AppColors.error),
+                ),
+                const SizedBox(height: 16),
+                Text('Something went wrong',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimaryLight)),
+                const SizedBox(height: 8),
+                Text('$e',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? AppColors.textTertiaryDark
+                            : AppColors.textTertiaryLight)),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ref.invalidate(branchTodayPaymentsProvider(branchId));
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        data: (data) {
+          final summary = data.summary;
+          final pending = data.pendingPayments;
+          final collected = data.collectedPayments;
+          final overdue = data.overduePayments;
+
+          return Column(
+            children: [
+              // Scrollable header
+              Flexible(
+                fit: FlexFit.loose,
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildSummaryHero(summary, isDark),
+                      _buildQuickStats(summary, isDark),
+                      const SizedBox(height: 8),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.fillDark
+                              : AppColors.fillLight,
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: TabBar(
+                          controller: _tabController,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: isDark
+                              ? AppColors.textTertiaryDark
+                              : AppColors.textTertiaryLight,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicator: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          dividerColor: Colors.transparent,
+                          labelStyle: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 13),
+                          unselectedLabelStyle: const TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 13),
+                          tabs: [
+                            Tab(text: 'Pending (${pending.length})'),
+                            Tab(text: 'Overdue (${overdue.length})'),
+                            Tab(text: 'Collected (${collected.length})'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Tab content fills remaining space
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildPaymentList(pending, isDark, 'No pending payments',
+                        Icons.schedule_rounded, branchId),
+                    _buildPaymentList(overdue, isDark, 'No overdue payments',
+                        Icons.warning_amber_rounded, branchId),
+                    _buildPaymentList(collected, isDark, 'No collections yet',
+                        Icons.check_circle_outline_rounded, branchId),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: paymentsAsync.maybeWhen(
+        data: (data) => FloatingActionButton.extended(
+          onPressed: () => _showShareSheet(data),
+          icon: const Icon(Icons.ios_share_rounded, size: 20),
+          label: const Text('Export',
+              style: TextStyle(fontWeight: FontWeight.w600)),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 4,
+        ),
+        orElse: () => null,
+      ),
+    );
+  }
+
+  // Summary Hero Card
+  Widget _buildSummaryHero(TodayPaymentSummary summary, bool isDark) {
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.accent],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total Due Today',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    currencyFormat.format(summary.totalDue),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.people_rounded,
+                        color: Colors.white, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${summary.countDue} payments',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            // Bottom row: actions
-            if (!payment.isCollected) ...[
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  if (payment.memberPhone != null)
-                    _actionChip(
-                      Icons.phone_rounded,
-                      'Call',
-                      const Color(0xFF10B981),
-                      () => _callMember(payment.memberPhone!),
-                    ),
-                  const SizedBox(width: 8),
-                  _actionChip(
-                    Icons.check_circle_outline_rounded,
-                    'Collect',
-                    AppColors.primary,
-                    () => _showQuickCollectSheet(
-                        context, isDark, payment, branchId),
-                  ),
-                ],
               ),
             ],
-          ],
-        ),
-      ),
-    ).animate().fadeIn(
-          delay: Duration(milliseconds: 50 * index.clamp(0, 10)),
-          duration: 300.ms,
-        ).slideY(begin: 0.03, end: 0);
-  }
+          ),
+          const SizedBox(height: 20),
 
-  Widget _actionChip(
-      IconData icon, String label, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 4),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: color)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Quick Collect FAB ──
-  Widget _buildQuickCollectFab(ThemeData theme, bool isDark, String branchId) {
-    return FloatingActionButton.extended(
-      onPressed: () => _showQuickCollectSheet(
-          context, isDark, null, branchId),
-      backgroundColor: AppColors.primary,
-      icon: const Icon(Icons.add_rounded, color: Colors.white),
-      label: const Text('Quick Collect',
-          style: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w600)),
-    );
-  }
-
-  // ── Empty State ──
-  Widget _buildEmptyState(ThemeData theme, bool isDark, int tabIndex) {
-    final messages = [
-      ['No pending payments', 'All payments for this date are collected!'],
-      ['No overdue payments', 'Great job! No overdue payments found.'],
-      ['No collections yet', 'Start collecting to see results here.'],
-    ];
-    final icons = [
-      Icons.check_circle_outline_rounded,
-      Icons.celebration_rounded,
-      Icons.hourglass_empty_rounded,
-    ];
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icons[tabIndex],
-                  size: 40, color: AppColors.primary),
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: summary.countDue > 0
+                  ? summary.countCollected / summary.countDue
+                  : 0,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              minHeight: 8,
             ),
-            const SizedBox(height: 20),
-            Text(messages[tabIndex][0],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${summary.countCollected} of ${summary.countDue} collected',
                 style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : Colors.black87)),
-            const SizedBox(height: 8),
-            Text(messages[tabIndex][1],
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white38 : Colors.black38)),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
-  }
-
-  // ── Error Widget ──
-  Widget _buildErrorWidget(ThemeData theme, bool isDark, Object error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: Color(0xFFEF4444)),
-            const SizedBox(height: 16),
-            Text('Something went wrong',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87)),
-            const SizedBox(height: 8),
-            Text(error.toString(),
-                textAlign: TextAlign.center,
-                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${summary.completionPercent}%',
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 13,
-                    color: isDark ? Colors.white38 : Colors.black38)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Helpers ──
-  List<TodayPayment> _getTabData(TodayPaymentData data) {
-    switch (_tabController.index) {
-      case 0:
-        return data.payments
-            .where((p) => p.status == PaymentStatus.pending)
-            .toList();
-      case 1:
-        return data.payments
-            .where((p) => p.status == PaymentStatus.overdue)
-            .toList();
-      case 2:
-        return data.payments
-            .where((p) => p.status == PaymentStatus.collected)
-            .toList();
-      default:
-        return data.payments;
-    }
-  }
-
-  String _statusLabel(PaymentStatus status) {
-    switch (status) {
-      case PaymentStatus.pending:
-        return 'Pending';
-      case PaymentStatus.overdue:
-        return 'Overdue';
-      case PaymentStatus.collected:
-        return 'Collected';
-    }
-  }
-
-  Color _statusColor(PaymentStatus status) {
-    switch (status) {
-      case PaymentStatus.pending:
-        return const Color(0xFFFBBF24);
-      case PaymentStatus.overdue:
-        return const Color(0xFFEF4444);
-      case PaymentStatus.collected:
-        return const Color(0xFF34D399);
-    }
-  }
-
-  Color _statusBorderColor(PaymentStatus status, bool isDark) {
-    switch (status) {
-      case PaymentStatus.overdue:
-        return const Color(0xFFEF4444).withValues(alpha: 0.2);
-      default:
-        return isDark
-            ? Colors.white.withValues(alpha: 0.06)
-            : Colors.black.withValues(alpha: 0.04);
-    }
-  }
-
-  Color _typeColor(PaymentType type) {
-    switch (type) {
-      case PaymentType.emi:
-        return const Color(0xFF667EEA);
-      case PaymentType.savings:
-        return const Color(0xFF10B981);
-    }
-  }
-
-  String _sortLabel(PaymentSortBy sortBy) {
-    switch (sortBy) {
-      case PaymentSortBy.statusPriority:
-        return 'Status';
-      case PaymentSortBy.nameAsc:
-        return 'Name A-Z';
-      case PaymentSortBy.nameDesc:
-        return 'Name Z-A';
-      case PaymentSortBy.amountHigh:
-        return 'Amount ↓';
-      case PaymentSortBy.amountLow:
-        return 'Amount ↑';
-      case PaymentSortBy.dueDateOldest:
-        return 'Oldest';
-      case PaymentSortBy.dueDateNewest:
-        return 'Newest';
-      case PaymentSortBy.branchAsc:
-        return 'Branch';
-    }
-  }
-
-  void _showSortSheet(BuildContext context, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C2030) : Colors.white,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(2),
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text('Sort by',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : Colors.black87)),
-              const SizedBox(height: 16),
-              ...PaymentSortBy.values.map((sortBy) {
-                final current =
-                    ref.read(branchPaymentFilterProvider).sortBy;
-                final isSelected = current == sortBy;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: GlassCard(
-                    onTap: () {
-                      ref
-                          .read(branchPaymentFilterProvider.notifier)
-                          .setSortBy(sortBy);
-                      Navigator.pop(ctx);
-                    },
-                    borderRadius: 12,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    borderColor: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.3)
-                        : null,
-                    enableScale: false,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(_sortLabel(sortBy),
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                                  color: isDark ? Colors.white : Colors.black87)),
-                        ),
-                        if (isSelected)
-                          Icon(Icons.check_rounded, color: AppColors.primary, size: 20),
-                      ],
-                    ),
-                  ),
-                );
-              }),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showPaymentDetails(
-      BuildContext context, bool isDark, TodayPayment payment) {
-    final f = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C2030) : Colors.white,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(payment.memberName,
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : Colors.black87)),
-              const SizedBox(height: 16),
-              _detailRow('Type', payment.type == PaymentType.emi ? 'EMI' : 'Savings', isDark),
-              _detailRow('Amount', f.format(payment.amountExpected), isDark),
-              if (payment.loanNumber != null)
-                _detailRow('Loan #', payment.loanNumber!, isDark),
-              if (payment.planName != null)
-                _detailRow('Plan', payment.planName!, isDark),
-              _detailRow('Status', _statusLabel(payment.status), isDark),
-              if (payment.paymentMode != null)
-                _detailRow('Mode', payment.paymentMode!, isDark),
-              if (payment.collectedAt != null)
-                _detailRow('Collected At',
-                    DateFormat('dd MMM yyyy, hh:mm a').format(payment.collectedAt!), isDark),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _detailRow(String label, String value, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.white54 : Colors.black54)),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black87)),
         ],
       ),
     );
   }
 
-  void _callMember(String phone) async {
-    final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
+  // Quick Stats Row
+  Widget _buildQuickStats(TodayPaymentSummary summary, bool isDark) {
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _StatCard(
+              icon: Icons.check_circle_rounded,
+              label: 'Collected',
+              value: currencyFormat.format(summary.totalCollected),
+              count: '${summary.countCollected}',
+              color: AppColors.success,
+              isDark: isDark,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _StatCard(
+              icon: Icons.schedule_rounded,
+              label: 'Pending',
+              value: currencyFormat.format(summary.totalPending),
+              count: '${summary.countPending}',
+              color: AppColors.warning,
+              isDark: isDark,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _StatCard(
+              icon: Icons.warning_amber_rounded,
+              label: 'Overdue',
+              value: currencyFormat.format(summary.totalPending),
+              count: '${summary.countOverdue}',
+              color: AppColors.error,
+              isDark: isDark,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  void _showQuickCollectSheet(BuildContext context, bool isDark,
-      TodayPayment? payment, String branchId) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _QuickCollectSheet(
-        payment: payment,
-        isDark: isDark,
-        onCollected: () {
-          ref.invalidate(branchTodayPaymentsProvider(branchId));
-          ref.invalidate(branchCollectionStatsProvider(branchId));
+  // Payment List
+  Widget _buildPaymentList(
+      List<TodayPayment> payments, bool isDark, String emptyMessage,
+      IconData emptyIcon, String branchId) {
+    if (payments.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)
+                    .withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(emptyIcon,
+                  size: 48,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              emptyMessage,
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(branchTodayPaymentsProvider(branchId));
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        itemCount: payments.length,
+        itemBuilder: (context, index) {
+          return _PaymentCard(
+            payment: payments[index],
+            isDark: isDark,
+            onCall: payments[index].memberPhone != null
+                ? () => _makePhoneCall(payments[index].memberPhone!)
+                : null,
+            onRemind: () => _sendReminder(payments[index]),
+            onTap: () => _showPaymentDetails(payments[index]),
+            onCollect: !payments[index].isCollected
+                ? () => _showQuickCollect(payments[index])
+                : null,
+          );
         },
       ),
     );
   }
 
-  Future<void> _exportPayments(
-      BuildContext context, String branchId, String format) async {
-    final data = ref.read(branchTodayPaymentsProvider(branchId));
-    final filter = ref.read(branchPaymentFilterProvider);
-    data.when(
-      data: (paymentData) async {
-        await PaymentExport.shareCsv(paymentData.payments, filter.dateLabel);
-      },
-      loading: () {},
-      error: (_, __) {},
-    );
-  }
-}
-
-// ── Quick Collect Bottom Sheet ──
-class _QuickCollectSheet extends ConsumerStatefulWidget {
-  final TodayPayment? payment;
-  final bool isDark;
-  final VoidCallback onCollected;
-
-  const _QuickCollectSheet({
-    this.payment,
-    required this.isDark,
-    required this.onCollected,
-  });
-
-  @override
-  ConsumerState<_QuickCollectSheet> createState() => _QuickCollectSheetState();
-}
-
-class _QuickCollectSheetState extends ConsumerState<_QuickCollectSheet> {
-  final _amountController = TextEditingController();
-  String _paymentMode = 'cash';
-  final _remarkController = TextEditingController();
-  bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.payment != null) {
-      _amountController.text =
-          widget.payment!.amountExpected.toStringAsFixed(0);
+  Future<void> _makePhoneCall(String phone) async {
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not launch phone dialer'),
+          backgroundColor: Colors.redAccent,
+        ));
+      }
     }
   }
 
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _remarkController.dispose();
-    super.dispose();
-  }
+  void _showPaymentDetails(TodayPayment payment) {
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final dateFormat = DateFormat('dd MMM yyyy');
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = widget.isDark;
-    final payment = widget.payment;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-          20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1C2030) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(2),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              payment != null
-                  ? 'Collect from ${payment.memberName}'
-                  : 'Quick Collect',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Amount
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700),
-              decoration: InputDecoration(
-                labelText: 'Amount',
-                labelStyle: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.black38),
-                prefixText: '₹ ',
-                prefixStyle: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700),
-                filled: true,
-                fillColor: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.grey.shade50,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Payment mode
-            Text('Payment Mode',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : Colors.black54)),
-            const SizedBox(height: 8),
-            Row(
-              children: ['cash', 'upi', 'bank_transfer', 'cheque'].map((mode) {
-                final isActive = _paymentMode == mode;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _paymentMode = mode),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? AppColors.primary
-                              : isDark
-                                  ? Colors.white.withValues(alpha: 0.06)
-                                  : Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isActive
-                                ? AppColors.primary
-                                : isDark
-                                    ? Colors.white.withValues(alpha: 0.08)
-                                    : Colors.black.withValues(alpha: 0.06),
+
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: payment.typeColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(payment.typeIcon,
+                        color: payment.typeColor, size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          payment.memberName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        child: Text(
-                          mode == 'bank_transfer' ? 'Bank' : mode.toUpperCase(),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isActive
-                                ? Colors.white
-                                : isDark
-                                    ? Colors.white70
-                                    : Colors.black54,
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: payment.statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            payment.statusLabel,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: payment.statusColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    currencyFormat.format(payment.amountExpected),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: payment.statusColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Details
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  children: [
+                    _DetailRow('Type', payment.typeLabel),
+                    if (payment.loanNumber != null)
+                      _DetailRow('Loan Number', payment.loanNumber!),
+                    if (payment.emiNumber != null)
+                      _DetailRow('EMI Number', '#${payment.emiNumber}'),
+                    if (payment.planName != null)
+                      _DetailRow('Savings Plan', payment.planName!),
+                    _DetailRow('Due Date', dateFormat.format(payment.dueDate)),
+                    if (payment.isOverdue)
+                      _DetailRow('Overdue', payment.overdueLabel,
+                          valueColor: Colors.red),
+                    if (payment.penaltyAmount > 0)
+                      _DetailRow('Penalty',
+                          currencyFormat.format(payment.penaltyAmount),
+                          valueColor: Colors.red),
+                    if (payment.memberPhone != null)
+                      _DetailRow('Phone', payment.memberPhone!),
+                    if (payment.paymentMode != null)
+                      _DetailRow(
+                          'Payment Mode', payment.paymentMode!.toUpperCase()),
+                    if (payment.collectedAt != null)
+                      _DetailRow(
+                          'Collected At',
+                          DateFormat('dd MMM yyyy, hh:mm a')
+                              .format(payment.collectedAt!)),
+                    if (payment.remarks != null &&
+                        payment.remarks!.isNotEmpty)
+                      _DetailRow('Remarks', payment.remarks!),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Action buttons
+              Row(
+                children: [
+                  if (payment.memberPhone != null)
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _makePhoneCall(payment.memberPhone!);
+                        },
+                        icon: const Icon(Icons.call_rounded, size: 18),
+                        label: const Text('Call'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
                     ),
+                  if (payment.memberPhone != null && !payment.isCollected)
+                    const SizedBox(width: 10),
+                  if (!payment.isCollected)
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _sendReminder(payment);
+                        },
+                        icon: const Icon(Icons.notifications_active_rounded,
+                            size: 18),
+                        label: const Text('Remind'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Stat Card
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String count;
+  final Color color;
+  final bool isDark;
+
+  const _StatCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.count,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 14, color: color),
+              ),
+              const Spacer(),
+              Text(
+                count,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: isDark
+                  ? AppColors.textTertiaryDark
+                  : AppColors.textTertiaryLight,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimaryLight,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Detail Row
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _DetailRow(this.label, this.value, {this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? Colors.grey.shade900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Payment Card
+class _PaymentCard extends StatelessWidget {
+  final TodayPayment payment;
+  final bool isDark;
+  final VoidCallback? onCall;
+  final VoidCallback onRemind;
+  final VoidCallback onTap;
+  final VoidCallback? onCollect;
+
+  const _PaymentCard({
+    required this.payment,
+    required this.isDark,
+    this.onCall,
+    required this.onRemind,
+    required this.onTap,
+    this.onCollect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final timeFormat = DateFormat('hh:mm a');
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.cardDark : AppColors.cardLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  // Left icon
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: payment.typeColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      payment.typeIcon,
+                      color: payment.typeColor,
+                      size: 22,
+                    ),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(width: 12),
+
+                  // Middle content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                payment.memberName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                  color: isDark
+                                      ? AppColors.textPrimaryDark
+                                      : AppColors.textPrimaryLight,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: payment.statusColor
+                                    .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                payment.statusLabel,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: payment.statusColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${payment.typeLabel}'
+                          '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
+                          '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
+                          '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.textTertiaryDark
+                                : AppColors.textTertiaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Right: amount
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        currencyFormat.format(payment.amountExpected),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: payment.statusColor,
+                        ),
+                      ),
+                      if (payment.penaltyAmount > 0) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '+${currencyFormat.format(payment.penaltyAmount)} penalty',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                      if (payment.isCollected &&
+                          payment.collectedAt != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          timeFormat.format(payment.collectedAt!),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark
+                                ? AppColors.textTertiaryDark
+                                : AppColors.textTertiaryLight,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+
+              // Overdue + action buttons
+              if (payment.isOverdue || !payment.isCollected) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    if (payment.isOverdue)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_rounded,
+                                size: 12, color: AppColors.error),
+                            const SizedBox(width: 4),
+                            Text(
+                              payment.overdueLabel,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const Spacer(),
+                    if (!payment.isCollected) ...[
+                      if (onCall != null)
+                        _CompactAction(
+                          icon: Icons.call_rounded,
+                          color: AppColors.success,
+                          onTap: onCall!,
+                        ),
+                      if (onCall != null) const SizedBox(width: 6),
+                      _CompactAction(
+                        icon: Icons.notifications_active_rounded,
+                        color: AppColors.warning,
+                        onTap: onRemind,
+                      ),
+                      if (onCollect != null) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: onCollect,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: AppColors.successGradient,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.payment_rounded,
+                                    size: 14, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Collect',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactAction extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _CompactAction({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 16, color: color),
+      ),
+    );
+  }
+}
+
+class _ModeChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ModeChip({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.success.withValues(alpha: 0.12)
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.success : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected ? AppColors.success : Colors.grey.shade600,
             ),
-            const SizedBox(height: 16),
-            // Remark
-            GlassTextField(
-              controller: _remarkController,
-              labelText: 'Remark (optional)',
-            ),
-            const SizedBox(height: 20),
-            // Submit
-            GlassButton(
-              label: 'Record Collection',
-              onTap: _submitting ? null : _submit,
-              isPrimary: true,
-              isLoading: _submitting,
-              width: double.infinity,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? AppColors.success : Colors.grey.shade700,
+              ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _submit() async {
-    final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) return;
-
-    setState(() => _submitting = true);
-    try {
-      final client = ref.read(supabaseClientProvider);
-      final profile = await ref.read(staffProfileProvider.future);
-      if (profile == null) throw Exception('Staff profile not found');
-
-      await client.from('collections').insert({
-        'org_id': profile.orgId,
-        'staff_id': profile.id,
-        'member_id': widget.payment?.memberId,
-        'member_name': widget.payment?.memberName ?? 'Quick Collect',
-        'member_phone': widget.payment?.memberPhone,
-        'loan_id': widget.payment?.loanId,
-        'loan_number': widget.payment?.loanNumber,
-        'amount_expected': widget.payment?.amountExpected ?? amount,
-        'amount_collected': amount,
-        'collection_type':
-            widget.payment?.type == PaymentType.savings ? 'savings' : 'emi',
-        'payment_mode': _paymentMode,
-        'collection_date':
-            DateTime.now().toIso8601String().split('T').first,
-        'collection_time': DateTime.now().toIso8601String(),
-        'remarks': _remarkController.text.isNotEmpty
-            ? _remarkController.text
-            : null,
-        'collector_name': profile.fullName,
-        'collector_role': profile.role.displayName,
-      });
-
-      widget.onCollected();
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                '₹${amount.toStringAsFixed(0)} collected successfully'),
-            backgroundColor: const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: const Color(0xFFEF4444),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
   }
 }

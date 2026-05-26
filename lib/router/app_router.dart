@@ -73,8 +73,7 @@ import '../features/staff/presentation/pages/break_logging_page.dart';
 import '../features/staff/presentation/pages/pending_operations_page.dart';
 import '../features/staff/presentation/pages/gamification_dashboard.dart';
 import '../features/staff/presentation/pages/staff_targets_page.dart';
-import '../features/staff/presentation/providers/sync_status_provider.dart';
-import '../core/services/haptic_service.dart';
+
 import '../core/constants/layout.dart';
 
 // Super Admin Portal
@@ -1070,23 +1069,22 @@ class _StaffShellState extends ConsumerState<StaffShell> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = _calculateSelectedIndex(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = Theme.of(context).colorScheme.primary;
-
-    // Get pending operations count
-    final syncStatus = ref.watch(syncStatusProvider);
-    final pendingCount = syncStatus.pending;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true,
       body: _NavSafeArea(child: widget.child),
-      bottomNavigationBar: StaffBottomBar(
+      bottomNavigationBar: _PremiumBottomBar(
         currentIndex: currentIndex,
         onTap: (index) => _onItemTapped(index, context),
-        pendingCount: pendingCount,
-        isDark: isDark,
-        primary: primary,
+        items: [
+          const _NavData(Icons.home_outlined, Icons.home_rounded, 'Home'),
+          const _NavData(Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Payments'),
+          const _NavData(Icons.people_outline, Icons.people_rounded, 'Users'),
+          const _NavData(Icons.timeline_outlined, Icons.timeline_rounded, 'Timeline'),
+          const _NavData(Icons.map_outlined, Icons.map_rounded, 'Map'),
+          const _NavData(Icons.settings_outlined, Icons.settings_rounded, 'Settings'),
+        ],
       ),
     );
   }
@@ -1517,225 +1515,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
 }
 
 // =====================================================
-// STAFF BOTTOM BAR - NEW
-// =====================================================
-class StaffBottomBar extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-  final int pendingCount;
-  final bool isDark;
-  final Color primary;
-
-  const StaffBottomBar({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-    required this.pendingCount,
-    required this.isDark,
-    required this.primary,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      minimum: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF1E1E2A).withValues(alpha: 0.95)
-                : Colors.white.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _StaffNavItem(
-                index: 0,
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
-                label: 'Home',
-                currentIndex: currentIndex,
-                primary: primary,
-                isDark: isDark,
-                onTap: onTap,
-                badge: pendingCount > 0 ? pendingCount.toString() : null,
-              ),
-              _StaffNavItem(
-                index: 1,
-                icon: Icons.receipt_long_outlined,
-                activeIcon: Icons.receipt_long_rounded,
-                label: 'Payments',
-                currentIndex: currentIndex,
-                primary: primary,
-                isDark: isDark,
-                onTap: onTap,
-              ),
-              _StaffNavItem(
-                index: 2,
-                icon: Icons.people_outline,
-                activeIcon: Icons.people_rounded,
-                label: 'Users',
-                currentIndex: currentIndex,
-                primary: primary,
-                isDark: isDark,
-                onTap: onTap,
-              ),
-              _StaffNavItem(
-                index: 3,
-                icon: Icons.timeline_outlined,
-                activeIcon: Icons.timeline_rounded,
-                label: 'Timeline',
-                currentIndex: currentIndex,
-                primary: primary,
-                isDark: isDark,
-                onTap: onTap,
-              ),
-              _StaffNavItem(
-                index: 4,
-                icon: Icons.map_outlined,
-                activeIcon: Icons.map_rounded,
-                label: 'Map',
-                currentIndex: currentIndex,
-                primary: primary,
-                isDark: isDark,
-                onTap: onTap,
-              ),
-              _StaffNavItem(
-                index: 5,
-                icon: Icons.settings_outlined,
-                activeIcon: Icons.settings_rounded,
-                label: 'Settings',
-                currentIndex: currentIndex,
-                primary: primary,
-                isDark: isDark,
-                onTap: onTap,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StaffNavItem extends StatelessWidget {
-  final int index;
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final int currentIndex;
-  final Color primary;
-  final bool isDark;
-  final ValueChanged<int> onTap;
-  final String? badge;
-
-  const _StaffNavItem({
-    required this.index,
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.currentIndex,
-    required this.primary,
-    required this.isDark,
-    required this.onTap,
-    this.badge,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = currentIndex == index;
-    final inactiveColor = isDark
-        ? Colors.white.withValues(alpha: 0.4)
-        : Colors.black.withValues(alpha: 0.4);
-
-    return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        onTap(index);
-      },
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 52,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? primary.withValues(alpha: isDark ? 0.2 : 0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isSelected ? activeIcon : icon,
-                    color: isSelected ? primary : inactiveColor,
-                    size: 22,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: isSelected ? primary : inactiveColor,
-                      fontSize: 10,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (badge != null)
-              Positioned(
-                right: 8,
-                top: 0,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    badge!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =====================================================
-// =====================================================
-// PREMIUM BOTTOM BAR (Admin)
+// PREMIUM BOTTOM BAR (shared: Admin + Staff)
 // =====================================================
 class _NavData {
   final IconData icon;

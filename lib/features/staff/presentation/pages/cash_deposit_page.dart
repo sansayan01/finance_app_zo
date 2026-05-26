@@ -9,6 +9,10 @@ import '../../data/models/wallet_model.dart';
 import '../../data/providers/staff_providers.dart';
 import '../../data/providers/collection_providers.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/shimmer_card.dart';
+import '../../../../core/widgets/smokey_background.dart';
+import '../widgets/premium_helpers.dart';
 
 class CashDepositPage extends ConsumerStatefulWidget {
   const CashDepositPage({super.key});
@@ -56,7 +60,7 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
       ),
       body: user == null
           ? const Center(child: CircularProgressIndicator())
-          : _buildForm(user.id, theme, isDark),
+          : SmokeyBackground(child: _buildForm(user.id, theme, isDark)),
     );
   }
 
@@ -226,8 +230,18 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.primary.withValues(alpha: 0.15),
+                              AppColors.accent.withValues(alpha: 0.06),
+                            ],
+                          )
+                        : null,
                     color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.12)
+                        ? null
                         : (isDark
                             ? Colors.white.withValues(alpha: 0.05)
                             : theme.colorScheme.surface),
@@ -350,41 +364,12 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
 
   Widget _section(ThemeData theme, bool isDark, String title, IconData icon,
       {required Widget child}) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10))
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: 10),
-              Text(title,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 14),
+          PremiumHelpers.sectionHeader(theme, title, icon: icon),
           child,
         ],
       ),
@@ -431,21 +416,5 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-}
-
-class ShimmerCard extends StatelessWidget {
-  final double height;
-  const ShimmerCard({super.key, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(24),
-      ),
-    );
   }
 }

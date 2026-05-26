@@ -311,24 +311,46 @@ class _StaffTimelinePageState extends ConsumerState<StaffTimelinePage> {
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: collectionType == 'savings'
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFF667EEA),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: collectionType == 'savings'
-                          ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                          : const Color(0xFF667EEA).withValues(alpha: 0.3),
-                      width: 3,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: collectionType == 'savings'
+                          ? [const Color(0xFF10B981), const Color(0xFF10B981).withValues(alpha: 0.6)]
+                          : [const Color(0xFF667EEA), const Color(0xFF667EEA).withValues(alpha: 0.6)],
                     ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (collectionType == 'savings'
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF667EEA))
+                            .withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
                 Container(
                   width: 2,
                   height: 30,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.black.withValues(alpha: 0.04),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        (collectionType == 'savings'
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF667EEA))
+                            .withValues(alpha: 0.25),
+                        (collectionType == 'savings'
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF667EEA))
+                            .withValues(alpha: 0.03),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
                 ),
               ],
             ),

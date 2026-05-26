@@ -9,6 +9,8 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../../core/widgets/smokey_background.dart';
+import '../widgets/premium_helpers.dart';
 
 class VisitCheckInPage extends ConsumerStatefulWidget {
   final String? customerId;
@@ -78,22 +80,24 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
             style: const TextStyle(fontWeight: FontWeight.w800)),
         centerTitle: false,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(activeVisitProvider);
-          ref.invalidate(recentActivitiesProvider);
-          await Future.delayed(const Duration(milliseconds: 500));
-        },
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!isActive) _buildCheckInView(theme, isDark),
-                if (isActive) _buildActiveVisitView(theme, isDark),
-              ],
+      body: SmokeyBackground(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(activeVisitProvider);
+            ref.invalidate(recentActivitiesProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isActive) _buildCheckInView(theme, isDark),
+                  if (isActive) _buildActiveVisitView(theme, isDark),
+                ],
+              ),
             ),
           ),
         ),
@@ -325,15 +329,8 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.flag_outlined, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text('Visit Purpose',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Visit Purpose',
+              icon: Icons.flag_outlined),
           const SizedBox(height: 16),
           Wrap(
             spacing: 10,
@@ -347,12 +344,23 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
                   setState(() =>
                       _visitPurpose = isSelected ? null : p['id'] as String);
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              color.withValues(alpha: 0.18),
+                              color.withValues(alpha: 0.08),
+                            ],
+                          )
+                        : null,
                     color: isSelected
-                        ? color.withValues(alpha: 0.15)
+                        ? null
                         : (isDark
                             ? Colors.white.withValues(alpha: 0.05)
                             : theme.colorScheme.surface),
@@ -394,15 +402,8 @@ class _VisitCheckInPageState extends ConsumerState<VisitCheckInPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text('Notes',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Notes',
+              icon: Icons.notes_rounded),
           const SizedBox(height: 12),
           TextField(
             controller: _notesController,

@@ -34,15 +34,29 @@ class SyncStatusBar extends StatelessWidget {
         HapticFeedback.lightImpact();
         onSyncTap?.call();
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: _getBackgroundColor(isDark),
+          gradient: LinearGradient(
+            colors: [
+              _getBackgroundColor(isDark),
+              _getBackgroundColor(isDark).withValues(alpha: 0.7),
+            ],
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _getBorderColor().withValues(alpha: 0.3),
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: _getBorderColor().withValues(alpha: 0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [

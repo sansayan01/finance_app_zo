@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../widgets/premium_helpers.dart';
 import '../../data/providers/staff_providers.dart';
 import '../../data/providers/gamification_providers.dart';
 
@@ -52,16 +55,17 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
             style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
         centerTitle: false,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(staffStreakProvider);
-          ref.invalidate(staffPointsProvider);
-          ref.invalidate(staffRankProvider);
-          ref.invalidate(todayTargetProvider);
-          ref.invalidate(staffLeaderboardProvider);
-          await Future.delayed(const Duration(milliseconds: 500));
-        },
-        child: SingleChildScrollView(
+      body: AuroraBackground(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(staffStreakProvider);
+            ref.invalidate(staffPointsProvider);
+            ref.invalidate(staffRankProvider);
+            ref.invalidate(todayTargetProvider);
+            ref.invalidate(staffLeaderboardProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -85,6 +89,7 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
                 .slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
           ),
         ),
+      ),
       ),
     );
   }
@@ -311,27 +316,12 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
 
   Widget _statCard(ThemeData theme, IconData icon, String value, String label,
       Color color, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: isDark ? color.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.12)),
-        boxShadow: [
-          BoxShadow(
-              color: color.withValues(alpha: isDark ? 0.05 : 0.03),
-              blurRadius: 20,
-              offset: const Offset(0, 8)),
-        ],
-      ),
+      borderColor: color.withValues(alpha: 0.12),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 20),
-          ),
+          PremiumHelpers.gradientIconContainer(icon, color, size: 40, iconSize: 20),
           const SizedBox(height: 12),
           Text(value,
               style: TextStyle(
@@ -358,23 +348,9 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
             final pct = t?.progress ?? 0.0;
             final achieved = t?.achievedAmount ?? 0.0;
             final goal = t?.targetAmount ?? 1.0;
-            return Container(
+            return GlassCard(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF181C24) : Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.06)
-                        : Colors.black.withValues(alpha: 0.04)),
-                boxShadow: [
-                  BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
-                      blurRadius: 24,
-                      offset: const Offset(0, 10))
-                ],
-              ),
+              elevated: true,
               child: Row(
                 children: [
                   SizedBox(
@@ -468,24 +444,15 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('ACHIEVEMENTS',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                      letterSpacing: 1.5)),
-              Text('8 OF 12',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary)),
-            ],
-          ),
+        PremiumHelpers.sectionHeader(
+          theme,
+          'Achievements',
+          icon: Icons.emoji_events_rounded,
+          trailing: Text('8 OF 12',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary)),
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -529,76 +496,49 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
 
   Widget _achievementCard(ThemeData theme, IconData icon, String title,
       String desc, Color color, bool unlocked, bool isDark) {
-    return Container(
+    return SizedBox(
       width: 160,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF181C24) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: unlocked
-                ? color.withValues(alpha: 0.3)
-                : (isDark
-                    ? Colors.white10
-                    : Colors.black.withValues(alpha: 0.05))),
-        boxShadow: [
-          BoxShadow(
-              color: (unlocked ? color : Colors.black).withValues(alpha: 0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 8))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: (unlocked ? color : Colors.grey).withValues(alpha: 0.1),
-                shape: BoxShape.circle),
-            child: Icon(icon, color: unlocked ? color : Colors.grey, size: 18),
-          ),
-          const SizedBox(height: 12),
-          Text(title,
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87)),
-          const SizedBox(height: 4),
-          Text(desc,
-              style: TextStyle(
-                  fontSize: 9,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                  height: 1.2),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis),
-        ],
+      child: GlassCard(
+        margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.all(16),
+        borderColor: unlocked
+            ? color.withValues(alpha: 0.3)
+            : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PremiumHelpers.gradientIconContainer(
+                icon, unlocked ? color : Colors.grey,
+                size: 36, iconSize: 18),
+            const SizedBox(height: 12),
+            Text(title,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : Colors.black87)),
+            const SizedBox(height: 4),
+            Text(desc,
+                style: TextStyle(
+                    fontSize: 9,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    height: 1.2),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis),
+          ],
+        ),
       ),
     );
   }
 
   Widget _milestones(ThemeData theme, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF181C24) : Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.04)),
-      ),
+      borderRadius: 32,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('MILESTONE PATH',
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                  letterSpacing: 1.5)),
-          const SizedBox(height: 24),
+          PremiumHelpers.sectionHeader(theme, 'Milestone Path', icon: Icons.flag_rounded),
+          const SizedBox(height: 8),
           _milestoneItem(
               theme, '50 Collections', 'Unlocked a new badge!', true, true),
           _milestoneItem(
@@ -684,58 +624,31 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
             final top3 = entries.take(3).toList();
             final others = entries.skip(3).toList();
 
-            return Container(
+            return GlassCard(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF181C24) : Colors.white,
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.06)
-                        : Colors.black.withValues(alpha: 0.04)),
-                boxShadow: [
-                  BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
-                      blurRadius: 20)
-                ],
-              ),
+              borderRadius: 32,
+              elevated: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(children: [
-                        Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12)),
-                            child: Icon(Icons.leaderboard_rounded,
-                                size: 20, color: AppColors.primary)),
-                        const SizedBox(width: 12),
-                        Text('Elite Performers',
+                  PremiumHelpers.sectionHeader(
+                    theme,
+                    'Elite Performers',
+                    icon: Icons.leaderboard_rounded,
+                    trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Text('DAILY',
                             style: TextStyle(
-                                fontSize: 18,
+                                color: AppColors.primary,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w900,
-                                color: isDark ? Colors.white : Colors.black87)),
-                      ]),
-                      Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Text('DAILY',
-                              style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1))),
-                    ],
+                                letterSpacing: 1))),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   // Podium
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -915,16 +828,9 @@ class _GamificationDashboardState extends ConsumerState<GamificationDashboard>
     ];
     final q = quotes[math.Random().nextInt(quotes.length)];
 
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [
-          AppColors.primary.withValues(alpha: 0.06),
-          AppColors.accent.withValues(alpha: 0.03)
-        ]),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.06)),
-      ),
+      borderColor: AppColors.primary.withValues(alpha: 0.06),
       child: Row(
         children: [
           Container(

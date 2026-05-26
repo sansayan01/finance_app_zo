@@ -7,6 +7,10 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/glass_button.dart';
+import '../../../../core/widgets/glass_text_field.dart';
+import '../../../../core/widgets/progress_gauge.dart';
 import '../../../payments/data/models/today_payment_model.dart';
 import '../../../payments/data/providers/payment_providers.dart' show TodayPaymentData;
 import '../../../payments/data/utils/payment_export.dart';
@@ -14,6 +18,7 @@ import '../../../branch_manager/data/providers/branch_payment_providers.dart';
 import '../../../branch_manager/data/providers/branch_scoped_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
 import '../../data/providers/staff_providers.dart';
+import '../widgets/premium_helpers.dart';
 
 class StaffTodayPaymentsPage extends ConsumerStatefulWidget {
   const StaffTodayPaymentsPage({super.key});
@@ -346,28 +351,44 @@ class _StaffTodayPaymentsPageState
             ),
           ],
         ),
-        child: Row(
+        child: Stack(
           children: [
-            // Progress ring
-            SizedBox(
-              width: 80,
-              height: 80,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 6,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeCap: StrokeCap.round,
-                    ),
-                  ),
-                  Column(
+            // Ambient orbs
+            Positioned(
+              top: -20,
+              right: -30,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -15,
+              left: 40,
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            // Content
+            Row(
+              children: [
+                // Progress ring
+                ProgressGauge(
+                  value: progress,
+                  size: 80,
+                  strokeWidth: 6,
+                  progressColor: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  center: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
@@ -387,47 +408,47 @@ class _StaffTodayPaymentsPageState
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 20),
-            // Stats
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    f.format(totalExpected),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Collected: ${f.format(totalCollected)}',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+                ),
+                const SizedBox(width: 20),
+                // Stats
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _miniBadge('$pending', 'Pending',
-                          const Color(0xFFFBBF24)),
-                      const SizedBox(width: 8),
-                      _miniBadge(
-                          '$overdue', 'Overdue', const Color(0xFFEF4444)),
-                      const SizedBox(width: 8),
-                      _miniBadge(
-                          '$collected', 'Done', const Color(0xFF34D399)),
+                      Text(
+                        f.format(totalExpected),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Collected: ${f.format(totalCollected)}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _miniBadge('$pending', 'Pending',
+                              const Color(0xFFFBBF24)),
+                          const SizedBox(width: 8),
+                          _miniBadge(
+                              '$overdue', 'Overdue', const Color(0xFFEF4444)),
+                          const SizedBox(width: 8),
+                          _miniBadge(
+                              '$collected', 'Done', const Color(0xFF34D399)),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -487,20 +508,26 @@ class _StaffTodayPaymentsPageState
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-              child: _statChip(theme, isDark, Icons.account_balance_rounded,
-                  'EMI', f.format(emiTotal), '${emiPayments.length} dues')),
-          const SizedBox(width: 10),
-          Expanded(
-              child: _statChip(
-                  theme,
-                  isDark,
-                  Icons.savings_rounded,
-                  'Savings',
-                  f.format(savingsTotal),
-                  '${savingsPayments.length} plans')),
+          PremiumHelpers.sectionHeader(theme, 'Quick Overview'),
+          Row(
+            children: [
+              Expanded(
+                  child: _statChip(theme, isDark, Icons.account_balance_rounded,
+                      'EMI', f.format(emiTotal), '${emiPayments.length} dues')),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: _statChip(
+                      theme,
+                      isDark,
+                      Icons.savings_rounded,
+                      'Savings',
+                      f.format(savingsTotal),
+                      '${savingsPayments.length} plans')),
+            ],
+          ),
         ],
       ),
     ).animate().fadeIn(delay: 200.ms, duration: 300.ms);
@@ -508,19 +535,12 @@ class _StaffTodayPaymentsPageState
 
   Widget _statChip(ThemeData theme, bool isDark, IconData icon, String label,
       String amount, String sub) {
-    return Container(
+    final color = AppColors.primary;
+    return GlassCard(
+      backgroundColor: color.withValues(alpha: 0.05),
+      borderRadius: 16,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.black.withValues(alpha: 0.04),
-        ),
-      ),
+      enableScale: false,
       child: Row(
         children: [
           Container(
@@ -753,156 +773,144 @@ class _StaffTodayPaymentsPageState
     final f = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showPaymentDetails(context, isDark, payment),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.04)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _statusBorderColor(payment.status, isDark),
-              ),
-            ),
-            child: Column(
+      child: GlassCard(
+        onTap: () => _showPaymentDetails(context, isDark, payment),
+        borderRadius: 16,
+        padding: const EdgeInsets.all(14),
+        borderColor: _statusBorderColor(payment.status, isDark),
+        enableScale: true,
+        child: Column(
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    // Type icon
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _typeColor(payment.type)
-                            .withValues(alpha: isDark ? 0.15 : 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        payment.type == PaymentType.emi
-                            ? Icons.account_balance_rounded
-                            : Icons.savings_rounded,
-                        size: 18,
-                        color: _typeColor(payment.type),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Member info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            payment.memberName,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              if (payment.loanNumber != null) ...[
-                                Text(
-                                  payment.loanNumber!,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : Colors.black38,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                              if (payment.planName != null) ...[
-                                Text(
-                                  payment.planName!,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : Colors.black38,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Amount + status
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          f.format(payment.amountExpected),
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: _statusColor(payment.status),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: _statusColor(payment.status)
-                                .withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            _statusLabel(payment.status),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: _statusColor(payment.status),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                // Type icon
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _typeColor(payment.type)
+                        .withValues(alpha: isDark ? 0.15 : 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    payment.type == PaymentType.emi
+                        ? Icons.account_balance_rounded
+                        : Icons.savings_rounded,
+                    size: 18,
+                    color: _typeColor(payment.type),
+                  ),
                 ),
-                // Bottom row: actions
-                if (!payment.isCollected) ...[
-                  const SizedBox(height: 10),
-                  Row(
+                const SizedBox(width: 12),
+                // Member info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (payment.memberPhone != null)
-                        _actionChip(
-                          Icons.phone_rounded,
-                          'Call',
-                          const Color(0xFF10B981),
-                          () => _callMember(payment.memberPhone!),
+                      Text(
+                        payment.memberName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
-                      const SizedBox(width: 8),
-                      _actionChip(
-                        Icons.check_circle_outline_rounded,
-                        'Collect',
-                        AppColors.primary,
-                        () => _showQuickCollectSheet(
-                            context, isDark, payment, branchId),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          if (payment.loanNumber != null) ...[
+                            Text(
+                              payment.loanNumber!,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark
+                                    ? Colors.white38
+                                    : Colors.black38,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          if (payment.planName != null) ...[
+                            Text(
+                              payment.planName!,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark
+                                    ? Colors.white38
+                                    : Colors.black38,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
+                // Amount + status
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      f.format(payment.amountExpected),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _statusColor(payment.status),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _statusColor(payment.status)
+                            .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _statusLabel(payment.status),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _statusColor(payment.status),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ),
+            // Bottom row: actions
+            if (!payment.isCollected) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  if (payment.memberPhone != null)
+                    _actionChip(
+                      Icons.phone_rounded,
+                      'Call',
+                      const Color(0xFF10B981),
+                      () => _callMember(payment.memberPhone!),
+                    ),
+                  const SizedBox(width: 8),
+                  _actionChip(
+                    Icons.check_circle_outline_rounded,
+                    'Collect',
+                    AppColors.primary,
+                    () => _showQuickCollectSheet(
+                        context, isDark, payment, branchId),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     ).animate().fadeIn(
           delay: Duration(milliseconds: 50 * index.clamp(0, 10)),
           duration: 300.ms,
-        );
+        ).slideY(begin: 0.03, end: 0);
   }
 
   Widget _actionChip(
@@ -1141,18 +1149,35 @@ class _StaffTodayPaymentsPageState
                 final current =
                     ref.read(branchPaymentFilterProvider).sortBy;
                 final isSelected = current == sortBy;
-                return ListTile(
-                  title: Text(_sortLabel(sortBy)),
-                  trailing: isSelected
-                      ? Icon(Icons.check_rounded,
-                          color: AppColors.primary)
-                      : null,
-                  onTap: () {
-                    ref
-                        .read(branchPaymentFilterProvider.notifier)
-                        .setSortBy(sortBy);
-                    Navigator.pop(ctx);
-                  },
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: GlassCard(
+                    onTap: () {
+                      ref
+                          .read(branchPaymentFilterProvider.notifier)
+                          .setSortBy(sortBy);
+                      Navigator.pop(ctx);
+                    },
+                    borderRadius: 12,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    borderColor: isSelected
+                        ? AppColors.primary.withValues(alpha: 0.3)
+                        : null,
+                    enableScale: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(_sortLabel(sortBy),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                  color: isDark ? Colors.white : Colors.black87)),
+                        ),
+                        if (isSelected)
+                          Icon(Icons.check_rounded, color: AppColors.primary, size: 20),
+                      ],
+                    ),
+                  ),
                 );
               }),
             ],
@@ -1436,48 +1461,18 @@ class _QuickCollectSheetState extends ConsumerState<_QuickCollectSheet> {
             ),
             const SizedBox(height: 16),
             // Remark
-            TextField(
+            GlassTextField(
               controller: _remarkController,
-              style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87),
-              decoration: InputDecoration(
-                labelText: 'Remark (optional)',
-                labelStyle: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.black38),
-                filled: true,
-                fillColor: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.grey.shade50,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+              labelText: 'Remark (optional)',
             ),
             const SizedBox(height: 20),
             // Submit
-            SizedBox(
+            GlassButton(
+              label: 'Record Collection',
+              onTap: _submitting ? null : _submit,
+              isPrimary: true,
+              isLoading: _submitting,
               width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _submitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
-                ),
-                child: _submitting
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Text('Record Collection',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
-              ),
             ),
           ],
         ),

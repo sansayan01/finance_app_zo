@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../data/providers/staff_providers.dart';
+import 'premium_helpers.dart';
 
 class ActivityFeedTimeline extends ConsumerWidget {
   const ActivityFeedTimeline({super.key});
@@ -9,22 +11,13 @@ class ActivityFeedTimeline extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final activitiesAsync = ref.watch(recentActivitiesProvider);
 
     return activitiesAsync.when(
       data: (activities) {
         if (activities.isEmpty) {
-          return Container(
+          return GlassCard(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.05)),
-            ),
             child: Center(
               child: Column(
                 children: [
@@ -43,44 +36,24 @@ class ActivityFeedTimeline extends ConsumerWidget {
           );
         }
 
-        return Container(
+        return GlassCard(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.05)),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10)),
-            ],
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.history_rounded,
-                      size: 18, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text('Recent Activity',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w800)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ...activities.take(5).map((activity) {
+              PremiumHelpers.sectionHeader(theme, 'Recent Activity',
+                  icon: Icons.history_rounded),
+              ...activities.take(5).toList().asMap().entries.map((entry) {
+                final i = entry.key;
+                final activity = entry.value;
                 final action = activity['action'] as String? ?? '';
                 final createdAt = activity['created_at'] as String?;
                 final metadata = activity['metadata'] as Map<String, dynamic>?;
                 final time =
                     createdAt != null ? DateTime.tryParse(createdAt) : null;
 
-                return _buildActivityRow(theme, action, metadata, time);
+                return _buildActivityRow(theme, action, metadata, time,
+                    isLast: i == activities.take(5).length - 1);
               }),
             ],
           ),
@@ -92,38 +65,86 @@ class ActivityFeedTimeline extends ConsumerWidget {
   }
 
   Widget _buildActivityRow(ThemeData theme, String action,
-      Map<String, dynamic>? metadata, DateTime? time) {
+      Map<String, dynamic>? metadata, DateTime? time,
+      {bool isLast = false}) {
     final (icon, label, color) = _getActivityInfo(theme, action, metadata);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    return IntrinsicHeight(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
+          SizedBox(
             width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, size: 16, color: color),
+            child: Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [color, color.withValues(alpha: 0.6)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, size: 16, color: Colors.white),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            color.withValues(alpha: 0.3),
+                            color.withValues(alpha: 0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(fontWeight: FontWeight.w500),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (time != null)
+                    Text(
+                      _formatTime(time),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4),
+                          fontSize: 10),
+                    ),
+                ],
+              ),
             ),
           ),
-          if (time != null)
-            Text(
-              _formatTime(time),
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                  fontSize: 10),
-            ),
         ],
       ),
     );

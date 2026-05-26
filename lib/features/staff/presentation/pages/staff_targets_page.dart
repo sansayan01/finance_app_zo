@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/staff_providers.dart';
 import '../../data/providers/collection_providers.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../widgets/premium_helpers.dart';
 
 class StaffTargetsPage extends ConsumerStatefulWidget {
   const StaffTargetsPage({super.key});
@@ -63,15 +66,31 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
             children: [
               _buildPeriodSelector(theme, isDark),
               const SizedBox(height: 24),
-              if (_selectedPeriod == 'daily') _buildDailyTarget(theme, isDark),
+              if (_selectedPeriod == 'daily')
+                PremiumHelpers.staggeredAnimation(
+                  _buildDailyTarget(theme, isDark),
+                  index: 1,
+                ),
               if (_selectedPeriod == 'weekly')
-                _buildWeeklyTarget(theme, isDark),
+                PremiumHelpers.staggeredAnimation(
+                  _buildWeeklyTarget(theme, isDark),
+                  index: 1,
+                ),
               if (_selectedPeriod == 'monthly')
-                _buildMonthlyTarget(theme, isDark),
+                PremiumHelpers.staggeredAnimation(
+                  _buildMonthlyTarget(theme, isDark),
+                  index: 1,
+                ),
               const SizedBox(height: 24),
-              _buildTargetHistory(theme, isDark),
+              PremiumHelpers.staggeredAnimation(
+                _buildTargetHistory(theme, isDark),
+                index: 2,
+              ),
               const SizedBox(height: 24),
-              _buildStreakSection(theme, isDark),
+              PremiumHelpers.staggeredAnimation(
+                _buildStreakSection(theme, isDark),
+                index: 3,
+              ),
             ],
           ),
         ),
@@ -85,22 +104,46 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
         final isSelected = _selectedPeriod == period;
         return Padding(
           padding: const EdgeInsets.only(right: 8),
-          child: ChoiceChip(
-            label: Text(period.capitalize(),
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedPeriod = period),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppColors.primary, AppColors.accent],
+                      )
+                    : null,
+                color: isSelected
+                    ? null
+                    : (isDark ? const Color(0xFF1E1E2D) : Colors.white),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.transparent
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.06)),
+                ),
+              ),
+              child: Text(
+                period.capitalize(),
                 style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : null)),
-            selected: isSelected,
-            selectedColor: AppColors.primary,
-            backgroundColor: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-            onSelected: (_) => setState(() => _selectedPeriod = period),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? Colors.white
+                      : (isDark ? Colors.white70 : Colors.black87),
+                ),
+              ),
+            ),
           ),
         );
       }).toList(),
-    );
+    ).animate().fadeIn(duration: 300.ms);
   }
 
   Widget _buildDailyTarget(ThemeData theme, bool isDark) {
@@ -233,35 +276,14 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
         final daysInWeek = today.weekday;
         final projectedTarget = profile.dailyCollectionTarget * daysInWeek;
 
-        return Container(
+        return GlassCard(
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.05)),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10)),
-            ],
-          ),
+          elevated: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.calendar_view_week_rounded,
-                      size: 20, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text('This Week',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w800)),
-                ],
-              ),
+              PremiumHelpers.sectionHeader(theme, 'This Week',
+                  icon: Icons.calendar_view_week_rounded),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -356,36 +378,14 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
             final monthlyProgress =
                 (todayCollected / monthlyTarget).clamp(0.0, 1.0);
 
-            return Container(
+            return GlassCard(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.05)),
-                boxShadow: [
-                  BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10)),
-                ],
-              ),
+              elevated: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_month_rounded,
-                          size: 20, color: AppColors.accent),
-                      const SizedBox(width: 8),
-                      Text('This Month',
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800)),
-                    ],
-                  ),
+                  PremiumHelpers.sectionHeader(theme, 'This Month',
+                      icon: Icons.calendar_month_rounded),
                   const SizedBox(height: 20),
                   _buildCircularProgress(monthlyProgress, 100, theme),
                   const SizedBox(height: 16),
@@ -505,34 +505,14 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
   Widget _buildTargetHistory(ThemeData theme, bool isDark) {
     final trendAsync = ref.watch(weeklyTrendProvider);
 
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
-        ],
-      ),
+      elevated: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.history_rounded, size: 20, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text('Recent Performance',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Recent Performance',
+              icon: Icons.history_rounded),
           const SizedBox(height: 16),
           trendAsync.when(
             data: (trend) {
@@ -741,16 +721,8 @@ class _StaffTargetsPageState extends ConsumerState<StaffTargetsPage>
   }
 
   Widget _buildEmptyTarget(ThemeData theme, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.05)),
-      ),
       child: Center(
         child: Column(
           children: [

@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/smokey_background.dart';
+import '../widgets/premium_helpers.dart';
 
 enum BreakType { lunch, tea, rest, personal, other;
 
@@ -151,22 +154,24 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
             style: const TextStyle(fontWeight: FontWeight.w800)),
         centerTitle: false,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await _checkCurrentBreakStatus();
-          ref.invalidate(recentActivitiesProvider);
-          await Future.delayed(const Duration(milliseconds: 500));
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              if (_isOnBreak)
-                _buildActiveBreakCard(theme, isDark)
-              else
-                _buildBreakSetup(theme, isDark),
-            ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
+      body: SmokeyBackground(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await _checkCurrentBreakStatus();
+            ref.invalidate(recentActivitiesProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                if (_isOnBreak)
+                  _buildActiveBreakCard(theme, isDark)
+                else
+                  _buildBreakSetup(theme, isDark),
+              ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
+            ),
           ),
         ),
       ),
@@ -346,35 +351,13 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
       },
     ];
 
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10))
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.category_outlined, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text('Break Type',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 16),
+          PremiumHelpers.sectionHeader(theme, 'Break Type',
+              icon: Icons.category_outlined),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -387,12 +370,23 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
                   HapticFeedback.selectionClick();
                   setState(() => _selectedBreakType = type);
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              color.withValues(alpha: 0.18),
+                              color.withValues(alpha: 0.08),
+                            ],
+                          )
+                        : null,
                     color: isSelected
-                        ? color.withValues(alpha: 0.15)
+                        ? null
                         : (isDark
                             ? Colors.white.withValues(alpha: 0.05)
                             : theme.colorScheme.surface),
@@ -429,34 +423,13 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
   }
 
   Widget _buildNotesSection(ThemeData theme, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10))
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text('Notes',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Notes',
+              icon: Icons.notes_rounded),
           const SizedBox(height: 12),
           TextField(
             controller: _notesController,

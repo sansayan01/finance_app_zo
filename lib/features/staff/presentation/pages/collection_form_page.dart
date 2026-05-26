@@ -14,6 +14,9 @@ import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../widgets/receipt_generator.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/smokey_background.dart';
+import '../widgets/premium_helpers.dart';
 
 class CollectionFormPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -92,26 +95,28 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
       backgroundColor:
           isDark ? const Color(0xFF0A0A14) : const Color(0xFFF5F5F5),
       appBar: _buildAppBar(theme),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildMemberCard(theme, isDark),
-              const SizedBox(height: 20),
-              _buildAmountSection(theme, isDark),
-              const SizedBox(height: 20),
-              _buildPaymentModeSection(theme, isDark),
-              const SizedBox(height: 20),
-              if (_selectedPaymentMode != cm.PaymentMode.cash) ...[
-                _buildReferenceSection(theme, isDark),
+      body: SmokeyBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildMemberCard(theme, isDark),
                 const SizedBox(height: 20),
-              ],
-              _buildRemarksSection(theme, isDark),
-              const SizedBox(height: 24),
-              _buildSubmitButton(theme, collectionState),
-            ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
+                _buildAmountSection(theme, isDark),
+                const SizedBox(height: 20),
+                _buildPaymentModeSection(theme, isDark),
+                const SizedBox(height: 20),
+                if (_selectedPaymentMode != cm.PaymentMode.cash) ...[
+                  _buildReferenceSection(theme, isDark),
+                  const SizedBox(height: 20),
+                ],
+                _buildRemarksSection(theme, isDark),
+                const SizedBox(height: 24),
+                _buildSubmitButton(theme, collectionState),
+              ].animate(interval: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
+            ),
           ),
         ),
       ),
@@ -235,42 +240,13 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
   }
 
   Widget _buildAmountSection(ThemeData theme, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.payments_rounded,
-                    size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: 10),
-              Text('Collection Amount',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Collection Amount',
+              icon: Icons.payments_rounded),
           const SizedBox(height: 16),
 
           // Amount input
@@ -394,42 +370,13 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
   }
 
   Widget _buildPaymentModeSection(ThemeData theme, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.credit_card_rounded,
-                    size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: 10),
-              Text('Payment Mode',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Payment Mode',
+              icon: Icons.credit_card_rounded),
           const SizedBox(height: 16),
           Row(
             children: cm.PaymentMode.values
@@ -475,11 +422,22 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
           _selectedPaymentMode = mode;
         });
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.15),
+                    AppColors.accent.withValues(alpha: 0.08),
+                  ],
+                )
+              : null,
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.15)
+              ? null
               : (isDark
                   ? Colors.white.withValues(alpha: 0.05)
                   : theme.colorScheme.surface),
@@ -544,42 +502,13 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
   }
 
   Widget _buildReferenceSection(ThemeData theme, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10)),
-                child:
-                    Icon(Icons.tag_rounded, size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: 10),
-              Text('Reference Number',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Reference Number',
+              icon: Icons.tag_rounded),
           const SizedBox(height: 12),
           TextFormField(
             controller: _referenceController,
@@ -605,42 +534,13 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
   }
 
   Widget _buildRemarksSection(ThemeData theme, bool isDark) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-        ),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.notes_rounded,
-                    size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: 10),
-              Text('Remarks',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
+          PremiumHelpers.sectionHeader(theme, 'Remarks',
+              icon: Icons.notes_rounded),
           const SizedBox(height: 12),
           TextFormField(
             controller: _remarksController,

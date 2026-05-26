@@ -3,7 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../data/providers/sync_providers.dart';
+import '../widgets/premium_helpers.dart';
 
 class PendingOperationsPage extends ConsumerStatefulWidget {
   const PendingOperationsPage({super.key});
@@ -70,13 +72,12 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
       onTap: syncStatus.isSyncing
           ? null
           : () => ref.read(syncStatusProvider.notifier).sync(),
-      child: Container(
+      child: GlassCard(
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
+        borderRadius: 12,
+        enableScale: false,
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -144,7 +145,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
           ],
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms);
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);
   }
 
   Widget _buildStatCol(String label, String value, IconData icon) {
@@ -169,13 +170,11 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                shape: BoxShape.circle),
-            child: const Icon(Icons.check_circle_outline_rounded,
-                size: 64, color: AppColors.success),
+          PremiumHelpers.gradientIconContainer(
+            Icons.check_circle_outline_rounded,
+            AppColors.success,
+            size: 80,
+            iconSize: 40,
           ),
           const SizedBox(height: 20),
           Text('All Synced!',
@@ -187,7 +186,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
               style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
         ],
-      ),
+      ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1), duration: 400.ms, curve: Curves.easeOutCubic),
     );
   }
 
@@ -214,69 +213,39 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
     final icon = _getTableIcon(table);
     final color = _getTableColor(table);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+    final countBadge = Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: Padding(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8)),
+      child: Text('${ops.length}',
+          style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w800)),
+    );
+
+    return PremiumHelpers.staggeredAnimation(
+      GlassCard(
+        margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10)),
-                      child: Icon(icon, size: 18, color: color),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(_formatTableName(table),
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                  ],
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8)),
-                  child: Text('${ops.length}',
-                      style: TextStyle(
-                          color: color,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800)),
-                ),
-              ],
+            PremiumHelpers.sectionHeader(
+              theme,
+              _formatTableName(table),
+              icon: icon,
+              trailing: countBadge,
             ),
-            const Divider(height: 24),
             ...ops.asMap().entries.map((entry) =>
                 _buildOperationItem(entry.value, theme, isDark, entry.key)),
           ],
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 300.ms, delay: (groupIndex * 80).ms)
-        .slideY(begin: 0.03, end: 0);
+      index: groupIndex,
+    );
   }
 
   Widget _buildOperationItem(
@@ -373,7 +342,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
           elevation: 0,
         ),
       ),
-    ).animate().fadeIn(duration: 300.ms);
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, end: 0, duration: 300.ms, curve: Curves.easeOutCubic);
   }
 
   IconData _getTableIcon(String table) {

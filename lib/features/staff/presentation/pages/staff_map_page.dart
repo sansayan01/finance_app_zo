@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../data/providers/staff_branch_providers.dart';
 
 class StaffMapPage extends ConsumerStatefulWidget {
@@ -273,7 +274,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
   Widget _buildMap() {
     return MapWidget(
       key: const ValueKey('staff_mapbox'),
-      cameraOptions: CameraOptions(
+      viewport: CameraViewportState(
         center: Point(
           coordinates: _currentPosition != null
               ? Position(
@@ -387,19 +388,9 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
         ),
       ),
       child: _currentPosition != null
-          ? Container(
+          ? GlassCard(
+              borderRadius: 16,
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.06),
-                ),
-              ),
               child: Row(
                 children: [
                   Container(

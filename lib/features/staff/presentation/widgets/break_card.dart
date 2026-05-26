@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../data/providers/staff_providers.dart';
 
 class BreakCard extends ConsumerStatefulWidget {
@@ -64,7 +65,6 @@ class _BreakCardState extends ConsumerState<BreakCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final profileAsync = ref.watch(staffProfileProvider);
 
     return profileAsync.when(
@@ -81,26 +81,11 @@ class _BreakCardState extends ConsumerState<BreakCard> {
             final currentBreak = snapshot.data;
             final isOnBreak = currentBreak != null;
 
-            return Container(
+            return GlassCard(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isOnBreak
-                      ? Colors.orangeAccent.withValues(alpha: 0.3)
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.black.withValues(alpha: 0.05)),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
+              borderColor: isOnBreak
+                  ? Colors.orangeAccent.withValues(alpha: 0.3)
+                  : null,
               child: Row(
                 children: [
                   Container(

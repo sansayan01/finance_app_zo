@@ -110,9 +110,15 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
             boxShadow: [
               BoxShadow(
                 color: (isCheckedIn ? Colors.green : AppColors.primary)
-                    .withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                    .withValues(alpha: 0.4),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: (isCheckedIn ? Colors.green : AppColors.primary)
+                    .withValues(alpha: 0.15),
+                blurRadius: 32,
+                spreadRadius: -4,
               ),
             ],
           ),

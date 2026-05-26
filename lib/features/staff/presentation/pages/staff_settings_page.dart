@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -7,6 +6,8 @@ import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/providers/staff_providers.dart';
 import '../../../../core/widgets/branded_loading.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../widgets/premium_helpers.dart';
 
 class StaffSettingsPage extends ConsumerStatefulWidget {
   const StaffSettingsPage({super.key});
@@ -85,7 +86,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                     _notificationsEnabled, (v) {
                   setState(() => _notificationsEnabled = v);
                 }),
-              ]),
+              ], index: 1),
               const SizedBox(height: 16),
               _buildSection(
                   theme, isDark, 'Account', Icons.person_outline_rounded, [
@@ -112,7 +113,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                     _biometricEnabled, (v) {
                   setState(() => _biometricEnabled = v);
                 }),
-              ]),
+              ], index: 2),
               const SizedBox(height: 16),
               _buildSection(
                   theme, isDark, 'Support', Icons.help_outline_rounded, [
@@ -130,7 +131,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                     Icons.bug_report_outlined,
                     Colors.orange,
                     () {}),
-              ]),
+              ], index: 3),
               const SizedBox(height: 16),
               _buildSection(
                   theme, isDark, 'About', Icons.info_outline_rounded, [
@@ -146,7 +147,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                         '-'),
                 _buildInfoTile(theme, 'Branch',
                     profileAsync.valueOrNull?.branchName ?? '-'),
-              ]),
+              ], index: 4),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -180,7 +181,8 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
     return profileAsync.when(
       data: (profile) {
         if (profile == null) return const SizedBox.shrink();
-        return Container(
+        return PremiumHelpers.staggeredAnimation(
+          Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -191,9 +193,13 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10)),
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8)),
+              BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.15),
+                  blurRadius: 32,
+                  spreadRadius: -4),
             ],
           ),
           child: Row(
@@ -270,7 +276,9 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
               ),
             ],
           ),
-        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, end: 0);
+        ),
+        index: 0,
+      );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
@@ -278,50 +286,22 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
   }
 
   Widget _buildSection(ThemeData theme, bool isDark, String title,
-      IconData icon, List<Widget> children) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
-        ],
+      IconData icon, List<Widget> children, {required int index}) {
+    return PremiumHelpers.staggeredAnimation(
+      GlassCard(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PremiumHelpers.sectionHeader(theme, title, icon: icon),
+            const Divider(height: 1),
+            const SizedBox(height: 4),
+            ...children,
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: 12),
-              Text(title,
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Divider(height: 1),
-          const SizedBox(height: 4),
-          ...children,
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, end: 0);
+      index: index,
+    );
   }
 
   Widget _buildSwitchTile(ThemeData theme, String title, String subtitle,

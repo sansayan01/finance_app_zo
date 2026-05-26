@@ -8,10 +8,12 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/glass_text_field.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../branch_manager/data/providers/branch_scoped_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
+import '../widgets/premium_helpers.dart';
 
 class StaffUserHubPage extends ConsumerStatefulWidget {
   const StaffUserHubPage({super.key});
@@ -125,42 +127,11 @@ class _StaffUserHubPageState extends ConsumerState<StaffUserHubPage> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.06),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (v) => setState(() => _searchQuery = v),
-                      style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87, fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: 'Search members by name or phone...',
-                        hintStyle: TextStyle(
-                            color: isDark ? Colors.white30 : Colors.black38, fontSize: 14),
-                        prefixIcon: Icon(Icons.search_rounded,
-                            color: isDark ? Colors.white30 : Colors.black38, size: 20),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = '');
-                                },
-                                icon: Icon(Icons.close_rounded,
-                                    color: isDark ? Colors.white30 : Colors.black38, size: 18),
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      ),
-                    ),
+                  child: GlassTextField(
+                    controller: _searchController,
+                    hintText: 'Search members by name or phone...',
+                    prefixIcon: Icons.search_rounded,
+                    onChanged: (v) => setState(() => _searchQuery = v),
                   ),
                 ),
               ),
@@ -183,8 +154,11 @@ class _StaffUserHubPageState extends ConsumerState<StaffUserHubPage> {
                           duration: const Duration(milliseconds: 250),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
+                            gradient: isActive
+                                ? LinearGradient(colors: [AppColors.primary, AppColors.accent])
+                                : null,
                             color: isActive
-                                ? AppColors.primary
+                                ? null
                                 : isDark
                                     ? Colors.white.withValues(alpha: 0.06)
                                     : Colors.white,
@@ -238,6 +212,16 @@ class _StaffUserHubPageState extends ConsumerState<StaffUserHubPage> {
               // Summary Row
               SliverToBoxAdapter(
                 child: membersAsync.when(
+                  data: (members) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: PremiumHelpers.sectionHeader(theme, 'Overview'),
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: membersAsync.when(
                   data: (members) => _buildSummaryRow(theme, isDark, members),
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
@@ -246,6 +230,12 @@ class _StaffUserHubPageState extends ConsumerState<StaffUserHubPage> {
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
               // Member Cards
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: PremiumHelpers.sectionHeader(theme, 'Members'),
+                ),
+              ),
               membersAsync.when(
                 data: (members) {
                   final filtered = _applyFilters(members);
@@ -326,46 +316,53 @@ class _StaffUserHubPageState extends ConsumerState<StaffUserHubPage> {
       return date.month == now.month && date.year == now.year;
     }).length;
 
+    final chips = [
+      _summaryChip(theme, isDark, '$total', 'Total', AppColors.primary),
+      _summaryChip(theme, isDark, '$active', 'Active', const Color(0xFF10B981)),
+      _summaryChip(theme, isDark, '$inactive', 'Inactive', const Color(0xFFFBBF24)),
+      _summaryChip(theme, isDark, '$thisMonth', 'New', const Color(0xFF667EEA)),
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          _summaryChip(theme, isDark, '$total', 'Total', AppColors.primary),
-          const SizedBox(width: 10),
-          _summaryChip(theme, isDark, '$active', 'Active', const Color(0xFF10B981)),
-          const SizedBox(width: 10),
-          _summaryChip(theme, isDark, '$inactive', 'Inactive', const Color(0xFFFBBF24)),
-          const SizedBox(width: 10),
-          _summaryChip(theme, isDark, '$thisMonth', 'New', const Color(0xFF667EEA)),
+          for (int i = 0; i < chips.length; i++) ...[
+            if (i > 0) const SizedBox(width: 10),
+            Expanded(
+              child: chips[i]
+                  .animate()
+                  .fadeIn(delay: Duration(milliseconds: 100 * i), duration: 300.ms)
+                  .slideY(begin: 0.04, end: 0, delay: Duration(milliseconds: 100 * i), duration: 300.ms, curve: Curves.easeOutCubic),
+            ),
+          ],
         ],
       ),
-    ).animate().fadeIn(delay: 200.ms, duration: 300.ms);
+    );
   }
 
   Widget _summaryChip(ThemeData theme, bool isDark, String count, String label, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
         ),
-        child: Column(
-          children: [
-            Text(count,
-                style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w800, color: color)),
-            const SizedBox(height: 2),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                    fontWeight: FontWeight.w500)),
-          ],
-        ),
+      ),
+      child: Column(
+        children: [
+          Text(count,
+              style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w800, color: color)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                  fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
@@ -404,6 +401,16 @@ class _StaffUserHubPageState extends ConsumerState<StaffUserHubPage> {
                           : [Colors.grey.shade400, Colors.grey.shade500],
                     ),
                     borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isActive
+                                ? const Color(0xFF667EEA)
+                                : Colors.grey.shade400)
+                            .withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: Text(

@@ -34,14 +34,6 @@ final branchCollectionsProvider =
   return repository.getBranchCollections(params.$1, date: params.$2);
 });
 
-/// Pending Approvals Provider
-final pendingApprovalsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>(
-        (ref, branchId) async {
-  final repository = ref.watch(branchManagerRepositoryProvider);
-  return repository.getPendingApprovals(branchId);
-});
-
 /// Branch Overdue Loans Provider
 final branchOverdueLoansProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>(
@@ -91,55 +83,13 @@ final branchManagerDashboardProvider =
   final repository = ref.watch(branchManagerRepositoryProvider);
 
   final stats = await repository.getBranchStats(branchId);
-  final pendingApprovals = await repository.getPendingApprovals(branchId);
   final dailySummary =
       await repository.getBranchDailySummary(branchId, DateTime.now());
   final targets = await repository.getBranchTargets(branchId);
 
   return {
     'stats': stats,
-    'pending_approvals_count': pendingApprovals.length,
     'daily_summary': dailySummary,
     'targets': targets,
   };
-});
-
-/// Approval Actions Notifier
-class ApprovalNotifier extends StateNotifier<AsyncValue<void>> {
-  final BranchManagerRepository _repository;
-  final Ref _ref;
-
-  ApprovalNotifier(this._repository, this._ref)
-      : super(const AsyncValue.data(null));
-
-  Future<void> approve(String requestId, String managerId,
-      {String? notes}) async {
-    state = const AsyncValue.loading();
-    try {
-      await _repository.approveRequest(requestId, managerId, notes: notes);
-      _ref.invalidate(pendingApprovalsProvider);
-      _ref.invalidate(branchManagerDashboardProvider);
-      state = const AsyncValue.data(null);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-
-  Future<void> reject(String requestId, String managerId, String reason) async {
-    state = const AsyncValue.loading();
-    try {
-      await _repository.rejectRequest(requestId, managerId, reason);
-      _ref.invalidate(pendingApprovalsProvider);
-      _ref.invalidate(branchManagerDashboardProvider);
-      state = const AsyncValue.data(null);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-}
-
-final approvalActionsProvider =
-    StateNotifierProvider<ApprovalNotifier, AsyncValue<void>>((ref) {
-  final repository = ref.watch(branchManagerRepositoryProvider);
-  return ApprovalNotifier(repository, ref);
 });

@@ -96,6 +96,13 @@ class _BranchLoansPageState extends ConsumerState<BranchLoansPage> {
                     letterSpacing: -0.5,
                   ),
                 ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.add_rounded),
+                    onPressed: () => context.push('/branch/loans/new'),
+                    tooltip: 'New Loan',
+                  ),
+                ],
                 systemOverlayStyle:
                     isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
               ),

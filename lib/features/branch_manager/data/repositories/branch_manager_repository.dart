@@ -127,23 +127,6 @@ class BranchManagerRepository {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// Get pending approvals
-  Future<List<Map<String, dynamic>>> getPendingApprovals(
-      String branchId) async {
-    final response = await _client
-        .from('pending_approvals')
-        .select('''
-          *,
-          requested_by_user:requested_by(full_name, role),
-          member:member_id(full_name, id, phone)
-        ''')
-        .eq('branch_id', branchId)
-        .eq('status', 'pending')
-        .order('created_at', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
-  }
-
   /// Get branch overdue loans
   Future<List<Map<String, dynamic>>> getBranchOverdueLoans(
       String branchId) async {
@@ -159,28 +142,6 @@ class BranchManagerRepository {
         ''').eq('branch_id', branchId).eq('status', 'active');
 
     return List<Map<String, dynamic>>.from(response);
-  }
-
-  /// Approve pending request
-  Future<void> approveRequest(String requestId, String managerId,
-      {String? notes}) async {
-    await _client.from('pending_approvals').update({
-      'status': 'approved',
-      'approved_by': managerId,
-      'approved_at': DateTime.now().toIso8601String(),
-      'notes': notes,
-    }).eq('id', requestId);
-  }
-
-  /// Reject pending request
-  Future<void> rejectRequest(
-      String requestId, String managerId, String reason) async {
-    await _client.from('pending_approvals').update({
-      'status': 'rejected',
-      'rejected_by': managerId,
-      'rejected_at': DateTime.now().toIso8601String(),
-      'rejection_reason': reason,
-    }).eq('id', requestId);
   }
 
   /// Get staff performance — computed from direct queries (no RPC needed)

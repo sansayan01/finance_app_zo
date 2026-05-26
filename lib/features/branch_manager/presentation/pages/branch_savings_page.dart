@@ -85,6 +85,13 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
                     letterSpacing: -0.5,
                   ),
                 ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.add_rounded),
+                    onPressed: () => context.push('/branch/savings/new'),
+                    tooltip: 'New Savings',
+                  ),
+                ],
                 systemOverlayStyle:
                     isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
               ),

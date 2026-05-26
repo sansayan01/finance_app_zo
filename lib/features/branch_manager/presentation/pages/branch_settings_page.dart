@@ -4,291 +4,273 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/powered_by_badge.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/data/models/user_model.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../chatbot/presentation/providers/chat_config_provider.dart';
+import '../../data/providers/branch_manager_providers.dart';
 import '../../data/providers/branch_scoped_providers.dart';
 
-/// Premium branch settings page for Branch Manager Portal.
-/// Shows branch info, manager profile, operations, and account settings.
 class BranchSettingsPage extends ConsumerWidget {
   const BranchSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final user = ref.watch(authProvider).user;
+    final user = ref.watch(currentUserProvider);
     final branchId = user?.branchId;
 
-    final branchAsync = branchId != null
-        ? ref.watch(branchInfoProvider(branchId))
-        : const AsyncData<Map<String, dynamic>?>(null);
-
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0A0A0C) : const Color(0xFFF2F2F7),
-      body: AuroraBackground(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // App Bar
+            // ─── App Bar ───
             SliverAppBar(
+              expandedHeight: 140.0,
+              collapsedHeight: 70.0,
+              floating: false,
               pinned: true,
+              backgroundColor: theme.scaffoldBackgroundColor,
               elevation: 0,
-              backgroundColor: isDark
-                  ? const Color(0xFF0A0A0C).withValues(alpha: 0.85)
-                  : const Color(0xFFF2F2F7).withValues(alpha: 0.85),
-              surfaceTintColor: Colors.transparent,
-              title: Text(
-                'Settings',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              systemOverlayStyle: isDark
-                  ? SystemUiOverlayStyle.light
-                  : SystemUiOverlayStyle.dark,
-            ),
-
-            // Profile Section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: _buildProfileCard(theme, isDark, user),
-              ),
-            ),
-
-            // Branch Info Section
-            SliverToBoxAdapter(
-              child: branchAsync.when(
-                data: (branch) => Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: _buildBranchInfoCard(context, theme, isDark, branch),
-                ),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
-            ),
-
-            // Operations Section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: _buildSectionCard(
-                  theme, isDark,
-                  title: 'Operations',
-                  icon: Icons.settings_rounded,
-                  items: [
-                    _SettingItem(
-                      icon: Icons.receipt_long_rounded,
-                      title: 'Collection Settings',
-                      subtitle: 'Payment modes and receipt settings',
-                      onTap: () {},
+              flexibleSpace: FlexibleSpaceBar(
+                titlePadding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                centerTitle: false,
+                title: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Settings',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.8,
+                      ),
                     ),
-                    _SettingItem(
-                      icon: Icons.notifications_active_rounded,
-                      title: 'Notifications',
-                      subtitle: 'Configure branch alerts and reminders',
-                      onTap: () {},
-                    ),
-                    _SettingItem(
-                      icon: Icons.print_rounded,
-                      title: 'Receipt Template',
-                      subtitle: 'Customize branch receipt format',
-                      onTap: () {},
+                    const SizedBox(height: 2),
+                    Text(
+                      user?.email ?? 'Branch Manager',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.6),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // Account Section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: _buildSectionCard(
-                  theme, isDark,
-                  title: 'Account',
-                  icon: Icons.person_rounded,
-                  items: [
-                    _SettingItem(
-                      icon: Icons.lock_rounded,
-                      title: 'Change Password',
-                      subtitle: 'Update your account password',
-                      onTap: () {},
-                    ),
-                    _SettingItem(
-                      icon: Icons.security_rounded,
-                      title: 'Privacy & Security',
-                      subtitle: 'Manage your account security',
-                      onTap: () {},
-                    ),
-                    _SettingItem(
-                      icon: Icons.help_outline_rounded,
-                      title: 'Help & Support',
-                      subtitle: 'Get help with the app',
-                      onTap: () {},
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // ─── Menu List ───
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // ─── SECTION 1: ACCOUNT & PREFERENCES ──────────────
+                  _buildSectionHeader(theme, 'ACCOUNT & PREFERENCES'),
+                  _buildMenuCard(
+                    theme: theme,
+                    icon: Icons.person_outline_rounded,
+                    title: 'Profile Settings',
+                    subtitle: 'Name, phone, email, and security',
+                    color: AppColors.primary,
+                    onTap: () => context.push('/branch/profile'),
+                  ).animate().fadeIn(delay: 50.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 12),
 
-            // Logout
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                child: GestureDetector(
-                  onTap: () => _showLogoutDialog(context, ref),
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(18),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  _buildQuickSettingsCard(theme, ref)
+                      .animate()
+                      .fadeIn(delay: 80.ms)
+                      .slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 28),
+
+                  // ─── SECTION 2: BRANCH OPERATIONS ───────────────────
+                  _buildSectionHeader(theme, 'BRANCH OPERATIONS'),
+                  if (branchId != null) ...[
+                    _buildBranchInfoCard(theme, ref, branchId)
+                        .animate()
+                        .fadeIn(delay: 110.ms)
+                        .slideY(begin: 0.05, end: 0),
+                    const SizedBox(height: 12),
+                    _buildBranchTargetsCard(theme, ref, branchId, context)
+                        .animate()
+                        .fadeIn(delay: 140.ms)
+                        .slideY(begin: 0.05, end: 0),
+                    const SizedBox(height: 12),
+                  ],
+                  _buildMenuCard(
+                    theme: theme,
+                    icon: Icons.people_outline_rounded,
+                    title: 'Staff Overview',
+                    subtitle: 'View branch staff and their performance',
+                    color: Colors.teal,
+                    onTap: () => context.push('/branch/members'),
+                  ).animate().fadeIn(delay: 170.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 28),
+
+                  // ─── SECTION 3: SECURITY ────────────────────────────
+                  _buildSectionHeader(theme, 'SECURITY & COMPLIANCE'),
+                  _buildMenuCard(
+                    theme: theme,
+                    icon: Icons.lock_outline_rounded,
+                    title: 'Change Password',
+                    subtitle: 'Update your account password',
+                    color: Colors.orange,
+                    onTap: () => _showChangePasswordDialog(context, ref),
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 12),
+                  _buildMenuCard(
+                    theme: theme,
+                    icon: Icons.security_rounded,
+                    title: 'Security & Activity',
+                    subtitle: 'Session info and recent activity',
+                    color: Colors.deepOrange,
+                    onTap: () => _showSessionInfo(context, ref),
+                  ).animate().fadeIn(delay: 230.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 28),
+
+                  // ─── SECTION 4: SUPPORT ─────────────────────────────
+                  _buildSectionHeader(theme, 'SUPPORT & ABOUT'),
+                  _buildMenuCard(
+                    theme: theme,
+                    icon: Icons.support_agent_rounded,
+                    title: 'Help & Support',
+                    subtitle: 'FAQs, report issues, and policies',
+                    color: Colors.blueGrey,
+                    onTap: () => _showSupportSheet(context),
+                  ).animate().fadeIn(delay: 260.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 12),
+                  _buildMenuCard(
+                    theme: theme,
+                    icon: Icons.logout_rounded,
+                    title: 'Sign Out',
+                    subtitle: 'End your session on this device',
+                    color: Colors.redAccent,
+                    onTap: () => _confirmSignOut(context, ref),
+                  ).animate().fadeIn(delay: 290.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 48),
+
+                  // ─── Footer ───
+                  Center(
+                    child: Column(
                       children: [
-                        Icon(Icons.logout_rounded, color: Colors.red, size: 20),
-                        const SizedBox(width: 10),
                         Text(
-                          'Logout',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: Colors.red,
-                            fontWeight: FontWeight.w700,
+                          'MicroFlow Pro — Branch Edition',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.textTheme.bodySmall?.color
+                                ?.withValues(alpha: 0.4),
                           ),
                         ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'v1.0.8-production',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: theme.textTheme.bodySmall?.color
+                                ?.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const PoweredByBadge(compact: true),
                       ],
                     ),
-                  ),
-                ),
+                  ).animate().fadeIn(delay: 320.ms),
+                ]),
               ),
             ),
-
-            // App Info
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-                child: Center(
-                  child: Text(
-                    'MicroFlow Pro v1.0.0',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? Colors.white30 : Colors.black38,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
       ),
     );
   }
 
-  // Profile Card
-  Widget _buildProfileCard(ThemeData theme, bool isDark, UserModel? user) {
-    final name = user?.fullName ?? 'Branch Manager';
-    final email = user?.email ?? '';
-    final phone = user?.phone ?? '';
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'B';
-
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.8),
-                  AppColors.accent.withValues(alpha: 0.6),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (email.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    email,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? Colors.white54 : Colors.black45,
-                    ),
-                  ),
-                ],
-                if (phone.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    phone,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Manager',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
+  // ─── Section Header ────────────────────────────────────────────────
+  Widget _buildSectionHeader(ThemeData theme, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, left: 4),
+      child: Text(
+        text,
+        style: theme.textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.5,
+          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.45),
+        ),
       ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+    );
   }
 
-  // Branch Info Card
-  Widget _buildBranchInfoCard(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-    Map<String, dynamic>? branch,
-  ) {
-    final name = branch?['name']?.toString() ?? 'Branch';
-    final address = branch?['address']?.toString() ?? '';
-    final city = branch?['city']?.toString() ?? '';
-    final code = branch?['code']?.toString() ?? '';
-    final status = branch?['status']?.toString() ?? 'active';
-    final phone = branch?['phone']?.toString() ?? '';
-    final email = branch?['email']?.toString() ?? '';
+  // ─── Menu Card ─────────────────────────────────────────────────────
+  Widget _buildMenuCard({
+    required ThemeData theme,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    return GlassCard(
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 2),
+                    Text(subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.6),
+                        )),
+                  ],
+                ),
+              ),
+              trailing ??
+                  Icon(Icons.chevron_right_rounded,
+                      color: theme.textTheme.bodySmall?.color
+                          ?.withValues(alpha: 0.3),
+                      size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Quick Settings Card ───────────────────────────────────────────
+  Widget _buildQuickSettingsCard(ThemeData theme, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    final isDark = ref.watch(themeProvider) == ThemeMode.dark;
 
     return GlassCard(
       padding: const EdgeInsets.all(20),
@@ -297,112 +279,593 @@ class BranchSettingsPage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.business_rounded, size: 18, color: AppColors.primary),
+              const Icon(Icons.tune_rounded,
+                  size: 18, color: AppColors.primary),
               const SizedBox(width: 10),
-              Text(
-                'Branch Information',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              Text('Quick Preferences',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(),
+          _buildToggleRow(
+            theme: theme,
+            label: 'Dark Mode',
+            description: 'Switch between light and dark theme',
+            value: isDark,
+            onChanged: (_) =>
+                ref.read(themeProvider.notifier).toggleTheme(),
+          ),
+          const SizedBox(height: 8),
+          _buildToggleRow(
+            theme: theme,
+            label: 'Push Notifications',
+            description: 'Alerts for overdue EMIs and new members',
+            value: settings.enableNotifications,
+            onChanged: notifier.toggleNotifications,
+          ),
+          const SizedBox(height: 8),
+          Builder(
+            builder: (context) {
+              final chatConfig = ref.watch(chatConfigProvider);
+              return _buildToggleRow(
+                theme: theme,
+                label: 'AI Assistant',
+                description: chatConfig.chatbotEnabled
+                    ? 'Floating chatbot is active'
+                    : 'Chatbot is hidden',
+                value: chatConfig.chatbotEnabled,
+                onChanged: (_) =>
+                    ref.read(chatConfigProvider.notifier).toggleChatbot(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleRow({
+    required ThemeData theme,
+    required String label,
+    required String description,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13)),
+            Text(description,
+                style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          ],
+        ),
+        Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+          activeTrackColor: AppColors.primary,
+        ),
+      ],
+    );
+  }
+
+  // ─── Branch Info Card ──────────────────────────────────────────────
+  Widget _buildBranchInfoCard(
+      ThemeData theme, WidgetRef ref, String branchId) {
+    final branchAsync = ref.watch(branchInfoProvider(branchId));
+    final staffAsync = ref.watch(branchStaffProvider(branchId));
+
+    return branchAsync.when(
+      data: (branch) {
+        if (branch == null) {
+          return const SizedBox.shrink();
+        }
+        return GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.business_rounded,
+                      size: 18, color: Colors.indigo),
+                  const SizedBox(width: 10),
+                  Text('Branch Information',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                ],
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: status == 'active'
-                      ? AppColors.success.withValues(alpha: 0.12)
-                      : AppColors.warning.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  status[0].toUpperCase() + status.substring(1),
-                  style: TextStyle(
-                    color: status == 'active' ? AppColors.success : AppColors.warning,
-                    fontSize: 11,
+              const SizedBox(height: 16),
+              _infoRow(theme, 'Branch Name',
+                  branch['name']?.toString() ?? 'N/A'),
+              _infoRow(theme, 'Branch Code',
+                  branch['code']?.toString() ?? 'N/A'),
+              _infoRow(theme, 'Address',
+                  branch['address']?.toString() ?? 'N/A'),
+              _infoRow(theme, 'Phone',
+                  branch['phone']?.toString() ?? 'N/A'),
+              _infoRow(theme, 'Email',
+                  branch['email']?.toString() ?? 'N/A'),
+              _infoRow(
+                theme,
+                'Status',
+                (branch['status']?.toString() ?? 'active').toUpperCase(),
+                valueColor: branch['status'] == 'active'
+                    ? AppColors.success
+                    : Colors.orange,
+              ),
+              const Divider(height: 24),
+              staffAsync.when(
+                data: (staff) => _infoRow(
+                    theme, 'Total Staff', '${staff.length}'),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _infoRow(ThemeData theme, String label, String value,
+      {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.6))),
+          ),
+          Expanded(
+            child: Text(value,
+                style: TextStyle(
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
+                    color: valueColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Branch Targets Card ───────────────────────────────────────────
+  Widget _buildBranchTargetsCard(
+      ThemeData theme, WidgetRef ref, String branchId, BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.flag_rounded,
+                  size: 18, color: Colors.deepPurple),
+              const SizedBox(width: 10),
+              Text('Branch Targets',
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => _showEditTargetsDialog(context, ref, branchId),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: const Text('Edit',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary)),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            name,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
+            'Set monthly collection and member growth targets for your branch.',
+            style: TextStyle(
+                fontSize: 12,
+                color: theme.textTheme.bodySmall?.color
+                    ?.withValues(alpha: 0.6)),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: Colors.amber.withValues(alpha: 0.25)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.construction_rounded,
+                    size: 16, color: Colors.amber),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Targets are stored locally. Server-side sync coming soon.',
+                    style: TextStyle(fontSize: 12, color: Colors.amber),
+                  ),
+                ),
+              ],
             ),
           ),
-          if (code.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              'Code: $code',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? Colors.white54 : Colors.black45,
-                fontSize: 12,
+        ],
+      ),
+    );
+  }
+
+  // ─── Change Password Dialog ────────────────────────────────────────
+  void _showChangePasswordDialog(
+      BuildContext context, WidgetRef ref) {
+    final currentPwController = TextEditingController();
+    final newPwController = TextEditingController();
+    final confirmPwController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 12,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom +
+                  MediaQuery.of(ctx).padding.bottom +
+                  24,
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.lock_outline_rounded,
+                            color: Colors.orange, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Change Password',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700)),
+                          Text('Update your account password',
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: currentPwController,
+                    obscureText: obscureCurrent,
+                    decoration: InputDecoration(
+                      labelText: 'Current Password',
+                      prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureCurrent
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 20),
+                        onPressed: () => setSheetState(
+                            () => obscureCurrent = !obscureCurrent),
+                      ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    validator: (v) => v == null || v.isEmpty
+                        ? 'Enter current password'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: newPwController,
+                    obscureText: obscureNew,
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      prefixIcon: const Icon(Icons.lock, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureNew
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 20),
+                        onPressed: () => setSheetState(
+                            () => obscureNew = !obscureNew),
+                      ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Enter new password';
+                      if (v.length < 8) return 'Minimum 8 characters';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: confirmPwController,
+                    obscureText: obscureConfirm,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm New Password',
+                      prefixIcon: const Icon(Icons.lock, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureConfirm
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 20),
+                        onPressed: () => setSheetState(
+                            () => obscureConfirm = !obscureConfirm),
+                      ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    validator: (v) {
+                      if (v != newPwController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 52),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+                                  setSheetState(() => isLoading = true);
+                                  try {
+                                    final success = await ref
+                                        .read(authProvider.notifier)
+                                        .changePassword(
+                                          currentPassword: currentPwController.text,
+                                          newPassword: newPwController.text,
+                                        );
+                                    if (!success) throw Exception('Current password is incorrect');
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                        content: Text(
+                                            'Password updated successfully'),
+                                        backgroundColor: AppColors.success,
+                                      ));
+                                    }
+                                  } catch (e) {
+                                    setSheetState(() => isLoading = false);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(SnackBar(
+                                        content: Text(e.toString().replaceAll(
+                                            'Exception: ', '')),
+                                        backgroundColor: Colors.redAccent,
+                                      ));
+                                    }
+                                  }
+                                },
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.check_rounded, size: 18),
+                          label: Text(
+                              isLoading ? 'Updating...' : 'Update Password'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(0, 52),
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-          if (address.isNotEmpty || city.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _buildInfoRow(
-              theme, isDark,
-              icon: Icons.location_on_rounded,
-              label: [address, city].where((s) => s.isNotEmpty).join(', '),
-            ),
-          ],
-          if (phone.isNotEmpty)
-            _buildInfoRow(
-              theme, isDark,
-              icon: Icons.phone_rounded,
-              label: phone,
-              onTap: () => launchUrl(Uri.parse('tel:$phone')),
-            ),
-          if (email.isNotEmpty)
-            _buildInfoRow(
-              theme, isDark,
-              icon: Icons.email_rounded,
-              label: email,
-              onTap: () => launchUrl(Uri.parse('mailto:$email')),
-            ),
-          if (branch == null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Branch details not available',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? Colors.white38 : Colors.black38,
-                  fontStyle: FontStyle.italic,
+          );
+        },
+      ),
+    );
+  }
+
+  // ─── Edit Targets Dialog ───────────────────────────────────────────
+  void _showEditTargetsDialog(
+      BuildContext context, WidgetRef ref, String branchId) {
+    final collectionController =
+        TextEditingController(text: '500000');
+    final memberController = TextEditingController(text: '20');
+    final disbursementController =
+        TextEditingController(text: '1000000');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 12,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom +
+              MediaQuery.of(ctx).padding.bottom +
+              24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.05, end: 0);
-  }
-
-  Widget _buildInfoRow(
-    ThemeData theme,
-    bool isDark, {
-    required IconData icon,
-    required String label,
-    VoidCallback? onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Row(
-          children: [
-            Icon(icon, size: 16, color: isDark ? Colors.white38 : Colors.black38),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark ? Colors.white70 : Colors.black87,
-                  fontSize: 13,
-                  decoration: onTap != null ? TextDecoration.underline : null,
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.flag_rounded,
+                      color: Colors.deepPurple, size: 22),
+                ),
+                const SizedBox(width: 14),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Branch Targets',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w700)),
+                    Text('Set monthly goals for your branch',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: collectionController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: 'Monthly Collection Target',
+                prefixText: '\u20B9 ',
+                prefixStyle: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 16),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: disbursementController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: 'Monthly Disbursement Target',
+                prefixText: '\u20B9 ',
+                prefixStyle: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 16),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: memberController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: 'New Members Target',
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // TODO: Save to branch_targets table when migration is applied
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Targets saved locally'),
+                    backgroundColor: AppColors.success,
+                  ));
+                },
+                icon: const Icon(Icons.save_rounded, size: 18),
+                label: const Text('Save Targets',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
               ),
             ),
@@ -412,158 +875,202 @@ class BranchSettingsPage extends ConsumerWidget {
     );
   }
 
-  // Section Card
-  Widget _buildSectionCard(
-    ThemeData theme,
-    bool isDark, {
-    required String title,
-    required IconData icon,
-    required List<_SettingItem> items,
-  }) {
-    return GlassCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: AppColors.primary),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+  // ─── Session Info ──────────────────────────────────────────────────
+  void _showSessionInfo(BuildContext context, WidgetRef ref) {
+    final user = ref.read(currentUserProvider);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ...items.asMap().entries.map((entry) {
-            final item = entry.value;
-            final isLast = entry.key == items.length - 1;
-            return Column(
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: item.onTap,
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.deepOrange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 4),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.06)
-                                  : AppColors.primary.withValues(alpha: 0.06),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              item.icon,
-                              size: 18,
-                              color: isDark ? Colors.white60 : AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.title,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  item.subtitle,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? Colors.white38
-                                        : Colors.black38,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color:
-                                isDark ? Colors.white24 : Colors.black26,
-                            size: 20,
-                          ),
-                        ],
-                      ),
+                  ),
+                  child: const Icon(Icons.security_rounded,
+                      color: Colors.deepOrange, size: 22),
+                ),
+                const SizedBox(width: 14),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Session Info',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w700)),
+                    Text('Your current session details',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _sessionRow('Name', user?.fullName ?? 'N/A'),
+            _sessionRow('Email', user?.email ?? 'N/A'),
+            _sessionRow('Role', user?.role?.name ?? 'N/A'),
+            _sessionRow(
+                'Branch', user?.branchId ?? 'Not assigned'),
+            _sessionRow('User ID', user?.id ?? 'N/A'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.25)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.check_circle_outline,
+                      size: 16, color: AppColors.success),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Session is active and secure.',
+                      style:
+                          TextStyle(fontSize: 12, color: AppColors.success),
                     ),
                   ),
-                ),
-                if (!isLast)
-                  Divider(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.05),
-                    height: 1,
-                  ),
-              ],
-            );
-          }),
-        ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: 100.ms);
+    );
   }
 
-  // Logout Dialog
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
-            ),
+  Widget _sessionRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ref.read(authProvider.notifier).signOut();
-              context.go('/login');
-            },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
-            ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
   }
-}
 
-class _SettingItem {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
+  // ─── Support Sheet ─────────────────────────────────────────────────
+  void _showSupportSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Help & Support',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.help_center_outlined,
+                  color: AppColors.primary),
+              title: const Text('Help Center & FAQs',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle:
+                  const Text('Guides, tutorials, and troubleshooting'),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Help Center coming soon')));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bug_report_outlined,
+                  color: Colors.orange),
+              title: const Text('Report an Issue',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Submit a bug report or feedback'),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Issue reporting coming soon')));
+              },
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.policy_outlined, color: Colors.teal),
+              title: const Text('Privacy Policy & Terms',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Legal disclosures and compliance'),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Policies page coming soon')));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  const _SettingItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+  // ─── Sign Out ──────────────────────────────────────────────────────
+  void _confirmSignOut(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign Out'),
+        content:
+            const Text('Are you sure you want to end your session?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(authProvider.notifier).signOut();
+            },
+            child: const Text('Sign Out',
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
 }

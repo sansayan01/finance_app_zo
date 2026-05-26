@@ -85,8 +85,6 @@ class _BranchManagerDashboardState
                 children: [
                   _buildHeader(context, branchId),
                   const SizedBox(height: 20),
-                  _buildPendingAlert(context, branchId),
-                  const SizedBox(height: 28),
                   _buildHeroCard(context, branchId),
                   const SizedBox(height: 16),
                   _buildFinancialSummaryStrip(context, branchId),
@@ -99,7 +97,7 @@ class _BranchManagerDashboardState
                   const SizedBox(height: 28),
                   _buildSavingsSection(context, branchId),
                   const SizedBox(height: 28),
-                  _buildRecentCollections(context, branchId),
+                  _buildRecentTransactions(context, branchId),
                 ],
               ),
             ),
@@ -190,7 +188,7 @@ class _BranchManagerDashboardState
             children: [
               _HeaderIconBtn(
                 icon: Icons.notifications_outlined,
-                onTap: () => context.push('/branch/approvals'),
+                onTap: () => context.push('/branch/payments'),
               ),
               const SizedBox(width: 12),
               _HeaderIconBtn(
@@ -202,75 +200,6 @@ class _BranchManagerDashboardState
         ),
       ],
     ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05, end: 0);
-  }
-
-  // ─── Pending Approvals Alert ───
-
-  Widget _buildPendingAlert(BuildContext context, String branchId) {
-    final dashboardAsync = ref.watch(branchManagerDashboardProvider);
-    final theme = Theme.of(context);
-
-    return dashboardAsync.when(
-      data: (data) {
-        final count = data['pending_approvals_count'] as int? ?? 0;
-        if (count == 0) return const SizedBox.shrink();
-        return GestureDetector(
-          onTap: () => context.push('/branch/approvals'),
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [
-                AppColors.warning.withValues(alpha: 0.15),
-                AppColors.warning.withValues(alpha: 0.05),
-              ]),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: AppColors.warning.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.pending_actions_rounded,
-                      color: AppColors.warning, size: 18),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$count Pending Approval${count > 1 ? 's' : ''}',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.warning,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text('Requests awaiting your review',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.7),
-                            fontSize: 11,
-                          )),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded,
-                    color: AppColors.warning.withValues(alpha: 0.5)),
-              ],
-            ),
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
   }
 
   // ─── Hero Card ───
@@ -480,9 +409,9 @@ class _BranchManagerDashboardState
                 Expanded(
                   child: _QuickActionBtn(
                     icon: Icons.savings_rounded,
-                    label: 'Savings',
+                    label: 'New Savings',
                     color: theme.colorScheme.secondary,
-                    onTap: () => context.push('/branch/savings'),
+                    onTap: () => context.push('/branch/savings/new'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -513,24 +442,6 @@ class _BranchManagerDashboardState
               children: [
                 Expanded(
                   child: _QuickActionBtn(
-                    icon: Icons.people_alt_rounded,
-                    label: 'Staff',
-                    color: AppColors.pink,
-                    onTap: () => context.push('/branch/staff'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickActionBtn(
-                    icon: Icons.approval_rounded,
-                    label: 'Approvals',
-                    color: const Color(0xFFFF6B35),
-                    onTap: () => context.push('/branch/approvals'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickActionBtn(
                     icon: Icons.location_on_rounded,
                     label: 'Live Map',
                     color: const Color(0xFF00BFA5),
@@ -544,6 +455,15 @@ class _BranchManagerDashboardState
                     label: 'Reports',
                     color: const Color(0xFF7C3AED),
                     onTap: () => context.push('/branch/reports'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.analytics_outlined,
+                    label: 'Analytics',
+                    color: const Color(0xFF2196F3),
+                    onTap: () => context.push('/branch/analytics'),
                   ),
                 ),
               ],
@@ -762,12 +682,12 @@ class _BranchManagerDashboardState
     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.05, end: 0);
   }
 
-  // ─── Recent Collections ───
+  // ─── Recent Transactions ───
 
-  Widget _buildRecentCollections(
+  Widget _buildRecentTransactions(
       BuildContext context, String branchId) {
-    final collectionsAsync =
-        ref.watch(branchTodayCollectionsProvider(branchId));
+    final transactionsAsync =
+        ref.watch(branchRecentTransactionsProvider(branchId));
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -777,7 +697,7 @@ class _BranchManagerDashboardState
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Recent Collections',
+            Text('Recent Transactions',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.3)),
             GestureDetector(
@@ -807,9 +727,9 @@ class _BranchManagerDashboardState
           ],
         ),
         const SizedBox(height: 16),
-        collectionsAsync.when(
-          data: (collections) {
-            if (collections.isEmpty) {
+        transactionsAsync.when(
+          data: (transactions) {
+            if (transactions.isEmpty) {
               return GlassCard(
                 padding: const EdgeInsets.all(32),
                 child: Center(
@@ -820,7 +740,7 @@ class _BranchManagerDashboardState
                           color: theme.textTheme.bodySmall?.color
                               ?.withValues(alpha: 0.2)),
                       const SizedBox(height: 12),
-                      Text('No collections today',
+                      Text('No recent transactions',
                           style: theme.textTheme.bodySmall),
                     ],
                   ),
@@ -830,26 +750,31 @@ class _BranchManagerDashboardState
             return GlassCard(
               padding: const EdgeInsets.all(16),
               child: Column(
-                children: collections.take(5).toList().asMap().entries.map((entry) {
+                children: transactions.take(5).toList().asMap().entries.map((entry) {
                   final index = entry.key;
-                  final c = entry.value;
-                  final collector =
-                      c['collector'] as Map<String, dynamic>?;
-                  final amount =
-                      (c['amount_collected'] as num?)?.toDouble() ?? 0;
-                  final paymentMode =
-                      (c['payment_mode'] as String?) ?? 'cash';
+                  final t = entry.value;
+                  final amount = (t['amount'] as num?)?.toDouble() ?? 0;
+                  final type = (t['type'] as String?) ?? 'other';
+                  final memberName = (t['member_name'] as String?) ?? '';
+                  final paymentMode = (t['payment_mode'] as String?) ?? 'cash';
+                  final createdAtStr = t['created_at'] as String?;
+                  final createdAt = createdAtStr != null
+                      ? DateTime.tryParse(createdAtStr)
+                      : null;
+                  final description = t['description'] as String?;
 
                   return Column(
                     children: [
-                      _CollectionItem(
+                      _TransactionItem(
                         amount: amount,
+                        type: type,
+                        memberName: memberName,
                         paymentMode: paymentMode,
-                        collectorName:
-                            collector?['full_name']?.toString() ?? '',
+                        createdAt: createdAt,
+                        description: description,
                         isDark: isDark,
                       ),
-                      if (index < collections.take(5).length - 1)
+                      if (index < transactions.take(5).length - 1)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           child: Divider(
@@ -867,7 +792,7 @@ class _BranchManagerDashboardState
           error: (_, __) => GlassCard(
             padding: const EdgeInsets.all(32),
             child: Center(
-              child: Text('Unable to load collections',
+              child: Text('Unable to load transactions',
                   style: theme.textTheme.bodySmall),
             ),
           ),
@@ -879,23 +804,90 @@ class _BranchManagerDashboardState
 
 // ─── Sub-Widgets ───
 
-class _CollectionItem extends StatelessWidget {
+class _TransactionItem extends StatelessWidget {
   final double amount;
+  final String type;
+  final String memberName;
   final String paymentMode;
-  final String collectorName;
+  final DateTime? createdAt;
+  final String? description;
   final bool isDark;
 
-  const _CollectionItem({
+  const _TransactionItem({
     required this.amount,
+    required this.type,
+    required this.memberName,
     required this.paymentMode,
-    required this.collectorName,
+    required this.createdAt,
+    required this.description,
     required this.isDark,
   });
+
+  IconData _getIcon() {
+    switch (type) {
+      case 'emiPayment':
+        return Icons.payments_rounded;
+      case 'savingsDeposit':
+        return Icons.savings_rounded;
+      case 'savingsWithdrawal':
+        return Icons.account_balance_wallet_outlined;
+      case 'loanDisbursement':
+        return Icons.outbond_rounded;
+      case 'penalty':
+        return Icons.warning_amber_rounded;
+      case 'staffCashDeposit':
+        return Icons.point_of_sale_rounded;
+      default:
+        return Icons.receipt_long_rounded;
+    }
+  }
+
+  String _getLabel() {
+    switch (type) {
+      case 'emiPayment':
+        return 'EMI Payment';
+      case 'savingsDeposit':
+        return 'Savings Deposit';
+      case 'savingsWithdrawal':
+        return 'Savings Withdrawal';
+      case 'loanDisbursement':
+        return 'Disbursement';
+      case 'penalty':
+        return 'Penalty';
+      case 'staffCashDeposit':
+        return 'Cash Deposit';
+      default:
+        return 'Transaction';
+    }
+  }
+
+  Color _getColor() {
+    switch (type) {
+      case 'emiPayment':
+      case 'savingsDeposit':
+      case 'staffCashDeposit':
+        return isDark ? AppColors.successDark : AppColors.success;
+      case 'loanDisbursement':
+      case 'savingsWithdrawal':
+        return isDark ? AppColors.errorDark : AppColors.error;
+      case 'penalty':
+        return isDark ? AppColors.warningDark : AppColors.warning;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  bool _isCredit() {
+    return type == 'emiPayment' ||
+        type == 'savingsDeposit' ||
+        type == 'staffCashDeposit';
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = isDark ? AppColors.successDark : AppColors.success;
+    final color = _getColor();
+    final isCredit = _isCredit();
 
     return Row(
       children: [
@@ -907,14 +899,15 @@ class _CollectionItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: color.withValues(alpha: 0.15)),
           ),
-          child: Icon(Icons.payments_rounded, color: color, size: 20),
+          child: Icon(_getIcon(), color: color, size: 20),
         ),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(collectorName.isNotEmpty ? collectorName : 'Collection',
+              Text(
+                  memberName.isNotEmpty ? memberName : _getLabel(),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -923,7 +916,7 @@ class _CollectionItem extends StatelessWidget {
               const SizedBox(height: 3),
               Row(
                 children: [
-                  Text(paymentMode.toUpperCase(),
+                  Text(_getLabel(),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -940,7 +933,9 @@ class _CollectionItem extends StatelessWidget {
                       )),
                   const SizedBox(width: 6),
                   Text(
-                      AppFormatters.formatRelativeTime(DateTime.now()),
+                      createdAt != null
+                          ? AppFormatters.formatRelativeTime(createdAt!)
+                          : '',
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 10,
                         color: theme.textTheme.bodySmall?.color
@@ -951,7 +946,8 @@ class _CollectionItem extends StatelessWidget {
             ],
           ),
         ),
-        Text('+${AppFormatters.formatCurrency(amount)}',
+        Text(
+            '${isCredit ? '+' : '-'}${AppFormatters.formatCurrency(amount)}',
             style: TextStyle(
               color: color,
               fontSize: 14,

@@ -478,3 +478,49 @@ final branchWeeklyCollectionTrendProvider =
     return List<double>.filled(7, 0);
   }
 });
+
+// =====================================================
+// BRANCH-SCOPED RECENT TRANSACTIONS
+// =====================================================
+
+final branchRecentTransactionsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, branchId) async {
+  final client = ref.watch(supabaseClientProvider);
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  try {
+    // Get staff IDs for this branch to filter transactions
+    final staffResp = await client
+        .from('staff_profiles')
+        .select('id')
+        .eq('branch_id', branchId);
+    final staffIds =
+        (staffResp as List<dynamic>).map((s) => s['id'] as String).toList();
+
+    // Get member IDs for this branch
+    final memberResp = await client
+        .from('members')
+        .select('id')
+        .eq('org_id', orgId)
+        .eq('branch_id', branchId);
+    final memberIds =
+        (memberResp as List<dynamic>).map((m) => m['id'] as String).toList();
+
+    // Combine: get transactions where staff_id in branch staff OR member_id in branch members
+    final allIds = [...staffIds, ...memberIds];
+    if (allIds.isEmpty) return [];
+
+    // Fetch recent transactions -- filter by staff_id or member_id
+    final response = await client
+        .from('transactions')
+        .select('*')
+        .eq('org_id', orgId)
+        .or('staff_id.in.(${staffIds.join(",")}),member_id.in.(${memberIds.join(",")})')
+        .order('created_at', ascending: false)
+        .limit(20);
+
+    return List<Map<String, dynamic>>.from(response as List<dynamic>);
+  } catch (e) {
+    return [];
+  }
+});

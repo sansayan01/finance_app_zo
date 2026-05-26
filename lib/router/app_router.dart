@@ -111,12 +111,9 @@ import '../features/billing/presentation/pages/usage_limits_page.dart';
 
 // Branch Manager Portal
 import '../features/branch_manager/presentation/pages/branch_manager_dashboard.dart';
-import '../features/branch_manager/presentation/pages/staff_management_page.dart';
-import '../features/branch_manager/presentation/pages/pending_approvals_page.dart';
 import '../features/branch_manager/presentation/pages/branch_reports_page.dart';
 import '../features/branch_manager/presentation/pages/manager_live_map_page.dart';
-import '../features/branch_manager/presentation/pages/branch_members_page.dart';
-import '../features/branch_manager/presentation/pages/branch_member_detail_page.dart';
+import '../features/branch_manager/presentation/pages/branch_users_page.dart';
 import '../features/branch_manager/presentation/pages/branch_loans_page.dart';
 import '../features/branch_manager/presentation/pages/branch_savings_page.dart';
 import '../features/branch_manager/presentation/pages/branch_today_payments_page.dart';
@@ -602,14 +599,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const BranchManagerDashboard(),
           ),
           GoRoute(
-            path: '/branch/staff',
-            builder: (context, state) => const StaffManagementPage(),
-          ),
-          GoRoute(
-            path: '/branch/approvals',
-            builder: (context, state) => const PendingApprovalsPage(),
-          ),
-          GoRoute(
             path: '/branch/reports',
             builder: (context, state) => const BranchReportsPage(),
           ),
@@ -637,6 +626,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const BranchSavingsPage(),
           ),
           GoRoute(
+            path: '/branch/savings/new',
+            builder: (context, state) => const NewRecurringSavingPage(),
+          ),
+          GoRoute(
             path: '/branch/savings/:id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
@@ -645,13 +638,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/branch/members',
-            builder: (context, state) => const BranchMembersPage(),
+            builder: (context, state) => const BranchUsersPage(),
           ),
           GoRoute(
             path: '/branch/members/:id',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              return BranchMemberDetailPage(memberId: id);
+              return UserDetailsPage(userId: id);
             },
           ),
           GoRoute(
@@ -669,6 +662,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/branch/profile',
             builder: (context, state) => const ProfilePage(),
+          ),
+          GoRoute(
+            path: '/branch/users/new',
+            builder: (context, state) => const NewUserPage(),
           ),
         ],
       ),

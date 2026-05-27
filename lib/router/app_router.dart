@@ -73,6 +73,7 @@ import '../features/staff/presentation/pages/break_logging_page.dart';
 import '../features/staff/presentation/pages/pending_operations_page.dart';
 import '../features/staff/presentation/pages/gamification_dashboard.dart';
 import '../features/staff/presentation/pages/staff_targets_page.dart';
+import '../features/staff/data/services/duty_auto_resume_service.dart';
 
 import '../core/constants/layout.dart';
 
@@ -1033,6 +1034,15 @@ class StaffShell extends ConsumerStatefulWidget {
 }
 
 class _StaffShellState extends ConsumerState<StaffShell> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto-resume tracking if agent was on duty when app closed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(dutyAutoResumeProvider);
+    });
+  }
+
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/staff/payments')) return 1;

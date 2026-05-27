@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../data/providers/staff_branch_providers.dart';
+import '../../data/providers/duty_providers.dart';
+import '../../data/providers/live_tracking_providers.dart';
+import '../../data/providers/staff_providers.dart';
+import '../widgets/on_duty_toggle.dart';
 
 class StaffMapPage extends ConsumerStatefulWidget {
   const StaffMapPage({super.key});
@@ -20,16 +24,37 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
   bool _loadingLocation = true;
   String? _locationError;
   bool _isDarkStyle = false;
+  PolylineAnnotationManager? _polylineManager;
+  Timer? _breadcrumbRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _initLocation();
+    // Refresh breadcrumbs every 30 seconds
+    _breadcrumbRefreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _refreshBreadcrumbs(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _breadcrumbRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _refreshBreadcrumbs() {
+    final profile = ref.read(staffProfileProvider).valueOrNull;
+    if (profile != null) {
+      ref.invalidate(agentBreadcrumbsProvider(profile.id));
+    }
   }
 
   Future<void> _initLocation() async {
     try {
-      geo.LocationPermission permission = await geo.Geolocator.checkPermission();
+      geo.LocationPermission permission =
+          await geo.Geolocator.checkPermission();
       if (permission == geo.LocationPermission.denied) {
         permission = await geo.Geolocator.requestPermission();
         if (permission == geo.LocationPermission.denied) {
@@ -67,6 +92,9 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
         ),
         MapAnimationOptions(duration: 1500),
       );
+
+      // Draw breadcrumb trail after map is ready
+      _drawBreadcrumbTrail();
     } catch (e) {
       setState(() {
         _loadingLocation = false;
@@ -75,12 +103,65 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
     }
   }
 
+  Future<void> _drawBreadcrumbTrail() async {
+    if (_mapboxMap == null) return;
+
+    final profile = ref.read(staffProfileProvider).valueOrNull;
+    if (profile == null) return;
+
+    final breadcrumbs =
+        ref.read(agentBreadcrumbsProvider(profile.id)).valueOrNull;
+    if (breadcrumbs == null || breadcrumbs.length < 2) return;
+
+    try {
+      _polylineManager ??= await _mapboxMap!.annotations
+          .createPolylineAnnotationManager();
+
+      // Clear existing annotations
+      await _polylineManager!.deleteAll();
+
+      // Build coordinates list
+      final coordinates = breadcrumbs
+          .where((p) => p['latitude'] != null && p['longitude'] != null)
+          .map((p) => Position(
+                (p['longitude'] as num).toDouble(),
+                (p['latitude'] as num).toDouble(),
+              ))
+          .toList();
+
+      if (coordinates.length >= 2) {
+        await _polylineManager!.create(
+          PolylineAnnotationOptions(
+            geometry: LineString(coordinates: coordinates),
+            lineColor: AppColors.primary.toARGB32(),
+            lineWidth: 3.0,
+            lineOpacity: 0.7,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[StaffMap] Error drawing breadcrumb: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final branchAsync = ref.watch(staffBranchIdProvider);
-    final branchId = branchAsync.valueOrNull;
+    final dutyState = ref.watch(onDutyProvider);
+    final isOnDuty = dutyState.valueOrNull ?? false;
+    final dutyMinutesAsync = ref.watch(todayDutyMinutesProvider);
+    final isTracking = ref.watch(isTrackingProvider);
+
+    // Watch breadcrumbs to redraw trail when data changes
+    final profile = ref.watch(staffProfileProvider).valueOrNull;
+    if (profile != null) {
+      final breadcrumbsAsync = ref.watch(agentBreadcrumbsProvider(profile.id));
+      breadcrumbsAsync.whenData((_) {
+        // Redraw trail when new data arrives
+        Future.microtask(() => _drawBreadcrumbTrail());
+      });
+    }
 
     return Scaffold(
       backgroundColor:
@@ -116,7 +197,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
             ),
           ),
 
-          // App Bar
+          // App Bar with On Duty toggle
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -168,8 +249,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
                     isDark,
                     Icons.refresh_rounded,
                     () {
-                      ref.invalidate(
-                          staffCollectionHistoryProvider(branchId ?? ''));
+                      _refreshBreadcrumbs();
                       _initLocation();
                     },
                   ),
@@ -178,15 +258,28 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
             ),
           ),
 
+          // On Duty toggle card (below header)
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 64, left: 16, right: 16),
+              child: _buildDutyCard(isDark, isOnDuty, isTracking, dutyMinutesAsync),
+            ),
+          ),
+
           // FABs
           Positioned(
             right: 16,
-            bottom: 120,
+            bottom: 200,
             child: Column(
               children: [
                 _mapFab(Icons.my_location_rounded, isDark, _goToMyLocation),
                 const SizedBox(height: 12),
                 _mapFab(Icons.layers_rounded, isDark, _toggleMapStyle),
+                const SizedBox(height: 12),
+                _mapFab(Icons.route_rounded, isDark, () {
+                  _drawBreadcrumbTrail();
+                  HapticFeedback.lightImpact();
+                }),
               ],
             ),
           ),
@@ -196,7 +289,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
             Positioned(
               left: 16,
               right: 16,
-              bottom: 100,
+              bottom: 180,
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -239,7 +332,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: _buildBottomPanel(isDark),
+            child: _buildBottomPanel(isDark, isOnDuty),
           ),
 
           // Loading overlay
@@ -271,6 +364,98 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
     );
   }
 
+  Widget _buildDutyCard(
+      bool isDark, bool isOnDuty, bool isTracking, AsyncValue<int> dutyMinutesAsync) {
+    final dutyMinutes = dutyMinutesAsync.valueOrNull ?? 0;
+    final hours = dutyMinutes ~/ 60;
+    final mins = dutyMinutes % 60;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF181C24).withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isOnDuty
+              ? AppColors.success.withValues(alpha: 0.3)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.06)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // On Duty toggle
+          const OnDutyToggle(),
+          const Spacer(),
+          // Tracking indicator
+          if (isTracking)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.satellite_alt_rounded,
+                      size: 12, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'GPS Active',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(width: 8),
+          // Today's duty time
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.timer_outlined,
+                    size: 12,
+                    color: isDark ? Colors.white54 : Colors.black45),
+                const SizedBox(width: 4),
+                Text(
+                  '${hours}h ${mins.toString().padLeft(2, '0')}m',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMap() {
     return MapWidget(
       key: const ValueKey('staff_mapbox'),
@@ -283,7 +468,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
         ),
         zoom: 14.0,
       ),
-      styleUri: MapboxStyles.MAPBOX_STREETS,
+      styleUri: _isDarkStyle ? MapboxStyles.DARK : MapboxStyles.MAPBOX_STREETS,
       onMapCreated: (map) {
         _mapboxMap = map;
         map.location.updateSettings(
@@ -293,6 +478,8 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
             puckBearingEnabled: true,
           ),
         );
+        // Draw breadcrumbs once map is ready
+        Future.delayed(const Duration(milliseconds: 500), _drawBreadcrumbTrail);
       },
     );
   }
@@ -365,7 +552,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
     );
   }
 
-  Widget _buildBottomPanel(bool isDark) {
+  Widget _buildBottomPanel(bool isDark, bool isOnDuty) {
     return Container(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -397,11 +584,21 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                      color: (isOnDuty
+                              ? AppColors.success
+                              : const Color(0xFF10B981))
+                          .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.my_location_rounded,
-                        size: 20, color: Color(0xFF10B981)),
+                    child: Icon(
+                      isOnDuty
+                          ? Icons.directions_walk_rounded
+                          : Icons.my_location_rounded,
+                      size: 20,
+                      color: isOnDuty
+                          ? AppColors.success
+                          : const Color(0xFF10B981),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -409,7 +606,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Your Location',
+                          isOnDuty ? 'Tracking Active' : 'Your Location',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -428,18 +625,23 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                      color: (isOnDuty
+                              ? AppColors.success
+                              : const Color(0xFF10B981))
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'LIVE',
+                    child: Text(
+                      isOnDuty ? 'ON DUTY' : 'LIVE',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF10B981),
+                        color: isOnDuty
+                            ? AppColors.success
+                            : const Color(0xFF10B981),
                       ),
                     ),
                   ),
@@ -471,7 +673,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage> {
   }
 
   void _toggleMapStyle() {
-    _isDarkStyle = !_isDarkStyle;
+    setState(() => _isDarkStyle = !_isDarkStyle);
     _mapboxMap?.loadStyleURI(
       _isDarkStyle ? MapboxStyles.DARK : MapboxStyles.MAPBOX_STREETS,
     );

@@ -140,3 +140,11 @@ final agentDailyStatsProvider =
   final repo = ref.watch(liveTrackingRepositoryProvider);
   return repo.getAgentDailyStats(staffProfileId);
 });
+
+// ─── On-Duty Agents Provider ──────────────────────────────────────────────────
+
+final onDutyAgentsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final repo = ref.watch(liveTrackingRepositoryProvider);
+  return repo.getOnDutyAgents();
+});

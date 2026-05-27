@@ -46,7 +46,7 @@ class UserRepository {
     try {
       var query = _client
           .from('profiles')
-          .select('*, branch:branches!fk_profiles_branch(id, name)')
+          .select('*, branch:branches!branch_id(id, name)')
           .eq('org_id', _orgId);
 
       if (roles.isNotEmpty) {
@@ -99,7 +99,7 @@ class UserRepository {
       // 1. Fetch from profiles table (customers with role = 'customer')
       var profileQuery = _client
           .from('profiles')
-          .select('*, branch:branches!fk_profiles_branch(id, name)')
+          .select('*, branch:branches!branch_id(id, name)')
           .eq('org_id', _orgId)
           .eq('role', 'customer');
 

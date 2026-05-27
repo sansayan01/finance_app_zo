@@ -116,5 +116,22 @@ class LiveTrackingRepository {
     }
   }
 
+  // ─── On-Duty Agents: Get agents currently on duty ───────────────────────────
+
+  Future<List<Map<String, dynamic>>> getOnDutyAgents() async {
+    try {
+      final response = await _client
+          .from('duty_sessions')
+          .select('staff_id, start_time, branch_id')
+          .eq('org_id', orgId)
+          .eq('status', 'active');
+
+      return List<Map<String, dynamic>>.from(response as List);
+    } catch (e) {
+      debugPrint('[LiveTracking] Error fetching on-duty agents: $e');
+      return [];
+    }
+  }
+
   void dispose() {}
 }

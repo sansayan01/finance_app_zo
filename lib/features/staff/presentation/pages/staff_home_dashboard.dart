@@ -15,6 +15,9 @@ import '../widgets/today_agenda_list.dart';
 import '../widgets/notification_bell.dart';
 import '../widgets/sync_status_card.dart';
 import '../widgets/activity_feed_timeline.dart';
+import '../widgets/on_duty_toggle.dart';
+import '../widgets/duty_status_card.dart';
+import '../../data/providers/duty_providers.dart';
 
 import '../widgets/leaderboard_snapshot.dart';
 import '../../../../core/widgets/branded_loading.dart';
@@ -61,6 +64,9 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
             ref.invalidate(weeklyTrendProvider);
             ref.invalidate(nearbyOverdueCountProvider);
             ref.invalidate(syncStatusProvider);
+            ref.invalidate(onDutyProvider);
+            ref.invalidate(todayDutyMinutesProvider);
+            ref.invalidate(activeDutySessionProvider);
             await Future.delayed(const Duration(milliseconds: 800));
           },
           child: CustomScrollView(
@@ -75,28 +81,32 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                   PremiumHelpers.staggeredAnimation(const SyncStatusCard(), index: 0),
                   const SizedBox(height: 16),
 
+                  // Duty Status (On Duty toggle + stats)
+                  PremiumHelpers.staggeredAnimation(const DutyStatusCard(), index: 1),
+                  const SizedBox(height: 16),
+
                   // Wallet & Target Grid
-                  PremiumHelpers.staggeredAnimation(_buildFinancialOverview(theme, isDark), index: 1),
+                  PremiumHelpers.staggeredAnimation(_buildFinancialOverview(theme, isDark), index: 2),
                   const SizedBox(height: 24),
 
                   // Quick Actions
-                  PremiumHelpers.staggeredAnimation(_buildQuickActions(theme, isDark), index: 2),
+                  PremiumHelpers.staggeredAnimation(_buildQuickActions(theme, isDark), index: 3),
                   const SizedBox(height: 28),
 
                   // Today's Agenda
-                  PremiumHelpers.staggeredAnimation(_buildAgendaSection(theme), index: 3),
+                  PremiumHelpers.staggeredAnimation(_buildAgendaSection(theme), index: 4),
                   const SizedBox(height: 24),
 
                   // Activity Feed
-                  PremiumHelpers.staggeredAnimation(const ActivityFeedTimeline(), index: 4),
+                  PremiumHelpers.staggeredAnimation(const ActivityFeedTimeline(), index: 5),
                   const SizedBox(height: 24),
 
                   // Daily Analytics
-                  PremiumHelpers.staggeredAnimation(_buildStatsSummary(theme, isDark), index: 5),
+                  PremiumHelpers.staggeredAnimation(_buildStatsSummary(theme, isDark), index: 6),
                   const SizedBox(height: 24),
 
                   // Leaderboard Snapshot
-                  PremiumHelpers.staggeredAnimation(const LeaderboardSnapshot(), index: 6),
+                  PremiumHelpers.staggeredAnimation(const LeaderboardSnapshot(), index: 7),
                 ]),
               ),
             ),
@@ -237,8 +247,16 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                                   ],
                                 ),
                               ),
-                              const GpsStatusChip(
-                                  status: GpsStatus.active, accuracy: 5),
+                              const Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  OnDutyToggle(),
+                                  SizedBox(height: 4),
+                                  GpsStatusChip(
+                                      status: GpsStatus.active, accuracy: 5),
+                                ],
+                              ),
                             ],
                           ),
                           const SizedBox(height: 4),

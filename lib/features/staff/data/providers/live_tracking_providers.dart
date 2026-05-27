@@ -75,6 +75,13 @@ class LiveAgentLocationsNotifier
 
   RealtimeChannel? _channel;
 
+  /// Stores previous positions for smooth interpolation
+  final Map<String, Map<String, dynamic>> _previousPositions = {};
+
+  /// Get previous position for an agent (used for animation)
+  Map<String, dynamic>? getPreviousPosition(String staffId) =>
+      _previousPositions[staffId];
+
   void seedFromSnapshot(List<Map<String, dynamic>> locations) {
     final map = <String, Map<String, dynamic>>{};
     for (final loc in locations) {
@@ -88,12 +95,18 @@ class LiveAgentLocationsNotifier
     final staffId = payload['staff_id'] as String?;
     if (staffId == null) return;
 
+    // Store previous position for smooth animation
+    final existing = state[staffId];
+    if (existing != null) {
+      _previousPositions[staffId] = Map.from(existing);
+    }
+
     // Merge new location into existing agent data (keep name/phone from snapshot)
-    final existing = state[staffId] ?? {};
+    final existingData = existing ?? {};
     state = {
       ...state,
       staffId: {
-        ...existing,
+        ...existingData,
         'latitude': payload['latitude'],
         'longitude': payload['longitude'],
         'speed': payload['speed'],

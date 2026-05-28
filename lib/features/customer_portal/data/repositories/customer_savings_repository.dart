@@ -45,7 +45,8 @@ class CustomerSavingsRepository {
           .from('transactions')
           .select()
           .eq('savings_id', savingsId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(100);
 
       // Fallback: if no results and memberId provided, query by member_id + type
       if ((data as List).isEmpty && memberId != null) {
@@ -54,7 +55,8 @@ class CustomerSavingsRepository {
             .select()
             .eq('member_id', memberId)
             .inFilter('type', ['savingsDeposit', 'deposit'])
-            .order('created_at', ascending: false);
+            .order('created_at', ascending: false)
+            .limit(100);
       }
 
       return (data as List)

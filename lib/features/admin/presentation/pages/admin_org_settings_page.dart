@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -407,7 +408,7 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                           image: MemoryImage(_selectedLogoBytes!), fit: BoxFit.cover)
                       : _logoUrl != null
                           ? DecorationImage(
-                              image: NetworkImage(_logoUrl!), fit: BoxFit.cover)
+                              image: CachedNetworkImageProvider(_logoUrl!), fit: BoxFit.cover)
                           : null,
                 ),
                 child: _isUploadingLogo

@@ -20,7 +20,7 @@ final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
       await client.from('members').select('id').eq('org_id', orgId);
   final loansData = await client
       .from('loans')
-      .select('status, amount, outstanding_balance')
+      .select('status, amount, outstanding_amount')
       .eq('org_id', orgId);
   final recentCollections = await client
       .from('collections')
@@ -35,7 +35,7 @@ final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final totalDisbursed = loansData.fold<double>(
       0, (s, l) => s + ((l['amount'] as num?)?.toDouble() ?? 0));
   final totalOutstanding = activeLoans.fold<double>(
-      0, (s, l) => s + ((l['outstanding_balance'] as num?)?.toDouble() ?? 0));
+      0, (s, l) => s + ((l['outstanding_amount'] as num?)?.toDouble() ?? 0));
   final staff = await client
       .from('staff_profiles')
       .select('id, full_name, role, status, branch_id')

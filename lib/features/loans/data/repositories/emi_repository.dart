@@ -12,7 +12,7 @@ class EMIRepository {
     try {
       var response = await _client
           .from('emi_schedule')
-          .select()
+          .select('id, loan_id, emi_number, due_date, emi_amount, principal, interest, balance_after, status, paid_on, payment_mode, transaction_id, penalty_amount, penalty_paid, created_at')
           .eq('loan_id', loanId)
           .order('emi_number', ascending: true);
 
@@ -20,7 +20,7 @@ class EMIRepository {
         try {
           final loanResponse = await _client
               .from('loans')
-              .select()
+              .select('amount, principal, interest_rate, tenure_months, interest_type, emi_amount, customer_id, member_id, frequency, first_emi_date, first_installment_date, disbursement_date')
               .eq('id', loanId)
               .maybeSingle();
           if (loanResponse != null) {
@@ -51,7 +51,7 @@ class EMIRepository {
 
             response = await _client
                 .from('emi_schedule')
-                .select()
+                .select('id, loan_id, emi_number, due_date, emi_amount, principal, interest, balance_after, status, paid_on, payment_mode, transaction_id, penalty_amount, penalty_paid, created_at')
                 .eq('loan_id', loanId)
                 .order('emi_number', ascending: true);
           }
@@ -417,7 +417,7 @@ class EMIRepository {
       // 2. Fetch transactions for this loan
       final transactionsResponse = await _client
           .from('transactions')
-          .select()
+          .select('id, loan_id, amount, payment_mode, reference_number, description, created_at')
           .eq('loan_id', loanId)
           .eq('type', TransactionType.emiPayment.name);
 

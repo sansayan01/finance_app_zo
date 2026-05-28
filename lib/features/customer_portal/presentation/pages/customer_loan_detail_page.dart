@@ -1662,11 +1662,11 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
       case 'overdue':
         return EMIStatus.overdue;
       case 'upcoming':
-        return EMIStatus.upcoming;
+        return EMIStatus.pending;
       case 'pending':
         return EMIStatus.pendingPayment;
       default:
-        return EMIStatus.upcoming;
+        return EMIStatus.pending;
     }
   }
 

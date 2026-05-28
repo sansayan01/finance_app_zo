@@ -8,6 +8,8 @@ class BranchModel extends Equatable {
   final String? address;
   final String? city;
   final String? state;
+  final String? zone;
+  final String? district;
   final String? pincode;
   final String? phone;
   final String? email;
@@ -28,6 +30,8 @@ class BranchModel extends Equatable {
     this.address,
     this.city,
     this.state,
+    this.zone,
+    this.district,
     this.pincode,
     this.phone,
     this.email,
@@ -50,6 +54,8 @@ class BranchModel extends Equatable {
       address: json['address'] as String?,
       city: json['city'] as String?,
       state: json['state'] as String?,
+      zone: json['zone'] as String?,
+      district: json['district'] as String?,
       pincode: json['pincode'] as String?,
       phone: json['phone'] as String?,
       email: json['email'] as String?,
@@ -73,6 +79,8 @@ class BranchModel extends Equatable {
       'address': address,
       'city': city,
       'state': state,
+      'zone': zone,
+      'district': district,
       'pincode': pincode,
       'phone': phone,
       'email': email,
@@ -92,6 +100,8 @@ class BranchModel extends Equatable {
     String? address,
     String? city,
     String? state,
+    String? zone,
+    String? district,
     String? pincode,
     String? phone,
     String? email,
@@ -109,6 +119,8 @@ class BranchModel extends Equatable {
       address: address ?? this.address,
       city: city ?? this.city,
       state: state ?? this.state,
+      zone: zone ?? this.zone,
+      district: district ?? this.district,
       pincode: pincode ?? this.pincode,
       phone: phone ?? this.phone,
       email: email ?? this.email,
@@ -135,6 +147,8 @@ class BranchModel extends Equatable {
         address,
         city,
         state,
+        zone,
+        district,
         pincode,
         phone,
         email,

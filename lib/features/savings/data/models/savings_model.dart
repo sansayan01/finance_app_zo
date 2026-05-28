@@ -15,6 +15,8 @@ class SavingsModel {
   final int totalInstallments;
   final double maturityAmount;
   final DateTime? nextDueDate;
+  final String? orgId;
+  final DateTime? updatedAt;
 
   SavingsModel({
     required this.id,
@@ -33,6 +35,8 @@ class SavingsModel {
     this.totalInstallments = 12,
     this.maturityAmount = 0.0,
     this.nextDueDate,
+    this.orgId,
+    this.updatedAt,
   });
 
   factory SavingsModel.fromJson(Map<String, dynamic> json) {
@@ -55,6 +59,10 @@ class SavingsModel {
       nextDueDate: json['next_due_date'] != null
           ? DateTime.tryParse(json['next_due_date'] as String)
           : null,
+      orgId: json['org_id'] as String?,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
     );
   }
 
@@ -75,6 +83,7 @@ class SavingsModel {
       'premature_penalty': prematurePenalty,
       'total_installments': totalInstallments,
       'maturity_amount': maturityAmount,
+      if (orgId != null) 'org_id': orgId,
     };
   }
 }

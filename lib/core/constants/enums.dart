@@ -19,14 +19,14 @@ enum LoanStatus {
 
 enum InterestType {
   flat,
-  reducing,
+  reducingBalance,  // was 'reducing' — DB CHECK requires 'reducingBalance'
 }
 
 enum EMIStatus {
-  upcoming,
+  pending,    // was 'upcoming' — DB CHECK requires 'pending'
   paid,
   overdue,
-  defaulted,
+  waived,     // was 'defaulted' — DB CHECK requires 'waived'
   pendingPayment,
 }
 
@@ -80,11 +80,10 @@ enum KYCStatus {
   pending,
   verified,
   rejected,
-  notSubmitted,
 }
 
 enum BranchStatus {
   active,
   inactive,
-  closed,
+  suspended,  // was 'closed' — DB CHECK requires 'suspended'
 }

@@ -16,7 +16,7 @@ class BillingRepository {
     try {
       final response = await _client
           .from('subscription_plans')
-          .select()
+          .select('id, name, description, price_monthly, price_yearly, currency, max_members, max_branches, max_staff, max_loans, features, is_active, is_popular, sort_order')
           .eq('is_active', true)
           .order('sort_order');
 
@@ -34,7 +34,7 @@ class BillingRepository {
     try {
       final response = await _client
           .from('subscription_plans')
-          .select()
+          .select('id, name, description, price_monthly, price_yearly, currency, max_members, max_branches, max_staff, max_loans, features, is_active, is_popular, sort_order')
           .eq('id', planId)
           .maybeSingle();
 
@@ -51,7 +51,7 @@ class BillingRepository {
   Future<OrgSubscriptionModel?> getSubscription(String orgId) async {
     try {
       final response = await _client.from('subscriptions').select('''
-            *,
+            id, org_id, plan_id, billing_cycle, status, current_period_start, current_period_end, trial_start, trial_end, cancel_at_period_end, canceled_at, created_at, updated_at,
             plan_name:subscription_plans(name)
           ''').eq('org_id', orgId).maybeSingle();
 
@@ -168,7 +168,7 @@ class BillingRepository {
     try {
       final response = await _client
           .from('invoices')
-          .select()
+          .select('id, org_id, subscription_id, invoice_number, amount, currency, tax_amount, discount_amount, total_amount, status, invoice_url, invoice_pdf, due_date, paid_at, created_at')
           .eq('org_id', orgId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
@@ -186,7 +186,7 @@ class BillingRepository {
     try {
       final response = await _client
           .from('invoices')
-          .select()
+          .select('id, org_id, subscription_id, invoice_number, amount, currency, tax_amount, discount_amount, total_amount, status, invoice_url, invoice_pdf, due_date, paid_at, lines, created_at')
           .eq('id', invoiceId)
           .maybeSingle();
 
@@ -219,7 +219,7 @@ class BillingRepository {
     try {
       final response = await _client
           .from('payment_methods')
-          .select()
+          .select('id, org_id, type, card_brand, card_last4, card_exp_month, card_exp_year, upi_id, bank_name, bank_last4, is_default, is_verified, created_at, updated_at')
           .eq('org_id', orgId)
           .order('created_at', ascending: false);
 
@@ -270,7 +270,7 @@ class BillingRepository {
 
       final response = await _client
           .from('usage_records')
-          .select()
+          .select('id, org_id, period_start, period_end, resource_type, quantity, unit_price, total_cost, created_at')
           .eq('org_id', orgId)
           .gte('period_start', startDate.toIso8601String())
           .order('period_start', ascending: false);

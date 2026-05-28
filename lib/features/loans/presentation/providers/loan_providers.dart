@@ -10,13 +10,13 @@ import '../../data/services/loan_statement_archive_service.dart';
 import '../../data/providers/loan_providers.dart';
 export '../../data/providers/loan_providers.dart';
 
-final emiRepositoryProvider = Provider<EMIRepository>((ref) {
+final emiRepositoryProvider = Provider.autoDispose<EMIRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return EMIRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 final loanStatementArchiveServiceProvider =
-    Provider<LoanStatementArchiveService>((ref) {
+    Provider.autoDispose<LoanStatementArchiveService>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return LoanStatementArchiveService(
       ref.watch(supabaseClientProvider), orgId);
@@ -28,9 +28,9 @@ final pastLoanStatementsProvider = FutureProvider.autoDispose
   return svc.listForLoan(loanId);
 });
 
-final loanSearchQueryProvider = StateProvider<String>((ref) => '');
+final loanSearchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
-final filteredLoansProvider = Provider<List<LoanModel>>((ref) {
+final filteredLoansProvider = Provider.autoDispose<List<LoanModel>>((ref) {
   final loans = ref.watch(allLoansProvider).value ?? [];
   final query = ref.watch(loanSearchQueryProvider).toLowerCase();
 
@@ -44,7 +44,7 @@ final filteredLoansProvider = Provider<List<LoanModel>>((ref) {
   }).toList();
 });
 
-final loanStatsProvider = Provider<AsyncValue<Map<String, dynamic>>>((ref) {
+final loanStatsProvider = Provider.autoDispose<AsyncValue<Map<String, dynamic>>>((ref) {
   return ref.watch(allLoansProvider).whenData((loans) {
     final active = loans.where((l) => l.status == LoanStatus.active).toList();
     final totalOut = active.fold<double>(
@@ -70,26 +70,26 @@ final loanStatsProvider = Provider<AsyncValue<Map<String, dynamic>>>((ref) {
 });
 
 final loanDetailProvider =
-    FutureProvider.family<LoanModel?, String>((ref, id) async {
+    FutureProvider.autoDispose.family<LoanModel?, String>((ref, id) async {
   final repository = ref.watch(loansRepositoryProvider);
   return repository.getLoanById(id);
 });
 
 final emiScheduleProvider =
-    FutureProvider.family<List<EMIScheduleModel>, String>((ref, loanId) async {
+    FutureProvider.autoDispose.family<List<EMIScheduleModel>, String>((ref, loanId) async {
   final repository = ref.watch(emiRepositoryProvider);
   return repository.getByLoanId(loanId);
 });
 
 final paymentHistoryProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>(
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>(
         (ref, loanId) async {
   final repository = ref.watch(emiRepositoryProvider);
   return repository.getPaymentHistory(loanId);
 });
 
 final userLoansProvider =
-    FutureProvider.family<List<LoanModel>, String>((ref, userId) async {
+    FutureProvider.autoDispose.family<List<LoanModel>, String>((ref, userId) async {
   final loans = await ref.watch(allLoansProvider.future);
   return loans.where((l) => l.customerId == userId).toList();
 });

@@ -117,8 +117,8 @@ class LoanModel {
       totalInterest: (json['total_interest'] ?? 0.0).toDouble(),
       totalRepayable:
           (json['total_repayable'] ?? json['total_exposure'] ?? 0.0).toDouble(),
-      outstandingBalance: (json['outstanding_balance'] ??
-              json['outstanding_amount'] ??
+      outstandingBalance: (json['outstanding_amount'] ??
+              json['outstanding_balance'] ??
               json['total_exposure'] ??
               0.0)
           .toDouble(),
@@ -181,7 +181,7 @@ class LoanModel {
       'emi_amount': emiAmount,
       'total_interest': totalInterest,
       'total_repayable': totalRepayable,
-      'outstanding_balance': outstandingBalance,
+      'outstanding_amount': outstandingBalance,
       'interest_type': interestType.name,
       'disbursement_date': disbursementDate?.toIso8601String(),
       'first_emi_date': firstEmiDate?.toIso8601String(),

@@ -150,7 +150,9 @@ class ProfileModel {
   final String? assignedZone;
   final String? avatarUrl;
   final String? memberCode; // member_id on profiles / member_id on members
+  final String? staffCode;
   final AccountStatus status;
+  final bool isOnDuty;
   final DateTime? lastSeenAt;
   final DateTime? dateOfBirth;
   final DateTime? createdAt;
@@ -181,7 +183,9 @@ class ProfileModel {
     this.email,
     this.avatarUrl,
     this.memberCode,
+    this.staffCode,
     this.status = AccountStatus.active,
+    this.isOnDuty = false,
     this.lastSeenAt,
     this.dateOfBirth,
     this.createdAt,
@@ -211,7 +215,9 @@ class ProfileModel {
       email: json['email']?.toString(),
       avatarUrl: json['avatar_url']?.toString(),
       memberCode: json['member_id']?.toString(),
+      staffCode: json['staff_code']?.toString(),
       status: parseStatus(json['status']?.toString()),
+      isOnDuty: json['is_on_duty'] as bool? ?? false,
       lastSeenAt: json['last_login'] != null
           ? DateTime.tryParse(json['last_login'].toString())
           : null,
@@ -249,7 +255,9 @@ class ProfileModel {
       email: json['email']?.toString(),
       avatarUrl: json['shop_photo_url']?.toString(),
       memberCode: json['member_id']?.toString(),
+      staffCode: json['staff_code']?.toString(),
       status: AccountStatus.active,
+      isOnDuty: json['is_on_duty'] as bool? ?? false,
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.tryParse(json['date_of_birth'].toString())
           : null,
@@ -293,7 +301,9 @@ class ProfileModel {
       email: email ?? this.email,
       avatarUrl: avatarUrl,
       memberCode: memberCode,
+      staffCode: staffCode,
       status: status ?? this.status,
+      isOnDuty: isOnDuty,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       dateOfBirth: dateOfBirth,
       createdAt: createdAt,
@@ -322,7 +332,9 @@ class ProfileModel {
       'email': email,
       'avatar_url': avatarUrl,
       'member_id': memberCode,
+      'staff_code': staffCode,
       'status': status.wireValue,
+      'is_on_duty': isOnDuty,
       'last_login': lastSeenAt?.toIso8601String(),
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),

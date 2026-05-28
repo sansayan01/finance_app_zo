@@ -4,20 +4,20 @@ import '../models/super_admin_models.dart';
 import '../repositories/super_admin_repository.dart';
 
 /// Super Admin Repository Provider
-final superAdminRepositoryProvider = Provider<SuperAdminRepository>((ref) {
+final superAdminRepositoryProvider = Provider.autoDispose<SuperAdminRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return SuperAdminRepository(client);
 });
 
 /// Platform Metrics Provider
-final platformMetricsProvider = FutureProvider<PlatformMetrics>((ref) async {
+final platformMetricsProvider = FutureProvider.autoDispose<PlatformMetrics>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getPlatformMetrics();
 });
 
 /// All Organizations Provider
 final allOrganizationsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
         (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAllOrganizations(
@@ -30,21 +30,21 @@ final allOrganizationsProvider =
 
 /// Organization Details Provider
 final organizationDetailsProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>((ref, orgId) async {
+    FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, orgId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getOrganizationById(orgId);
 });
 
 /// Organization Health Provider
 final organizationHealthProvider =
-    FutureProvider.family<OrganizationHealthScore?, String>((ref, orgId) async {
+    FutureProvider.autoDispose.family<OrganizationHealthScore?, String>((ref, orgId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getOrganizationHealth(orgId);
 });
 
 /// All Users Provider
 final allUsersProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
         (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAllUsers(
@@ -57,28 +57,28 @@ final allUsersProvider =
 
 /// User Activity Log Provider
 final userActivityLogProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>(
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>(
         (ref, userId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getUserActivityLog(userId);
 });
 
 /// Feature Flags Provider
-final featureFlagsProvider = FutureProvider<List<FeatureFlag>>((ref) async {
+final featureFlagsProvider = FutureProvider.autoDispose<List<FeatureFlag>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getFeatureFlags();
 });
 
 /// Platform Announcements Provider
 final platformAnnouncementsProvider =
-    FutureProvider<List<PlatformAnnouncement>>((ref) async {
+    FutureProvider.autoDispose<List<PlatformAnnouncement>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAnnouncements();
 });
 
 /// Audit Logs Provider
 final auditLogsProvider =
-    FutureProvider.family<List<SystemAuditLog>, Map<String, dynamic>>(
+    FutureProvider.autoDispose.family<List<SystemAuditLog>, Map<String, dynamic>>(
         (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAuditLogs(
@@ -91,7 +91,7 @@ final auditLogsProvider =
 
 /// Support Tickets Provider
 final supportTicketsProvider =
-    FutureProvider.family<List<SupportTicket>, Map<String, dynamic>>(
+    FutureProvider.autoDispose.family<List<SupportTicket>, Map<String, dynamic>>(
         (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getSupportTickets(
@@ -103,60 +103,60 @@ final supportTicketsProvider =
 
 /// Maintenance Windows Provider
 final maintenanceWindowsProvider =
-    FutureProvider<List<MaintenanceWindow>>((ref) async {
+    FutureProvider.autoDispose<List<MaintenanceWindow>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getMaintenanceWindows();
 });
 
 /// Platform Revenue Provider
 final platformRevenueProvider =
-    FutureProvider<List<PlatformRevenue>>((ref) async {
+    FutureProvider.autoDispose<List<PlatformRevenue>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getRevenue();
 });
 
 /// Revenue Summary Provider
 final revenueSummaryProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getRevenueSummary();
 });
 
 /// Platform Settings Provider
 final platformSettingsProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getPlatformSettings();
 });
 
 /// API Usage Stats Provider
-final apiUsageStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final apiUsageStatsProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getApiUsageStats();
 });
 
 /// Error Logs Provider
 final errorLogsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getErrorLogs();
 });
 
 /// Activity Feed Provider
 final activityFeedProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getActivityFeed();
 });
 
 /// Open Tickets Count Provider
-final openTicketsCountProvider = FutureProvider<int>((ref) async {
+final openTicketsCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getOpenTicketsCount();
 });
 
 /// At Risk Orgs Count Provider
-final atRiskOrgsCountProvider = FutureProvider<int>((ref) async {
+final atRiskOrgsCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getAtRiskOrgsCount();
 });
@@ -420,7 +420,7 @@ class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
 /// Super Admin Actions Provider
 final superAdminActionsProvider =
-    StateNotifierProvider<SuperAdminActionsNotifier, AsyncValue<void>>((ref) {
+    StateNotifierProvider.autoDispose<SuperAdminActionsNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(superAdminRepositoryProvider);
   return SuperAdminActionsNotifier(repository, ref);
 });

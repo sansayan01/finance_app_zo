@@ -66,7 +66,11 @@ class SavingsRepository {
         .from('savings_plans')
         .insert(insertData)
         .select('id')
-        .single();
+        .maybeSingle();
+
+    if (response == null) {
+      throw Exception('Failed to create savings plan');
+    }
 
     return response['id'].toString();
   }

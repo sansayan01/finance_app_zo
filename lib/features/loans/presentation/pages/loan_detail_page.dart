@@ -676,7 +676,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         // Find current EMI (next upcoming or first overdue)
         int currentEmiIndex = -1;
         for (int i = 0; i < schedule.length; i++) {
-          if (schedule[i].status == EMIStatus.upcoming ||
+          if (schedule[i].status == EMIStatus.pending ||
               schedule[i].status == EMIStatus.overdue) {
             currentEmiIndex = i;
             break;
@@ -721,10 +721,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final allCount = schedule.length;
     final overdueCount = schedule
         .where((e) =>
-            e.status == EMIStatus.overdue || e.status == EMIStatus.defaulted)
+            e.status == EMIStatus.overdue || e.status == EMIStatus.waived)
         .length;
     final upcomingCount =
-        schedule.where((e) => e.status == EMIStatus.upcoming).length;
+        schedule.where((e) => e.status == EMIStatus.pending).length;
     final paidCount = schedule.where((e) => e.status == EMIStatus.paid).length;
 
     return Row(
@@ -770,7 +770,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       {bool isCurrent = false, VoidCallback? onTap}) {
     final isPaid = emi.status == EMIStatus.paid;
     final isOverdue =
-        emi.status == EMIStatus.overdue || emi.status == EMIStatus.defaulted;
+        emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
     final color = isPaid
         ? Colors.green
         : (isOverdue ? Colors.red : theme.colorScheme.primary);
@@ -872,7 +872,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       EMIScheduleModel emi, LoanModel loan, ThemeData theme) {
     final isPaid = emi.status == EMIStatus.paid;
     final isOverdue =
-        emi.status == EMIStatus.overdue || emi.status == EMIStatus.defaulted;
+        emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
 
     showModalBottomSheet(
       context: context,
@@ -1985,10 +1985,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final overdueCount = schedule
             .where((e) =>
                 e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.defaulted)
+                e.status == EMIStatus.waived)
             .length;
         final upcomingCount =
-            schedule.where((e) => e.status == EMIStatus.upcoming).length;
+            schedule.where((e) => e.status == EMIStatus.pending).length;
         final totalPaid = schedule
             .where((e) => e.status == EMIStatus.paid)
             .fold<double>(0, (s, e) => s + e.emiAmount);
@@ -2333,12 +2333,12 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             filtered = schedule
                 .where((e) =>
                     e.status == EMIStatus.overdue ||
-                    e.status == EMIStatus.defaulted)
+                    e.status == EMIStatus.waived)
                 .toList();
             break;
           case 'upcoming':
             filtered = schedule
-                .where((e) => e.status == EMIStatus.upcoming)
+                .where((e) => e.status == EMIStatus.pending)
                 .toList();
             break;
           default:
@@ -2350,10 +2350,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final overdueCount = schedule
             .where((e) =>
                 e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.defaulted)
+                e.status == EMIStatus.waived)
             .length;
         final upcomingCount =
-            schedule.where((e) => e.status == EMIStatus.upcoming).length;
+            schedule.where((e) => e.status == EMIStatus.pending).length;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2468,7 +2468,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       EMIScheduleModel emi, ThemeData theme, LoanModel loan, int index) {
     final isPaid = emi.status == EMIStatus.paid;
     final isOverdue =
-        emi.status == EMIStatus.overdue || emi.status == EMIStatus.defaulted;
+        emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
     final accentColor = isPaid
         ? Colors.green
         : (isOverdue ? Colors.red : theme.colorScheme.primary);
@@ -2853,7 +2853,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final overdueEmis = schedule
             .where((e) =>
                 e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.defaulted)
+                e.status == EMIStatus.waived)
             .toList();
 
         // Payment consistency score (% paid on time)
@@ -3197,7 +3197,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
         for (final emi in schedule) {
           if (emi.status == EMIStatus.overdue ||
-              emi.status == EMIStatus.defaulted) {
+              emi.status == EMIStatus.waived) {
             overdueCount++;
             final daysPast = now.difference(emi.dueDate).inDays;
             if (daysPast > maxDaysPastDue) {
@@ -3362,7 +3362,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final overdueEmis = schedule
             .where((e) =>
                 e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.defaulted)
+                e.status == EMIStatus.waived)
             .toList();
 
         double totalPenalty =
@@ -5547,7 +5547,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
 
       final overdueEmis = schedule
           .where((e) =>
-              e.status == EMIStatus.overdue || e.status == EMIStatus.defaulted)
+              e.status == EMIStatus.overdue || e.status == EMIStatus.waived)
           .toList();
       for (final emi in overdueEmis) {
         activities.add(_ActivityItem(

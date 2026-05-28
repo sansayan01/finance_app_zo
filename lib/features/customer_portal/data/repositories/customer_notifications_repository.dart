@@ -13,7 +13,8 @@ class CustomerNotificationsRepository {
           .from('customer_notifications')
           .select()
           .eq('customer_id', customerId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(50);
       return (data as List)
           .map((e) =>
               CustomerNotificationModel.fromJson(e as Map<String, dynamic>))

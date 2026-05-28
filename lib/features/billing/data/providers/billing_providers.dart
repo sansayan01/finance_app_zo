@@ -7,21 +7,21 @@ import '../models/invoice_model.dart';
 import '../repositories/billing_repository.dart';
 
 // Repository provider
-final billingRepositoryProvider = Provider<BillingRepository>((ref) {
+final billingRepositoryProvider = Provider.autoDispose<BillingRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return BillingRepository(client);
 });
 
 // All available plans
 final subscriptionPlansProvider =
-    FutureProvider<List<SubscriptionPlanModel>>((ref) async {
+    FutureProvider.autoDispose<List<SubscriptionPlanModel>>((ref) async {
   final repository = ref.watch(billingRepositoryProvider);
   return repository.getPlans();
 });
 
 // Current org subscription
 final currentSubscriptionProvider =
-    FutureProvider<OrgSubscriptionModel?>((ref) async {
+    FutureProvider.autoDispose<OrgSubscriptionModel?>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return null;
 
@@ -31,7 +31,7 @@ final currentSubscriptionProvider =
 
 // Subscription status with usage
 final subscriptionStatusProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return {};
 
@@ -41,7 +41,7 @@ final subscriptionStatusProvider =
 
 // Limit check provider
 final limitCheckProvider =
-    FutureProvider.family<bool, String>((ref, limitType) async {
+    FutureProvider.autoDispose.family<bool, String>((ref, limitType) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return false;
 
@@ -50,7 +50,7 @@ final limitCheckProvider =
 });
 
 // Org invoices
-final orgInvoicesProvider = FutureProvider<List<InvoiceModel>>((ref) async {
+final orgInvoicesProvider = FutureProvider.autoDispose<List<InvoiceModel>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return [];
 
@@ -60,7 +60,7 @@ final orgInvoicesProvider = FutureProvider<List<InvoiceModel>>((ref) async {
 
 // Payment methods
 final paymentMethodsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final orgId = ref.watch(currentOrgIdProvider);
   if (orgId == null) return [];
 
@@ -195,7 +195,7 @@ class BillingNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final billingNotifierProvider =
-    StateNotifierProvider<BillingNotifier, AsyncValue<void>>((ref) {
+    StateNotifierProvider.autoDispose<BillingNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(billingRepositoryProvider);
   return BillingNotifier(repository, ref);
 });

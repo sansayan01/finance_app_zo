@@ -41,8 +41,8 @@ final todayDueCustomerLocationsProvider =
               id,
               full_name,
               phone,
-              latitude,
-              longitude
+              gps_lat,
+              gps_lng
             )
           )
         ''')
@@ -63,8 +63,8 @@ final todayDueCustomerLocationsProvider =
       final member = loan['members'] as Map<String, dynamic>?;
       if (member == null) continue;
 
-      double? lat = (member['latitude'] as num?)?.toDouble();
-      double? lng = (member['longitude'] as num?)?.toDouble();
+      double? lat = (member['gps_lat'] as num?)?.toDouble();
+      double? lng = (member['gps_lng'] as num?)?.toDouble();
 
       // If member doesn't have coordinates, try visit_logs
       if (lat == null || lng == null) {
@@ -148,8 +148,8 @@ Future<List<Map<String, dynamic>>> _fallbackCustomerLocations(
           id,
           full_name,
           phone,
-          latitude,
-          longitude
+          gps_lat,
+          gps_lng
         )
       ''')
       .eq('staff_id', staffId)
@@ -167,8 +167,8 @@ Future<List<Map<String, dynamic>>> _fallbackCustomerLocations(
     if (seenMembers.contains(memberId)) continue;
     seenMembers.add(memberId);
 
-    final lat = (member['latitude'] as num?)?.toDouble();
-    final lng = (member['longitude'] as num?)?.toDouble();
+    final lat = (member['gps_lat'] as num?)?.toDouble();
+    final lng = (member['gps_lng'] as num?)?.toDouble();
 
     if (lat != null && lng != null && lat != 0 && lng != 0) {
       results.add({

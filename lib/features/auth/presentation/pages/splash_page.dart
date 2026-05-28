@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,7 +55,17 @@ class _SplashPageState extends ConsumerState<SplashPage> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: branding?.logoUrl != null
-                    ? Image.network(branding!.logoUrl!, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                        imageUrl: branding!.logoUrl!,
+                        fit: BoxFit.cover,
+                        memCacheWidth: 200,
+                        memCacheHeight: 200,
+                        errorWidget: (_, __, ___) => const Icon(
+                          Icons.account_balance_rounded,
+                          size: 50,
+                          color: Color(0xFF1A5CFF),
+                        ),
+                      )
                     : const Icon(
                         Icons.account_balance_rounded,
                         size: 50,

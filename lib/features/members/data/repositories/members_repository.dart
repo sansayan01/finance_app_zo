@@ -9,7 +9,7 @@ class MembersRepository {
 
   Future<List<MemberModel>> getMembers({int limit = 50, String? query}) async {
     try {
-      var request = _client.from('members').select().eq('org_id', _orgId);
+      var request = _client.from('members').select('id, full_name, phone, member_id, kyc_status, status, created_at, branch_id').eq('org_id', _orgId);
 
       if (query != null && query.isNotEmpty) {
         request = request.or(

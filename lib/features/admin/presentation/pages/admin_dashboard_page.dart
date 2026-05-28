@@ -55,19 +55,30 @@ class AdminDashboardPage extends ConsumerWidget {
                   HapticService.light();
                   return ref.invalidate(adminOrgListProvider);
                 },
-                child: ListView(
+                child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-                  children: [
-                    _buildHeader(context, ref, theme, isDark),
-                    const SizedBox(height: 28),
-                    _buildStatsRow(totalOrgs, activeOrgs, suspended, isDark),
-                    const SizedBox(height: 28),
-                    _buildSectionHeader(
-                        'Organizations', '${orgs.length} total', isDark),
-                    const SizedBox(height: 16),
-                    ...orgs.asMap().entries.map(
-                        (e) => _buildOrgCard(context, e.value, e.key, isDark)),
-                  ],
+                  itemCount: 6 + orgs.length,
+                  itemBuilder: (context, index) {
+                    switch (index) {
+                      case 0:
+                        return _buildHeader(context, ref, theme, isDark);
+                      case 1:
+                        return const SizedBox(height: 28);
+                      case 2:
+                        return _buildStatsRow(
+                            totalOrgs, activeOrgs, suspended, isDark);
+                      case 3:
+                        return const SizedBox(height: 28);
+                      case 4:
+                        return _buildSectionHeader('Organizations',
+                            '${orgs.length} total', isDark);
+                      case 5:
+                        return const SizedBox(height: 16);
+                      default:
+                        return _buildOrgCard(
+                            context, orgs[index - 6], index - 6, isDark);
+                    }
+                  },
                 ),
               );
             },

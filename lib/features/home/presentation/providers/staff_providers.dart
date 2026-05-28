@@ -60,23 +60,23 @@ class StaffTodayStats {
 }
 
 final staffTodayEmiDuesProvider =
-    FutureProvider<List<EMIScheduleModel>>((ref) async {
+    FutureProvider.autoDispose<List<EMIScheduleModel>>((ref) async {
   final repository = ref.watch(emiRepositoryProvider);
   return repository.getTodaysDues();
 });
 
-final staffActiveLoansProvider = FutureProvider<List<LoanModel>>((ref) async {
+final staffActiveLoansProvider = FutureProvider.autoDispose<List<LoanModel>>((ref) async {
   final repository = ref.watch(loansRepositoryProvider);
   return repository.getAllLoans();
 });
 
 final staffActiveSavingsProvider =
-    FutureProvider<List<SavingsModel>>((ref) async {
+    FutureProvider.autoDispose<List<SavingsModel>>((ref) async {
   final repository = ref.watch(savingsRepositoryProvider);
   return repository.getActiveSavingsPlans();
 });
 
-final staffTodaysDuesProvider = FutureProvider<List<StaffDueItem>>((ref) async {
+final staffTodaysDuesProvider = FutureProvider.autoDispose<List<StaffDueItem>>((ref) async {
   final emisAsync = ref.watch(staffTodayEmiDuesProvider);
   final loansAsync = ref.watch(staffActiveLoansProvider);
   final savingsAsync = ref.watch(staffActiveSavingsProvider);
@@ -120,7 +120,7 @@ final staffTodaysDuesProvider = FutureProvider<List<StaffDueItem>>((ref) async {
   return dues;
 });
 
-final staffTodayStatsProvider = FutureProvider<StaffTodayStats>((ref) async {
+final staffTodayStatsProvider = FutureProvider.autoDispose<StaffTodayStats>((ref) async {
   final duesAsync = ref.watch(staffTodaysDuesProvider);
   final transactionsRepo = ref.watch(transactionsRepositoryProvider);
   final stats = await transactionsRepo.getTodayStats();
@@ -143,12 +143,12 @@ final staffTodayStatsProvider = FutureProvider<StaffTodayStats>((ref) async {
 });
 
 final staffRecentActivityProvider =
-    FutureProvider<List<TransactionModel>>((ref) async {
+    FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
   final repository = ref.watch(transactionsRepositoryProvider);
   return repository.getTransactionsByDate(DateTime.now());
 });
 
-final offlineQueueCountProvider = FutureProvider<int>((ref) async {
+final offlineQueueCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final queue = OfflineQueueService();
   return queue.pendingCount;
 });
@@ -169,7 +169,7 @@ class StaffWallet {
   });
 }
 
-final staffWalletProvider = FutureProvider<StaffWallet>((ref) async {
+final staffWalletProvider = FutureProvider.autoDispose<StaffWallet>((ref) async {
   final repository = ref.watch(transactionsRepositoryProvider);
   final transactions = await repository.getTransactionsByDate(DateTime.now());
 

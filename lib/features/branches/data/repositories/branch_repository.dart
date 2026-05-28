@@ -11,7 +11,7 @@ class BranchRepository {
   Future<List<BranchModel>> getBranches() async {
     final response = await _client
         .from('branches')
-        .select('*, manager:manager_id(full_name)')
+        .select('id, org_id, name, code, address, city, state, pincode, phone, email, manager_id, status, location_lat, location_lng, operating_hours, created_at, updated_at, manager:manager_id(full_name)')
         .eq('org_id', _orgId)
         .order('created_at', ascending: false);
 
@@ -24,7 +24,7 @@ class BranchRepository {
   Future<List<BranchModel>> getActiveBranches() async {
     final response = await _client
         .from('branches')
-        .select('*, manager:manager_id(full_name)')
+        .select('id, org_id, name, code, address, city, state, pincode, phone, email, manager_id, status, location_lat, location_lng, operating_hours, created_at, updated_at, manager:manager_id(full_name)')
         .eq('org_id', _orgId)
         .eq('status', 'active')
         .order('name');
@@ -38,7 +38,7 @@ class BranchRepository {
   Future<BranchModel?> getBranch(String id) async {
     final response = await _client
         .from('branches')
-        .select('*, manager:manager_id(full_name)')
+        .select('id, org_id, name, code, address, city, state, pincode, phone, email, manager_id, status, location_lat, location_lng, operating_hours, created_at, updated_at, manager:manager_id(full_name)')
         .eq('id', id)
         .eq('org_id', _orgId)
         .maybeSingle();
@@ -51,7 +51,7 @@ class BranchRepository {
   Future<BranchModel?> getBranchByCode(String code) async {
     final response = await _client
         .from('branches')
-        .select()
+        .select('id, org_id, name, code, address, city, state, pincode, phone, email, manager_id, status, location_lat, location_lng, operating_hours, created_at, updated_at')
         .eq('org_id', _orgId)
         .eq('code', code)
         .maybeSingle();
@@ -180,7 +180,8 @@ class BranchRepository {
         .from('staff_profiles')
         .select('id, full_name, email, role, phone')
         .eq('branch_id', branchId)
-        .order('full_name');
+        .order('full_name')
+        .limit(100);
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -191,7 +192,8 @@ class BranchRepository {
         .from('members')
         .select('id, full_name, phone, status')
         .eq('branch_id', branchId)
-        .order('full_name');
+        .order('full_name')
+        .limit(200);
 
     return List<Map<String, dynamic>>.from(response);
   }

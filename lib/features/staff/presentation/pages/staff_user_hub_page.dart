@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -961,12 +962,14 @@ class _MemberCard extends StatelessWidget {
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: avatarUrl != null && avatarUrl.isNotEmpty
-                      ? Image.network(
-                          avatarUrl,
+                      ? CachedNetworkImage(
+                          imageUrl: avatarUrl,
                           fit: BoxFit.cover,
                           width: 48,
                           height: 48,
-                          errorBuilder: (_, __, ___) => _buildInitialAvatar(avatarColor, name),
+                          memCacheWidth: 96,
+                          memCacheHeight: 96,
+                          errorWidget: (_, __, ___) => _buildInitialAvatar(avatarColor, name),
                         )
                       : _buildInitialAvatar(avatarColor, name),
                 ),

@@ -33,13 +33,13 @@ final staffProfileProvider = FutureProvider<StaffProfileModel?>((ref) async {
 
 // Staff profile by ID (for supervisors viewing other staff)
 final staffByIdProvider =
-    FutureProvider.family<StaffProfileModel?, String>((ref, staffId) async {
+    FutureProvider.autoDispose.family<StaffProfileModel?, String>((ref, staffId) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getStaffById(staffId);
 });
 
 // Staff wallet
-final staffWalletProvider = FutureProvider<WalletModel?>((ref) async {
+final staffWalletProvider = FutureProvider.autoDispose<WalletModel?>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return null;
 
@@ -48,7 +48,7 @@ final staffWalletProvider = FutureProvider<WalletModel?>((ref) async {
 });
 
 // Staff streak
-final staffStreakProvider = FutureProvider<StreakModel?>((ref) async {
+final staffStreakProvider = FutureProvider.autoDispose<StreakModel?>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return null;
 
@@ -57,7 +57,7 @@ final staffStreakProvider = FutureProvider<StreakModel?>((ref) async {
 });
 
 // Today's target
-final todayTargetProvider = FutureProvider<TargetModel?>((ref) async {
+final todayTargetProvider = FutureProvider.autoDispose<TargetModel?>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return null;
 
@@ -73,7 +73,7 @@ final todayTargetProvider = FutureProvider<TargetModel?>((ref) async {
 });
 
 // Today's summary
-final todaySummaryProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+final todaySummaryProvider = FutureProvider.autoDispose<Map<String, dynamic>?>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return null;
 
@@ -82,7 +82,7 @@ final todaySummaryProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 });
 
 // Daily summary for a specific date
-final dailySummaryProvider = FutureProvider.family<Map<String, dynamic>,
+final dailySummaryProvider = FutureProvider.autoDispose.family<Map<String, dynamic>,
     ({String staffId, DateTime date})>((ref, params) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getDailySummary(params.staffId, params.date);
@@ -90,7 +90,7 @@ final dailySummaryProvider = FutureProvider.family<Map<String, dynamic>,
 
 // Today's breaks
 final todayBreaksProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>(
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>(
         (ref, staffId) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getTodayBreaks(staffId);
@@ -98,7 +98,7 @@ final todayBreaksProvider =
 
 // Current activity status
 final currentActivityProvider =
-    FutureProvider.family<String?, String>((ref, staffId) async {
+    FutureProvider.autoDispose.family<String?, String>((ref, staffId) async {
   final repository = ref.watch(staffRepositoryProvider);
   return repository.getCurrentActivity(staffId);
 });
@@ -116,7 +116,7 @@ final refreshStaffDataProvider = Provider<Future<void> Function()>((ref) {
 
 // ─── Notifications ───
 
-final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
+final unreadNotificationCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return 0;
   final repository = ref.watch(staffRepositoryProvider);
@@ -124,7 +124,7 @@ final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
 });
 
 final recentNotificationsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
   final repository = ref.watch(staffRepositoryProvider);
@@ -133,7 +133,7 @@ final recentNotificationsProvider =
 
 // ─── Visit / Check-In ───
 
-final activeVisitProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+final activeVisitProvider = FutureProvider.autoDispose<Map<String, dynamic>?>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return null;
   final repository = ref.watch(staffRepositoryProvider);
@@ -143,7 +143,7 @@ final activeVisitProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 // ─── Recent Activities ───
 
 final recentActivitiesProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
   final repository = ref.watch(staffRepositoryProvider);
@@ -153,7 +153,7 @@ final recentActivitiesProvider =
 // ─── Savings Stats ───
 
 final todaySavingsStatsProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) {
     return {
@@ -170,7 +170,7 @@ final todaySavingsStatsProvider =
 // ─── Weekly Trend ───
 
 final weeklyTrendProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
   final repository = ref.watch(staffRepositoryProvider);
@@ -179,7 +179,7 @@ final weeklyTrendProvider =
 
 // ─── Nearby Overdue Count ───
 
-final nearbyOverdueCountProvider = FutureProvider<int>((ref) async {
+final nearbyOverdueCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return 0;
   final repository = ref.watch(staffRepositoryProvider);

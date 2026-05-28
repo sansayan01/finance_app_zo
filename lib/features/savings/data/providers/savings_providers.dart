@@ -6,22 +6,22 @@ import '../../../../core/providers/org_provider.dart';
 import '../../../transactions/data/repositories/transactions_repository.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 
-final savingsRepositoryProvider = Provider<SavingsRepository>((ref) {
+final savingsRepositoryProvider = Provider.autoDispose<SavingsRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return SavingsRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
-final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
+final transactionsRepositoryProvider = Provider.autoDispose<TransactionsRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return TransactionsRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
-final allSavingsProvider = FutureProvider<List<SavingsModel>>((ref) async {
+final allSavingsProvider = FutureProvider.autoDispose<List<SavingsModel>>((ref) async {
   final repository = ref.watch(savingsRepositoryProvider);
   return repository.getAllSavingsPlans();
 });
 
-final savingsSummaryProvider = FutureProvider<SavingsSummary>((ref) async {
+final savingsSummaryProvider = FutureProvider.autoDispose<SavingsSummary>((ref) async {
   final repository = ref.watch(savingsRepositoryProvider);
   return repository.getSavingsSummary();
 });
@@ -30,13 +30,13 @@ final savingsSummaryProvider = FutureProvider<SavingsSummary>((ref) async {
 final savingsProvider = allSavingsProvider;
 
 final savingDetailProvider =
-    FutureProvider.family<SavingsModel?, String>((ref, id) async {
+    FutureProvider.family.autoDispose<SavingsModel?, String>((ref, id) async {
   final repository = ref.watch(savingsRepositoryProvider);
   return repository.getSavingPlanById(id);
 });
 
 final savingTransactionsProvider =
-    FutureProvider.family<List<TransactionModel>, String>((ref, id) async {
+    FutureProvider.family.autoDispose<List<TransactionModel>, String>((ref, id) async {
   final repository = ref.watch(transactionsRepositoryProvider);
   return repository.getTransactionsBySavingsId(id);
 });
@@ -124,19 +124,19 @@ class SavingTxPager extends StateNotifier<SavingTxPageState> {
   }
 }
 
-final savingTxPagerProvider = StateNotifierProvider.family<SavingTxPager,
+final savingTxPagerProvider = StateNotifierProvider.family.autoDispose<SavingTxPager,
     SavingTxPageState, String>((ref, id) {
   return SavingTxPager(ref, id);
 });
 
 final userSavingsProvider =
-    FutureProvider.family<List<SavingsModel>, String>((ref, userId) async {
+    FutureProvider.family.autoDispose<List<SavingsModel>, String>((ref, userId) async {
   final savings = await ref.watch(allSavingsProvider.future);
   return savings.where((s) => s.memberId == userId).toList();
 });
 
 final memberSavingsProvider =
-    FutureProvider.family<List<SavingsModel>, String>((ref, memberId) async {
+    FutureProvider.family.autoDispose<List<SavingsModel>, String>((ref, memberId) async {
   final repo = ref.watch(savingsRepositoryProvider);
   return repo.getPlansByMemberId(memberId);
 });

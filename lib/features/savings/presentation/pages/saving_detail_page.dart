@@ -40,19 +40,20 @@ class SavingDetailPage extends ConsumerStatefulWidget {
 
 class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0;
+  final ValueNotifier<double> _scrollOffset = ValueNotifier<double>(0);
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      setState(() => _scrollOffset = _scrollController.offset);
+      _scrollOffset.value = _scrollController.offset;
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -66,10 +67,19 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       backgroundColor:
           isDark ? const Color(0xFF0A0A0C) : const Color(0xFFF2F2F7),
       extendBodyBehindAppBar: true,
-      appBar: savingAsync.when(
-        data: (saving) => saving != null ? _buildAppBar(theme, saving) : null,
-        loading: () => null,
-        error: (_, __) => null,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ValueListenableBuilder<double>(
+          valueListenable: _scrollOffset,
+          builder: (context, offset, _) {
+            return savingAsync.when(
+              data: (saving) =>
+                  saving != null ? _buildAppBar(theme, saving) : const SizedBox.shrink(),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            );
+          },
+        ),
       ),
       body: savingAsync.when(
         data: (saving) {
@@ -377,7 +387,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   PreferredSizeWidget _buildAppBar(ThemeData theme, SavingsModel saving) {
-    final blurAlpha = (_scrollOffset / 100).clamp(0.0, 1.0);
+    final blurAlpha = (_scrollOffset.value / 100).clamp(0.0, 1.0);
     final isPaused = saving.status.toLowerCase() == 'paused';
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight),

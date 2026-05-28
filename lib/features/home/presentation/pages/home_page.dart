@@ -19,6 +19,22 @@ import '../../../../core/constants/enums.dart';
 import '../../data/providers/dashboard_providers.dart';
 import '../widgets/live_agents_map_card.dart';
 
+// ─── Provider list for centralised invalidation ───
+
+final List<ProviderBase<Object?>> _refreshableProviders = [
+  loanSummaryProvider,
+  dashboardLoansProvider,
+  dashboardSavingsProvider,
+  dashboardTransactionsProvider,
+  todayStatsProvider,
+  activeLoansProvider,
+  activeSavingsProvider,
+  pendingDepositsProvider,
+  overdueLoansProvider,
+];
+
+// ─── Main Page (thin layout shell) ───
+
 class HomePage extends ConsumerStatefulWidget {
   final VoidCallback onViewAllLoans;
   final VoidCallback onViewAllSavings;
@@ -40,17 +56,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     // Invalidate all dashboard providers on page creation for fresh data
-    Future.microtask(() {
-      ref.invalidate(loanSummaryProvider);
-      ref.invalidate(dashboardLoansProvider);
-      ref.invalidate(dashboardSavingsProvider);
-      ref.invalidate(dashboardTransactionsProvider);
-      ref.invalidate(todayStatsProvider);
-      ref.invalidate(activeLoansProvider);
-      ref.invalidate(activeSavingsProvider);
-      ref.invalidate(pendingDepositsProvider);
-      ref.invalidate(overdueLoansProvider);
-    });
+    Future.microtask(_invalidateAll);
+  }
+
+  void _invalidateAll() {
+    for (final p in _refreshableProviders) {
+      ref.invalidate(p);
+    }
   }
 
   @override
@@ -61,17 +73,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: SafeArea(
           bottom: false, // Bottom is handled by the nav bar padding
           child: RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(loanSummaryProvider);
-              ref.invalidate(dashboardLoansProvider);
-              ref.invalidate(dashboardSavingsProvider);
-              ref.invalidate(dashboardTransactionsProvider);
-              ref.invalidate(todayStatsProvider);
-              ref.invalidate(activeLoansProvider);
-              ref.invalidate(activeSavingsProvider);
-              ref.invalidate(pendingDepositsProvider);
-              ref.invalidate(overdueLoansProvider);
-            },
+            onRefresh: () async => _invalidateAll(),
             displacement: 20,
             color: Theme.of(context).colorScheme.primary,
             backgroundColor: Theme.of(context).cardColor,
@@ -82,23 +84,23 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(context, ref),
+                  const _Header(),
                   const SizedBox(height: 20),
-                  _buildOverdueBanner(context, ref),
+                  const _OverdueBanner(),
                   const SizedBox(height: 28),
-                  _buildHeroCard(context, ref),
+                  const _HeroCard(),
                   const SizedBox(height: 16),
-                  _buildFinancialSummaryStrip(context, ref),
+                  const _FinancialSummaryStrip(),
                   const SizedBox(height: 28),
-                  _buildQuickActions(context, ref),
+                  const _QuickActions(),
                   const SizedBox(height: 28),
                   const LiveAgentsMapCard(),
                   const SizedBox(height: 28),
-                  _buildActiveLoansSection(context, ref),
+                  _ActiveLoansSection(onViewAll: widget.onViewAllLoans),
                   const SizedBox(height: 28),
-                  _buildSavingsSection(context, ref),
+                  _SavingsSection(onViewAll: widget.onViewAllSavings),
                   const SizedBox(height: 28),
-                  _buildRecentTransactions(context, ref),
+                  const _RecentTransactions(),
                 ],
               ),
             ),
@@ -107,115 +109,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
   }
+}
 
-  Widget _buildOverdueBanner(BuildContext context, WidgetRef ref) {
-    final overdueAsync = ref.watch(overdueLoansProvider);
-    final theme = Theme.of(context);
+// ─── Section 1: Header ───
 
-    return overdueAsync.when(
-      data: (overdue) {
-        if (overdue.isEmpty) return const SizedBox.shrink();
-        return GestureDetector(
-          onTap: () => context.push('/analytics'),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.error.withValues(alpha: 0.15),
-                  AppColors.error.withValues(alpha: 0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.warning_amber_rounded,
-                      color: AppColors.error, size: 18),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Attention Required',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.error,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text(
-                        '${overdue.length} accounts are currently in default',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.7),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded,
-                    color: AppColors.error.withValues(alpha: 0.5)),
-              ],
-            ),
-          ).animate().shake(delay: 500.ms, duration: 600.ms),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
+class _Header extends ConsumerWidget {
+  const _Header();
 
-  Widget _buildFinancialSummaryStrip(BuildContext context, WidgetRef ref) {
-    final loanSummaryAsync = ref.watch(loanSummaryProvider);
-
-    return loanSummaryAsync.when(
-      data: (summary) => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          children: [
-            _SummaryChip(
-              label: 'Disbursed',
-              value:
-                  AppFormatters.formatCompactCurrency(summary.totalDisbursed),
-              icon: Icons.outbond_rounded,
-              color: AppColors.primary,
-            ),
-            const SizedBox(width: 10),
-            _SummaryChip(
-              label: 'Collected',
-              value:
-                  AppFormatters.formatCompactCurrency(summary.totalCollected),
-              icon: Icons.move_to_inbox_rounded,
-              color: AppColors.success,
-            ),
-            const SizedBox(width: 10),
-            _SummaryChip(
-              label: 'Overdue',
-              value: AppFormatters.formatCompactCurrency(summary.overdueAmount),
-              icon: Icons.timer_rounded,
-              color: AppColors.error,
-            ),
-          ],
-        ),
-      ),
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, WidgetRef ref) {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final theme = Theme.of(context);
 
@@ -318,8 +220,90 @@ class _HomePageState extends ConsumerState<HomePage> {
       ],
     ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05, end: 0);
   }
+}
 
-  Widget _buildHeroCard(BuildContext context, WidgetRef ref) {
+// ─── Section 2: Overdue Banner ───
+
+class _OverdueBanner extends ConsumerWidget {
+  const _OverdueBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final overdueAsync = ref.watch(overdueLoansProvider);
+    final theme = Theme.of(context);
+
+    return overdueAsync.when(
+      data: (overdue) {
+        if (overdue.isEmpty) return const SizedBox.shrink();
+        return GestureDetector(
+          onTap: () => context.push('/analytics'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.error.withValues(alpha: 0.15),
+                  AppColors.error.withValues(alpha: 0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.warning_amber_rounded,
+                      color: AppColors.error, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Attention Required',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.error,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '${overdue.length} accounts are currently in default',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.7),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded,
+                    color: AppColors.error.withValues(alpha: 0.5)),
+              ],
+            ),
+          ).animate().shake(delay: 500.ms, duration: 600.ms),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+// ─── Section 3: Hero Card ───
+
+class _HeroCard extends ConsumerWidget {
+  const _HeroCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final loanSummaryAsync = ref.watch(loanSummaryProvider);
     final todayStatsAsync = ref.watch(todayStatsProvider);
     final theme = Theme.of(context);
@@ -459,8 +443,61 @@ class _HomePageState extends ConsumerState<HomePage> {
         .fadeIn(delay: 100.ms)
         .slideY(begin: 0.06, end: 0);
   }
+}
 
-  Widget _buildQuickActions(BuildContext context, WidgetRef ref) {
+// ─── Section 4: Financial Summary Strip ───
+
+class _FinancialSummaryStrip extends ConsumerWidget {
+  const _FinancialSummaryStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loanSummaryAsync = ref.watch(loanSummaryProvider);
+
+    return loanSummaryAsync.when(
+      data: (summary) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _SummaryChip(
+              label: 'Disbursed',
+              value:
+                  AppFormatters.formatCompactCurrency(summary.totalDisbursed),
+              icon: Icons.outbond_rounded,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 10),
+            _SummaryChip(
+              label: 'Collected',
+              value:
+                  AppFormatters.formatCompactCurrency(summary.totalCollected),
+              icon: Icons.move_to_inbox_rounded,
+              color: AppColors.success,
+            ),
+            const SizedBox(width: 10),
+            _SummaryChip(
+              label: 'Overdue',
+              value: AppFormatters.formatCompactCurrency(summary.overdueAmount),
+              icon: Icons.timer_rounded,
+              color: AppColors.error,
+            ),
+          ],
+        ),
+      ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+// ─── Section 5: Quick Actions ───
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -556,8 +593,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       ],
     ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.05, end: 0);
   }
+}
 
-  Widget _buildActiveLoansSection(BuildContext context, WidgetRef ref) {
+// ─── Section 6: Active Loans ───
+
+class _ActiveLoansSection extends ConsumerWidget {
+  final VoidCallback onViewAll;
+  const _ActiveLoansSection({required this.onViewAll});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final loansAsync = ref.watch(dashboardLoansProvider);
     final theme = Theme.of(context);
 
@@ -573,7 +618,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             GestureDetector(
-              onTap: widget.onViewAllLoans,
+              onTap: onViewAll,
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -608,6 +653,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               children: loans
                   .take(3)
                   .map((loan) => Padding(
+                        key: ValueKey(loan.id),
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _LoanCard(loan: loan),
                       ))
@@ -633,8 +679,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       ],
     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.05, end: 0);
   }
+}
 
-  Widget _buildSavingsSection(BuildContext context, WidgetRef ref) {
+// ─── Section 7: Savings ───
+
+class _SavingsSection extends ConsumerWidget {
+  final VoidCallback onViewAll;
+  const _SavingsSection({required this.onViewAll});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final savingsAsync = ref.watch(dashboardSavingsProvider);
     final summaryAsync = ref.watch(savingsSummaryProvider);
     final pendingAsync = ref.watch(pendingDepositsProvider);
@@ -689,7 +743,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
-                  onTap: widget.onViewAllSavings,
+                  onTap: onViewAll,
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -791,6 +845,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               children: savings
                   .take(3)
                   .map((saving) => Padding(
+                        key: ValueKey(saving.id),
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _SavingsCard(saving: saving),
                       ))
@@ -863,6 +918,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                   const SizedBox(height: 12),
                   ...upcoming.take(2).map((s) => Padding(
+                        key: ValueKey(s.id),
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
                           children: [
@@ -922,8 +978,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       ],
     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.05, end: 0);
   }
+}
 
-  Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
+// ─── Section 8: Recent Transactions ───
+
+class _RecentTransactions extends ConsumerWidget {
+  const _RecentTransactions();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(dashboardTransactionsProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -995,8 +1058,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                   final index = entry.key;
                   final transaction = entry.value;
                   return Column(
+                    key: ValueKey(transaction.id),
                     children: [
-                      _buildTransactionItem(context, transaction, isDark),
+                      _TransactionItem(
+                          transaction: transaction, isDark: isDark),
                       if (index < transactions.length - 1)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1023,9 +1088,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       ],
     ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.05, end: 0);
   }
+}
 
-  Widget _buildTransactionItem(
-      BuildContext context, TransactionModel transaction, bool isDark) {
+class _TransactionItem extends StatelessWidget {
+  final TransactionModel transaction;
+  final bool isDark;
+  const _TransactionItem({required this.transaction, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     // Type-specific config

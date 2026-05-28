@@ -13,7 +13,8 @@ class CustomerSupportRepository {
           .from('customer_support_tickets')
           .select()
           .eq('customer_id', customerId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(50);
       return (data as List)
           .map((e) => CustomerTicketModel.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -38,7 +39,12 @@ class CustomerSupportRepository {
           'org_id': _orgId,
         })
         .select('id')
-        .single();
+        .maybeSingle();
+
+    if (data == null) {
+      throw Exception('Failed to create support ticket');
+    }
+
     return data['id'] as String;
   }
 

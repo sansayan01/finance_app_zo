@@ -214,8 +214,11 @@ class StaffRepository {
         .from('collection_targets')
         .insert(payload)
         .select()
-        .single();
+        .maybeSingle();
 
+    if (response == null) {
+      throw Exception('Failed to create daily target for staff $staffId');
+    }
     return TargetModel.fromJson(response);
   }
 
@@ -549,20 +552,37 @@ class StaffRepository {
       String staffId, DateTime date) async {
     final dateStr = date.toIso8601String().split('T').first;
 
-    // Get collections for the date
-    final collections = await _client
-        .from('collections')
-        .select()
-        .eq('staff_id', staffId)
-        .eq('collection_date', dateStr);
+    // Parallelize all 4 independent queries
+    final results = await Future.wait<dynamic>([
+      // 0: collections for the date
+      _client
+          .from('collections')
+          .select()
+          .eq('staff_id', staffId)
+          .eq('collection_date', dateStr),
+      // 1: visits for the date
+      _client
+          .from('visit_logs')
+          .select()
+          .eq('staff_id', staffId)
+          .gte('check_in_time', '${dateStr}T00:00:00')
+          .lt('check_in_time', '${dateStr}T23:59:59'),
+      // 2: target for the date
+      _client
+          .from('collection_targets')
+          .select()
+          .eq('staff_id', staffId)
+          .eq('period_type', 'daily')
+          .eq('target_date', dateStr)
+          .maybeSingle(),
+      // 3: streak
+      getStreak(staffId),
+    ]);
 
-    // Get visits for the date
-    final visits = await _client
-        .from('visit_logs')
-        .select()
-        .eq('staff_id', staffId)
-        .gte('check_in_time', '${dateStr}T00:00:00')
-        .lt('check_in_time', '${dateStr}T23:59:59');
+    final collections = results[0] as List;
+    final visits = results[1] as List;
+    final target = results[2] as Map<String, dynamic>?;
+    final streak = results[3] as StreakModel?;
 
     // Calculate summary
     double totalCollected = 0;
@@ -585,18 +605,6 @@ class StaffRepository {
         successfulVisits++;
       }
     }
-
-    // Get target for the date
-    final target = await _client
-        .from('collection_targets')
-        .select()
-        .eq('staff_id', staffId)
-        .eq('period_type', 'daily')
-        .eq('target_date', dateStr)
-        .maybeSingle();
-
-    // Get streak
-    final streak = await getStreak(staffId);
 
     return {
       'total_collected': totalCollected,

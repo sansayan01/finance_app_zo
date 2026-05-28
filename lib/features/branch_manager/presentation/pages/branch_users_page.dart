@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -2057,7 +2058,7 @@ class _Avatar extends StatelessWidget {
                 image: (profile.avatarUrl != null &&
                         profile.avatarUrl!.trim().isNotEmpty)
                     ? DecorationImage(
-                        image: NetworkImage(profile.avatarUrl!),
+                        image: CachedNetworkImageProvider(profile.avatarUrl!),
                         fit: BoxFit.cover,
                       )
                     : null,

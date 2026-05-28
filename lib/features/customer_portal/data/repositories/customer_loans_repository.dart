@@ -44,7 +44,8 @@ class CustomerLoansRepository {
           .from('emi_schedule')
           .select()
           .eq('loan_id', loanId)
-          .order('emi_number', ascending: true);
+          .order('emi_number', ascending: true)
+          .limit(100);
       return (data as List)
           .map((e) => CustomerEmiModel.fromJson(e as Map<String, dynamic>))
           .toList();

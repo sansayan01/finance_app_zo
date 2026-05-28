@@ -26,13 +26,13 @@ dependencies:
 
   # Network
   internet_connection_checker: ^1.0.0
+  cached_network_image: ^3.4.1
 
   # UI/Design
   google_fonts: ^6.2.1
   fl_chart: ^0.70.2
   shimmer: ^3.0.0
   flutter_animate: ^4.5.2
-  pull_to_refresh: ^2.0.0
 
   # Utilities
   intl: ^0.20.2
@@ -83,7 +83,6 @@ dev_dependencies:
 
   # Testing Utilities
   mocktail: ^1.0.4
-  bloc_test: ^9.1.7
 
   # Code Generation
   build_runner: ^2.4.13

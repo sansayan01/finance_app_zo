@@ -76,38 +76,10 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
               sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Sync Status
-                  PremiumHelpers.staggeredAnimation(const SyncStatusCard(), index: 0),
-                  const SizedBox(height: 16),
-
-                  // Duty Status (On Duty toggle + stats)
-                  PremiumHelpers.staggeredAnimation(const DutyStatusCard(), index: 1),
-                  const SizedBox(height: 16),
-
-                  // Wallet & Target Grid
-                  PremiumHelpers.staggeredAnimation(_buildFinancialOverview(theme, isDark), index: 2),
-                  const SizedBox(height: 24),
-
-                  // Quick Actions
-                  PremiumHelpers.staggeredAnimation(_buildQuickActions(theme, isDark), index: 3),
-                  const SizedBox(height: 28),
-
-                  // Today's Agenda
-                  PremiumHelpers.staggeredAnimation(_buildAgendaSection(theme), index: 4),
-                  const SizedBox(height: 24),
-
-                  // Activity Feed
-                  PremiumHelpers.staggeredAnimation(const ActivityFeedTimeline(), index: 5),
-                  const SizedBox(height: 24),
-
-                  // Daily Analytics
-                  PremiumHelpers.staggeredAnimation(_buildStatsSummary(theme, isDark), index: 6),
-                  const SizedBox(height: 24),
-
-                  // Leaderboard Snapshot
-                  PremiumHelpers.staggeredAnimation(const LeaderboardSnapshot(), index: 7),
-                ]),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _buildDashboardItem(index, theme, isDark),
+                  childCount: 15, // 8 widgets + 7 spacers
+                ),
               ),
             ),
           ],
@@ -409,6 +381,38 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
         return Colors.greenAccent;
       default:
         return Colors.white70;
+    }
+  }
+
+  Widget _buildDashboardItem(int index, ThemeData theme, bool isDark) {
+    final itemIndex = index ~/ 2;
+    final isSpacer = index.isOdd;
+
+    if (isSpacer) {
+      // Spacers: after items 0-2 use 16, after items 3-7 use 24/28
+      final spacerHeight = itemIndex < 3 ? 16.0 : (itemIndex == 3 ? 28.0 : 24.0);
+      return SizedBox(height: spacerHeight);
+    }
+
+    switch (itemIndex) {
+      case 0:
+        return PremiumHelpers.staggeredAnimation(const SyncStatusCard(), index: 0);
+      case 1:
+        return PremiumHelpers.staggeredAnimation(const DutyStatusCard(), index: 1);
+      case 2:
+        return PremiumHelpers.staggeredAnimation(_buildFinancialOverview(theme, isDark), index: 2);
+      case 3:
+        return PremiumHelpers.staggeredAnimation(_buildQuickActions(theme, isDark), index: 3);
+      case 4:
+        return PremiumHelpers.staggeredAnimation(_buildAgendaSection(theme), index: 4);
+      case 5:
+        return PremiumHelpers.staggeredAnimation(const ActivityFeedTimeline(), index: 5);
+      case 6:
+        return PremiumHelpers.staggeredAnimation(_buildStatsSummary(theme, isDark), index: 6);
+      case 7:
+        return PremiumHelpers.staggeredAnimation(const LeaderboardSnapshot(), index: 7);
+      default:
+        return const SizedBox.shrink();
     }
   }
 

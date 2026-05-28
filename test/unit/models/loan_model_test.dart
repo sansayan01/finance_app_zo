@@ -56,7 +56,7 @@ void main() {
       expect(loan.customerId, 'cust-456');
       expect(loan.amount, 100000.0);
       expect(loan.interestRate, 15.5);
-      expect(loan.interestType, InterestType.reducing);
+      expect(loan.interestType, InterestType.reducingBalance);
       expect(loan.status, LoanStatus.active);
       expect(loan.purpose, 'Business');
     });

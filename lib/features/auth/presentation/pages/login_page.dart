@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -245,7 +246,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         color: logoUrl != null ? Colors.transparent : primary,
         borderRadius: BorderRadius.circular(20),
         image: logoUrl != null
-            ? DecorationImage(image: NetworkImage(logoUrl), fit: BoxFit.contain)
+            ? DecorationImage(image: CachedNetworkImageProvider(logoUrl), fit: BoxFit.contain)
             : null,
         boxShadow: [
           BoxShadow(

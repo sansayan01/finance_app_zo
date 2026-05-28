@@ -838,7 +838,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               ? _remarksController.text
               : null,
           outstandingBalance:
-              (widget.loanData?['outstanding_balance'] as num?)?.toDouble(),
+              (widget.loanData?['outstanding_amount'] as num?)?.toDouble(),
         );
 
     setState(() => _isSubmitting = false);

@@ -7,28 +7,28 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Branch Manager Repository Provider
 final branchManagerRepositoryProvider =
-    Provider<BranchManagerRepository>((ref) {
+    Provider.autoDispose<BranchManagerRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return BranchManagerRepository(client);
 });
 
 /// Branch Stats Provider
 final branchStatsProvider =
-    FutureProvider.family<BranchStats, String>((ref, branchId) async {
+    FutureProvider.autoDispose.family<BranchStats, String>((ref, branchId) async {
   final repository = ref.watch(branchManagerRepositoryProvider);
   return repository.getBranchStats(branchId);
 });
 
 /// Branch Staff Provider
 final branchStaffProvider =
-    FutureProvider.family<List<ProfileModel>, String>((ref, branchId) async {
+    FutureProvider.autoDispose.family<List<ProfileModel>, String>((ref, branchId) async {
   final repository = ref.watch(branchManagerRepositoryProvider);
   return repository.getBranchStaff(branchId);
 });
 
 /// Branch Collections Provider (for a specific date)
 final branchCollectionsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, (String, DateTime)>(
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, (String, DateTime)>(
         (ref, params) async {
   final repository = ref.watch(branchManagerRepositoryProvider);
   return repository.getBranchCollections(params.$1, date: params.$2);
@@ -36,14 +36,14 @@ final branchCollectionsProvider =
 
 /// Branch Overdue Loans Provider
 final branchOverdueLoansProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>(
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>(
         (ref, branchId) async {
   final repository = ref.watch(branchManagerRepositoryProvider);
   return repository.getBranchOverdueLoans(branchId);
 });
 
 /// Staff Performance Provider
-final staffPerformanceProvider = FutureProvider.family<
+final staffPerformanceProvider = FutureProvider.autoDispose.family<
     List<Map<String, dynamic>>,
     (String, DateTime?, DateTime?)>((ref, params) async {
   final repository = ref.watch(branchManagerRepositoryProvider);
@@ -53,7 +53,7 @@ final staffPerformanceProvider = FutureProvider.family<
 
 /// Branch Daily Summary Provider
 final branchDailySummaryProvider =
-    FutureProvider.family<Map<String, dynamic>, (String, DateTime)>(
+    FutureProvider.autoDispose.family<Map<String, dynamic>, (String, DateTime)>(
         (ref, params) async {
   final repository = ref.watch(branchManagerRepositoryProvider);
   return repository.getBranchDailySummary(params.$1, params.$2);
@@ -61,7 +61,7 @@ final branchDailySummaryProvider =
 
 /// Branch Targets Provider
 final branchTargetsProvider =
-    FutureProvider.family<Map<String, dynamic>, (String, int, int)>(
+    FutureProvider.autoDispose.family<Map<String, dynamic>, (String, int, int)>(
         (ref, params) async {
   final repository = ref.watch(branchManagerRepositoryProvider);
   return repository.getBranchTargets(params.$1,
@@ -69,14 +69,14 @@ final branchTargetsProvider =
 });
 
 /// Current User's Branch ID Provider
-final currentUserBranchIdProvider = Provider<String?>((ref) {
+final currentUserBranchIdProvider = Provider.autoDispose<String?>((ref) {
   final authState = ref.watch(authProvider);
   return authState.user?.branchId;
 });
 
 /// Branch Manager Dashboard Data Provider
 final branchManagerDashboardProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final branchId = ref.watch(currentUserBranchIdProvider);
   if (branchId == null) throw Exception('No branch assigned');
 

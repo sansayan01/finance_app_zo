@@ -49,8 +49,8 @@ class AnalyticsPage extends ConsumerWidget {
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
               analyticsAsync.when(
-                data: (stats) => SliverList(
-                  delegate: SliverChildListDelegate([
+                data: (stats) {
+                  final children = <Widget>[
                     _buildHealthScoreGauge(stats, theme),
                     const SizedBox(height: 32),
                     Padding(
@@ -93,8 +93,14 @@ class AnalyticsPage extends ConsumerWidget {
                     const SizedBox(height: 32),
                     _buildExportButton(context, theme),
                     const SizedBox(height: 100),
-                  ]),
-                ),
+                  ];
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => children[index],
+                      childCount: children.length,
+                    ),
+                  );
+                },
                 loading: () => SliverFillRemaining(
                   child: Center(
                     child: Padding(

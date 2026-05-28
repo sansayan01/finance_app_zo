@@ -108,7 +108,7 @@ class BackgroundSyncService {
             principal,
             interest_rate,
             status,
-            outstanding_balance,
+            outstanding_amount,
             emi_schedule(
               id,
               installment_number AS period,

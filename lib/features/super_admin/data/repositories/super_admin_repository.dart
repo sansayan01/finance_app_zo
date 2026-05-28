@@ -234,7 +234,8 @@ class SuperAdminRepository {
       final response = await _client
           .from('feature_flags')
           .select()
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(100);
 
       return response
           .map<FeatureFlag>((json) => FeatureFlag.fromJson(json))
@@ -284,7 +285,8 @@ class SuperAdminRepository {
         query = query.eq('is_active', true);
       }
 
-      final response = await query.order('created_at', ascending: false);
+      final response =
+          await query.order('created_at', ascending: false).limit(100);
       return response
           .map<PlatformAnnouncement>(
               (json) => PlatformAnnouncement.fromJson(json))
@@ -543,7 +545,9 @@ class SuperAdminRepository {
         query = query.eq('is_active', true);
       }
 
-      final response = await query.order('scheduled_start', ascending: false);
+      final response = await query
+          .order('scheduled_start', ascending: false)
+          .limit(50);
       return response
           .map<MaintenanceWindow>((json) => MaintenanceWindow.fromJson(json))
           .toList();
@@ -658,7 +662,10 @@ class SuperAdminRepository {
   /// Get platform settings
   Future<Map<String, dynamic>> getPlatformSettings() async {
     try {
-      final response = await _client.from('platform_settings').select();
+      final response = await _client
+          .from('platform_settings')
+          .select()
+          .limit(50);
 
       final settings = <String, dynamic>{};
       for (final item in response) {

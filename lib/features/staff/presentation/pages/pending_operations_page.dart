@@ -473,6 +473,7 @@ class _PendingOperationsPageState extends ConsumerState<PendingOperationsPage> {
   }
 }
 
-final pendingOperationsProvider = FutureProvider<List<dynamic>>((ref) async {
-  return [];
+final pendingOperationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final engine = ref.watch(syncEngineProvider);
+  return engine.getPendingOperations();
 });

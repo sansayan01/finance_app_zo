@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -309,11 +310,12 @@ class BrandedAppBarLogo extends ConsumerWidget {
         }
 
         // Fallback to network image
-        return Image.network(
-          branding.logoUrl!,
+        return CachedNetworkImage(
+          imageUrl: branding.logoUrl!,
           height: height,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => _buildDefaultLogo(theme),
+          memCacheHeight: height.isFinite ? (height * 2).toInt() : null,
+          errorWidget: (_, __, ___) => _buildDefaultLogo(theme),
         );
       },
     );

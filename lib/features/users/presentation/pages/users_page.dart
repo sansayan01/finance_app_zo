@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -2942,7 +2943,7 @@ class _Avatar extends StatelessWidget {
                 image: (profile.avatarUrl != null &&
                         profile.avatarUrl!.trim().isNotEmpty)
                     ? DecorationImage(
-                        image: NetworkImage(profile.avatarUrl!),
+                        image: CachedNetworkImageProvider(profile.avatarUrl!),
                         fit: BoxFit.cover,
                       )
                     : null,

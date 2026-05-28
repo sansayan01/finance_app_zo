@@ -51,8 +51,10 @@ class MemberModel {
       orgId: json['org_id'] as String?,
       shopName: json['shop_name'] as String?,
       businessType: json['business_type'] as String?,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
+      latitude: (json['gps_lat'] as num?)?.toDouble() ??
+          (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['gps_lng'] as num?)?.toDouble() ??
+          (json['longitude'] as num?)?.toDouble(),
       shopPhotoUrl: json['shop_photo_url'] as String?,
     );
   }
@@ -63,15 +65,15 @@ class MemberModel {
       'full_name': fullName,
       'phone': phone,
       'member_id': memberId,
-      'kyc_status': kycStatus == KYCStatus.notSubmitted ? 'pending' : kycStatus.name,
+      'kyc_status': kycStatus == KYCStatus.pending ? 'pending' : kycStatus.name,
       'active_loans': activeLoans,
       'total_savings': totalSavings,
       'org_id': orgId,
       'created_at': createdAt.toIso8601String(),
       'shop_name': shopName,
       'business_type': businessType,
-      'latitude': latitude,
-      'longitude': longitude,
+      'gps_lat': latitude,
+      'gps_lng': longitude,
       'shop_photo_url': shopPhotoUrl,
     };
   }

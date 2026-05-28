@@ -36,7 +36,7 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
   final _notesController = TextEditingController();
   bool _isLoading = false;
   Timer? _timer;
-  int _elapsedSeconds = 0;
+  final ValueNotifier<int> _elapsedSeconds = ValueNotifier(0);
 
   @override
   void initState() {
@@ -48,6 +48,7 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
   void dispose() {
     _notesController.dispose();
     _timer?.cancel();
+    _elapsedSeconds.dispose();
     super.dispose();
   }
 
@@ -74,8 +75,8 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_breakStartTime != null && mounted) {
-        setState(() => _elapsedSeconds =
-            DateTime.now().difference(_breakStartTime!).inSeconds);
+        _elapsedSeconds.value =
+            DateTime.now().difference(_breakStartTime!).inSeconds;
       }
     });
   }
@@ -96,10 +97,10 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
               behavior: SnackBarBehavior.floating));
         }
         _timer?.cancel();
+        _elapsedSeconds.value = 0;
         setState(() {
           _isOnBreak = false;
           _breakStartTime = null;
-          _elapsedSeconds = 0;
         });
       } else {
         await repo.startBreak(
@@ -208,13 +209,16 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
           Text('Break in Progress',
               style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
           const SizedBox(height: 4),
-          Text(
-            '${_elapsedSeconds ~/ 60}:${(_elapsedSeconds % 60).toString().padLeft(2, '0')}',
-            style: const TextStyle(
-                color: Colors.white,
-                fontSize: 56,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2),
+          ValueListenableBuilder<int>(
+            valueListenable: _elapsedSeconds,
+            builder: (_, seconds, __) => Text(
+              '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 56,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2),
+            ),
           ),
           const SizedBox(height: 4),
           Text(_selectedBreakType.displayName.toUpperCase(),

@@ -122,7 +122,8 @@ class BranchManagerRepository {
           )
         ''')
         .eq('collection_date', dateStr)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(200);
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -139,7 +140,8 @@ class BranchManagerRepository {
             emi_amount,
             status
           )
-        ''').eq('branch_id', branchId).eq('status', 'active');
+        ''').eq('branch_id', branchId).eq('status', 'active')
+        .limit(200);
 
     return List<Map<String, dynamic>>.from(response);
   }

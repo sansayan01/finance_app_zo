@@ -5,67 +5,67 @@ import '../repositories/branch_repository.dart';
 import '../../models/branch_model.dart';
 
 /// Branch Repository Provider
-final branchRepositoryProvider = Provider<BranchRepository>((ref) {
+final branchRepositoryProvider = Provider.autoDispose<BranchRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return BranchRepository(client, orgId);
 });
 
 /// All Branches Provider
-final branchesProvider = FutureProvider<List<BranchModel>>((ref) {
+final branchesProvider = FutureProvider.autoDispose<List<BranchModel>>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranches();
 });
 
 /// Active Branches Provider
-final activeBranchesProvider = FutureProvider<List<BranchModel>>((ref) {
+final activeBranchesProvider = FutureProvider.autoDispose<List<BranchModel>>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getActiveBranches();
 });
 
 /// Single Branch Provider
-final branchProvider = FutureProvider.family<BranchModel?, String>((ref, id) {
+final branchProvider = FutureProvider.autoDispose.family<BranchModel?, String>((ref, id) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranch(id);
 });
 
 /// Branch Stats Provider
 final branchStatsProvider =
-    FutureProvider.family<BranchStats, String>((ref, branchId) {
+    FutureProvider.autoDispose.family<BranchStats, String>((ref, branchId) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranchStats(branchId);
 });
 
 /// Branch Count Provider
-final branchCountProvider = FutureProvider<int>((ref) {
+final branchCountProvider = FutureProvider.autoDispose<int>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranchCount();
 });
 
 /// Potential Managers Provider
 final potentialManagersProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) {
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getPotentialManagers();
 });
 
 /// Branch Staff Provider
 final branchStaffProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, branchId) {
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>((ref, branchId) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranchStaff(branchId);
 });
 
 /// Branch Members Provider
 final branchMembersProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, branchId) {
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>((ref, branchId) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranchMembers(branchId);
 });
 
 /// Branch Notifier for CRUD operations
 final branchNotifierProvider =
-    StateNotifierProvider<BranchNotifier, AsyncValue<void>>((ref) {
+    StateNotifierProvider.autoDispose<BranchNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
   return BranchNotifier(repository, ref);
 });

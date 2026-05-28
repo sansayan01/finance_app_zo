@@ -57,7 +57,7 @@ class LoansRepository {
       // Get loan counts and totals in a single query
       final response = await _client.from('loans').select('''
             status,
-            outstanding_balance,
+            outstanding_amount,
             amount
           ''').eq('org_id', _orgId);
 
@@ -73,7 +73,7 @@ class LoansRepository {
       for (final loan in loans) {
         final status = loan['status'] as String?;
         final outstanding =
-            (loan['outstanding_balance'] as num?)?.toDouble() ?? 0.0;
+            (loan['outstanding_amount'] as num?)?.toDouble() ?? 0.0;
         final amount = (loan['amount'] as num?)?.toDouble() ?? 0.0;
 
         if (status == 'active') {
@@ -253,7 +253,7 @@ class LoansRepository {
     }
     if (estimatedInstallment != null) data['emi_amount'] = estimatedInstallment;
     if (totalExposure != null) {
-      data['outstanding_balance'] = totalExposure;
+      data['outstanding_amount'] = totalExposure;
       data['total_repayable'] = totalExposure;
     }
     if (interestMode != null) data['interest_mode'] = interestMode;

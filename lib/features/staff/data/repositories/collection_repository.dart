@@ -17,7 +17,7 @@ class CollectionRepository {
            id,
           member_id,
           member_name,
-          outstanding_balance,
+          outstanding_amount,
           loan_number,
           members(
             id,
@@ -124,7 +124,11 @@ class CollectionRepository {
     };
 
     final response =
-        await _client.from('collections').insert(payload).select().single();
+        await _client.from('collections').insert(payload).select().maybeSingle();
+
+    if (response == null) {
+      throw Exception('Failed to record collection');
+    }
 
     return CollectionModel.fromJson(response);
   }
@@ -268,7 +272,7 @@ class CollectionRepository {
             id,
             loan_number,
             principal,
-            outstanding_balance,
+            outstanding_amount,
             status
           )
         ''')
@@ -284,7 +288,7 @@ class CollectionRepository {
 
       for (final loan in loans) {
         if (loan['status'] == 'active') {
-          outstanding += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
+          outstanding += (loan['outstanding_amount'] as num?)?.toDouble() ?? 0;
           loanNumber ??= loan['loan_number'];
         }
       }
@@ -310,7 +314,7 @@ class CollectionRepository {
             interest_rate,
             tenure_months,
             emi,
-            outstanding_balance,
+            outstanding_amount,
             status,
             start_date,
             paid_emis,
@@ -350,7 +354,7 @@ class CollectionRepository {
     for (final loan in loans) {
       if (loan['status'] == 'active') {
         outstandingAmount +=
-            (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
+            (loan['outstanding_amount'] as num?)?.toDouble() ?? 0;
         paidEmis += (loan['paid_emis'] as num?)?.toInt() ?? 0;
         totalEmis += (loan['total_emis'] as num?)?.toInt() ??
             (loan['tenure'] as num?)?.toInt() ??
@@ -395,7 +399,7 @@ class CollectionRepository {
           interest_rate,
           tenure_months,
           emi,
-          outstanding_balance,
+          outstanding_amount,
           status,
            start_date,
           paid_emis,

@@ -136,7 +136,8 @@ final isOnlineProvider = StreamProvider<bool>((ref) async* {
   // Check immediately
   yield await engine.isOnline();
 
-  // Then check every 5 seconds
-  await Future.delayed(const Duration(seconds: 5));
-  yield await engine.isOnline();
+  // Then check every 10 seconds
+  await for (final _ in Stream.periodic(const Duration(seconds: 10))) {
+    yield await engine.isOnline();
+  }
 });

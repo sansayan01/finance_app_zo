@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -158,8 +159,16 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: branding?.logoUrl != null
-                            ? Image.network(branding!.logoUrl!,
-                                fit: BoxFit.contain)
+                            ? CachedNetworkImage(
+                                imageUrl: branding!.logoUrl!,
+                                fit: BoxFit.contain,
+                                memCacheWidth: 240,
+                                memCacheHeight: 120,
+                                errorWidget: (_, __, ___) => const Icon(
+                                    Icons.image,
+                                    size: 40,
+                                    color: Colors.grey),
+                              )
                             : const Icon(Icons.image,
                                 size: 40, color: Colors.grey),
                       ),
@@ -187,8 +196,16 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: branding?.logoDarkUrl != null
-                            ? Image.network(branding!.logoDarkUrl!,
-                                fit: BoxFit.contain)
+                            ? CachedNetworkImage(
+                                imageUrl: branding!.logoDarkUrl!,
+                                fit: BoxFit.contain,
+                                memCacheWidth: 240,
+                                memCacheHeight: 120,
+                                errorWidget: (_, __, ___) => const Icon(
+                                    Icons.image,
+                                    size: 40,
+                                    color: Colors.grey),
+                              )
                             : const Icon(Icons.image,
                                 size: 40, color: Colors.grey),
                       ),

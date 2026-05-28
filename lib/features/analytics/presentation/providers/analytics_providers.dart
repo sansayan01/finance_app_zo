@@ -114,9 +114,9 @@ class AnalyticsStats {
 }
 
 final analyticsPeriodProvider =
-    StateProvider<AnalyticsPeriod>((ref) => AnalyticsPeriod.thisMonth);
+    StateProvider.autoDispose<AnalyticsPeriod>((ref) => AnalyticsPeriod.thisMonth);
 
-final analyticsProvider = FutureProvider<AnalyticsStats>((ref) async {
+final analyticsProvider = FutureProvider.autoDispose<AnalyticsStats>((ref) async {
   final period = ref.watch(analyticsPeriodProvider);
   final supabase = ref.watch(supabaseClientProvider);
   final orgId = ref.watch(currentOrgIdOrThrowProvider);

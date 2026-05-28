@@ -608,7 +608,7 @@ class _StaffHomePageState extends ConsumerState<StaffHomePage> {
                               principal: 0,
                               interest: 0,
                               balanceAfter: 0,
-                              status: EMIStatus.upcoming,
+                              status: EMIStatus.pending,
                               penaltyAmount: 0,
                               penaltyPaid: false,
                               createdAt: DateTime.now(),

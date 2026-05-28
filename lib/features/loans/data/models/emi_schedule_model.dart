@@ -47,7 +47,7 @@ class EMIScheduleModel {
       balanceAfter: (json['balance_after'] as num?)?.toDouble() ?? 0,
       status: EMIStatus.values.firstWhere(
         (e) => e.name == json['status'] || _toSnake(e.name) == json['status'],
-        orElse: () => EMIStatus.upcoming,
+        orElse: () => EMIStatus.pending,
       ),
       paidOn: json['paid_on'] != null
           ? DateTime.tryParse(json['paid_on'] as String)

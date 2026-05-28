@@ -34,6 +34,64 @@ class _LoansPageState extends ConsumerState<LoansPage>
   String _sortBy = 'recent'; // 'recent', 'amount', 'balance', 'progress'
   bool _sortAscending = false;
 
+  // Cached filtered/sorted list — recomputed only when inputs change
+  List<LoanModel>? _cachedFiltered;
+  List<LoanModel>? _cachedSource;
+  LoanStatus? _cachedFilterStatus;
+  String _cachedSearchQuery = '';
+  String _cachedSortBy = 'recent';
+  bool _cachedSortAscending = false;
+
+  List<LoanModel> _getFilteredList(List<LoanModel> loans) {
+    if (_cachedSource == loans &&
+        _cachedFilterStatus == _filterStatus &&
+        _cachedSearchQuery == _searchQuery &&
+        _cachedSortBy == _sortBy &&
+        _cachedSortAscending == _sortAscending &&
+        _cachedFiltered != null) {
+      return _cachedFiltered!;
+    }
+
+    var filtered = loans.where((l) {
+      if (_filterStatus != null && l.status != _filterStatus) return false;
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        return (l.customerName?.toLowerCase().contains(q) ?? false) ||
+            l.loanNumber.toLowerCase().contains(q);
+      }
+      return true;
+    }).toList();
+
+    filtered.sort((a, b) {
+      int cmp;
+      switch (_sortBy) {
+        case 'amount':
+          cmp = a.amount.compareTo(b.amount);
+          break;
+        case 'balance':
+          cmp = a.outstandingBalance.compareTo(b.outstandingBalance);
+          break;
+        case 'progress':
+          final pA = 1 - (a.outstandingBalance / a.totalRepayable);
+          final pB = 1 - (b.outstandingBalance / b.totalRepayable);
+          cmp = pA.compareTo(pB);
+          break;
+        default:
+          cmp = a.createdAt.compareTo(b.createdAt);
+          break;
+      }
+      return _sortAscending ? cmp : -cmp;
+    });
+
+    _cachedSource = loans;
+    _cachedFilterStatus = _filterStatus;
+    _cachedSearchQuery = _searchQuery;
+    _cachedSortBy = _sortBy;
+    _cachedSortAscending = _sortAscending;
+    _cachedFiltered = filtered;
+    return filtered;
+  }
+
   final List<Map<String, dynamic>> _filters = [
     {'label': 'Overview', 'status': null, 'icon': Icons.dashboard_rounded},
     {
@@ -220,43 +278,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
                 // Dynamic Loan List
                 loansAsync.when(
                   data: (loans) {
-                    var filtered = loans.where((l) {
-                      if (_filterStatus != null && l.status != _filterStatus) {
-                        return false;
-                      }
-                      if (_searchQuery.isNotEmpty) {
-                        final q = _searchQuery.toLowerCase();
-                        return (l.customerName?.toLowerCase().contains(q) ??
-                                false) ||
-                            l.loanNumber.toLowerCase().contains(q);
-                      }
-                      return true;
-                    }).toList();
-
-                    // Apply Sorting
-                    filtered.sort((a, b) {
-                      int cmp;
-                      switch (_sortBy) {
-                        case 'amount':
-                          cmp = a.amount.compareTo(b.amount);
-                          break;
-                        case 'balance':
-                          cmp = a.outstandingBalance
-                              .compareTo(b.outstandingBalance);
-                          break;
-                        case 'progress':
-                          final pA =
-                              1 - (a.outstandingBalance / a.totalRepayable);
-                          final pB =
-                              1 - (b.outstandingBalance / b.totalRepayable);
-                          cmp = pA.compareTo(pB);
-                          break;
-                        default:
-                          cmp = a.createdAt.compareTo(b.createdAt);
-                          break;
-                      }
-                      return _sortAscending ? cmp : -cmp;
-                    });
+                    final filtered = _getFilteredList(loans);
 
                     if (filtered.isEmpty) {
                       return SliverFillRemaining(
@@ -269,16 +291,24 @@ class _LoansPageState extends ConsumerState<LoansPage>
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
-                          (ctx, i) => Padding(
-                            padding: const EdgeInsets.only(bottom: 24),
-                            child: _PremiumLoanCard(loan: filtered[i])
-                                .animate()
-                                .fadeIn(delay: (40 * i).ms)
-                                .slideY(
-                                    begin: 0.08,
-                                    end: 0,
-                                    curve: Curves.easeOutQuart),
-                          ),
+                          (ctx, i) {
+                            final card = Padding(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: _PremiumLoanCard(loan: filtered[i]),
+                            );
+                            // Only animate first 10 items to avoid
+                            // creating animation controllers off-screen
+                            if (i < 10) {
+                              return card
+                                  .animate()
+                                  .fadeIn(delay: (40 * i).ms)
+                                  .slideY(
+                                      begin: 0.08,
+                                      end: 0,
+                                      curve: Curves.easeOutQuart);
+                            }
+                            return card;
+                          },
                           childCount: filtered.length,
                         ),
                       ),

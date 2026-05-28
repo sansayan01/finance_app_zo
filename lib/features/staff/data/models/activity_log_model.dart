@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../services/offline_sync_engine.dart';
 
 class ActivityLogModel extends Equatable {
   final String id;
@@ -167,12 +168,6 @@ class ActivityLogModel extends Equatable {
         syncStatus,
         createdAt,
       ];
-}
-
-enum SyncStatus {
-  pending,
-  synced,
-  failed,
 }
 
 // Activity action constants

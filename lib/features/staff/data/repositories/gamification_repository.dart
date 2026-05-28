@@ -60,8 +60,6 @@ class GamificationRepository {
       final response = await _client
           .from('staff_leaderboard_view')
           .select()
-          .filter('collection_time', 'gte', startDate.toIso8601String())
-          .filter('collection_time', 'lt', endDate.toIso8601String())
           .order('total_collected', ascending: false)
           .limit(50);
 
@@ -137,7 +135,7 @@ class GamificationRepository {
   Future<void> awardAchievement(String staffId, String achievementCode) async {
     await _client.from('staff_achievements').upsert({
       'staff_id': staffId,
-      'achievement_code': achievementCode,
+      'title': achievementCode,
       'is_unlocked': true,
       'unlocked_at': DateTime.now().toIso8601String(),
     });
@@ -151,9 +149,9 @@ class GamificationRepository {
   ) async {
     await _client.from('staff_achievements').upsert({
       'staff_id': staffId,
-      'achievement_code': achievementCode,
+      'title': achievementCode,
       'progress': progress,
-    }, onConflict: 'staff_id,achievement_code');
+    }, onConflict: 'staff_id,title');
   }
 
   /// Add points

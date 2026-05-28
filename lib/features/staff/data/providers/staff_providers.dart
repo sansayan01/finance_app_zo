@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../repositories/staff_repository.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
-import '../repositories/collection_repository.dart';
 import '../models/staff_profile_model.dart';
 import '../models/wallet_model.dart';
 import '../models/streak_model.dart';
@@ -11,11 +10,6 @@ import '../models/target_model.dart';
 final staffRepositoryProvider = Provider<StaffRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return StaffRepository(ref.watch(supabaseClientProvider), orgId);
-});
-
-final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
-  final orgId = ref.watch(currentOrgIdOrThrowProvider);
-  return CollectionRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
 // Current staff profile

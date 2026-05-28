@@ -110,11 +110,11 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
             coordinates:
                 Position(position.longitude, position.latitude),
           ),
-          zoom: 16.0,
-          pitch: 45.0,
+          zoom: 17.0,
+          pitch: 60.0,
           bearing: 0,
         ),
-        MapAnimationOptions(duration: 2000),
+        MapAnimationOptions(duration: 2800),
       );
       _drawBreadcrumbTrail();
     } catch (e) {
@@ -173,18 +173,19 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
         final amount =
             (customer['emi_amount'] as num?)?.toDouble() ?? 0;
         final label = amount > 0
-            ? '${name.split(' ').first} ₹${amount.toStringAsFixed(0)}'
+            ? '${name.split(' ').first}\n₹${amount.toStringAsFixed(0)}'
             : name.split(' ').first;
         await _customerPinManager!.create(PointAnnotationOptions(
           geometry: Point(coordinates: Position(lng, lat)),
-          iconSize: 0.8,
+          iconSize: 1.0,
           textField: label,
-          textSize: 11.0,
-          textOffset: [0, 1.8],
+          textSize: 10.0,
+          textOffset: [0, 2.2],
           textColor: Colors.white.toARGB32(),
-          textHaloColor: const Color(0xFFF97316).toARGB32(),
-          textHaloWidth: 1.5,
-          iconColor: const Color(0xFFF97316).toARGB32(),
+          textHaloColor: const Color(0xFF4F46E5).toARGB32(),
+          textHaloWidth: 2.0,
+          iconColor: const Color(0xFF4F46E5).toARGB32(),
+          iconImage: 'marker-15',
         ));
       }
     } catch (e) {
@@ -201,9 +202,40 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
     }
   }
 
+  Future<void> _enhanceMapStyle() async {
+    if (_mapboxMap == null) return;
+    try {
+      final style = _mapboxMap!.style;
+      // Add 3D building extrusion for non-Standard styles
+      if (!await style.styleLayerExists('3d-buildings')) {
+        final buildingLayer = FillExtrusionLayer(
+          id: '3d-buildings',
+          sourceId: 'composite',
+          sourceLayer: 'building',
+          minZoom: 14.0,
+          maxZoom: 18.0,
+          fillExtrusionColor: const Color(0xFFA0AAB5).toARGB32(),
+          fillExtrusionOpacity: 0.7,
+          fillExtrusionHeightExpression: ['get', 'height'],
+          fillExtrusionBaseExpression: ['get', 'min_height'],
+          fillExtrusionVerticalGradient: true,
+          fillExtrusionCastShadows: true,
+        );
+        await style.addLayer(buildingLayer);
+      }
+    } catch (e) {
+      debugPrint('[StaffMap] Style enhancement error: $e');
+    }
+  }
+
   void _cycleMapStyle() {
     setState(() => _styleIndex = (_styleIndex + 1) % _styles.length);
     _mapboxMap?.loadStyleURI(_styles[_styleIndex]);
+    Future.delayed(const Duration(milliseconds: 800), () {
+      _enhanceMapStyle();
+      _drawBreadcrumbTrail();
+      if (_showCustomerPins) _drawCustomerPins();
+    });
     HapticFeedback.lightImpact();
   }
 
@@ -308,6 +340,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
           pulsingEnabled: true,
           pulsingColor: AppColors.primary.toARGB32(),
         ));
+        _enhanceMapStyle();
         Future.delayed(const Duration(milliseconds: 600), () {
           _drawBreadcrumbTrail();
           _drawCustomerPins();
@@ -490,20 +523,43 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
                 ),
               ),
               const SizedBox(width: 14),
-              // Location text
+              // Location text with speed
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      isOnDuty ? 'On Duty · Tracking' : 'Your Location',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : Colors.black87,
-                        letterSpacing: -0.2,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          isOnDuty ? 'On Duty · Tracking' : 'Your Location',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : Colors.black87,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        if (_currentPosition!.speed > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${(_currentPosition!.speed * 3.6).toStringAsFixed(1)} km/h',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -600,48 +656,74 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
 
   Widget _buildLoadingOverlay(bool isDark) {
     return Container(
-      color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+              ? [const Color(0xFF0A0A0B), const Color(0xFF1A1A2E)]
+              : [const Color(0xFFF0F4FF), Colors.white],
+        ),
+      ),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.8, end: 1.0),
+          duration: const Duration(milliseconds: 1500),
+          builder: (_, scale, __) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 24,
+                      spreadRadius: 4,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.map_rounded,
+                  color: Colors.white,
+                  size: 36,
+                ),
               ),
-              child: const Center(
-                child: SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: AppColors.primary,
+              const SizedBox(height: 24),
+              Text(
+                'Acquiring GPS...',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: 160,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Acquiring GPS...',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white70 : Colors.black54,
-                letterSpacing: -0.3,
+              const SizedBox(height: 8),
+              Text(
+                'Getting your precise location',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Getting your precise location',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white30 : Colors.black26,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

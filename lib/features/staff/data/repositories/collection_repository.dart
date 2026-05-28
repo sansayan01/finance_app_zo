@@ -69,8 +69,8 @@ class CollectionRepository {
     final response = await _client
         .from('overdue_loans_view')
         .select()
-        .eq('staff_id', staffId)
-        .order('days_overdue', ascending: false);
+        .eq('agent_id', staffId)
+        .order('due_date', ascending: true);
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -300,7 +300,7 @@ class CollectionRepository {
   }
 
   /// Get customer detail with all info
-  Future<Map<String, dynamic>> getCustomerDetail(String customerId) async {
+  Future<Map<String, dynamic>?> getCustomerDetail(String customerId) async {
     final response = await _client.from('members').select('''
           *,
           loans(
@@ -333,7 +333,9 @@ class CollectionRepository {
             status,
             collection_type
           )
-        ''').eq('id', customerId).single();
+        ''').eq('id', customerId).maybeSingle();
+
+    if (response == null) return null;
 
     // Calculate stats
     double outstandingAmount = 0;

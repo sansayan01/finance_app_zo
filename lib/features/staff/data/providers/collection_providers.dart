@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import 'package:microflow_pro/core/constants/enums.dart';
@@ -6,7 +9,9 @@ import '../repositories/collection_repository.dart';
 import 'staff_providers.dart';
 import 'sync_providers.dart';
 
+import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/providers/org_provider.dart';
+import '../../../../core/providers/sms_provider.dart';
 import '../../../home/data/providers/dashboard_providers.dart' show dashboardLoansProvider, loanSummaryProvider, todayAgendaProvider;
 
 // Collection repository provider
@@ -71,7 +76,7 @@ final todayStatsProvider = todayCollectionStatsProvider;
 
 // Customer detail provider
 final customerDetailProvider =
-    FutureProvider.family<Map<String, dynamic>, String>(
+    FutureProvider.family<Map<String, dynamic>?, String>(
         (ref, customerId) async {
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.getCustomerDetail(customerId);
@@ -181,6 +186,7 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
     double? gpsAccuracy,
     String? gpsAddress,
     String? remarks,
+    double? outstandingBalance,
   }) async {
     state = const AsyncValue.loading();
 
@@ -217,6 +223,16 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
         _ref.invalidate(loanSummaryProvider);
         _ref.invalidate(todayStatsProvider);
         _ref.invalidate(todayAgendaProvider);
+
+        // Fire SMS notification in background (non-blocking)
+        _sendSmsNotification(
+          collectionId: result.id,
+          memberId: memberId,
+          memberPhone: memberPhone,
+          loanNumber: loanNumber,
+          amountCollected: amountCollected,
+          outstandingBalance: outstandingBalance,
+        );
       } catch (e) {
         // Fallback to offline queue
         await _syncNotifier.queueOperation(
@@ -271,6 +287,103 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
       }
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
+    }
+  }
+
+  /// Sends SMS notification to customer in background. Never blocks collection flow.
+  void _sendSmsNotification({
+    required String collectionId,
+    String? memberId,
+    String? memberPhone,
+    String? loanNumber,
+    required double amountCollected,
+    double? outstandingBalance,
+  }) async {
+    try {
+      if (memberPhone == null || memberPhone.isEmpty) {
+        await _logSms(
+          collectionId: collectionId,
+          memberId: memberId,
+          memberPhone: memberPhone,
+          message: '',
+          status: 'skipped',
+          errorMessage: 'No phone number',
+        );
+        return;
+      }
+
+      final smsService = _ref.read(smsServiceProvider);
+      final branding = _ref.read(brandingProvider).valueOrNull;
+      final orgName = branding?.displayName ?? 'MicroFlow Finance';
+
+      // Get collector name from staff profile
+      final staffProfile = await _ref.read(staffProfileProvider.future);
+      final collectorName = staffProfile?.fullName ?? 'Staff';
+
+      final balance = outstandingBalance != null
+          ? 'Rs${outstandingBalance.toStringAsFixed(0)}'
+          : 'N/A';
+
+      final message = smsService.buildCollectionSms(
+        amount: 'Rs${amountCollected.toStringAsFixed(0)}',
+        collectorName: collectorName,
+        orgName: orgName,
+        loanNumber: loanNumber ?? 'N/A',
+        outstandingBalance: balance,
+        date: DateTime.now(),
+      );
+
+      final sent = await smsService.sendSms(
+        phoneNumber: memberPhone,
+        message: message,
+      );
+
+      await _logSms(
+        collectionId: collectionId,
+        memberId: memberId,
+        memberPhone: memberPhone,
+        message: message,
+        status: sent ? 'sent' : 'failed',
+      );
+    } catch (e) {
+      debugPrint('SMS notification error: $e');
+      await _logSms(
+        collectionId: collectionId,
+        memberId: memberId,
+        memberPhone: memberPhone,
+        message: '',
+        status: 'failed',
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<void> _logSms({
+    required String collectionId,
+    String? memberId,
+    String? memberPhone,
+    required String message,
+    required String status,
+    String? errorMessage,
+  }) async {
+    try {
+      final client = _ref.read(supabaseClientProvider);
+      final orgId = _ref.read(currentOrgIdProvider);
+      final staffProfile = await _ref.read(staffProfileProvider.future);
+
+      await client.from('sms_notifications').insert({
+        'org_id': orgId,
+        'collection_id': collectionId,
+        'member_id': memberId,
+        'member_phone': memberPhone ?? '',
+        'message': message,
+        'status': status,
+        'error_message': errorMessage,
+        'platform': Platform.isAndroid ? 'android' : 'ios',
+        'sent_by': staffProfile?.id,
+      });
+    } catch (e) {
+      debugPrint('SMS log error: $e');
     }
   }
 }

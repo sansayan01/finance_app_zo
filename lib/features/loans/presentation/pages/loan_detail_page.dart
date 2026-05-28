@@ -4022,6 +4022,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
         await showModalBottomSheet(
           context: context,
+          isScrollControlled: true,
           builder: (ctx) => SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,

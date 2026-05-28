@@ -215,19 +215,16 @@ class ConflictResolutionService {
         .from('sync_conflicts')
         .select()
         .eq('table_name', table)
-        .eq('status', 'pending');
+        .isFilter('resolved_at', null);
 
     return conflicts
         .map((c) => ConflictRecord(
               id: c['id'].toString(),
               table: c['table_name'],
-              type: ConflictType.values.firstWhere(
-                (t) => t.name == c['conflict_type'],
-                orElse: () => ConflictType.updateUpdate,
-              ),
+              type: ConflictType.updateUpdate,
               localData: c['local_data'],
               serverData: c['server_data'],
-              detectedAt: DateTime.parse(c['detected_at']),
+              detectedAt: DateTime.parse(c['created_at']),
             ))
         .toList();
   }

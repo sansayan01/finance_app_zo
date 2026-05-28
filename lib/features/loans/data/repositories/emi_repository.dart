@@ -24,11 +24,11 @@ class EMIRepository {
               .eq('id', loanId)
               .maybeSingle();
           if (loanResponse != null) {
-            final double amount = ((loanResponse['amount'] ?? loanResponse['principal_amount']) as num?)?.toDouble() ?? 0.0;
+            final double amount = ((loanResponse['amount'] ?? loanResponse['principal']) as num?)?.toDouble() ?? 0.0;
             final double interestRate = ((loanResponse['interest_rate']) as num?)?.toDouble() ?? 0.0;
             final int tenureMonths = loanResponse['tenure_months'] as int? ?? 12;
             final String interestType = loanResponse['interest_type'] as String? ?? 'flat';
-            final double emiAmount = ((loanResponse['emi_amount'] ?? loanResponse['estimated_installment']) as num?)?.toDouble() ?? 0.0;
+            final double emiAmount = (loanResponse['emi_amount'] as num?)?.toDouble() ?? 0.0;
             final String? memberId = loanResponse['customer_id']?.toString() ?? loanResponse['member_id']?.toString();
             final String? frequency = loanResponse['frequency'] as String?;
             final DateTime startDate = (loanResponse['first_emi_date'] ?? loanResponse['first_installment_date']) != null
@@ -91,7 +91,8 @@ class EMIRepository {
             .from('loans')
             .select('customer_id, member_id, member_name')
             .eq('id', loanId)
-            .single();
+            .maybeSingle();
+        if (loan == null) return;
         memberId = loan['customer_id']?.toString() ?? loan['member_id']?.toString();
         memberName = loan['member_name']?.toString();
         // If member_name is null on loan, look up from members table
@@ -125,7 +126,9 @@ class EMIRepository {
           .from('loans')
           .select('outstanding_amount, outstanding_balance')
           .eq('id', loanId)
-          .single();
+          .maybeSingle();
+
+      if (loanResponse == null) return;
 
       final currentBalance = ((loanResponse['outstanding_amount'] ??
                   loanResponse['outstanding_balance']) as num?)
@@ -171,7 +174,8 @@ class EMIRepository {
             .from('loans')
             .select('customer_id, member_id, member_name')
             .eq('id', loanId)
-            .single();
+            .maybeSingle();
+        if (loan == null) return;
         memberId = loan['customer_id']?.toString() ?? loan['member_id']?.toString();
         memberName = loan['member_name']?.toString();
         if (memberName == null && memberId != null) {
@@ -204,7 +208,9 @@ class EMIRepository {
           .from('loans')
           .select('outstanding_amount, outstanding_balance')
           .eq('id', loanId)
-          .single();
+          .maybeSingle();
+
+      if (loanResponse == null) return;
 
       final currentBalance = ((loanResponse['outstanding_amount'] ??
                   loanResponse['outstanding_balance']) as num?)

@@ -5,8 +5,7 @@ import '../../data/models/member_model.dart';
 import '../../data/repositories/members_repository.dart';
 import 'member_providers.dart';
 import '../../../../core/services/location_service.dart';
-import '../../../../core/providers/org_provider.dart';
-import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/providers/location_providers.dart';
 
 class OnboardingState {
   final String fullName;
@@ -118,16 +117,6 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
   void reset() => state = OnboardingState();
 }
-
-final membersRepositoryProvider = Provider<MembersRepository>((ref) {
-  final client = ref.watch(supabaseClientProvider);
-  final orgId = ref.watch(currentOrgIdOrThrowProvider);
-  return MembersRepository(client, orgId);
-});
-
-final locationServiceProvider = Provider<LocationService>((ref) {
-  return LocationService();
-});
 
 final onboardingProvider =
     StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {

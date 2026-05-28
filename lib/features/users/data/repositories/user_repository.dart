@@ -282,6 +282,22 @@ class UserRepository {
         // Member record may not exist — that's fine
       }
     }
+
+    // Sync full_name / phone / email to members table
+    final memberSync = <String, dynamic>{};
+    if (data.containsKey('full_name')) memberSync['full_name'] = data['full_name'];
+    if (data.containsKey('phone')) memberSync['phone'] = data['phone'];
+    if (data.containsKey('email')) memberSync['email'] = data['email'];
+    if (memberSync.isNotEmpty) {
+      try {
+        await _client
+            .from('members')
+            .update(memberSync)
+            .eq('profile_id', id);
+      } catch (_) {
+        // Member record may not exist — that's fine
+      }
+    }
   }
 
   Future<void> updateUserRole(String id, UserRole role) =>
@@ -444,15 +460,15 @@ class UserRepository {
     try {
       final res = await _client
           .from('activity_logs')
-          .select('user_id,timestamp')
+          .select('user_id,created_at')
           .eq('org_id', _orgId)
           .inFilter('user_id', userIds)
-          .order('timestamp', ascending: false)
+          .order('created_at', ascending: false)
           .limit(500);
       for (final row in (res as List? ?? [])) {
         if (row is! Map) continue;
         final uid = row['user_id']?.toString();
-        final ts = row['timestamp']?.toString();
+        final ts = row['created_at']?.toString();
         if (uid == null || ts == null) continue;
         final dt = DateTime.tryParse(ts);
         if (dt == null) continue;
@@ -506,7 +522,7 @@ class UserRepository {
           .select()
           .eq('org_id', _orgId)
           .eq('user_id', userId)
-          .order('timestamp', ascending: false)
+          .order('created_at', ascending: false)
           .limit(limit);
       return List<Map<String, dynamic>>.from(res as List? ?? []);
     } catch (e) {

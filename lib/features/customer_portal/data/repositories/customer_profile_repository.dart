@@ -12,8 +12,7 @@ class CustomerProfileRepository {
           .from('members')
           .select(
             'id, full_name, phone, email, kyc_status, area, village, address, '
-            'aadhar_number, pan_number, date_of_birth, gender, occupation, '
-            'monthly_income, profile_id, created_at',
+            'aadhar, pan, profile_id, created_at',
           )
           .eq('id', memberId)
           .eq('org_id', _orgId)
@@ -80,6 +79,31 @@ class CustomerProfileRepository {
           .update(data)
           .eq('id', memberId)
           .eq('org_id', _orgId);
+
+      // Sync full_name / phone / email back to profiles table
+      final profileSync = <String, dynamic>{};
+      if (data.containsKey('full_name')) profileSync['full_name'] = data['full_name'];
+      if (data.containsKey('phone')) profileSync['phone'] = data['phone'];
+      if (data.containsKey('email')) profileSync['email'] = data['email'];
+      if (profileSync.isNotEmpty) {
+        try {
+          // Get the profile_id from this member row
+          final member = await _client
+              .from('members')
+              .select('profile_id')
+              .eq('id', memberId)
+              .maybeSingle();
+          if (member != null && member['profile_id'] != null) {
+            await _client
+                .from('profiles')
+                .update(profileSync)
+                .eq('id', member['profile_id']);
+          }
+        } catch (_) {
+          // Profile may not exist — that's fine
+        }
+      }
+
       return true;
     } catch (e) {
       return false;

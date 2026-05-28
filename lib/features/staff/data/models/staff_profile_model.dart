@@ -18,13 +18,54 @@ enum StaffRole {
         return 'Area Manager';
     }
   }
+
+  /// Maps to the DB constraint values on collections.collected_by_role
+  String get dbValue {
+    switch (this) {
+      case StaffRole.collector:
+        return 'collectionAgent';
+      case StaffRole.supervisor:
+        return 'manager';
+      case StaffRole.branchManager:
+        return 'manager';
+      case StaffRole.areaManager:
+        return 'manager';
+    }
+  }
+
+  /// Maps to the DB constraint values on staff_profiles.role
+  String get dbRole {
+    switch (this) {
+      case StaffRole.collector:
+        return 'collector';
+      case StaffRole.supervisor:
+        return 'supervisor';
+      case StaffRole.branchManager:
+        return 'branch_manager';
+      case StaffRole.areaManager:
+        return 'area_manager';
+    }
+  }
 }
 
 enum StaffStatus {
   active,
   inactive,
   suspended,
-  onLeave,
+  onLeave;
+
+  String get dbValue {
+    switch (this) {
+      case StaffStatus.active:
+        return 'active';
+      case StaffStatus.inactive:
+        return 'inactive';
+      case StaffStatus.suspended:
+        return 'suspended';
+      case StaffStatus.onLeave:
+        return 'on_leave';
+    }
+  }
 }
 
 enum ShiftType {
@@ -40,6 +81,17 @@ enum ShiftType {
         return 'Evening';
       case ShiftType.fullDay:
         return 'Full Day';
+    }
+  }
+
+  String get dbValue {
+    switch (this) {
+      case ShiftType.morning:
+        return 'morning';
+      case ShiftType.evening:
+        return 'evening';
+      case ShiftType.fullDay:
+        return 'full_day';
     }
   }
 }
@@ -145,11 +197,11 @@ class StaffProfileModel extends Equatable {
       'full_name': fullName,
       'phone': phone,
       'email': email,
-      'role': role.name,
+      'role': role.dbRole,
       'branch_id': branchId,
-      'status': status.name,
+      'status': status.dbValue,
       'assigned_areas': assignedAreas,
-      'shift': shift.name,
+      'shift': shift.dbValue,
       'hire_date': hireDate?.toIso8601String(),
       'daily_collection_target': dailyCollectionTarget,
       'monthly_collection_target': monthlyCollectionTarget,

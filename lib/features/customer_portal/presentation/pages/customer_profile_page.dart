@@ -499,6 +499,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return Container(

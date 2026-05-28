@@ -9,7 +9,7 @@
         "--features=docs,account,database,debugging,development,functions,branching,storage"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_65e5721cce74581386ca56ea2707c8ed1e38c760"
+        "SUPABASE_ACCESS_TOKEN": "YOUR_SUPABASE_ACCESS_TOKEN_HERE"
       }
     }
   }

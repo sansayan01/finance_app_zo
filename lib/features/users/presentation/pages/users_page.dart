@@ -2159,6 +2159,7 @@ class _RowActions extends ConsumerWidget {
   Future<UserRole?> _pickRole(BuildContext context, UserRole? current) {
     return showModalBottomSheet<UserRole>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(

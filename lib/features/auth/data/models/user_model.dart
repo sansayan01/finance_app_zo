@@ -212,8 +212,8 @@ class ProfileModel {
       avatarUrl: json['avatar_url']?.toString(),
       memberCode: json['member_id']?.toString(),
       status: parseStatus(json['status']?.toString()),
-      lastSeenAt: json['last_seen_at'] != null
-          ? DateTime.tryParse(json['last_seen_at'].toString())
+      lastSeenAt: json['last_login'] != null
+          ? DateTime.tryParse(json['last_login'].toString())
           : null,
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.tryParse(json['date_of_birth'].toString())
@@ -247,7 +247,7 @@ class ProfileModel {
       branchName:
           json['branch'] is Map ? json['branch']['name']?.toString() : null,
       email: json['email']?.toString(),
-      avatarUrl: json['profile_photo_url']?.toString(),
+      avatarUrl: json['shop_photo_url']?.toString(),
       memberCode: json['member_id']?.toString(),
       status: AccountStatus.active,
       dateOfBirth: json['date_of_birth'] != null
@@ -323,7 +323,7 @@ class ProfileModel {
       'avatar_url': avatarUrl,
       'member_id': memberCode,
       'status': status.wireValue,
-      'last_seen_at': lastSeenAt?.toIso8601String(),
+      'last_login': lastSeenAt?.toIso8601String(),
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

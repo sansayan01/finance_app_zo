@@ -12,8 +12,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/services/offline_queue_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../loans/presentation/providers/loan_providers.dart'
-    hide loansRepositoryProvider;
+import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../loans/presentation/widgets/collection_sheet.dart';
 
 import '../../../loans/data/models/emi_schedule_model.dart';

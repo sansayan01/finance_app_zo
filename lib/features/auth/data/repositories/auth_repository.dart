@@ -397,6 +397,23 @@ class AuthRepository {
           .update(updates)
           .eq('user_id', _client.auth.currentUser!.id);
 
+      // Sync full_name to members table so loan/savings searches stay current
+      try {
+        final profile = await _client
+            .from('profiles')
+            .select('id')
+            .eq('user_id', _client.auth.currentUser!.id)
+            .maybeSingle();
+        if (profile != null) {
+          await _client
+              .from('members')
+              .update({'full_name': fullName})
+              .eq('profile_id', profile['id']);
+        }
+      } catch (_) {
+        // Member record may not exist — that's fine
+      }
+
       await _logRepo?.log(
         action: 'Profile Updated',
         details: 'User updated their personal information',

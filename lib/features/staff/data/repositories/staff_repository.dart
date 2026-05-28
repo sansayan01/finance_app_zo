@@ -94,7 +94,8 @@ class StaffRepository {
   Future<StaffProfileModel?> getStaffById(String staffId) async {
     try {
       final response = await _client.from('staff_profiles').select()
-          .eq('id', staffId).single();
+          .eq('id', staffId).maybeSingle();
+      if (response == null) return null;
 
       // Fetch supervisor name separately
       final supervisorId = response['supervisor_id'] as String?;
@@ -140,7 +141,8 @@ class StaffRepository {
           .from('staff_wallet')
           .select()
           .eq('staff_id', staffId)
-          .single();
+          .maybeSingle();
+      if (response == null) return null;
 
       return WalletModel.fromJson(response);
     } catch (e) {
@@ -155,7 +157,8 @@ class StaffRepository {
           .from('staff_streaks')
           .select()
           .eq('staff_id', staffId)
-          .single();
+          .maybeSingle();
+      if (response == null) return null;
 
       return StreakModel.fromJson(response);
     } catch (e) {
@@ -174,8 +177,9 @@ class StaffRepository {
           .eq('staff_id', staffId)
           .eq('period_type', 'daily')
           .eq('target_date', today)
-          .single();
+          .maybeSingle();
 
+      if (response == null) return null;
       return TargetModel.fromJson(response);
     } catch (e) {
       return null;
@@ -222,7 +226,7 @@ class StaffRepository {
           .from('staff_today_summary')
           .select()
           .eq('staff_id', staffId)
-          .single();
+          .maybeSingle();
 
       return response;
     } catch (e) {
@@ -698,7 +702,7 @@ class StaffRepository {
       final today = DateTime.now().toIso8601String().split('T').first;
       final response = await _client
           .from('savings_collections')
-          .select('amount, payment_mode')
+          .select('amount_collected, payment_mode')
           .eq('staff_id', staffId)
           .filter('collection_date', 'gte', today);
 
@@ -707,7 +711,7 @@ class StaffRepository {
       double digitalSavings = 0;
 
       for (final item in response) {
-        final amount = (item['amount'] as num?)?.toDouble() ?? 0;
+        final amount = (item['amount_collected'] as num?)?.toDouble() ?? 0;
         totalSavings += amount;
         if (item['payment_mode'] == 'cash') {
           cashSavings += amount;
@@ -774,8 +778,8 @@ class StaffRepository {
     try {
       final response = await _client
           .from('overdue_loans_view')
-          .select('id')
-          .eq('staff_id', staffId);
+          .select('loan_id')
+          .eq('agent_id', staffId);
       return response.length;
     } catch (_) {
       return 0;

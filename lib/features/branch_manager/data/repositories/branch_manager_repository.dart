@@ -272,12 +272,16 @@ class BranchManagerRepository {
   /// Assign collection agent to area
   Future<void> assignAgentToArea(
       String agentId, String areaId, String branchId) async {
-    await _client.from('agent_areas').upsert({
-      'agent_id': agentId,
-      'area_id': areaId,
-      'branch_id': branchId,
-      'assigned_at': DateTime.now().toIso8601String(),
-    });
+    try {
+      await _client.from('agent_areas').upsert({
+        'agent_id': agentId,
+        'area_id': areaId,
+        'branch_id': branchId,
+        'assigned_at': DateTime.now().toIso8601String(),
+      });
+    } catch (_) {
+      // agent_areas table may not exist
+    }
   }
 
   /// Get branch targets

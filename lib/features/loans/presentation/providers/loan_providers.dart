@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/loan_model.dart';
-import '../../data/repositories/loans_repository.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../core/constants/enums.dart';
@@ -8,11 +7,8 @@ import '../../../../core/constants/enums.dart';
 import '../../data/repositories/emi_repository.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../../data/services/loan_statement_archive_service.dart';
-
-final loansRepositoryProvider = Provider<LoansRepository>((ref) {
-  final orgId = ref.watch(currentOrgIdOrThrowProvider);
-  return LoansRepository(ref.watch(supabaseClientProvider), orgId);
-});
+import '../../data/providers/loan_providers.dart';
+export '../../data/providers/loan_providers.dart';
 
 final emiRepositoryProvider = Provider<EMIRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
@@ -30,11 +26,6 @@ final pastLoanStatementsProvider = FutureProvider.autoDispose
     .family<List<LoanStatementArchive>, String>((ref, loanId) async {
   final svc = ref.watch(loanStatementArchiveServiceProvider);
   return svc.listForLoan(loanId);
-});
-
-final allLoansProvider = FutureProvider<List<LoanModel>>((ref) async {
-  final repository = ref.watch(loansRepositoryProvider);
-  return repository.getAllLoans();
 });
 
 final loanSearchQueryProvider = StateProvider<String>((ref) => '');
@@ -102,6 +93,3 @@ final userLoansProvider =
   final loans = await ref.watch(allLoansProvider.future);
   return loans.where((l) => l.customerId == userId).toList();
 });
-
-// Backward compatibility and aliases
-final loansProvider = allLoansProvider;

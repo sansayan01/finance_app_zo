@@ -152,8 +152,9 @@ class SavingsRepository {
           .from('savings_plans')
           .select('*, members:member_id(full_name)')
           .eq('id', id)
-          .single();
+          .maybeSingle();
 
+      if (response == null) return null;
       return _mapSavingsList([response]).first;
     } catch (e) {
       return null;

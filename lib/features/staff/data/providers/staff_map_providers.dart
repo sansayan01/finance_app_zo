@@ -111,18 +111,18 @@ Future<Map<String, double>?> _getLastVisitLocation(
   try {
     final response = await client
         .from('visit_logs')
-        .select('latitude, longitude')
+        .select('check_in_lat, check_in_lng')
         .eq('member_id', memberId)
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
+        .not('check_in_lat', 'is', null)
+        .not('check_in_lng', 'is', null)
         .order('created_at', ascending: false)
         .limit(1);
 
     final list = List<Map<String, dynamic>>.from(response as List);
     if (list.isEmpty) return null;
 
-    final lat = (list.first['latitude'] as num?)?.toDouble();
-    final lng = (list.first['longitude'] as num?)?.toDouble();
+    final lat = (list.first['check_in_lat'] as num?)?.toDouble();
+    final lng = (list.first['check_in_lng'] as num?)?.toDouble();
     if (lat == null || lng == null) return null;
 
     return {'latitude': lat, 'longitude': lng};

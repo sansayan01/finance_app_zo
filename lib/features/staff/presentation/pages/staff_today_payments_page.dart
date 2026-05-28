@@ -650,8 +650,8 @@ class _StaffTodayPaymentsPageState
         'payment_mode': paymentMode,
         'collection_date': today,
         'staff_id': profile.id,
-        'collector_name': profile.fullName,
-        'collector_role': profile.role.displayName,
+        'collected_by_name': profile.fullName,
+        'collected_by_role': profile.role.dbValue,
         'sync_status': 'synced',
       });
 
@@ -725,8 +725,8 @@ class _StaffTodayPaymentsPageState
         'collection_date': today,
         'collection_time':
             '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
-        'collector_name': profile.fullName,
-        'collector_role': profile.role.displayName,
+        'collected_by_name': profile.fullName,
+        'collected_by_role': profile.role.dbValue,
         'sync_status': 'synced',
       });
 

@@ -8,7 +8,9 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity : FlutterFragmentActivity() {
-    private val CHANNEL = "com.microflow.app_icon"
+    private val ICON_CHANNEL = "com.microflow.app_icon"
+    private val SMS_CHANNEL = "com.microflow/sms"
+    private var smsPlugin: SmsSenderPlugin? = null
 
     // Map preset IDs to their activity-alias component names.
     // Each alias is declared in AndroidManifest.xml with its own icon + label.
@@ -26,7 +28,13 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         GeneratedPluginRegistrant.registerWith(flutterEngine)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        // SMS Sender plugin
+        val smsChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SMS_CHANNEL)
+        smsPlugin = SmsSenderPlugin(this, smsChannel)
+        smsChannel.setMethodCallHandler(smsPlugin)
+
+        // App icon channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ICON_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isSupported" -> result.success(true)
@@ -54,8 +62,6 @@ class MainActivity : FlutterFragmentActivity() {
                 return presetId
             }
         }
-        // If none explicitly enabled, check if the real MainActivity is enabled
-        // (which means "default" is active since it's the initial launcher)
         return "default"
     }
 
@@ -64,7 +70,6 @@ class MainActivity : FlutterFragmentActivity() {
 
         val pm = packageManager
 
-        // Disable all aliases first
         for ((_, aliasName) in iconAliases) {
             val component = ComponentName(packageName, "$packageName$aliasName")
             pm.setComponentEnabledSetting(
@@ -74,7 +79,6 @@ class MainActivity : FlutterFragmentActivity() {
             )
         }
 
-        // Also disable the real MainActivity launcher intent
         val mainComponent = ComponentName(packageName, "$packageName.MainActivity")
         pm.setComponentEnabledSetting(
             mainComponent,
@@ -82,7 +86,6 @@ class MainActivity : FlutterFragmentActivity() {
             PackageManager.DONT_KILL_APP
         )
 
-        // Enable the selected alias
         val targetAlias = iconAliases[presetId]!!
         val targetComponent = ComponentName(packageName, "$packageName$targetAlias")
         pm.setComponentEnabledSetting(
@@ -96,5 +99,14 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        smsPlugin?.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 }

@@ -11,8 +11,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
-import '../../../home/data/providers/dashboard_providers.dart'
-    hide savingsSummaryProvider, transactionsRepositoryProvider;
+import '../../../home/data/providers/dashboard_providers.dart';
 
 class SavingsPage extends ConsumerStatefulWidget {
   const SavingsPage({super.key});

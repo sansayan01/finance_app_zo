@@ -1,23 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
-import '../../../loans/data/repositories/loans_repository.dart';
+import '../../../loans/data/providers/loan_providers.dart';
+export '../../../loans/data/providers/loan_providers.dart' show loansRepositoryProvider, loansProvider, allLoansProvider;
 import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../savings/data/providers/savings_providers.dart';
-import '../../../transactions/data/repositories/transactions_repository.dart';
+export '../../../savings/data/providers/savings_providers.dart' show savingsSummaryProvider, transactionsRepositoryProvider;
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../../core/constants/enums.dart';
-
-final loansRepositoryProvider = Provider<LoansRepository>((ref) {
-  final orgId = ref.watch(currentOrgIdOrThrowProvider);
-  return LoansRepository(ref.watch(supabaseClientProvider), orgId);
-});
-
-final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
-  final orgId = ref.watch(currentOrgIdOrThrowProvider);
-  return TransactionsRepository(ref.watch(supabaseClientProvider), orgId);
-});
 
 final activeLoansProvider = FutureProvider<List<LoanModel>>((ref) async {
   final repository = ref.watch(loansRepositoryProvider);
@@ -32,11 +23,6 @@ final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
 final activeSavingsProvider = FutureProvider<List<SavingsModel>>((ref) async {
   final repository = ref.watch(savingsRepositoryProvider);
   return repository.getActiveSavingsPlans(limit: 20);
-});
-
-final savingsSummaryProvider = FutureProvider<SavingsSummary>((ref) async {
-  final repository = ref.watch(savingsRepositoryProvider);
-  return repository.getSavingsSummary();
 });
 
 final pendingDepositsProvider = FutureProvider<List<SavingsModel>>((ref) async {

@@ -60,7 +60,7 @@ class _BreakLoggingPageState extends ConsumerState<BreakLoggingPage> {
       if (currentBreak != null && mounted) {
         setState(() {
           _isOnBreak = true;
-          _breakStartTime = DateTime.parse(currentBreak['start_time']);
+          _breakStartTime = DateTime.parse(currentBreak['break_start']);
           _selectedBreakType = BreakType.values.firstWhere(
               (t) => t.toString().split('.').last == currentBreak['break_type'],
               orElse: () => BreakType.other);

@@ -135,39 +135,24 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
             display_name,
             logo_url,
             brand_color,
-            org_branding (
-              primary_color,
-              secondary_color,
-              accent_color,
-              logo_url,
-              logo_dark_url,
-              splash_screen_url,
-              use_custom_branding,
-              show_powered_by
-            )
+            primary_color
           ''').eq('id', orgId).maybeSingle();
 
       if (response != null) {
-        final brandingData = response['org_branding'] as List?;
-        final branding = brandingData != null && brandingData.isNotEmpty
-            ? brandingData[0] as Map<String, dynamic>
-            : null;
-
         final config = BrandingConfig(
           orgId: orgId,
           displayName: response['display_name'] as String? ??
               response['name'] as String?,
-          logoUrl: branding?['logo_url'] as String? ??
-              response['logo_url'] as String?,
-          primaryColor: branding?['primary_color'] as String? ??
+          logoUrl: response['logo_url'] as String?,
+          primaryColor: response['primary_color'] as String? ??
               response['brand_color'] as String? ??
               '#1976D2',
-          secondaryColor: branding?['secondary_color'] as String? ?? '#424242',
-          accentColor: branding?['accent_color'] as String? ?? '#FF5722',
-          logoDarkUrl: branding?['logo_dark_url'] as String?,
-          splashScreenUrl: branding?['splash_screen_url'] as String?,
-          useCustomBranding: branding?['use_custom_branding'] as bool? ?? false,
-          showPoweredBy: branding?['show_powered_by'] as bool? ?? true,
+          secondaryColor: '#424242',
+          accentColor: '#FF5722',
+          logoDarkUrl: null,
+          splashScreenUrl: null,
+          useCustomBranding: false,
+          showPoweredBy: true,
         );
 
         // Cache the configuration
@@ -249,15 +234,12 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
         }).eq('id', orgId);
       }
 
-      // Update branding
-      await client.from('org_branding').upsert({
-        'org_id': orgId,
-        if (primaryColor != null) 'primary_color': primaryColor,
-        if (secondaryColor != null) 'secondary_color': secondaryColor,
-        if (accentColor != null) 'accent_color': accentColor,
-        if (useCustomBranding != null) 'use_custom_branding': useCustomBranding,
-        if (showPoweredBy != null) 'show_powered_by': showPoweredBy,
-      });
+      // Update organization branding fields
+      final updates = <String, dynamic>{};
+      if (primaryColor != null) updates['primary_color'] = primaryColor;
+      if (updates.isNotEmpty) {
+        await client.from('organizations').update(updates).eq('id', orgId);
+      }
 
       // Reload branding
       await loadBranding();
@@ -288,12 +270,12 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
       final logoUrl =
           client.storage.from('brand-assets').getPublicUrl(fileName);
 
-      // Update branding record
-      await client.from('org_branding').upsert({
-        'org_id': orgId,
-        if (isDark) 'logo_dark_url': logoUrl,
-        if (!isDark) 'logo_url': logoUrl,
-      });
+      // Update organization logo
+      if (!isDark) {
+        await client.from('organizations').update({
+          'logo_url': logoUrl,
+        }).eq('id', orgId);
+      }
 
       // Update organization
       if (!isDark) {

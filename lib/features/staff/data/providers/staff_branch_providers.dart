@@ -36,24 +36,26 @@ final staffCollectionHistoryProvider =
         .split('T')
         .first;
 
+    // Step 1: Get loan IDs for this branch
+    final loans = await client
+        .from('loans')
+        .select('id')
+        .eq('branch_id', branchId);
+    final loanIds =
+        (loans as List).map((l) => l['id'] as String).toList();
+
+    if (loanIds.isEmpty) return [];
+
+    // Step 2: Fetch collections for those loans
     final response = await client
         .from('collections')
-        .select('''
-          *,
-          collector:staff_id!fk_collections_staff(full_name, id),
-          loan:loan_id(id, amount, branch_id, loan_number, customer_id)
-        ''')
+        .select('*')
         .eq('org_id', orgId)
+        .inFilter('loan_id', loanIds)
         .gte('collection_date', thirtyDaysAgo)
         .order('created_at', ascending: false);
 
-    final allCollections =
-        List<Map<String, dynamic>>.from(response as List<dynamic>);
-    // Filter to branch
-    return allCollections.where((c) {
-      final loan = c['loan'] as Map<String, dynamic>?;
-      return loan?['branch_id'] == branchId;
-    }).toList();
+    return List<Map<String, dynamic>>.from(response as List<dynamic>);
   } catch (e) {
     return [];
   }

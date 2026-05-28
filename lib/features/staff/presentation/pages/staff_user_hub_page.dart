@@ -905,7 +905,8 @@ class _MemberCard extends StatelessWidget {
     final isActive = status == 'active';
     final totalLoans = (member['total_loans'] as int?) ?? 0;
     final totalSavings = (member['total_savings'] as num?)?.toDouble() ?? 0;
-    final memberId = member['id'] as String;
+    final profileId = member['profile_id'] as String?;
+    final avatarUrl = member['avatar_url'] as String?;
     final f = NumberFormat.currency(locale: 'en_IN', symbol: '\u20B9', decimalDigits: 0);
 
     final avatarColor = isActive
@@ -914,14 +915,22 @@ class _MemberCard extends StatelessWidget {
 
     return GlassCard(
       padding: const EdgeInsets.all(14),
-      onTap: () => context.go('/staff/user-hub/$memberId'),
+      onTap: () {
+        if (profileId != null) {
+          context.go('/staff/user-hub/$profileId');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('This member has no linked user account')),
+          );
+        }
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar (gradient circle with initials + glow)
+              // Avatar (image or gradient circle with initials + glow)
               Container(
                 width: 52,
                 height: 52,
@@ -945,29 +954,21 @@ class _MemberCard extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        avatarColor.withValues(alpha: 0.95),
-                        avatarColor.withValues(alpha: 0.55),
-                      ],
-                    ),
                     border: Border.all(
                       color: theme.scaffoldBackgroundColor,
                       width: 2,
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: avatarUrl != null && avatarUrl.isNotEmpty
+                      ? Image.network(
+                          avatarUrl,
+                          fit: BoxFit.cover,
+                          width: 48,
+                          height: 48,
+                          errorBuilder: (_, __, ___) => _buildInitialAvatar(avatarColor, name),
+                        )
+                      : _buildInitialAvatar(avatarColor, name),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1045,6 +1046,34 @@ class _MemberCard extends StatelessWidget {
           delay: Duration(milliseconds: 40 * index.clamp(0, 15)),
         );
   }
+
+  Widget _buildInitialAvatar(Color avatarColor, String name) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            avatarColor.withValues(alpha: 0.95),
+            avatarColor.withValues(alpha: 0.55),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : '?',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _StatusBadge extends StatelessWidget {
@@ -1091,6 +1120,7 @@ class _StatusBadge extends StatelessWidget {
       ),
     );
   }
+
 }
 
 class _MutedChip extends StatelessWidget {

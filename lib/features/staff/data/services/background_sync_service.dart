@@ -121,7 +121,7 @@ class BackgroundSyncService {
           savings(
             id,
             account_number,
-            current_amount
+            balance
           )
         ''').limit(500);
 

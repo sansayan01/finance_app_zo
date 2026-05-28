@@ -31,6 +31,16 @@ enum _MapStyle {
 
 enum _MarkerFreshness { fresh, recent, stale, offline }
 
+// ─── Filter Option ──────────────────────────────────────────────────────────
+
+class _FilterOption {
+  final String? key;
+  final String label;
+  final IconData icon;
+  final Color? color;
+  const _FilterOption(this.key, this.label, this.icon, this.color);
+}
+
 // ─── Ripple Painter ─────────────────────────────────────────────────────────
 
 class _RipplePainter extends CustomPainter {
@@ -77,6 +87,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
   late AnimationController _rippleCtrl;
   late AnimationController _radarCtrl;
   late AnimationController _markerMoveCtrl;
+  late AnimationController _cameraAnimCtrl;
   late MapController _mapController;
 
   // ─── State ──────────────────────────────────────────────────────────────
@@ -88,6 +99,11 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
   bool _showBreadcrumbTrail = false;
   _MapStyle _currentStyle = _MapStyle.navNight;
   bool _isLoading = true;
+  String? _activityFilter;
+  LatLng? _flyFrom;
+  LatLng? _flyTo;
+  double _flyZoomFrom = 5;
+  double _flyZoomTarget = 16;
 
   @override
   void initState() {
@@ -114,9 +130,16 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
       duration: const Duration(milliseconds: 2000),
     );
 
+    _cameraAnimCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
     _initRealtime();
     _refreshTimer =
         Timer.periodic(const Duration(seconds: 30), (_) => _refreshSnapshot());
+
+    _cameraAnimCtrl.addListener(_onCameraAnimate);
   }
 
   // ─── Realtime Init ──────────────────────────────────────────────────────
@@ -170,10 +193,11 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
 
     if (active.length == 1) {
       final a = active.first;
-      _mapController.move(
+      _flyCameraTo(
         LatLng((a['latitude'] as num).toDouble(),
             (a['longitude'] as num).toDouble()),
-        14,
+        zoom: 14,
+        durationMs: 1000,
       );
       return;
     }
@@ -192,12 +216,33 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
     );
   }
 
+  void _flyCameraTo(LatLng dest, {double zoom = 16, int durationMs = 1200}) {
+    if (!_isMapReady) return;
+    _cameraAnimCtrl.stop();
+    _flyFrom = _mapController.camera.center;
+    _flyTo = dest;
+    _flyZoomFrom = _mapController.camera.zoom;
+    _flyZoomTarget = zoom;
+    _cameraAnimCtrl.duration = Duration(milliseconds: durationMs);
+    _cameraAnimCtrl.forward(from: 0);
+  }
+
+  void _onCameraAnimate() {
+    if (_flyFrom == null || _flyTo == null) return;
+    final t = Curves.easeInOut.transform(_cameraAnimCtrl.value);
+    final lat = _flyFrom!.latitude + (_flyTo!.latitude - _flyFrom!.latitude) * t;
+    final lng = _flyFrom!.longitude + (_flyTo!.longitude - _flyFrom!.longitude) * t;
+    final z = _flyZoomFrom + (_flyZoomTarget - _flyZoomFrom) * t;
+    _mapController.move(LatLng(lat, lng), z);
+  }
+
   void _focusAgent(Map<String, dynamic> agent) {
     if (!_isMapReady) return;
     final lat = (agent['latitude'] as num?)?.toDouble();
     final lng = (agent['longitude'] as num?)?.toDouble();
     if (lat == null || lng == null) return;
-    _mapController.move(LatLng(lat, lng), 16);
+    HapticFeedback.mediumImpact();
+    _flyCameraTo(LatLng(lat, lng), zoom: 17, durationMs: 1400);
     setState(() {
       _selectedStaffId = agent['staff_id'] as String?;
       _showBreadcrumbTrail = false;
@@ -219,6 +264,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
     _rippleCtrl.dispose();
     _radarCtrl.dispose();
     _markerMoveCtrl.dispose();
+    _cameraAnimCtrl.dispose();
     _mapController.dispose();
     _refreshTimer?.cancel();
     _channel?.unsubscribe();
@@ -410,7 +456,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
     );
   }
 
-  // ─── Speed-Colored Breadcrumb Trail ─────────────────────────────────────
+  // ─── Speed-Colored Breadcrumb Trail (Premium) ─────────────────────────
 
   List<Polyline> _buildSpeedColoredTrail(
       List<Map<String, dynamic>>? breadcrumbs) {
@@ -430,16 +476,8 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
           breadcrumbs[i]['activity_type'] as String? ?? 'idle';
 
       if (activity != currentActivity && segmentPoints.isNotEmpty) {
-        // Close current segment and start new one
         segmentPoints.add(point);
-        polylines.add(Polyline(
-          points: List.from(segmentPoints),
-          strokeWidth: 4,
-          color: _trailColorForActivity(currentActivity),
-          borderColor:
-              _trailColorForActivity(currentActivity).withValues(alpha: 0.2),
-          borderStrokeWidth: 6,
-        ));
+        _addTrailSegment(polylines, segmentPoints, currentActivity);
         segmentPoints = [point];
         currentActivity = activity;
       } else {
@@ -449,17 +487,45 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
 
     // Final segment
     if (segmentPoints.length > 1) {
+      _addTrailSegment(polylines, segmentPoints, currentActivity);
+    }
+
+    // Add glow underlay for the last segment (most recent)
+    if (segmentPoints.length > 1) {
+      final glowColor = _trailColorForActivity(currentActivity);
       polylines.add(Polyline(
         points: segmentPoints,
-        strokeWidth: 4,
-        color: _trailColorForActivity(currentActivity),
-        borderColor:
-            _trailColorForActivity(currentActivity).withValues(alpha: 0.2),
-        borderStrokeWidth: 6,
+        strokeWidth: 12,
+        color: glowColor.withValues(alpha: 0.08),
       ));
     }
 
     return polylines;
+  }
+
+  void _addTrailSegment(List<Polyline> polylines,
+      List<LatLng> points, String activity) {
+    final color = _trailColorForActivity(activity);
+    // Glow underlay
+    polylines.add(Polyline(
+      points: List.from(points),
+      strokeWidth: 10,
+      color: color.withValues(alpha: 0.12),
+    ));
+    // Main trail
+    polylines.add(Polyline(
+      points: List.from(points),
+      strokeWidth: 4,
+      color: color,
+      borderColor: color.withValues(alpha: 0.3),
+      borderStrokeWidth: 6,
+    ));
+    // Dashed accent overlay
+    polylines.add(Polyline(
+      points: List.from(points),
+      strokeWidth: 1.5,
+      color: Colors.white.withValues(alpha: 0.15),
+    ));
   }
 
   Color _trailColorForActivity(String activity) {
@@ -910,9 +976,13 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
 
   Widget _buildBottomSheet(
       ThemeData theme, bool isDark, List<Map<String, dynamic>> agentList) {
+    final filteredList = _activityFilter == null
+        ? agentList
+        : agentList.where((a) => _agentMatchesFilter(a)).toList();
+
     return AnimatedContainer(
       duration: 300.ms,
-      height: _showList ? 300 : 0,
+      height: _showList ? 340 : 0,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F1117) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -950,7 +1020,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
                     color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text('${agentList.length} total',
+                  child: Text('${filteredList.length} / ${agentList.length}',
                       style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.primary,
@@ -959,11 +1029,14 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
+          // Filter chips
+          _buildFilterChips(theme, isDark),
+          const SizedBox(height: 6),
           Expanded(
-            child: agentList.isEmpty
+            child: filteredList.isEmpty
                 ? Center(
-                    child: Text('No agents reporting location',
+                    child: Text('No agents match filter',
                         style: TextStyle(
                             color: theme.colorScheme.onSurface
                                 .withValues(alpha: 0.3),
@@ -972,15 +1045,106 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                     scrollDirection: Axis.horizontal,
-                    itemCount: agentList.length,
+                    itemCount: filteredList.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 12),
                     itemBuilder: (ctx, i) =>
-                        _buildAgentCard(theme, isDark, agentList[i], i),
+                        _buildAgentCard(theme, isDark, filteredList[i], i),
                   ),
           ),
         ],
       ),
     );
+  }
+
+  // ─── Filter Chips ─────────────────────────────────────────────────────
+
+  Widget _buildFilterChips(ThemeData theme, bool isDark) {
+    final filters = <_FilterOption>[
+      _FilterOption(null, 'All', Icons.all_inclusive_rounded, null),
+      _FilterOption('traveling', 'Moving', Icons.directions_car_rounded, AppColors.primary),
+      _FilterOption('collecting', 'Collect', Icons.payments_rounded, AppColors.accent),
+      _FilterOption('idle', 'Idle', Icons.coffee_rounded, Colors.grey),
+      _FilterOption('offline', 'Offline', Icons.cloud_off_rounded, null),
+    ];
+
+    return SizedBox(
+      height: 32,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: filters.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final f = filters[i];
+          final isSelected = _activityFilter == f.key;
+          final chipColor = f.color ?? AppColors.primary;
+
+          return GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() =>
+                  _activityFilter = isSelected ? null : f.key);
+            },
+            child: AnimatedContainer(
+              duration: 200.ms,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: [chipColor, chipColor.withValues(alpha: 0.8)],
+                      )
+                    : null,
+                color: isSelected
+                    ? null
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.black.withValues(alpha: 0.04)),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected
+                      ? chipColor
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    f.icon,
+                    size: 13,
+                    color: isSelected ? Colors.white : chipColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    f.label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? Colors.white : chipColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  bool _agentMatchesFilter(Map<String, dynamic> agent) {
+    if (_activityFilter == null) return true;
+    if (_activityFilter == 'offline') {
+      final recordedAt = agent['recorded_at'] != null
+          ? DateTime.tryParse(agent['recorded_at'] as String)
+          : null;
+      return _getMarkerFreshness(recordedAt) == _MarkerFreshness.offline;
+    }
+    final activity = agent['activity_type'] as String? ?? 'idle';
+    if (_activityFilter == 'idle') {
+      return activity == 'idle' || activity == 'resting';
+    }
+    return activity == _activityFilter;
   }
 
   // ─── Agent Card in Bottom Sheet ─────────────────────────────────────────
@@ -1000,12 +1164,14 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
     final isSelected = _selectedStaffId == agent['staff_id'];
     final freshness = _getMarkerFreshness(recordedAt);
     final freshnessColor = _freshnessColor(freshness);
+    final speed = (agent['speed'] as num?)?.toDouble() ?? 0;
+    final heading = (agent['heading'] as num?)?.toDouble() ?? 0;
 
     return GestureDetector(
       onTap: () => _focusAgent(agent),
       child: AnimatedContainer(
         duration: 250.ms,
-        width: 160,
+        width: 170,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isSelected
@@ -1091,7 +1257,32 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
                       ),
                   ],
                 ),
-                const Spacer(),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name.split(' ').first,
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : Colors.black87),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (speed > 0)
+                        Text(
+                          '${speed.toStringAsFixed(1)} km/h',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary.withValues(alpha: 0.7),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
                 if (battery != null)
                   Icon(
                     battery > 50
@@ -1107,15 +1298,6 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              name.split(' ').first,
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
             if (staffCode.isNotEmpty)
               Text(staffCode,
                   style: const TextStyle(
@@ -1132,19 +1314,30 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
             const Spacer(),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6)),
-              child: Text(
-                _activityLabel(activityType),
-                style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: color),
-              ),
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6)),
+                  child: Text(
+                    _activityLabel(activityType),
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: color),
+                  ),
+                ),
+                const Spacer(),
+                if (heading > 0)
+                  Icon(
+                    Icons.navigation_rounded,
+                    size: 12,
+                    color: color.withValues(alpha: 0.5),
+                  ),
+              ],
             ),
             if (recordedAt != null)
               Padding(
@@ -1245,6 +1438,8 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
         : null;
     final freshness = _getMarkerFreshness(recordedAt);
     final freshnessColor = _freshnessColor(freshness);
+    final speed = (agent['speed'] as num?)?.toDouble() ?? 0;
+    final heading = (agent['heading'] as num?)?.toDouble() ?? 0;
 
     showModalBottomSheet(
       context: context,
@@ -1391,7 +1586,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
 
                     const SizedBox(height: 16),
 
-                    // Info row: battery + last update + freshness
+                    // Info row: battery + speed + last update
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -1431,6 +1626,37 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
                                     : (isDark
                                         ? Colors.white70
                                         : Colors.black54),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                          ],
+                          if (speed > 0) ...[
+                            Icon(Icons.speed_rounded, size: 14,
+                                color: isDark ? Colors.white54 : Colors.black54),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${speed.toStringAsFixed(1)} km/h',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                          ],
+                          if (heading > 0) ...[
+                            Transform.rotate(
+                              angle: heading * (math.pi / 180),
+                              child: Icon(Icons.navigation_rounded, size: 14,
+                                  color: isDark ? Colors.white54 : Colors.black54),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${heading.toStringAsFixed(0)}°',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white54 : Colors.black45,
                               ),
                             ),
                             const SizedBox(width: 16),

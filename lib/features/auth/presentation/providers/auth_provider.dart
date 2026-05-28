@@ -349,11 +349,6 @@ final StateNotifierProvider<AuthNotifier, AuthState> authProvider =
   return AuthNotifier(repository);
 });
 
-final isAuthenticatedProvider = Provider<bool>((ref) {
-  final authState = ref.watch(authProvider);
-  return authState.status == AuthStatus.authenticated;
-});
-
 final Provider<UserModel?> currentUserProvider = Provider<UserModel?>((ref) {
   final authState = ref.watch(authProvider);
   return authState.user;

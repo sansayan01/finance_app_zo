@@ -11,13 +11,17 @@ class BrandingRepository {
   Future<OrgBrandingModel?> getBranding(String orgId) async {
     try {
       final response = await _client
-          .from('org_branding')
-          .select()
-          .eq('org_id', orgId)
+          .from('organizations')
+          .select('id, name, display_name, logo_url, primary_color, brand_color')
+          .eq('id', orgId)
           .maybeSingle();
 
       if (response == null) return null;
-      return OrgBrandingModel.fromJson(response);
+      return OrgBrandingModel.fromJson({
+        'org_id': response['id'],
+        'logo_url': response['logo_url'],
+        'primary_color': response['primary_color'] ?? response['brand_color'],
+      });
     } catch (e) {
       rethrow;
     }
@@ -31,14 +35,26 @@ class BrandingRepository {
     try {
       updates['updated_at'] = DateTime.now().toIso8601String();
 
+      final orgUpdates = <String, dynamic>{};
+      if (updates.containsKey('primary_color')) orgUpdates['primary_color'] = updates['primary_color'];
+      if (updates.containsKey('logo_url')) orgUpdates['logo_url'] = updates['logo_url'];
+      if (updates.containsKey('display_name')) orgUpdates['display_name'] = updates['display_name'];
+
+      if (orgUpdates.isNotEmpty) {
+        await _client.from('organizations').update(orgUpdates).eq('id', orgId);
+      }
+
       final response = await _client
-          .from('org_branding')
-          .update(updates)
-          .eq('org_id', orgId)
-          .select()
+          .from('organizations')
+          .select('id, name, display_name, logo_url, primary_color, brand_color')
+          .eq('id', orgId)
           .single();
 
-      return OrgBrandingModel.fromJson(response);
+      return OrgBrandingModel.fromJson({
+        'org_id': response['id'],
+        'logo_url': response['logo_url'],
+        'primary_color': response['primary_color'] ?? response['brand_color'],
+      });
     } catch (e) {
       rethrow;
     }
@@ -51,22 +67,26 @@ class BrandingRepository {
     List<int> bytes, {
     bool isDark = false,
   }) async {
-    final fileName = isDark ? 'logo_dark.png' : 'logo.png';
-    final storagePath = 'branding/$orgId/$fileName';
+    try {
+      final fileName = isDark ? 'logo_dark.png' : 'logo.png';
+      final storagePath = 'branding/$orgId/$fileName';
 
-    await _client.storage.from('organization-assets').uploadBinary(
-        storagePath, Uint8List.fromList(bytes),
-        fileOptions: const FileOptions(upsert: true));
+      await _client.storage.from('organization-assets').uploadBinary(
+          storagePath, Uint8List.fromList(bytes),
+          fileOptions: const FileOptions(upsert: true));
 
-    final publicUrl =
-        _client.storage.from('organization-assets').getPublicUrl(storagePath);
+      final publicUrl =
+          _client.storage.from('organization-assets').getPublicUrl(storagePath);
 
-    // Update branding record
-    await updateBranding(orgId, {
-      isDark ? 'logo_dark_url' : 'logo_url': publicUrl,
-    });
+      // Update branding record
+      await updateBranding(orgId, {
+        isDark ? 'logo_dark_url' : 'logo_url': publicUrl,
+      });
 
-    return publicUrl;
+      return publicUrl;
+    } catch (e) {
+      return '';
+    }
   }
 
   /// Set custom domain

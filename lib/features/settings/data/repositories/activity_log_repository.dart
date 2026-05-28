@@ -25,7 +25,7 @@ class ActivityLogRepository {
         'details': details,
         'type': type.name,
         'org_id': _orgId,
-        'timestamp': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
       // Silently fail logging in dev if table missing
@@ -37,7 +37,7 @@ class ActivityLogRepository {
         .from('activity_logs')
         .select()
         .eq('org_id', _orgId)
-        .order('timestamp', ascending: false)
+        .order('created_at', ascending: false)
         .limit(100);
 
     return (response as List).map((e) => ActivityLogModel.fromJson(e)).toList();

@@ -3,28 +3,28 @@ import 'package:equatable/equatable.dart';
 class ActivityLogModel extends Equatable {
   final String id;
   final String? staffId;
-  
+
   // Action details
   final String action;
   final String? entityType;
   final String? entityId;
-  
+
   // Metadata (flexible JSON)
   final Map<String, dynamic> metadata;
-  
+
   // GPS Location
   final double? gpsLat;
   final double? gpsLng;
   final String? gpsAddress;
-  
+
   // Device info
   final String? deviceId;
   final String? appVersion;
   final String? platform;
-  
+
   // Sync
   final SyncStatus syncStatus;
-  
+
   // Timestamps
   final DateTime createdAt;
 

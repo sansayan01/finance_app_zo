@@ -145,5 +145,3 @@ class _GlassCardState extends State<GlassCard>
     );
   }
 }
-
-

@@ -68,5 +68,80 @@
 	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face ID is used to authenticate and securely access your financial data.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>MicroFlow Pro uses your location to track field visits, record collection stops, and show agents on the live map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>MicroFlow Pro uses your location in the background to continuously share your position with your manager during field hours.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>MicroFlow Pro uses your location in the background to continuously share your position with your manager during field hours.</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+			<key>UIPrerenderedIcon</key>
+			<false/>
+		</dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>bank_blue</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon-BankBlue</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>savings_green</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon-SavingsGreen</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>micro_orange</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon-MicroOrange</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>trust_purple</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon-TrustPurple</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>field_teal</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon-FieldTeal</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>future_swarupnagar</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon-FutureSwarupnagar</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

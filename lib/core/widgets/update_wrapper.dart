@@ -13,15 +13,31 @@ class UpdateWrapper extends ConsumerStatefulWidget {
   ConsumerState<UpdateWrapper> createState() => _UpdateWrapperState();
 }
 
-class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
+class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
+    with WidgetsBindingObserver {
   StreamSubscription? _progressSub;
   DownloadProgress _downloadProgress = const DownloadProgress();
   bool _dialogShown = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _progressSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-check when app comes back to foreground
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(systemConfigProvider);
+    }
   }
 
   void _startListening(AppUpdateService service) {
@@ -39,9 +55,9 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    final updateCheck = ref.watch(updateCheckProvider);
+    final updateCheckAsync = ref.watch(updateCheckProvider);
 
-    return updateCheck.when(
+    return updateCheckAsync.when(
       data: (result) {
         if (result.status == UpdateStatus.noUpdate) {
           _dialogShown = false;
@@ -57,7 +73,9 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
         if (!_dialogShown) {
           _dialogShown = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showTelegramUpdateDialog(context, result, isForce);
+            if (mounted) {
+              _showTelegramUpdateDialog(context, result, isForce);
+            }
           });
         }
 
@@ -81,6 +99,14 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
+            // Listen to progress changes and rebuild dialog
+            _progressSub?.cancel();
+            _progressSub = service.progressStream.listen((p) {
+              if (ctx.mounted) {
+                setDialogState(() => _downloadProgress = p);
+              }
+            });
+
             final isDownloading =
                 _downloadProgress.state == DownloadState.downloading;
             final isCompleted =
@@ -104,8 +130,8 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: 0.1),
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: isCompleted
@@ -129,17 +155,14 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                             Text('$pct%',
                                                 style: TextStyle(
                                                     fontSize: 10,
-                                                    fontWeight:
-                                                        FontWeight.w700,
+                                                    fontWeight: FontWeight.w700,
                                                     color: theme
                                                         .colorScheme.primary)),
                                           ],
                                         ),
                                       )
-                                    : const Icon(
-                                        Icons.system_update_rounded,
-                                        size: 40,
-                                        color: Colors.blue),
+                                    : const Icon(Icons.system_update_rounded,
+                                        size: 40, color: Colors.blue),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -156,12 +179,14 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                       const SizedBox(height: 8),
                       Text(
                         isCompleted
-                            ? 'Tap install to apply the update.'
+                            ? 'Tap Install to apply the update.'
                             : isFailed
-                                ? _downloadProgress.error ?? 'Something went wrong.'
+                                ? _downloadProgress.error ??
+                                    'Something went wrong.'
                                 : isDownloading
-                                    ? 'Downloading the latest version ($pct%)'
-                                    : result.message ?? 'A new version is available.',
+                                    ? 'Downloading the latest version...'
+                                    : result.message ??
+                                        'A new version is available.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall
                             ?.copyWith(color: Colors.grey[600]),
@@ -173,13 +198,13 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 6,
-                            backgroundColor:
-                                theme.colorScheme.primary.withValues(alpha: 0.15),
+                            backgroundColor: theme.colorScheme.primary
+                                .withValues(alpha: 0.15),
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '$pct%  •  ${_formatSize(progress)}',
+                          '$pct%',
                           style: theme.textTheme.bodySmall
                               ?.copyWith(fontSize: 11, color: Colors.grey),
                         ),
@@ -190,8 +215,9 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                         child: isCompleted
                             ? ElevatedButton.icon(
                                 onPressed: () {
-                                  if (result.updateUrl != null) {
-                                    _startDownload(service, result.updateUrl!);
+                                  final path = _downloadProgress.filePath;
+                                  if (path != null) {
+                                    service.installFromPath(path);
                                   }
                                   Navigator.pop(ctx);
                                 },
@@ -201,7 +227,7 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12)),
                                 ),
-                                icon: const Icon(Icons.download_done_rounded,
+                                icon: const Icon(Icons.install_mobile_rounded,
                                     size: 18),
                                 label: const Text('Install Now'),
                               )
@@ -220,16 +246,22 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                           borderRadius:
                                               BorderRadius.circular(12)),
                                     ),
-                                    icon: const Icon(
-                                        Icons.refresh_rounded, size: 18),
+                                    icon: const Icon(Icons.refresh_rounded,
+                                        size: 18),
                                     label: const Text('Retry'),
                                   )
                                 : isDownloading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2.5),
+                                    ? OutlinedButton(
+                                        onPressed: () =>
+                                            service.cancelDownload(),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 14),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12)),
+                                        ),
+                                        child: const Text('Cancel'),
                                       )
                                     : ElevatedButton.icon(
                                         onPressed: () {
@@ -245,11 +277,10 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
                                               borderRadius:
                                                   BorderRadius.circular(12)),
                                         ),
-                                        icon: const Icon(
-                                            Icons.download_rounded, size: 18),
-                                        label: Text(isForce
-                                            ? 'Update Now'
-                                            : 'Update'),
+                                        icon: const Icon(Icons.download_rounded,
+                                            size: 18),
+                                        label: Text(
+                                            isForce ? 'Update Now' : 'Update'),
                                       ),
                       ),
                       if (!isForce && !isDownloading && !isCompleted) ...[
@@ -268,10 +299,6 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper> {
         );
       },
     );
-  }
-
-  String _formatSize(double fraction) {
-    return '${(fraction * 100).toInt()}%';
   }
 }
 

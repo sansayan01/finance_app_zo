@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 
@@ -11,20 +12,73 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/services/offline_queue_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../loans/presentation/providers/loan_providers.dart'
-    hide loansRepositoryProvider;
+import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../loans/presentation/widgets/collection_sheet.dart';
 
 import '../../../loans/data/models/emi_schedule_model.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../providers/staff_providers.dart';
 import '../../../savings/data/providers/savings_providers.dart';
+import '../../../staff/data/providers/live_tracking_providers.dart';
+import '../../../staff/presentation/widgets/live_tracking_toggle.dart';
 
-class StaffHomePage extends ConsumerWidget {
+class StaffHomePage extends ConsumerStatefulWidget {
   const StaffHomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StaffHomePage> createState() => _StaffHomePageState();
+}
+
+class _StaffHomePageState extends ConsumerState<StaffHomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybePromptTracking());
+  }
+
+  Future<void> _maybePromptTracking() async {
+    if (!mounted) return;
+    if (ref.read(isTrackingProvider)) return;
+
+    final userId = ref.read(currentUserProvider)?.id;
+    if (userId == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'tracking_prompt_shown_$userId';
+    if (prefs.getBool(key) == true) return;
+    if (!mounted) return;
+
+    final enable = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Share your live location?'),
+        content: const Text(
+          'Your manager will see your location on the live map while you\'re on duty. '
+          'You can turn this off any time from the toggle on your home screen.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Enable'),
+          ),
+        ],
+      ),
+    );
+
+    await prefs.setBool(key, true);
+
+    if (enable == true) {
+      await ref.read(startTrackingProvider)();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -50,7 +104,9 @@ class StaffHomePage extends ConsumerWidget {
               _buildHeader(context, ref),
               const SizedBox(height: 24),
               _buildWalletCard(context, ref),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              const LiveTrackingToggleWidget(),
+              const SizedBox(height: 8),
               _buildMissionCard(context, ref),
               const SizedBox(height: 24),
               _buildDueList(context, ref),
@@ -217,19 +273,23 @@ class StaffHomePage extends ConsumerWidget {
             ),
           ),
         const SizedBox(width: 12),
-        _buildGPSStatusChip(context),
+        _buildGPSStatusChip(context, ref),
       ],
     );
   }
 
-  Widget _buildGPSStatusChip(BuildContext context) {
+  Widget _buildGPSStatusChip(BuildContext context, WidgetRef ref) {
+    final isTracking = ref.watch(isTrackingProvider);
+    final active = isTracking;
+    final color = active ? AppColors.success : AppColors.error;
+    final label = active ? 'TRACKING ON' : 'TRACKING OFF';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.success.withValues(alpha: 0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: AppColors.success.withValues(alpha: 0.2),
+          color: color.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -239,16 +299,16 @@ class StaffHomePage extends ConsumerWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: AppColors.success,
+            decoration: BoxDecoration(
+              color: color,
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 6),
-          const Text(
-            'GPS ACTIVE',
+          Text(
+            label,
             style: TextStyle(
-              color: AppColors.success,
+              color: color,
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.5,
@@ -516,6 +576,7 @@ class StaffHomePage extends ConsumerWidget {
     // Fetch loan and EMI details, then show collection sheet
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
@@ -579,17 +640,19 @@ class StaffHomePage extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         bool isSubmitting = false;
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (sheetContext, setState) {
             return Container(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 
-                        MediaQuery.of(context).padding.bottom + 
-                        AppSpacing.xxl + 20,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom +
+                    MediaQuery.of(sheetContext).padding.bottom +
+                    AppSpacing.xxl +
+                    20,
                 left: 20,
                 right: 20,
                 top: 24,
@@ -768,8 +831,8 @@ class StaffHomePage extends ConsumerWidget {
                                   item.savingsId!,
                                   amount,
                                 );
-                                if (context.mounted) {
-                                  Navigator.pop(context);
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
                                   _showSuccessFeedback(
                                       context,
                                       'Deposit Recorded',
@@ -789,14 +852,14 @@ class StaffHomePage extends ConsumerWidget {
                                   'member_name': item.memberName,
                                   'timestamp': DateTime.now().toIso8601String(),
                                 });
-                                if (context.mounted) {
-                                  Navigator.pop(context);
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
                                   _showSuccessFeedback(context, 'Saved Offline',
                                       'Will sync automatically when online.');
                                 }
                                 ref.invalidate(offlineQueueCountProvider);
                               }
-                              if (context.mounted) {
+                              if (sheetContext.mounted) {
                                 setState(() => isSubmitting = false);
                               }
                             },
@@ -937,6 +1000,37 @@ class StaffHomePage extends ConsumerWidget {
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickActionCard(
+                icon: Icons.map_rounded,
+                label: 'Route Map',
+                color: const Color(0xFF00BFA5),
+                onTap: () => context.push('/staff/map'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickActionCard(
+                icon: Icons.trending_up_rounded,
+                label: 'Analytics',
+                color: AppColors.accent,
+                onTap: () => context.push('/staff/analytics'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickActionCard(
+                icon: Icons.settings_rounded,
+                label: 'Settings',
+                color: Colors.grey,
+                onTap: () => context.push('/staff/settings'),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -948,6 +1042,7 @@ class StaffHomePage extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => Container(
@@ -964,20 +1059,41 @@ class StaffHomePage extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: theme.dividerColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
+            Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: theme.dividerColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            const Text('Cash Vault', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+            const Text('Cash Vault',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
             const SizedBox(height: 32),
-            _buildVaultInfoRow('Cash in Hand', AppFormatters.formatCurrency(wallet?.cashInHand ?? 0), AppColors.success, theme),
+            _buildVaultInfoRow(
+                'Cash in Hand',
+                AppFormatters.formatCurrency(wallet?.cashInHand ?? 0),
+                AppColors.success,
+                theme),
             const SizedBox(height: 16),
-            _buildVaultInfoRow('Digital Today', AppFormatters.formatCurrency(wallet?.totalDigitalCollected ?? 0), AppColors.primary, theme),
+            _buildVaultInfoRow(
+                'Digital Today',
+                AppFormatters.formatCurrency(
+                    wallet?.totalDigitalCollected ?? 0),
+                AppColors.primary,
+                theme),
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 24),
-            const Text('Handover to Branch', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('Handover to Branch',
+                style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
-            Text('Generate this QR for the Branch Manager to scan and confirm your cash deposit.', 
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6))),
+            Text(
+                'Generate this QR for the Branch Manager to scan and confirm your cash deposit.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.6))),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
@@ -985,7 +1101,8 @@ class StaffHomePage extends ConsumerWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: Icon(Icons.qr_code_2_rounded, size: 200, color: Colors.black.withValues(alpha: 0.8)),
+              child: Icon(Icons.qr_code_2_rounded,
+                  size: 200, color: Colors.black.withValues(alpha: 0.8)),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -1002,12 +1119,15 @@ class StaffHomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildVaultInfoRow(String label, String value, Color color, ThemeData theme) {
+  Widget _buildVaultInfoRow(
+      String label, String value, Color color, ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: theme.textTheme.bodyMedium),
-        Text(value, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, color: color)),
+        Text(value,
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w900, color: color)),
       ],
     );
   }
@@ -1092,10 +1212,12 @@ class StaffHomePage extends ConsumerWidget {
     final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
       builder: (ctx) {
         return Container(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xxl + 24,
+            bottom: MediaQuery.of(ctx).padding.bottom + AppSpacing.xxl + 24,
             left: 24,
             right: 24,
             top: 24,

@@ -131,7 +131,8 @@ final biometricAvailableProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Available biometrics provider
-final availableBiometricsProvider = FutureProvider<List<BiometricType>>((ref) async {
+final availableBiometricsProvider =
+    FutureProvider<List<BiometricType>>((ref) async {
   final service = ref.watch(securityServiceProvider);
   return service.getAvailableBiometrics();
 });

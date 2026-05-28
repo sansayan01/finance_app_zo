@@ -15,11 +15,5 @@ final allLoansProvider = FutureProvider<List<LoanModel>>((ref) async {
   return repository.getAllLoans();
 });
 
-final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
-  final repository = ref.watch(loansRepositoryProvider);
-  return repository.getLoanSummary();
-});
-
 // Alias for backward compatibility
 final loansProvider = allLoansProvider;
-

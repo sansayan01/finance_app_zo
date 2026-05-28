@@ -92,7 +92,8 @@ class _InvoiceCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        invoice.invoiceNumber ?? 'Invoice #${invoice.id.substring(0, 8)}',
+                        invoice.invoiceNumber ??
+                            'Invoice #${invoice.id.substring(0, 8)}',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -130,7 +131,8 @@ class _InvoiceCard extends StatelessWidget {
               if (invoice.isOverdue) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.red[50],
                     borderRadius: BorderRadius.circular(4),
@@ -191,6 +193,7 @@ class _InvoiceCard extends StatelessWidget {
   void _showInvoiceDetail(BuildContext context, InvoiceModel invoice) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) => DraggableScrollableSheet(
         initialChildSize: 0.7,
@@ -208,8 +211,8 @@ class _InvoiceCard extends StatelessWidget {
                   Text(
                     'Invoice Details',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(ctx),
@@ -218,57 +221,62 @@ class _InvoiceCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               // Invoice info
               _detailRow('Invoice Number', invoice.invoiceNumber ?? '-'),
               _detailRow('Status', invoice.statusDisplay),
               _detailRow('Amount', invoice.formattedAmount),
-              _detailRow('Due Date', DateFormat('MMMM d, yyyy').format(invoice.dueDate)),
+              _detailRow('Due Date',
+                  DateFormat('MMMM d, yyyy').format(invoice.dueDate)),
               if (invoice.paidAt != null)
-                _detailRow('Paid On', DateFormat('MMMM d, yyyy').format(invoice.paidAt!)),
-              
+                _detailRow('Paid On',
+                    DateFormat('MMMM d, yyyy').format(invoice.paidAt!)),
+
               const Divider(height: 32),
-              
+
               // Line items
               if (invoice.lineItems.isNotEmpty) ...[
                 Text(
                   'Items',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 const SizedBox(height: 12),
                 ...invoice.lineItems.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item.description),
-                            if (item.period != null)
-                              Text(
-                                item.period!,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                          ],
-                        ),
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item.description),
+                                if (item.period != null)
+                                  Text(
+                                    item.period!,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Colors.grey[600],
+                                        ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '₹${item.amount.toInt()}',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '₹${item.amount.toInt()}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                )),
+                    )),
               ],
-              
+
               const SizedBox(height: 24),
-              
+
               // Actions
               Row(
                 children: [

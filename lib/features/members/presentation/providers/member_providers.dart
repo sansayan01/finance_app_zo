@@ -21,4 +21,3 @@ final memberSummaryProvider = FutureProvider<MemberSummary>((ref) async {
   final repository = ref.watch(membersRepositoryProvider);
   return repository.getMemberSummary();
 });
-

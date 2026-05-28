@@ -3,14 +3,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/presentation/pages/branch_management_page.dart';
 
-final adminOrgSettingsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final adminOrgSettingsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final client = ref.read(supabaseClientProvider);
   final orgId = ref.read(currentOrgIdOrThrowProvider);
   return client.from('organizations').select().eq('id', orgId).single();
@@ -20,7 +22,8 @@ class AdminOrgSettingsPage extends ConsumerStatefulWidget {
   const AdminOrgSettingsPage({super.key});
 
   @override
-  ConsumerState<AdminOrgSettingsPage> createState() => _AdminOrgSettingsPageState();
+  ConsumerState<AdminOrgSettingsPage> createState() =>
+      _AdminOrgSettingsPageState();
 }
 
 class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
@@ -31,9 +34,9 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
   final _membersCtrl = TextEditingController();
   final _primaryColorCtrl = TextEditingController();
   final _accentColorCtrl = TextEditingController();
-  
+
   String? _logoUrl;
-  File? _selectedLogo;
+  Uint8List? _selectedLogoBytes;
   bool _isSaving = false;
   bool _isLoading = true;
   bool _isUploadingLogo = false;
@@ -74,36 +77,49 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     );
 
     if (pickedFile != null) {
-      setState(() => _selectedLogo = File(pickedFile.path));
+      final bytes = await pickedFile.readAsBytes();
+      setState(() => _selectedLogoBytes = bytes);
       await _uploadLogo();
     }
   }
 
   Future<void> _uploadLogo() async {
-    if (_selectedLogo == null) return;
+    if (_selectedLogoBytes == null) return;
 
     setState(() => _isUploadingLogo = true);
     try {
       final client = ref.read(supabaseClientProvider);
       final orgId = ref.read(currentOrgIdOrThrowProvider);
-      final fileName = 'org_logos/$orgId-${DateTime.now().millisecondsSinceEpoch}.png';
+      final fileName =
+          'org_logos/$orgId-${DateTime.now().millisecondsSinceEpoch}.png';
 
-      await client.storage.from('organization-assets').upload(fileName, _selectedLogo!);
-      
-      final publicUrl = client.storage.from('organization-assets').getPublicUrl(fileName);
-      
+      await client.storage
+          .from('organization-assets')
+          .uploadBinary(
+            fileName,
+            _selectedLogoBytes!,
+            fileOptions: const FileOptions(
+              contentType: 'image/png',
+              upsert: true,
+            ),
+          );
+
+      final publicUrl =
+          client.storage.from('organization-assets').getPublicUrl(fileName);
+
       await client.from('organizations').update({
         'logo_url': publicUrl,
       }).eq('id', orgId);
 
       setState(() => _logoUrl = publicUrl);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Logo uploaded successfully'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
       }
     } catch (e) {
@@ -112,7 +128,8 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           content: Text('Error uploading logo: $e'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
       }
     } finally {
@@ -127,7 +144,10 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
       final orgId = ref.read(currentOrgIdOrThrowProvider);
       await client.from('organizations').update({
         'name': _nameCtrl.text.trim(),
-        'slug': _slugCtrl.text.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
+        'slug': _slugCtrl.text
+            .trim()
+            .toLowerCase()
+            .replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
         'max_branches': int.tryParse(_branchesCtrl.text) ?? 5,
         'max_staff': int.tryParse(_staffCtrl.text) ?? 20,
         'max_members': int.tryParse(_membersCtrl.text) ?? 500,
@@ -138,7 +158,8 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Settings saved successfully'),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
         Navigator.pop(context);
       }
@@ -147,7 +168,8 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Error: $e'),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
       }
     } finally {
@@ -215,10 +237,17 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 20,
+                color: isDark ? Colors.white : const Color(0xFF0F172A)),
             onPressed: () => Navigator.pop(context),
           ),
-          Expanded(child: Text('Organization Settings', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF0F172A)))),
+          Expanded(
+              child: Text('Organization Settings',
+                  style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A)))),
           GestureDetector(
             onTap: () async {
               await ref.read(authProvider.notifier).signOut();
@@ -235,7 +264,11 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                 children: [
                   Icon(Icons.logout_rounded, size: 14, color: AppColors.error),
                   const SizedBox(width: 4),
-                  Text('Sign Out', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.error)),
+                  Text('Sign Out',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.error)),
                 ],
               ),
             ),
@@ -249,9 +282,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.8),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,27 +297,42 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           Row(
             children: [
               Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                  gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.accent]),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.business_rounded, color: Colors.white, size: 22),
+                child: const Icon(Icons.business_rounded,
+                    color: Colors.white, size: 22),
               ),
               const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Organization Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                  Text('Update your organization details', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+                  Text('Organization Profile',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A))),
+                  Text('Update your organization details',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.grey.shade500
+                              : Colors.grey.shade600)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 20),
-          _buildField('Organization Name', _nameCtrl, Icons.business_rounded, isDark),
+          _buildField(
+              'Organization Name', _nameCtrl, Icons.business_rounded, isDark),
           const SizedBox(height: 14),
-          _buildField('Slug', _slugCtrl, Icons.alternate_email_rounded, isDark, hint: 'Used in URLs: my-mfi'),
+          _buildField('Slug', _slugCtrl, Icons.alternate_email_rounded, isDark,
+              hint: 'Used in URLs: my-mfi'),
         ],
       ),
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
@@ -289,9 +342,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.8),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,19 +357,32 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           Row(
             children: [
               Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppColors.accent, AppColors.pink]),
+                  gradient: LinearGradient(
+                      colors: [AppColors.accent, AppColors.pink]),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.image_rounded, color: Colors.white, size: 22),
+                child: const Icon(Icons.image_rounded,
+                    color: Colors.white, size: 22),
               ),
               const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Organization Logo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                  Text('Upload your brand logo (512x512 recommended)', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+                  Text('Organization Logo',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A))),
+                  Text('Upload your brand logo (512x512 recommended)',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.grey.shade500
+                              : Colors.grey.shade600)),
                 ],
               ),
             ],
@@ -324,19 +395,27 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
+                  color: isDark
+                      ? const Color(0xFF1F2532)
+                      : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 2),
-                  image: _selectedLogo != null
-                      ? DecorationImage(image: FileImage(_selectedLogo!), fit: BoxFit.cover)
+                  border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      width: 2),
+                  image: _selectedLogoBytes != null
+                      ? DecorationImage(
+                          image: MemoryImage(_selectedLogoBytes!), fit: BoxFit.cover)
                       : _logoUrl != null
-                          ? DecorationImage(image: NetworkImage(_logoUrl!), fit: BoxFit.cover)
+                          ? DecorationImage(
+                              image: NetworkImage(_logoUrl!), fit: BoxFit.cover)
                           : null,
                 ),
                 child: _isUploadingLogo
                     ? const Center(child: CircularProgressIndicator())
-                    : _selectedLogo == null && _logoUrl == null
-                        ? Icon(Icons.add_photo_alternate_rounded, size: 40, color: AppColors.primary.withValues(alpha: 0.5))
+                    : _selectedLogoBytes == null && _logoUrl == null
+                        ? Icon(Icons.add_photo_alternate_rounded,
+                            size: 40,
+                            color: AppColors.primary.withValues(alpha: 0.5))
                         : null,
               ),
             ),
@@ -345,7 +424,9 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           Center(
             child: Text(
               'Tap to upload logo',
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
             ),
           ),
         ],
@@ -357,9 +438,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.8),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,19 +453,32 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           Row(
             children: [
               Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppColors.warning, AppColors.orange]),
+                  gradient: LinearGradient(
+                      colors: [AppColors.warning, AppColors.orange]),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.palette_rounded, color: Colors.white, size: 22),
+                child: const Icon(Icons.palette_rounded,
+                    color: Colors.white, size: 22),
               ),
               const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Brand Colors', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                  Text('Customize your brand appearance', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+                  Text('Brand Colors',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A))),
+                  Text('Customize your brand appearance',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.grey.shade500
+                              : Colors.grey.shade600)),
                 ],
               ),
             ],
@@ -391,16 +490,25 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Primary Color', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.grey.shade300 : Colors.grey.shade700)),
+                    Text('Primary Color',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? Colors.grey.shade300
+                                : Colors.grey.shade700)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         Container(
-                          width: 40, height: 40,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
                             color: _parseColor(_primaryColorCtrl.text),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                            border: Border.all(
+                                color:
+                                    isDark ? Colors.white24 : Colors.black12),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -410,11 +518,20 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                             decoration: InputDecoration(
                               hintText: '#6366F1',
                               filled: true,
-                              fillColor: isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              fillColor: isDark
+                                  ? const Color(0xFF1F2532)
+                                  : const Color(0xFFF1F5F9),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                             ),
-                            style: TextStyle(fontSize: 14, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A)),
                           ),
                         ),
                       ],
@@ -427,16 +544,25 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Accent Color', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.grey.shade300 : Colors.grey.shade700)),
+                    Text('Accent Color',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? Colors.grey.shade300
+                                : Colors.grey.shade700)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         Container(
-                          width: 40, height: 40,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
                             color: _parseColor(_accentColorCtrl.text),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                            border: Border.all(
+                                color:
+                                    isDark ? Colors.white24 : Colors.black12),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -446,11 +572,20 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                             decoration: InputDecoration(
                               hintText: '#8B5CF6',
                               filled: true,
-                              fillColor: isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              fillColor: isDark
+                                  ? const Color(0xFF1F2532)
+                                  : const Color(0xFFF1F5F9),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                             ),
-                            style: TextStyle(fontSize: 14, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A)),
                           ),
                         ),
                       ],
@@ -469,9 +604,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.8),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,39 +619,59 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           Row(
             children: [
               Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppColors.success, AppColors.teal]),
+                  gradient: LinearGradient(
+                      colors: [AppColors.success, AppColors.teal]),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.settings_rounded, color: Colors.white, size: 22),
+                child: const Icon(Icons.settings_rounded,
+                    color: Colors.white, size: 22),
               ),
               const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Quick Actions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                  Text('Manage organization settings', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+                  Text('Quick Actions',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A))),
+                  Text('Manage organization settings',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.grey.shade500
+                              : Colors.grey.shade600)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 20),
-          _buildActionTile(Icons.business_rounded, 'Manage Branches', 'Create and manage branch offices', isDark, () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage()));
+          _buildActionTile(Icons.business_rounded, 'Manage Branches',
+              'Create and manage branch offices', isDark, () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const BranchManagementPage()));
           }),
           const SizedBox(height: 12),
-          _buildActionTile(Icons.people_rounded, 'Manage Users', 'Create admins, managers, and staff', isDark, () {
+          _buildActionTile(Icons.people_rounded, 'Manage Users',
+              'Create admins, managers, and staff', isDark, () {
             context.push('/admin/users');
           }),
           const SizedBox(height: 12),
-          _buildActionTile(Icons.security_rounded, 'Security Settings', 'Configure access controls', isDark, () {}),
+          _buildActionTile(Icons.security_rounded, 'Security Settings',
+              'Configure access controls', isDark, () {}),
         ],
       ),
     ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
 
-  Widget _buildActionTile(IconData icon, String title, String subtitle, bool isDark, VoidCallback onTap) {
+  Widget _buildActionTile(IconData icon, String title, String subtitle,
+      bool isDark, VoidCallback onTap) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -520,7 +680,9 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.black.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -531,12 +693,25 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                    Text(subtitle, style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                    Text(title,
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A))),
+                    Text(subtitle,
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade600)),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, size: 20, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600),
+              Icon(Icons.chevron_right_rounded,
+                  size: 20,
+                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade600),
             ],
           ),
         ),
@@ -548,9 +723,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2E).withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.8),
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,19 +738,32 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           Row(
             children: [
               Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppColors.error, AppColors.pink]),
+                  gradient:
+                      LinearGradient(colors: [AppColors.error, AppColors.pink]),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.speed_rounded, color: Colors.white, size: 22),
+                child: const Icon(Icons.speed_rounded,
+                    color: Colors.white, size: 22),
               ),
               const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Plan Limits', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                  Text('Set maximum limits for your organization', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600)),
+                  Text('Plan Limits',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A))),
+                  Text('Set maximum limits for your organization',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.grey.shade500
+                              : Colors.grey.shade600)),
                 ],
               ),
             ],
@@ -578,11 +771,17 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _buildLimitField('Max Branches', _branchesCtrl, Icons.business_rounded, isDark)),
+              Expanded(
+                  child: _buildLimitField('Max Branches', _branchesCtrl,
+                      Icons.business_rounded, isDark)),
               const SizedBox(width: 12),
-              Expanded(child: _buildLimitField('Max Staff', _staffCtrl, Icons.people_rounded, isDark)),
+              Expanded(
+                  child: _buildLimitField(
+                      'Max Staff', _staffCtrl, Icons.people_rounded, isDark)),
               const SizedBox(width: 12),
-              Expanded(child: _buildLimitField('Max Members', _membersCtrl, Icons.person_rounded, isDark)),
+              Expanded(
+                  child: _buildLimitField('Max Members', _membersCtrl,
+                      Icons.person_rounded, isDark)),
             ],
           ),
         ],
@@ -598,7 +797,9 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
     }
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, IconData icon, bool isDark, {String? hint}) {
+  Widget _buildField(
+      String label, TextEditingController ctrl, IconData icon, bool isDark,
+      {String? hint}) {
     return TextField(
       controller: ctrl,
       decoration: InputDecoration(
@@ -607,13 +808,16 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
         prefixIcon: Icon(icon, size: 20),
         filled: true,
         fillColor: isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none),
       ),
       style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
     );
   }
 
-  Widget _buildLimitField(String label, TextEditingController ctrl, IconData icon, bool isDark) {
+  Widget _buildLimitField(
+      String label, TextEditingController ctrl, IconData icon, bool isDark) {
     return TextField(
       controller: ctrl,
       keyboardType: TextInputType.number,
@@ -622,10 +826,14 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
         prefixIcon: Icon(icon, size: 18),
         filled: true,
         fillColor: isDark ? const Color(0xFF1F2532) : const Color(0xFFF1F5F9),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       ),
-      style: TextStyle(fontSize: 14, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+      style: TextStyle(
+          fontSize: 14, color: isDark ? Colors.white : const Color(0xFF0F172A)),
     );
   }
 
@@ -638,14 +846,19 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
         child: _isSaving
-            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-            : const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: Colors.white))
+            : const Text('Save Changes',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
       ),
     ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
   }
 }
-

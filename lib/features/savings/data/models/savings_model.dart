@@ -10,6 +10,11 @@ class SavingsModel {
   final DateTime maturityDate;
   final DateTime createdAt;
   final String status;
+  final String collectionType;
+  final double prematurePenalty;
+  final int totalInstallments;
+  final double maturityAmount;
+  final DateTime? nextDueDate;
 
   SavingsModel({
     required this.id,
@@ -23,6 +28,11 @@ class SavingsModel {
     required this.maturityDate,
     required this.createdAt,
     this.status = 'active',
+    this.collectionType = 'monthly',
+    this.prematurePenalty = 2.0,
+    this.totalInstallments = 12,
+    this.maturityAmount = 0.0,
+    this.nextDueDate,
   });
 
   factory SavingsModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +48,13 @@ class SavingsModel {
       maturityDate: DateTime.parse(json['maturity_date'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       status: json['status'] as String? ?? 'active',
+      collectionType: json['collection_type'] as String? ?? 'monthly',
+      prematurePenalty: (json['premature_penalty'] as num?)?.toDouble() ?? 2.0,
+      totalInstallments: (json['total_installments'] as num?)?.toInt() ?? 12,
+      maturityAmount: (json['maturity_amount'] as num?)?.toDouble() ?? 0.0,
+      nextDueDate: json['next_due_date'] != null
+          ? DateTime.tryParse(json['next_due_date'] as String)
+          : null,
     );
   }
 
@@ -54,6 +71,10 @@ class SavingsModel {
       'maturity_date': maturityDate.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'status': status,
+      'collection_type': collectionType,
+      'premature_penalty': prematurePenalty,
+      'total_installments': totalInstallments,
+      'maturity_amount': maturityAmount,
     };
   }
 }

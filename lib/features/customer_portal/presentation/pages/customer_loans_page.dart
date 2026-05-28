@@ -1,224 +1,433 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import '../../data/providers/customer_portal_providers.dart';
-// import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/shimmer_card.dart';
+import '../../data/providers/customer_loans_providers.dart';
+import '../../data/models/customer_loan_model.dart';
+import '../widgets/customer_loan_card.dart';
+import '../widgets/customer_empty_state.dart';
 
-class CustomerLoansPage extends ConsumerWidget {
+class CustomerLoansPage extends ConsumerStatefulWidget {
   const CustomerLoansPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final memberId = ref.watch(currentMemberIdProvider);
-    final loansAsync = memberId != null
-        ? ref.watch(customerLoansProvider(memberId))
-        : null;
+  ConsumerState<CustomerLoansPage> createState() => _CustomerLoansPageState();
+}
 
-    // final theme = Theme.of(context);
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
+    with TickerProviderStateMixin {
+  String _filter = 'all';
+  late final AnimationController _staggerController;
+  late final AnimationController _headerController;
+  late final Animation<double> _headerFade;
+  late final Animation<Offset> _headerSlide;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Loans'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () => _showFilterOptions(context),
-          ),
-        ],
+  double _previousOutstanding = 0;
+  double _targetOutstanding = 0;
+
+  static const _filterOptions = [
+    ('all', 'All', Icons.layers_rounded),
+    ('active', 'Active', Icons.play_circle_fill_rounded),
+    ('completed', 'Closed', Icons.check_circle_rounded),
+    ('overdue', 'Overdue', Icons.warning_amber_rounded),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _staggerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _headerFade = CurvedAnimation(
+      parent: _headerController,
+      curve: Curves.easeOutCubic,
+    );
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _headerController,
+      curve: Curves.easeOutCubic,
+    ));
+    _headerController.forward();
+  }
+
+  @override
+  void dispose() {
+    _staggerController.dispose();
+    _headerController.dispose();
+    super.dispose();
+  }
+
+  void _scheduleStagger(double outstanding) {
+    if (_targetOutstanding == outstanding && _staggerController.value > 0) {
+      return;
+    }
+    _previousOutstanding = _targetOutstanding;
+    _targetOutstanding = outstanding;
+    _staggerController.reset();
+    Future.delayed(const Duration(milliseconds: 180), () {
+      if (mounted) _staggerController.forward();
+    });
+  }
+
+  /// Indian-style currency: ₹12,34,567 / ₹1.23 L / ₹1.23 Cr
+  String _formatCurrency(double value) {
+    if (value.abs() >= 10000000) {
+      return '₹${(value / 10000000).toStringAsFixed(2)} Cr';
+    }
+    if (value.abs() >= 100000) {
+      return '₹${(value / 100000).toStringAsFixed(2)} L';
+    }
+    final n = value.round();
+    final s = n.toString();
+    if (s.length <= 3) return '₹$s';
+    final last3 = s.substring(s.length - 3);
+    final rest = s.substring(0, s.length - 3);
+    final buf = StringBuffer();
+    for (int i = 0; i < rest.length; i++) {
+      buf.write(rest[i]);
+      final remaining = rest.length - i - 1;
+      if (remaining > 0 && remaining % 2 == 0) buf.write(',');
+    }
+    return '₹${buf.toString()},$last3';
+  }
+
+  DateTime? _nextEmiDate(List<CustomerLoanModel> loans) {
+    final now = DateTime.now();
+    final upcoming = loans
+        .where((l) => l.status == 'active' && l.firstEmiDate != null)
+        .map((l) => l.firstEmiDate!)
+        .where((d) => d.isAfter(now.subtract(const Duration(days: 1))))
+        .toList()
+      ..sort((a, b) => a.compareTo(b));
+    return upcoming.isEmpty ? null : upcoming.first;
+  }
+
+  String _formatLongDate(DateTime d) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final loansAsync = ref.watch(customerLoansProvider);
+
+    final headerGradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF1A1F3A), Color(0xFF151A30)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : AppColors.primaryGradient;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
       ),
-      body: loansAsync == null
-          ? const Center(child: Text('Please login to continue'))
-          : loansAsync.when(
-              data: (loans) => loans.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.account_balance_wallet_outlined, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('No active loans'),
-                          SizedBox(height: 8),
-                          Text('Apply for a loan from your branch'),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: loans.length,
-                      itemBuilder: (context, index) {
-                        final loan = loans[index];
-                        return _buildLoanCard(context, ref, loan, currencyFormat)
-                            .animate()
-                            .fadeIn(duration: 300.ms, delay: Duration(milliseconds: index * 50))
-                            .slideX(begin: 0.1, end: 0);
-                      },
-                    ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Error: $error')),
-            ),
-      bottomNavigationBar: _buildBottomNav(context, 1),
+      child: Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      extendBody: true,
+      body: AuroraBackground(
+        child: loansAsync.when(
+          loading: () => _buildLoadingState(theme, isDark, headerGradient),
+          error: (e, _) => _buildErrorState(theme, isDark, e, headerGradient),
+          data: (loans) {
+            final summary = CustomerLoanSummary.fromLoans(loans);
+            final filtered = _filterLoans(loans);
+            final nextEmi = _nextEmiDate(loans);
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scheduleStagger(summary.totalOutstanding);
+            });
+
+            return _buildContent(
+              theme,
+              isDark,
+              headerGradient,
+              summary,
+              filtered,
+              nextEmi,
+            );
+          },
+        ),
+      ),
+      ),
     );
   }
 
-  Widget _buildLoanCard(BuildContext context, WidgetRef ref, dynamic loan, NumberFormat currencyFormat) {
-    final theme = Theme.of(context);
-    final progress = ((loan['paid_amount'] as num?)?.toDouble() ?? 0.0) / ((loan['amount'] as num?)?.toDouble() ?? 1.0);
-    final nextDueDate = DateTime.tryParse(loan['first_emi_date'] ?? '');
-    final isOverdue = nextDueDate?.isBefore(DateTime.now()) ?? false;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isOverdue ? Colors.red.withValues(alpha: 0.5) : theme.colorScheme.outlineVariant,
+  Widget _buildContent(
+    ThemeData theme,
+    bool isDark,
+    LinearGradient headerGradient,
+    CustomerLoanSummary summary,
+    List<CustomerLoanModel> filtered,
+    DateTime? nextEmi,
+  ) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(customerLoansProvider);
+      },
+      color: AppColors.primary,
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
         ),
+        slivers: [
+          SliverToBoxAdapter(
+            child: _buildGradientHeader(
+              theme,
+              isDark,
+              headerGradient,
+              summary,
+              nextEmi,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _headerFade,
+              child: _buildFilterChips(theme, isDark),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Your Loans',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimaryLight,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${filtered.length} ${filtered.length == 1 ? 'loan' : 'loans'}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: (isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimaryLight)
+                          .withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (filtered.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: CustomerEmptyState(
+                icon: _filterIcon,
+                title: 'No Loans Found',
+                subtitle: _filterEmptyMessage,
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, 0, AppSpacing.md, 110,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final delay = (index * 0.07).clamp(0.0, 0.9);
+                    return AnimatedBuilder(
+                      animation: _staggerController,
+                      builder: (context, child) {
+                        final progress = ((_staggerController.value - delay) /
+                                (1 - delay))
+                            .clamp(0.0, 1.0);
+                        final eased = Curves.easeOutCubic.transform(progress);
+                        return Opacity(
+                          opacity: eased,
+                          child: Transform.translate(
+                            offset: Offset(0, 24 * (1 - eased)),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: CustomerLoanCard(
+                          loan: filtered[index],
+                          onTap: () => context.push(
+                            '/customer/loans/${filtered[index].id}',
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: filtered.length,
+                ),
+              ),
+            ),
+        ],
       ),
-      child: InkWell(
-        onTap: () => context.push('/customer/loans/${loan['id']}'),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+    );
+  }
+
+  Widget _buildGradientHeader(
+    ThemeData theme,
+    bool isDark,
+    LinearGradient gradient,
+    CustomerLoanSummary summary,
+    DateTime? nextEmi,
+  ) {
+    final mq = MediaQuery.of(context);
+
+    return FadeTransition(
+      opacity: _headerFade,
+      child: SlideTransition(
+        position: _headerSlide,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            mq.padding.top + AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.xl,
+          ),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(32),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.28),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _getLoanStatusColor(loan['status'] ?? 'active').withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      (loan['status'] ?? 'Active').toUpperCase(),
-                      style: TextStyle(
-                        color: _getLoanStatusColor(loan['status'] ?? 'active'),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
+                  _CircleIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    onTap: () => context.pop(),
                   ),
+                  const SizedBox(width: AppSpacing.md),
                   Text(
-                    'Loan #${(loan['loan_number'] as String?) ?? ''}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    'My Loans',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currencyFormat.format(loan['amount'] ?? 0),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Total Amount',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${loan.emiCount ?? 0} EMIs',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '₹${loan['emi_amount'] ?? 0}/month',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                  const Spacer(),
+                  _HeaderPill(
+                    icon: Icons.account_balance_rounded,
+                    label: '${summary.activeLoans} active',
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: progress.clamp(0.0, 1.0),
-                  minHeight: 8,
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation(
-                    isOverdue ? Colors.red : theme.colorScheme.primary,
-                  ),
+              const SizedBox(height: AppSpacing.xl),
+
+              Text(
+                'Total Outstanding',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.2,
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Paid: ${currencyFormat.format(loan['collected_amount'] ?? 0)}',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  Text(
-                    'Outstanding: ${currencyFormat.format(loan['outstanding_balance'] ?? 0)}',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: _previousOutstanding,
+                  end: summary.totalOutstanding,
+                ),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) {
+                  return Text(
+                    _formatCurrency(value),
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  );
+                },
               ),
-              if (isOverdue) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.warning_amber, color: Colors.red, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Next EMI overdue - Pay now to avoid penalty',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
+              const SizedBox(height: 6),
+              Text(
+                'Disbursed ${_formatCurrency(summary.totalDisbursed)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.65),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm + 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
                 ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => context.push('/customer/loans/${loan['id']}/schedule'),
-                      icon: const Icon(Icons.calendar_today, size: 18),
-                      label: const Text('Schedule'),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.event_rounded,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showPaymentDialog(context, ref, loan),
-                      icon: const Icon(Icons.payment, size: 18),
-                      label: const Text('Pay EMI'),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      'Next EMI',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                    const Spacer(),
+                    Text(
+                      nextEmi != null
+                          ? _formatLongDate(nextEmi)
+                          : 'No upcoming EMI',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -227,160 +436,277 @@ class CustomerLoansPage extends ConsumerWidget {
     );
   }
 
-  Color _getLoanStatusColor(String status) {
-    switch (status.toLowerCase()) {
+  Widget _buildFilterChips(ThemeData theme, bool isDark) {
+    return SizedBox(
+      height: 52,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        itemCount: _filterOptions.length,
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final (key, label, icon) = _filterOptions[index];
+          final selected = _filter == key;
+          final color = _colorForFilter(key, isDark);
+
+          return GestureDetector(
+            onTap: () => setState(() => _filter = key),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                gradient: selected
+                    ? LinearGradient(
+                        colors: [
+                          color,
+                          color.withValues(alpha: 0.85),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: selected
+                    ? null
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.035)),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: selected
+                      ? Colors.transparent
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : Colors.black.withValues(alpha: 0.05)),
+                  width: 0.6,
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 15,
+                    color: selected
+                        ? Colors.white
+                        : (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: selected
+                          ? Colors.white
+                          : (isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight),
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Color _colorForFilter(String key, bool isDark) {
+    switch (key) {
       case 'active':
-        return Colors.blue;
+        return isDark ? AppColors.successDark : AppColors.success;
       case 'completed':
-        return Colors.green;
+        return isDark ? AppColors.primaryDark : AppColors.primary;
       case 'overdue':
-        return Colors.red;
-      case 'closed':
-        return Colors.grey;
+        return isDark ? AppColors.errorDark : AppColors.error;
       default:
-        return Colors.orange;
+        return isDark ? AppColors.accentDark : AppColors.accent;
     }
   }
 
-  void _showPaymentDialog(BuildContext context, WidgetRef ref, dynamic loan) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Pay EMI'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('EMI Amount: ₹${loan['emi_amount'] ?? 0}'),
-            const SizedBox(height: 16),
-            const Text('Select Payment Mode:'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                ChoiceChip(
-                  label: const Text('UPI'),
-                  selected: true,
-                  onSelected: (_) {},
-                ),
-                ChoiceChip(
-                  label: const Text('Cash'),
-                  selected: false,
-                  onSelected: (_) {},
-                ),
-                ChoiceChip(
-                  label: const Text('Bank'),
-                  selected: false,
-                  onSelected: (_) {},
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+  IconData get _filterIcon {
+    return switch (_filter) {
+      'active' => Icons.play_circle_fill_rounded,
+      'completed' => Icons.check_circle_rounded,
+      'overdue' => Icons.warning_amber_rounded,
+      _ => Icons.account_balance_rounded,
+    };
+  }
+
+  String get _filterEmptyMessage {
+    return switch (_filter) {
+      'active' => 'You have no active loans at the moment.',
+      'completed' => 'No closed loans to show yet.',
+      'overdue' => 'Great news! No overdue loans.',
+      _ => 'You don\'t have any loans yet.',
+    };
+  }
+
+  List<CustomerLoanModel> _filterLoans(List<CustomerLoanModel> loans) {
+    return switch (_filter) {
+      'active' => loans.where((l) => l.status == 'active').toList(),
+      'completed' => loans
+          .where((l) => l.status == 'completed' || l.status == 'closed')
+          .toList(),
+      'overdue' => loans.where((l) => l.isOverdue).toList(),
+      _ => loans,
+    };
+  }
+
+  Widget _buildLoadingState(
+      ThemeData theme, bool isDark, LinearGradient gradient) {
+    return Column(
+      children: [
+        _buildGradientHeader(
+          theme,
+          isDark,
+          gradient,
+          CustomerLoanSummary(
+            activeLoans: 0,
+            totalOutstanding: 0,
+            totalDisbursed: 0,
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final success = await ref.read(emiPaymentProvider.notifier).payEMI(
-                loan['id'] ?? '',
-                (loan['emi_amount'] ?? 0).toDouble(),
-                'upi',
-              );
-              if (success && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Payment successful!')),
-                );
-              }
-            },
-            child: const Text('Pay Now'),
+          null,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            itemCount: 4,
+            itemBuilder: (_, __) => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: ShimmerCard(height: 140, borderRadius: 20),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(
+    ThemeData theme,
+    bool isDark,
+    Object error,
+    LinearGradient gradient,
+  ) {
+    return Column(
+      children: [
+        _buildGradientHeader(
+          theme,
+          isDark,
+          gradient,
+          CustomerLoanSummary(
+            activeLoans: 0,
+            totalOutstanding: 0,
+            totalDisbursed: 0,
+          ),
+          null,
+        ),
+        Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.cloud_off_rounded,
+            title: 'Couldn\'t load loans',
+            subtitle: 'Pull down to retry, or tap the button below.',
+            ctaLabel: 'Retry',
+            onCtaTap: () => ref.invalidate(customerLoansProvider),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Frosted circular back/header button.
+class _CircleIconButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleIconButton({required this.icon, required this.onTap});
+
+  @override
+  State<_CircleIconButton> createState() => _CircleIconButtonState();
+}
+
+class _CircleIconButtonState extends State<_CircleIconButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _pressed
+              ? Colors.white.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(widget.icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+}
+
+/// Compact frosted pill used in the gradient header.
+class _HeaderPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _HeaderPill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.9)),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  void _showFilterOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Filter Loans',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              title: const Text('All Loans'),
-              trailing: const Icon(Icons.check),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              title: const Text('Active Only'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              title: const Text('Completed'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              title: const Text('Overdue'),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context, int currentIndex) {
-    return NavigationBar(
-      selectedIndex: currentIndex,
-      onDestinationSelected: (index) {
-        switch (index) {
-          case 0:
-            context.go('/customer');
-            break;
-          case 1:
-            context.go('/customer/loans');
-            break;
-          case 2:
-            context.go('/customer/savings');
-            break;
-          case 3:
-            context.go('/customer/profile');
-            break;
-        }
-      },
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.dashboard_outlined),
-          selectedIcon: Icon(Icons.dashboard),
-          label: 'Home',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.account_balance_outlined),
-          selectedIcon: Icon(Icons.account_balance),
-          label: 'Loans',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.savings_outlined),
-          selectedIcon: Icon(Icons.savings),
-          label: 'Savings',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],
     );
   }
 }

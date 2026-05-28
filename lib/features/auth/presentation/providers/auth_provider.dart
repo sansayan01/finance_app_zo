@@ -7,7 +7,8 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../../settings/data/providers/activity_log_repository_provider.dart';
 
-final Provider<AuthRepository?> authRepositoryProvider = Provider<AuthRepository?>((ref) {
+final Provider<AuthRepository?> authRepositoryProvider =
+    Provider<AuthRepository?>((ref) {
   try {
     final client = Supabase.instance.client;
     final logRepo = ref.read(activityLogRepositoryProvider);
@@ -27,26 +28,36 @@ enum AuthStatus {
   emailVerification,
 }
 
+enum AuthErrorType {
+  emailNotFound,
+  invalidPassword,
+  generic,
+}
+
 class AuthState {
   final AuthStatus status;
   final UserModel? user;
   final String? errorMessage;
+  final AuthErrorType? errorType;
 
   const AuthState({
     this.status = AuthStatus.initial,
     this.user,
     this.errorMessage,
+    this.errorType,
   });
 
   AuthState copyWith({
     AuthStatus? status,
     UserModel? user,
     String? errorMessage,
+    AuthErrorType? errorType,
   }) {
     return AuthState(
       status: status ?? this.status,
       user: user ?? this.user,
       errorMessage: errorMessage ?? this.errorMessage,
+      errorType: errorType ?? this.errorType,
     );
   }
 }
@@ -130,9 +141,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
       return true;
     } catch (e) {
+      final errorInfo = _getErrorMessage(e);
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: _getErrorMessage(e),
+        errorMessage: errorInfo.message,
+        errorType: errorInfo.type,
       );
       return false;
     }
@@ -175,9 +188,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
       return true;
     } catch (e) {
+      final errorInfo = _getErrorMessage(e);
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: _getErrorMessage(e),
+        errorMessage: errorInfo.message,
+        errorType: errorInfo.type,
       );
       return false;
     }
@@ -208,9 +223,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _repository.resetPassword(email);
       return true;
     } catch (e) {
+      final errorInfo = _getErrorMessage(e);
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: _getErrorMessage(e),
+        errorMessage: errorInfo.message,
+        errorType: errorInfo.type,
       );
       return false;
     }
@@ -241,8 +258,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _checkSession();
       return true;
     } catch (e) {
+      final errorInfo = _getErrorMessage(e);
       state = state.copyWith(
-          status: AuthStatus.error, errorMessage: _getErrorMessage(e));
+          status: AuthStatus.error,
+          errorMessage: errorInfo.message,
+          errorType: errorInfo.type);
       return false;
     }
   }
@@ -259,42 +279,67 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _repository.updatePassword(newPassword);
       return true;
     } catch (e) {
+      final errorInfo = _getErrorMessage(e);
       state = state.copyWith(
-          status: AuthStatus.error, errorMessage: _getErrorMessage(e));
+          status: AuthStatus.error,
+          errorMessage: errorInfo.message,
+          errorType: errorInfo.type);
       return false;
     }
   }
 
-  String _getErrorMessage(dynamic error) {
+  ({String message, AuthErrorType type}) _getErrorMessage(dynamic error) {
     if (error is AuthException) {
-      return error.message;
+      // Check for our custom status codes from the repository
+      if (error.statusCode == 'email_not_found') {
+        return (message: error.message, type: AuthErrorType.emailNotFound);
+      }
+      if (error.statusCode == 'invalid_password') {
+        return (message: error.message, type: AuthErrorType.invalidPassword);
+      }
+      return (message: error.message, type: AuthErrorType.generic);
     }
 
     final message = error.toString().toLowerCase();
     if (message.contains('invalid credentials') ||
         message.contains('invalid login credentials')) {
-      return 'Invalid email or password';
+      return (
+        message: 'Invalid email or password',
+        type: AuthErrorType.generic,
+      );
     }
     if (message.contains('user already registered')) {
-      return 'This email is already registered';
+      return (
+        message: 'This email is already registered',
+        type: AuthErrorType.generic,
+      );
     }
     if (message.contains('email not confirmed')) {
-      return 'Please confirm your email address';
+      return (
+        message: 'Please confirm your email address',
+        type: AuthErrorType.generic,
+      );
     }
     if (message.contains('network') || message.contains('connection')) {
-      return 'Network error. Please check your internet connection.';
+      return (
+        message: 'Network error. Please check your internet connection.',
+        type: AuthErrorType.generic,
+      );
     }
 
     // Return the actual error message if possible to help debugging
     if (error is Exception) {
       final str = error.toString();
       if (str.startsWith('Exception: ')) {
-        return str.substring(11);
+        return (message: str.substring(11), type: AuthErrorType.generic);
       }
-      return str;
+      return (message: str, type: AuthErrorType.generic);
     }
 
-    return 'An error occurred: ${error.toString()}';
+    return (
+      message: 'An error occurred: ${error.toString()}',
+      type: AuthErrorType.generic,
+    );
   }
 }
 
@@ -302,11 +347,6 @@ final StateNotifierProvider<AuthNotifier, AuthState> authProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return AuthNotifier(repository);
-});
-
-final isAuthenticatedProvider = Provider<bool>((ref) {
-  final authState = ref.watch(authProvider);
-  return authState.status == AuthStatus.authenticated;
 });
 
 final Provider<UserModel?> currentUserProvider = Provider<UserModel?>((ref) {

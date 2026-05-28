@@ -8,13 +8,15 @@ final enterpriseRepositoryProvider = Provider<EnterpriseRepository>((ref) {
   return EnterpriseRepository(client);
 });
 
-final auditLogsProvider = FutureProvider.family<List<AuditLogModel>, (String orgId, int limit)>((ref, params) async {
+final auditLogsProvider =
+    FutureProvider.family<List<AuditLogModel>, (String orgId, int limit)>(
+        (ref, params) async {
   final repository = ref.watch(enterpriseRepositoryProvider);
   return repository.getAuditLogs(params.$1, limit: params.$2);
 });
 
-final auditStatsProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, orgId) async {
+final auditStatsProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, orgId) async {
   final repository = ref.watch(enterpriseRepositoryProvider);
   return repository.getAuditStats(orgId);
 });
-

@@ -10,32 +10,46 @@ enum TargetStatus {
   active,
   completed,
   failed,
-  cancelled,
+  cancelled;
+
+  /// Maps to DB constraint: pending, achieved, partial, missed
+  String get dbValue {
+    switch (this) {
+      case TargetStatus.active:
+        return 'pending';
+      case TargetStatus.completed:
+        return 'achieved';
+      case TargetStatus.failed:
+        return 'missed';
+      case TargetStatus.cancelled:
+        return 'missed';
+    }
+  }
 }
 
 class TargetModel extends Equatable {
   final String id;
   final String staffId;
-  
+
   // Target period
   final PeriodType periodType;
   final DateTime targetDate;
   final DateTime periodStart;
   final DateTime periodEnd;
-  
+
   // Targets
   final double targetAmount;
   final int? targetCount;
   final double achievedAmount;
   final int achievedCount;
-  
+
   // Overdue-specific
   final double overdueTargetAmount;
   final double overdueAchievedAmount;
-  
+
   // Status
   final TargetStatus status;
-  
+
   // Timestamps
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -94,7 +108,7 @@ class TargetModel extends Equatable {
       'achieved_count': achievedCount,
       'overdue_target_amount': overdueTargetAmount,
       'overdue_achieved_amount': overdueAchievedAmount,
-      'status': status.name,
+      'status': status.dbValue,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -115,6 +129,14 @@ class TargetModel extends Equatable {
 
   static TargetStatus _parseTargetStatus(String? value) {
     switch (value) {
+      case 'pending':
+        return TargetStatus.active;
+      case 'achieved':
+        return TargetStatus.completed;
+      case 'partial':
+        return TargetStatus.completed;
+      case 'missed':
+        return TargetStatus.failed;
       case 'active':
         return TargetStatus.active;
       case 'completed':

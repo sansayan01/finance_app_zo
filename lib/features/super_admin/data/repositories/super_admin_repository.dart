@@ -54,9 +54,7 @@ class SuperAdminRepository {
     String? status,
   }) async {
     try {
-      var query = _client
-          .from('organizations')
-          .select('''
+      var query = _client.from('organizations').select('''
             id,
             name,
             slug,
@@ -89,16 +87,12 @@ class SuperAdminRepository {
   /// Get organization by ID with full details
   Future<Map<String, dynamic>?> getOrganizationById(String orgId) async {
     try {
-      final response = await _client
-          .from('organizations')
-          .select('''
+      final response = await _client.from('organizations').select('''
             *,
-            profiles:profiles(id, name, email, role, created_at),
+            profiles:profiles(id, full_name, email, role, created_at),
             branches:branches(*),
             subscriptions:subscriptions(*)
-          ''')
-          .eq('id', orgId)
-          .single();
+          ''').eq('id', orgId).single();
 
       return response;
     } catch (e) {
@@ -109,10 +103,10 @@ class SuperAdminRepository {
   /// Update organization status
   Future<bool> updateOrganizationStatus(String orgId, String status) async {
     try {
-      await _client
-          .from('organizations')
-          .update({'status': status, 'updated_at': DateTime.now().toIso8601String()})
-          .eq('id', orgId);
+      await _client.from('organizations').update({
+        'status': status,
+        'updated_at': DateTime.now().toIso8601String()
+      }).eq('id', orgId);
       return true;
     } catch (e) {
       return false;
@@ -168,11 +162,9 @@ class SuperAdminRepository {
     String? role,
   }) async {
     try {
-      var query = _client
-          .from('profiles')
-          .select('''
+      var query = _client.from('profiles').select('''
             id,
-            name,
+            full_name,
             email,
             phone,
             role,
@@ -183,7 +175,7 @@ class SuperAdminRepository {
           ''');
 
       if (search != null && search.isNotEmpty) {
-        query = query.or('name.ilike.%$search%,email.ilike.%$search%');
+        query = query.or('full_name.ilike.%$search%,email.ilike.%$search%');
       }
 
       if (role != null && role.isNotEmpty) {
@@ -201,7 +193,8 @@ class SuperAdminRepository {
   }
 
   /// Get user activity log
-  Future<List<Map<String, dynamic>>> getUserActivityLog(String userId, {
+  Future<List<Map<String, dynamic>>> getUserActivityLog(
+    String userId, {
     int limit = 100,
   }) async {
     try {
@@ -221,10 +214,10 @@ class SuperAdminRepository {
   /// Update user status
   Future<bool> updateUserStatus(String userId, bool isActive) async {
     try {
-      await _client
-          .from('profiles')
-          .update({'is_active': isActive, 'updated_at': DateTime.now().toIso8601String()})
-          .eq('id', userId);
+      await _client.from('profiles').update({
+        'is_active': isActive,
+        'updated_at': DateTime.now().toIso8601String()
+      }).eq('id', userId);
       return true;
     } catch (e) {
       return false;
@@ -243,7 +236,9 @@ class SuperAdminRepository {
           .select()
           .order('created_at', ascending: false);
 
-      return response.map<FeatureFlag>((json) => FeatureFlag.fromJson(json)).toList();
+      return response
+          .map<FeatureFlag>((json) => FeatureFlag.fromJson(json))
+          .toList();
     } catch (e) {
       return [];
     }
@@ -252,12 +247,10 @@ class SuperAdminRepository {
   /// Create or update feature flag
   Future<bool> upsertFeatureFlag(FeatureFlag flag) async {
     try {
-      await _client
-          .from('feature_flags')
-          .upsert({
-            ...flag.toJson(),
-            'updated_at': DateTime.now().toIso8601String(),
-          });
+      await _client.from('feature_flags').upsert({
+        ...flag.toJson(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
       return true;
     } catch (e) {
       return false;
@@ -267,13 +260,10 @@ class SuperAdminRepository {
   /// Toggle feature flag
   Future<bool> toggleFeatureFlag(String flagId, bool isEnabled) async {
     try {
-      await _client
-          .from('feature_flags')
-          .update({
-            'is_enabled': isEnabled,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', flagId);
+      await _client.from('feature_flags').update({
+        'is_enabled': isEnabled,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', flagId);
       return true;
     } catch (e) {
       return false;
@@ -285,18 +275,20 @@ class SuperAdminRepository {
   // =====================================================
 
   /// Get all announcements
-  Future<List<PlatformAnnouncement>> getAnnouncements({bool activeOnly = false}) async {
+  Future<List<PlatformAnnouncement>> getAnnouncements(
+      {bool activeOnly = false}) async {
     try {
-      var query = _client
-          .from('platform_announcements')
-          .select();
+      var query = _client.from('platform_announcements').select();
 
       if (activeOnly) {
         query = query.eq('is_active', true);
       }
 
       final response = await query.order('created_at', ascending: false);
-      return response.map<PlatformAnnouncement>((json) => PlatformAnnouncement.fromJson(json)).toList();
+      return response
+          .map<PlatformAnnouncement>(
+              (json) => PlatformAnnouncement.fromJson(json))
+          .toList();
     } catch (e) {
       return [];
     }
@@ -350,13 +342,12 @@ class SuperAdminRepository {
       if (targetAudience != null) updates['target_audience'] = targetAudience;
       if (targetOrgs != null) updates['target_orgs'] = targetOrgs;
       if (showFrom != null) updates['show_from'] = showFrom.toIso8601String();
-      if (showUntil != null) updates['show_until'] = showUntil.toIso8601String();
+      if (showUntil != null) {
+        updates['show_until'] = showUntil.toIso8601String();
+      }
       if (isActive != null) updates['is_active'] = isActive;
 
-      await _client
-          .from('platform_announcements')
-          .update(updates)
-          .eq('id', id);
+      await _client.from('platform_announcements').update(updates).eq('id', id);
       return true;
     } catch (e) {
       return false;
@@ -366,10 +357,7 @@ class SuperAdminRepository {
   /// Delete announcement
   Future<bool> deleteAnnouncement(String id) async {
     try {
-      await _client
-          .from('platform_announcements')
-          .delete()
-          .eq('id', id);
+      await _client.from('platform_announcements').delete().eq('id', id);
       return true;
     } catch (e) {
       return false;
@@ -377,15 +365,13 @@ class SuperAdminRepository {
   }
 
   /// Update announcement status
-  Future<bool> updateAnnouncementStatus(String announcementId, bool isActive) async {
+  Future<bool> updateAnnouncementStatus(
+      String announcementId, bool isActive) async {
     try {
-      await _client
-          .from('platform_announcements')
-          .update({
-            'is_active': isActive,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', announcementId);
+      await _client.from('platform_announcements').update({
+        'is_active': isActive,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', announcementId);
       return true;
     } catch (e) {
       return false;
@@ -406,9 +392,7 @@ class SuperAdminRepository {
     DateTime? endDate,
   }) async {
     try {
-      var query = _client
-          .from('system_audit_logs')
-          .select();
+      var query = _client.from('audit_logs').select();
 
       if (action != null) {
         query = query.eq('action', action);
@@ -426,10 +410,11 @@ class SuperAdminRepository {
         query = query.lte('created_at', endDate.toIso8601String());
       }
 
-      final response = await query
-          .order('created_at', ascending: false)
-          .limit(limit);
-      return response.map<SystemAuditLog>((json) => SystemAuditLog.fromJson(json)).toList();
+      final response =
+          await query.order('created_at', ascending: false).limit(limit);
+      return response
+          .map<SystemAuditLog>((json) => SystemAuditLog.fromJson(json))
+          .toList();
     } catch (e) {
       return [];
     }
@@ -445,7 +430,7 @@ class SuperAdminRepository {
     String? orgId,
   }) async {
     try {
-      await _client.from('system_audit_logs').insert({
+      await _client.from('audit_logs').insert({
         'action': action,
         'entity_type': entityType,
         'entity_id': entityId,
@@ -470,9 +455,7 @@ class SuperAdminRepository {
     int limit = 50,
   }) async {
     try {
-      var query = _client
-          .from('support_tickets')
-          .select();
+      var query = _client.from('support_tickets').select();
 
       if (status != null) {
         query = query.eq('status', status);
@@ -481,17 +464,19 @@ class SuperAdminRepository {
         query = query.eq('priority', priority);
       }
 
-      final response = await query
-          .order('created_at', ascending: false)
-          .limit(limit);
-      return response.map<SupportTicket>((json) => SupportTicket.fromJson(json)).toList();
+      final response =
+          await query.order('created_at', ascending: false).limit(limit);
+      return response
+          .map<SupportTicket>((json) => SupportTicket.fromJson(json))
+          .toList();
     } catch (e) {
       return [];
     }
   }
 
   /// Update ticket status
-  Future<bool> updateTicketStatus(String ticketId, String status, {String? assignedTo}) async {
+  Future<bool> updateTicketStatus(String ticketId, String status,
+      {String? assignedTo}) async {
     try {
       final updates = <String, dynamic>{
         'status': status,
@@ -506,10 +491,7 @@ class SuperAdminRepository {
         updates['resolved_at'] = DateTime.now().toIso8601String();
       }
 
-      await _client
-          .from('support_tickets')
-          .update(updates)
-          .eq('id', ticketId);
+      await _client.from('support_tickets').update(updates).eq('id', ticketId);
       return true;
     } catch (e) {
       return false;
@@ -517,7 +499,8 @@ class SuperAdminRepository {
   }
 
   /// Add message to ticket
-  Future<bool> addTicketMessage(String ticketId, String message, bool isInternal) async {
+  Future<bool> addTicketMessage(
+      String ticketId, String message, bool isInternal) async {
     try {
       // Get current messages
       final ticket = await _client
@@ -526,7 +509,8 @@ class SuperAdminRepository {
           .eq('id', ticketId)
           .single();
 
-      final messages = List<Map<String, dynamic>>.from(ticket['messages'] ?? []);
+      final messages =
+          List<Map<String, dynamic>>.from(ticket['messages'] ?? []);
       messages.add({
         'content': message,
         'is_internal': isInternal,
@@ -534,13 +518,10 @@ class SuperAdminRepository {
         'created_by': _client.auth.currentUser?.id,
       });
 
-      await _client
-          .from('support_tickets')
-          .update({
-            'messages': messages,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', ticketId);
+      await _client.from('support_tickets').update({
+        'messages': messages,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', ticketId);
 
       return true;
     } catch (e) {
@@ -553,18 +534,19 @@ class SuperAdminRepository {
   // =====================================================
 
   /// Get maintenance windows
-  Future<List<MaintenanceWindow>> getMaintenanceWindows({bool activeOnly = false}) async {
+  Future<List<MaintenanceWindow>> getMaintenanceWindows(
+      {bool activeOnly = false}) async {
     try {
-      var query = _client
-          .from('maintenance_windows')
-          .select();
+      var query = _client.from('maintenance_windows').select();
 
       if (activeOnly) {
         query = query.eq('is_active', true);
       }
 
       final response = await query.order('scheduled_start', ascending: false);
-      return response.map<MaintenanceWindow>((json) => MaintenanceWindow.fromJson(json)).toList();
+      return response
+          .map<MaintenanceWindow>((json) => MaintenanceWindow.fromJson(json))
+          .toList();
     } catch (e) {
       return [];
     }
@@ -597,8 +579,7 @@ class SuperAdminRepository {
     try {
       await _client
           .from('maintenance_windows')
-          .update({'is_active': isActive})
-          .eq('id', windowId);
+          .update({'is_active': isActive}).eq('id', windowId);
       return true;
     } catch (e) {
       return false;
@@ -617,9 +598,7 @@ class SuperAdminRepository {
     int limit = 100,
   }) async {
     try {
-      var query = _client
-          .from('platform_revenue')
-          .select();
+      var query = _client.from('platform_revenue').select();
 
       if (startDate != null) {
         query = query.gte('created_at', startDate.toIso8601String());
@@ -631,10 +610,11 @@ class SuperAdminRepository {
         query = query.eq('status', status);
       }
 
-      final response = await query
-          .order('created_at', ascending: false)
-          .limit(limit);
-      return response.map<PlatformRevenue>((json) => PlatformRevenue.fromJson(json)).toList();
+      final response =
+          await query.order('created_at', ascending: false).limit(limit);
+      return response
+          .map<PlatformRevenue>((json) => PlatformRevenue.fromJson(json))
+          .toList();
     } catch (e) {
       return [];
     }
@@ -644,7 +624,7 @@ class SuperAdminRepository {
   Future<Map<String, dynamic>> getRevenueSummary({int months = 12}) async {
     try {
       final startDate = DateTime.now().subtract(Duration(days: months * 30));
-      
+
       final response = await _client
           .from('platform_revenue')
           .select('amount, status, created_at')
@@ -652,8 +632,9 @@ class SuperAdminRepository {
           .eq('status', 'completed');
 
       final revenues = List<Map<String, dynamic>>.from(response);
-      
-      final totalRevenue = revenues.fold<double>(0, (sum, r) => sum + (r['amount'] ?? 0));
+
+      final totalRevenue =
+          revenues.fold<double>(0, (sum, r) => sum + (r['amount'] ?? 0));
       final avgMonthly = totalRevenue / months;
 
       return {
@@ -677,9 +658,7 @@ class SuperAdminRepository {
   /// Get platform settings
   Future<Map<String, dynamic>> getPlatformSettings() async {
     try {
-      final response = await _client
-          .from('platform_settings')
-          .select();
+      final response = await _client.from('platform_settings').select();
 
       final settings = <String, dynamic>{};
       for (final item in response) {
@@ -694,13 +673,11 @@ class SuperAdminRepository {
   /// Update platform setting
   Future<bool> updatePlatformSetting(String key, dynamic value) async {
     try {
-      await _client
-          .from('platform_settings')
-          .update({
-            'value': value,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('key', key);
+      await _client.from('platform_settings').upsert({
+        'key': key,
+        'value': value,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'key');
       return true;
     } catch (e) {
       return false;
@@ -717,17 +694,14 @@ class SuperAdminRepository {
     int limit = 100,
   }) async {
     try {
-      var query = _client
-          .from('system_error_logs')
-          .select();
+      var query = _client.from('system_error_logs').select();
 
       if (resolved != null) {
         query = query.eq('resolved', resolved);
       }
 
-      final response = await query
-          .order('created_at', ascending: false)
-          .limit(limit);
+      final response =
+          await query.order('created_at', ascending: false).limit(limit);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];
@@ -737,14 +711,11 @@ class SuperAdminRepository {
   /// Mark error as resolved
   Future<bool> resolveError(String errorId) async {
     try {
-      await _client
-          .from('system_error_logs')
-          .update({
-            'resolved': true,
-            'resolved_by': _client.auth.currentUser?.id,
-            'resolved_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', errorId);
+      await _client.from('system_error_logs').update({
+        'resolved': true,
+        'resolved_by': _client.auth.currentUser?.id,
+        'resolved_at': DateTime.now().toIso8601String(),
+      }).eq('id', errorId);
       return true;
     } catch (e) {
       return false;
@@ -759,24 +730,24 @@ class SuperAdminRepository {
   Future<Map<String, dynamic>> getApiUsageStats({int days = 7}) async {
     try {
       final startDate = DateTime.now().subtract(Duration(days: days));
-      
+
       final response = await _client
           .from('api_usage_logs')
           .select('endpoint, method, status_code, response_time_ms, created_at')
           .gte('created_at', startDate.toIso8601String());
 
       final logs = List<Map<String, dynamic>>.from(response);
-      
+
       // Calculate stats
       final endpointCounts = <String, int>{};
       final statusCounts = <int, int>{};
       var totalResponseTime = 0;
-      
+
       for (final log in logs) {
         final endpoint = log['endpoint'] as String;
         final status = log['status_code'] as int;
         final responseTime = log['response_time_ms'] as int? ?? 0;
-        
+
         endpointCounts[endpoint] = (endpointCounts[endpoint] ?? 0) + 1;
         statusCounts[status] = (statusCounts[status] ?? 0) + 1;
         totalResponseTime += responseTime;
@@ -787,7 +758,8 @@ class SuperAdminRepository {
         'unique_endpoints': endpointCounts.length,
         'endpoint_counts': endpointCounts,
         'status_counts': statusCounts,
-        'avg_response_time': logs.isNotEmpty ? totalResponseTime / logs.length : 0,
+        'avg_response_time':
+            logs.isNotEmpty ? totalResponseTime / logs.length : 0,
       };
     } catch (e) {
       return {
@@ -801,21 +773,49 @@ class SuperAdminRepository {
   }
 
   // =====================================================
+  // DASHBOARD COUNTS
+  // =====================================================
+
+  /// Get count of open support tickets
+  Future<int> getOpenTicketsCount() async {
+    try {
+      final response = await _client
+          .from('support_tickets')
+          .select('id')
+          .inFilter('status', ['open', 'in_progress']);
+      return (response as List).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Get count of at-risk organizations (trial ending soon or suspended)
+  Future<int> getAtRiskOrgsCount() async {
+    try {
+      final now = DateTime.now();
+      final soon = now.add(const Duration(days: 7));
+      final response = await _client
+          .from('organizations')
+          .select('id')
+          .or('status.eq.suspended,trial_ends_at.lte.${soon.toIso8601String()}');
+      return (response as List).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // =====================================================
   // REAL-TIME ACTIVITY
   // =====================================================
 
   /// Get real-time activity feed
   Future<List<Map<String, dynamic>>> getActivityFeed({int limit = 50}) async {
     try {
-      final response = await _client
-          .from('platform_activity_feed')
-          .select('''
+      final response = await _client.from('platform_activity_feed').select('''
             *,
-            profiles:user_id(name, email),
+            profiles:user_id(full_name, email),
             organizations:org_id(name)
-          ''')
-          .order('created_at', ascending: false)
-          .limit(limit);
+          ''').order('created_at', ascending: false).limit(limit);
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {

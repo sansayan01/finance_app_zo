@@ -53,19 +53,16 @@ class LoansRepository {
     try {
       // Use SQL aggregation instead of fetching all records
       // This is much more efficient and uses less bandwidth
-      
+
       // Get loan counts and totals in a single query
-      final response = await _client
-          .from('loans')
-          .select('''
+      final response = await _client.from('loans').select('''
             status,
             outstanding_balance,
             amount
-          ''')
-          .eq('org_id', _orgId);
+          ''').eq('org_id', _orgId);
 
       final loans = response as List;
-      
+
       int totalLoans = loans.length;
       int activeLoans = 0;
       int defaultLoans = 0;
@@ -75,7 +72,8 @@ class LoansRepository {
 
       for (final loan in loans) {
         final status = loan['status'] as String?;
-        final outstanding = (loan['outstanding_balance'] as num?)?.toDouble() ?? 0.0;
+        final outstanding =
+            (loan['outstanding_balance'] as num?)?.toDouble() ?? 0.0;
         final amount = (loan['amount'] as num?)?.toDouble() ?? 0.0;
 
         if (status == 'active') {
@@ -140,7 +138,7 @@ class LoansRepository {
     }
   }
 
-  Future<void> createLoan({
+  Future<String> createLoan({
     required String borrowerId,
     required double principal,
     required double interestRate,
@@ -164,7 +162,15 @@ class LoansRepository {
 
     double totalInterest = totalExposure - principal;
 
-    await _client.from('loans').insert({
+    // Look up the member's branch_id
+    final member = await _client
+        .from('members')
+        .select('branch_id')
+        .eq('id', borrowerId)
+        .maybeSingle();
+    final branchId = member?['branch_id'] as String?;
+
+    final result = await _client.from('loans').insert({
       'customer_id': borrowerId,
       'loan_number': loanNumber,
       'amount': principal,
@@ -177,6 +183,7 @@ class LoansRepository {
       'collection_type': collectionType,
       'emi_amount': estimatedInstallment,
       'outstanding_balance': totalExposure,
+      'outstanding_amount': totalExposure,
       'total_repayable': totalExposure,
       'interest_type': interestLogic,
       'status': 'active',
@@ -187,13 +194,16 @@ class LoansRepository {
       'created_at': now.toIso8601String(),
       'updated_at': now.toIso8601String(),
       'org_id': _orgId,
+      if (branchId != null) 'branch_id': branchId,
       if (interestMode != null) 'interest_mode': interestMode,
       if (interestRateBasis != null) 'interest_rate_basis': interestRateBasis,
       if (interestAmount != null) 'interest_amount': interestAmount,
       if (interestBasis != null) 'interest_basis': interestBasis,
       if (tenureValue != null) 'tenure_value': tenureValue,
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
-    });
+    }).select('id').single();
+
+    return result['id'] as String;
   }
 
   Future<void> createLoanFromMap(Map<String, dynamic> data) async {
@@ -205,7 +215,8 @@ class LoansRepository {
     await _client.from('loans').update({'status': status}).eq('id', id);
   }
 
-  Future<void> updateLoan(String id, {
+  Future<void> updateLoan(
+    String id, {
     String? borrowerId,
     double? principal,
     double? interestRate,
@@ -246,7 +257,9 @@ class LoansRepository {
       data['total_repayable'] = totalExposure;
     }
     if (interestMode != null) data['interest_mode'] = interestMode;
-    if (interestRateBasis != null) data['interest_rate_basis'] = interestRateBasis;
+    if (interestRateBasis != null) {
+      data['interest_rate_basis'] = interestRateBasis;
+    }
     if (interestAmount != null) data['interest_amount'] = interestAmount;
     if (interestBasis != null) data['interest_basis'] = interestBasis;
     if (tenureValue != null) data['tenure_value'] = tenureValue;
@@ -254,7 +267,7 @@ class LoansRepository {
     if (remarks != null) data['remarks'] = remarks;
     if (purpose != null) data['purpose'] = purpose;
     data['updated_at'] = DateTime.now().toIso8601String();
-    
+
     await _client.from('loans').update(data).eq('id', id);
   }
 
@@ -269,6 +282,7 @@ class LoansRepository {
     await _client.from('loans').update({
       'status': newStatus,
       'outstanding_balance': newBalance,
+      'outstanding_amount': newBalance,
     }).eq('id', loanId);
   }
 
@@ -283,47 +297,37 @@ class LoansRepository {
             'p_org_id': _orgId,
           },
         );
-        
-        if (result != true) {
-          throw Exception('Loan not found or deletion failed');
+
+        if (result == true) {
+          return;
         }
-        return;
       } catch (rpcError) {
         // Fallback to manual deletion if RPC doesn't exist
       }
 
       // Manual deletion with proper ordering
       // 1. Delete transactions
-      await _client
-          .from('transactions')
-          .delete()
-          .eq('loan_id', loanId)
-          .eq('org_id', _orgId);
+      await _client.from('transactions').delete().eq('loan_id', loanId);
 
-      // 2. Delete EMI schedules
-      await _client
-          .from('emi_schedule')
-          .delete()
-          .eq('loan_id', loanId)
-          .eq('org_id', _orgId);
+      // 2. Delete EMI schedules (covers all schedule records via streaming)
+      await _client.from('emi_schedule').delete().eq('loan_id', loanId);
 
-      // 3. Nullify loan_id in collections
-      await _client
-          .from('collections')
-          .update({'loan_id': null})
-          .eq('loan_id', loanId)
-          .eq('org_id', _orgId);
+      // 3. Delete collections (not just nullify)
+      await _client.from('collections').delete().eq('loan_id', loanId);
 
-      // 4. Delete the loan
-      final response = await _client
+      // 5. Delete the loan itself
+      await _client.from('loans').delete().eq('id', loanId);
+
+      // 7. Verify deletion
+      final check = await _client
           .from('loans')
-          .delete()
+          .select('id')
           .eq('id', loanId)
-          .eq('org_id', _orgId)
-          .select('id');
+          .maybeSingle();
 
-      if (response.isEmpty) {
-        throw Exception('Loan could not be deleted. Check permissions or constraints.');
+      if (check != null) {
+        throw Exception(
+            'Loan record still exists after deletion. Check organization permissions or active database constraints.');
       }
     } catch (e) {
       throw Exception('Delete failed: $e');

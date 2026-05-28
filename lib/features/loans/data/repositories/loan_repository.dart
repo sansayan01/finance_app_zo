@@ -17,6 +17,14 @@ class LoanRepository {
     required double estimatedInstallment,
     required double totalExposure,
   }) async {
+    // Look up the member's branch_id
+    final member = await _client
+        .from('members')
+        .select('branch_id')
+        .eq('id', borrowerId)
+        .maybeSingle();
+    final branchId = member?['branch_id'] as String?;
+
     await _client.from('loans').insert({
       'customer_id': borrowerId,
       'amount': principal,
@@ -28,9 +36,11 @@ class LoanRepository {
       'first_installment_date': firstInstallmentDate.toIso8601String(),
       'emi_amount': estimatedInstallment,
       'outstanding_balance': totalExposure,
+      'outstanding_amount': totalExposure,
       'total_repayable': totalExposure,
       'status': 'active',
       'org_id': _orgId,
+      if (branchId != null) 'branch_id': branchId,
     });
   }
 
@@ -47,6 +57,7 @@ class LoanRepository {
     await _client.from('loans').update({
       'status': 'closed',
       'outstanding_balance': 0,
+      'outstanding_amount': 0,
     }).eq('id', loanId);
   }
 }

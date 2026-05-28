@@ -11,14 +11,68 @@ class AuthRepository {
 
   SupabaseClient get client => _client;
 
+  /// Check if an email exists in profiles table OR auth metadata.
+  /// Uses two checks for reliability — the email may exist in auth.users
+  /// without a matching profiles row, or vice versa.
+  Future<bool> _checkEmailInProfiles(String email) async {
+    final normalized = email.toLowerCase().trim();
+    try {
+      // Check 1: profiles table (our app's user records)
+      final profile = await _client
+          .from('profiles')
+          .select('id')
+          .eq('email', normalized)
+          .maybeSingle();
+      if (profile != null) return true;
+
+      // Check 2: auth.users via RPC — any user with this email
+      // The user may have an auth account but no profile yet
+      final authCheck = await _client.rpc('check_email_exists', params: {
+        'p_email': normalized,
+      });
+      if (authCheck == true) return true;
+
+      return false;
+    } catch (_) {
+      // If queries fail, assume email exists (don't leak info)
+      return true;
+    }
+  }
+
   Future<UserModel> signInWithEmail({
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    final AuthResponse response;
+    try {
+      response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      // Network/connection errors — rethrow as-is so the provider can show the right message
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('socket') ||
+          errStr.contains('network') ||
+          errStr.contains('connection') ||
+          errStr.contains('timeout')) {
+        rethrow;
+      }
+      // Sign-in failed — now check if the email exists in profiles
+      // to distinguish "email not found" from "wrong password"
+      final emailExists = await _checkEmailInProfiles(email);
+      if (emailExists) {
+        throw AuthException(
+          'Incorrect password. Please check your password and try again.',
+          statusCode: 'invalid_password',
+        );
+      } else {
+        throw AuthException(
+          'No account found with this email. Please check your email address.',
+          statusCode: 'email_not_found',
+        );
+      }
+    }
 
     final user = response.user;
     if (user == null) {
@@ -55,6 +109,27 @@ class AuthRepository {
     String? phone,
     String? orgName,
   }) async {
+    // Check if email already exists in profiles or members
+    final existingProfile = await _client
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+
+    if (existingProfile != null) {
+      throw Exception('This email is already registered. Please sign in instead.');
+    }
+
+    final existingMember = await _client
+        .from('members')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+
+    if (existingMember != null) {
+      throw Exception('This email is already registered. Please sign in instead.');
+    }
+
     final metadata = <String, dynamic>{
       'full_name': fullName,
       'phone': phone,
@@ -69,7 +144,7 @@ class AuthRepository {
 
     final user = response.user;
     if (user == null) {
-      throw Exception('Sign up failed');
+      throw Exception('Sign up failed. This email may already be registered.');
     }
 
     // If email confirmation is disabled and we have a session, create org + profile now
@@ -91,7 +166,11 @@ class AuthRepository {
   }
 
   Future<UserModel> _createOrgAndProfile(
-    User user, String fullName, String email, String? phone, String? orgName,
+    User user,
+    String fullName,
+    String email,
+    String? phone,
+    String? orgName,
   ) async {
     String orgId = '00000000-0000-0000-0000-000000000001';
     if (orgName != null && orgName.isNotEmpty) {
@@ -99,26 +178,53 @@ class AuthRepository {
           .toLowerCase()
           .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
           .replaceAll(RegExp(r'^-|-$'), '');
-      final trialEnd = DateTime.now().add(const Duration(days: 14)).toIso8601String();
-      final orgResponse = await _client.from('organizations').insert({
-        'name': orgName,
-        'slug': slug,
-        'status': 'trial',
-        'trial_ends_at': trialEnd,
-        'max_branches': 2,
-        'max_staff': 5,
-        'max_members': 100,
-      }).select('id').single();
-      orgId = orgResponse['id'].toString();
+      final trialEnd =
+          DateTime.now().add(const Duration(days: 14)).toIso8601String();
+      try {
+        final orgResponse = await _client
+            .from('organizations')
+            .insert({
+              'name': orgName,
+              'slug': slug,
+              'status': 'trial',
+              'trial_ends_at': trialEnd,
+              'max_branches': 10,
+              'max_staff': 5,
+              'max_members': 100,
+              'created_by': user.id,
+            })
+            .select('id')
+            .single();
+        orgId = orgResponse['id'].toString();
+      } catch (e) {
+        // Org creation failed (e.g., slug conflict or RLS) — try to find existing org
+        try {
+          final existing = await _client
+              .from('organizations')
+              .select('id')
+              .eq('slug', slug)
+              .maybeSingle();
+          if (existing != null) {
+            orgId = existing['id'].toString();
+          }
+        } catch (_) {
+          // Use default org as last resort
+        }
+      }
 
-      await _client.from('profiles').insert({
-        'user_id': user.id,
-        'full_name': fullName,
-        'email': email,
-        'phone': phone,
-        'role': 'executiveAdmin',
-        'org_id': orgId,
-      });
+      // Create profile — use upsert to handle race conditions
+      try {
+        await _client.from('profiles').upsert({
+          'user_id': user.id,
+          'full_name': fullName,
+          'email': email,
+          'phone': phone,
+          'role': 'executiveAdmin',
+          'org_id': orgId,
+        }, onConflict: 'user_id');
+      } catch (_) {
+        // Profile creation failed — will be retried on next login
+      }
     }
 
     final parsedDate = DateTime.tryParse(user.createdAt);
@@ -186,7 +292,8 @@ class AuthRepository {
       }
 
       if (profile != null) {
-        role = _parseRole(profile['role'] as String?, user.email, user.userMetadata);
+        role = _parseRole(
+            profile['role'] as String?, user.email, user.userMetadata);
       } else {
         role = _parseRole(null, user.email, user.userMetadata);
       }
@@ -210,7 +317,8 @@ class AuthRepository {
     );
   }
 
-  UserRole _parseRole(String? roleStr, String? email, Map<String, dynamic>? metadata) {
+  UserRole _parseRole(
+      String? roleStr, String? email, Map<String, dynamic>? metadata) {
     // 1. Explicit super admin override
     if (email != null && email.toLowerCase() == 'msayan9733@gmail.com') {
       return UserRole.superAdmin;
@@ -229,7 +337,7 @@ class AuthRepository {
     }
 
     final normalized = effectiveRole.toLowerCase();
-    
+
     if (normalized == 'superadmin' || normalized == 'super_admin') {
       return UserRole.superAdmin;
     }
@@ -239,7 +347,9 @@ class AuthRepository {
     if (normalized == 'manager') {
       return UserRole.manager;
     }
-    if (normalized == 'collectionagent' || normalized == 'staff' || normalized == 'fieldstaff') {
+    if (normalized == 'collectionagent' ||
+        normalized == 'staff' ||
+        normalized == 'fieldstaff') {
       return UserRole.collectionAgent;
     }
     if (normalized == 'customer' || normalized == 'retailmember') {
@@ -282,7 +392,27 @@ class AuthRepository {
       if (employeeId != null) updates['employee_id'] = employeeId;
       if (assignedZone != null) updates['assigned_zone'] = assignedZone;
 
-      await _client.from('profiles').update(updates).eq('user_id', _client.auth.currentUser!.id);
+      await _client
+          .from('profiles')
+          .update(updates)
+          .eq('user_id', _client.auth.currentUser!.id);
+
+      // Sync full_name to members table so loan/savings searches stay current
+      try {
+        final profile = await _client
+            .from('profiles')
+            .select('id')
+            .eq('user_id', _client.auth.currentUser!.id)
+            .maybeSingle();
+        if (profile != null) {
+          await _client
+              .from('members')
+              .update({'full_name': fullName})
+              .eq('profile_id', profile['id']);
+        }
+      } catch (_) {
+        // Member record may not exist — that's fine
+      }
 
       await _logRepo?.log(
         action: 'Profile Updated',

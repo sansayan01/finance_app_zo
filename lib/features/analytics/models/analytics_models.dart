@@ -4,36 +4,36 @@ import 'package:equatable/equatable.dart';
 class OrgMetricsModel extends Equatable {
   final String id;
   final String orgId;
-  
+
   // Collections
   final double totalCollections;
   final double collectionsThisMonth;
   final double collectionsGrowth;
   final double collectionEfficiency;
-  
+
   // Loans
   final double totalLoansDisbursed;
   final int activeLoans;
   final int overdueLoans;
   final int npaCount;
   final double npaPercentage;
-  
+
   // Members
   final int totalMembers;
   final int activeMembers;
   final int newMembersThisMonth;
   final double memberRetentionRate;
-  
+
   // Staff
   final int totalStaff;
   final int activeStaff;
   final double staffProductivity;
-  
+
   // Financial
   final double totalRevenue;
   final double revenueThisMonth;
   final double revenueGrowth;
-  
+
   final DateTime computedAt;
 
   const OrgMetricsModel({
@@ -66,10 +66,13 @@ class OrgMetricsModel extends Equatable {
       id: json['id'] as String,
       orgId: json['org_id'] as String,
       totalCollections: (json['total_collections'] as num?)?.toDouble() ?? 0,
-      collectionsThisMonth: (json['collections_this_month'] as num?)?.toDouble() ?? 0,
+      collectionsThisMonth:
+          (json['collections_this_month'] as num?)?.toDouble() ?? 0,
       collectionsGrowth: (json['collections_growth'] as num?)?.toDouble() ?? 0,
-      collectionEfficiency: (json['collection_efficiency'] as num?)?.toDouble() ?? 0,
-      totalLoansDisbursed: (json['total_loans_disbursed'] as num?)?.toDouble() ?? 0,
+      collectionEfficiency:
+          (json['collection_efficiency'] as num?)?.toDouble() ?? 0,
+      totalLoansDisbursed:
+          (json['total_loans_disbursed'] as num?)?.toDouble() ?? 0,
       activeLoans: json['active_loans'] as int? ?? 0,
       overdueLoans: json['overdue_loans'] as int? ?? 0,
       npaCount: json['npa_count'] as int? ?? 0,
@@ -77,7 +80,8 @@ class OrgMetricsModel extends Equatable {
       totalMembers: json['total_members'] as int? ?? 0,
       activeMembers: json['active_members'] as int? ?? 0,
       newMembersThisMonth: json['new_members_this_month'] as int? ?? 0,
-      memberRetentionRate: (json['member_retention_rate'] as num?)?.toDouble() ?? 0,
+      memberRetentionRate:
+          (json['member_retention_rate'] as num?)?.toDouble() ?? 0,
       totalStaff: json['total_staff'] as int? ?? 0,
       activeStaff: json['active_staff'] as int? ?? 0,
       staffProductivity: (json['staff_productivity'] as num?)?.toDouble() ?? 0,
@@ -90,12 +94,29 @@ class OrgMetricsModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, orgId, totalCollections, collectionsThisMonth, collectionsGrowth,
-    collectionEfficiency, totalLoansDisbursed, activeLoans, overdueLoans,
-    npaCount, npaPercentage, totalMembers, activeMembers, newMembersThisMonth,
-    memberRetentionRate, totalStaff, activeStaff, staffProductivity,
-    totalRevenue, revenueThisMonth, revenueGrowth, computedAt
-  ];
+        id,
+        orgId,
+        totalCollections,
+        collectionsThisMonth,
+        collectionsGrowth,
+        collectionEfficiency,
+        totalLoansDisbursed,
+        activeLoans,
+        overdueLoans,
+        npaCount,
+        npaPercentage,
+        totalMembers,
+        activeMembers,
+        newMembersThisMonth,
+        memberRetentionRate,
+        totalStaff,
+        activeStaff,
+        staffProductivity,
+        totalRevenue,
+        revenueThisMonth,
+        revenueGrowth,
+        computedAt
+      ];
 }
 
 /// Custom report model
@@ -146,7 +167,8 @@ class CustomReportModel extends Equatable {
       columns: json['columns'] as List<dynamic>? ?? [],
       aggregations: json['aggregations'] as Map<String, dynamic>? ?? {},
       scheduleFrequency: json['schedule_frequency'] as String?,
-      scheduleRecipients: (json['schedule_recipients'] as List<dynamic>?)?.cast<String>(),
+      scheduleRecipients:
+          (json['schedule_recipients'] as List<dynamic>?)?.cast<String>(),
       lastRunAt: json['last_run_at'] != null
           ? DateTime.parse(json['last_run_at'] as String)
           : null,
@@ -160,8 +182,20 @@ class CustomReportModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, orgId, createdBy, name, description, reportType, filters, columns,
-    aggregations, scheduleFrequency, scheduleRecipients, lastRunAt, nextRunAt,
-    createdAt, updatedAt
-  ];
+        id,
+        orgId,
+        createdBy,
+        name,
+        description,
+        reportType,
+        filters,
+        columns,
+        aggregations,
+        scheduleFrequency,
+        scheduleRecipients,
+        lastRunAt,
+        nextRunAt,
+        createdAt,
+        updatedAt
+      ];
 }

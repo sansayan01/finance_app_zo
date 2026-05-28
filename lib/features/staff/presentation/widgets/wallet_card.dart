@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/glass_card.dart' as core;
 import '../../data/models/wallet_model.dart';
 
 class WalletCard extends StatelessWidget {
@@ -47,7 +48,7 @@ class WalletCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: GlassCard(
+        child: core.GlassCard(
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -136,10 +137,12 @@ class WalletCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: isLoading ? null : () {
-                        HapticFeedback.mediumImpact();
-                        onDeposit?.call();
-                      },
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              HapticFeedback.mediumImpact();
+                              onDeposit?.call();
+                            },
                       icon: isLoading
                           ? const SizedBox(
                               width: 16,
@@ -248,24 +251,3 @@ class WalletCard extends StatelessWidget {
   }
 }
 
-// Simple glass card wrapper
-class GlassCard extends StatelessWidget {
-  final Widget child;
-
-  const GlassCard({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: child,
-    );
-  }
-}

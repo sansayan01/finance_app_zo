@@ -851,25 +851,51 @@ CREATE TRIGGER update_wallet_on_collection_insert
 -- =====================================================
 -- FUNCTION: UPDATE LOAN SCHEDULE ON COLLECTION
 -- =====================================================
+-- NOTE: Uses emi_schedule directly (not loan_schedules VIEW)
+-- because computed columns in a VIEW (is_paid, is_overdue)
+-- are not updatable via DML in PostgreSQL.
+-- =====================================================
 CREATE OR REPLACE FUNCTION public.update_schedule_on_collection()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_current_outstanding DECIMAL(12, 2);
+    v_total_repayable DECIMAL(12, 2);
 BEGIN
-    -- Update the loan schedule if linked
-    IF NEW.loan_schedule_id IS NOT NULL THEN
-        UPDATE public.loan_schedules
+    -- Mark EMIs as paid via the physical table (emi_schedule),
+    -- not the loan_schedules VIEW which has computed non-updatable columns.
+    IF NEW.loan_id IS NOT NULL THEN
+        UPDATE public.emi_schedule
         SET 
-            is_paid = (NEW.amount_collected >= NEW.amount_expected),
-            paid_date = CASE WHEN NEW.amount_collected >= NEW.amount_expected THEN NEW.collection_time ELSE paid_date END
-        WHERE id = NEW.loan_schedule_id;
+            is_paid      = (NEW.amount_collected >= NEW.amount_expected),
+            status       = CASE WHEN NEW.amount_collected >= NEW.amount_expected THEN 'paid' ELSE 'pending' END,
+            paid_on      = CASE WHEN NEW.amount_collected >= NEW.amount_expected THEN NEW.collection_time ELSE paid_on END,
+            payment_mode = COALESCE(NEW.payment_mode, payment_mode)
+        WHERE loan_id = NEW.loan_id
+          AND is_paid = false
+          AND paid_on IS NULL;
     END IF;
     
-    -- Update loan outstanding amount
+    -- Update loan outstanding amount and outstanding balance
     IF NEW.loan_id IS NOT NULL THEN
+        -- Get current non-zero balance to be extremely safe
+        SELECT 
+            COALESCE(outstanding_balance, outstanding_amount, total_repayable, amount, 0),
+            COALESCE(total_repayable, amount, 0)
+        INTO v_current_outstanding, v_total_repayable
+        FROM public.loans
+        WHERE id = NEW.loan_id;
+        
+        -- If the current outstanding is 0 or less, but the loan is active, we should use total_repayable
+        IF v_current_outstanding <= 0 THEN
+            v_current_outstanding := v_total_repayable;
+        END IF;
+
         UPDATE public.loans
         SET 
-            outstanding_amount = outstanding_amount - NEW.amount_collected,
+            outstanding_amount = GREATEST(v_current_outstanding - NEW.amount_collected, 0),
+            outstanding_balance = GREATEST(v_current_outstanding - NEW.amount_collected, 0),
             status = CASE 
-                WHEN outstanding_amount - NEW.amount_collected <= 0 THEN 'closed'
+                WHEN v_current_outstanding - NEW.amount_collected <= 0 THEN 'closed'
                 ELSE status
             END
         WHERE id = NEW.loan_id;

@@ -22,7 +22,8 @@ class GpsStatusChip extends StatelessWidget {
     this.onTap,
   });
 
-  factory GpsStatusChip.fromPosition(Position? position, {VoidCallback? onTap}) {
+  factory GpsStatusChip.fromPosition(Position? position,
+      {VoidCallback? onTap}) {
     if (position == null) {
       return GpsStatusChip(status: GpsStatus.inactive, onTap: onTap);
     }
@@ -83,7 +84,7 @@ class GpsStatusChip extends StatelessWidget {
           children: [
             // Pulsing dot
             if (status == GpsStatus.active) _buildPulsingDot(),
-            
+
             // Icon
             Icon(
               _getIcon(),

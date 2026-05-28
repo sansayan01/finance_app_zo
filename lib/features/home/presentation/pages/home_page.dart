@@ -16,10 +16,10 @@ import '../../../loans/data/models/loan_model.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/providers/org_provider.dart';
 import '../../data/providers/dashboard_providers.dart';
+import '../widgets/live_agents_map_card.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   final VoidCallback onViewAllLoans;
   final VoidCallback onViewAllSavings;
   final VoidCallback onQuickAction;
@@ -32,7 +32,29 @@ class HomePage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Invalidate all dashboard providers on page creation for fresh data
+    Future.microtask(() {
+      ref.invalidate(loanSummaryProvider);
+      ref.invalidate(dashboardLoansProvider);
+      ref.invalidate(dashboardSavingsProvider);
+      ref.invalidate(dashboardTransactionsProvider);
+      ref.invalidate(todayStatsProvider);
+      ref.invalidate(activeLoansProvider);
+      ref.invalidate(activeSavingsProvider);
+      ref.invalidate(pendingDepositsProvider);
+      ref.invalidate(overdueLoansProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AuroraBackground(
@@ -45,6 +67,10 @@ class HomePage extends ConsumerWidget {
               ref.invalidate(dashboardSavingsProvider);
               ref.invalidate(dashboardTransactionsProvider);
               ref.invalidate(todayStatsProvider);
+              ref.invalidate(activeLoansProvider);
+              ref.invalidate(activeSavingsProvider);
+              ref.invalidate(pendingDepositsProvider);
+              ref.invalidate(overdueLoansProvider);
             },
             displacement: 20,
             color: Theme.of(context).colorScheme.primary,
@@ -66,7 +92,7 @@ class HomePage extends ConsumerWidget {
                   const SizedBox(height: 28),
                   _buildQuickActions(context, ref),
                   const SizedBox(height: 28),
-                  _buildTodayAgenda(context, ref),
+                  const LiveAgentsMapCard(),
                   const SizedBox(height: 28),
                   _buildActiveLoansSection(context, ref),
                   const SizedBox(height: 28),
@@ -130,7 +156,8 @@ class HomePage extends ConsumerWidget {
                       Text(
                         '${overdue.length} accounts are currently in default',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -160,14 +187,16 @@ class HomePage extends ConsumerWidget {
           children: [
             _SummaryChip(
               label: 'Disbursed',
-              value: AppFormatters.formatCompactCurrency(summary.totalDisbursed),
+              value:
+                  AppFormatters.formatCompactCurrency(summary.totalDisbursed),
               icon: Icons.outbond_rounded,
               color: AppColors.primary,
             ),
             const SizedBox(width: 10),
             _SummaryChip(
               label: 'Collected',
-              value: AppFormatters.formatCompactCurrency(summary.totalCollected),
+              value:
+                  AppFormatters.formatCompactCurrency(summary.totalCollected),
               icon: Icons.move_to_inbox_rounded,
               color: AppColors.success,
             ),
@@ -184,135 +213,6 @@ class HomePage extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
     );
-  }
-
-  Widget _buildTodayAgenda(BuildContext context, WidgetRef ref) {
-    final agendaAsync = ref.watch(todayAgendaProvider);
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Today's Agenda",
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Due Today',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        agendaAsync.when(
-          data: (items) {
-            if (items.isEmpty) {
-              return GlassCard(
-                padding: const EdgeInsets.all(24),
-                child: Center(
-                  child: Text('No collections due today',
-                      style: theme.textTheme.bodySmall),
-                ),
-              );
-            }
-            return Column(
-              children: items.map((item) {
-                final isLoan = item is LoanModel;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(16),
-                    onTap: () {
-                      if (isLoan) {
-                        context.push('/loans/${item.id}');
-                      } else {
-                        context.push('/savings/${item.id}');
-                      }
-                    },
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: (isLoan ? AppColors.primary : AppColors.orange)
-                                .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            isLoan ? Icons.payments_rounded : Icons.savings_rounded,
-                            color: isLoan ? AppColors.primary : AppColors.orange,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isLoan ? item.customerName ?? 'Unknown' : item.memberName,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                isLoan ? 'Loan EMI Due' : 'Savings Installment',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              AppFormatters.formatCurrency(
-                                isLoan ? item.emiAmount : item.monthlyDeposit,
-                              ),
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                            Text(
-                              'Tap to collect',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            );
-          },
-          loading: () => ShimmerCard(height: 150),
-          error: (_, __) => const SizedBox.shrink(),
-        ),
-      ],
-    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.05, end: 0);
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
@@ -379,7 +279,8 @@ class HomePage extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -562,7 +463,6 @@ class HomePage extends ConsumerWidget {
   Widget _buildQuickActions(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hasManager = ref.watch(hasBranchManagerProvider).valueOrNull ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -599,7 +499,8 @@ class HomePage extends ConsumerWidget {
                   child: _QuickActionBtn(
                     icon: Icons.person_add_alt_1_rounded,
                     label: 'Add User',
-                    color: isDark ? AppColors.accentDark : AppColors.accentLight,
+                    color:
+                        isDark ? AppColors.accentDark : AppColors.accentLight,
                     onTap: () => context.push('/users/new'),
                   ),
                 ),
@@ -624,20 +525,30 @@ class HomePage extends ConsumerWidget {
                     icon: Icons.business_rounded,
                     label: 'Branches',
                     color: AppColors.pink,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BranchManagementPage())),
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const BranchManagementPage())),
                   ),
                 ),
-                if (!hasManager) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _QuickActionBtn(
-                      icon: Icons.rocket_launch_rounded,
-                      label: 'Quick Setup',
-                      color: Colors.green,
-                      onTap: () => context.push('/setup'),
-                    ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.payments_rounded,
+                    label: 'Today\'s Pay',
+                    color: const Color(0xFFFF6B35),
+                    onTap: () => context.push('/payments'),
                   ),
-                ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
+                    icon: Icons.location_on_rounded,
+                    label: 'Live Map',
+                    color: const Color(0xFF00BFA5),
+                    onTap: () => context.push('/live-map'),
+                  ),
+                ),
               ],
             ),
           ],
@@ -662,7 +573,7 @@ class HomePage extends ConsumerWidget {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             GestureDetector(
-              onTap: onViewAllLoans,
+              onTap: widget.onViewAllLoans,
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -778,7 +689,7 @@ class HomePage extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
-                  onTap: onViewAllSavings,
+                  onTap: widget.onViewAllSavings,
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1015,6 +926,7 @@ class HomePage extends ConsumerWidget {
   Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(dashboardTransactionsProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1025,7 +937,7 @@ class HomePage extends ConsumerWidget {
             Text(
               'Recent Transactions',
               style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+                  ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.3),
             ),
             GestureDetector(
               onTap: () => context.push('/transactions'),
@@ -1033,15 +945,23 @@ class HomePage extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.orange.withValues(alpha: 0.08),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(
-                  'View All',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.orange,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'View All',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded,
+                        size: 12, color: theme.colorScheme.primary),
+                  ],
                 ),
               ),
             ),
@@ -1054,24 +974,36 @@ class HomePage extends ConsumerWidget {
               return GlassCard(
                 padding: const EdgeInsets.all(32),
                 child: Center(
-                  child: Text('No recent transactions',
-                      style: theme.textTheme.bodySmall),
+                  child: Column(
+                    children: [
+                      Icon(Icons.receipt_long_rounded,
+                          size: 40,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.2)),
+                      const SizedBox(height: 12),
+                      Text('No recent transactions',
+                          style: theme.textTheme.bodySmall),
+                    ],
+                  ),
                 ),
               );
             }
             return GlassCard(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: transactions.asMap().entries.map((entry) {
                   final index = entry.key;
                   final transaction = entry.value;
                   return Column(
                     children: [
-                      _buildTransactionItem(context, transaction),
+                      _buildTransactionItem(context, transaction, isDark),
                       if (index < transactions.length - 1)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Divider(height: 1),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(
+                              height: 1,
+                              color:
+                                  theme.dividerColor.withValues(alpha: 0.08)),
                         ),
                     ],
                   );
@@ -1093,79 +1025,159 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildTransactionItem(
-      BuildContext context, TransactionModel transaction) {
+      BuildContext context, TransactionModel transaction, bool isDark) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isDeposit = transaction.type == TransactionType.emiPayment ||
-        transaction.type == TransactionType.savingsDeposit;
-    final icon =
-        isDeposit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded;
-    final iconColor = isDeposit
-        ? (isDark ? AppColors.successDark : AppColors.success)
-        : (isDark ? AppColors.errorDark : AppColors.error);
 
-    String title;
+    // Type-specific config
+    IconData icon;
+    Color color;
+    String typeLabel;
+    bool isInflow;
+
     switch (transaction.type) {
       case TransactionType.emiPayment:
-        title = 'EMI Payment - ${transaction.memberName}';
-        break;
-      case TransactionType.loanDisbursement:
-        title = 'Loan Disbursement - ${transaction.memberName}';
+        icon = Icons.payments_rounded;
+        color = isDark ? AppColors.successDark : AppColors.success;
+        typeLabel = 'EMI Payment';
+        isInflow = true;
         break;
       case TransactionType.savingsDeposit:
-        title = 'Savings Deposit - ${transaction.memberName}';
+        icon = Icons.savings_rounded;
+        color = isDark ? AppColors.successDark : AppColors.success;
+        typeLabel = 'Savings Deposit';
+        isInflow = true;
+        break;
+      case TransactionType.loanDisbursement:
+        icon = Icons.account_balance_rounded;
+        color = isDark ? AppColors.errorDark : AppColors.error;
+        typeLabel = 'Loan Disbursed';
+        isInflow = false;
         break;
       case TransactionType.savingsWithdrawal:
-        title = 'Savings Withdrawal - ${transaction.memberName}';
+        icon = Icons.money_off_rounded;
+        color = isDark ? AppColors.warningDark : AppColors.warning;
+        typeLabel = 'Withdrawal';
+        isInflow = false;
         break;
       case TransactionType.penalty:
-        title = 'Penalty - ${transaction.memberName}';
+        icon = Icons.warning_amber_rounded;
+        color = isDark ? AppColors.errorDark : AppColors.error;
+        typeLabel = 'Penalty';
+        isInflow = true;
+        break;
+      case TransactionType.staffCashDeposit:
+        icon = Icons.account_balance_wallet_rounded;
+        color = isDark ? AppColors.successDark : AppColors.success;
+        typeLabel = 'Cash Deposit';
+        isInflow = true;
         break;
       default:
-        title = transaction.description ?? 'Transaction';
+        icon = Icons.swap_horiz_rounded;
+        color = Colors.grey;
+        typeLabel = 'Transaction';
+        isInflow = true;
     }
 
-    return Row(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
+    return InkWell(
+      onTap: () => context.push('/transactions'),
+      borderRadius: BorderRadius.circular(12),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color.withValues(alpha: 0.15)),
+            ),
+            child: Icon(icon, color: color, size: 20),
           ),
-          child: Icon(icon, color: iconColor, size: 22),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaction.memberName.isNotEmpty
+                      ? transaction.memberName
+                      : 'Unknown',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                AppFormatters.formatRelativeTime(transaction.createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
-              ),
-            ],
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(
+                      typeLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                    if (transaction.paymentMode != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 3,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        transaction.paymentMode!.name.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 3,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.3),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      AppFormatters.formatRelativeTime(transaction.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10,
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        Text(
-          AppFormatters.formatCurrency(transaction.amount),
-          style: TextStyle(
-            color: iconColor,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
+          Text(
+            '${isInflow ? '+' : '-'}${AppFormatters.formatCurrency(transaction.amount)}',
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.3,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -1783,7 +1795,8 @@ class _SummaryChip extends StatelessWidget {
                 label,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontSize: 10,
-                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                  color:
+                      theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                 ),
               ),
             ],

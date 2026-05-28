@@ -39,15 +39,18 @@ class EmailService {
     return send(
       to: email,
       subject: 'Welcome to MicroFlow Pro!',
-      body: '<h2>Welcome to MicroFlow Pro!</h2><p>Your organization <b>$orgName</b> is ready.</p><p><a href="https://app.microflowpro.com">Go to Dashboard</a></p>',
+      body:
+          '<h2>Welcome to MicroFlow Pro!</h2><p>Your organization <b>$orgName</b> is ready.</p><p><a href="https://app.microflowpro.com">Go to Dashboard</a></p>',
     );
   }
 
-  Future<bool> sendOverdueAlert(String email, String memberName, double amount) async {
+  Future<bool> sendOverdueAlert(
+      String email, String memberName, double amount) async {
     return send(
       to: email,
       subject: 'Overdue EMI Alert',
-      body: '<h2>Overdue Collection</h2><p>Member <b>$memberName</b> has an overdue EMI of ₹${amount.toStringAsFixed(2)}.</p>',
+      body:
+          '<h2>Overdue Collection</h2><p>Member <b>$memberName</b> has an overdue EMI of ₹${amount.toStringAsFixed(2)}.</p>',
     );
   }
 }

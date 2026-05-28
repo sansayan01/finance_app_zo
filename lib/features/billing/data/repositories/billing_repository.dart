@@ -13,67 +13,74 @@ class BillingRepository {
 
   /// Get all available plans
   Future<List<SubscriptionPlanModel>> getPlans() async {
-    final response = await _client
-        .from('subscription_plans')
-        .select()
-        .eq('is_active', true)
-        .order('sort_order');
+    try {
+      final response = await _client
+          .from('subscription_plans')
+          .select()
+          .eq('is_active', true)
+          .order('sort_order');
 
-    return response
-        .map<SubscriptionPlanModel>((json) => SubscriptionPlanModel.fromJson(json))
-        .toList();
+      return response
+          .map<SubscriptionPlanModel>(
+              (json) => SubscriptionPlanModel.fromJson(json))
+          .toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Get plan by ID
   Future<SubscriptionPlanModel?> getPlan(String planId) async {
-    final response = await _client
-        .from('subscription_plans')
-        .select()
-        .eq('id', planId)
-        .maybeSingle();
+    try {
+      final response = await _client
+          .from('subscription_plans')
+          .select()
+          .eq('id', planId)
+          .maybeSingle();
 
-    if (response == null) return null;
-    return SubscriptionPlanModel.fromJson(response);
+      if (response == null) return null;
+      return SubscriptionPlanModel.fromJson(response);
+    } catch (_) {
+      return null;
+    }
   }
 
   // ==================== SUBSCRIPTION ====================
 
   /// Get current subscription for org
   Future<OrgSubscriptionModel?> getSubscription(String orgId) async {
-    final response = await _client
-        .from('subscriptions')
-        .select('''
-          *,
-          plan_name:subscription_plans(name)
-        ''')
-        .eq('org_id', orgId)
-        .maybeSingle();
+    try {
+      final response = await _client.from('subscriptions').select('''
+            *,
+            plan_name:subscription_plans(name)
+          ''').eq('org_id', orgId).maybeSingle();
 
-    if (response == null) return null;
+      if (response == null) return null;
 
-    // Flatten plan_name
-    return OrgSubscriptionModel.fromJson({
-      ...response,
-      'plan_name': response['plan_name']?['name'],
-    });
+      // Flatten plan_name
+      return OrgSubscriptionModel.fromJson({
+        ...response,
+        'plan_name': response['plan_name']?['name'],
+      });
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Get subscription status with usage
   Future<Map<String, dynamic>> getSubscriptionStatus(String orgId) async {
-    final response = await _client
-        .rpc('get_subscription_status', params: {'p_org_id': orgId})
-        .maybeSingle();
+    final response = await _client.rpc('get_subscription_status',
+        params: {'p_org_id': orgId}).maybeSingle();
 
     return response ?? {};
   }
 
   /// Check if limit reached for a resource
   Future<bool> checkLimit(String orgId, String limitType) async {
-    final response = await _client
-        .rpc('check_subscription_limit', params: {
-          'p_org_id': orgId,
-          'p_limit_type': limitType,
-        });
+    final response = await _client.rpc('check_subscription_limit', params: {
+      'p_org_id': orgId,
+      'p_limit_type': limitType,
+    });
 
     return response as bool? ?? false;
   }
@@ -111,24 +118,26 @@ class BillingRepository {
 
   /// Cancel subscription at period end
   Future<void> cancelSubscription(String subscriptionId) async {
-    await _client
-        .from('subscriptions')
-        .update({
-          'cancel_at_period_end': true,
-          'canceled_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', subscriptionId);
+    try {
+      await _client.from('subscriptions').update({
+        'cancel_at_period_end': true,
+        'canceled_at': DateTime.now().toIso8601String(),
+      }).eq('id', subscriptionId);
+    } catch (_) {
+      // subscriptions table may not exist yet
+    }
   }
 
   /// Reactivate canceled subscription
   Future<void> reactivateSubscription(String subscriptionId) async {
-    await _client
-        .from('subscriptions')
-        .update({
-          'cancel_at_period_end': false,
-          'canceled_at': null,
-        })
-        .eq('id', subscriptionId);
+    try {
+      await _client.from('subscriptions').update({
+        'cancel_at_period_end': false,
+        'canceled_at': null,
+      }).eq('id', subscriptionId);
+    } catch (_) {
+      // subscriptions table may not exist yet
+    }
   }
 
   /// Update subscription plan (upgrade/downgrade)
@@ -137,14 +146,15 @@ class BillingRepository {
     required String newPlanId,
     String billingCycle = 'monthly',
   }) async {
-    await _client
-        .from('subscriptions')
-        .update({
-          'plan_id': newPlanId,
-          'billing_cycle': billingCycle,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', subscriptionId);
+    try {
+      await _client.from('subscriptions').update({
+        'plan_id': newPlanId,
+        'billing_cycle': billingCycle,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', subscriptionId);
+    } catch (_) {
+      // subscriptions table may not exist yet
+    }
   }
 
   // ==================== INVOICES ====================
@@ -155,76 +165,97 @@ class BillingRepository {
     int limit = 20,
     int offset = 0,
   }) async {
-    final response = await _client
-        .from('invoices')
-        .select()
-        .eq('org_id', orgId)
-        .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
+    try {
+      final response = await _client
+          .from('invoices')
+          .select()
+          .eq('org_id', orgId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
 
-    return response
-        .map<InvoiceModel>((json) => InvoiceModel.fromJson(json))
-        .toList();
+      return response
+          .map<InvoiceModel>((json) => InvoiceModel.fromJson(json))
+          .toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Get single invoice
   Future<InvoiceModel?> getInvoice(String invoiceId) async {
-    final response = await _client
-        .from('invoices')
-        .select()
-        .eq('id', invoiceId)
-        .maybeSingle();
+    try {
+      final response = await _client
+          .from('invoices')
+          .select()
+          .eq('id', invoiceId)
+          .maybeSingle();
 
-    if (response == null) return null;
-    return InvoiceModel.fromJson(response);
+      if (response == null) return null;
+      return InvoiceModel.fromJson(response);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Download invoice PDF
   Future<String?> getInvoicePdf(String invoiceId) async {
-    final response = await _client
-        .from('invoices')
-        .select('invoice_pdf')
-        .eq('id', invoiceId)
-        .maybeSingle();
+    try {
+      final response = await _client
+          .from('invoices')
+          .select('invoice_pdf')
+          .eq('id', invoiceId)
+          .maybeSingle();
 
-    return response?['invoice_pdf'] as String?;
+      return response?['invoice_pdf'] as String?;
+    } catch (_) {
+      return null;
+    }
   }
 
   // ==================== PAYMENT METHODS ====================
 
   /// Get payment methods for org
   Future<List<Map<String, dynamic>>> getPaymentMethods(String orgId) async {
-    final response = await _client
-        .from('payment_methods')
-        .select()
-        .eq('org_id', orgId)
-        .order('created_at', ascending: false);
+    try {
+      final response = await _client
+          .from('payment_methods')
+          .select()
+          .eq('org_id', orgId)
+          .order('created_at', ascending: false);
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Set default payment method
-  Future<void> setDefaultPaymentMethod(String orgId, String paymentMethodId) async {
-    // Unset current default
-    await _client
-        .from('payment_methods')
-        .update({'is_default': false})
-        .eq('org_id', orgId)
-        .eq('is_default', true);
+  Future<void> setDefaultPaymentMethod(
+      String orgId, String paymentMethodId) async {
+    try {
+      // Unset current default
+      await _client
+          .from('payment_methods')
+          .update({'is_default': false})
+          .eq('org_id', orgId)
+          .eq('is_default', true);
 
-    // Set new default
-    await _client
-        .from('payment_methods')
-        .update({'is_default': true})
-        .eq('id', paymentMethodId);
+      // Set new default
+      await _client
+          .from('payment_methods')
+          .update({'is_default': true}).eq('id', paymentMethodId);
+    } catch (_) {
+      // payment_methods table may not exist yet
+    }
   }
 
   /// Delete payment method
   Future<void> deletePaymentMethod(String paymentMethodId) async {
-    await _client
-        .from('payment_methods')
-        .delete()
-        .eq('id', paymentMethodId);
+    try {
+      await _client.from('payment_methods').delete().eq('id', paymentMethodId);
+    } catch (_) {
+      // payment_methods table may not exist yet
+    }
   }
 
   // ==================== USAGE ====================
@@ -234,15 +265,19 @@ class BillingRepository {
     String orgId, {
     int months = 6,
   }) async {
-    final startDate = DateTime.now().subtract(Duration(days: months * 30));
+    try {
+      final startDate = DateTime.now().subtract(Duration(days: months * 30));
 
-    final response = await _client
-        .from('usage_records')
-        .select()
-        .eq('org_id', orgId)
-        .gte('period_start', startDate.toIso8601String())
-        .order('period_start', ascending: false);
+      final response = await _client
+          .from('usage_records')
+          .select()
+          .eq('org_id', orgId)
+          .gte('period_start', startDate.toIso8601String())
+          .order('period_start', ascending: false);
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (_) {
+      return [];
+    }
   }
 }

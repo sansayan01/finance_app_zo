@@ -33,19 +33,19 @@ class AppFormatters {
   }
 
   static String formatDate(DateTime date) {
-    return _dateFormat.format(date);
+    return _dateFormat.format(date.toLocal());
   }
 
   static String formatShortDate(DateTime date) {
-    return _shortDateFormat.format(date);
+    return _shortDateFormat.format(date.toLocal());
   }
 
   static String formatTime(DateTime time) {
-    return _timeFormat.format(time);
+    return _timeFormat.format(time.toLocal());
   }
 
   static String formatDateTime(DateTime dateTime) {
-    return _dateTimeFormat.format(dateTime);
+    return _dateTimeFormat.format(dateTime.toLocal());
   }
 
   static String formatPhone(String phone) {
@@ -81,5 +81,9 @@ class AppFormatters {
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return formatDate(dateTime);
+  }
+
+  static DateTime convertToIST(DateTime dateTime) {
+    return dateTime.toLocal();
   }
 }

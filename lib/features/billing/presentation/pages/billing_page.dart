@@ -74,8 +74,9 @@ class _BillingContent extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Current subscription card
-          if (subscription != null) _CurrentSubscriptionCard(subscription: subscription!),
-          
+          if (subscription != null)
+            _CurrentSubscriptionCard(subscription: subscription!),
+
           const SizedBox(height: 32),
 
           // Plan selection
@@ -96,7 +97,7 @@ class _BillingContent extends ConsumerWidget {
 
           // Billing cycle toggle
           _BillingCycleToggle(),
-          
+
           const SizedBox(height: 24),
 
           // Plans grid
@@ -235,7 +236,6 @@ class _CurrentSubscriptionCard extends StatelessWidget {
               _StatusBadge(status: subscription.status),
             ],
           ),
-          
           if (subscription.isTrial) ...[
             const SizedBox(height: 16),
             Container(
@@ -260,7 +260,6 @@ class _CurrentSubscriptionCard extends StatelessWidget {
               ),
             ),
           ],
-
           if (subscription.cancelAtPeriodEnd) ...[
             const SizedBox(height: 16),
             Container(
@@ -458,7 +457,8 @@ class _PlanCard extends StatelessWidget {
               children: [
                 if (plan.isPopular)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(4),
@@ -472,18 +472,18 @@ class _PlanCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 Text(
                   plan.name,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -504,9 +504,9 @@ class _PlanCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Features
                 Expanded(
                   child: SingleChildScrollView(
@@ -517,7 +517,8 @@ class _PlanCard extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Row(
                             children: [
-                              const Icon(Icons.check, size: 16, color: Colors.green),
+                              const Icon(Icons.check,
+                                  size: 16, color: Colors.green),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -532,9 +533,9 @@ class _PlanCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // CTA button
                 SizedBox(
                   width: double.infinity,
@@ -551,7 +552,11 @@ class _PlanCard extends StatelessWidget {
                                 : null,
                           ),
                           child: Text(
-                            isTrial ? 'Start Plan' : (plan.isEnterprise ? 'Contact Sales' : 'Select'),
+                            isTrial
+                                ? 'Start Plan'
+                                : (plan.isEnterprise
+                                    ? 'Contact Sales'
+                                    : 'Select'),
                           ),
                         ),
                 ),

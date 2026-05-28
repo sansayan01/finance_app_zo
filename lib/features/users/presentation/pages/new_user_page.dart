@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/utils/kyc_validators.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/new_user_provider.dart';
@@ -31,7 +32,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   final TextEditingController _aadharController = TextEditingController();
   final TextEditingController _panController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   TextInputType _panKeyboardType = TextInputType.text;
   final FocusNode _panFocusNode = FocusNode();
@@ -39,24 +40,38 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   @override
   void initState() {
     super.initState();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(newUserProvider);
       _fullNameController.text = state.fullName;
       _emailController.text = state.email;
-      _mobileController.text = state.mobileNumber;
+      if (state.mobileNumber.isNotEmpty) {
+        final rawMobile = state.mobileNumber;
+        if (rawMobile.length == 10) {
+          _mobileController.text = '${rawMobile.substring(0, 5)} ${rawMobile.substring(5)}';
+        } else {
+          _mobileController.text = rawMobile;
+        }
+      } else {
+        _mobileController.text = '';
+      }
       _employeeIdController.text = state.employeeId;
       _zoneController.text = state.assignedZone;
       _addressController.text = "";
       _aadharController.text = state.aadharNumber;
       _panController.text = state.panNumber;
       _passwordController.text = state.password;
-      
+
       final currentUser = ref.read(currentUserProvider);
       if (widget.initialBranchId != null) {
-        ref.read(newUserProvider.notifier).updateBranchId(widget.initialBranchId);
-      } else if (currentUser?.role == UserRole.manager && currentUser?.branchId != null) {
-        ref.read(newUserProvider.notifier).updateBranchId(currentUser!.branchId);
+        ref
+            .read(newUserProvider.notifier)
+            .updateBranchId(widget.initialBranchId);
+      } else if (currentUser?.role == UserRole.manager &&
+          currentUser?.branchId != null) {
+        ref
+            .read(newUserProvider.notifier)
+            .updateBranchId(currentUser!.branchId);
       }
     });
 
@@ -116,7 +131,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_person_rounded, size: 64, color: Colors.grey),
+              const Icon(Icons.lock_person_rounded,
+                  size: 64, color: Colors.grey),
               const SizedBox(height: 16),
               Text(
                 'You do not have permission to create users.\nYour current role: ${currentUser.role?.name ?? 'None'}',
@@ -187,8 +203,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       children: [
                         Expanded(
                             flex: 3,
-                            child: _buildFormDetails(state, currentUser, theme, isDark,
-                                primary, false, availableRoles)),
+                            child: _buildFormDetails(state, currentUser, theme,
+                                isDark, primary, false, availableRoles)),
                         const SizedBox(width: 24),
                         Expanded(
                             flex: 2,
@@ -201,8 +217,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       children: [
                         _buildSummary(state, theme, isDark, primary),
                         const SizedBox(height: 20),
-                        _buildFormDetails(state, currentUser, theme, isDark, primary,
-                            isNarrow, availableRoles),
+                        _buildFormDetails(state, currentUser, theme, isDark,
+                            primary, isNarrow, availableRoles),
                       ],
                     );
                   }
@@ -268,7 +284,84 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                       if (state.branchId == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text('Please select a branch first.'),
+                            content:
+                                const Text('Please select a branch first.'),
+                            backgroundColor: theme.colorScheme.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (state.fullName.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Full name is required.'),
+                            backgroundColor: theme.colorScheme.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+
+                      final phoneError = KYCValidators.validatePhone(state.mobileNumber);
+                      if (phoneError != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(phoneError),
+                            backgroundColor: theme.colorScheme.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (state.email.trim().isNotEmpty) {
+                        final emailError = KYCValidators.validateEmail(state.email);
+                        if (emailError != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(emailError),
+                              backgroundColor: theme.colorScheme.error,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+                      }
+
+                      if (state.aadharNumber.isNotEmpty) {
+                        final aadharError = KYCValidators.validateAadhar(state.aadharNumber);
+                        if (aadharError != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(aadharError),
+                              backgroundColor: theme.colorScheme.error,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+                      }
+
+                      if (state.panNumber.isNotEmpty) {
+                        final panError = KYCValidators.validatePAN(state.panNumber);
+                        if (panError != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(panError),
+                              backgroundColor: theme.colorScheme.error,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+                      }
+
+                      if (state.role != UserRole.customer && state.password.length < 8) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Password must be at least 8 characters.'),
                             backgroundColor: theme.colorScheme.error,
                             behavior: SnackBarBehavior.floating,
                           ),
@@ -383,11 +476,11 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
       List<UserRole> availableRoles) {
     final branchesAsync = ref.watch(activeBranchesProvider);
     final branches = branchesAsync.value ?? [];
-    
+
     // Only show branch selection if user is admin or super admin
-    final showBranchSelection = currentUser?.role == UserRole.executiveAdmin || 
-                               currentUser?.role == UserRole.superAdmin;
-    
+    final showBranchSelection = currentUser?.role == UserRole.executiveAdmin ||
+        currentUser?.role == UserRole.superAdmin;
+
     return Column(
       children: [
         // ── Branch Assignment Card (if admin) ──
@@ -406,7 +499,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                   value: state.branchId,
                   hint: 'Select target branch',
                   branches: branches,
-                  onChanged: (val) => ref.read(newUserProvider.notifier).updateBranchId(val),
+                  onChanged: (val) =>
+                      ref.read(newUserProvider.notifier).updateBranchId(val),
                   theme: theme,
                   isDark: isDark,
                 ),
@@ -465,12 +559,13 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                 isNarrow: isNarrow,
                 first: _buildInputField(
                   label: 'MOBILE NUMBER',
-                  hint: '+91 XXXXXXXXXX',
+                  hint: '98765 43210',
                   icon: Icons.phone_android_outlined,
+                  prefixText: '+91 ',
                   controller: _mobileController,
                   keyboardType: TextInputType.phone,
                   inputFormatters: [
-                    LengthLimitingTextInputFormatter(14),
+                    LengthLimitingTextInputFormatter(11),
                     _MobileFormatter(),
                   ],
                   onChanged: (val) => ref
@@ -837,6 +932,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
     required String label,
     required String hint,
     IconData? icon,
+    String? prefixText,
     FocusNode? focusNode,
     TextInputType? keyboardType,
     TextCapitalization textCapitalization = TextCapitalization.none,
@@ -863,6 +959,11 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
             prefixIcon: icon != null
                 ? Icon(icon, color: theme.textTheme.bodySmall?.color, size: 20)
                 : null,
+            prefixText: prefixText,
+            prefixStyle: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.textTheme.bodySmall?.color,
+            ),
             filled: true,
             fillColor: isDark ? AppColors.fillDark : AppColors.fillLight,
             border: OutlineInputBorder(
@@ -928,7 +1029,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                         ),
                         Text(
                           'Code: ${branch.code}',
-                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                          style:
+                              theme.textTheme.bodySmall?.copyWith(fontSize: 11),
                         ),
                       ],
                     ),
@@ -1077,13 +1179,9 @@ class _MobileFormatter extends TextInputFormatter {
     if (digits.length > 10) digits = digits.substring(0, 10);
 
     StringBuffer formatted = StringBuffer();
-    if (digits.isNotEmpty) {
-      formatted.write('+91 ');
-      if (digits.length > 5) {
-        formatted.write('${digits.substring(0, 5)} ${digits.substring(5)}');
-      } else {
-        formatted.write(digits);
-      }
+    for (int i = 0; i < digits.length; i++) {
+      if (i > 0 && i % 5 == 0) formatted.write(' ');
+      formatted.write(digits[i]);
     }
 
     return TextEditingValue(

@@ -1,448 +1,639 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import '../../data/providers/customer_portal_providers.dart';
-// import '../../../auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/progress_gauge.dart';
+import '../../../../core/widgets/shimmer_card.dart';
+import '../../data/providers/customer_savings_providers.dart';
+import '../widgets/customer_savings_card.dart';
+import '../widgets/customer_savings_achievements_row.dart';
+import '../widgets/customer_empty_state.dart';
 
-class CustomerSavingsPage extends ConsumerWidget {
+class CustomerSavingsPage extends ConsumerStatefulWidget {
   const CustomerSavingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final memberId = ref.watch(currentMemberIdProvider);
-    final savingsAsync = memberId != null
-        ? ref.watch(customerSavingsProvider(memberId))
-        : null;
+  ConsumerState<CustomerSavingsPage> createState() =>
+      _CustomerSavingsPageState();
+}
 
+class _CustomerSavingsPageState extends ConsumerState<CustomerSavingsPage>
+    with TickerProviderStateMixin {
+  late final AnimationController _headerController;
+  late final Animation<double> _headerFade;
+  late final Animation<Offset> _headerSlide;
+
+  late final AnimationController _staggerController;
+
+  double _previousBalance = 0;
+  double _targetBalance = 0;
+
+  String _filter = 'all'; // all | active | completed
+
+  @override
+  void initState() {
+    super.initState();
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _headerFade = CurvedAnimation(
+      parent: _headerController,
+      curve: Curves.easeOutCubic,
+    );
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _headerController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _staggerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+
+    _headerController.forward();
+  }
+
+  @override
+  void dispose() {
+    _headerController.dispose();
+    _staggerController.dispose();
+    super.dispose();
+  }
+
+  void _scheduleAnimations(double total) {
+    if (_targetBalance == total) return;
+    _previousBalance = _targetBalance;
+    _targetBalance = total;
+    _staggerController.reset();
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) _staggerController.forward();
+    });
+  }
+
+  /// Indian-style currency formatting (e.g. 12,34,567).
+  String _formatCurrency(double value) {
+    if (value.abs() >= 10000000) {
+      return '₹${(value / 10000000).toStringAsFixed(2)} Cr';
+    }
+    if (value.abs() >= 100000) {
+      return '₹${(value / 100000).toStringAsFixed(2)} L';
+    }
+    final n = value.round();
+    final s = n.toString();
+    if (s.length <= 3) return '₹$s';
+    final last3 = s.substring(s.length - 3);
+    final rest = s.substring(0, s.length - 3);
+    final buf = StringBuffer();
+    for (int i = 0; i < rest.length; i++) {
+      buf.write(rest[i]);
+      final remaining = rest.length - i - 1;
+      if (remaining > 0 && remaining % 2 == 0) buf.write(',');
+    }
+    return '₹${buf.toString()},$last3';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final isDark = theme.brightness == Brightness.dark;
+    final savingsAsync = ref.watch(customerSavingsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Savings'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () => context.push('/customer/transactions'),
-          ),
-        ],
+    final headerGradient = isDark
+        ? const LinearGradient(
+            colors: [Color(0xFF1A1F3A), Color(0xFF151A30)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : AppColors.primaryGradient;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
       ),
-      body: savingsAsync == null
-          ? const Center(child: Text('Please login to continue'))
-          : savingsAsync.when(
-              data: (savings) {
-                final totalBalance = savings.fold<double>(
-                  0.0,
-                  (sum, s) => sum + ((s['balance'] as num?)?.toDouble() ?? 0.0),
-                );
+      child: Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      extendBody: true,
+      body: AuroraBackground(
+        child: savingsAsync.when(
+          loading: () => _buildLoadingState(isDark, headerGradient),
+          error: (e, _) => _buildErrorState(e, isDark, headerGradient),
+          data: (savings) {
+            final totalBalance =
+                savings.fold<double>(0, (sum, s) => sum + s.currentAmount);
+            final totalTarget =
+                savings.fold<double>(0, (sum, s) => sum + s.targetAmount);
+            final double overallProgress = totalTarget > 0
+                ? (totalBalance / totalTarget * 100).clamp(0.0, 100.0)
+                : 0.0;
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Total Savings Card
-                      _buildTotalSavingsCard(theme, currencyFormat, totalBalance),
-                      const SizedBox(height: 16),
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scheduleAnimations(totalBalance);
+            });
 
-                      // Quick Actions
-                      _buildQuickActionsCard(context, ref, theme),
-                      const SizedBox(height: 16),
+            if (savings.isEmpty) {
+              return Column(
+                children: [
+                  _buildGradientHeader(
+                    context, isDark, headerGradient, 0, 0, 0, 0,
+                  ),
+                  Expanded(
+                    child: CustomerEmptyState(
+                      icon: Icons.savings_rounded,
+                      title: 'Start your savings journey',
+                      subtitle:
+                          'Build wealth, one deposit at a time. Open a vault and watch your goals come to life.',
+                      ctaLabel: 'Refresh',
+                      onCtaTap: () =>
+                          ref.invalidate(customerSavingsProvider),
+                    ),
+                  ),
+                ],
+              );
+            }
 
-                      // Savings Accounts
-                      Text(
-                        'Savings Accounts',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+            // Derive available filters
+            final hasActive = savings.any((s) => s.status == 'active');
+            final hasCompleted = savings.any((s) => s.status == 'completed');
+            final filtered = savings.where((s) {
+              if (_filter == 'all') return true;
+              return s.status == _filter;
+            }).toList();
+
+            return RefreshIndicator(
+              onRefresh: () async =>
+                  ref.invalidate(customerSavingsProvider),
+              color: theme.colorScheme.primary,
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _buildGradientHeader(
+                      context,
+                      isDark,
+                      headerGradient,
+                      totalBalance,
+                      totalTarget,
+                      overallProgress,
+                      savings.length,
+                    ),
+                  ),
+
+                  // Achievements
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                        AppSpacing.sm,
                       ),
-                      const SizedBox(height: 12),
+                      child: CustomerSavingsAchievementsRow(
+                        currentAmount: totalBalance,
+                        targetAmount: totalTarget,
+                        depositCount: savings.length,
+                      ),
+                    ),
+                  ),
 
-                      if (savings.isEmpty)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: Text('No savings accounts yet'),
+                  // Filter chips (only when both states exist)
+                  if (hasActive && hasCompleted)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                          AppSpacing.md,
+                          0,
+                        ),
+                        child: _buildFilterChips(theme, isDark),
+                      ),
+                    ),
+
+                  // Section title
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Your Vaults',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                              color: isDark
+                                  ? AppColors.textPrimaryDark
+                                  : AppColors.textPrimaryLight,
+                            ),
                           ),
-                        )
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: savings.length,
-                          itemBuilder: (context, index) {
-                            final account = savings[index];
-                            return _buildSavingsAccountCard(context, ref, account, currencyFormat)
-                                .animate()
-                                .fadeIn(duration: 300.ms, delay: Duration(milliseconds: index * 50));
+                          const Spacer(),
+                          Text(
+                            '${filtered.length} ${filtered.length == 1 ? 'vault' : 'vaults'}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: (isDark
+                                      ? AppColors.textPrimaryDark
+                                      : AppColors.textPrimaryLight)
+                                  .withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Stagger fade+slide vault cards
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final delay = (index * 0.07).clamp(0.0, 0.9);
+                        return AnimatedBuilder(
+                          animation: _staggerController,
+                          builder: (context, child) {
+                            final progress =
+                                ((_staggerController.value - delay) / (1 - delay))
+                                    .clamp(0.0, 1.0);
+                            final eased =
+                                Curves.easeOutCubic.transform(progress);
+                            return Opacity(
+                              opacity: eased,
+                              child: Transform.translate(
+                                offset: Offset(0, 28 * (1 - eased)),
+                                child: child,
+                              ),
+                            );
                           },
-                        ),
-                    ],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm / 2,
+                            ),
+                            child: CustomerSavingsCard(
+                              savings: filtered[index],
+                              onTap: () => context.push(
+                                '/customer/savings/${filtered[index].id}',
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      childCount: filtered.length,
+                    ),
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Error: $error')),
-            ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showDepositDialog(context, ref),
-        icon: const Icon(Icons.add),
-        label: const Text('Deposit'),
-      ),
-      bottomNavigationBar: _buildBottomNav(context, 2),
-    );
-  }
 
-  Widget _buildTotalSavingsCard(ThemeData theme, NumberFormat currencyFormat, double totalBalance) {
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Icon(
-              Icons.savings,
-              color: theme.colorScheme.onPrimaryContainer,
-              size: 48,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Total Savings',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 110),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              currencyFormat.format(totalBalance),
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildQuickActionsCard(BuildContext context, WidgetRef ref, ThemeData theme) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildQuickAction(
-              context,
-              Icons.arrow_downward,
-              'Deposit',
-              Colors.green,
-              () => _showDepositDialog(context, ref),
-            ),
-            _buildQuickAction(
-              context,
-              Icons.arrow_upward,
-              'Withdraw',
-              Colors.orange,
-              () => _showWithdrawDialog(context, ref),
-            ),
-            _buildQuickAction(
-              context,
-              Icons.history,
-              'History',
-              Colors.blue,
-              () => context.push('/customer/transactions'),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildQuickAction(
-    BuildContext context,
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
+  Widget _buildFilterChips(ThemeData theme, bool isDark) {
+    final chips = [
+      ('all', 'All'),
+      ('active', 'Active'),
+      ('completed', 'Completed'),
+    ];
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: chips.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final (key, label) = chips[i];
+          final selected = _filter == key;
+          final activeColor = theme.colorScheme.primary;
+
+          return GestureDetector(
+            onTap: () => setState(() => _filter = key),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                gradient: selected
+                    ? LinearGradient(
+                        colors: [
+                          activeColor,
+                          activeColor.withValues(alpha: 0.85),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: selected
+                    ? null
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.black.withValues(alpha: 0.04)),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: selected
+                      ? Colors.transparent
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.06)),
+                ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
-              child: Icon(icon, color: color),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: selected
+                      ? Colors.white
+                      : (isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimaryLight),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(label),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildSavingsAccountCard(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic account,
-    NumberFormat currencyFormat,
-  ) {
-    final theme = Theme.of(context);
-    final accountType = account['savings_plan']?['name'] ?? 'Regular Savings';
-    final balance = (account['balance'] as num?)?.toDouble() ?? 0.0;
-    final interestRate = (account['interest_rate'] as num?)?.toDouble() ?? 5.0;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      accountType,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Account #${(account['id'] as String?)?.substring(0, 8) ?? ''}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '$interestRate% p.a.',
-                    style: const TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+  Widget _buildLoadingState(bool isDark, LinearGradient gradient) {
+    return Column(
+      children: [
+        _buildGradientHeader(context, isDark, gradient, 0, 0, 0, 0),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            itemCount: 4,
+            itemBuilder: (_, __) => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: ShimmerCard(height: 140, borderRadius: 20),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      currencyFormat.format(balance),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Available Balance',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _showWithdrawDialog(context, ref, accountId: account['id']),
-                    child: const Text('Withdraw'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _showDepositDialog(context, ref, accountId: account['id']),
-                    child: const Text('Deposit'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDepositDialog(BuildContext context, WidgetRef ref, {String? accountId}) {
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Deposit Savings'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Amount',
-                prefixText: '₹',
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text('Deposit will be collected by your field agent'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(controller.text) ?? 0;
-              if (amount <= 0) return;
-
-              Navigator.pop(context);
-              // Process deposit
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Deposit request submitted')),
-              );
-            },
-            child: const Text('Deposit'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showWithdrawDialog(BuildContext context, WidgetRef ref, {String? accountId}) {
-    final controller = TextEditingController();
-    final reasonController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Withdraw Savings'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Amount',
-                prefixText: '₹',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Reason',
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text('Withdrawal requires branch manager approval'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(controller.text) ?? 0;
-              if (amount <= 0) return;
-
-              Navigator.pop(context);
-              // Process withdrawal request
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Withdrawal request submitted')),
-              );
-            },
-            child: const Text('Request'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context, int currentIndex) {
-    return NavigationBar(
-      selectedIndex: currentIndex,
-      onDestinationSelected: (index) {
-        switch (index) {
-          case 0:
-            context.go('/customer');
-            break;
-          case 1:
-            context.go('/customer/loans');
-            break;
-          case 2:
-            context.go('/customer/savings');
-            break;
-          case 3:
-            context.go('/customer/profile');
-            break;
-        }
-      },
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.dashboard_outlined),
-          selectedIcon: Icon(Icons.dashboard),
-          label: 'Home',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.account_balance_outlined),
-          selectedIcon: Icon(Icons.account_balance),
-          label: 'Loans',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.savings_outlined),
-          selectedIcon: Icon(Icons.savings),
-          label: 'Savings',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: 'Profile',
         ),
       ],
+    );
+  }
+
+  Widget _buildErrorState(Object e, bool isDark, LinearGradient gradient) {
+    return Column(
+      children: [
+        _buildGradientHeader(context, isDark, gradient, 0, 0, 0, 0),
+        Expanded(
+          child: CustomerEmptyState(
+            icon: Icons.error_outline_rounded,
+            title: 'Couldn\'t load savings',
+            subtitle: e.toString(),
+            ctaLabel: 'Retry',
+            onCtaTap: () => ref.invalidate(customerSavingsProvider),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGradientHeader(
+    BuildContext context,
+    bool isDark,
+    LinearGradient gradient,
+    double totalBalance,
+    double totalTarget,
+    double overallProgress,
+    int accountCount,
+  ) {
+    final theme = Theme.of(context);
+    final mq = MediaQuery.of(context);
+
+    return FadeTransition(
+      opacity: _headerFade,
+      child: SlideTransition(
+        position: _headerSlide,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            mq.padding.top + AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.xl,
+          ),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(32),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.28),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _CircleIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    onTap: () => context.pop(),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    'My Savings',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Savings Balance',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(
+                            begin: _previousBalance,
+                            end: totalBalance,
+                          ),
+                          duration: const Duration(milliseconds: 800),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, _) {
+                            return Text(
+                              _formatCurrency(value),
+                              style:
+                                  theme.textTheme.headlineLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$accountCount vault${accountCount != 1 ? 's' : ''}  •  ${overallProgress.toStringAsFixed(1)}% overall',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ProgressGauge(
+                    value: (overallProgress / 100).clamp(0.0, 1.0),
+                    size: 84,
+                    strokeWidth: 7,
+                    progressColor: Colors.white,
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    center: Text(
+                      '${overallProgress.toStringAsFixed(0)}%',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.track_changes_rounded,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      'Target ${_formatCurrency(totalTarget)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.savings_rounded,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      'Saved ${_formatCurrency(totalBalance)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Circular icon button used in the header.
+class _CircleIconButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleIconButton({required this.icon, required this.onTap});
+
+  @override
+  State<_CircleIconButton> createState() => _CircleIconButtonState();
+}
+
+class _CircleIconButtonState extends State<_CircleIconButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _pressed
+              ? Colors.white.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          widget.icon,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
     );
   }
 }

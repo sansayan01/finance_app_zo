@@ -48,37 +48,46 @@ class PlatformMetrics extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-    'total_organizations': totalOrganizations,
-    'active_organizations': activeOrganizations,
-    'total_users': totalUsers,
-    'active_users': activeUsers,
-    'total_branches': totalBranches,
-    'total_members': totalMembers,
-    'total_loans': totalLoans,
-    'total_loan_amount': totalLoanAmount,
-    'total_collections': totalCollections,
-    'total_savings': totalSavings,
-    'mrr': mrr,
-  };
+        'total_organizations': totalOrganizations,
+        'active_organizations': activeOrganizations,
+        'total_users': totalUsers,
+        'active_users': activeUsers,
+        'total_branches': totalBranches,
+        'total_members': totalMembers,
+        'total_loans': totalLoans,
+        'total_loan_amount': totalLoanAmount,
+        'total_collections': totalCollections,
+        'total_savings': totalSavings,
+        'mrr': mrr,
+      };
 
-  double get organizationActivationRate => 
-    totalOrganizations > 0 ? (activeOrganizations / totalOrganizations) * 100 : 0;
+  double get organizationActivationRate => totalOrganizations > 0
+      ? (activeOrganizations / totalOrganizations) * 100
+      : 0;
 
-  double get userActivationRate => 
-    totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
+  double get userActivationRate =>
+      totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
 
-  double get avgLoanAmount => 
-    totalLoans > 0 ? totalLoanAmount / totalLoans : 0;
+  double get avgLoanAmount => totalLoans > 0 ? totalLoanAmount / totalLoans : 0;
 
-  double get collectionRate => 
-    totalLoanAmount > 0 ? (totalCollections / totalLoanAmount) * 100 : 0;
+  double get collectionRate =>
+      totalLoanAmount > 0 ? (totalCollections / totalLoanAmount) * 100 : 0;
 
   @override
   List<Object?> get props => [
-    totalOrganizations, activeOrganizations, totalUsers, activeUsers,
-    totalBranches, totalMembers, totalLoans, totalLoanAmount,
-    totalCollections, totalSavings, mrr, lastUpdated,
-  ];
+        totalOrganizations,
+        activeOrganizations,
+        totalUsers,
+        activeUsers,
+        totalBranches,
+        totalMembers,
+        totalLoans,
+        totalLoanAmount,
+        totalCollections,
+        totalSavings,
+        mrr,
+        lastUpdated,
+      ];
 }
 
 /// Organization health score model
@@ -179,15 +188,15 @@ class FeatureFlag extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-    'key': key,
-    'name': name,
-    'description': description,
-    'is_enabled': isEnabled,
-    'rollout_percentage': rolloutPercentage,
-    'target_orgs': targetOrgs,
-    'target_roles': targetRoles,
-    'config': config,
-  };
+        'key': key,
+        'name': name,
+        'description': description,
+        'is_enabled': isEnabled,
+        'rollout_percentage': rolloutPercentage,
+        'target_orgs': targetOrgs,
+        'target_roles': targetRoles,
+        'config': config,
+      };
 
   @override
   List<Object?> get props => [id, key, isEnabled];
@@ -230,8 +239,12 @@ class PlatformAnnouncement extends Equatable {
       targetAudience: json['target_audience'] ?? 'all',
       targetOrgs: List<String>.from(json['target_orgs'] ?? []),
       isActive: json['is_active'] ?? true,
-      showFrom: json['show_from'] != null ? DateTime.tryParse(json['show_from']) : null,
-      showUntil: json['show_until'] != null ? DateTime.tryParse(json['show_until']) : null,
+      showFrom: json['show_from'] != null
+          ? DateTime.tryParse(json['show_from'])
+          : null,
+      showUntil: json['show_until'] != null
+          ? DateTime.tryParse(json['show_until'])
+          : null,
       createdAt: DateTime.parse(json['created_at']),
       isRead: json['is_read'] ?? false,
     );
@@ -332,7 +345,9 @@ class SupportTicket extends Equatable {
       messages: List<Map<String, dynamic>>.from(json['messages'] ?? []),
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
-      resolvedAt: json['resolved_at'] != null ? DateTime.tryParse(json['resolved_at']) : null,
+      resolvedAt: json['resolved_at'] != null
+          ? DateTime.tryParse(json['resolved_at'])
+          : null,
     );
   }
 
@@ -376,12 +391,12 @@ class MaintenanceWindow extends Equatable {
   }
 
   Duration get duration => scheduledEnd.difference(scheduledStart);
-  
+
   bool get isUpcoming => scheduledStart.isAfter(DateTime.now());
-  
-  bool get isOngoing => 
-    DateTime.now().isAfter(scheduledStart) && 
-    DateTime.now().isBefore(scheduledEnd);
+
+  bool get isOngoing =>
+      DateTime.now().isAfter(scheduledStart) &&
+      DateTime.now().isBefore(scheduledEnd);
 
   @override
   List<Object?> get props => [id, title, scheduledStart, scheduledEnd];

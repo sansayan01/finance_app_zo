@@ -36,7 +36,7 @@ class ActivityLogModel {
         (e) => e.name == json['type'],
         orElse: () => ActivityType.userAction,
       ),
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      timestamp: DateTime.parse((json['created_at'] ?? json['timestamp']) as String),
     );
   }
 }

@@ -3,9 +3,9 @@ import 'package:microflow_pro/core/constants/enums.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/member_model.dart';
 import '../../data/repositories/members_repository.dart';
+import 'member_providers.dart';
 import '../../../../core/services/location_service.dart';
-import '../../../../core/providers/org_provider.dart';
-import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/providers/location_providers.dart';
 
 class OnboardingState {
   final String fullName;
@@ -54,13 +54,16 @@ class OnboardingState {
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
   final MembersRepository _repository;
   final LocationService _locationService;
+  final Ref _ref;
 
-  OnboardingNotifier(this._repository, this._locationService) : super(OnboardingState());
+  OnboardingNotifier(this._ref, this._repository, this._locationService)
+      : super(OnboardingState());
 
   void updateFullName(String val) => state = state.copyWith(fullName: val);
   void updatePhone(String val) => state = state.copyWith(phone: val);
   void updateShopName(String val) => state = state.copyWith(shopName: val);
-  void updateBusinessType(String val) => state = state.copyWith(businessType: val);
+  void updateBusinessType(String val) =>
+      state = state.copyWith(businessType: val);
 
   Future<void> captureLocation() async {
     state = state.copyWith(isLoading: true);
@@ -72,7 +75,8 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
         isLoading: false,
       );
     } else {
-      state = state.copyWith(isLoading: false, error: 'Could not capture location');
+      state =
+          state.copyWith(isLoading: false, error: 'Could not capture location');
     }
   }
 
@@ -98,6 +102,11 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       );
 
       await _repository.createMember(member);
+
+      // Invalidate member-related providers
+      _ref.invalidate(membersProvider);
+      _ref.invalidate(memberSummaryProvider);
+
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
@@ -109,20 +118,11 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   void reset() => state = OnboardingState();
 }
 
-final membersRepositoryProvider = Provider<MembersRepository>((ref) {
-  final client = ref.watch(supabaseClientProvider);
-  final orgId = ref.watch(currentOrgIdOrThrowProvider);
-  return MembersRepository(client, orgId);
-});
-
-final locationServiceProvider = Provider<LocationService>((ref) {
-  return LocationService();
-});
-
-final onboardingProvider = StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
+final onboardingProvider =
+    StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
   return OnboardingNotifier(
+    ref,
     ref.watch(membersRepositoryProvider),
     ref.watch(locationServiceProvider),
   );
 });
-

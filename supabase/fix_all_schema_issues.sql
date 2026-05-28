@@ -893,6 +893,9 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.update_schedule_on_collection()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_current_outstanding DECIMAL(12, 2);
+    v_total_repayable DECIMAL(12, 2);
 BEGIN
     IF NEW.loan_schedule_id IS NOT NULL THEN
         UPDATE public.loan_schedules
@@ -903,11 +906,25 @@ BEGIN
     END IF;
     
     IF NEW.loan_id IS NOT NULL THEN
+        -- Get current non-zero balance to be extremely safe
+        SELECT 
+            COALESCE(outstanding_balance, outstanding_amount, total_repayable, amount, 0),
+            COALESCE(total_repayable, amount, 0)
+        INTO v_current_outstanding, v_total_repayable
+        FROM public.loans
+        WHERE id = NEW.loan_id;
+        
+        -- If the current outstanding is 0 or less, but the loan is active, we should use total_repayable
+        IF v_current_outstanding <= 0 THEN
+            v_current_outstanding := v_total_repayable;
+        END IF;
+
         UPDATE public.loans
         SET 
-            outstanding_amount = GREATEST(outstanding_amount - NEW.amount_collected, 0),
+            outstanding_amount = GREATEST(v_current_outstanding - NEW.amount_collected, 0),
+            outstanding_balance = GREATEST(v_current_outstanding - NEW.amount_collected, 0),
             status = CASE 
-                WHEN outstanding_amount - NEW.amount_collected <= 0 THEN 'closed'
+                WHEN v_current_outstanding - NEW.amount_collected <= 0 THEN 'closed'
                 ELSE status
             END
         WHERE id = NEW.loan_id;

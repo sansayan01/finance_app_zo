@@ -3,22 +3,22 @@ import 'package:equatable/equatable.dart';
 class WalletModel extends Equatable {
   final String id;
   final String staffId;
-  
+
   // Cash tracking
   final double cashInHand;
   final double digitalBalance;
   final double totalCollectedToday;
   final double totalDepositedToday;
-  
+
   // Last deposit info
   final double? lastDepositAmount;
   final DateTime? lastDepositAt;
   final String? lastDepositMode;
-  
+
   // Safe limit (alerts when exceeded)
   final double safeLimit;
   final bool isOverLimit;
-  
+
   // Timestamps
   final DateTime updatedAt;
   final DateTime createdAt;
@@ -49,8 +49,7 @@ class WalletModel extends Equatable {
           (json['total_collected_today'] as num?)?.toDouble() ?? 0.0,
       totalDepositedToday:
           (json['total_deposited_today'] as num?)?.toDouble() ?? 0.0,
-      lastDepositAmount:
-          (json['last_deposit_amount'] as num?)?.toDouble(),
+      lastDepositAmount: (json['last_deposit_amount'] as num?)?.toDouble(),
       lastDepositAt: json['last_deposit_at'] != null
           ? DateTime.parse(json['last_deposit_at'] as String)
           : null,
@@ -82,10 +81,10 @@ class WalletModel extends Equatable {
 
   double get totalBalance => cashInHand + digitalBalance;
   double get availableForDeposit => cashInHand;
-  
+
   double get safeLimitPercentage =>
       safeLimit > 0 ? (cashInHand / safeLimit) * 100 : 0;
-  
+
   String get safeLimitStatus {
     if (cashInHand >= safeLimit) return 'danger';
     if (cashInHand >= safeLimit * 0.8) return 'warning';

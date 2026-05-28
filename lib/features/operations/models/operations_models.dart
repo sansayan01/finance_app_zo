@@ -37,7 +37,8 @@ class SystemStatusModel extends Equatable {
       title: json['title'] as String,
       description: json['description'] as String?,
       type: json['type'] as String? ?? 'incident',
-      affectedComponents: (json['affected_components'] as List<dynamic>?)?.cast<String>() ?? [],
+      affectedComponents:
+          (json['affected_components'] as List<dynamic>?)?.cast<String>() ?? [],
       status: json['status'] as String? ?? 'investigating',
       severity: json['severity'] as String? ?? 'minor',
       startedAt: DateTime.parse(json['started_at'] as String),
@@ -51,9 +52,19 @@ class SystemStatusModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, incidentNumber, title, description, type, affectedComponents,
-    status, severity, startedAt, resolvedAt, updates, createdAt
-  ];
+        id,
+        incidentNumber,
+        title,
+        description,
+        type,
+        affectedComponents,
+        status,
+        severity,
+        startedAt,
+        resolvedAt,
+        updates,
+        createdAt
+      ];
 }
 
 /// Help article model
@@ -100,16 +111,24 @@ class HelpArticleModel extends Equatable {
     );
   }
 
-  double get helpfulPercentage =>
-    (helpfulCount + notHelpfulCount) > 0
+  double get helpfulPercentage => (helpfulCount + notHelpfulCount) > 0
       ? (helpfulCount / (helpfulCount + notHelpfulCount)) * 100
       : 0;
 
   @override
   List<Object?> get props => [
-    id, title, content, category, tags, viewCount, helpfulCount,
-    notHelpfulCount, status, createdAt, updatedAt
-  ];
+        id,
+        title,
+        content,
+        category,
+        tags,
+        viewCount,
+        helpfulCount,
+        notHelpfulCount,
+        status,
+        createdAt,
+        updatedAt
+      ];
 }
 
 /// Video tutorial model
@@ -165,7 +184,16 @@ class VideoTutorialModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, title, description, videoUrl, thumbnailUrl, durationSeconds,
-    category, tags, viewCount, status, createdAt
-  ];
+        id,
+        title,
+        description,
+        videoUrl,
+        thumbnailUrl,
+        durationSeconds,
+        category,
+        tags,
+        viewCount,
+        status,
+        createdAt
+      ];
 }

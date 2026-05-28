@@ -27,11 +27,13 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
     try {
       final locationService = LocationService();
       final position = await locationService.getCurrentLocation();
-      
+
       if (position == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not get location'), backgroundColor: Colors.red),
+            const SnackBar(
+                content: Text('Could not get location'),
+                backgroundColor: Colors.red),
           );
         }
         return;
@@ -45,19 +47,26 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Checked out successfully'), backgroundColor: Colors.green, duration: Duration(seconds: 2)),
+            const SnackBar(
+                content: Text('Checked out successfully'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2)),
           );
         }
       } else {
         await repo.logVisit(
           staffId: profile.id,
+          orgId: profile.orgId ?? '',
           purpose: 'collection',
           checkInLat: position.latitude,
           checkInLng: position.longitude,
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Checked in successfully'), backgroundColor: Colors.green, duration: Duration(seconds: 2)),
+            const SnackBar(
+                content: Text('Checked in successfully'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2)),
           );
         }
       }
@@ -68,7 +77,10 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 2)),
+          SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2)),
         );
       }
     } finally {
@@ -97,9 +109,16 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: (isCheckedIn ? Colors.green : AppColors.primary).withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: (isCheckedIn ? Colors.green : AppColors.primary)
+                    .withValues(alpha: 0.4),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: (isCheckedIn ? Colors.green : AppColors.primary)
+                    .withValues(alpha: 0.15),
+                blurRadius: 32,
+                spreadRadius: -4,
               ),
             ],
           ),
@@ -115,7 +134,9 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      isCheckedIn ? Icons.check_circle_outline_rounded : Icons.login_rounded,
+                      isCheckedIn
+                          ? Icons.check_circle_outline_rounded
+                          : Icons.login_rounded,
                       color: Colors.white,
                       size: 20,
                     ),
@@ -149,14 +170,20 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
                         backgroundColor: Colors.white.withValues(alpha: 0.2),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
                       child: _isLoading
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
                           : Text(
                               isCheckedIn ? 'Check Out' : 'Check In',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 12),
                             ),
                     ),
                   ),

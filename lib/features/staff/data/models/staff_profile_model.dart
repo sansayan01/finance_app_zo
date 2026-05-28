@@ -4,20 +4,96 @@ enum StaffRole {
   collector,
   supervisor,
   branchManager,
-  areaManager,
+  areaManager;
+
+  String get displayName {
+    switch (this) {
+      case StaffRole.collector:
+        return 'Collection Agent';
+      case StaffRole.supervisor:
+        return 'Supervisor';
+      case StaffRole.branchManager:
+        return 'Branch Manager';
+      case StaffRole.areaManager:
+        return 'Area Manager';
+    }
+  }
+
+  /// Maps to the DB constraint values on collections.collected_by_role
+  String get dbValue {
+    switch (this) {
+      case StaffRole.collector:
+        return 'collectionAgent';
+      case StaffRole.supervisor:
+        return 'manager';
+      case StaffRole.branchManager:
+        return 'manager';
+      case StaffRole.areaManager:
+        return 'manager';
+    }
+  }
+
+  /// Maps to the DB constraint values on staff_profiles.role
+  String get dbRole {
+    switch (this) {
+      case StaffRole.collector:
+        return 'collector';
+      case StaffRole.supervisor:
+        return 'supervisor';
+      case StaffRole.branchManager:
+        return 'branch_manager';
+      case StaffRole.areaManager:
+        return 'area_manager';
+    }
+  }
 }
 
 enum StaffStatus {
   active,
   inactive,
   suspended,
-  onLeave,
+  onLeave;
+
+  String get dbValue {
+    switch (this) {
+      case StaffStatus.active:
+        return 'active';
+      case StaffStatus.inactive:
+        return 'inactive';
+      case StaffStatus.suspended:
+        return 'suspended';
+      case StaffStatus.onLeave:
+        return 'on_leave';
+    }
+  }
 }
 
 enum ShiftType {
   morning,
   evening,
-  fullDay,
+  fullDay;
+
+  String get displayName {
+    switch (this) {
+      case ShiftType.morning:
+        return 'Morning';
+      case ShiftType.evening:
+        return 'Evening';
+      case ShiftType.fullDay:
+        return 'Full Day';
+    }
+  }
+
+  String get dbValue {
+    switch (this) {
+      case ShiftType.morning:
+        return 'morning';
+      case ShiftType.evening:
+        return 'evening';
+      case ShiftType.fullDay:
+        return 'full_day';
+    }
+  }
 }
 
 class StaffProfileModel extends Equatable {
@@ -66,25 +142,36 @@ class StaffProfileModel extends Equatable {
   });
 
   factory StaffProfileModel.fromJson(Map<String, dynamic> json) {
+    // staff_code may come as 'staff_code' (profiles) or 'employee_id' (staff_profiles)
+    final rawStaffCode = json['staff_code'] as String? ??
+        json['employee_id'] as String? ??
+        '';
+    // role may come as 'role' or 'designation'
+    final rawRole = json['role'] as String? ?? json['designation'] as String?;
+    // hire_date may come as 'hire_date' or 'date_of_joining'
+    final rawHireDate = json['hire_date'] as String? ??
+        json['date_of_joining'] as String?;
+    // assigned_areas may be a list or a single 'area' string
+    final rawAreas = json['assigned_areas'] as List<dynamic>?;
+    final rawArea = json['area'] as String?;
+
     return StaffProfileModel(
       id: json['id'] as String,
       orgId: json['org_id'] as String?,
       userId: json['user_id'] as String?,
-      staffCode: json['staff_code'] as String,
-      fullName: json['full_name'] as String,
-      phone: json['phone'] as String,
+      staffCode: rawStaffCode,
+      fullName: json['full_name'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
       email: json['email'] as String?,
-      role: _parseRole(json['role'] as String?),
+      role: _parseRole(rawRole),
       branchId: json['branch_id'] as String?,
       branchName: json['branches']?['name'] as String?,
       status: _parseStatus(json['status'] as String?),
-      assignedAreas: (json['assigned_areas'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      assignedAreas: rawAreas?.map((e) => e.toString()).toList() ??
+          (rawArea != null ? [rawArea] : []),
       shift: _parseShift(json['shift'] as String?),
-      hireDate: json['hire_date'] != null
-          ? DateTime.parse(json['hire_date'] as String)
+      hireDate: rawHireDate != null
+          ? DateTime.tryParse(rawHireDate)
           : null,
       dailyCollectionTarget:
           (json['daily_collection_target'] as num?)?.toDouble() ?? 50000.0,
@@ -92,8 +179,12 @@ class StaffProfileModel extends Equatable {
           (json['monthly_collection_target'] as num?)?.toDouble() ?? 1500000.0,
       supervisorId: json['supervisor_id'] as String?,
       supervisorName: json['supervisor']?['full_name'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(),
     );
   }
 
@@ -106,11 +197,11 @@ class StaffProfileModel extends Equatable {
       'full_name': fullName,
       'phone': phone,
       'email': email,
-      'role': role.name,
+      'role': role.dbRole,
       'branch_id': branchId,
-      'status': status.name,
+      'status': status.dbValue,
       'assigned_areas': assignedAreas,
-      'shift': shift.name,
+      'shift': shift.dbValue,
       'hire_date': hireDate?.toIso8601String(),
       'daily_collection_target': dailyCollectionTarget,
       'monthly_collection_target': monthlyCollectionTarget,

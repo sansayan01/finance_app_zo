@@ -37,20 +37,20 @@ class EMIScheduleModel {
 
   factory EMIScheduleModel.fromJson(Map<String, dynamic> json) {
     return EMIScheduleModel(
-      id: json['id'] as String,
-      loanId: json['loan_id'] as String,
-      emiNumber: json['emi_number'] as int,
-      dueDate: DateTime.parse(json['due_date'] as String),
-      emiAmount: (json['emi_amount'] as num).toDouble(),
-      principal: (json['principal'] as num).toDouble(),
-      interest: (json['interest'] as num).toDouble(),
-      balanceAfter: (json['balance_after'] as num).toDouble(),
+      id: json['id']?.toString() ?? '',
+      loanId: json['loan_id']?.toString() ?? '',
+      emiNumber: json['emi_number'] as int? ?? 0,
+      dueDate: DateTime.tryParse(json['due_date']?.toString() ?? '') ?? DateTime.now(),
+      emiAmount: (json['emi_amount'] as num?)?.toDouble() ?? 0,
+      principal: (json['principal'] as num?)?.toDouble() ?? 0,
+      interest: (json['interest'] as num?)?.toDouble() ?? 0,
+      balanceAfter: (json['balance_after'] as num?)?.toDouble() ?? 0,
       status: EMIStatus.values.firstWhere(
         (e) => e.name == json['status'] || _toSnake(e.name) == json['status'],
         orElse: () => EMIStatus.upcoming,
       ),
       paidOn: json['paid_on'] != null
-          ? DateTime.parse(json['paid_on'] as String)
+          ? DateTime.tryParse(json['paid_on'] as String)
           : null,
       paymentMode: json['payment_mode'] != null
           ? PaymentMode.values.firstWhere(
@@ -63,7 +63,9 @@ class EMIScheduleModel {
       transactionId: json['transaction_id'] as String?,
       penaltyAmount: (json['penalty_amount'] as num?)?.toDouble() ?? 0,
       penaltyPaid: json['penalty_paid'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
     );
   }
 

@@ -4,30 +4,30 @@ import 'package:equatable/equatable.dart';
 class AuditLogModel extends Equatable {
   final String id;
   final String orgId;
-  
+
   // Who
   final String? userId;
   final String? userEmail;
   final String? userName;
-  
+
   // What
   final String action;
   final String entityType;
   final String? entityId;
-  
+
   // Details
   final String? description;
   final Map<String, dynamic>? oldValues;
   final Map<String, dynamic>? newValues;
-  
+
   // Where
   final String? ipAddress;
   final String? userAgent;
   final String? deviceType;
-  
+
   // When
   final DateTime createdAt;
-  
+
   // Classification
   final String severity;
   final String? category;
@@ -98,11 +98,24 @@ class AuditLogModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, orgId, userId, userEmail, userName,
-    action, entityType, entityId, description,
-    oldValues, newValues, ipAddress, userAgent, deviceType,
-    createdAt, severity, category,
-  ];
+        id,
+        orgId,
+        userId,
+        userEmail,
+        userName,
+        action,
+        entityType,
+        entityId,
+        description,
+        oldValues,
+        newValues,
+        ipAddress,
+        userAgent,
+        deviceType,
+        createdAt,
+        severity,
+        category,
+      ];
 }
 
 /// Support ticket model
@@ -183,8 +196,19 @@ class SupportTicketModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, orgId, ticketNumber, subject, description,
-    priority, status, assignedTo, category,
-    createdAt, updatedAt, firstResponseAt, resolvedAt, slaBreached,
-  ];
+        id,
+        orgId,
+        ticketNumber,
+        subject,
+        description,
+        priority,
+        status,
+        assignedTo,
+        category,
+        createdAt,
+        updatedAt,
+        firstResponseAt,
+        resolvedAt,
+        slaBreached,
+      ];
 }

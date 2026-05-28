@@ -15,6 +15,8 @@ class SuperAdminDashboard extends ConsumerWidget {
     final metrics = ref.watch(platformMetricsProvider);
     final revenue = ref.watch(revenueSummaryProvider);
     final activity = ref.watch(activityFeedProvider);
+    final openTickets = ref.watch(openTicketsCountProvider);
+    final atRiskOrgs = ref.watch(atRiskOrgsCountProvider);
     final fmt = NumberFormat.compactCurrency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(
@@ -30,42 +32,56 @@ class SuperAdminDashboard extends ConsumerWidget {
                   children: [
                     _header(context, isDark),
                     const SizedBox(height: 24),
-                    _alertBanner(context, isDark),
+                    _alertBanner(context, isDark, openTickets, atRiskOrgs),
                     const SizedBox(height: 24),
-                    _sectionArea(context, isDark, () => metrics.when(
-                      data: (m) => _metricGrid(context, m, fmt, isDark),
-                      loading: () => const SizedBox(
-                        height: 200,
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (_, __) => const SizedBox.shrink(),
-                    )),
+                    _sectionArea(
+                        context,
+                        isDark,
+                        () => metrics.when(
+                              data: (m) => _metricGrid(context, m, fmt, isDark),
+                              loading: () => const SizedBox(
+                                height: 200,
+                                child:
+                                    Center(child: CircularProgressIndicator()),
+                              ),
+                              error: (_, __) => const SizedBox.shrink(),
+                            )),
                     const SizedBox(height: 24),
                     D.sectionTitle('Quick Actions', Icons.flash_on, isDark),
                     const SizedBox(height: 14),
                     _quickActions(context, isDark),
                     const SizedBox(height: 28),
-                    D.sectionTitle('Revenue & Benchmarking', Icons.trending_up, isDark),
+                    D.sectionTitle(
+                        'Revenue & Benchmarking', Icons.trending_up, isDark),
                     const SizedBox(height: 14),
-                    _sectionArea(context, isDark, () => revenue.when(
-                      data: (r) => _revenueSection(context, r, fmt, isDark),
-                      loading: () => const SizedBox(
-                        height: 100,
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (_, __) => const SizedBox.shrink(),
-                    )),
+                    _sectionArea(
+                        context,
+                        isDark,
+                        () => revenue.when(
+                              data: (r) =>
+                                  _revenueSection(context, r, fmt, isDark),
+                              loading: () => const SizedBox(
+                                height: 100,
+                                child:
+                                    Center(child: CircularProgressIndicator()),
+                              ),
+                              error: (_, __) => const SizedBox.shrink(),
+                            )),
                     const SizedBox(height: 28),
                     D.sectionTitle('Churn Risk', Icons.warning_amber, isDark),
                     const SizedBox(height: 14),
-                    _sectionArea(context, isDark, () => metrics.when(
-                      data: (m) => _churnRisk(context, m, isDark),
-                      loading: () => const SizedBox(
-                        height: 100,
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (_, __) => const SizedBox.shrink(),
-                    )),
+                    _sectionArea(
+                        context,
+                        isDark,
+                        () => metrics.when(
+                              data: (m) => _churnRisk(context, m, isDark),
+                              loading: () => const SizedBox(
+                                height: 100,
+                                child:
+                                    Center(child: CircularProgressIndicator()),
+                              ),
+                              error: (_, __) => const SizedBox.shrink(),
+                            )),
                     const SizedBox(height: 28),
                     D.sectionTitle('SLA Status', Icons.verified, isDark),
                     const SizedBox(height: 14),
@@ -87,9 +103,11 @@ class SuperAdminDashboard extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        D.sectionTitle('Recent Activity', Icons.history, isDark),
+                        D.sectionTitle(
+                            'Recent Activity', Icons.history, isDark),
                         TextButton(
-                          onPressed: () => context.push('/super-admin/audit-logs'),
+                          onPressed: () =>
+                              context.push('/super-admin/audit-logs'),
                           child: Text(
                             'View All',
                             style: TextStyle(
@@ -107,7 +125,8 @@ class SuperAdminDashboard extends ConsumerWidget {
                 ),
               ),
               loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-              error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+              error: (_, __) =>
+                  const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
           ],
         ),
@@ -115,7 +134,8 @@ class SuperAdminDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _sectionArea(BuildContext context, bool isDark, Widget Function() child) {
+  Widget _sectionArea(
+      BuildContext context, bool isDark, Widget Function() child) {
     return child();
   }
 
@@ -175,12 +195,17 @@ class SuperAdminDashboard extends ConsumerWidget {
   }
 
   // ── Section 2: Alert Banner ──────────────────────────────
-  Widget _alertBanner(BuildContext context, bool isDark) {
+  Widget _alertBanner(BuildContext context, bool isDark,
+      AsyncValue<int> openTickets, AsyncValue<int> atRiskOrgs) {
+    final ticketsCount = openTickets.valueOrNull ?? 0;
+    final riskCount = atRiskOrgs.valueOrNull ?? 0;
     final alerts = [
       _AlertPill('🚀', 'System Running', 'All good', const Color(0xFF10B981)),
-      _AlertPill('📊', 'Orgs at risk', '3', const Color(0xFFF59E0B)),
-      _AlertPill('⚠️', 'Tickets open', '12', const Color(0xFFEF4444)),
-      _AlertPill('📈', 'Revenue up', '18%', const Color(0xFF10B981)),
+      _AlertPill('📊', 'Orgs at risk', '$riskCount',
+          riskCount > 0 ? const Color(0xFFF59E0B) : const Color(0xFF10B981)),
+      _AlertPill('⚠️', 'Tickets open', '$ticketsCount',
+          ticketsCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
+      _AlertPill('📈', 'Revenue', 'Live', const Color(0xFF10B981)),
     ];
     return SizedBox(
       height: 80,
@@ -403,7 +428,9 @@ class SuperAdminDashboard extends ConsumerWidget {
     final total = (r['total_revenue'] ?? 0).toDouble();
     final avg = (r['avg_monthly_revenue'] ?? 0).toDouble();
     final count = r['transaction_count'] ?? 0;
-    final vsLastMonth = 18.0;
+    final vsLastMonth = total > 0 && avg > 0
+        ? ((total - avg) / avg * 100).clamp(-100, 999)
+        : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -412,7 +439,8 @@ class SuperAdminDashboard extends ConsumerWidget {
         children: [
           Row(children: [
             Expanded(
-              child: _revItem(context, 'Total Revenue', fmt.format(total), const Color(0xFF10B981), isDark),
+              child: _revItem(context, 'Total Revenue', fmt.format(total),
+                  const Color(0xFF10B981), isDark),
             ),
             Container(
               width: 1,
@@ -420,7 +448,8 @@ class SuperAdminDashboard extends ConsumerWidget {
               color: D.border(context),
             ),
             Expanded(
-              child: _revItem(context, 'Avg Monthly', fmt.format(avg), const Color(0xFF3B82F6), isDark),
+              child: _revItem(context, 'Avg Monthly', fmt.format(avg),
+                  const Color(0xFF3B82F6), isDark),
             ),
             Container(
               width: 1,
@@ -428,20 +457,23 @@ class SuperAdminDashboard extends ConsumerWidget {
               color: D.border(context),
             ),
             Expanded(
-              child: _revItem(context, 'Transactions', '$count', const Color(0xFFF59E0B), isDark),
+              child: _revItem(context, 'Transactions', '$count',
+                  const Color(0xFFF59E0B), isDark),
             ),
           ]),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.1 : 0.06),
+              color: const Color(0xFF10B981)
+                  .withValues(alpha: isDark ? 0.1 : 0.06),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.trending_up, size: 14, color: Color(0xFF10B981)),
+                const Icon(Icons.trending_up,
+                    size: 14, color: Color(0xFF10B981)),
                 const SizedBox(width: 6),
                 Text(
                   'vs last month: +$vsLastMonth%',
@@ -502,7 +534,8 @@ class SuperAdminDashboard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, size: 20, color: Color(0xFFF59E0B)),
+              const Icon(Icons.warning_amber_rounded,
+                  size: 20, color: Color(0xFFF59E0B)),
               const SizedBox(width: 8),
               Text(
                 '$atRisk orgs at risk',
@@ -519,7 +552,8 @@ class SuperAdminDashboard extends ConsumerWidget {
             children: [
               _riskBadge('Low Risk', '$low', const Color(0xFF10B981), isDark),
               const SizedBox(width: 10),
-              _riskBadge('Medium Risk', '$medium', const Color(0xFFF59E0B), isDark),
+              _riskBadge(
+                  'Medium Risk', '$medium', const Color(0xFFF59E0B), isDark),
               const SizedBox(width: 10),
               _riskBadge('High Risk', '$high', const Color(0xFFEF4444), isDark),
             ],
@@ -564,9 +598,11 @@ class SuperAdminDashboard extends ConsumerWidget {
   }
 
   // ── Section 7: Activity Feed ─────────────────────────────
-  Widget _activityItem(BuildContext context, Map<String, dynamic> a, bool isDark) {
+  Widget _activityItem(
+      BuildContext context, Map<String, dynamic> a, bool isDark) {
     final type = a['activity_type'] as String? ?? 'unknown';
-    final createdAt = DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
+    final createdAt =
+        DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
     final ago = _timeAgo(DateTime.now().difference(createdAt));
     final title = type
         .replaceAll('_', ' ')
@@ -714,7 +750,8 @@ class SuperAdminDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _progressRing(BuildContext context, double rate, Color color, bool isDark) {
+  Widget _progressRing(
+      BuildContext context, double rate, Color color, bool isDark) {
     return SizedBox(
       width: 40,
       height: 40,
@@ -754,7 +791,8 @@ class _MetricItem {
   final String value;
   final String subtitle;
   final Color color;
-  const _MetricItem(this.icon, this.label, this.value, this.subtitle, this.color);
+  const _MetricItem(
+      this.icon, this.label, this.value, this.subtitle, this.color);
 }
 
 class _Action {

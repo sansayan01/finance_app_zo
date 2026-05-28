@@ -1,26 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/loan_model.dart';
-import '../../data/repositories/loans_repository.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../core/constants/enums.dart';
 
 import '../../data/repositories/emi_repository.dart';
 import '../../data/models/emi_schedule_model.dart';
-
-final loansRepositoryProvider = Provider<LoansRepository>((ref) {
-  final orgId = ref.watch(currentOrgIdOrThrowProvider);
-  return LoansRepository(ref.watch(supabaseClientProvider), orgId);
-});
+import '../../data/services/loan_statement_archive_service.dart';
+import '../../data/providers/loan_providers.dart';
+export '../../data/providers/loan_providers.dart';
 
 final emiRepositoryProvider = Provider<EMIRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
   return EMIRepository(ref.watch(supabaseClientProvider), orgId);
 });
 
-final allLoansProvider = FutureProvider<List<LoanModel>>((ref) async {
-  final repository = ref.watch(loansRepositoryProvider);
-  return repository.getAllLoans();
+final loanStatementArchiveServiceProvider =
+    Provider<LoanStatementArchiveService>((ref) {
+  final orgId = ref.watch(currentOrgIdOrThrowProvider);
+  return LoanStatementArchiveService(
+      ref.watch(supabaseClientProvider), orgId);
+});
+
+final pastLoanStatementsProvider = FutureProvider.autoDispose
+    .family<List<LoanStatementArchive>, String>((ref, loanId) async {
+  final svc = ref.watch(loanStatementArchiveServiceProvider);
+  return svc.listForLoan(loanId);
 });
 
 final loanSearchQueryProvider = StateProvider<String>((ref) => '');
@@ -77,7 +82,8 @@ final emiScheduleProvider =
 });
 
 final paymentHistoryProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, loanId) async {
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, loanId) async {
   final repository = ref.watch(emiRepositoryProvider);
   return repository.getPaymentHistory(loanId);
 });
@@ -87,12 +93,3 @@ final userLoansProvider =
   final loans = await ref.watch(allLoansProvider.future);
   return loans.where((l) => l.customerId == userId).toList();
 });
-
-// Backward compatibility and aliases
-final loansProvider = allLoansProvider;
-
-final loanSummaryProvider = FutureProvider<LoanSummary>((ref) async {
-  final repository = ref.watch(loansRepositoryProvider);
-  return repository.getLoanSummary();
-});
-

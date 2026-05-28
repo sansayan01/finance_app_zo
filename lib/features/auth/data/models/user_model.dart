@@ -20,7 +20,7 @@ UserRole parseRole(String roleStr) {
       normalized == 'collectionagent') {
     return UserRole.collectionAgent;
   }
-  
+
   // Default to customer for everything else
   return UserRole.customer;
 }
@@ -92,6 +92,44 @@ class UserModel {
   }
 }
 
+/// Account status — mirrors `profiles.status` check constraint.
+enum AccountStatus { active, inactive, suspended, onLeave, pending }
+
+AccountStatus parseStatus(String? raw) {
+  switch (raw?.toLowerCase().trim()) {
+    case 'inactive':
+      return AccountStatus.inactive;
+    case 'suspended':
+      return AccountStatus.suspended;
+    case 'on_leave':
+    case 'onleave':
+      return AccountStatus.onLeave;
+    case 'pending':
+      return AccountStatus.pending;
+    case 'active':
+    default:
+      return AccountStatus.active;
+  }
+}
+
+extension AccountStatusX on AccountStatus {
+  String get wireValue => switch (this) {
+        AccountStatus.active => 'active',
+        AccountStatus.inactive => 'inactive',
+        AccountStatus.suspended => 'suspended',
+        AccountStatus.onLeave => 'on_leave',
+        AccountStatus.pending => 'pending',
+      };
+
+  String get label => switch (this) {
+        AccountStatus.active => 'Active',
+        AccountStatus.inactive => 'Inactive',
+        AccountStatus.suspended => 'Suspended',
+        AccountStatus.onLeave => 'On Leave',
+        AccountStatus.pending => 'Pending',
+      };
+}
+
 class ProfileModel {
   final String id;
   final String? userId;
@@ -110,9 +148,18 @@ class ProfileModel {
   final String? branchName;
   final String? employeeId;
   final String? assignedZone;
+  final String? avatarUrl;
+  final String? memberCode; // member_id on profiles / member_id on members
+  final AccountStatus status;
+  final DateTime? lastSeenAt;
   final DateTime? dateOfBirth;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  /// `true` when this row was sourced from the `members` table rather than
+  /// the `profiles` table. Members do not have an `auth.users` link, status
+  /// column or role; treat them as customers in the UI.
+  final bool isMember;
 
   ProfileModel({
     required this.id,
@@ -132,9 +179,14 @@ class ProfileModel {
     this.employeeId,
     this.assignedZone,
     this.email,
+    this.avatarUrl,
+    this.memberCode,
+    this.status = AccountStatus.active,
+    this.lastSeenAt,
     this.dateOfBirth,
     this.createdAt,
     this.updatedAt,
+    this.isMember = false,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -152,10 +204,17 @@ class ProfileModel {
       role: parseRole(json['role']?.toString() ?? 'customer'),
       orgId: json['org_id']?.toString(),
       branchId: json['branch_id']?.toString(),
-      branchName: json['branch'] is Map ? json['branch']['name']?.toString() : null,
+      branchName:
+          json['branch'] is Map ? json['branch']['name']?.toString() : null,
       employeeId: json['employee_id']?.toString(),
       assignedZone: json['assigned_zone']?.toString(),
       email: json['email']?.toString(),
+      avatarUrl: json['avatar_url']?.toString(),
+      memberCode: json['member_id']?.toString(),
+      status: parseStatus(json['status']?.toString()),
+      lastSeenAt: json['last_login'] != null
+          ? DateTime.tryParse(json['last_login'].toString())
+          : null,
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.tryParse(json['date_of_birth'].toString())
           : null,
@@ -165,6 +224,81 @@ class ProfileModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'].toString())
           : null,
+      isMember: false,
+    );
+  }
+
+  /// Build a ProfileModel from a row of the `members` table (customer view).
+  factory ProfileModel.fromMembersJson(Map<String, dynamic> json) {
+    return ProfileModel(
+      id: json['id']?.toString() ?? '',
+      userId: json['user_id']?.toString(),
+      fullName: (json['full_name'] ?? json['name'])?.toString(),
+      phone: json['phone']?.toString(),
+      pan: json['pan']?.toString(),
+      aadhar: json['aadhar']?.toString(),
+      address: json['address']?.toString(),
+      city: json['city']?.toString(),
+      state: json['state']?.toString(),
+      pincode: json['pincode']?.toString(),
+      role: UserRole.customer,
+      orgId: json['org_id']?.toString(),
+      branchId: json['branch_id']?.toString(),
+      branchName:
+          json['branch'] is Map ? json['branch']['name']?.toString() : null,
+      email: json['email']?.toString(),
+      avatarUrl: json['shop_photo_url']?.toString(),
+      memberCode: json['member_id']?.toString(),
+      status: AccountStatus.active,
+      dateOfBirth: json['date_of_birth'] != null
+          ? DateTime.tryParse(json['date_of_birth'].toString())
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
+      isMember: true,
+    );
+  }
+
+  ProfileModel copyWith({
+    String? fullName,
+    String? phone,
+    String? email,
+    UserRole? role,
+    String? branchId,
+    String? branchName,
+    AccountStatus? status,
+    DateTime? lastSeenAt,
+  }) {
+    return ProfileModel(
+      id: id,
+      userId: userId,
+      fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
+      pan: pan,
+      aadhar: aadhar,
+      address: address,
+      city: city,
+      state: state,
+      pincode: pincode,
+      role: role ?? this.role,
+      orgId: orgId,
+      branchId: branchId ?? this.branchId,
+      branchName: branchName ?? this.branchName,
+      employeeId: employeeId,
+      assignedZone: assignedZone,
+      email: email ?? this.email,
+      avatarUrl: avatarUrl,
+      memberCode: memberCode,
+      status: status ?? this.status,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+      dateOfBirth: dateOfBirth,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      isMember: isMember,
     );
   }
 
@@ -186,6 +320,10 @@ class ProfileModel {
       'employee_id': employeeId,
       'assigned_zone': assignedZone,
       'email': email,
+      'avatar_url': avatarUrl,
+      'member_id': memberCode,
+      'status': status.wireValue,
+      'last_login': lastSeenAt?.toIso8601String(),
       'date_of_birth': dateOfBirth?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

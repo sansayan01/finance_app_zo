@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../data/providers/staff_providers.dart';
 
 class BreakCard extends ConsumerStatefulWidget {
@@ -28,14 +29,20 @@ class _BreakCardState extends ConsumerState<BreakCard> {
         await repo.endBreak(profile.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Break ended'), backgroundColor: Colors.green, duration: Duration(seconds: 2)),
+            const SnackBar(
+                content: Text('Break ended'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2)),
           );
         }
       } else {
         await repo.startBreak(staffId: profile.id, breakType: 'lunch');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Break started'), backgroundColor: Colors.blue, duration: Duration(seconds: 2)),
+            const SnackBar(
+                content: Text('Break started'),
+                backgroundColor: Colors.blue,
+                duration: Duration(seconds: 2)),
           );
         }
       }
@@ -44,7 +51,10 @@ class _BreakCardState extends ConsumerState<BreakCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 2)),
+          SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2)),
         );
       }
     } finally {
@@ -55,14 +65,14 @@ class _BreakCardState extends ConsumerState<BreakCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final profileAsync = ref.watch(staffProfileProvider);
 
     return profileAsync.when(
       data: (profile) {
         if (profile == null) return const SizedBox.shrink();
         return StreamBuilder<Map<String, dynamic>?>(
-          stream: Stream.periodic(const Duration(seconds: 10), (_) => null).asyncMap((_) async {
+          stream: Stream.periodic(const Duration(seconds: 10), (_) => null)
+              .asyncMap((_) async {
             final repo = ref.read(staffRepositoryProvider);
             return repo.getCurrentBreak(profile.id);
           }),
@@ -71,35 +81,27 @@ class _BreakCardState extends ConsumerState<BreakCard> {
             final currentBreak = snapshot.data;
             final isOnBreak = currentBreak != null;
 
-            return Container(
+            return GlassCard(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isOnBreak
-                      ? Colors.orangeAccent.withValues(alpha: 0.3)
-                      : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
+              borderColor: isOnBreak
+                  ? Colors.orangeAccent.withValues(alpha: 0.3)
+                  : null,
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: isOnBreak ? Colors.orangeAccent.withValues(alpha: 0.2) : AppColors.primary.withValues(alpha: 0.1),
+                      color: isOnBreak
+                          ? Colors.orangeAccent.withValues(alpha: 0.2)
+                          : AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      isOnBreak ? Icons.free_breakfast_rounded : Icons.coffee_outlined,
-                      color: isOnBreak ? Colors.orangeAccent : AppColors.primary,
+                      isOnBreak
+                          ? Icons.free_breakfast_rounded
+                          : Icons.coffee_outlined,
+                      color:
+                          isOnBreak ? Colors.orangeAccent : AppColors.primary,
                       size: 20,
                     ),
                   ),
@@ -110,12 +112,16 @@ class _BreakCardState extends ConsumerState<BreakCard> {
                       children: [
                         Text(
                           isOnBreak ? 'On Break' : 'Take a Break',
-                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          isOnBreak ? 'Tap to resume work' : 'Tap when taking a break',
+                          isOnBreak
+                              ? 'Tap to resume work'
+                              : 'Tap when taking a break',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
                             fontSize: 10,
                           ),
                         ),
@@ -127,17 +133,25 @@ class _BreakCardState extends ConsumerState<BreakCard> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleBreak,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isOnBreak ? Colors.orangeAccent.withValues(alpha: 0.2) : AppColors.primary.withValues(alpha: 0.1),
-                        foregroundColor: isOnBreak ? Colors.orangeAccent : AppColors.primary,
+                        backgroundColor: isOnBreak
+                            ? Colors.orangeAccent.withValues(alpha: 0.2)
+                            : AppColors.primary.withValues(alpha: 0.1),
+                        foregroundColor:
+                            isOnBreak ? Colors.orangeAccent : AppColors.primary,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
                       child: _isLoading
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2))
                           : Text(
                               isOnBreak ? 'End' : 'Start',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 12),
                             ),
                     ),
                   ),

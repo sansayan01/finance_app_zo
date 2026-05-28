@@ -320,4 +320,3 @@ final analyticsProvider = FutureProvider<AnalyticsStats>((ref) async {
     liquidityRatio: liquidityRatio.clamp(0, 500),
   );
 });
-

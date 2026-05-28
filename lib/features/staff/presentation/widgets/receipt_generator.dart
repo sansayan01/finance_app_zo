@@ -4,7 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 
 /// Receipt Generator
-/// 
+///
 /// Generates text receipts for collections that can be shared with customers.
 /// No images or heavy files - just clean, printable text.
 class ReceiptGenerator {
@@ -65,9 +65,11 @@ class ReceiptGenerator {
     buffer.writeln('────────────────────────────────────────');
     buffer.writeln('PAYMENT DETAILS');
     buffer.writeln('────────────────────────────────────────');
-    buffer.writeln('Amount Collected: ${_currencyFormat.format(amountCollected)}');
+    buffer.writeln(
+        'Amount Collected: ${_currencyFormat.format(amountCollected)}');
     if (amountExpected != null && amountExpected != amountCollected) {
-      buffer.writeln('Amount Expected: ${_currencyFormat.format(amountExpected)}');
+      buffer.writeln(
+          'Amount Expected: ${_currencyFormat.format(amountExpected)}');
       final remaining = amountExpected - amountCollected;
       if (remaining > 0) {
         buffer.writeln('Balance Due: ${_currencyFormat.format(remaining)}');
@@ -119,7 +121,8 @@ class ReceiptGenerator {
   }
 
   /// Share receipt via system share sheet
-  static Future<void> shareReceipt(String receiptText, {String? orgName}) async {
+  static Future<void> shareReceipt(String receiptText,
+      {String? orgName}) async {
     await SharePlus.instance.share(
       ShareParams(
         text: receiptText,
@@ -152,7 +155,8 @@ class ReceiptPreview extends StatelessWidget {
         color: isDark ? const Color(0xFF1E1E2A) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]!,
+          color:
+              isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]!,
         ),
         boxShadow: [
           BoxShadow(
@@ -196,12 +200,14 @@ class ReceiptPreview extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               TextButton.icon(
-                onPressed: onCopy ?? () => _copyToClipboard(context, receiptText),
+                onPressed:
+                    onCopy ?? () => _copyToClipboard(context, receiptText),
                 icon: const Icon(Icons.copy, size: 18),
                 label: const Text('Copy'),
               ),
               ElevatedButton.icon(
-                onPressed: onShare ?? () => ReceiptGenerator.shareReceipt(receiptText),
+                onPressed:
+                    onShare ?? () => ReceiptGenerator.shareReceipt(receiptText),
                 icon: const Icon(Icons.share, size: 18),
                 label: const Text('Share'),
                 style: ElevatedButton.styleFrom(

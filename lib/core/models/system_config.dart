@@ -34,9 +34,11 @@ class SystemConfig extends Equatable {
       minVersionIos: json['min_version_ios'] ?? '1.0.0',
       updateUrlAndroid: json['update_url_android'],
       updateUrlIos: json['update_url_ios'],
-      updateMessage: json['update_message'] ?? 'A new version is available. Please update to continue.',
+      updateMessage: json['update_message'] ??
+          'A new version is available. Please update to continue.',
       isUnderMaintenance: json['is_under_maintenance'] ?? false,
-      maintenanceMessage: json['maintenance_message'] ?? 'MicroFlow Pro is currently under maintenance.',
+      maintenanceMessage: json['maintenance_message'] ??
+          'MicroFlow Pro is currently under maintenance.',
     );
   }
 

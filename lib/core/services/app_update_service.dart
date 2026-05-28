@@ -1,14 +1,31 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 enum DownloadState { idle, downloading, completed, failed }
 
+class DownloadProgress {
+  final DownloadState state;
+  final double progress;
+  final String? error;
+  final String? filePath;
+
+  const DownloadProgress({
+    this.state = DownloadState.idle,
+    this.progress = 0.0,
+    this.error,
+    this.filePath,
+  });
+}
+
 class AppUpdateService {
-  String? _taskId;
-  Timer? _pollTimer;
+  final Dio _dio = Dio();
+  CancelToken? _cancelToken;
 
   final _stateController = StreamController<DownloadProgress>.broadcast();
   Stream<DownloadProgress> get progressStream => _stateController.stream;
@@ -24,86 +41,115 @@ class AppUpdateService {
   Future<void> downloadAndInstall(String url) async {
     if (_current.state == DownloadState.downloading) return;
 
-    final dir = await getApplicationDocumentsDirectory();
-    final taskId = await FlutterDownloader.enqueue(
-      url: url,
-      savedDir: dir.path,
-      fileName: 'microflow_update.apk',
-      showNotification: true,
-      openFileFromNotification: false,
-    );
+    try {
+      // Request storage permission on older Android versions
+      if (Platform.isAndroid) {
+        final status = await Permission.requestInstallPackages.request();
+        if (!status.isGranted) {
+          _update(const DownloadProgress(
+            state: DownloadState.failed,
+            error: 'Install permission denied. Please allow app installs.',
+          ));
+          return;
+        }
+      }
 
-    if (taskId == null) {
-      _update(const DownloadProgress(
-        state: DownloadState.failed,
-        error: 'Failed to start download.',
+      _update(const DownloadProgress(state: DownloadState.downloading));
+      _cancelToken = CancelToken();
+
+      // Use external cache directory — accessible by FileProvider
+      final dir = await getTemporaryDirectory();
+      final filePath = '${dir.path}/microflow_update.apk';
+
+      // Delete old file if exists
+      final oldFile = File(filePath);
+      if (await oldFile.exists()) {
+        await oldFile.delete();
+      }
+
+      await _dio.download(
+        url,
+        filePath,
+        cancelToken: _cancelToken,
+        onReceiveProgress: (received, total) {
+          if (total <= 0) return;
+          final progress = received / total;
+          _update(DownloadProgress(
+            state: DownloadState.downloading,
+            progress: progress,
+            filePath: filePath,
+          ));
+        },
+      );
+
+      _update(DownloadProgress(
+        state: DownloadState.completed,
+        progress: 1.0,
+        filePath: filePath,
       ));
-      return;
-    }
 
-    _taskId = taskId;
-    _update(const DownloadProgress(state: DownloadState.downloading));
-    _startPolling();
-  }
-
-  void _startPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
-      if (_taskId == null) return;
-      final tasks = await FlutterDownloader.loadTasksWithRawQuery(
-          query: "SELECT * FROM task WHERE task_id='$_taskId'");
-      if (tasks == null || tasks.isEmpty) return;
-
-      final task = tasks.first;
-      if (task.status == DownloadTaskStatus.running) {
-        _update(DownloadProgress(
-          state: DownloadState.downloading,
-          progress: task.progress / 100.0,
-        ));
-      } else if (task.status == DownloadTaskStatus.complete) {
-        _pollTimer?.cancel();
-        _update(const DownloadProgress(state: DownloadState.completed));
-        _installApk();
-      } else if (task.status == DownloadTaskStatus.failed) {
-        _pollTimer?.cancel();
+      // Auto-trigger install
+      await _installApk(filePath);
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
         _update(const DownloadProgress(
           state: DownloadState.failed,
-          error: 'Download failed.',
+          error: 'Download cancelled.',
+        ));
+      } else {
+        _update(DownloadProgress(
+          state: DownloadState.failed,
+          error: 'Download failed: ${e.message}',
         ));
       }
-    });
+    } catch (e) {
+      debugPrint('❌ Download error: $e');
+      _update(DownloadProgress(
+        state: DownloadState.failed,
+        error: 'Download failed: $e',
+      ));
+    }
   }
 
-  Future<void> _installApk() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final path = '${dir.path}/microflow_update.apk';
-    OpenFilex.open(path, type: 'application/vnd.android.package-archive');
+  Future<void> _installApk(String filePath) async {
+    try {
+      final result = await OpenFilex.open(
+        filePath,
+        type: 'application/vnd.android.package-archive',
+      );
+      debugPrint('📦 Install result: ${result.type} - ${result.message}');
+    } catch (e) {
+      debugPrint('❌ Install error: $e');
+    }
+  }
+
+  /// Re-trigger install for a previously downloaded file
+  Future<void> installFromPath(String filePath) async {
+    await _installApk(filePath);
+  }
+
+  void cancelDownload() {
+    _cancelToken?.cancel();
+    _cancelToken = null;
+    _update(const DownloadProgress(state: DownloadState.idle));
   }
 
   void reset() {
-    _pollTimer?.cancel();
+    _cancelToken?.cancel();
+    _cancelToken = null;
     _current = const DownloadProgress();
     _stateController.add(_current);
   }
 
   void dispose() {
-    _pollTimer?.cancel();
+    _cancelToken?.cancel();
     _stateController.close();
+    _dio.close();
   }
 }
 
-class DownloadProgress {
-  final DownloadState state;
-  final double progress;
-  final String? error;
-
-  const DownloadProgress({
-    this.state = DownloadState.idle,
-    this.progress = 0.0,
-    this.error,
-  });
-}
-
 final appUpdateServiceProvider = Provider<AppUpdateService>((ref) {
-  return AppUpdateService();
+  final service = AppUpdateService();
+  ref.onDispose(() => service.dispose());
+  return service;
 });

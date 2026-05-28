@@ -15,6 +15,7 @@ import '../../../../core/widgets/glass_button.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../data/models/loan_model.dart';
 import '../providers/loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 
 class LoansPage extends ConsumerStatefulWidget {
   const LoansPage({super.key});
@@ -53,6 +54,15 @@ class _LoansPageState extends ConsumerState<LoansPage>
   ];
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.invalidate(loansProvider);
+      ref.invalidate(loanSummaryProvider);
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -83,7 +93,8 @@ class _LoansPageState extends ConsumerState<LoansPage>
             color: primary,
             backgroundColor: theme.cardColor,
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics()),
               slivers: [
                 // Premium Dynamic Header
                 SliverToBoxAdapter(
@@ -322,8 +333,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
           const SizedBox(width: 16),
           _AnalyticsCard(
             label: 'TOTAL OUTSTANDING',
-            value:
-                AppFormatters.formatCurrency(summary.totalOutstanding),
+            value: AppFormatters.formatCurrency(summary.totalOutstanding),
             icon: Icons.donut_large_rounded,
             color: AppColors.warning,
             isDark: isDark,
@@ -540,7 +550,7 @@ class _AnalyticsCard extends StatelessWidget {
     required this.color,
     this.subtitle,
     required this.isDark,
-  }); 
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -827,8 +837,7 @@ class _PremiumLoanCard extends StatelessWidget {
                   icon: Icons.percent_rounded),
               _DataPoint(
                   label: 'BALANCE',
-                  value: AppFormatters.formatCurrency(
-                      loan.outstandingBalance),
+                  value: AppFormatters.formatCurrency(loan.outstandingBalance),
                   highlight: true),
             ],
           ),

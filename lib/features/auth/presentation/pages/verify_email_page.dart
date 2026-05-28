@@ -38,26 +38,45 @@ class VerifyEmailPage extends ConsumerWidget {
                     width: 88,
                     height: 88,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                      gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.accent]),
                       borderRadius: BorderRadius.circular(28),
-                      boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 24, offset: const Offset(0, 8))],
+                      boxShadow: [
+                        BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8))
+                      ],
                     ),
-                    child: const Icon(Icons.mark_email_unread_rounded, color: Colors.white, size: 42),
+                    child: const Icon(Icons.mark_email_unread_rounded,
+                        color: Colors.white, size: 42),
                   ).animate().fadeIn().scale(begin: const Offset(0.8, 0.8)),
                   const SizedBox(height: 32),
-                  Text('Verify Your Email', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.8))
-                      .animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+                  Text('Verify Your Email',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w800, letterSpacing: -0.8))
+                      .animate()
+                      .fadeIn(delay: 200.ms)
+                      .slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 12),
                   Text(
                     'We sent a verification email to\n$email',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                    style: TextStyle(
+                        fontSize: 15,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600),
                   ).animate().fadeIn(delay: 300.ms),
                   const SizedBox(height: 8),
                   Text(
                     'Click the link in the email to verify your account, then sign in.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade500 : Colors.grey.shade500),
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? Colors.grey.shade500
+                            : Colors.grey.shade500),
                   ).animate().fadeIn(delay: 400.ms),
                   const SizedBox(height: 40),
                   SizedBox(
@@ -71,9 +90,12 @@ class VerifyEmailPage extends ConsumerWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text('Back to Sign In', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                      child: const Text('Back to Sign In',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 16)),
                     ),
                   ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 16),
@@ -82,10 +104,12 @@ class VerifyEmailPage extends ConsumerWidget {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: const Text('Verification email sent!'),
                         behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ));
                     },
-                    child: const Text('Resend email', style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: const Text('Resend email',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
                   ).animate().fadeIn(delay: 600.ms),
                 ],
               ),

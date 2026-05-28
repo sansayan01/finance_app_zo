@@ -10,7 +10,7 @@ enum ActivityType {
 class StaffLocationModel extends Equatable {
   final String id;
   final String staffId;
-  
+
   // Location
   final double latitude;
   final double longitude;
@@ -18,15 +18,15 @@ class StaffLocationModel extends Equatable {
   final double? altitude;
   final double? speed;
   final double? heading;
-  
+
   // Context
   final ActivityType activityType;
   final int? batteryLevel;
   final bool isCharging;
-  
+
   // Timestamps
   final DateTime recordedAt;
-  
+
   // Sync
   final SyncStatus syncStatus;
   final DateTime createdAt;
@@ -133,7 +133,7 @@ class StaffLocationModel extends Equatable {
 
   bool get hasAccuracy => accuracy != null && accuracy! <= 100;
   bool get isPendingSync => syncStatus == SyncStatus.pending;
-  
+
   bool get isLowBattery => batteryLevel != null && batteryLevel! < 20;
 
   StaffLocationModel copyWith({

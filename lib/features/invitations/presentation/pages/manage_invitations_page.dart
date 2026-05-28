@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/constants/layout.dart';
 import '../../data/providers/invitation_providers.dart';
 import '../../data/models/org_invitation_model.dart';
 
@@ -29,7 +30,8 @@ class ManageInvitationsPage extends ConsumerWidget {
         children: [
           // Stats cards
           statsAsync.when(
-            loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+            loading: () => const SizedBox(
+                height: 80, child: Center(child: CircularProgressIndicator())),
             error: (_, __) => const SizedBox.shrink(),
             data: (stats) => _StatsRow(stats: stats),
           ),
@@ -42,7 +44,8 @@ class ManageInvitationsPage extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(Icons.error_outline,
+                        size: 48, color: Colors.red),
                     const SizedBox(height: 16),
                     Text('Error loading invitations: $e'),
                     const SizedBox(height: 16),
@@ -59,7 +62,8 @@ class ManageInvitationsPage extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.mail_outline, size: 64, color: Colors.grey[400]),
+                        Icon(Icons.mail_outline,
+                            size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
                           'No invitations yet',
@@ -68,7 +72,8 @@ class ManageInvitationsPage extends ConsumerWidget {
                         const SizedBox(height: 8),
                         Text(
                           'Invite team members to get started',
-                          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
@@ -94,10 +99,13 @@ class ManageInvitationsPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showInviteDialog(context, ref),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Invite'),
+      floatingActionButton: Padding(
+        padding: kFabSafeAreaPadding,
+        child: FloatingActionButton.extended(
+          onPressed: () => _showInviteDialog(context, ref),
+          icon: const Icon(Icons.person_add),
+          label: const Text('Invite'),
+        ),
       ),
     );
   }
@@ -105,6 +113,7 @@ class ManageInvitationsPage extends ConsumerWidget {
   void _showInviteDialog(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       builder: (ctx) => const _InviteMemberSheet(),
     );
@@ -224,9 +233,11 @@ class _InvitationCard extends ConsumerWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: _getRoleColor(invitation.role).withValues(alpha: 0.1),
+                              color: _getRoleColor(invitation.role)
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -319,7 +330,9 @@ class _InvitationCard extends ConsumerWidget {
         title: const Text('Revoke Invitation?'),
         content: Text('Revoke invitation to ${invitation.email}?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -441,13 +454,17 @@ class _InviteMemberSheetState extends ConsumerState<_InviteMemberSheet> {
               prefixIcon: Icon(Icons.badge_outlined),
               border: OutlineInputBorder(),
             ),
-            items: UserRole.values.where((r) => r != UserRole.superAdmin).map((role) {
+            items: UserRole.values
+                .where((r) => r != UserRole.superAdmin)
+                .map((role) {
               return DropdownMenuItem(
                 value: role,
-                child: Text(role.name[0].toUpperCase() + role.name.substring(1)),
+                child:
+                    Text(role.name[0].toUpperCase() + role.name.substring(1)),
               );
             }).toList(),
-            onChanged: (value) => setState(() => _selectedRole = value ?? UserRole.collectionAgent),
+            onChanged: (value) => setState(
+                () => _selectedRole = value ?? UserRole.collectionAgent),
           ),
           const SizedBox(height: 16),
 
@@ -497,7 +514,9 @@ class _InviteMemberSheetState extends ConsumerState<_InviteMemberSheet> {
     final invitation = await notifier.createInvitation(
       email: _emailController.text.trim(),
       role: _selectedRole.name,
-      message: _messageController.text.trim().isEmpty ? null : _messageController.text.trim(),
+      message: _messageController.text.trim().isEmpty
+          ? null
+          : _messageController.text.trim(),
     );
 
     setState(() => _isLoading = false);

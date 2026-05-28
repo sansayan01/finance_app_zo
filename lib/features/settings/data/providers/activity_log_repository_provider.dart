@@ -6,4 +6,3 @@ final Provider<ActivityLogRepository> activityLogRepositoryProvider =
     Provider<ActivityLogRepository>((ref) {
   return ActivityLogRepository(ref.watch(supabaseClientProvider));
 });
-

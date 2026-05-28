@@ -7,7 +7,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../users/presentation/providers/user_list_provider.dart';
+import '../../../members/data/models/member_model.dart';
+import '../../../members/presentation/providers/member_providers.dart';
 import '../providers/new_recurring_saving_provider.dart';
 
 class NewRecurringSavingPage extends ConsumerStatefulWidget {
@@ -64,7 +65,7 @@ class _NewRecurringSavingPageState
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
-    final usersAsync = ref.watch(customerListProvider);
+    final usersAsync = ref.watch(membersProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -289,7 +290,7 @@ class _NewRecurringSavingPageState
       bool isDark,
       Color primary,
       bool isNarrow,
-      AsyncValue<List<dynamic>> usersAsync) {
+      AsyncValue<List<MemberModel>> usersAsync) {
     return GlassCard(
       padding: EdgeInsets.all(isNarrow ? 18 : 24),
       child: Column(
@@ -307,8 +308,8 @@ class _NewRecurringSavingPageState
               value: state.memberId,
               hint:
                   users.isEmpty ? 'No users found' : 'Select registered member',
-              items: users.map((u) => u.id as String).toList(),
-              itemLabels: users.map((u) => u.fullName as String).toList(),
+              items: users.map((u) => u.id).toList(),
+              itemLabels: users.map((u) => u.fullName).toList(),
               onChanged: (val) => ref
                   .read(newRecurringSavingProvider.notifier)
                   .updateMember(val),

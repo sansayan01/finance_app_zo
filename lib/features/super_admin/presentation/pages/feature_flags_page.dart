@@ -26,22 +26,36 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
             SliverPadding(
               padding: D.bodyPad,
               sliver: SliverToBoxAdapter(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    D.header('Feature Flags', 'Control platform features', isDark),
-                    FloatingActionButton.small(onPressed: _create, backgroundColor: D.accent, foregroundColor: Colors.white, child: const Icon(Icons.add)),
-                  ]),
-                  const SizedBox(height: 20),
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            D.header('Feature Flags',
+                                'Control platform features', isDark),
+                            FloatingActionButton.small(
+                                onPressed: _create,
+                                backgroundColor: D.accent,
+                                foregroundColor: Colors.white,
+                                child: const Icon(Icons.add)),
+                          ]),
+                      const SizedBox(height: 20),
+                    ]),
               ),
             ),
             flags.when(
               data: (f) => SliverPadding(
                 padding: D.bodyBottomPad,
-                sliver: SliverList(delegate: SliverChildBuilderDelegate((_, i) => _flagCard(f[i], isDark, cardBg), childCount: f.length)),
+                sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                        (_, i) => _flagCard(f[i], isDark, cardBg),
+                        childCount: f.length)),
               ),
-              loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => SliverToBoxAdapter(child: Center(child: Text('Error: $e'))),
+              loading: () => const SliverToBoxAdapter(
+                  child: Center(child: CircularProgressIndicator())),
+              error: (e, _) =>
+                  SliverToBoxAdapter(child: Center(child: Text('Error: $e'))),
             ),
           ],
         ),
@@ -56,25 +70,51 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
       decoration: D.card(context),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(f.name, style: D.titleStyle(isDark)),
-            Text(f.key, style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: D.muted(context))),
-          ])),
-          Switch(value: f.isEnabled, onChanged: (v) => _toggle(f.id, v), activeTrackColor: Colors.green),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(f.name, style: D.titleStyle(isDark)),
+                Text(f.key,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        color: D.muted(context))),
+              ])),
+          Switch(
+              value: f.isEnabled,
+              onChanged: (v) => _toggle(f.id, v),
+              activeTrackColor: Colors.green),
         ]),
-        if (f.description != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(f.description!, style: D.valueStyle(isDark))),
+        if (f.description != null)
+          Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(f.description!, style: D.valueStyle(isDark))),
         const SizedBox(height: 10),
         Row(children: [
           _chip('${f.rolloutPercentage}%', Colors.blue),
-          if (f.targetOrgs.isNotEmpty) ...[const SizedBox(width: 8), _chip('${f.targetOrgs.length} orgs', Colors.orange)],
-          if (f.targetRoles.isNotEmpty) ...[const SizedBox(width: 8), _chip('${f.targetRoles.length} roles', Colors.purple)],
+          if (f.targetOrgs.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            _chip('${f.targetOrgs.length} orgs', Colors.orange)
+          ],
+          if (f.targetRoles.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            _chip('${f.targetRoles.length} roles', Colors.purple)
+          ],
         ]),
       ]),
     );
   }
 
   Widget _chip(String label, Color color) {
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: color)));
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6)),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w500, color: color)));
   }
 
   void _toggle(String id, bool v) async {
@@ -89,25 +129,55 @@ class _FeatureFlagsPageState extends ConsumerState<FeatureFlagsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('New Flag', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text('New Flag',
+            style: TextStyle(fontWeight: FontWeight.w600)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: keyC, decoration: const InputDecoration(labelText: 'Key', hintText: 'new_feature', prefixIcon: Icon(Icons.vpn_key), border: OutlineInputBorder())),
+          TextField(
+              controller: keyC,
+              decoration: const InputDecoration(
+                  labelText: 'Key',
+                  hintText: 'new_feature',
+                  prefixIcon: Icon(Icons.vpn_key),
+                  border: OutlineInputBorder())),
           const SizedBox(height: 14),
-          TextField(controller: nameC, decoration: const InputDecoration(labelText: 'Name', hintText: 'New Feature', prefixIcon: Icon(Icons.flag), border: OutlineInputBorder())),
+          TextField(
+              controller: nameC,
+              decoration: const InputDecoration(
+                  labelText: 'Name',
+                  hintText: 'New Feature',
+                  prefixIcon: Icon(Icons.flag),
+                  border: OutlineInputBorder())),
           const SizedBox(height: 14),
-          TextField(controller: descC, decoration: const InputDecoration(labelText: 'Description', prefixIcon: Icon(Icons.description), border: OutlineInputBorder()), maxLines: 2),
+          TextField(
+              controller: descC,
+              decoration: const InputDecoration(
+                  labelText: 'Description',
+                  prefixIcon: Icon(Icons.description),
+                  border: OutlineInputBorder()),
+              maxLines: 2),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () async {
-            if (keyC.text.isEmpty || nameC.text.isEmpty) return;
-            final flag = FeatureFlag(id: '', key: keyC.text, name: nameC.text, description: descC.text.isEmpty ? null : descC.text, createdAt: DateTime.now(), updatedAt: DateTime.now());
-            final repo = ref.read(superAdminRepositoryProvider);
-            await repo.upsertFeatureFlag(flag);
-            if (!ctx.mounted) return;
-            Navigator.pop(ctx);
-            ref.invalidate(featureFlagsProvider);
-          }, style: ElevatedButton.styleFrom(backgroundColor: D.accent, foregroundColor: Colors.white), child: const Text('Create')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+              onPressed: () async {
+                if (keyC.text.isEmpty || nameC.text.isEmpty) return;
+                final flag = FeatureFlag(
+                    id: '',
+                    key: keyC.text,
+                    name: nameC.text,
+                    description: descC.text.isEmpty ? null : descC.text,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now());
+                final repo = ref.read(superAdminRepositoryProvider);
+                await repo.upsertFeatureFlag(flag);
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx);
+                ref.invalidate(featureFlagsProvider);
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: D.accent, foregroundColor: Colors.white),
+              child: const Text('Create')),
         ],
       ),
     );

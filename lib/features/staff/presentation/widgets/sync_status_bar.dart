@@ -34,15 +34,29 @@ class SyncStatusBar extends StatelessWidget {
         HapticFeedback.lightImpact();
         onSyncTap?.call();
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: _getBackgroundColor(isDark),
+          gradient: LinearGradient(
+            colors: [
+              _getBackgroundColor(isDark),
+              _getBackgroundColor(isDark).withValues(alpha: 0.7),
+            ],
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _getBorderColor().withValues(alpha: 0.3),
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: _getBorderColor().withValues(alpha: 0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -66,7 +80,8 @@ class SyncStatusBar extends StatelessWidget {
                     Text(
                       'Last sync: ${_formatTime(lastSyncAt!)}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 10,
                       ),
                     ),
@@ -77,7 +92,8 @@ class SyncStatusBar extends StatelessWidget {
             // Pending count or action
             if (pendingCount > 0)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.orangeAccent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -92,7 +108,8 @@ class SyncStatusBar extends StatelessWidget {
               )
             else if (status == SyncStatus.synced)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.greenAccent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),

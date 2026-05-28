@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/staff_profile_model.dart';
 import '../models/wallet_model.dart';
@@ -10,27 +11,81 @@ class StaffRepository {
 
   StaffRepository(this._client, this._orgId);
 
-  /// Get current staff profile from user ID
+  /// Get current staff profile from user ID.
+  /// Tries staff_profiles first, falls back to profiles table since
+  /// user creation (UserRepository.createUser) only creates a profiles row,
+  /// not a staff_profiles row.
   Future<StaffProfileModel?> getStaffProfile(String userId,
       [String? fullName, String? email]) async {
     try {
-      final response = await _client
+      // Try staff_profiles first
+      final spResponse = await _client
           .from('staff_profiles')
-          .select('''
-            *,
-            branches(name),
-            supervisor:staff_profiles!fk_sp_supervisor(full_name)
-          ''')
+          .select()
           .eq('user_id', userId)
-          .eq('org_id', _orgId)
           .maybeSingle();
 
-      if (response != null) {
-        return StaffProfileModel.fromJson(response);
+      if (spResponse != null) {
+        // Fetch supervisor name separately
+        final supervisorId = spResponse['supervisor_id'] as String?;
+        if (supervisorId != null) {
+          try {
+            final sup = await _client
+                .from('staff_profiles')
+                .select('full_name')
+                .eq('id', supervisorId)
+                .maybeSingle();
+            spResponse['supervisor'] = {'full_name': sup?['full_name']};
+          } catch (_) {
+            spResponse['supervisor'] = null;
+          }
+        }
+        // Fetch branch name separately
+        final branchId = spResponse['branch_id'] as String?;
+        if (branchId != null) {
+          try {
+            final branch = await _client
+                .from('branches')
+                .select('name')
+                .eq('id', branchId)
+                .maybeSingle();
+            spResponse['branches'] = branch;
+          } catch (_) {
+            spResponse['branches'] = null;
+          }
+        }
+        return StaffProfileModel.fromJson(spResponse);
+      }
+
+      // Fallback: profiles table (created by UserRepository.createUser)
+      final pResponse = await _client
+          .from('profiles')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (pResponse != null) {
+        pResponse['supervisor'] = null;
+        // Fetch branch name separately (FK join on profiles may fail)
+        final branchId = pResponse['branch_id'] as String?;
+        if (branchId != null) {
+          try {
+            final branch = await _client
+                .from('branches')
+                .select('name')
+                .eq('id', branchId)
+                .maybeSingle();
+            pResponse['branches'] = branch;
+          } catch (_) {
+            pResponse['branches'] = null;
+          }
+        }
+        return StaffProfileModel.fromJson(pResponse);
       }
 
       return null;
     } catch (e) {
+      debugPrint('[StaffRepository] getStaffProfile error: $e');
       return null;
     }
   }
@@ -38,18 +93,43 @@ class StaffRepository {
   /// Get staff profile by staff ID
   Future<StaffProfileModel?> getStaffById(String staffId) async {
     try {
-      final response = await _client
-          .from('staff_profiles')
-          .select('''
-            *,
-            branches(name),
-            supervisor:staff_profiles!fk_sp_supervisor(full_name)
-          ''')
-          .eq('id', staffId)
-          .single();
+      final response = await _client.from('staff_profiles').select()
+          .eq('id', staffId).maybeSingle();
+      if (response == null) return null;
+
+      // Fetch supervisor name separately
+      final supervisorId = response['supervisor_id'] as String?;
+      String? supervisorName;
+      if (supervisorId != null) {
+        try {
+          final sup = await _client
+              .from('staff_profiles')
+              .select('full_name')
+              .eq('id', supervisorId)
+              .maybeSingle();
+          supervisorName = sup?['full_name'] as String?;
+        } catch (_) {}
+      }
+      response['supervisor'] = {'full_name': supervisorName};
+
+      // Fetch branch name separately
+      final branchId = response['branch_id'] as String?;
+      if (branchId != null) {
+        try {
+          final branch = await _client
+              .from('branches')
+              .select('name')
+              .eq('id', branchId)
+              .maybeSingle();
+          response['branches'] = branch;
+        } catch (_) {
+          response['branches'] = null;
+        }
+      }
 
       return StaffProfileModel.fromJson(response);
     } catch (e) {
+      debugPrint('[StaffRepository] getStaffById error: $e');
       return null;
     }
   }
@@ -61,7 +141,8 @@ class StaffRepository {
           .from('staff_wallet')
           .select()
           .eq('staff_id', staffId)
-          .single();
+          .maybeSingle();
+      if (response == null) return null;
 
       return WalletModel.fromJson(response);
     } catch (e) {
@@ -76,7 +157,8 @@ class StaffRepository {
           .from('staff_streaks')
           .select()
           .eq('staff_id', staffId)
-          .single();
+          .maybeSingle();
+      if (response == null) return null;
 
       return StreakModel.fromJson(response);
     } catch (e) {
@@ -95,8 +177,9 @@ class StaffRepository {
           .eq('staff_id', staffId)
           .eq('period_type', 'daily')
           .eq('target_date', today)
-          .single();
+          .maybeSingle();
 
+      if (response == null) return null;
       return TargetModel.fromJson(response);
     } catch (e) {
       return null;
@@ -143,7 +226,7 @@ class StaffRepository {
           .from('staff_today_summary')
           .select()
           .eq('staff_id', staffId)
-          .single();
+          .maybeSingle();
 
       return response;
     } catch (e) {
@@ -169,11 +252,8 @@ class StaffRepository {
     await _client.from('staff_wallet').update({
       'cash_in_hand': wallet.cashInHand - amount,
       'total_deposited_today': wallet.totalDepositedToday + amount,
-      'last_deposit_amount': amount,
-      'last_deposit_at': now.toIso8601String(),
-      'last_deposit_mode': depositMode,
       'is_over_limit': (wallet.cashInHand - amount) > wallet.safeLimit,
-      'updated_at': now.toIso8601String(),
+      'last_updated': now.toIso8601String(),
     }).eq('staff_id', staffId);
 
     // Create wallet transaction
@@ -184,10 +264,6 @@ class StaffRepository {
       'direction': 'out',
       'payment_mode': depositMode,
       'balance_after': wallet.cashInHand - amount,
-      'gps_lat': gpsLat,
-      'gps_lng': gpsLng,
-      'transaction_time': now.toIso8601String(),
-      'sync_status': 'synced',
       'org_id': _orgId,
     });
   }
@@ -243,39 +319,39 @@ class StaffRepository {
         'battery_level': batteryLevel,
         'is_charging': isCharging,
         'recorded_at': DateTime.now().toIso8601String(),
-        'sync_status': 'synced',
+        'org_id': _orgId,
       });
     } catch (e) {
       // Location tracking is non-critical
     }
   }
 
-  /// Log a visit (check-in)
+  /// Log a visit (check-in).
+  /// [orgId] should be the staff profile's org_id (verified by RLS SELECT).
   Future<void> logVisit({
     required String staffId,
+    required String orgId,
     String? customerId,
     required String purpose,
     required double checkInLat,
     required double checkInLng,
     String? notes,
   }) async {
-    try {
-      await _client.from('visit_logs').insert({
-        'staff_id': staffId,
-        'customer_id': customerId,
-        'member_id': customerId,
-        'purpose': purpose,
-        'check_in_time': DateTime.now().toIso8601String(),
-        'check_in_at': DateTime.now().toIso8601String(),
-        'check_in_lat': checkInLat,
-        'check_in_lng': checkInLng,
-        'notes': notes,
-        'status': 'in_progress',
-        'visit_type': 'collection',
-        'sync_status': 'synced',
-      });
+    await _client.from('visit_logs').insert({
+      'staff_id': staffId,
+      'customer_id': customerId,
+      'member_id': customerId,
+      'purpose': purpose,
+      'check_in_time': DateTime.now().toIso8601String(),
+      'check_in_lat': checkInLat,
+      'check_in_lng': checkInLng,
+      'notes': notes,
+      'status': 'in_progress',
+      'org_id': orgId,
+    });
 
-      // Log activity
+    // Log activity (best-effort, don't fail the check-in if this fails)
+    try {
       await logActivity(
         staffId: staffId,
         action: 'visit_check_in',
@@ -286,7 +362,7 @@ class StaffRepository {
         gpsLng: checkInLng,
       );
     } catch (e) {
-      // Log failure silently - visitor log is non-critical
+      debugPrint('[StaffRepository] logActivity failed: $e');
     }
   }
 
@@ -298,33 +374,31 @@ class StaffRepository {
     String? outcome,
     String? notes,
   }) async {
+    final now = DateTime.now();
+
+    // Find active visit
+    final activeVisit = await _client
+        .from('visit_logs')
+        .select()
+        .eq('staff_id', staffId)
+        .eq('status', 'in_progress')
+        .order('check_in_time', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    if (activeVisit == null) throw Exception('No active visit found');
+
+    await _client.from('visit_logs').update({
+      'check_out_time': now.toIso8601String(),
+      'check_out_lat': checkOutLat,
+      'check_out_lng': checkOutLng,
+      'status': 'completed',
+      'outcome': outcome ?? 'collected',
+      'notes': notes,
+    }).eq('id', activeVisit['id']);
+
+    // Log activity (best-effort)
     try {
-      final now = DateTime.now();
-
-      // Find active visit
-      final activeVisit = await _client
-          .from('visit_logs')
-          .select()
-          .eq('staff_id', staffId)
-          .eq('status', 'in_progress')
-          .order('check_in_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
-      if (activeVisit == null) throw Exception('No active visit found');
-
-      await _client.from('visit_logs').update({
-        'check_out_time': now.toIso8601String(),
-        'check_out_at': now.toIso8601String(),
-        'check_out_lat': checkOutLat,
-        'check_out_lng': checkOutLng,
-        'status': 'completed',
-        'outcome': outcome ?? 'collected',
-        'notes': notes,
-        'sync_status': 'synced',
-      }).eq('id', activeVisit['id']);
-
-      // Log activity
       await logActivity(
         staffId: staffId,
         action: 'visit_check_out',
@@ -334,7 +408,7 @@ class StaffRepository {
         gpsLng: checkOutLng,
       );
     } catch (e) {
-      // Log failure silently
+      debugPrint('[StaffRepository] logActivity failed: $e');
     }
   }
 
@@ -353,12 +427,13 @@ class StaffRepository {
       await _client.from('cash_deposits').insert({
         'staff_id': staffId,
         'amount': amount,
-        'deposit_method': method,
+        'bank_name': method,
         'reference_number': reference,
         'notes': notes,
-        'deposit_time': now.toIso8601String(),
+        'deposit_date': now.toIso8601String().split('T').first,
+        'deposit_time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
         'status': 'pending_verification',
-        'sync_status': 'synced',
+        'org_id': _orgId,
       });
 
       // Update wallet
@@ -367,9 +442,7 @@ class StaffRepository {
         await _client.from('staff_wallet').update({
           'cash_in_hand': wallet.cashInHand - amount,
           'total_deposited_today': wallet.totalDepositedToday + amount,
-          'last_deposit_amount': amount,
-          'last_deposit_at': now.toIso8601String(),
-          'updated_at': now.toIso8601String(),
+          'last_updated': now.toIso8601String(),
         }).eq('staff_id', staffId);
       }
 
@@ -395,10 +468,8 @@ class StaffRepository {
       await _client.from('staff_breaks').insert({
         'staff_id': staffId,
         'break_type': breakType,
-        'start_time': DateTime.now().toIso8601String(),
+        'break_start': DateTime.now().toIso8601String(),
         'notes': notes,
-        'status': 'in_progress',
-        'sync_status': 'synced',
       });
 
       // Log activity
@@ -422,17 +493,19 @@ class StaffRepository {
           .from('staff_breaks')
           .select()
           .eq('staff_id', staffId)
-          .eq('status', 'in_progress')
-          .order('start_time', ascending: false)
+          .isFilter('break_end', null)
+          .order('break_start', ascending: false)
           .limit(1)
           .maybeSingle();
 
       if (activeBreak == null) return;
 
+      final breakStart = DateTime.parse(activeBreak['break_start']);
+      final duration = now.difference(breakStart).inMinutes;
+
       await _client.from('staff_breaks').update({
-        'end_time': now.toIso8601String(),
-        'status': 'completed',
-        'sync_status': 'synced',
+        'break_end': now.toIso8601String(),
+        'duration_minutes': duration,
       }).eq('id', activeBreak['id']);
 
       // Log activity
@@ -447,14 +520,14 @@ class StaffRepository {
     }
   }
 
-  /// Get current break
+  /// Get current break (break_end is null means break is active)
   Future<Map<String, dynamic>?> getCurrentBreak(String staffId) async {
     return await _client
         .from('staff_breaks')
         .select()
         .eq('staff_id', staffId)
-        .eq('status', 'in_progress')
-        .order('start_time', ascending: false)
+        .isFilter('break_end', null)
+        .order('break_start', ascending: false)
         .limit(1)
         .maybeSingle();
   }
@@ -466,30 +539,30 @@ class StaffRepository {
     return await _client
         .from('staff_breaks')
         .select()
-         .eq('staff_id', staffId)
-         .filter('start_time', 'gte', today)
-         .order('start_time', ascending: false);
+        .eq('staff_id', staffId)
+        .gte('break_start', '${today}T00:00:00')
+        .order('break_start', ascending: false);
   }
 
   /// Get daily summary for a specific date
-  Future<Map<String, dynamic>> getDailySummary(String staffId, DateTime date) async {
+  Future<Map<String, dynamic>> getDailySummary(
+      String staffId, DateTime date) async {
     final dateStr = date.toIso8601String().split('T').first;
 
     // Get collections for the date
     final collections = await _client
         .from('collections')
         .select()
-         .eq('staff_id', staffId)
-         .filter('collection_time', 'gte', dateStr)
-         .filter('collection_time', 'lt', '${dateStr}T23:59:59');
+        .eq('staff_id', staffId)
+        .eq('collection_date', dateStr);
 
     // Get visits for the date
     final visits = await _client
         .from('visit_logs')
         .select()
-         .eq('staff_id', staffId)
-         .filter('check_in_at', 'gte', dateStr)
-         .filter('check_in_at', 'lt', '${dateStr}T23:59:59');
+        .eq('staff_id', staffId)
+        .gte('check_in_time', '${dateStr}T00:00:00')
+        .lt('check_in_time', '${dateStr}T23:59:59');
 
     // Calculate summary
     double totalCollected = 0;
@@ -594,10 +667,10 @@ class StaffRepository {
     try {
       return await _client
           .from('visit_logs')
-          .select()
+          .select('*, members(full_name, phone)')
           .eq('staff_id', staffId)
           .eq('status', 'in_progress')
-          .order('check_in_at', ascending: false)
+          .order('check_in_time', ascending: false)
           .limit(1)
           .maybeSingle();
     } catch (_) {
@@ -629,7 +702,7 @@ class StaffRepository {
       final today = DateTime.now().toIso8601String().split('T').first;
       final response = await _client
           .from('savings_collections')
-          .select('amount, payment_mode')
+          .select('amount_collected, payment_mode')
           .eq('staff_id', staffId)
           .filter('collection_date', 'gte', today);
 
@@ -638,7 +711,7 @@ class StaffRepository {
       double digitalSavings = 0;
 
       for (final item in response) {
-        final amount = (item['amount'] as num?)?.toDouble() ?? 0;
+        final amount = (item['amount_collected'] as num?)?.toDouble() ?? 0;
         totalSavings += amount;
         if (item['payment_mode'] == 'cash') {
           cashSavings += amount;
@@ -672,7 +745,8 @@ class StaffRepository {
           .from('collections')
           .select('amount_collected, collection_date')
           .eq('staff_id', staffId)
-          .filter('collection_date', 'gte', weekAgo.toIso8601String().split('T').first)
+          .filter('collection_date', 'gte',
+              weekAgo.toIso8601String().split('T').first)
           .order('collection_date', ascending: true);
 
       // Group by date and sum amounts
@@ -704,8 +778,8 @@ class StaffRepository {
     try {
       final response = await _client
           .from('overdue_loans_view')
-          .select('id')
-          .eq('staff_id', staffId);
+          .select('loan_id')
+          .eq('agent_id', staffId);
       return response.length;
     } catch (_) {
       return 0;

@@ -36,7 +36,8 @@ class OrgInvitationModel {
   bool get isPending => status == 'pending';
   bool get isAccepted => status == 'accepted';
   bool get isRevoked => status == 'revoked';
-  bool get isExpired => status == 'expired' || expiresAt.isBefore(DateTime.now());
+  bool get isExpired =>
+      status == 'expired' || expiresAt.isBefore(DateTime.now());
 
   String get roleDisplay {
     return switch (role) {
@@ -63,24 +64,32 @@ class OrgInvitationModel {
       invitedBy: json['invited_by']?.toString(),
       inviterName: json['inviter']?['full_name']?.toString(),
       message: json['message']?.toString(),
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      expiresAt: DateTime.parse(json['expires_at'] ?? DateTime.now().toIso8601String()),
-      acceptedAt: json['accepted_at'] != null ? DateTime.parse(json['accepted_at']) : null,
+      createdAt: DateTime.parse(
+          json['created_at'] ?? DateTime.now().toIso8601String()),
+      expiresAt: DateTime.parse(
+          json['expires_at'] ?? DateTime.now().toIso8601String()),
+      acceptedAt: json['accepted_at'] != null
+          ? DateTime.parse(json['accepted_at'])
+          : null,
     );
   }
 
   static UserRole _roleFromString(String? role) {
     switch (role?.toLowerCase()) {
-      case 'superadmin': return UserRole.superAdmin;
-      case 'executiveadmin': return UserRole.executiveAdmin;
-      case 'manager': return UserRole.manager;
+      case 'superadmin':
+        return UserRole.superAdmin;
+      case 'executiveadmin':
+        return UserRole.executiveAdmin;
+      case 'manager':
+        return UserRole.manager;
       case 'collectionagent':
-      case 'fieldstaff': 
+      case 'fieldstaff':
         return UserRole.collectionAgent;
       case 'customer':
-      case 'retailmember': 
+      case 'retailmember':
         return UserRole.customer;
-      default: return UserRole.collectionAgent;
+      default:
+        return UserRole.collectionAgent;
     }
   }
 }

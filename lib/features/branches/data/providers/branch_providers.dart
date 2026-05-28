@@ -30,7 +30,8 @@ final branchProvider = FutureProvider.family<BranchModel?, String>((ref, id) {
 });
 
 /// Branch Stats Provider
-final branchStatsProvider = FutureProvider.family<BranchStats, String>((ref, branchId) {
+final branchStatsProvider =
+    FutureProvider.family<BranchStats, String>((ref, branchId) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranchStats(branchId);
 });
@@ -42,25 +43,29 @@ final branchCountProvider = FutureProvider<int>((ref) {
 });
 
 /// Potential Managers Provider
-final potentialManagersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) {
+final potentialManagersProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getPotentialManagers();
 });
 
 /// Branch Staff Provider
-final branchStaffProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, branchId) {
+final branchStaffProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, branchId) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranchStaff(branchId);
 });
 
 /// Branch Members Provider
-final branchMembersProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, branchId) {
+final branchMembersProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, branchId) {
   final repository = ref.watch(branchRepositoryProvider);
   return repository.getBranchMembers(branchId);
 });
 
 /// Branch Notifier for CRUD operations
-final branchNotifierProvider = StateNotifierProvider<BranchNotifier, AsyncValue<void>>((ref) {
+final branchNotifierProvider =
+    StateNotifierProvider<BranchNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
   return BranchNotifier(repository, ref);
 });
@@ -69,7 +74,8 @@ class BranchNotifier extends StateNotifier<AsyncValue<void>> {
   final BranchRepository _repository;
   final Ref _ref;
 
-  BranchNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  BranchNotifier(this._repository, this._ref)
+      : super(const AsyncValue.data(null));
 
   Future<BranchModel?> createBranch({
     required String name,
@@ -110,13 +116,15 @@ class BranchNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  Future<BranchModel?> updateBranch(String id, Map<String, dynamic> data) async {
+  Future<BranchModel?> updateBranch(
+      String id, Map<String, dynamic> data) async {
     state = const AsyncValue.loading();
     try {
       final branch = await _repository.updateBranch(id, data);
       _ref.invalidate(branchesProvider);
       _ref.invalidate(activeBranchesProvider);
       _ref.invalidate(branchProvider(id));
+      _ref.invalidate(potentialManagersProvider);
       state = const AsyncValue.data(null);
       return branch;
     } catch (e, st) {
@@ -152,4 +160,3 @@ class BranchNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 }
-

@@ -11,30 +11,34 @@ class BranchRepository {
   Future<List<BranchModel>> getBranches() async {
     final response = await _client
         .from('branches')
-        .select()
+        .select('*, manager:manager_id(full_name)')
         .eq('org_id', _orgId)
         .order('created_at', ascending: false);
 
-    return (response as List).map((json) => BranchModel.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => BranchModel.fromJson(json))
+        .toList();
   }
 
   /// Get active branches only
   Future<List<BranchModel>> getActiveBranches() async {
     final response = await _client
         .from('branches')
-        .select()
+        .select('*, manager:manager_id(full_name)')
         .eq('org_id', _orgId)
         .eq('status', 'active')
         .order('name');
 
-    return (response as List).map((json) => BranchModel.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => BranchModel.fromJson(json))
+        .toList();
   }
 
   /// Get a single branch by ID
   Future<BranchModel?> getBranch(String id) async {
     final response = await _client
         .from('branches')
-        .select()
+        .select('*, manager:manager_id(full_name)')
         .eq('id', id)
         .eq('org_id', _orgId)
         .maybeSingle();
@@ -118,25 +122,24 @@ class BranchRepository {
 
   /// Delete a branch
   Future<void> deleteBranch(String id) async {
-    // First, unassign all staff from this branch
+    // First, unassign all profiles from this branch (handles fk_profiles_branch)
+    await _client
+        .from('profiles')
+        .update({'branch_id': null}).eq('branch_id', id);
+
+    // Then, unassign all staff from this branch
     await _client
         .from('staff_profiles')
-        .update({'branch_id': null})
-        .eq('branch_id', id);
+        .update({'branch_id': null}).eq('branch_id', id);
 
-    // Then delete the branch
-    await _client
-        .from('branches')
-        .delete()
-        .eq('id', id)
-        .eq('org_id', _orgId);
+    // Finally delete the branch
+    await _client.from('branches').delete().eq('id', id).eq('org_id', _orgId);
   }
 
   /// Get branch statistics
   Future<BranchStats> getBranchStats(String branchId) async {
-    final response = await _client
-        .rpc('get_branch_stats', params: {'p_branch_id': branchId})
-        .maybeSingle();
+    final response = await _client.rpc('get_branch_stats',
+        params: {'p_branch_id': branchId}).maybeSingle();
 
     if (response == null) return const BranchStats();
     return BranchStats.fromJson(response);
@@ -144,10 +147,8 @@ class BranchRepository {
 
   /// Get branch count
   Future<int> getBranchCount() async {
-    final response = await _client
-        .from('branches')
-        .select('id')
-        .eq('org_id', _orgId);
+    final response =
+        await _client.from('branches').select('id').eq('org_id', _orgId);
 
     return response.length;
   }
@@ -161,13 +162,13 @@ class BranchRepository {
         .eq('org_id', _orgId);
   }
 
-  /// Get potential managers (staff with manager role)
+  /// Get potential managers (users with manager role in the same org)
   Future<List<Map<String, dynamic>>> getPotentialManagers() async {
     final response = await _client
-        .from('staff_profiles')
+        .from('profiles')
         .select('id, full_name, email')
         .eq('org_id', _orgId)
-        .inFilter('role', ['branch_manager', 'manager', 'supervisor'])
+        .eq('role', 'manager')
         .order('full_name');
 
     return List<Map<String, dynamic>>.from(response);

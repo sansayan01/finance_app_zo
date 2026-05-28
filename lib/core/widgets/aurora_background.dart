@@ -105,5 +105,3 @@ class _AuroraPainter extends CustomPainter {
   bool shouldRepaint(covariant _AuroraPainter oldDelegate) =>
       oldDelegate.progress != progress;
 }
-
-

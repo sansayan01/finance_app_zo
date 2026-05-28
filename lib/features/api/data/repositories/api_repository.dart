@@ -10,15 +10,19 @@ class ApiRepository {
 
   /// Get all API keys for org
   Future<List<ApiKeyModel>> getApiKeys(String orgId) async {
-    final response = await _client
-        .from('api_keys')
-        .select()
-        .eq('org_id', orgId)
-        .order('created_at', ascending: false);
+    try {
+      final response = await _client
+          .from('api_keys')
+          .select()
+          .eq('org_id', orgId)
+          .order('created_at', ascending: false);
 
-    return response
-        .map<ApiKeyModel>((json) => ApiKeyModel.fromJson(json))
-        .toList();
+      return response
+          .map<ApiKeyModel>((json) => ApiKeyModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   /// Generate new API key
@@ -65,8 +69,7 @@ class ApiRepository {
     try {
       await _client
           .from('api_keys')
-          .update({'is_active': false})
-          .eq('id', keyId);
+          .update({'is_active': false}).eq('id', keyId);
       return true;
     } catch (e) {
       return false;
@@ -87,15 +90,19 @@ class ApiRepository {
 
   /// Get all webhooks for org
   Future<List<WebhookModel>> getWebhooks(String orgId) async {
-    final response = await _client
-        .from('webhooks')
-        .select()
-        .eq('org_id', orgId)
-        .order('created_at', ascending: false);
+    try {
+      final response = await _client
+          .from('webhooks')
+          .select()
+          .eq('org_id', orgId)
+          .order('created_at', ascending: false);
 
-    return response
-        .map<WebhookModel>((json) => WebhookModel.fromJson(json))
-        .toList();
+      return response
+          .map<WebhookModel>((json) => WebhookModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   /// Create webhook
@@ -138,10 +145,7 @@ class ApiRepository {
       if (events != null) updates['events'] = events;
       if (isActive != null) updates['is_active'] = isActive;
 
-      await _client
-          .from('webhooks')
-          .update(updates)
-          .eq('id', webhookId);
+      await _client.from('webhooks').update(updates).eq('id', webhookId);
       return true;
     } catch (e) {
       return false;
@@ -163,28 +167,34 @@ class ApiRepository {
     String webhookId, {
     int limit = 20,
   }) async {
-    final response = await _client
-        .from('webhook_deliveries')
-        .select()
-        .eq('webhook_id', webhookId)
-        .order('created_at', ascending: false)
-        .limit(limit);
+    try {
+      final response = await _client
+          .from('webhook_deliveries')
+          .select()
+          .eq('webhook_id', webhookId)
+          .order('created_at', ascending: false)
+          .limit(limit);
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      return [];
+    }
   }
 
   // ==================== INTEGRATIONS ====================
 
   /// Get all integrations for org
   Future<List<IntegrationModel>> getIntegrations(String orgId) async {
-    final response = await _client
-        .from('integrations')
-        .select()
-        .eq('org_id', orgId);
+    try {
+      final response =
+          await _client.from('integrations').select().eq('org_id', orgId);
 
-    return response
-        .map<IntegrationModel>((json) => IntegrationModel.fromJson(json))
-        .toList();
+      return response
+          .map<IntegrationModel>((json) => IntegrationModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   /// Create integration
@@ -276,13 +286,17 @@ class ApiRepository {
 
   /// Get exports for org
   Future<List<Map<String, dynamic>>> getExports(String orgId) async {
-    final response = await _client
-        .from('data_exports')
-        .select()
-        .eq('org_id', orgId)
-        .order('created_at', ascending: false)
-        .limit(20);
+    try {
+      final response = await _client
+          .from('data_exports')
+          .select()
+          .eq('org_id', orgId)
+          .order('created_at', ascending: false)
+          .limit(20);
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      return [];
+    }
   }
 }

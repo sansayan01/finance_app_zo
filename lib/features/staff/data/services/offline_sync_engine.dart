@@ -54,7 +54,10 @@ class OfflineSyncEngine {
   /// Get all pending operations
   Future<List<Map<String, dynamic>>> getPendingOperations() async {
     final queue = await _getQueue();
-    return queue.where((item) => item['status'] == 'pending').toList().cast<Map<String, dynamic>>();
+    return queue
+        .where((item) => item['status'] == 'pending')
+        .toList()
+        .cast<Map<String, dynamic>>();
   }
 
   /// Sync all pending operations
@@ -170,9 +173,9 @@ class OfflineSyncEngine {
   }
 
   /// Check if device is online
-   Future<bool> isOnline() async {
-     return await InternetConnectionChecker().hasConnection;
-   }
+  Future<bool> isOnline() async {
+    return await InternetConnectionChecker().hasConnection;
+  }
 }
 
 /// Result of a sync operation

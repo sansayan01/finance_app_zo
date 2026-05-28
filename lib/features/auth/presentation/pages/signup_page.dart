@@ -66,7 +66,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       if (updatedState.status == AuthStatus.emailVerification) {
         context.go('/auth/verify-email');
       } else {
-        context.go('/setup');
+        context.go('/');
       }
     } else if (mounted) {
       final error = ref.read(auth.authProvider).errorMessage;
@@ -161,19 +161,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.3, end: 0),
         const SizedBox(height: 6),
         Text(
-          'Start your 14-day free trial',
+          'Set up your organization in minutes',
           style: theme.textTheme.bodySmall?.copyWith(fontSize: 15),
         ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.3, end: 0),
-        const SizedBox(height: 2),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          decoration: BoxDecoration(
-            color: AppColors.success.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text('No credit card required',
-            style: TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600)),
-        ).animate().fadeIn(delay: 350.ms),
       ],
     );
   }
@@ -358,7 +348,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 height: 24,
                 child: CircularProgressIndicator(
                     strokeWidth: 2.5, color: Colors.white))
-            : const Text('Start 14-Day Free Trial',
+            : const Text('Create Organization',
                 style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,

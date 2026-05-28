@@ -23,7 +23,8 @@ final lastSyncTimeProvider = Provider<DateTime?>((ref) {
 });
 
 // Sync status
-final syncStatusProvider = StateNotifierProvider<SyncStatusNotifier, SyncUIState>((ref) {
+final syncStatusProvider =
+    StateNotifierProvider<SyncStatusNotifier, SyncUIState>((ref) {
   final engine = ref.watch(syncEngineProvider);
   return SyncStatusNotifier(engine);
 });
@@ -131,12 +132,11 @@ class SyncStatusNotifier extends StateNotifier<SyncUIState> {
 // Network status provider
 final isOnlineProvider = StreamProvider<bool>((ref) async* {
   final engine = ref.watch(syncEngineProvider);
-  
+
   // Check immediately
   yield await engine.isOnline();
-  
+
   // Then check every 5 seconds
   await Future.delayed(const Duration(seconds: 5));
   yield await engine.isOnline();
 });
-

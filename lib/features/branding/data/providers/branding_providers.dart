@@ -10,7 +10,8 @@ final brandingRepositoryProvider = Provider<BrandingRepository>((ref) {
 });
 
 /// Current organization branding
-final orgBrandingProvider = FutureProvider.family<OrgBrandingModel?, String>((ref, orgId) async {
+final orgBrandingProvider =
+    FutureProvider.family<OrgBrandingModel?, String>((ref, orgId) async {
   final repository = ref.watch(brandingRepositoryProvider);
   return repository.getBranding(orgId);
 });
@@ -20,7 +21,8 @@ class BrandingNotifier extends StateNotifier<AsyncValue<OrgBrandingModel?>> {
   final BrandingRepository _repository;
   final String _orgId;
 
-  BrandingNotifier(this._repository, this._orgId) : super(const AsyncValue.loading()) {
+  BrandingNotifier(this._repository, this._orgId)
+      : super(const AsyncValue.loading()) {
     loadBranding();
   }
 
@@ -47,9 +49,11 @@ class BrandingNotifier extends StateNotifier<AsyncValue<OrgBrandingModel?>> {
     }
   }
 
-  Future<String?> uploadLogo(String filePath, List<int> bytes, {bool isDark = false}) async {
+  Future<String?> uploadLogo(String filePath, List<int> bytes,
+      {bool isDark = false}) async {
     try {
-      final url = await _repository.uploadLogo(_orgId, filePath, bytes, isDark: isDark);
+      final url =
+          await _repository.uploadLogo(_orgId, filePath, bytes, isDark: isDark);
       await loadBranding();
       return url;
     } catch (e) {
@@ -85,17 +89,18 @@ class BrandingNotifier extends StateNotifier<AsyncValue<OrgBrandingModel?>> {
 }
 
 /// Branding notifier provider
-final brandingNotifierProvider = StateNotifierProvider.family<BrandingNotifier, AsyncValue<OrgBrandingModel?>, String>((ref, orgId) {
+final brandingNotifierProvider = StateNotifierProvider.family<BrandingNotifier,
+    AsyncValue<OrgBrandingModel?>, String>((ref, orgId) {
   final repository = ref.watch(brandingRepositoryProvider);
   return BrandingNotifier(repository, orgId);
 });
 
 /// Check if feature is enabled
-final featureEnabledProvider = Provider.family<bool, (String orgId, String feature)>((ref, params) {
+final featureEnabledProvider =
+    Provider.family<bool, (String orgId, String feature)>((ref, params) {
   final brandingAsync = ref.watch(orgBrandingProvider(params.$1));
   return brandingAsync.maybeWhen(
     data: (branding) => branding?.hasFeature(params.$2) ?? false,
     orElse: () => false,
   );
 });
-

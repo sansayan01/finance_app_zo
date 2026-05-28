@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import 'package:microflow_pro/core/constants/enums.dart';
@@ -6,7 +9,10 @@ import '../repositories/collection_repository.dart';
 import 'staff_providers.dart';
 import 'sync_providers.dart';
 
+import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/providers/org_provider.dart';
+import '../../../../core/providers/sms_provider.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show dashboardLoansProvider, loanSummaryProvider, todayAgendaProvider;
 
 // Collection repository provider
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
@@ -16,7 +22,8 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 });
 
 // Today's due EMIs
-final todayDueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final todayDueEmisProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -28,7 +35,8 @@ final todayDueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) as
 final todayEmisProvider = todayDueEmisProvider;
 
 // Overdue EMIs
-final overdueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final overdueEmisProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -37,7 +45,8 @@ final overdueEmisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asy
 });
 
 // Today's collections
-final todayCollectionsProvider = FutureProvider<List<CollectionModel>>((ref) async {
+final todayCollectionsProvider =
+    FutureProvider<List<CollectionModel>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -46,7 +55,8 @@ final todayCollectionsProvider = FutureProvider<List<CollectionModel>>((ref) asy
 });
 
 // Today's collection stats (Aliased for StaffHomeDashboard)
-final todayCollectionStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final todayCollectionStatsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) {
     return {
@@ -65,26 +75,34 @@ final todayCollectionStatsProvider = FutureProvider<Map<String, dynamic>>((ref) 
 final todayStatsProvider = todayCollectionStatsProvider;
 
 // Customer detail provider
-final customerDetailProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, customerId) async {
+final customerDetailProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+        (ref, customerId) async {
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.getCustomerDetail(customerId);
 });
 
 // Customer search provider
-final customerSearchProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, query) async {
+final customerSearchProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, query) async {
   if (query.isEmpty) return [];
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.searchCustomers(query);
 });
 
 // Customer loans provider
-final customerLoansProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, customerId) async {
+final customerLoansProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, customerId) async {
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.getCustomerLoans(customerId);
 });
 
 // Customer savings provider
-final customerSavingsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, customerId) async {
+final customerSavingsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, customerId) async {
   final repository = ref.watch(collectionRepositoryProvider);
   return repository.getCustomerSavings(customerId);
 });
@@ -102,10 +120,12 @@ typedef HistoryParams = ({
   String? paymentMode,
 });
 
-final collectionHistoryProvider = FutureProvider.family<List<Map<String, dynamic>>, HistoryParams>((ref, params) async {
+final collectionHistoryProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, HistoryParams>(
+        (ref, params) async {
   final profile = await ref.watch(staffProfileProvider.future);
   final staffId = params.staffId ?? profile?.id;
-  
+
   if (staffId == null) return [];
 
   final repository = ref.watch(collectionRepositoryProvider);
@@ -120,7 +140,8 @@ final collectionHistoryProvider = FutureProvider.family<List<Map<String, dynamic
 });
 
 // Recent collections
-final recentCollectionsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final recentCollectionsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -129,7 +150,8 @@ final recentCollectionsProvider = FutureProvider<List<Map<String, dynamic>>>((re
 });
 
 // Frequent customers
-final frequentCustomersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final frequentCustomersProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
   if (profile == null) return [];
 
@@ -141,8 +163,10 @@ final frequentCustomersProvider = FutureProvider<List<Map<String, dynamic>>>((re
 class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
   final CollectionRepository _repository;
   final SyncStatusNotifier _syncNotifier;
+  final Ref _ref;
 
-  CollectionNotifier(this._repository, this._syncNotifier) : super(const AsyncValue.data(null));
+  CollectionNotifier(this._ref, this._repository, this._syncNotifier)
+      : super(const AsyncValue.data(null));
 
   Future<void> recordCollection({
     required String staffId,
@@ -162,6 +186,7 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
     double? gpsAccuracy,
     String? gpsAddress,
     String? remarks,
+    double? outstandingBalance,
   }) async {
     state = const AsyncValue.loading();
 
@@ -187,6 +212,27 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
           remarks: remarks,
         );
         state = AsyncValue.data(result);
+
+        // Invalidate all related providers for real-time UI updates
+        _ref.invalidate(todayDueEmisProvider);
+        _ref.invalidate(todayCollectionsProvider);
+        _ref.invalidate(todayCollectionStatsProvider);
+        _ref.invalidate(recentCollectionsProvider);
+        _ref.invalidate(staffWalletProvider);
+        _ref.invalidate(dashboardLoansProvider);
+        _ref.invalidate(loanSummaryProvider);
+        _ref.invalidate(todayStatsProvider);
+        _ref.invalidate(todayAgendaProvider);
+
+        // Fire SMS notification in background (non-blocking)
+        _sendSmsNotification(
+          collectionId: result.id,
+          memberId: memberId,
+          memberPhone: memberPhone,
+          loanNumber: loanNumber,
+          amountCollected: amountCollected,
+          outstandingBalance: outstandingBalance,
+        );
       } catch (e) {
         // Fallback to offline queue
         await _syncNotifier.queueOperation(
@@ -210,12 +256,13 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
             'gps_accuracy': gpsAccuracy,
             'gps_address': gpsAddress,
             'remarks': remarks,
-            'collection_date': DateTime.now().toIso8601String().split('T').first,
-            'collection_time': DateTime.now().toIso8601String(),
+            'collection_date':
+                DateTime.now().toIso8601String().split('T').first,
+            'collection_time': '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')}',
             'sync_status': 'pending',
           },
         );
-        
+
         // Return a local model for the offline queued collection
         final now = DateTime.now();
         state = AsyncValue.data(CollectionModel(
@@ -242,11 +289,109 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  /// Sends SMS notification to customer in background. Never blocks collection flow.
+  void _sendSmsNotification({
+    required String collectionId,
+    String? memberId,
+    String? memberPhone,
+    String? loanNumber,
+    required double amountCollected,
+    double? outstandingBalance,
+  }) async {
+    try {
+      if (memberPhone == null || memberPhone.isEmpty) {
+        await _logSms(
+          collectionId: collectionId,
+          memberId: memberId,
+          memberPhone: memberPhone,
+          message: '',
+          status: 'skipped',
+          errorMessage: 'No phone number',
+        );
+        return;
+      }
+
+      final smsService = _ref.read(smsServiceProvider);
+      final branding = _ref.read(brandingProvider).valueOrNull;
+      final orgName = branding?.displayName ?? 'MicroFlow Finance';
+
+      // Get collector name from staff profile
+      final staffProfile = await _ref.read(staffProfileProvider.future);
+      final collectorName = staffProfile?.fullName ?? 'Staff';
+
+      final balance = outstandingBalance != null
+          ? 'Rs${outstandingBalance.toStringAsFixed(0)}'
+          : 'N/A';
+
+      final message = smsService.buildCollectionSms(
+        amount: 'Rs${amountCollected.toStringAsFixed(0)}',
+        collectorName: collectorName,
+        orgName: orgName,
+        loanNumber: loanNumber ?? 'N/A',
+        outstandingBalance: balance,
+        date: DateTime.now(),
+      );
+
+      final sent = await smsService.sendSms(
+        phoneNumber: memberPhone,
+        message: message,
+      );
+
+      await _logSms(
+        collectionId: collectionId,
+        memberId: memberId,
+        memberPhone: memberPhone,
+        message: message,
+        status: sent ? 'sent' : 'failed',
+      );
+    } catch (e) {
+      debugPrint('SMS notification error: $e');
+      await _logSms(
+        collectionId: collectionId,
+        memberId: memberId,
+        memberPhone: memberPhone,
+        message: '',
+        status: 'failed',
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<void> _logSms({
+    required String collectionId,
+    String? memberId,
+    String? memberPhone,
+    required String message,
+    required String status,
+    String? errorMessage,
+  }) async {
+    try {
+      final client = _ref.read(supabaseClientProvider);
+      final orgId = _ref.read(currentOrgIdProvider);
+      final staffProfile = await _ref.read(staffProfileProvider.future);
+
+      await client.from('sms_notifications').insert({
+        'org_id': orgId,
+        'collection_id': collectionId,
+        'member_id': memberId,
+        'member_phone': memberPhone ?? '',
+        'message': message,
+        'status': status,
+        'error_message': errorMessage,
+        'platform': Platform.isAndroid ? 'android' : 'ios',
+        'sent_by': staffProfile?.id,
+      });
+    } catch (e) {
+      debugPrint('SMS log error: $e');
+    }
+  }
 }
 
-final collectionNotifierProvider = StateNotifierProvider<CollectionNotifier, AsyncValue<CollectionModel?>>((ref) {
+final collectionNotifierProvider =
+    StateNotifierProvider<CollectionNotifier, AsyncValue<CollectionModel?>>(
+        (ref) {
   final repository = ref.watch(collectionRepositoryProvider);
   final syncNotifier = ref.watch(syncStatusProvider.notifier);
-  return CollectionNotifier(repository, syncNotifier);
+  return CollectionNotifier(ref, repository, syncNotifier);
 });
-

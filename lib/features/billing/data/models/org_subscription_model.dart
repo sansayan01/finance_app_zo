@@ -45,12 +45,19 @@ class OrgSubscriptionModel {
       planName: json['plan_name']?.toString() ?? 'Basic',
       status: json['status']?.toString() ?? 'unknown',
       billingCycle: json['billing_cycle']?.toString() ?? 'monthly',
-      currentPeriodStart: DateTime.parse(json['current_period_start'] ?? DateTime.now().toIso8601String()),
-      currentPeriodEnd: DateTime.parse(json['current_period_end'] ?? DateTime.now().toIso8601String()),
+      currentPeriodStart: DateTime.parse(
+          json['current_period_start'] ?? DateTime.now().toIso8601String()),
+      currentPeriodEnd: DateTime.parse(
+          json['current_period_end'] ?? DateTime.now().toIso8601String()),
       cancelAtPeriodEnd: json['cancel_at_period_end'] ?? false,
-      canceledAt: json['canceled_at'] != null ? DateTime.parse(json['canceled_at']) : null,
-      trialStart: json['trial_start'] != null ? DateTime.parse(json['trial_start']) : null,
-      trialEnd: json['trial_end'] != null ? DateTime.parse(json['trial_end']) : null,
+      canceledAt: json['canceled_at'] != null
+          ? DateTime.parse(json['canceled_at'])
+          : null,
+      trialStart: json['trial_start'] != null
+          ? DateTime.parse(json['trial_start'])
+          : null,
+      trialEnd:
+          json['trial_end'] != null ? DateTime.parse(json['trial_end']) : null,
     );
   }
 }

@@ -18,7 +18,8 @@ class _SuperAdminShellState extends ConsumerState<SuperAdminShell> {
   final _navSections = [
     _NavSection('Main', [
       _NavItem(Icons.dashboard, 'Dashboard', '/super-admin'),
-      _NavItem(Icons.assessment, 'Executive Summary', '/super-admin/executive-summary'),
+      _NavItem(Icons.assessment, 'Executive Summary',
+          '/super-admin/executive-summary'),
       _NavItem(Icons.business, 'Organizations', '/super-admin/organizations'),
     ]),
     _NavSection('Management', [
@@ -30,9 +31,11 @@ class _SuperAdminShellState extends ConsumerState<SuperAdminShell> {
       _NavItem(Icons.campaign, 'Announcements', '/super-admin/announcements'),
     ]),
     _NavSection('System', [
-      _NavItem(Icons.miscellaneous_services, 'Platform Health', '/super-admin/health'),
+      _NavItem(Icons.miscellaneous_services, 'Platform Health',
+          '/super-admin/health'),
       _NavItem(Icons.shield, 'Security Scorecard', '/super-admin/security'),
       _NavItem(Icons.build, 'Maintenance', '/super-admin/maintenance'),
+      _NavItem(Icons.system_update, 'App Updates', '/super-admin/app-update'),
       _NavItem(Icons.settings, 'Settings', '/super-admin/settings'),
       _NavItem(Icons.toggle_on, 'System Controls', '/super-admin/controls'),
     ]),
@@ -40,7 +43,8 @@ class _SuperAdminShellState extends ConsumerState<SuperAdminShell> {
       _NavItem(Icons.analytics, 'Analytics', '/super-admin/analytics'),
       _NavItem(Icons.trending_up, 'Feature Adoption', '/super-admin/adoption'),
       _NavItem(Icons.feedback, 'NPS Survey', '/super-admin/nps'),
-      _NavItem(Icons.notifications, 'Notification Center', '/super-admin/notifications'),
+      _NavItem(Icons.notifications, 'Notification Center',
+          '/super-admin/notifications'),
     ]),
     _NavSection('Operations', [
       _NavItem(Icons.receipt, 'Reconciliation', '/super-admin/reconciliation'),
@@ -69,27 +73,28 @@ class _SuperAdminShellState extends ConsumerState<SuperAdminShell> {
       body: SafeArea(
         child: Row(
           children: [
-            if (wide) _SideNav(
-              sections: _navSections,
-              isDark: isDark,
-              onSignOut: () async {
-                await ref.read(authProvider.notifier).signOut();
-                if (context.mounted) context.go('/auth');
-              },
-            ),
+            if (wide)
+              _SideNav(
+                sections: _navSections,
+                isDark: isDark,
+                onSignOut: () async {
+                  await ref.read(authProvider.notifier).signOut();
+                  if (context.mounted) context.go('/auth');
+                },
+              ),
             Expanded(
               child: Column(
                 children: [
-            if (!wide)
-              _TopBar(isDark: isDark, items: _mobileItems),
-            Expanded(child: widget.child),
+                  if (!wide) _TopBar(isDark: isDark, items: _mobileItems),
+                  Expanded(child: widget.child),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: wide ? null : _BottomNav(items: _mobileItems, isDark: isDark),
+      bottomNavigationBar:
+          wide ? null : _BottomNav(items: _mobileItems, isDark: isDark),
     );
   }
 }
@@ -111,7 +116,8 @@ class _SideNav extends StatelessWidget {
   final List<_NavSection> sections;
   final bool isDark;
   final VoidCallback onSignOut;
-  const _SideNav({required this.sections, required this.isDark, required this.onSignOut});
+  const _SideNav(
+      {required this.sections, required this.isDark, required this.onSignOut});
 
   bool _selected(_NavItem item, BuildContext ctx) {
     final loc = GoRouterState.of(ctx).matchedLocation;
@@ -224,7 +230,8 @@ class _SideNav extends StatelessWidget {
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
               border: sel
-                  ? Border.all(color: D.accent.withValues(alpha: isDark ? 0.2 : 0.15))
+                  ? Border.all(
+                      color: D.accent.withValues(alpha: isDark ? 0.2 : 0.15))
                   : null,
             ),
             child: Row(children: [
@@ -264,7 +271,8 @@ class _SideNav extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(children: [
-              Icon(Icons.logout, size: 18, color: Colors.red.withValues(alpha: 0.8)),
+              Icon(Icons.logout,
+                  size: 18, color: Colors.red.withValues(alpha: 0.8)),
               const SizedBox(width: 12),
               Text(
                 'Sign Out',

@@ -243,7 +243,8 @@ class _UsageBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayColor = isAtLimit ? Colors.red : (isNearLimit ? Colors.orange : color);
+    final displayColor =
+        isAtLimit ? Colors.red : (isNearLimit ? Colors.orange : color);
 
     return Card(
       child: Padding(

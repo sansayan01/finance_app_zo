@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,9 +8,11 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../users/presentation/providers/user_list_provider.dart';
+import '../../../members/data/models/member_model.dart';
+import '../../../members/presentation/providers/member_providers.dart';
 import '../providers/new_loan_provider.dart';
 import '../providers/loan_providers.dart';
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 import '../../data/models/loan_model.dart';
 
 class EditLoanPage extends ConsumerStatefulWidget {
@@ -48,7 +50,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
 
   Future<void> _loadLoanData() async {
     try {
-      final loanAsync = await ref.read(loanDetailProvider(widget.loanId).future);
+      final loanAsync =
+          await ref.read(loanDetailProvider(widget.loanId).future);
       if (!mounted) return;
 
       if (loanAsync != null) {
@@ -61,7 +64,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             content: Text('Error loading loan: ${e.toString()}'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -74,7 +78,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
 
   void _populateFormFromLoan(LoanModel loan) {
     final notifier = ref.read(newLoanProvider.notifier);
-    
+
     _principalController.text = loan.amount.toInt().toString();
     _rateController.text = loan.interestRate.toString();
     _tenureController.text = loan.tenureMonths.toString();
@@ -116,7 +120,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
-    final usersAsync = ref.watch(customerListProvider);
+    final usersAsync = ref.watch(membersProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -155,8 +159,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                             children: [
                               Expanded(
                                   flex: 3,
-                                  child: _buildFacilityDetails(state, theme, isDark,
-                                      primary, false, usersAsync)),
+                                  child: _buildFacilityDetails(state, theme,
+                                      isDark, primary, false, usersAsync)),
                               const SizedBox(width: 24),
                               Expanded(
                                   flex: 2,
@@ -167,10 +171,11 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                         } else {
                           return Column(
                             children: [
-                              _buildFinancialSummary(state, theme, isDark, primary),
+                              _buildFinancialSummary(
+                                  state, theme, isDark, primary),
                               const SizedBox(height: 20),
-                              _buildFacilityDetails(state, theme, isDark, primary,
-                                  isNarrow, usersAsync),
+                              _buildFacilityDetails(state, theme, isDark,
+                                  primary, isNarrow, usersAsync),
                             ],
                           );
                         }
@@ -262,7 +267,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
           content: Text('Please select a borrower'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -271,39 +277,46 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
     setState(() => _isSaving = true);
     try {
       await ref.read(loansRepositoryProvider).updateLoan(
-        widget.loanId,
-        borrowerId: state.borrowerId!,
-        principal: state.principalAmount,
-        interestRate: state.interestMode == InterestMode.rate
-            ? state.interestRate
-            : _calculateEquivalentAPR(state),
-        tenureMonths: state.tenureValue,
-        frequency: state.collectionType.name,
-        collectionType: state.collectionType.name,
-        interestLogic: state.interestLogic.name,
-        firstInstallmentDate: state.firstInstallmentDate ?? DateTime.now().add(const Duration(days: 30)),
-        estimatedInstallment: state.estimatedInstallment,
-        totalExposure: state.totalExposure,
-        interestMode: state.interestMode.name,
-        interestRateBasis: state.interestMode == InterestMode.rate
-            ? state.interestRateBasis.name
-            : null,
-        interestAmount: state.interestMode == InterestMode.amount
-            ? state.interestAmount
-            : 0,
-        interestBasis: state.interestMode == InterestMode.amount
-            ? state.interestBasis.name
-            : null,
-        tenureValue: state.tenureValue,
-        tenureUnit: state.tenureUnit.name,
-        remarks: _remarksController.text.isEmpty ? null : _remarksController.text,
-        purpose: _purposeController.text.isEmpty ? null : _purposeController.text,
-      );
+            widget.loanId,
+            borrowerId: state.borrowerId!,
+            principal: state.principalAmount,
+            interestRate: state.interestMode == InterestMode.rate
+                ? state.interestRate
+                : _calculateEquivalentAPR(state),
+            tenureMonths: state.tenureValue,
+            frequency: state.collectionType.name,
+            collectionType: state.collectionType.name,
+            interestLogic: state.interestLogic.name,
+            firstInstallmentDate: state.firstInstallmentDate ??
+                DateTime.now().add(const Duration(days: 30)),
+            estimatedInstallment: state.estimatedInstallment,
+            totalExposure: state.totalExposure,
+            interestMode: state.interestMode.name,
+            interestRateBasis: state.interestMode == InterestMode.rate
+                ? state.interestRateBasis.name
+                : null,
+            interestAmount: state.interestMode == InterestMode.amount
+                ? state.interestAmount
+                : 0,
+            interestBasis: state.interestMode == InterestMode.amount
+                ? state.interestBasis.name
+                : null,
+            tenureValue: state.tenureValue,
+            tenureUnit: state.tenureUnit.name,
+            remarks: _remarksController.text.isEmpty
+                ? null
+                : _remarksController.text,
+            purpose: _purposeController.text.isEmpty
+                ? null
+                : _purposeController.text,
+          );
 
       if (!mounted) return;
 
       ref.invalidate(loansProvider);
       ref.invalidate(loanDetailProvider(widget.loanId));
+      ref.invalidate(loanSummaryProvider);
+      ref.invalidate(emiScheduleProvider(widget.loanId));
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -316,7 +329,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       context.pop();
@@ -328,7 +342,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
           content: Text('Error: ${e.toString()}'),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     } finally {
@@ -340,7 +355,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
 
   double _calculateEquivalentAPR(NewLoanState state) {
     if (state.interestAmount <= 0 || state.tenureInDays <= 0) return 0;
-    
+
     double totalInterest;
     switch (state.interestBasis) {
       case InterestBasis.onPrincipal:
@@ -358,7 +373,9 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
         totalInterest = state.interestAmount * (state.tenureInDays / 365);
         break;
     }
-    return (totalInterest / state.principalAmount) * (365 / state.tenureInDays) * 100;
+    return (totalInterest / state.principalAmount) *
+        (365 / state.tenureInDays) *
+        100;
   }
 
   Widget _buildSectionHeader(
@@ -390,7 +407,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
   }
 
   Widget _buildFacilityDetails(NewLoanState state, ThemeData theme, bool isDark,
-      Color primary, bool isNarrow, AsyncValue<List<dynamic>> usersAsync) {
+      Color primary, bool isNarrow, AsyncValue<List<MemberModel>> usersAsync) {
     return GlassCard(
       padding: EdgeInsets.all(isNarrow ? 18 : 24),
       child: Column(
@@ -399,7 +416,6 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
           _buildSectionHeader('Facility Details', Icons.account_balance_rounded,
               theme, primary),
           const SizedBox(height: 20),
-
           Container(
             decoration: BoxDecoration(
               color: isDark ? AppColors.fillDark : AppColors.fillLight,
@@ -419,7 +435,6 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               },
             ),
           ).animate().fadeIn(duration: 400.ms),
-
           if (_isMigratedLoan) ...[
             const SizedBox(height: 20),
             Container(
@@ -453,7 +468,6 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             ).animate().fadeIn(),
           ],
           const SizedBox(height: 28),
-
           _buildLabel('BORROWER ACCOUNT', theme),
           const SizedBox(height: 10),
           usersAsync.when(
@@ -462,8 +476,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               hint: users.isEmpty
                   ? 'No users found'
                   : 'Select registered customer',
-              items: users.map((u) => u.id as String).toList(),
-              itemLabels: users.map((u) => u.fullName as String).toList(),
+              items: users.map((u) => u.id).toList(),
+              itemLabels: users.map((u) => u.fullName).toList(),
               onChanged: (val) =>
                   ref.read(newLoanProvider.notifier).updateBorrower(val),
               theme: theme,
@@ -478,9 +492,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                 theme: theme,
                 isDark: isDark),
           ),
-
           const SizedBox(height: 28),
-
           _buildLabel('PRINCIPAL AMOUNT (₹)', theme),
           const SizedBox(height: 10),
           _buildTextField(
@@ -509,9 +521,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             theme: theme,
             primary: primary,
           ),
-
           _buildDivider(theme),
-
           _buildLabel('INTEREST TYPE', theme),
           const SizedBox(height: 10),
           Container(
@@ -526,7 +536,9 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                     label: 'Interest Rate',
                     subtitle: 'APR %',
                     isSelected: state.interestMode == InterestMode.rate,
-                    onTap: () => ref.read(newLoanProvider.notifier).updateInterestMode(InterestMode.rate),
+                    onTap: () => ref
+                        .read(newLoanProvider.notifier)
+                        .updateInterestMode(InterestMode.rate),
                     theme: theme,
                     primary: primary,
                   ),
@@ -536,7 +548,9 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                     label: 'Interest Amount',
                     subtitle: 'Fixed ₹',
                     isSelected: state.interestMode == InterestMode.amount,
-                    onTap: () => ref.read(newLoanProvider.notifier).updateInterestMode(InterestMode.amount),
+                    onTap: () => ref
+                        .read(newLoanProvider.notifier)
+                        .updateInterestMode(InterestMode.amount),
                     theme: theme,
                     primary: primary,
                   ),
@@ -545,13 +559,18 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             ),
           ),
           const SizedBox(height: 16),
-
           if (state.interestMode == InterestMode.rate) ...[
             _buildDropdown(
               value: state.interestRateBasis.name,
               hint: 'Rate basis',
               items: InterestBasis.values.map((e) => e.name).toList(),
-              itemLabels: ['Per Day', 'Per Week', 'Per Month', 'Per Year', '% of Principal'],
+              itemLabels: [
+                'Per Day',
+                'Per Week',
+                'Per Month',
+                'Per Year',
+                '% of Principal'
+              ],
               onChanged: (val) {
                 if (val != null) {
                   ref.read(newLoanProvider.notifier).updateInterestRateBasis(
@@ -565,7 +584,9 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             const SizedBox(height: 12),
             _buildTextField(
               controller: _rateController,
-              suffix: state.interestRateBasis == InterestBasis.onPrincipal ? '%' : '%',
+              suffix: state.interestRateBasis == InterestBasis.onPrincipal
+                  ? '%'
+                  : '%',
               onChanged: (val) {
                 final parsed = double.tryParse(val) ?? 0;
                 ref.read(newLoanProvider.notifier).updateInterestRate(parsed);
@@ -575,12 +596,20 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             ),
             const SizedBox(height: 12),
             _buildSlider(
-              value: state.interestRate.clamp(0, state.interestRateBasis == InterestBasis.onPrincipal ? 100 : 50),
+              value: state.interestRate.clamp(
+                  0,
+                  state.interestRateBasis == InterestBasis.onPrincipal
+                      ? 100
+                      : 50),
               min: 0,
-              max: state.interestRateBasis == InterestBasis.onPrincipal ? 100 : 50,
+              max: state.interestRateBasis == InterestBasis.onPrincipal
+                  ? 100
+                  : 50,
               displayValue: '${state.interestRate.toStringAsFixed(1)}%',
               minLabel: '0%',
-              maxLabel: state.interestRateBasis == InterestBasis.onPrincipal ? '100%' : '50%',
+              maxLabel: state.interestRateBasis == InterestBasis.onPrincipal
+                  ? '100%'
+                  : '50%',
               onChanged: (val) {
                 _rateController.text = val.toStringAsFixed(1);
                 ref.read(newLoanProvider.notifier).updateInterestRate(val);
@@ -593,7 +622,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               padding: const EdgeInsets.only(top: 4),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
+                  Icon(Icons.info_outline_rounded,
+                      size: 14, color: theme.textTheme.bodySmall?.color),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -609,7 +639,13 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               value: state.interestBasis.name,
               hint: 'Interest basis',
               items: InterestBasis.values.map((e) => e.name).toList(),
-              itemLabels: ['Per Day', 'Per Week', 'Per Month', 'Per Year', 'On Principal'],
+              itemLabels: [
+                'Per Day',
+                'Per Week',
+                'Per Month',
+                'Per Year',
+                'On Principal'
+              ],
               onChanged: (val) {
                 if (val != null) {
                   ref.read(newLoanProvider.notifier).updateInterestBasis(
@@ -623,7 +659,9 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             const SizedBox(height: 12),
             _buildTextField(
               controller: _rateController,
-              suffix: state.interestBasis == InterestBasis.onPrincipal ? '₹ (flat)' : '₹',
+              suffix: state.interestBasis == InterestBasis.onPrincipal
+                  ? '₹ (flat)'
+                  : '₹',
               onChanged: (val) {
                 final parsed = double.tryParse(val) ?? 0;
                 ref.read(newLoanProvider.notifier).updateInterestAmount(parsed);
@@ -636,7 +674,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               padding: const EdgeInsets.only(top: 4),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
+                  Icon(Icons.info_outline_rounded,
+                      size: 14, color: theme.textTheme.bodySmall?.color),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -650,9 +689,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               ),
             ),
           ],
-
           _buildDivider(theme),
-
           _buildLabel('LOAN TENURE', theme),
           const SizedBox(height: 10),
           Row(
@@ -663,7 +700,9 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                   controller: _tenureController,
                   onChanged: (val) {
                     final parsed = int.tryParse(val) ?? 1;
-                    ref.read(newLoanProvider.notifier).updateTenureValue(parsed);
+                    ref
+                        .read(newLoanProvider.notifier)
+                        .updateTenureValue(parsed);
                   },
                   theme: theme,
                   isDark: isDark,
@@ -692,9 +731,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
           ),
           const SizedBox(height: 12),
           _buildTenureSlider(state, theme, primary),
-
           _buildDivider(theme),
-
           _buildLabel('COLLECTION TYPE', theme),
           const SizedBox(height: 10),
           _buildDropdown(
@@ -717,7 +754,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             padding: const EdgeInsets.only(top: 4),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded, size: 14, color: theme.textTheme.bodySmall?.color),
+                Icon(Icons.info_outline_rounded,
+                    size: 14, color: theme.textTheme.bodySmall?.color),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -728,9 +766,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               ],
             ),
           ),
-
           _buildDivider(theme),
-
           _buildLabel('PURPOSE', theme),
           const SizedBox(height: 10),
           _buildTextField(
@@ -739,9 +775,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             theme: theme,
             isDark: isDark,
           ),
-
           const SizedBox(height: 20),
-
           _buildLabel('REMARKS', theme),
           const SizedBox(height: 10),
           _buildTextField(
@@ -750,9 +784,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             theme: theme,
             isDark: isDark,
           ),
-
           _buildDivider(theme),
-
           _buildTwoColumn(
             isNarrow: isNarrow,
             first: Column(
@@ -810,7 +842,6 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
               _buildSectionHeader('Financial Summary', Icons.calculate_outlined,
                   theme, primary),
               const SizedBox(height: 24),
-
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -849,7 +880,6 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
               _buildKV(
                   'Capital Outlay',
@@ -876,7 +906,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
         ).animate().fadeIn(delay: 150.ms).slideX(begin: 0.08, end: 0),
         const SizedBox(height: 16),
         InkWell(
-          onTap: () => _showAmortizationPreview(context, state, theme, isDark, primary),
+          onTap: () =>
+              _showAmortizationPreview(context, state, theme, isDark, primary),
           borderRadius: BorderRadius.circular(20),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -907,7 +938,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.table_chart_rounded, size: 22, color: primary),
+                  child:
+                      Icon(Icons.table_chart_rounded, size: 22, color: primary),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -916,15 +948,16 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
                     children: [
                       Text('Amortization Preview',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: primary)),
+                              fontWeight: FontWeight.w700, color: primary)),
                       const SizedBox(height: 2),
                       Text('View full EMI schedule breakdown',
-                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontSize: 11)),
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: primary.withValues(alpha: 0.5)),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 16, color: primary.withValues(alpha: 0.5)),
               ],
             ),
           ),
@@ -1193,7 +1226,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? primary.withValues(alpha: 0.12) : Colors.transparent,
+          color:
+              isSelected ? primary.withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? primary : Colors.transparent,
@@ -1205,19 +1239,24 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             Text(label,
                 style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: isSelected ? primary : theme.textTheme.bodySmall?.color)),
+                    color: isSelected
+                        ? primary
+                        : theme.textTheme.bodySmall?.color)),
             const SizedBox(height: 2),
             Text(subtitle,
                 style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 10,
-                    color: isSelected ? primary.withValues(alpha: 0.7) : theme.textTheme.bodySmall?.color)),
+                    color: isSelected
+                        ? primary.withValues(alpha: 0.7)
+                        : theme.textTheme.bodySmall?.color)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTenureSlider(NewLoanState state, ThemeData theme, Color primary) {
+  Widget _buildTenureSlider(
+      NewLoanState state, ThemeData theme, Color primary) {
     final unit = state.tenureUnit;
     double min, max, value;
     String minLabel, maxLabel, displayValue;
@@ -1339,12 +1378,8 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
     }
   }
 
-  void _showAmortizationPreview(
-      BuildContext context,
-      NewLoanState state,
-      ThemeData theme,
-      bool isDark,
-      Color primary) {
+  void _showAmortizationPreview(BuildContext context, NewLoanState state,
+      ThemeData theme, bool isDark, Color primary) {
     final schedule = state.generateAmortizationSchedule();
     if (schedule.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1359,6 +1394,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _AmortizationPreviewSheet(
         schedule: schedule,
@@ -1397,8 +1433,10 @@ class _AmortizationPreviewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalPrincipal = schedule.fold<double>(0, (sum, r) => sum + r.principal);
-    final totalInterest = schedule.fold<double>(0, (sum, r) => sum + r.interest);
+    final totalPrincipal =
+        schedule.fold<double>(0, (sum, r) => sum + r.principal);
+    final totalInterest =
+        schedule.fold<double>(0, (sum, r) => sum + r.interest);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -1439,7 +1477,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.table_chart_rounded, size: 20, color: primary),
+                      child: Icon(Icons.table_chart_rounded,
+                          size: 20, color: primary),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -1448,9 +1487,12 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                         children: [
                           Text('Amortization Schedule',
                               style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w800, letterSpacing: -0.5)),
-                          Text('${schedule.length} installments · $tenureLabel · ${state.interestLogic == InterestLogic.reducingBalance ? "Reducing Balance" : "Flat Rate"}',
-                              style: theme.textTheme.bodySmall?.copyWith(fontSize: 12)),
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5)),
+                          Text(
+                              '${schedule.length} installments · $tenureLabel · ${state.interestLogic == InterestLogic.reducingBalance ? "Reducing Balance" : "Flat Rate"}',
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(fontSize: 12)),
                         ],
                       ),
                     ),
@@ -1480,7 +1522,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                         label: 'Interest',
                         value: currencyFormat.format(totalInterest),
                         icon: Icons.trending_up_rounded,
-                        color: isDark ? AppColors.warningDark : AppColors.orange,
+                        color:
+                            isDark ? AppColors.warningDark : AppColors.orange,
                         theme: theme,
                       ),
                     ),
@@ -1488,7 +1531,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                     Expanded(
                       child: _SummaryCard(
                         label: 'Total',
-                        value: currencyFormat.format(totalPrincipal + totalInterest),
+                        value: currencyFormat
+                            .format(totalPrincipal + totalInterest),
                         icon: Icons.summarize_rounded,
                         color: theme.colorScheme.error,
                         theme: theme,
@@ -1528,11 +1572,13 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                         Expanded(
                           child: ListView.builder(
                             controller: scrollController,
-                            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                            padding: const EdgeInsets.only(
+                                left: 24, right: 24, bottom: 24),
                             itemCount: schedule.length,
                             itemBuilder: (context, index) {
                               final row = schedule[index];
-                              return _buildRow(row, index, theme, isDark, primary);
+                              return _buildRow(
+                                  row, index, theme, isDark, primary);
                             },
                           ),
                         ),
@@ -1548,7 +1594,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildMiniChart(ThemeData theme, double totalPrincipal, double totalInterest) {
+  Widget _buildMiniChart(
+      ThemeData theme, double totalPrincipal, double totalInterest) {
     final total = totalPrincipal + totalInterest;
 
     if (total == 0) return const SizedBox.shrink();
@@ -1574,7 +1621,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                     height: 12,
                     decoration: BoxDecoration(
                       color: primary,
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                      borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(8)),
                     ),
                   ),
                 ),
@@ -1584,7 +1632,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                     height: 12,
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.warningDark : AppColors.orange,
-                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                      borderRadius: const BorderRadius.horizontal(
+                          right: Radius.circular(8)),
                     ),
                   ),
                 ),
@@ -1606,7 +1655,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Text('Principal ($principalPct%)', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                  Text('Principal ($principalPct%)',
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
                 ],
               ),
               Row(
@@ -1620,7 +1670,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Text('Interest ($interestPct%)', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                  Text('Interest ($interestPct%)',
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
                 ],
               ),
             ],
@@ -1646,7 +1697,8 @@ class _AmortizationPreviewSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(AmortizationRow row, int index, ThemeData theme, bool isDark, Color primary) {
+  Widget _buildRow(AmortizationRow row, int index, ThemeData theme, bool isDark,
+      Color primary) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
@@ -1747,20 +1799,22 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(height: 8),
-          Text(label, style: theme.textTheme.labelSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 10,
-            color: theme.textTheme.bodySmall?.color,
-          )),
+          Text(label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 10,
+                color: theme.textTheme.bodySmall?.color,
+              )),
           const SizedBox(height: 2),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(value, style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 13,
-              color: color,
-            )),
+            child: Text(value,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: color,
+                )),
           ),
         ],
       ),

@@ -15,30 +15,50 @@ class NotificationsPage extends ConsumerWidget {
     final notificationsAsync = ref.watch(allNotificationsProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
+      backgroundColor:
+          isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
       appBar: AppBar(
-        title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Notifications',
+            style: TextStyle(fontWeight: FontWeight.w800)),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: RefreshIndicator(
-        onRefresh: () async { ref.invalidate(allNotificationsProvider); await Future.delayed(const Duration(milliseconds: 500)); },
+        onRefresh: () async {
+          ref.invalidate(allNotificationsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
         child: notificationsAsync.when(
           data: (notifications) {
             if (notifications.isEmpty) {
               return Center(
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Container(
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), shape: BoxShape.circle),
-                    child: Icon(Icons.notifications_none_rounded, size: 56, color: AppColors.primary.withValues(alpha: 0.2)),
-                  ),
-                  const SizedBox(height: 20),
-                  Text('No notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withValues(alpha: 0.35))),
-                  const SizedBox(height: 6),
-                  Text('You\'re all caught up!', style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.2))),
-                ]),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.06),
+                            shape: BoxShape.circle),
+                        child: Icon(Icons.notifications_none_rounded,
+                            size: 56,
+                            color: AppColors.primary.withValues(alpha: 0.2)),
+                      ),
+                      const SizedBox(height: 20),
+                      Text('No notifications',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.35))),
+                      const SizedBox(height: 6),
+                      Text('You\'re all caught up!',
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.2))),
+                    ]),
               );
             }
             return ListView.builder(
@@ -53,12 +73,16 @@ class NotificationsPage extends ConsumerWidget {
                     child: Row(
                       children: [
                         Container(
-                          width: 48, height: 48,
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
-                            color: _getNotifColor(n['type'] as String? ?? '').withValues(alpha: 0.1),
+                            color: _getNotifColor(n['type'] as String? ?? '')
+                                .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: Icon(_getNotifIcon(n['type'] as String? ?? ''), color: _getNotifColor(n['type'] as String? ?? ''), size: 22),
+                          child: Icon(_getNotifIcon(n['type'] as String? ?? ''),
+                              color: _getNotifColor(n['type'] as String? ?? ''),
+                              size: 22),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -67,12 +91,14 @@ class NotificationsPage extends ConsumerWidget {
                             children: [
                               Text(
                                 n['title'] as String? ?? 'Notification',
-                                style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600, fontSize: 15),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 n['message'] as String? ?? '',
-                                style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(fontSize: 13),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -81,17 +107,23 @@ class NotificationsPage extends ConsumerWidget {
                         ),
                         Text(
                           _formatTime(n['created_at'] as String?),
-                          style: theme.textTheme.labelSmall?.copyWith(color: AppColors.textTertiaryLight),
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: AppColors.textTertiaryLight),
                         ),
                       ],
                     ),
                   ),
-                ).animate().fadeIn(delay: (index * 100).ms).slideX(begin: 0.05, end: 0);
+                )
+                    .animate()
+                    .fadeIn(delay: (index * 100).ms)
+                    .slideX(begin: 0.05, end: 0);
               },
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => Center(child: Text('Could not load notifications', style: TextStyle(color: theme.colorScheme.error))),
+          error: (_, __) => Center(
+              child: Text('Could not load notifications',
+                  style: TextStyle(color: theme.colorScheme.error))),
         ),
       ),
     );
@@ -99,23 +131,35 @@ class NotificationsPage extends ConsumerWidget {
 
   IconData _getNotifIcon(String type) {
     switch (type) {
-      case 'target': return Icons.flag_rounded;
-      case 'overdue': return Icons.warning_amber_rounded;
-      case 'sync': return Icons.sync_rounded;
-      case 'alert': return Icons.notifications_active_rounded;
-      case 'reminder': return Icons.notifications_rounded;
-      default: return Icons.circle_outlined;
+      case 'target':
+        return Icons.flag_rounded;
+      case 'overdue':
+        return Icons.warning_amber_rounded;
+      case 'sync':
+        return Icons.sync_rounded;
+      case 'alert':
+        return Icons.notifications_active_rounded;
+      case 'reminder':
+        return Icons.notifications_rounded;
+      default:
+        return Icons.circle_outlined;
     }
   }
 
   Color _getNotifColor(String type) {
     switch (type) {
-      case 'target': return AppColors.success;
-      case 'overdue': return AppColors.error;
-      case 'sync': return AppColors.info;
-      case 'alert': return AppColors.warning;
-      case 'reminder': return AppColors.primary;
-      default: return AppColors.primary;
+      case 'target':
+        return AppColors.success;
+      case 'overdue':
+        return AppColors.error;
+      case 'sync':
+        return AppColors.info;
+      case 'alert':
+        return AppColors.warning;
+      case 'reminder':
+        return AppColors.primary;
+      default:
+        return AppColors.primary;
     }
   }
 

@@ -14,7 +14,7 @@ class CollectionRepository {
     final response = await _client
         .from('loans')
         .select('''
-          id,
+           id,
           member_id,
           member_name,
           outstanding_balance,
@@ -28,17 +28,17 @@ class CollectionRepository {
             gps_lng,
             gps_address
           ),
-          loan_schedules(
+          emi_schedule(
             id,
             period,
             due_date,
-            emi,
+            emi_amount,
             principal,
             interest,
-            balance,
+            balance_after,
             is_paid,
             is_overdue,
-            penalty
+            penalty_amount
           )
         ''')
         .eq('agent_id', staffId)
@@ -48,7 +48,7 @@ class CollectionRepository {
     // Filter schedules for today
     final result = <Map<String, dynamic>>[];
     for (final loan in response) {
-      final schedules = loan['loan_schedules'] as List?;
+      final schedules = loan['emi_schedule'] as List?;
       if (schedules != null) {
         for (final schedule in schedules) {
           if (schedule['due_date']?.toString().startsWith(today) == true &&
@@ -69,8 +69,8 @@ class CollectionRepository {
     final response = await _client
         .from('overdue_loans_view')
         .select()
-        .eq('staff_id', staffId)
-        .order('days_overdue', ascending: false);
+        .eq('agent_id', staffId)
+        .order('due_date', ascending: true);
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -117,17 +117,14 @@ class CollectionRepository {
       'gps_accuracy': gpsAccuracy,
       'gps_address': gpsAddress,
       'collection_date': now.toIso8601String().split('T').first,
-      'collection_time': now.toIso8601String(),
+      'collection_time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
       'sync_status': 'synced',
       'remarks': remarks,
       'org_id': _orgId,
     };
 
-    final response = await _client
-        .from('collections')
-        .insert(payload)
-        .select()
-        .single();
+    final response =
+        await _client.from('collections').insert(payload).select().single();
 
     return CollectionModel.fromJson(response);
   }
@@ -158,9 +155,7 @@ class CollectionRepository {
     String? paymentMode,
     int limit = 100,
   }) async {
-    var query = _client
-        .from('collections')
-        .select('''
+    var query = _client.from('collections').select('''
           id,
           member_id,
           member_name,
@@ -178,8 +173,7 @@ class CollectionRepository {
           is_offline,
           sync_status,
           profiles!fk_collections_staff(full_name)
-        ''')
-        .eq('staff_id', staffId);
+        ''').eq('staff_id', staffId);
 
     if (customerId != null) {
       query = query.eq('member_id', customerId);
@@ -189,8 +183,10 @@ class CollectionRepository {
       final startDate = DateTime(year, month, 1);
       final endDate = DateTime(year, month + 1, 0);
       query = query
-          .filter('collection_date', 'gte', startDate.toIso8601String().split('T').first)
-          .filter('collection_date', 'lte', endDate.toIso8601String().split('T').first);
+          .filter('collection_date', 'gte',
+              startDate.toIso8601String().split('T').first)
+          .filter('collection_date', 'lte',
+              endDate.toIso8601String().split('T').first);
     }
 
     if (type != null && type != 'all') {
@@ -201,9 +197,8 @@ class CollectionRepository {
       query = query.eq('payment_mode', paymentMode);
     }
 
-    final response = await query
-        .order('collection_time', ascending: false)
-        .limit(limit);
+    final response =
+        await query.order('collection_time', ascending: false).limit(limit);
 
     // Flatten staff name
     return response.map((item) {
@@ -235,7 +230,7 @@ class CollectionRepository {
     for (final item in response) {
       final amount = (item['amount_collected'] as num?)?.toDouble() ?? 0;
       totalCollected += amount;
-      
+
       if (item['payment_mode'] == 'cash') {
         cashCollected += amount;
       } else {
@@ -256,7 +251,7 @@ class CollectionRepository {
     if (query.isEmpty) return [];
 
     final searchTerm = query.toLowerCase();
-    
+
     final response = await _client
         .from('members')
         .select('''
@@ -286,7 +281,7 @@ class CollectionRepository {
       final loans = member['loans'] as List? ?? [];
       double outstanding = 0;
       String? loanNumber;
-      
+
       for (final loan in loans) {
         if (loan['status'] == 'active') {
           outstanding += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
@@ -305,10 +300,8 @@ class CollectionRepository {
   }
 
   /// Get customer detail with all info
-  Future<Map<String, dynamic>> getCustomerDetail(String customerId) async {
-    final response = await _client
-        .from('members')
-        .select('''
+  Future<Map<String, dynamic>?> getCustomerDetail(String customerId) async {
+    final response = await _client.from('members').select('''
           *,
           loans(
             id,
@@ -322,26 +315,27 @@ class CollectionRepository {
             start_date,
             paid_emis,
             total_emis,
-            loan_schedules(
+            emi_schedule(
               id,
               period,
               due_date,
-              emi,
+              emi_amount,
               is_paid,
               is_overdue
             )
           ),
-          savings(
+          savings_plans(
             id,
             plan_name,
             current_amount,
             target_amount,
             monthly_deposit,
-            status
+            status,
+            collection_type
           )
-        ''')
-        .eq('id', customerId)
-        .single();
+        ''').eq('id', customerId).maybeSingle();
+
+    if (response == null) return null;
 
     // Calculate stats
     double outstandingAmount = 0;
@@ -355,12 +349,14 @@ class CollectionRepository {
     final loans = response['loans'] as List? ?? [];
     for (final loan in loans) {
       if (loan['status'] == 'active') {
-        outstandingAmount += (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
+        outstandingAmount +=
+            (loan['outstanding_balance'] as num?)?.toDouble() ?? 0;
         paidEmis += (loan['paid_emis'] as num?)?.toInt() ?? 0;
-        totalEmis += (loan['total_emis'] as num?)?.toInt() ?? 
-                     (loan['tenure'] as num?)?.toInt() ?? 0;
+        totalEmis += (loan['total_emis'] as num?)?.toInt() ??
+            (loan['tenure'] as num?)?.toInt() ??
+            0;
 
-        final schedules = loan['loan_schedules'] as List? ?? [];
+        final schedules = loan['emi_schedule'] as List? ?? [];
         for (final schedule in schedules) {
           if (schedule['is_overdue'] == true) {
             overdueAmount += (schedule['emi'] as num?)?.toDouble() ?? 0;
@@ -392,9 +388,7 @@ class CollectionRepository {
 
   /// Get customer loans
   Future<List<Map<String, dynamic>>> getCustomerLoans(String customerId) async {
-    final response = await _client
-        .from('loans')
-        .select('''
+    final response = await _client.from('loans').select('''
           id,
           loan_number,
           principal,
@@ -403,34 +397,31 @@ class CollectionRepository {
           emi,
           outstanding_balance,
           status,
-          start_date,
+           start_date,
           paid_emis,
           total_emis,
-          loan_schedules(
+          emi_schedule(
             id,
             period,
             due_date,
-            emi,
+            emi_amount,
             principal,
             interest,
-            balance,
+            balance_after,
             is_paid,
             is_overdue,
             paid_on,
-            penalty
+            penalty_amount
           )
-        ''')
-        .eq('member_id', customerId)
-        .order('created_at', ascending: false);
+        ''').eq('member_id', customerId).order('created_at', ascending: false);
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   /// Get customer savings
-  Future<List<Map<String, dynamic>>> getCustomerSavings(String customerId) async {
-    final response = await _client
-        .from('savings')
-        .select('''
+  Future<List<Map<String, dynamic>>> getCustomerSavings(
+      String customerId) async {
+    final response = await _client.from('savings_plans').select('''
           id,
           plan_name,
           current_amount,
@@ -438,10 +429,9 @@ class CollectionRepository {
           monthly_deposit,
           status,
           created_at,
-          maturity_date
-        ''')
-        .eq('member_id', customerId)
-        .order('created_at', ascending: false);
+          maturity_date,
+          collection_type
+        ''').eq('member_id', customerId).order('created_at', ascending: false);
 
     // Map current_amount → balance for backward compatibility
     return response.map((item) {
@@ -523,11 +513,10 @@ class CollectionRepository {
     String staffId, {
     int limit = 10,
   }) async {
-    final response = await _client
-        .rpc('get_frequent_customers', params: {
-          'p_staff_id': staffId,
-          'p_limit': limit,
-        });
+    final response = await _client.rpc('get_frequent_customers', params: {
+      'p_staff_id': staffId,
+      'p_limit': limit,
+    });
 
     return List<Map<String, dynamic>>.from(response);
   }

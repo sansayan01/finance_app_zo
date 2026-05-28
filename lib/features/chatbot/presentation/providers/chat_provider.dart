@@ -3,14 +3,11 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/repositories/chatbot_repository.dart';
-import 'chat_config_provider.dart';
-import '../../../loans/data/providers/loan_providers.dart';
 import '../../../../router/app_router.dart';
 import '../../../../core/providers/branding_provider.dart';
 
 final chatbotRepositoryProvider = Provider<ChatbotRepository>((ref) {
-  final config = ref.watch(chatConfigProvider);
-  return ChatbotRepository(apiKey: config.apiKey, model: config.modelId);
+  return ChatbotRepository();
 });
 
 class ChatState {
@@ -66,16 +63,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> sendMessage(String text, {String? contextRoute}) async {
     if (text.trim().isEmpty) return;
 
-    final config = _ref.read(chatConfigProvider);
-    if (config.apiKey.isEmpty) {
-      state = state.copyWith(
-        error:
-            'NVIDIA API Key not configured. Please go to Settings > Chatbot to add your API key.',
-        isLoading: false,
-      );
-      return;
-    }
-
     final userMessage = ChatMessage(text: text, role: MessageRole.user);
     state = state.copyWith(
       messages: [...state.messages, userMessage],
@@ -119,40 +106,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
       }
     }
 
-    // Auto-detect current page context
-    String? currentRoute;
-    try {
-      currentRoute = _ref
-          .read(routerProvider)
-          .routerDelegate
-          .currentConfiguration
-          .uri
-          .toString();
-    } catch (_) {}
-
-    // RAG: Auto-fetch Live Database Context if requested
-    String? businessContext;
-    if (t.contains('loan') ||
-        t.contains('summary') ||
-        t.contains('portfolio') ||
-        t.contains('analytics')) {
-      try {
-        final loanSummary = await _ref.read(loanSummaryProvider.future);
-        businessContext = '''
-Total Loans: ${loanSummary.totalLoans}
-Active Loans: ${loanSummary.activeLoans}
-Default Loans: ${loanSummary.defaultLoans}
-Total Outstanding: \$${loanSummary.totalOutstanding.toStringAsFixed(2)}
-Total Disbursed: \$${loanSummary.totalDisbursed.toStringAsFixed(2)}
-Total Collected: \$${loanSummary.totalCollected.toStringAsFixed(2)}
-Overdue Amount: \$${loanSummary.overdueAmount.toStringAsFixed(2)}
-PAR (Portfolio at Risk): ${loanSummary.parPercentage.toStringAsFixed(1)}%
-''';
-      } catch (e) {
-        businessContext = 'Error fetching live data: $e';
-      }
-    }
-
     try {
       final repository = _ref.read(chatbotRepositoryProvider);
       String fullContent = '';
@@ -167,10 +120,10 @@ PAR (Portfolio at Risk): ${loanSummary.parPercentage.toStringAsFixed(1)}%
       final branding = _ref.read(brandingProvider).valueOrNull;
       final orgName = branding?.displayName;
 
+      // Context injection (business data, role scope) is handled server-side
+      // by the chat-proxy edge function.
       final responseStream = repository.streamChatResponse(
         state.messages.sublist(0, state.messages.length - 1),
-        contextRoute: currentRoute,
-        businessContext: businessContext,
         orgName: orgName,
       );
 

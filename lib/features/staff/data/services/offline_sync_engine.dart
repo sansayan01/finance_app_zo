@@ -4,11 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 /// Sync status for offline records
+/// Canonical definition -- import from this file everywhere.
 enum SyncStatus {
   pending,
   syncing,
   synced,
   failed,
+  offline,
+  error,
 }
 
 /// Offline Sync Engine for field operations

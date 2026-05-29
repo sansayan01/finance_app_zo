@@ -19,6 +19,15 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const scrollTo = (id) => {
+    if (mobileOpen) setMobileOpen(false);
+    const el = document.getElementById(id);
+    if (!el) return;
+    const offset = 80;
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
@@ -39,11 +48,11 @@ export default function Navbar() {
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-1">
           {links.map((l) => (
-            <a key={l.href} href={l.href}
-              className="px-3.5 py-1.5 text-white/60 hover:text-white text-sm font-medium rounded-full hover:bg-white/[0.04] transition-all duration-300"
+            <button key={l.href} onClick={() => scrollTo(l.href.slice(1))}
+              className="px-3.5 py-1.5 text-white/60 hover:text-white text-sm font-medium rounded-full hover:bg-white/[0.04] transition-all duration-300 cursor-pointer"
             >
               {l.label}
-            </a>
+            </button>
           ))}
         </div>
 
@@ -72,11 +81,11 @@ export default function Navbar() {
         >
           <div className="flex flex-col gap-1">
             {links.map((l) => (
-              <a key={l.href} href={l.href} onClick={() => setMobileOpen(false)}
-                className="px-4 py-2.5 text-white/70 hover:text-white text-sm rounded-xl hover:bg-white/[0.03] transition-all duration-300"
+              <button key={l.href} onClick={() => scrollTo(l.href.slice(1))}
+                className="w-full text-left px-4 py-2.5 text-white/70 hover:text-white text-sm rounded-xl hover:bg-white/[0.03] transition-all duration-300 cursor-pointer"
               >
                 {l.label}
-              </a>
+              </button>
             ))}
             <div className="h-px bg-white/[0.04] my-2" />
             <a href="#" className="px-4 py-2.5 text-white/70 hover:text-white text-sm rounded-xl hover:bg-white/[0.03] transition-all duration-300">Sign Up</a>

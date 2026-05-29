@@ -524,4 +524,16 @@ class CollectionRepository {
 
     return List<Map<String, dynamic>>.from(response);
   }
+
+  /// Hard delete a collection with cascade revert (executive admin only)
+  Future<Map<String, dynamic>> deleteCollection(String collectionId) async {
+    try {
+      final response = await _client.rpc('delete_collection', params: {
+        'p_collection_id': collectionId,
+      });
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Failed to delete collection: $e');
+    }
+  }
 }

@@ -1,565 +1,534 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MicroFlow Pro | Premium Micro-Finance Management</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #0ea5e9;
-            --accent: #8b5cf6;
-            --background: #ffffff;
-            --surface: #f8fafc;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --glass: rgba(255, 255, 255, 0.7);
-            --border: #e2e8f0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MicroFlow Pro — Intelligent Micro-Finance Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06080e;--bg2:#0b0e16;--bg3:#11151f;--s:hsl(0,0%,100%,.025);--sh:hsl(0,0%,100%,.045);--b:hsl(0,0%,100%,.06);--bh:hsl(0,0%,100%,.1);--t:#f0f2f5;--t2:hsl(0,0%,100%,.55);--t3:hsl(0,0%,100%,.3);--br:#8b5cf6;--br2:#a78bfa;--gl:hsl(263,90%,65%,.25);--sc:#06b6d4;--sc2:#67e8f9;--sg:hsl(187,90%,45%,.2);--am:#f59e0b;--rs:8px;--rm:14px;--rl:20px;--rxl:28px;--r2:36px;--fs:"Inter",system-ui,sans-serif;--fd:"Space Grotesk","Inter",system-ui,sans-serif;--mw:1200px;--nh:72px;--e:cubic-bezier(.22,1,.36,1)}
+*,:after,:before{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--br) transparent;scroll-snap-type:y proximity}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
+body{font-family:var(--fs);background:var(--bg);color:var(--t);line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(139,92,246,.4);color:#fff}
+::placeholder{color:var(--t3)}
 
-        [data-theme="dark"] {
-            --background: #020617;
-            --surface: #0f172a;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --glass: rgba(15, 23, 42, 0.7);
-            --border: #1e293b;
-        }
+/* ── Canvas Background ── */
+#bgCanvas{position:fixed;inset:0;z-index:-2;pointer-events:none}
+.bg-mesh{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.06;background:radial-gradient(ellipse 70% 40% at 50% 0,hsl(263,90%,65%),transparent 70%),radial-gradient(ellipse 50% 30% at 80% 100%,hsl(187,90%,45%),transparent 70%),radial-gradient(ellipse 30% 40% at 20% 50%,hsl(39,100%,50%),transparent 60%);animation:meshShift 12s ease-in-out infinite alternate}
+@keyframes meshShift{0%{opacity:.04;transform:scale(1)}50%{opacity:.07;transform:scale(1.05)}to{opacity:.04;transform:scale(1)}}
+.noise{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.012;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:160px}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--background);
-            color: var(--text-main);
-            line-height: 1.6;
-            overflow-x: hidden;
-            transition: background-color 0.3s ease;
-        }
+/* ── Floating Orbs ── */
+.floating-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:-1;opacity:.04;animation:orbFloat 20s ease-in-out infinite}
+.floating-orb:nth-child(1){width:500px;height:500px;top:-10%;left:-5%;background:var(--br);animation-delay:0s;animation-duration:28s}
+.floating-orb:nth-child(2){width:400px;height:400px;bottom:-8%;right:-5%;background:var(--sc);animation-delay:-8s;animation-duration:24s}
+.floating-orb:nth-child(3){width:250px;height:250px;top:45%;left:55%;background:var(--am);animation-delay:-15s;animation-duration:22s;opacity:.025}
+@keyframes orbFloat{0%,to{transform:translate(0,0) scale(1)}25%{transform:translate(70px,-90px) scale(1.12)}50%{transform:translate(-50px,60px) scale(.9)}75%{transform:translate(40px,-40px) scale(1.06)}}
 
-        h1, h2, h3, .logo { font-family: 'Outfit', sans-serif; }
+/* ── Container ── */
+.ct{max-width:var(--mw);margin:0 auto;padding:0 28px;width:100%}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
+/* ── Section Headers ── */
+.sh{text-align:center;margin-bottom:52px}
+.sh h2{font-family:var(--fd);font-size:clamp(28px,4.5vw,44px);font-weight:800;letter-spacing:-1.5px;line-height:1.1}
+.sh h2 .g{background:linear-gradient(135deg,var(--br2),var(--sc2),#fcd34d);background-size:200% 200%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:gs 5s ease-in-out infinite}
+@keyframes gs{0%,to{background-position:0 50%}50%{background-position:100% 50%}}
+.sh p{color:var(--t2);font-size:15px;max-width:480px;margin:10px auto 0}
+.bdg{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;background:hsl(263,90%,65%,.08);border:1px solid hsl(263,90%,65%,.15);font-size:11px;font-weight:600;color:var(--br2);letter-spacing:.3px;text-transform:uppercase;margin-bottom:18px;text-decoration:none}
+.bdg .pl{width:5px;height:5px;border-radius:50%;background:var(--sc2);display:inline-block;animation:pl 1.8s ease-in-out infinite}
+@keyframes pl{0%,to{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.5)}}
 
-        /* Navigation */
-        nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            padding: 20px 0;
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-        }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:100px;font-family:var(--fs);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;border:none;position:relative;overflow:hidden;white-space:nowrap;transition:all .35s var(--e);letter-spacing:-.01em;z-index:1}
+.btn:after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,hsl(0,0%,100%,.12),transparent);opacity:0;transition:opacity .3s;border-radius:inherit;z-index:-1}
+.btn:hover:after{opacity:1}
+.btn-p{background:linear-gradient(135deg,var(--br),#7c3aed);color:#fff;box-shadow:0 4px 20px var(--gl)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 32px var(--gl)}
+.btn-s{background:transparent;color:var(--t);border:1px solid var(--b)}
+.btn-s:hover{border-color:var(--bh);background:var(--s);transform:translateY(-2px)}
+.btn-g{background:transparent;color:var(--t2);padding:12px 18px}
+.btn-g:hover{color:var(--t)}
+.ripple{position:absolute;border-radius:50%;background:hsl(0,0%,100%,.15);transform:scale(0);animation:rippleAnim .6s ease-out;pointer-events:none}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0}}
 
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+/* ── Scroll Progress ── */
+#scrollP{position:fixed;top:0;left:0;width:100%;height:2px;z-index:9999;pointer-events:none}
+#scrollP .bar{height:100%;width:0;background:linear-gradient(90deg,var(--br),var(--sc),var(--am));border-radius:0 2px 2px 0;transition:width .1s linear}
 
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+/* ── Navigation ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;height:var(--nh);display:flex;align-items:center;background:hsl(240,6%,4%,.5);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid transparent;transition:border-color .3s,background .3s,backdrop-filter .3s}
+nav.sc{border-color:var(--b);background:hsl(240,6%,4%,.85)}
+.nav-in{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--fd);font-size:20px;font-weight:800;letter-spacing:-.5px;text-decoration:none;color:#fff}
+.logo sp{color:var(--br2)}
+.nav-l{display:flex;align-items:center;gap:2px}
+.nav-l a{text-decoration:none;color:var(--t2);font-size:13px;font-weight:500;padding:7px 14px;border-radius:var(--rs);transition:all .2s;position:relative}
+.nav-l a:hover{color:var(--t);background:var(--s)}
+.nav-l a.act{color:var(--br2)}
+.nav-a{display:flex;align-items:center;gap:8px}
+.nav-a .btn{padding:9px 20px;font-size:13px}
+.mt{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;z-index:1000}
+.mt sp{display:block;width:22px;height:2px;background:var(--t);border-radius:2px;transition:all .3s var(--e)}
+.mt.op sp:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.mt.op sp:nth-child(2){opacity:0;transform:translateX(-10px)}
+.mt.op sp:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mm{position:fixed;top:0;right:-100%;width:300px;height:100vh;background:hsl(240,6%,4%,.96);backdrop-filter:blur(28px);z-index:998;padding:96px 28px 28px;transition:right .45s var(--e);border-left:1px solid var(--b);display:flex;flex-direction:column;gap:4px}
+.mm.op{right:0}
+.mm a{color:var(--t2);text-decoration:none;font-size:17px;font-weight:500;padding:12px 16px;border-radius:12px;transition:all .2s}
+.mm a:hover{color:var(--t);background:var(--s)}
 
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-        }
+/* ── Hero ── */
+.hero{min-height:100vh;display:flex;align-items:center;padding:var(--nh)0 0;position:relative;overflow:hidden;scroll-snap-align:start}
+.hg{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;padding:20px 0 40px}
+.hl{opacity:0;transform:translateY(30px);animation:fu 1s .15s var(--e) forwards}
+@keyframes fu{to{opacity:1;transform:translateY(0)}}
+.hl h1{font-family:var(--fd);font-size:clamp(30px,4.8vw,58px);font-weight:800;line-height:1.05;letter-spacing:-2.5px;margin-bottom:16px}
+.hl h1 .g{background:linear-gradient(135deg,var(--br2),var(--sc2),#fcd34d);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:gs 5s ease-in-out infinite}
+.hl .sub{font-size:clamp(14px,1.4vw,17px);color:var(--t2);max-width:460px;margin-bottom:26px;line-height:1.75}
+.ha{display:flex;gap:10px;flex-wrap:wrap}
+.hs{display:flex;gap:28px;margin-top:32px;padding-top:24px;border-top:1px solid var(--b)}
+.hs-item{text-align:center}
+.hs-n{font-family:var(--fd);font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--t),var(--t2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hs-l{font-size:10px;color:var(--t3);margin-top:2px;text-transform:uppercase;letter-spacing:.7px}
 
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 14px;
-            transition: color 0.2s;
-        }
+/* Hero Dashboard */
+.hr{opacity:0;transform:translateY(30px) perspective(1200px) rotateY(-3deg) rotateX(1deg);animation:fu 1s .3s var(--e) forwards;perspective:1200px}
+.db{background:linear-gradient(135deg,hsl(0,0%,100%,.04),hsl(0,0%,100%,.01));border:1px solid var(--b);border-radius:var(--r2);padding:20px;position:relative;overflow:hidden;transition:transform .5s var(--e);box-shadow:0 40px 100px rgba(0,0,0,.5),0 0 0 1px hsl(263,90%,65%,.04)}
+.db:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 35% 40%,hsl(263,90%,65%,.06),transparent 65%);pointer-events:none}
+.db-b{display:flex;align-items:center;gap:8px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--b);position:relative;z-index:1}
+.db-d{width:9px;height:9px;border-radius:50%}
+.db-d:nth-child(1){background:#ff5f56}
+.db-d:nth-child(2){background:#ffbd2e}
+.db-d:nth-child(3){background:#27c93f}
+.db-c{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px;min-height:320px}
+.db-t{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.db-card{background:hsl(0,0%,100%,.03);border-radius:var(--rm);padding:12px 14px;position:relative;overflow:hidden;transition:background .3s}
+.db-card:hover{background:hsl(0,0%,100%,.045)}
+.db-card .l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.db-card .v{font-family:var(--fd);font-size:18px;font-weight:700;letter-spacing:-.5px}
+.db-card .v.c1{color:var(--sc2)}
+.db-card .v.c2{color:var(--br2)}
+.db-card .v.c3{color:#fcd34d}
+.db-card .ch{font-size:10px;color:var(--sc2);display:inline-flex;align-items:center;gap:2px;margin-left:6px;font-weight:600}
+.db-card .ch.dn{color:#f43f5e}
+.db-chart{background:hsl(0,0%,100%,.02);border-radius:var(--rm);padding:14px 16px;flex:1;position:relative;min-height:100px}
+.db-chart .bars{display:flex;align-items:flex-end;gap:5px;height:100%;min-height:100px}
+.db-chart .bars .bar{flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,hsl(263,90%,65%,.8),hsl(263,90%,65%,.15));transform-origin:bottom;animation:gb 1.2s .6s var(--e) both;position:relative;transition:opacity .3s,height 1.2s var(--e);cursor:pointer}
+.db-chart .bars .bar:nth-child(2){background:linear-gradient(180deg,hsl(187,90%,45%,.8),hsl(187,90%,45%,.15))}
+.db-chart .bars .bar:nth-child(3){background:linear-gradient(180deg,hsl(263,90%,75%,.8),hsl(263,90%,75%,.15))}
+.db-chart .bars .bar:nth-child(5){background:linear-gradient(180deg,hsl(187,90%,45%,.8),hsl(187,90%,45%,.15))}
+.db-chart .bars .bar:nth-child(6){background:linear-gradient(180deg,hsl(263,90%,75%,.8),hsl(263,90%,75%,.15))}
+.db-chart .bars .bar:nth-child(8){background:linear-gradient(180deg,hsl(187,90%,45%,.8),hsl(187,90%,45%,.15))}
+.db-chart .bars .bar:nth-child(10){background:linear-gradient(180deg,hsl(263,90%,75%,.8),hsl(263,90%,75%,.15))}
+.db-chart .bars .bar:nth-child(12){background:linear-gradient(180deg,var(--br),hsl(263,90%,65%,.15))}
+@keyframes gb{0%{transform:scaleY(0)}to{transform:scaleY(1)}}
 
-        .nav-links a:hover { color: var(--primary); }
+/* ── Trust ── */
+.trust{padding:28px 0;border-top:1px solid var(--b);border-bottom:1px solid var(--b);overflow:hidden;background:var(--bg2)}
+.trust .l{text-align:center;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+.trust-t{display:flex;gap:48px;animation:tm 30s linear infinite;width:max-content}
+.trust-t:hover{animation-play-state:paused}
+.trust-i{font-family:var(--fd);font-size:13px;color:var(--t2);white-space:nowrap;font-weight:600;letter-spacing:-.3px;opacity:.35;transition:opacity .3s;cursor:default}
+.trust-i:hover{opacity:.75}
+@keyframes tm{0%{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-        .btn {
-            display: inline-block;
-            padding: 12px 28px;
-            border-radius: 100px;
-            font-weight: 600;
-            font-size: 15px;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            border: none;
-        }
+/* ── Features ── */
+.ft{padding:100px 0;position:relative;scroll-snap-align:start}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.fc{position:relative;padding:34px 30px;border-radius:var(--rl);background:var(--s);border:1px solid var(--b);transition:all .4s var(--e);cursor:default;overflow:hidden;transform-style:preserve-3d}
+.fc:hover{background:var(--sh);border-color:var(--bh);transform:translateY(-4px) scale(1.01)}
+.fc:before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,hsl(263,90%,65%,.04),transparent);opacity:0;transition:opacity .4s}
+.fc:hover:before{opacity:1}
+.fc .n{position:absolute;top:12px;right:18px;font-family:var(--fd);font-size:48px;font-weight:800;color:hsl(0,0%,100%,.02);line-height:1;user-select:none;pointer-events:none}
+.fico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px;background:hsl(263,90%,65%,.08);border:1px solid hsl(263,90%,65%,.1);position:relative;z-index:1;transition:transform .3s,background .3s}
+.fc:hover .fico{transform:scale(1.08);background:hsl(263,90%,65%,.12)}
+.fc h3{font-family:var(--fd);font-size:17px;font-weight:700;margin-bottom:10px;position:relative;z-index:1}
+.fc p{color:var(--t2);font-size:13px;line-height:1.7;position:relative;z-index:1}
+.fc .fl{display:inline-flex;align-items:center;gap:5px;margin-top:14px;font-size:12px;font-weight:600;color:var(--br2);opacity:0;transform:translateX(-6px);transition:all .3s;position:relative;z-index:1}
+.fc:hover .fl{opacity:1;transform:translateX(0)}/* ── Stats ── */
+.st{background:var(--bg2);border-top:1px solid var(--b);border-bottom:1px solid var(--b);scroll-snap-align:start}
+.st-in{padding:64px 0}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
+.si{cursor:default}
+.si .nw{display:flex;align-items:baseline;justify-content:center;gap:2px}
+.si .n{font-family:var(--fd);font-size:38px;font-weight:700;letter-spacing:-1px;background:linear-gradient(135deg,var(--t),var(--br2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.si .sfx{font-family:var(--fd);font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--t),var(--br2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.si p{color:var(--t2);font-size:12px;margin-top:4px;text-transform:uppercase;letter-spacing:.6px}
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-        }
+/* ── How It Works ── */
+.hw{padding:100px 0;scroll-snap-align:start}
+.hg{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;position:relative}
+.hg:before{content:"";position:absolute;top:44px;left:calc(16.66% + 24px);right:calc(16.66% + 24px);height:2px;background:linear-gradient(90deg,var(--br),var(--sc),var(--br2));opacity:.1}
+.hi{text-align:center;position:relative}
+.hi .hn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:17px;font-weight:700;margin:0 auto 18px;background:linear-gradient(135deg,hsl(263,90%,65%,.08),hsl(187,90%,45%,.08));border:1px solid hsl(263,90%,65%,.12);color:var(--br2);position:relative;transition:all .4s var(--e)}
+.hi.act .hn{background:linear-gradient(135deg,var(--br),var(--sc));color:#fff;border-color:transparent;box-shadow:0 8px 28px var(--gl)}
+.hi h3{font-family:var(--fd);font-size:16px;font-weight:700;margin-bottom:8px}
+.hi p{color:var(--t2);font-size:13px;line-height:1.7;max-width:250px;margin:0 auto}
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-        }
+/* ── Testimonials ── */
+.tm{padding:100px 0;overflow:hidden;scroll-snap-align:start}
+.tg{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px}
+.tc{padding:30px 26px;border-radius:var(--rl);background:var(--s);border:1px solid var(--b);transition:all .3s}
+.tc:hover{border-color:var(--bh);background:var(--sh);transform:translateY(-3px)}
+.tc .sr{color:var(--am);font-size:12px;margin-bottom:14px;letter-spacing:2px}
+.tc bq{color:var(--t2);font-size:14px;line-height:1.8;font-style:italic;margin-bottom:18px;position:relative;padding-left:16px;border-left:2px solid var(--br);display:block}
+.tc-au{display:flex;align-items:center;gap:10px}
+.tc-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--br),var(--sc));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+.tc-info strong{display:block;font-size:13px;font-weight:600}
+.tc-info sp{font-size:11px;color:var(--t3)}
 
-        .btn-outline {
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            background: transparent;
-        }
+/* ── Pricing ── */
+.pr{padding:100px 0;background:var(--bg2);scroll-snap-align:start}
+.pr-t{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:40px;font-size:13px;color:var(--t2)}
+.pr-t .tk{width:44px;height:24px;border-radius:12px;background:var(--b);cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
+.pr-t .tk.act{background:var(--br)}
+.pr-t .th{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .3s var(--e);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.pr-t .tk.act .th{left:23px}
+.pr-t .sv{padding:2px 10px;border-radius:100px;background:hsl(187,90%,45%,.08);border:1px solid hsl(187,90%,45%,.15);font-size:10px;font-weight:600;color:var(--sc2);margin-left:4px}
+.pg{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:20px;align-items:start}
+.pc{padding:38px 34px;border-radius:var(--r2);background:var(--bg);border:1px solid var(--b);transition:all .4s var(--e);position:relative}
+.pc:hover{border-color:var(--bh);transform:translateY(-3px)}
+.pc.pop{border-color:hsl(263,90%,65%,.22);background:linear-gradient(135deg,hsl(263,90%,65%,.03),transparent);box-shadow:0 16px 48px hsl(263,90%,65%,.05)}
+.pc .pt{position:absolute;top:14px;right:14px;padding:4px 12px;border-radius:100px;background:var(--br);color:#fff;font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.pc .pn{font-family:var(--fd);font-size:13px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.pc .pp{font-family:var(--fd);font-size:44px;font-weight:700;letter-spacing:-2px;margin-bottom:2px;transition:opacity .3s;display:flex;align-items:baseline;gap:2px;flex-wrap:wrap}
+.pc .pp .an{display:none}
+.pc .pp.sa .mo{display:none}
+.pc .pp.sa .an{display:inline}
+.pc .pp .prd{font-size:14px;font-weight:500;color:var(--t2);letter-spacing:0;margin-left:2px}
+.pc .pd{font-size:12px;color:var(--t3);margin-bottom:22px}
+.pc .pf{list-style:none;margin-bottom:26px}
+.pc .pf li{padding:6px 0;font-size:13px;color:var(--t2);display:flex;align-items:center;gap:8px}
+.pc .pf li:before{content:"\2713";color:var(--sc2);font-weight:700;font-size:13px}
+.pc .btn{width:100%;justify-content:center}
 
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            background: rgba(99, 102, 241, 0.05);
-        }
+/* ── FAQ ── */
+.fq{padding:100px 0;scroll-snap-align:start}
+.fql{max-width:660px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
+.fqi{border-radius:var(--rm);border:1px solid var(--b);overflow:hidden;transition:border-color .3s}
+.fqi:hover,.fqi.op{border-color:var(--bh)}
+.fqi button{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:none;border:none;color:var(--t);font-family:var(--fs);font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:color .3s;gap:14px}
+.fqi button:hover{color:var(--br2)}
+.fqi button .ic{font-size:16px;transition:transform .3s var(--e);flex-shrink:0;color:var(--t3);line-height:1}
+.fqi.op button .ic{transform:rotate(45deg)}
+.fqi .ans{padding:0 20px;max-height:0;overflow:hidden;transition:all .4s var(--e)}
+.fqi.op .ans{max-height:300px;padding:0 20px 16px}
+.fqi .ans p{color:var(--t2);font-size:13px;line-height:1.8}
 
-        /* Hero Section */
-        .hero {
-            padding: 160px 0 100px;
-            text-align: center;
-            background: radial-gradient(circle at top center, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
-        }
+/* ── CTA ── */
+.cta{padding:100px 0;text-align:center;position:relative;scroll-snap-align:start}
+.cta-b{max-width:620px;margin:0 auto;padding:52px 42px;border-radius:var(--r2);background:linear-gradient(135deg,hsl(263,90%,65%,.05),hsl(187,90%,45%,.03));border:1px solid hsl(263,90%,65%,.1);position:relative;overflow:hidden}
+.cta-b:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0,hsl(263,90%,65%,.08),transparent 65%)}
+.cta-b h2{font-family:var(--fd);font-size:clamp(24px,3.5vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:12px;position:relative}
+.cta-b p{color:var(--t2);font-size:14px;margin-bottom:26px;position:relative;max-width:420px;margin-left:auto;margin-right:auto}
+.cta-b .btn{position:relative}
 
-        .badge-new {
-            display: inline-block;
-            padding: 6px 16px;
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--primary);
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 24px;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
+/* ── Footer ── */
+footer{padding:64px 0 32px;border-top:1px solid var(--b)}
+.fg{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:36px}
+.fb .logo{font-size:17px}
+.fb .d{color:var(--t2);font-size:12px;margin-top:12px;max-width:220px;line-height:1.8}
+.fcol h4{font-family:var(--fd);font-size:13px;font-weight:600;margin-bottom:16px}
+.fcol ul{list-style:none}
+.fcol li{margin-bottom:7px}
+.fcol a{color:var(--t2);text-decoration:none;font-size:12px;transition:color .2s}
+.fcol a:hover{color:var(--t)}
+.fb{padding-top:24px;border-top:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.fb p{color:var(--t3);font-size:12px}
+.fs{display:flex;gap:12px}
+.fs a{color:var(--t3);text-decoration:none;font-size:12px;transition:color .2s}
+.fs a:hover{color:var(--t)}
 
-        .hero h1 {
-            font-size: 64px;
-            font-weight: 800;
-            line-height: 1.1;
-            letter-spacing: -1px;
-            margin-bottom: 24px;
-            color: var(--text-main);
-        }
+/* ── Reveal ── */
+.rv{opacity:0;transform:translateY(24px) scale(.98);transition:opacity .7s var(--e),transform .7s var(--e)}
+.rv.sh{opacity:1;transform:translateY(0) scale(1)}
+.r1{transition-delay:.08s}.r2{transition-delay:.16s}.r3{transition-delay:.24s}.r4{transition-delay:.32s}.r5{transition-delay:.4s}.r6{transition-delay:.48s}
 
-        .hero h1 span {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+/* ── Loader ── */
+#ld{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s}
+#ld.hd{opacity:0;visibility:hidden;pointer-events:none}
+#ld .ld-in{display:flex;gap:5px}
+#ld .ld-in sp{width:6px;height:6px;border-radius:50%;background:var(--br);animation:ldb 1.4s ease-in-out infinite}
+#ld .ld-in sp:nth-child(2){animation-delay:.16s;background:var(--sc)}
+#ld .ld-in sp:nth-child(3){animation-delay:.32s;background:var(--br2)}
+@keyframes ldb{0%,80%,to{transform:scale(.4);opacity:.2}40%{transform:scale(1);opacity:1}}
 
-        .hero p {
-            font-size: 20px;
-            color: var(--text-muted);
-            max-width: 650px;
-            margin: 0 auto 40px;
-        }
+/* ── Cursor ── */
+@media(hover:hover){
+.cd{position:fixed;pointer-events:none;z-index:99999;width:5px;height:5px;border-radius:50%;background:var(--br2);transform:translate(-50%,-50%);transition:width .15s,height .15s,opacity .2s;opacity:0;will-change:transform}
+.cr{position:fixed;pointer-events:none;z-index:99998;width:30px;height:30px;border-radius:50%;border:1.5px solid hsl(263,90%,75%,.2);transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s,opacity .3s;opacity:0;will-change:transform}
+body:hover .cd,body:hover .cr{opacity:1}
+a:hover~.cd{width:7px;height:7px}
+a:hover~.cr{width:38px;height:38px;border-color:var(--br2)}
+}
 
-        .hero-btns {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-        }
-
-        /* Dashboard Preview */
-        .preview-container {
-            margin-top: 60px;
-            position: relative;
-            padding: 20px;
-            background: var(--surface);
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
-            max-width: 1000px;
-            margin-left: auto;
-            margin-right: auto;
-            overflow: hidden;
-        }
-
-        .preview-img {
-            width: 100%;
-            border-radius: 12px;
-            display: block;
-        }
-
-        /* Features */
-        .features { padding: 120px 0; }
-        
-        .section-header {
-            text-align: center;
-            margin-bottom: 80px;
-        }
-
-        .section-header h2 {
-            font-size: 40px;
-            font-weight: 800;
-            margin-bottom: 16px;
-        }
-
-        .section-header p {
-            color: var(--text-muted);
-            font-size: 18px;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 32px;
-        }
-
-        .feature-card {
-            padding: 40px;
-            border-radius: 24px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.05);
-        }
-
-        .icon-box {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 24px;
-            background: white;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
-        }
-
-        .feature-card h3 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .feature-card p {
-            color: var(--text-muted);
-            font-size: 15px;
-        }
-
-        /* Pricing */
-        .pricing {
-            padding: 120px 0;
-            background-color: var(--surface);
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 32px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .pricing-card {
-            background: var(--background);
-            padding: 48px 40px;
-            border-radius: 32px;
-            border: 1px solid var(--border);
-            text-align: center;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .pricing-card.popular {
-            border-color: var(--primary);
-            box-shadow: 0 32px 64px rgba(99, 102, 241, 0.15);
-            transform: scale(1.05);
-            z-index: 2;
-        }
-
-        .pricing-card h3 {
-            font-size: 18px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            margin-bottom: 16px;
-        }
-
-        .price {
-            font-size: 56px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: var(--text-main);
-        }
-
-        .price span {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        .pricing-features {
-            list-style: none;
-            margin: 32px 0;
-            text-align: left;
-        }
-
-        .pricing-features li {
-            padding: 10px 0;
-            color: var(--text-muted);
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .pricing-features li::before {
-            content: '→';
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        /* Footer */
-        footer {
-            padding: 80px 0 40px;
-            border-top: 1px solid var(--border);
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 60px;
-            margin-bottom: 60px;
-        }
-
-        .footer-logo { margin-bottom: 24px; }
-        .footer-desc { color: var(--text-muted); font-size: 14px; max-width: 250px; }
-
-        .footer-links h4 { font-size: 16px; font-weight: 700; margin-bottom: 24px; }
-        .footer-links ul { list-style: none; }
-        .footer-links li { margin-bottom: 12px; }
-        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 14px; transition: color 0.2s; }
-        .footer-links a:hover { color: var(--primary); }
-
-        .copyright {
-            padding-top: 40px;
-            border-top: 1px solid var(--border);
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        @media (max-width: 968px) {
-            .hero h1 { font-size: 48px; }
-            .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
-            .pricing-card.popular { transform: none; margin: 20px 0; }
-        }
-
-        @media (max-width: 640px) {
-            .nav-links { display: none; }
-            .hero h1 { font-size: 36px; }
-            .hero-btns { flex-direction: column; }
-            .footer-grid { grid-template-columns: 1fr; }
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .hero > * {
-            animation: fadeIn 0.8s ease forwards;
-        }
-
-        .hero h1 { animation-delay: 0.1s; }
-        .hero p { animation-delay: 0.2s; }
-        .hero-btns { animation-delay: 0.3s; }
-    </style>
+/* ── RWD ── */
+@media(max-width:1024px){
+.hg{grid-template-columns:1fr;gap:36px}
+.hr .db{transform:none!important;max-width:520px;margin:0 auto}
+.hw .hg:before{display:none}
+.fg{grid-template-columns:1fr 1fr}
+}
+@media(max-width:768px){
+.nav-l,.nav-a .btn{display:none}.mt{display:flex}
+.hero{min-height:auto;padding:var(--nh)0 0}
+.hl h1{font-size:clamp(24px,7vw,34px);letter-spacing:-1.5px}
+.hs{gap:16px;flex-wrap:wrap;margin-top:24px;padding-top:20px}
+.hs-n{font-size:18px}
+.fg{grid-template-columns:1fr}
+.tg,.pg{grid-template-columns:1fr}
+.pg{max-width:360px;margin:0 auto}
+.pc{padding:30px 26px}
+.cta-b{padding:32px 22px;margin:0 12px}
+.sg{grid-template-columns:repeat(2,1fr);gap:16px}
+.si .n{font-size:28px}
+.si .sfx{font-size:22px}
+.fg,.fg2{grid-template-columns:1fr}
+.ft,.tm,.pr,.fq,.cta,.hw{padding:72px 0}
+.st-in{padding:48px 0}
+}
+@media(max-width:480px){
+.ha{flex-direction:column}
+.ha .btn{width:100%;justify-content:center}
+.db-t{grid-template-columns:1fr;gap:8px}
+}
+</style>
 </head>
-<body>
-    <nav>
-        <div class="container nav-content">
-            <div class="logo">MicroFlow Pro</div>
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#pricing">Pricing</a>
-                <a href="#security">Security</a>
-                <a href="#" class="btn btn-outline">Log In</a>
-                <a href="#" class="btn btn-primary">Start Free</a>
-            </div>
-        </div>
-    </nav>
+<body><div id="ld"><div class="ld-in"><sp></sp><sp></sp><sp></sp></div></div>
+<div class="bg-mesh"></div><div class="noise"></div><div class="floating-orb"></div><div class="floating-orb"></div><div class="floating-orb"></div>
+<canvas id="bgCanvas"></canvas>
+<div class="cd" id="cd"></div><div class="cr" id="cr"></div>
+<div id="scrollP"><div class="bar" id="scBar"></div></div>
 
-    <section class="hero">
-        <div class="container">
-            <span class="badge-new">v2.4 Release: Now with Advanced Offline Engine</span>
-            <h1>Manage Your <span>Micro-Finance</span><br>Ecosystem with Precision</h1>
-            <p>The all-in-one SaaS platform for MFIs and Savings Groups. Empower your field staff with offline-first tools and real-time GPS tracking.</p>
-            <div class="hero-btns">
-                <a href="#" class="btn btn-primary">Try for 14 Days Free</a>
-                <a href="#features" class="btn btn-outline">Explore Features</a>
-            </div>
-            
-            <div class="preview-container">
-                <!-- Replace with actual screenshot of the app -->
-                <div style="background: linear-gradient(135deg, #f1f5f9, #cbd5e1); height: 400px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 600;">
-                    Interactive Dashboard Preview
-                </div>
-            </div>
-        </div>
-    </section>
+<nav id="nav">
+  <div class="ct nav-in">
+    <a href="#" class="logo">MicroFlow<sp> Pro</sp></a>
+    <div class="nav-l">
+      <a href="#ft">Features</a><a href="#hw">How It Works</a><a href="#pr">Pricing</a><a href="#fq">FAQ</a>
+    </div>
+    <div class="nav-a">
+      <a href="#" class="btn btn-g" id="magneticBtn1">Log In</a>
+      <a href="#" class="btn btn-p" id="magneticBtn2">Start Free Trial</a>
+    </div>
+    <button class="mt" id="mt" aria-label="Menu"><sp></sp><sp></sp><sp></sp></button>
+  </div>
+</nav>
+<div class="mm" id="mm">
+  <a href="#ft">Features</a><a href="#hw">How It Works</a><a href="#pr">Pricing</a><a href="#fq">FAQ</a>
+  <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+    <a href="#" class="btn btn-g" style="justify-content:center">Log In</a>
+    <a href="#" class="btn btn-p" style="justify-content:center">Start Free Trial</a>
+  </div>
+</div>
 
-    <section class="features" id="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Built for Modern MFIs</h2>
-                <p>Powerful tools designed to work where your customers are.</p>
-            </div>
-            
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="icon-box" style="color: #6366f1;">📍</div>
-                    <h3>GPS Field Operations</h3>
-                    <p>Every collection and visit is verified with automatic GPS tagging. Ensure field staff presence with geofencing and real-time location audits.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon-box" style="color: #0ea5e9;">📴</div>
-                    <h3>Offline-First Engine</h3>
-                    <p>No internet? No problem. Our advanced sync engine allows field staff to record collections offline and auto-syncs when back online.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon-box" style="color: #8b5cf6;">🚀</div>
-                    <h3>Automated EMI Scheduling</h3>
-                    <p>Generate complex EMI schedules in seconds. Support for flat, reducing balance, and custom interest rates with grace period handling.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon-box" style="color: #f59e0b;">🛡️</div>
-                    <h3>Role-Based Security</h3>
-                    <p>Protect sensitive financial data with enterprise-grade RLS (Row Level Security). Branch-level isolation ensures staff only see what they need.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon-box" style="color: #10b981;">💹</div>
-                    <h3>Dynamic Analytics</h3>
-                    <p>Track collection efficiency, staff performance, and portfolio health with real-time sparklines and detailed trend analysis dashboards.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon-box" style="color: #ef4444;">🏆</div>
-                    <h3>Staff Gamification</h3>
-                    <p>Drive productivity with collection streaks, achievement badges, and branch leaderboards. Turn daily targets into engaging missions.</p>
-                </div>
-            </div>
+<section class="hero">
+  <div class="ct">
+    <div class="hg">
+      <div class="hl">
+        <span class="bdg"><span class="pl"></span> v2.4 — Advanced Offline Engine</span>
+        <h1 id="heroTitle">Manage Your<br><span class="g">Micro-Finance Ecosystem</span><br>with Precision</h1>
+        <p class="sub">The all-in-one platform for MFIs and Savings Groups. Empower field staff with offline-first tools, GPS tracking, and automated workflows.</p>
+        <div class="ha">
+          <a href="#" class="btn btn-p" id="heroBtn">Try for 14 Days Free <span style="display:inline-block;transition:transform .3s">→</span></a>
+          <a href="#ft" class="btn btn-s">Explore Features</a>
         </div>
-    </section>
+        <div class="hs">
+          <div class="hs-item"><div class="hs-n" id="heroCount1">0</div><div class="hs-l">Active Members</div></div>
+          <div class="hs-item"><div class="hs-n" id="heroCount2">0</div><div class="hs-l">MFIs Trust Us</div></div>
+          <div class="hs-item"><div class="hs-n">99.9%</div><div class="hs-l">Uptime SLA</div></div>
+          <div class="hs-item"><div class="hs-n" id="heroCount3">0</div><div class="hs-l">Cr+ Collections</div></div>
+        </div>
+      </div>
+      <div class="hr">
+        <div class="db" id="dash3d">
+          <div class="db-b"><span class="db-d"></span><span class="db-d"></span><span class="db-d"></span></div>
+          <div class="db-c">
+            <div class="db-t">
+              <div class="db-card"><div class="l">Total Portfolio</div><div class="v c1" id="liveVal1">₹2.4Cr</div><span class="ch">↑ 12.3%</span></div>
+              <div class="db-card"><div class="l">Collection Rate</div><div class="v c2" id="liveVal2">94.2%</div><span class="ch">↑ 3.1%</span></div>
+              <div class="db-card"><div class="l">Active Loans</div><div class="v c3" id="liveVal3">1,847</div><span class="ch dn" id="liveChg">↓ 0.7%</span></div>
+            </div>
+            <div class="db-chart"><div class="bars" id="chartBars"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <section class="pricing" id="pricing">
-        <div class="container">
-            <div class="section-header">
-                <h2>Transparent Pricing</h2>
-                <p>Choose the plan that fits your institution's scale.</p>
-            </div>
-            
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Starter</h3>
-                    <div class="price">₹999<span>/mo</span></div>
-                    <ul class="pricing-features">
-                        <li>Up to 100 Active Members</li>
-                        <li>Single Branch Management</li>
-                        <li>3 Field Staff Accounts</li>
-                        <li>Basic EMI Scheduling</li>
-                        <li>Email Support</li>
-                    </ul>
-                    <a href="#" class="btn btn-outline" style="width: 100%;">Get Started</a>
-                </div>
-                
-                <div class="pricing-card popular">
-                    <div style="position: absolute; top: 16px; right: 16px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 800;">MOST POPULAR</div>
-                    <h3>Professional</h3>
-                    <div class="price">₹2,999<span>/mo</span></div>
-                    <ul class="pricing-features">
-                        <li>Up to 1,000 Active Members</li>
-                        <li>Up to 5 Branch Offices</li>
-                        <li>20 Field Staff Accounts</li>
-                        <li>GPS & Offline Sync Engine</li>
-                        <li>Advanced Analytics Suite</li>
-                        <li>Priority Chat Support</li>
-                    </ul>
-                    <a href="#" class="btn btn-primary" style="width: 100%;">Start 14-Day Trial</a>
-                </div>
-                
-                <div class="pricing-card">
-                    <h3>Enterprise</h3>
-                    <div class="price">Custom</div>
-                    <ul class="pricing-features">
-                        <li>Unlimited Members & Branches</li>
-                        <li>Custom Branding & White-label</li>
-                        <li>Public API Access</li>
-                        <li>Dedicated Account Manager</li>
-                        <li>SLA Guarantees</li>
-                        <li>On-Premise Deployment</li>
-                    </ul>
-                    <a href="#" class="btn btn-outline" style="width: 100%;">Contact Sales</a>
-                </div>
-            </div>
-        </div>
-    </section>
+<section class="trust">
+  <div class="ct">
+    <p class="l">Trusted by Leading Micro-Finance Institutions</p>
+    <div style="overflow:hidden"><div class="trust-t">
+      <sp class="trust-i">Gramin Financial</sp><sp class="trust-i">SEWA Bank</sp><sp class="trust-i">Janalakshmi Finance</sp>
+      <sp class="trust-i">Sa-Dhan</sp><sp class="trust-i">Bandhan Conclave</sp><sp class="trust-i">Arohan Financial</sp>
+      <sp class="trust-i">Village Financial</sp><sp class="trust-i">Ujjivan SFB</sp><sp class="trust-i">Fincare SFB</sp>
+      <sp class="trust-i">Annapurna Finance</sp><sp class="trust-i">Gramin Financial</sp><sp class="trust-i">SEWA Bank</sp>
+      <sp class="trust-i">Janalakshmi Finance</sp><sp class="trust-i">Sa-Dhan</sp><sp class="trust-i">Bandhan Conclave</sp>
+      <sp class="trust-i">Arohan Financial</sp><sp class="trust-i">Village Financial</sp><sp class="trust-i">Ujjivan SFB</sp>
+      <sp class="trust-i">Fincare SFB</sp><sp class="trust-i">Annapurna Finance</sp>
+    </div></div>
+  </div>
+</section>
 
-    <footer>
-        <div class="container">
-            <div class="footer-grid">
-                <div>
-                    <div class="logo footer-logo">MicroFlow Pro</div>
-                    <p class="footer-desc">Empowering Micro-Finance Institutions with next-generation field operations and management software.</p>
-                </div>
-                <div class="footer-links">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Staff Portal</a></li>
-                        <li><a href="#">Admin Dashboard</a></li>
-                        <li><a href="#">Offline Sync</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Security</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links">
-                    <h4>Support</h4>
-                    <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">API Docs</a></li>
-                        <li><a href="#">Status Page</a></li>
-                        <li><a href="#">Contact Us</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                &copy; 2024-2026 MicroFlow Pro. All rights reserved. Built with ❤️ for MFIs.
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+<section class="ft" id="ft">
+  <div class="ct">
+    <div class="sh rv"><h2>Built for <span class="g">Modern MFIs</span></h2><p>Powerful tools designed to work where your customers are — online, offline, anywhere.</p></div>
+    <div class="fg">
+      <div class="fc rv r1" data-tilt><span class="n">01</span><div class="fico">📍</div><h3>GPS Field Operations</h3><p>Every collection and visit verified with automatic GPS tagging. Geofencing and real-time location audits ensure field staff presence.</p><span class="fl">Learn more →</span></div>
+      <div class="fc rv r2" data-tilt><span class="n">02</span><div class="fico">📴</div><h3>Offline-First Engine</h3><p>No internet? No problem. Record collections offline and auto-sync when back online. Zero data loss, seamless experience.</p><span class="fl">Learn more →</span></div>
+      <div class="fc rv r3" data-tilt><span class="n">03</span><div class="fico">🚀</div><h3>Automated EMI Scheduling</h3><p>Generate complex EMI schedules in seconds. Flat, reducing balance, and custom rates with grace period handling.</p><span class="fl">Learn more →</span></div>
+      <div class="fc rv r2" data-tilt><span class="n">04</span><div class="fico">🛡️</div><h3>Role-Based Security</h3><p>Enterprise-grade Row Level Security with branch-level isolation. Staff see only what they need.</p><span class="fl">Learn more →</span></div>
+      <div class="fc rv r3" data-tilt><span class="n">05</span><div class="fico">📊</div><h3>Dynamic Analytics</h3><p>Track collection efficiency, staff performance, and portfolio health with real-time dashboards and trend analysis.</p><span class="fl">Learn more →</span></div>
+      <div class="fc rv r4" data-tilt><span class="n">06</span><div class="fico">🏆</div><h3>Staff Gamification</h3><p>Drive productivity with streaks, achievement badges, and branch leaderboards. Turn targets into engaging missions.</p><span class="fl">Learn more →</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="st">
+  <div class="ct st-in">
+    <div class="sg">
+      <div class="si rv"><div class="nw"><sp class="n counter" data-t="10000">0</sp><sp class="sfx">+</sp></div><p>Active Members Served</p></div>
+      <div class="si rv r1"><div class="nw"><sp class="n counter" data-t="500">0</sp><sp class="sfx">+</sp></div><p>MFI Partners</p></div>
+      <div class="si rv r2"><div class="nw"><sp class="n counter" data-t="50">0</sp><sp class="sfx">Cr+</sp></div><p>Collections Managed</p></div>
+      <div class="si rv r3"><div class="nw"><sp class="n counter" data-t="49" data-d="1">0</sp><sp class="sfx">★</sp></div><p>Average User Rating</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="hw" id="hw">
+  <div class="ct">
+    <div class="sh rv"><h2>How It <span class="g">Works</span></h2><p>Get your MFI up and running in three simple steps.</p></div>
+    <div class="hg">
+      <div class="hi rv r1"><div class="hn">1</div><h3>Create Organization</h3><p>Sign up and configure branches, staff roles, and loan products in minutes.</p></div>
+      <div class="hi rv r2"><div class="hn">2</div><h3>Add Members &amp; Loans</h3><p>Register members, create savings accounts, and disburse loans with automated EMI scheduling.</p></div>
+      <div class="hi rv r3"><div class="hn">3</div><h3>Go to the Field</h3><p>Staff collect payments with GPS verification. Data syncs automatically — online or offline.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="tm" id="tm">
+  <div class="ct">
+    <div class="sh rv"><h2>Trusted by <span class="g">Financial Leaders</span></h2><p>See what MFI executives and field staff say about MicroFlow Pro.</p></div>
+    <div class="tg">
+      <div class="tc rv r1"><div class="sr">★★★★★</div><bq>"MicroFlow Pro transformed our field operations. Offline sync is a game-changer — our agents in remote villages can now record collections seamlessly."</bq><div class="tc-au"><div class="tc-av">RP</div><div class="tc-info"><strong>Rajesh Patel</strong><sp>CEO, Gramin Financial Services</sp></div></div></div>
+      <div class="tc rv r2"><div class="sr">★★★★★</div><bq>"GPS verification and analytics gave us unprecedented visibility. PAR reduced by 23% in the first quarter alone."</bq><div class="tc-au"><div class="tc-av">SK</div><div class="tc-info"><strong>Sunita Kumari</strong><sp>Branch Manager, SEWA Bank</sp></div></div></div>
+      <div class="tc rv r3"><div class="sr">★★★★★</div><bq>"EMI scheduling used to take hours. Now it's seconds. Gamification has our staff competing to hit collection targets every day."</bq><div class="tc-au"><div class="tc-av">AM</div><div class="tc-info"><strong>Arun Mehta</strong><sp>Operations Head, Janalakshmi Finance</sp></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="pr" id="pr">
+  <div class="ct">
+    <div class="sh rv"><h2>Transparent <span class="g">Pricing</span></h2><p>Choose the plan that fits your institution's scale. No hidden fees.</p></div>
+    <div class="pr-t" id="pToggle"><sp style="opacity:.6" id="moL">Monthly</sp><div class="tk" id="togT"><div class="th"></div></div><sp id="yrL">Annual <span class="sv">Save 20%</span></sp></div>
+    <div class="pg">
+      <div class="pc rv r1"><div class="pn">Starter</div><div class="pp" data-mo="₹999" data-yr="₹7,999"><sp class="mo">₹999</sp><sp class="an">₹7,999</sp><sp class="prd">/mo</sp></div><p class="pd">For small groups and emerging MFIs.</p><ul class="pf"><li>Up to 100 Members</li><li>Single Branch</li><li>3 Staff Accounts</li><li>Basic EMI Scheduling</li><li>Email Support</li></ul><a href="#" class="btn btn-s">Get Started</a></div>
+      <div class="pc pop rv r2"><sp class="pt">Most Popular</sp><div class="pn">Professional</div><div class="pp" data-mo="₹2,999" data-yr="₹23,999"><sp class="mo">₹2,999</sp><sp class="an">₹23,999</sp><sp class="prd">/mo</sp></div><p class="pd">For growing institutions with multiple branches.</p><ul class="pf"><li>Up to 1,000 Members</li><li>Up to 5 Branches</li><li>20 Staff Accounts</li><li>GPS &amp; Offline Sync</li><li>Advanced Analytics</li><li>Priority Support</li></ul><a href="#" class="btn btn-p">Start 14-Day Trial</a></div>
+      <div class="pc rv r3"><div class="pn">Enterprise</div><div class="pp" data-mo="Custom" data-yr="Custom"><sp class="mo">Custom</sp><sp class="an">Custom</sp></div><p class="pd">For large-scale institutions with custom requirements.</p><ul class="pf"><li>Unlimited Members</li><li>Unlimited Branches</li><li>White-label &amp; API</li><li>Dedicated Account Manager</li><li>SLA Guarantees</li><li>On-Premise Option</li></ul><a href="#" class="btn btn-s">Contact Sales</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="fq" id="fq">
+  <div class="ct">
+    <div class="sh rv"><h2>Frequently Asked <span class="g">Questions</span></h2><p>Everything you need to know about MicroFlow Pro.</p></div>
+    <div class="fql">
+      <div class="fqi rv r1"><button>What is MicroFlow Pro?<span class="ic">+</span></button><div class="ans"><p>MicroFlow Pro is a comprehensive SaaS platform designed for MFIs and Savings Groups. It enables field staff to manage collections, track members, and sync data — even without internet.</p></div></div>
+      <div class="fqi rv r2"><button>Can I try before buying?<span class="ic">+</span></button><div class="ans"><p>Absolutely! We offer a 14-day free trial with full access to all Professional plan features. No credit card required.</p></div></div>
+      <div class="fqi rv r3"><button>Does it work without internet?<span class="ic">+</span></button><div class="ans"><p>Yes! Our Offline-First Engine lets staff record collections, log visits, and capture GPS data entirely offline. Everything syncs automatically when connectivity is restored.</p></div></div>
+      <div class="fqi rv r2"><button>How does GPS tracking work?<span class="ic">+</span></button><div class="ans"><p>Every collection and visit is tagged with precise GPS coordinates. Branch managers can verify staff presence via the dashboard, ensuring accountability.</p></div></div>
+      <div class="fqi rv r3"><button>Is my data secure?<span class="ic">+</span></button><div class="ans"><p>Security is our top priority. We use enterprise-grade Row Level Security, end-to-end encryption, and branch-level data isolation.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="ct">
+    <div class="cta-b rv">
+      <h2>Ready to Transform Your Micro-Finance Operations?</h2>
+      <p>Join 500+ MFIs already using MicroFlow Pro. Start your 14-day free trial — no credit card required.</p>
+      <a href="#" class="btn btn-p" id="ctaBtn">Start Free Trial <span style="display:inline-block;transition:transform .3s">→</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="ct">
+    <div class="fg">
+      <div class="fb"><a href="#" class="logo">MicroFlow<sp> Pro</sp></a><p class="d">Empowering Micro-Finance Institutions with next-generation field operations and management software.</p></div>
+      <div class="fcol"><h4>Product</h4><ul><li><a href="#">Features</a></li><li><a href="#">Staff Portal</a></li><li><a href="#">Admin Dashboard</a></li><li><a href="#">Offline Sync</a></li><li><a href="#">API Reference</a></li></ul></div>
+      <div class="fcol"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Security</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">Careers</a></li></ul></div>
+      <div class="fcol"><h4>Support</h4><ul><li><a href="#">Help Center</a></li><li><a href="#">API Docs</a></li><li><a href="#">Status</a></li><li><a href="#">Contact</a></li></ul></div>
+    </div>
+    <div class="fb"><p>&copy; 2024—2026 MicroFlow Pro. Built with ❤️ for MFIs.</p><div class="fs"><a href="#">Twitter</a><a href="#">LinkedIn</a><a href="#">GitHub</a><a href="#">YouTube</a></div></div>
+  </div>
+</footer><script>
+// ── Init ──
+window.addEventListener('load',()=>setTimeout(()=>document.getElementById('ld').classList.add('hd'),500));
+const scBar=document.getElementById('scBar');
+window.addEventListener('scroll',()=>{const h=document.documentElement;scBar.style.width=((h.scrollTop/(h.scrollHeight-h.clientHeight))*100)+'%'});
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('sc',window.scrollY>30));
+const mt=document.getElementById('mt'),mm=document.getElementById('mm');
+mt.addEventListener('click',()=>{mt.classList.toggle('op');mm.classList.toggle('op');document.body.style.overflow=mm.classList.contains('op')?'hidden':''});
+mm.querySelectorAll('a').forEach(l=>l.addEventListener('click',()=>{mt.classList.remove('op');mm.classList.remove('op');document.body.style.overflow=''}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mm.classList.contains('op')){mt.classList.remove('op');mm.classList.remove('op');document.body.style.overflow=''}});
+document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{const h=a.getAttribute('href');if(h==='#')return;e.preventDefault();const t=document.querySelector(h);if(t){t.scrollIntoView({behavior:'smooth'});history.pushState(null,'',h)}})});
+
+// ── Cursor ──
+const cd=document.getElementById('cd'),cr=document.getElementById('cr');let mx=0,my=0,rx=0,ry=0;
+if(window.matchMedia('(hover: hover)').matches){
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cd.style.transform='translate('+mx+'px,'+my+'px) translate(-50%,-50%)'});
+  !function anim(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cr.style.transform='translate('+rx+'px,'+ry+'px) translate(-50%,-50%)';requestAnimationFrame(anim)}();
+}
+
+// ── Scroll Reveal ──
+document.querySelectorAll('.rv').forEach(el=>{new IntersectionObserver(e=>{e.forEach(n=>{if(n.isIntersecting)n.target.classList.add('sh')})},{threshold:.08,rootMargin:'0px 0px -40px 0px'}).observe(el)});
+
+// ── Hero Counters ──
+['heroCount1','heroCount2','heroCount3'].forEach((id,i)=>{const el=document.getElementById(id),targets=[10000,500,50];if(!el)return;const dur=2000,start=performance.now();!function u(n){const p=Math.min((n-start)/dur,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(e*targets[i]).toLocaleString('en-IN');if(p<1)requestAnimationFrame(u)}(performance.now())});
+
+// ── Stats Counters ──
+document.querySelectorAll('.counter').forEach(el=>{const t=parseFloat(el.dataset.t),d=parseInt(el.dataset.d)||0;if(isNaN(t))return;const o=new IntersectionObserver(e=>{e.forEach(n=>{if(!n.isIntersecting)return;const dur=2000,s=performance.now();!function u(n){const p=Math.min((n-s)/dur,1),e=1-Math.pow(1-p,3),v=e*t;el.textContent=d>0?v.toFixed(d):Math.round(v).toLocaleString('en-IN');if(p<1)requestAnimationFrame(u)}(performance.now());o.unobserve(el)})},{threshold:.5});o.observe(el)});
+
+// ── Pricing ──
+const togT=document.getElementById('togT'),moL=document.getElementById('moL'),yrL=document.getElementById('yrL');let iA=false;
+togT.addEventListener('click',()=>{iA=!iA;togT.classList.toggle('act',iA);moL.style.opacity=iA?'.6':'1';yrL.style.opacity=iA?'1':'.6';document.querySelectorAll('.pp').forEach(el=>{el.classList.toggle('sa',iA);const p=el.querySelector('.prd');if(p)p.textContent=iA?'/yr':'/mo'})});
+
+// ── FAQ ──
+document.querySelectorAll('.fqi button').forEach(b=>{b.addEventListener('click',()=>{const p=b.parentElement;document.querySelectorAll('.fqi.op').forEach(q=>q.classList.remove('op'));if(!p.classList.contains('op'))p.classList.add('op')})});
+
+// ── Steps Highlight ──
+document.querySelectorAll('.hi').forEach(el=>{new IntersectionObserver(e=>{e.forEach(n=>{if(n.isIntersecting)n.target.classList.add('act')})},{threshold:.3}).observe(el)});
+
+// ── 3D Tilt Cards ──
+document.querySelectorAll('[data-tilt]').forEach(c=>{c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,dx=x/r.width-.5,dy=y/r.height-.5;c.style.transform='translateY(-4px) perspective(800px) rotateX('+(-dy*6)+'deg) rotateY('+(dx*6)+'deg) scale(1.01)'});c.addEventListener('mouseleave',()=>{c.style.transform=''})});
+
+// ── Dashboard Tilt ──
+const dash=document.getElementById('dash3d');if(dash){dash.addEventListener('mousemove',e=>{const r=dash.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,dx=x/r.width-.5,dy=y/r.height-.5;dash.style.transform='rotateY('+(-dx*4)+'deg) rotateX('+(dy*3)+'deg)'});dash.addEventListener('mouseleave',()=>{dash.style.transform=''})}
+
+// ── Canvas ──
+(function(){const c=document.getElementById('bgCanvas'),ctx=c.getContext('2d');let w,h;function r(){w=c.width=window.innerWidth;h=c.height=window.innerHeight}r();window.addEventListener('resize',r);const p=[];for(let i=0;i<60;i++){p.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,s:Math.random()*2+1})}function a(){ctx.clearRect(0,0,w,h);for(let q of p){q.x+=q.vx;q.y+=q.vy;if(q.x<0||q.x>w)q.vx*=-1;if(q.y<0||q.y>h)q.vy*=-1;ctx.beginPath();ctx.arc(q.x,q.y,q.s,0,Math.PI*2);ctx.fillStyle='hsla(263,90%,65%,.12)';ctx.fill()}for(let i=0;i<p.length;i++){for(let j=i+1;j<p.length;j++){const dx=p[i].x-p[j].x,dy=p[i].y-p[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<140){ctx.beginPath();ctx.moveTo(p[i].x,p[i].y);ctx.lineTo(p[j].x,p[j].y);ctx.strokeStyle='hsla(263,90%,65%,'+((1-dist/140)*.05)+')';ctx.lineWidth=.5;ctx.stroke()}}}requestAnimationFrame(a)}a()})();
+// ── Chart Bars Init ──
+(function(){const c=document.getElementById("chartBars");if(!c)return;const hs=[35,58,42,70,52,65,48,72,55,60,44,68];c.innerHTML="";hs.forEach((h)=>{const b=document.createElement("div");b.className="bar";b.style.height=h+"%";b.dataset.h=h;c.appendChild(b)});setInterval(()=>{c.querySelectorAll(".bar").forEach(b=>{let v=parseFloat(b.dataset.h)+(Math.random()-.5)*16;v=Math.max(20,Math.min(90,v));b.style.height=v+"%";b.dataset.h=v})},2500)})();
+
+// ── Magnetic Buttons ──
+document.querySelectorAll("#magneticBtn1,#magneticBtn2,#heroBtn").forEach(btn=>{btn.addEventListener("mousemove",e=>{const r=btn.getBoundingClientRect();btn.style.transform="translate("+((e.clientX-r.left-r.width/2)*.25)+"px,"+((e.clientY-r.top-r.height/2)*.25)+"px)"});btn.addEventListener("mouseleave",()=>{btn.style.transform=""})});
+
+// ── Click Ripple ──
+document.addEventListener("click",e=>{const btn=e.target.closest(".btn");if(!btn)return;const r=document.createElement("span");r.className="ripple";const rect=btn.getBoundingClientRect();r.style.left=(e.clientX-rect.left)+"px";r.style.top=(e.clientY-rect.top)+"px";r.style.width="6px";r.style.height="6px";btn.appendChild(r);setTimeout(()=>r.remove(),700)});
+
+// ── Live Dashboard Sim ──
+setInterval(()=>{const v1=document.getElementById("liveVal1"),v2=document.getElementById("liveVal2"),v3=document.getElementById("liveVal3"),cg=document.getElementById("liveChg");if(v1){const b=2.4+(Math.random()-.5)*.06;v1.textContent="₹"+b.toFixed(2)+"Cr"}if(v2){const b=94+(Math.random()-.5)*.8;v2.textContent=b.toFixed(1)+"%"}if(v3){const b=1840+Math.floor((Math.random()-.5)*30);v3.textContent=b.toLocaleString("en-IN")}if(cg){cg.textContent=(Math.random()>.5?"↑":"↓")+(Math.random()*4+.5).toFixed(1)+"%";cg.className="ch"+(cg.textContent.startsWith("↓")?" dn":"")}},3000);
+
+// ── Nav Highlight ──
+const secs=document.querySelectorAll("section[id]"),nls=document.querySelectorAll(".nav-l a");const nObs=new IntersectionObserver(e=>{e.forEach(n=>{if(n.isIntersecting){nls.forEach(l=>{l.classList.toggle("act",l.getAttribute("href")==="#"+n.target.id)})}})},{threshold:.3,rootMargin:"-80px 0px 0px 0px"});secs.forEach(s=>nObs.observe(s));
+
+// ── Console Branding ──
+console.log("%c MicroFlow Pro %c v2.4 ","background:#8b5cf6;color:#fff;padding:4px 8px;border-radius:3px 0 0 3px;font-weight:700;font-size:12px","background:#06b6d4;color:#fff;padding:4px 8px;border-radius:0 3px 3px 0;font-weight:600;font-size:12px");console.log("%c Empowering MFIs with next-gen field operations","color:#a78bfa;font-size:11px");
+</script></body></html>

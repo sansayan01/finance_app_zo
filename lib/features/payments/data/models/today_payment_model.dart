@@ -50,6 +50,7 @@ class TodayPayment {
   final String? paymentMode;
   final DateTime? collectedAt;
   final String? remarks;
+  final String? collectionId; // collections.id for delete/revert
 
   const TodayPayment({
     required this.id,
@@ -73,6 +74,7 @@ class TodayPayment {
     this.paymentMode,
     this.collectedAt,
     this.remarks,
+    this.collectionId,
   });
 
   bool get isCollected => status == PaymentStatus.collected;

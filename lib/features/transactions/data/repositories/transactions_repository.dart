@@ -14,7 +14,7 @@ class TransactionsRepository {
       // RLS enforces org isolation — no need for client-side org_id filter
       final response = await _client
           .from('transactions')
-          .select('id, type, amount, description, created_at, member_id, loan_id')
+          .select('id, type, amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
           .order('created_at', ascending: false)
           .limit(limit);
 
@@ -79,7 +79,7 @@ class TransactionsRepository {
     try {
       final response = await _client
           .from('transactions')
-          .select('id, type, amount, description, created_at, member_id, loan_id')
+          .select('id, type, amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
           .filter('created_at', 'gte', startOfDay.toIso8601String())
           .filter('created_at', 'lt', endOfDay.toIso8601String())
           .order('created_at', ascending: false)
@@ -127,7 +127,7 @@ class TransactionsRepository {
     try {
       final response = await _client
           .from('transactions')
-          .select('id, type, amount, description, created_at, member_id, loan_id')
+          .select('id, type, amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
           .eq('savings_id', savingsId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);

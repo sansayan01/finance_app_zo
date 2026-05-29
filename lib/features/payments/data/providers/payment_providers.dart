@@ -295,6 +295,9 @@ final todayPaymentsProvider =
     debugPrint(stack.toString());
   }
 
+  // Map to track collection IDs by loan_number for EMI revert support
+  final Map<String, String> collectionIdByLoanNumber = {};
+
   try {
     // 2. Fetch collections for the selected date
     final collections = await client
@@ -308,6 +311,12 @@ final todayPaymentsProvider =
       // Apply agent filter
       if (filters.agentId != null && col['staff_id'] != filters.agentId) {
         continue;
+      }
+
+      // Track collection ID for loan_number lookup
+      final loanNum = col['loan_number'] as String?;
+      if (loanNum != null && col['id'] != null) {
+        collectionIdByLoanNumber[loanNum] = col['id'] as String;
       }
 
       final existingIdx = payments.indexWhere(
@@ -339,12 +348,48 @@ final todayPaymentsProvider =
               ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')
               : null,
           remarks: col['remarks'],
+          collectionId: col['id'] as String?,
         ));
       }
     }
   } catch (e, stack) {
     debugPrint('Error fetching collections: $e');
     debugPrint(stack.toString());
+  }
+
+  // Backfill collectionId for collected EMIs that were deduplicated
+  // (their id is emi_schedule.id, but delete needs collections.id)
+  for (int i = 0; i < payments.length; i++) {
+    final p = payments[i];
+    if (p.isCollected && p.collectionId == null && p.loanNumber != null) {
+      final cid = collectionIdByLoanNumber[p.loanNumber!];
+      if (cid != null) {
+        payments[i] = TodayPayment(
+          id: p.id,
+          type: p.type,
+          status: p.status,
+          memberName: p.memberName,
+          memberPhone: p.memberPhone,
+          memberId: p.memberId,
+          branchId: p.branchId,
+          branchName: p.branchName,
+          agentId: p.agentId,
+          agentName: p.agentName,
+          amountExpected: p.amountExpected,
+          amountCollected: p.amountCollected,
+          penaltyAmount: p.penaltyAmount,
+          dueDate: p.dueDate,
+          loanNumber: p.loanNumber,
+          loanId: p.loanId,
+          emiNumber: p.emiNumber,
+          planName: p.planName,
+          paymentMode: p.paymentMode,
+          collectedAt: p.collectedAt,
+          remarks: p.remarks,
+          collectionId: cid,
+        );
+      }
+    }
   }
 
   // 3. Fetch savings plans due on the selected date

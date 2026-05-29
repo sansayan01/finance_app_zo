@@ -41,20 +41,21 @@ class LoanDetailPage extends ConsumerStatefulWidget {
 
 class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0;
+  final ValueNotifier<double> _scrollOffset = ValueNotifier(0);
   String _selectedEmiFilter = 'all';
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      setState(() => _scrollOffset = _scrollController.offset);
+      _scrollOffset.value = _scrollController.offset;
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -151,15 +152,19 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               const SizedBox(height: 40),
                               _buildSectionHeader('Payment History', theme),
                               const SizedBox(height: 16),
-                              _buildPaymentHistory(loan, theme),
+                              _PaymentHistorySection(loanId: widget.loanId, loan: loan),
                               const SizedBox(height: 40),
                               _buildSectionHeader('EMI Breakdown', theme),
                               const SizedBox(height: 16),
-                              _buildEMISummaryHero(scheduleAsync, theme),
-                              const SizedBox(height: 20),
-                              _buildPrincipalInterestBreakdown(
-                                  scheduleAsync, theme),
-                              const SizedBox(height: 20),
+                              ClipRect(
+                                child: _buildEMISummaryHero(scheduleAsync, theme),
+                              ),
+                              const SizedBox(height: 24),
+                              ClipRect(
+                                child: _buildPrincipalInterestBreakdown(
+                                    scheduleAsync, theme),
+                              ),
+                              const SizedBox(height: 24),
                               _buildEMIList(scheduleAsync, theme, loan),
                               const SizedBox(height: 40),
                               _buildSectionHeader('Financial Health', theme),
@@ -210,16 +215,19 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   PreferredSizeWidget _buildAppBar(ThemeData theme, LoanModel? loan) {
-    final blurAlpha = (_scrollOffset / 100).clamp(0.0, 1.0);
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight),
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter:
-              ImageFilter.blur(sigmaX: 15 * blurAlpha, sigmaY: 15 * blurAlpha),
-          child: AppBar(
-            backgroundColor: theme.scaffoldBackgroundColor
-                .withValues(alpha: 0.7 * blurAlpha),
+      child: ValueListenableBuilder<double>(
+        valueListenable: _scrollOffset,
+        builder: (context, offset, _) {
+          final blurAlpha = (offset / 100).clamp(0.0, 1.0);
+          return ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                  sigmaX: 15 * blurAlpha, sigmaY: 15 * blurAlpha),
+              child: AppBar(
+                backgroundColor: theme.scaffoldBackgroundColor
+                    .withValues(alpha: 0.7 * blurAlpha),
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -340,6 +348,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             ],
           ),
         ),
+      );
+        },
       ),
     );
   }
@@ -361,7 +371,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           ),
         ),
       ),
-    ).animate(onPlay: (c) => c.repeat()).rotate(duration: 20.seconds);
+    );
   }
 
   Widget _buildHugeBalance(LoanModel loan, ThemeData theme) {
@@ -727,19 +737,23 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         schedule.where((e) => e.status == EMIStatus.pending).length;
     final paidCount = schedule.where((e) => e.status == EMIStatus.paid).length;
 
-    return Row(
-      children: [
-        _buildFilterChip('All ($allCount)', true, theme),
-        const SizedBox(width: 8),
-        _buildFilterChip('Overdue ($overdueCount)', false, theme,
-            color: Colors.red),
-        const SizedBox(width: 8),
-        _buildFilterChip('Upcoming ($upcomingCount)', false, theme,
-            color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        _buildFilterChip('Paid ($paidCount)', false, theme,
-            color: Colors.green),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          _buildFilterChip('All ($allCount)', true, theme),
+          const SizedBox(width: 8),
+          _buildFilterChip('Overdue ($overdueCount)', false, theme,
+              color: Colors.red),
+          const SizedBox(width: 8),
+          _buildFilterChip('Upcoming ($upcomingCount)', false, theme,
+              color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          _buildFilterChip('Paid ($paidCount)', false, theme,
+              color: Colors.green),
+        ],
+      ),
     );
   }
 
@@ -1358,269 +1372,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildPaymentHistory(LoanModel loan, ThemeData theme) {
-    final paymentHistoryAsync = ref.watch(paymentHistoryProvider(loan.id));
-
-    return paymentHistoryAsync.when(
-      data: (payments) {
-        if (payments.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(32),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.receipt_long_rounded,
-                    size: 48,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
-                const SizedBox(height: 12),
-                Text('No payments recorded yet',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.5))),
-              ],
-            ),
-          );
-        }
-
-        double totalPaid = payments.fold<double>(
-            0.0, (sum, p) => sum + ((p['amount'] as num?)?.toDouble() ?? 0.0));
-
-        // Calculate payment mode distribution
-        final modeCounts = <String, int>{};
-        for (final payment in payments) {
-          final mode = payment['payment_mode'] as String? ?? 'cash';
-          modeCounts[mode] = (modeCounts[mode] ?? 0) + 1;
-        }
-
-        return Column(
-          children: [
-            // Summary card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: const Color(0xFF5E5CE6).withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Total Paid',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.6),
-                              fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      Text(AppFormatters.formatCurrency(totalPaid),
-                          style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF5E5CE6))),
-                    ],
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                        '${payments.length} payment${payments.length > 1 ? 's' : ''}',
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.green)),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Payment mode distribution mini-chart
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Payment Methods',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5))),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: modeCounts.entries.map((entry) {
-                      final mode = entry.key;
-                      final count = entry.value;
-                      final pct =
-                          (count / payments.length * 100).toStringAsFixed(0);
-
-                      IconData modeIcon;
-                      Color modeColor;
-                      switch (mode) {
-                        case 'cash':
-                          modeIcon = Icons.payments_rounded;
-                          modeColor = Colors.green;
-                          break;
-                        case 'upi':
-                          modeIcon = Icons.qr_code_rounded;
-                          modeColor = Colors.purple;
-                          break;
-                        case 'bank_transfer':
-                          modeIcon = Icons.account_balance_rounded;
-                          modeColor = Colors.blue;
-                          break;
-                        case 'cheque':
-                          modeIcon = Icons.book_rounded;
-                          modeColor = Colors.orange;
-                          break;
-                        case 'card':
-                          modeIcon = Icons.credit_card_rounded;
-                          modeColor = Colors.teal;
-                          break;
-                        default:
-                          modeIcon = Icons.payments_rounded;
-                          modeColor = Colors.green;
-                      }
-
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: modeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(modeIcon, size: 12, color: modeColor),
-                            const SizedBox(width: 6),
-                            Text(
-                                '${mode.replaceAll('_', ' ').split(' ').map(_capitalize).join(' ')} ($pct%)',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: modeColor)),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Filter chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildPaymentFilterChip('All', true, theme),
-                  const SizedBox(width: 8),
-                  _buildPaymentFilterChip('Cash', false, theme,
-                      color: Colors.green),
-                  const SizedBox(width: 8),
-                  _buildPaymentFilterChip('UPI', false, theme,
-                      color: Colors.purple),
-                  const SizedBox(width: 8),
-                  _buildPaymentFilterChip('Bank', false, theme,
-                      color: Colors.blue),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Payment list
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: payments.length > 5 ? 5 : payments.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final payment = payments[index];
-                return InkWell(
-                  onTap: () => _showPaymentDetailSheet(payment, theme),
-                  borderRadius: BorderRadius.circular(16),
-                  child: _buildPaymentTile(payment, theme),
-                );
-              },
-            ),
-
-            // View All button
-            if (payments.length > 5)
-              InkWell(
-                onTap: () => _showFullPaymentHistory(payments, theme),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('View All ${payments.length} Payments',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_rounded,
-                          size: 16, color: theme.colorScheme.primary),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-      loading: () => const ShimmerCard(height: 200),
-      error: (_, __) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text('Failed to load payment history',
-            style: TextStyle(color: Colors.red)),
-      ),
-    );
-  }
-
-  Widget _buildPaymentFilterChip(String label, bool isSelected, ThemeData theme,
-      {Color? color}) {
-    final chipColor = color ?? theme.colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? chipColor.withValues(alpha: 0.15)
-            : chipColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-            color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isSelected
-                  ? chipColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-    );
-  }
-
   DateTime _getPaymentDate(Map<String, dynamic> payment) {
     if (payment['entered_at'] != null) {
       try {
@@ -1647,316 +1398,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       } catch (_) {}
     }
     return AppFormatters.convertToIST(DateTime.now());
-  }
-
-  void _showPaymentDetailSheet(Map<String, dynamic> payment, ThemeData theme) {
-    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
-    final paymentMode = payment['payment_mode'] as String? ?? 'cash';
-    final enteredAt = _getPaymentDate(payment);
-    final notes = payment['notes'] as String?;
-    final transactionId = payment['transaction_id'] as String?;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.dividerColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.receipt_long_rounded,
-                        color: Colors.green, size: 24),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Payment Detail',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w900, fontSize: 18)),
-                        Text('Transaction Record',
-                            style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // Amount
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: [
-                    Text('Amount Paid',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5))),
-                    const SizedBox(height: 8),
-                    Text(AppFormatters.formatCurrency(amount),
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, color: Colors.green)),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Details
-              _buildDetailRow('Payment Mode',
-                  paymentMode.replaceAll('_', ' ').toUpperCase(), theme),
-              _buildDetailRow(
-                  'Date & Time',
-                  '${enteredAt.day}/${enteredAt.month}/${enteredAt.year} ${enteredAt.hour.toString().padLeft(2, '0')}:${enteredAt.minute.toString().padLeft(2, '0')}',
-                  theme),
-              if (transactionId != null)
-                _buildDetailRow('Transaction ID', transactionId, theme),
-              if (notes != null && notes.isNotEmpty)
-                _buildDetailRow('Notes', notes, theme),
-
-              const SizedBox(height: 24),
-
-              // Receipt button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    // Implement receipt generation
-                  },
-                  icon: const Icon(Icons.receipt_rounded),
-                  label: const Text('Download Receipt'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showFullPaymentHistory(
-      List<Map<String, dynamic>> payments, ThemeData theme) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: theme.dividerColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.receipt_long_rounded,
-                            size: 20, color: Colors.green),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('All Payments',
-                                style: theme.textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w800)),
-                            Text('${payments.length} transactions',
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView.separated(
-                    controller: scrollController,
-                    padding: EdgeInsets.fromLTRB(24, 8, 24,
-                        8 + MediaQuery.of(context).padding.bottom + 90),
-                    itemCount: payments.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final payment = payments[index];
-                      return InkWell(
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _showPaymentDetailSheet(payment, theme);
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: _buildPaymentTile(payment, theme),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentTile(Map<String, dynamic> payment, ThemeData theme) {
-    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
-    final paymentMode = payment['payment_mode'] as String? ?? 'cash';
-    final enteredAt = _getPaymentDate(payment);
-    final notes = payment['notes'] as String?;
-
-    IconData modeIcon;
-    Color modeColor;
-    switch (paymentMode) {
-      case 'cash':
-        modeIcon = Icons.payments_rounded;
-        modeColor = Colors.green;
-        break;
-      case 'upi':
-        modeIcon = Icons.qr_code_rounded;
-        modeColor = Colors.purple;
-        break;
-      case 'bank_transfer':
-        modeIcon = Icons.account_balance_rounded;
-        modeColor = Colors.blue;
-        break;
-      case 'cheque':
-        modeIcon = Icons.book_rounded;
-        modeColor = Colors.orange;
-        break;
-      case 'card':
-        modeIcon = Icons.credit_card_rounded;
-        modeColor = Colors.teal;
-        break;
-      default:
-        modeIcon = Icons.payments_rounded;
-        modeColor = Colors.green;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: modeColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(modeIcon, color: modeColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(paymentMode.replaceAll('_', ' ').toUpperCase(),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700, letterSpacing: 0.5)),
-                const SizedBox(height: 2),
-                Text(
-                    '${enteredAt.day}/${enteredAt.month}/${enteredAt.year} at ${enteredAt.hour.toString().padLeft(2, '0')}:${enteredAt.minute.toString().padLeft(2, '0')}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.5))),
-                if (notes != null && notes.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(notes,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6))),
-                ],
-              ],
-            ),
-          ),
-          Text(AppFormatters.formatCurrency(amount),
-              style: theme.textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w900, color: Colors.green)),
-        ],
-      ),
-    );
   }
 
   // ─── EMI Summary Hero ───────────────────────────────────────────
@@ -1998,7 +1439,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final isDark = theme.brightness == Brightness.dark;
 
         return Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -2009,35 +1450,29 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     .withValues(alpha: 0.3),
               ],
             ),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: theme.colorScheme.primary.withValues(alpha: 0.12),
               width: 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
           ),
           child: Column(
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Progress gauge
+                  // Progress gauge (smaller)
                   ProgressGauge(
                     value: progress.clamp(0.0, 1.0),
-                    size: 90,
-                    strokeWidth: 8,
+                    size: 72,
+                    strokeWidth: 7,
                     progressColor: Colors.green,
                     center: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           '${(progress * 100).toInt()}%',
-                          style: theme.textTheme.titleMedium?.copyWith(
+                          style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: Colors.green,
                           ),
@@ -2046,11 +1481,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                             style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurface
                                     .withValues(alpha: 0.4),
-                                fontSize: 9)),
+                                fontSize: 8)),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 16),
                   // Stats grid
                   Expanded(
                     child: Column(
@@ -2059,17 +1494,17 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           children: [
                             _buildMiniStat(
                                 'Paid', '$paidCount', Colors.green, theme),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             _buildMiniStat(
                                 'Overdue', '$overdueCount', Colors.red, theme),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             _buildMiniStat('Upcoming', '$upcomingCount',
                                 theme.colorScheme.primary, theme),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             _buildMiniStat('Total', '$totalEmis',
                                 const Color(0xFF5E5CE6), theme),
                           ],
@@ -2079,7 +1514,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               // Collected amount + progress bar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2087,19 +1522,24 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   Text('Collected',
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5))),
-                  Text(
-                    '${AppFormatters.formatCurrency(totalPaid)} / ${AppFormatters.formatCurrency(totalAmount)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.primary),
+                              .withValues(alpha: 0.5),
+                          fontSize: 11)),
+                  Flexible(
+                    child: Text(
+                      '${AppFormatters.formatCurrency(totalPaid)} / ${AppFormatters.formatCurrency(totalAmount)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                          fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               LinearProgressBar(
                 value: progress.clamp(0.0, 1.0),
-                height: 6,
+                height: 5,
                 progressColor: Colors.green,
               ),
             ],
@@ -2115,22 +1555,23 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       String label, String value, Color color, ThemeData theme) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.12)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(value,
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w900, color: color)),
             Text(label,
                 style: theme.textTheme.labelSmall?.copyWith(
                     color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontSize: 9)),
           ],
         ),
       ),
@@ -2237,17 +1678,21 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Principal',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5))),
-                            Text(AppFormatters.formatCurrency(totalPrincipal),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w800)),
-                          ],
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Principal',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.5))),
+                              Text(AppFormatters.formatCurrency(totalPrincipal),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w800)),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -2271,17 +1716,21 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Interest',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.5))),
-                              Text(AppFormatters.formatCurrency(totalInterest),
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w800)),
-                            ],
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Interest',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.5))),
+                                Text(AppFormatters.formatCurrency(totalInterest),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w800)),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -2504,21 +1953,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           children: [
             // Left accent bar
             Container(
-              width: 4,
-              height: 48,
+              width: 3,
+              height: 40,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    accentColor,
-                    accentColor.withValues(alpha: 0.4),
-                  ],
-                ),
+                color: accentColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             // Main content
             Expanded(
               child: Column(
@@ -2571,26 +2013,32 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   // Amount + date row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppFormatters.formatCurrency(emi.emiAmount),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: accentColor)),
+                      Flexible(
+                        child: Text(AppFormatters.formatCurrency(emi.emiAmount),
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: accentColor)),
+                      ),
+                      const SizedBox(width: 8),
                       Text(AppFormatters.formatDate(emi.dueDate),
                           style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
                               color: theme.colorScheme.onSurface
                                   .withValues(alpha: 0.5))),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   // Principal/Interest mini bar
                   Row(
                     children: [
                       Expanded(
+                        flex: 3,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(3),
                           child: SizedBox(
@@ -2613,18 +2061,30 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                          'P: ${AppFormatters.formatCompactCurrency(emi.principal)}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 6),
-                      Text(
-                          'I: ${AppFormatters.formatCompactCurrency(emi.interest)}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.amber.shade700,
-                              fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        flex: 2,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                  'P: ${AppFormatters.formatCompactCurrency(emi.principal)}',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w600)),
+                              const SizedBox(width: 6),
+                              Text(
+                                  'I: ${AppFormatters.formatCompactCurrency(emi.interest)}',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.amber.shade700,
+                                      fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -3092,7 +2552,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     child: _buildHealthMetricCard(
                       icon: Icons.pie_chart_rounded,
                       label: 'EMI Status',
-                      value: '$paidEmis/$totalEmis',
+                      value: '${paidEmis.length}/$totalEmis',
                       subtitle: 'Paid / Total',
                       color: theme.colorScheme.primary,
                       theme: theme,
@@ -4954,6 +4414,566 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
+}
+
+class _PaymentHistorySection extends ConsumerWidget {
+  final String loanId;
+  final LoanModel loan;
+
+  const _PaymentHistorySection({required this.loanId, required this.loan});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final paymentHistoryAsync = ref.watch(paymentHistoryProvider(loanId));
+
+    return paymentHistoryAsync.when(
+      data: (payments) {
+        if (payments.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.receipt_long_rounded,
+                    size: 48,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                const SizedBox(height: 12),
+                Text('No payments recorded yet',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5))),
+              ],
+            ),
+          );
+        }
+
+        double totalPaid = payments.fold<double>(
+            0.0, (sum, p) => sum + ((p['amount'] as num?)?.toDouble() ?? 0.0));
+
+        // Calculate payment mode distribution
+        final modeCounts = <String, int>{};
+        for (final payment in payments) {
+          final mode = payment['payment_mode'] as String? ?? 'cash';
+          modeCounts[mode] = (modeCounts[mode] ?? 0) + 1;
+        }
+
+        return Column(
+          children: [
+            // Summary card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                    color: const Color(0xFF5E5CE6).withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.payments_rounded,
+                            color: Colors.green, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total Collected',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6))),
+                            Text(AppFormatters.formatCurrency(totalPaid),
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.green)),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text('${payments.length} payments',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.green)),
+                      ),
+                    ],
+                  ),
+                  // Mode distribution
+                  if (modeCounts.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: modeCounts.entries.map((e) {
+                        final pct =
+                            ((e.value / payments.length) * 100).round();
+                        return _buildPaymentFilterChip(
+                            '${e.key.replaceAll('_', ' ').split(' ').map(_capitalize).join(' ')} ($pct%)',
+                            false,
+                            theme);
+                      }).toList(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Recent payments
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: payments.length > 5 ? 5 : payments.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final payment = payments[index];
+                return InkWell(
+                  onTap: () =>
+                      _showPaymentDetailSheet(context, payment, theme),
+                  borderRadius: BorderRadius.circular(16),
+                  child: _buildPaymentTile(payment, theme),
+                );
+              },
+            ),
+
+            // View All button
+            if (payments.length > 5)
+              InkWell(
+                onTap: () => _showFullPaymentHistory(context, payments, theme),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('View All ${payments.length} Payments',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_forward_rounded,
+                          size: 16, color: theme.colorScheme.primary),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+      loading: () => const ShimmerCard(height: 200),
+      error: (_, __) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text('Failed to load payment history',
+            style: TextStyle(color: Colors.red)),
+      ),
+    );
+  }
+
+  // ─── Helper Methods ──────────────────────────────────────────────
+
+  Widget _buildPaymentFilterChip(String label, bool isSelected, ThemeData theme,
+      {Color? color}) {
+    final chipColor = color ?? theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? chipColor.withValues(alpha: 0.15)
+            : chipColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+            color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isSelected
+                  ? chipColor
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+    );
+  }
+
+  DateTime _getPaymentDate(Map<String, dynamic> payment) {
+    if (payment['entered_at'] != null) {
+      try {
+        return AppFormatters.convertToIST(
+            DateTime.parse(payment['entered_at'] as String));
+      } catch (_) {}
+    }
+    if (payment['created_at'] != null) {
+      try {
+        return AppFormatters.convertToIST(
+            DateTime.parse(payment['created_at'] as String));
+      } catch (_) {}
+    }
+    if (payment['transaction_time'] != null) {
+      try {
+        return AppFormatters.convertToIST(
+            DateTime.parse(payment['transaction_time'] as String));
+      } catch (_) {}
+    }
+    if (payment['collection_time'] != null) {
+      try {
+        return AppFormatters.convertToIST(
+            DateTime.parse(payment['collection_time'] as String));
+      } catch (_) {}
+    }
+    return AppFormatters.convertToIST(DateTime.now());
+  }
+
+  void _showPaymentDetailSheet(
+      BuildContext context, Map<String, dynamic> payment, ThemeData theme) {
+    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+    final paymentMode = payment['payment_mode'] as String? ?? 'cash';
+    final enteredAt = _getPaymentDate(payment);
+    final notes = payment['notes'] as String?;
+    final transactionId = payment['transaction_id'] as String?;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.receipt_long_rounded,
+                        color: Colors.green, size: 24),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Payment Detail',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w900, fontSize: 18)),
+                        Text('Transaction Record',
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Amount
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    Text('Amount Paid',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5))),
+                    const SizedBox(height: 8),
+                    Text(AppFormatters.formatCurrency(amount),
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w900, color: Colors.green)),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Details
+              _buildDetailRow('Payment Mode',
+                  paymentMode.replaceAll('_', ' ').toUpperCase(), theme),
+              _buildDetailRow(
+                  'Date & Time',
+                  '${enteredAt.day}/${enteredAt.month}/${enteredAt.year} ${enteredAt.hour.toString().padLeft(2, '0')}:${enteredAt.minute.toString().padLeft(2, '0')}',
+                  theme),
+              if (transactionId != null)
+                _buildDetailRow('Transaction ID', transactionId, theme),
+              if (notes != null && notes.isNotEmpty)
+                _buildDetailRow('Notes', notes, theme),
+
+              const SizedBox(height: 24),
+
+              // Receipt button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    // Implement receipt generation
+                  },
+                  icon: const Icon(Icons.receipt_rounded),
+                  label: const Text('Download Receipt'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullPaymentHistory(
+      BuildContext context, List<Map<String, dynamic>> payments, ThemeData theme) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.receipt_long_rounded,
+                            size: 20, color: Colors.green),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('All Payments',
+                                style: theme.textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.w800)),
+                            Text('${payments.length} transactions',
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    controller: scrollController,
+                    padding: EdgeInsets.fromLTRB(24, 8, 24,
+                        8 + MediaQuery.of(context).padding.bottom + 90),
+                    itemCount: payments.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final payment = payments[index];
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showPaymentDetailSheet(context, payment, theme);
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: _buildPaymentTile(payment, theme),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentTile(Map<String, dynamic> payment, ThemeData theme) {
+    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+    final paymentMode = payment['payment_mode'] as String? ?? 'cash';
+    final enteredAt = _getPaymentDate(payment);
+    final notes = payment['notes'] as String?;
+
+    IconData modeIcon;
+    Color modeColor;
+    switch (paymentMode) {
+      case 'cash':
+        modeIcon = Icons.payments_rounded;
+        modeColor = Colors.green;
+        break;
+      case 'upi':
+        modeIcon = Icons.qr_code_rounded;
+        modeColor = Colors.purple;
+        break;
+      case 'bank_transfer':
+        modeIcon = Icons.account_balance_rounded;
+        modeColor = Colors.blue;
+        break;
+      case 'cheque':
+        modeIcon = Icons.book_rounded;
+        modeColor = Colors.orange;
+        break;
+      case 'card':
+        modeIcon = Icons.credit_card_rounded;
+        modeColor = Colors.teal;
+        break;
+      default:
+        modeIcon = Icons.payments_rounded;
+        modeColor = Colors.green;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: modeColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(modeIcon, color: modeColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(paymentMode.replaceAll('_', ' ').toUpperCase(),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                const SizedBox(height: 2),
+                Text(
+                    '${enteredAt.day}/${enteredAt.month}/${enteredAt.year} at ${enteredAt.hour.toString().padLeft(2, '0')}:${enteredAt.minute.toString().padLeft(2, '0')}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5))),
+                if (notes != null && notes.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(notes,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6))),
+                ],
+              ],
+            ),
+          ),
+          Text(AppFormatters.formatCurrency(amount),
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w900, color: Colors.green)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, ThemeData theme,
+      {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+          Text(value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: valueColor ?? theme.colorScheme.onSurface)),
+        ],
+      ),
+    );
+  }
+
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
@@ -5023,18 +5043,6 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
     return notes.reversed.toList();
   }
 
-  List<Map<String, dynamic>> _getFilteredNotes() {
-    final notes = _parseNotes();
-    if (_searchQuery.isEmpty) return notes;
-
-    return notes
-        .where((note) => note['text']
-            .toString()
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase()))
-        .toList();
-  }
-
   Future<void> _addNote() async {
     if (_notesController.text.trim().isEmpty) return;
 
@@ -5096,8 +5104,13 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
-    final notes = _getFilteredNotes();
     final allNotes = _parseNotes();
+    final notes = _searchQuery.isEmpty
+        ? allNotes
+        : allNotes.where((note) => note['text']
+            .toString()
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase())).toList();
 
     return Column(
       children: [
@@ -5580,17 +5593,13 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
     return activities;
   }
 
-  List<_ActivityItem> _getFilteredActivities() {
-    final all = _getAllActivities();
-    if (_selectedFilter == 'all') return all;
-    return all.where((a) => a.type == _selectedFilter).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
     final allActivities = _getAllActivities();
-    final filtered = _getFilteredActivities();
+    final filtered = _selectedFilter == 'all'
+        ? allActivities
+        : allActivities.where((a) => a.type == _selectedFilter).toList();
     final displayed = filtered.take(_displayCount).toList();
     final hasMore = _displayCount < filtered.length;
 

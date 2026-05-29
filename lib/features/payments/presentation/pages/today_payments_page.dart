@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../home/data/providers/dashboard_providers.dart' show dashboardLoansProvider, loanSummaryProvider, todayAgendaProvider;
 import '../../../staff/data/providers/collection_providers.dart';
@@ -1496,6 +1497,10 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       );
     }
 
+    final userRole = ref.watch(currentUserProvider)?.role;
+    final isExecAdmin =
+        userRole == UserRole.executiveAdmin || userRole == UserRole.superAdmin;
+
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(todayPaymentsProvider);
@@ -1504,21 +1509,115 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         itemCount: payments.length,
         itemBuilder: (context, index) {
+          final p = payments[index];
           return _PaymentCard(
-            payment: payments[index],
+            payment: p,
             isDark: isDark,
-            onCall: payments[index].memberPhone != null
-                ? () => _makePhoneCall(payments[index].memberPhone!)
+            onCall: p.memberPhone != null
+                ? () => _makePhoneCall(p.memberPhone!)
                 : null,
-            onRemind: () => _sendReminder(payments[index]),
-            onTap: () => _showPaymentDetails(payments[index]),
-            onCollect: !payments[index].isCollected
-                ? () => _showQuickCollect(payments[index])
+            onRemind: () => _sendReminder(p),
+            onTap: () => _showPaymentDetails(p),
+            onCollect: !p.isCollected
+                ? () => _showQuickCollect(p)
+                : null,
+            onDelete: (isExecAdmin && p.isCollected && p.collectionId != null)
+                ? () => _deleteCollection(p)
                 : null,
           );
         },
       ),
     );
+  }
+
+  Future<void> _deleteCollection(TodayPayment payment) async {
+    if (payment.collectionId == null) return;
+
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_forever_rounded, color: AppColors.error),
+            SizedBox(width: 10),
+            Text('Delete Collection'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete this collection of '
+          '${currencyFormat.format(payment.amountCollected ?? payment.amountExpected)}? '
+          'This will revert the outstanding amount and cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final repo = ref.read(collectionRepositoryProvider);
+      await repo.deleteCollection(payment.collectionId!);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Collection of ${currencyFormat.format(payment.amountCollected ?? payment.amountExpected)} deleted'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+
+      // Refresh all relevant providers
+      ref.invalidate(todayPaymentsProvider);
+      ref.invalidate(todayCollectionsProvider);
+      ref.invalidate(todayCollectionStatsProvider);
+      ref.invalidate(todayDueEmisProvider);
+      ref.invalidate(dashboardLoansProvider);
+      ref.invalidate(loanSummaryProvider);
+      ref.invalidate(todayStatsProvider);
+      ref.invalidate(todayAgendaProvider);
+      if (payment.loanId != null) {
+        ref.invalidate(loansProvider);
+        ref.invalidate(loanDetailProvider(payment.loanId!));
+        ref.invalidate(emiScheduleProvider(payment.loanId!));
+        ref.invalidate(paymentHistoryProvider(payment.loanId!));
+      }
+      if (payment.type == PaymentType.savings) {
+        ref.invalidate(allSavingsProvider);
+        ref.invalidate(savingsSummaryProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Delete failed: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    }
   }
 
   Future<void> _makePhoneCall(String phone) async {
@@ -1853,6 +1952,7 @@ class _PaymentCard extends StatelessWidget {
   final VoidCallback onRemind;
   final VoidCallback onTap;
   final VoidCallback? onCollect;
+  final VoidCallback? onDelete;
 
   const _PaymentCard({
     required this.payment,
@@ -1861,6 +1961,7 @@ class _PaymentCard extends StatelessWidget {
     required this.onRemind,
     required this.onTap,
     this.onCollect,
+    this.onDelete,
   });
 
   @override
@@ -2003,7 +2104,7 @@ class _PaymentCard extends StatelessWidget {
               ),
 
               // Overdue + action buttons
-              if (payment.isOverdue || !payment.isCollected) ...[
+              if (payment.isOverdue || !payment.isCollected || onDelete != null) ...[
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -2033,6 +2134,12 @@ class _PaymentCard extends StatelessWidget {
                         ),
                       ),
                     const Spacer(),
+                    if (onDelete != null && payment.isCollected)
+                      _CompactAction(
+                        icon: Icons.delete_outline_rounded,
+                        color: AppColors.error,
+                        onTap: onDelete!,
+                      ),
                     if (!payment.isCollected) ...[
                       if (onCall != null)
                         _CompactAction(

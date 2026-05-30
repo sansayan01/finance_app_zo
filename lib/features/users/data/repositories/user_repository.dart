@@ -281,6 +281,32 @@ class UserRepository {
       } catch (_) {
         // Member record may not exist — that's fine
       }
+
+      // Also sync branch_id to active loans & pending approvals
+      try {
+        final member = await _client
+            .from('members')
+            .select('id')
+            .eq('profile_id', id)
+            .maybeSingle();
+        if (member != null) {
+          final memberId = member['id'] as String;
+          // Update active loans so branch reports stay correct
+          await _client
+              .from('loans')
+              .update({'branch_id': data['branch_id']})
+              .eq('member_id', memberId)
+              .not('status', 'in', ['closed', 'rejected', 'cancelled']);
+          // Update pending approvals so they route to new branch manager
+          await _client
+              .from('pending_approvals')
+              .update({'branch_id': data['branch_id']})
+              .eq('member_id', memberId)
+              .eq('status', 'pending');
+        }
+      } catch (_) {
+        // Loans / approvals may not exist — that's fine
+      }
     }
 
     // Sync full_name / phone / email to members table

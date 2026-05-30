@@ -158,12 +158,22 @@ class TransactionsRepository {
   }
 
   Future<void> deleteTransaction(String id) async {
-    await _client.from('transactions').delete().eq('id', id);
+    // Use RPC that also reverts EMI status and collection
+    try {
+      await _client.rpc('delete_transaction_with_revert', params: {
+        'p_transaction_id': id,
+      });
+    } catch (_) {
+      // Fallback to plain delete if RPC fails
+      await _client.from('transactions').delete().eq('id', id);
+    }
   }
 
   Future<int> deleteTransactions(List<String> ids) async {
     if (ids.isEmpty) return 0;
-    await _client.from('transactions').delete().inFilter('id', ids);
+    for (final id in ids) {
+      await deleteTransaction(id);
+    }
     return ids.length;
   }
 

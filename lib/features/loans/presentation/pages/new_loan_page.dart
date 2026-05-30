@@ -9,6 +9,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../members/data/models/member_model.dart';
 import '../../../members/presentation/providers/member_providers.dart';
+import '../../../../core/constants/enums.dart' show TenureUnit;
 import '../providers/new_loan_provider.dart';
 
 class NewLoanPage extends ConsumerStatefulWidget {
@@ -658,6 +659,20 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
           ),
 
           _buildDivider(theme),
+
+          // ── Disbursement Date ──
+          _buildLabel('DISBURSEMENT DATE', theme),
+          const SizedBox(height: 10),
+          _buildDatePicker(
+            date: state.disbursementDate,
+            onPicked: (date) => ref
+                .read(newLoanProvider.notifier)
+                .updateDisbursementDate(date),
+            theme: theme,
+            isDark: isDark,
+          ),
+
+          const SizedBox(height: 20),
 
           // ── Interest Logic & Date ──
           _buildTwoColumn(

@@ -10,6 +10,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/providers/savings_providers.dart';
 import '../providers/new_recurring_saving_provider.dart' show CollectionType;
+import '../../../../core/constants/enums.dart' show TenureUnit;
 
 class EditSavingsVaultPage extends ConsumerStatefulWidget {
   final String savingId;
@@ -32,15 +33,18 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
   final TextEditingController _penaltyController = TextEditingController();
   final TextEditingController _currentBalanceController =
       TextEditingController();
+  final TextEditingController _tenureController = TextEditingController();
 
   bool _initialized = false;
   CollectionType _collectionType = CollectionType.monthly;
   double _installmentAmount = 1000;
   double _maturityAmount = 12500;
   double _currentBalance = 0;
+  DateTime _startDate = DateTime.now();
   DateTime _maturityDate = DateTime.now().add(const Duration(days: 365));
-  DateTime? _createdAt;
   double _prematurePenalty = 2;
+  TenureUnit _tenureUnit = TenureUnit.months;
+  int _tenureValue = 12;
   bool _isSaving = false;
 
   @override
@@ -49,6 +53,7 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
     _maturityAmountController.dispose();
     _penaltyController.dispose();
     _currentBalanceController.dispose();
+    _tenureController.dispose();
     super.dispose();
   }
 
@@ -63,8 +68,8 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
     _installmentAmount = saving.monthlyDeposit;
     _maturityAmount = saving.targetAmount;
     _currentBalance = saving.currentAmount;
+    _startDate = saving.startDate ?? saving.createdAt;
     _maturityDate = saving.maturityDate;
-    _createdAt = saving.createdAt;
     _prematurePenalty = saving.prematurePenalty;
 
     final typeStr = saving.collectionType.toLowerCase();
@@ -76,21 +81,59 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
       _collectionType = CollectionType.monthly;
     }
 
+    // Use stored tenure unit, or derive from date range
+    if (saving.tenureUnit != null && saving.tenureUnit!.isNotEmpty) {
+      _tenureUnit = TenureUnit.values.firstWhere(
+        (e) => e.name == saving.tenureUnit,
+        orElse: () => TenureUnit.months,
+      );
+    } else {
+      final days = _maturityDate.difference(_startDate).inDays;
+      if (days % 365 == 0 && days >= 365) {
+        _tenureUnit = TenureUnit.years;
+      } else if (days % 7 == 0 && days >= 7) {
+        _tenureUnit = TenureUnit.weeks;
+      } else if (days < 7) {
+        _tenureUnit = TenureUnit.days;
+      } else {
+        _tenureUnit = TenureUnit.months;
+      }
+    }
+
+    // Use stored tenure value, or derive from dates as fallback
+    _tenureValue = saving.tenure > 0 ? saving.tenure : _deriveTenureFromDates();
+    _tenureController.text = _tenureValue.toString();
+
     _initialized = true;
   }
 
   int get _calculatedTotalInstallments {
-    final start = _createdAt ?? DateTime.now();
-    if (_maturityDate.isBefore(start)) return 0;
+    if (_tenureValue <= 0) return 0;
 
-    final days = _maturityDate.difference(start).inDays;
+    // Convert tenure to total days, then to collection-type installments
+    int totalDays;
+    switch (_tenureUnit) {
+      case TenureUnit.days:
+        totalDays = _tenureValue;
+        break;
+      case TenureUnit.weeks:
+        totalDays = _tenureValue * 7;
+        break;
+      case TenureUnit.months:
+        totalDays = (_tenureValue * 30.44).round();
+        break;
+      case TenureUnit.years:
+        totalDays = (_tenureValue * 365.25).round();
+        break;
+    }
+
     switch (_collectionType) {
       case CollectionType.daily:
-        return days;
+        return totalDays;
       case CollectionType.weekly:
-        return (days / 7).round();
+        return (totalDays / 7).round();
       case CollectionType.monthly:
-        return (days / 30.44).round();
+        return (totalDays / 30.44).round();
     }
   }
 
@@ -104,6 +147,47 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
 
   String _capitalize(String s) =>
       s.isNotEmpty ? s[0].toUpperCase() + s.substring(1) : s;
+
+  /// Derive tenure from dates as a fallback when no stored value exists.
+  int _deriveTenureFromDates() {
+    if (_maturityDate.isBefore(_startDate)) return 0;
+    final days = _maturityDate.difference(_startDate).inDays;
+    switch (_tenureUnit) {
+      case TenureUnit.days:
+        return days;
+      case TenureUnit.weeks:
+        return (days / 7).round();
+      case TenureUnit.months:
+        return (days / 30.44).round();
+      case TenureUnit.years:
+        return (days / 365.25).round();
+    }
+  }
+
+  /// Recalculate maturity date from start date + tenure value + unit.
+  DateTime _maturityFromTenure(DateTime start, int value, TenureUnit unit) {
+    if (value <= 0) return start;
+    switch (unit) {
+      case TenureUnit.days:
+        return start.add(Duration(days: value));
+      case TenureUnit.weeks:
+        return start.add(Duration(days: value * 7));
+      case TenureUnit.months:
+        final newMonth = start.month + value;
+        final yearOverflow = (newMonth - 1) ~/ 12;
+        final month = ((newMonth - 1) % 12) + 1;
+        final day = start.day.clamp(1, _daysInMonth(start.year + yearOverflow, month));
+        return DateTime(start.year + yearOverflow, month, day);
+      case TenureUnit.years:
+        final targetYear = start.year + value;
+        final day = start.day.clamp(1, _daysInMonth(targetYear, start.month));
+        return DateTime(targetYear, start.month, day);
+    }
+  }
+
+  static int _daysInMonth(int year, int month) {
+    return DateTime(year, month + 1, 0).day;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -240,9 +324,13 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
                           'monthly_deposit': _installmentAmount,
                           'target_amount': _maturityAmount,
                           'maturity_amount': _maturityAmount,
+                          'start_date':
+                              _startDate.toIso8601String().split('T')[0],
                           'maturity_date':
                               _maturityDate.toIso8601String().split('T')[0],
                           'collection_type': _collectionType.name,
+                          'tenure_unit': _tenureUnit.name,
+                          'tenure': _tenureValue,
                           'premature_penalty': _prematurePenalty,
                           'total_installments': _calculatedTotalInstallments,
                           'current_amount': _currentBalance,
@@ -469,6 +557,82 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
 
           _buildDivider(theme),
 
+          // Start Date & Tenure Unit
+          _buildTwoColumn(
+            isNarrow: isNarrow,
+            first: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel('START DATE', theme),
+                const SizedBox(height: 10),
+                _buildDatePicker(
+                  date: _startDate,
+                  onPicked: (date) {
+                    setState(() {
+                      _startDate = date;
+                      _maturityDate = _maturityFromTenure(
+                          _startDate, _tenureValue, _tenureUnit);
+                    });
+                  },
+                  theme: theme,
+                  isDark: isDark,
+                ),
+              ],
+            ),
+            second: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel('TENURE', theme),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildTextField(
+                        controller: _tenureController,
+                        onChanged: (val) {
+                          final parsed = int.tryParse(val) ?? 12;
+                          setState(() {
+                            _tenureValue = parsed;
+                            _maturityDate = _maturityFromTenure(
+                                _startDate, _tenureValue, _tenureUnit);
+                          });
+                        },
+                        theme: theme,
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: _buildDropdown(
+                        value: _tenureUnit.name,
+                        hint: 'Unit',
+                        items: TenureUnit.values.map((e) => e.name).toList(),
+                        itemLabels: const ['Days', 'Weeks', 'Months', 'Years'],
+                        onChanged: (val) {
+                          if (val != null) {
+                            final newUnit = TenureUnit.values
+                                .firstWhere((e) => e.name == val);
+                            setState(() {
+                              _tenureUnit = newUnit;
+                              _maturityDate = _maturityFromTenure(
+                                  _startDate, _tenureValue, newUnit);
+                            });
+                          }
+                        },
+                        theme: theme,
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          _buildDivider(theme),
+
           // Maturity Amount & Date
           _buildTwoColumn(
             isNarrow: isNarrow,
@@ -518,6 +682,9 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
                   onPicked: (date) {
                     setState(() {
                       _maturityDate = date;
+                      // Sync tenure value from the new date range
+                      _tenureValue = _deriveTenureFromDates();
+                      _tenureController.text = _tenureValue.toString();
                     });
                   },
                   theme: theme,

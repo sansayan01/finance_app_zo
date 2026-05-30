@@ -173,7 +173,8 @@ final todayPaymentsProvider =
   final client = Supabase.instance.client;
   final orgId = user.orgId!;
   final filters = ref.watch(paymentFilterProvider);
-  final dateStr = filters.selectedDate.toIso8601String().split('T').first;
+  final d = filters.selectedDate;
+  final dateStr = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   debugPrint('todayPaymentsProvider: orgId = $orgId, dateStr = $dateStr');
 
   final List<TodayPayment> payments = [];

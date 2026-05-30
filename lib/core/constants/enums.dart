@@ -82,6 +82,8 @@ enum KYCStatus {
   rejected,
 }
 
+enum TenureUnit { days, weeks, months, years }
+
 enum BranchStatus {
   active,
   inactive,

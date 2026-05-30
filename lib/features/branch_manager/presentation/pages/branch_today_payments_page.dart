@@ -857,24 +857,7 @@ class _BranchTodayPaymentsPageState
       });
 
       if (payment.loanId != null) {
-        final unpaidEmis = await client
-            .from('emi_schedule')
-            .select('id')
-            .eq('loan_id', payment.loanId!)
-            .eq('is_paid', false)
-            .order('due_date', ascending: true)
-            .limit(installmentCount);
-
-        for (final emi in (unpaidEmis as List)) {
-          await client.from('emi_schedule').update({
-            'is_paid': true,
-            'status': 'paid',
-            'paid_on': now.toIso8601String(),
-            'payment_mode': paymentMode,
-            'amount_paid': payment.amountExpected,
-            'updated_at': now.toIso8601String(),
-          }).eq('id', emi['id']);
-        }
+        // EMI marking handled by DB trigger 'update_schedule_on_collection'
 
         final loan = await client
             .from('loans')

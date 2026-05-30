@@ -79,8 +79,9 @@ class EMIRepository {
 
       // 1. Update EMI Schedule
       await _client.from('emi_schedule').update({
-        'is_paid': true,
-        'paid_date': now.toUtc().toIso8601String(),
+        'status': 'paid',
+        'paid_on': now.toUtc().toIso8601String(),
+        'payment_mode': paymentMode,
       }).eq('id', emiId);
 
       // 2. Look up borrower info from the loan
@@ -358,8 +359,6 @@ class EMIRepository {
             'interest': interest,
             'balance_after': balance,
             'status': 'pending',
-            'is_paid': false,
-            'is_overdue': false,
           });
         }
 
@@ -373,7 +372,10 @@ class EMIRepository {
   Future<void> updateEMIStatus(String emiId, String status) async {
     await _client
         .from('emi_schedule')
-        .update({'status': status}).eq('id', emiId);
+        .update({
+          'status': status,
+          if (status == 'paid') 'paid_on': DateTime.now().toUtc().toIso8601String(),
+        }).eq('id', emiId);
   }
 
   Future<List<Map<String, dynamic>>> getPaymentHistory(String loanId) async {
@@ -438,6 +440,8 @@ class EMIRepository {
       }
 
       // 3. Merge and deduplicate
+      // Strategy: if a transaction has the same amount, payment mode, and same day
+      // as a collection, it's a duplicate (the collection triggers create both records)
       final List<Map<String, dynamic>> merged = [];
       merged.addAll(collections);
 
@@ -450,16 +454,23 @@ class EMIRepository {
         bool isDuplicate = false;
         if (txTime != null) {
           for (final col in collections) {
-            final colTimeStr = col['created_at']?.toString() ?? '';
-            final colTime = DateTime.tryParse(colTimeStr);
             final colAmount = col['amount'] as double;
             final colMode = col['payment_mode']?.toString();
 
-            if (colTime != null && 
-                (txAmount - colAmount).abs() < 0.01 && 
-                txMode == colMode) {
-              final diff = txTime.difference(colTime).inMinutes.abs();
-              if (diff <= 5) {
+            // Same amount and same payment mode = likely duplicate
+            if ((txAmount - colAmount).abs() < 0.01 && txMode == colMode) {
+              // Check if same day (parse collection date from created_at or use collection_date)
+              final colTimeStr = col['created_at']?.toString() ?? '';
+              final colTime = DateTime.tryParse(colTimeStr);
+
+              if (colTime != null) {
+                final diff = txTime.difference(colTime).inMinutes.abs();
+                if (diff <= 1440) { // Same day (24 hours)
+                  isDuplicate = true;
+                  break;
+                }
+              } else {
+                // If we can't parse the collection time, match by amount alone
                 isDuplicate = true;
                 break;
               }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../members/data/models/member_model.dart';
 import '../../../members/presentation/providers/member_providers.dart';
@@ -32,6 +33,7 @@ class _NewRecurringSavingPageState
   final TextEditingController _penaltyController = TextEditingController();
   final TextEditingController _initialBalanceController =
       TextEditingController();
+  final TextEditingController _tenureController = TextEditingController();
 
   bool _isMigratedAccount = false;
 
@@ -44,6 +46,7 @@ class _NewRecurringSavingPageState
       _maturityAmountController.text = state.maturityAmount.toInt().toString();
       _penaltyController.text = state.prematurePenalty.toInt().toString();
       _initialBalanceController.text = state.initialBalance.toInt().toString();
+      _tenureController.text = state.tenure.toString();
     });
   }
 
@@ -53,6 +56,7 @@ class _NewRecurringSavingPageState
     _maturityAmountController.dispose();
     _penaltyController.dispose();
     _initialBalanceController.dispose();
+    _tenureController.dispose();
     super.dispose();
   }
 
@@ -357,7 +361,7 @@ class _NewRecurringSavingPageState
 
           if (_isMigratedAccount) ...[
             const SizedBox(height: 20),
-            _buildLabel('ALREADY SAVED / INITIAL BALANCE (₹)', theme),
+            _buildLabel('OPENING BALANCE (EXISTING AMOUNT) (₹)', theme),
             const SizedBox(height: 10),
             _buildTextField(
               controller: _initialBalanceController,
@@ -439,6 +443,75 @@ class _NewRecurringSavingPageState
             },
             theme: theme,
             primary: primary,
+          ),
+
+          _buildDivider(theme),
+
+          // ── Start Date & Tenure ──
+          _buildTwoColumn(
+            isNarrow: isNarrow,
+            first: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel('START DATE', theme),
+                const SizedBox(height: 10),
+                _buildDatePicker(
+                  date: state.startDate,
+                  onPicked: (date) => ref
+                      .read(newRecurringSavingProvider.notifier)
+                      .updateStartDate(date),
+                  theme: theme,
+                  isDark: isDark,
+                ),
+              ],
+            ),
+            second: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel('TENURE', theme),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildTextField(
+                        controller: _tenureController,
+                        onChanged: (val) {
+                          final parsed = int.tryParse(val) ?? 12;
+                          ref
+                              .read(newRecurringSavingProvider.notifier)
+                              .updateTenure(parsed);
+                        },
+                        theme: theme,
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: _buildDropdown(
+                        value: state.tenureUnit.name,
+                        hint: 'Unit',
+                        items: TenureUnit.values.map((e) => e.name).toList(),
+                        itemLabels: ['Days', 'Weeks', 'Months', 'Years'],
+                        onChanged: (val) {
+                          if (val != null) {
+                            ref
+                                .read(newRecurringSavingProvider.notifier)
+                                .updateTenureUnit(
+                                  TenureUnit.values
+                                      .firstWhere((e) => e.name == val),
+                                );
+                          }
+                        },
+                        theme: theme,
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
 
           _buildDivider(theme),
@@ -664,8 +737,44 @@ class _NewRecurringSavingPageState
               const SizedBox(height: 24),
               _buildKV('Deposit Cycle', _capitalize(state.collectionType.name),
                   theme),
+              _buildKV('Start Date',
+                  DateFormat('dd MMM yyyy').format(state.startDate), theme),
               _buildKV('Installment',
                   currencyFormat.format(state.installmentAmount), theme),
+              if (state.initialBalance > 0) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('OPENING BALANCE (EXISTING AMOUNT)',
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w500)),
+                            const SizedBox(height: 2),
+                            Text('Amount already deposited by the customer',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.5))),
+                          ],
+                        ),
+                      ),
+                      Text(currencyFormat.format(state.initialBalance),
+                          style: TextStyle(
+                              color: isDark
+                                  ? AppColors.warningDark
+                                  : AppColors.orange,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              ],
               _buildKV(
                   'Total Installments', '${state.totalInstallments}', theme),
               _buildKV('Total Capital',

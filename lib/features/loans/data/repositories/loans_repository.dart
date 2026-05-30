@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../settings/data/repositories/activity_log_repository.dart';
 import '../../../settings/data/models/activity_log_model.dart';
 import '../models/loan_model.dart';
+import 'emi_repository.dart';
 
 class LoansRepository {
   final SupabaseClient _client;
@@ -17,7 +18,7 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, profiles:customer_id(full_name, phone), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone), staff:staff_id(full_name)')
           .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -35,7 +36,7 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, profiles:customer_id(full_name, phone), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone), staff:staff_id(full_name)')
           .eq('org_id', _orgId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
@@ -118,21 +119,12 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, profiles:customer_id(full_name, phone), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone), staff:staff_id(full_name)')
           .eq('id', id)
           .maybeSingle();
 
       if (response == null) return null;
-      final createdLoan = LoanModel.fromJson(response);
-
-      await _logRepo?.log(
-        action: 'Loan Disbursed',
-        details:
-            'Amount: ₹${createdLoan.amount}, Customer ID: ${createdLoan.customerId}',
-        type: ActivityType.financialTransaction,
-      );
-
-      return createdLoan;
+      return LoanModel.fromJson(response);
     } catch (e) {
       return null;
     }
@@ -155,8 +147,10 @@ class LoansRepository {
     String? interestBasis,
     int? tenureValue,
     String? tenureUnit,
+    DateTime? disbursementDate,
   }) async {
     final now = DateTime.now();
+    final effectiveDisbursementDate = disbursementDate ?? now;
     final loanNumber =
         'L-${DateFormat('yyyyMMdd').format(now)}-${math.Random().nextInt(9999).toString().padLeft(4, '0')}';
 
@@ -165,13 +159,15 @@ class LoansRepository {
     // Look up the member's branch_id
     final member = await _client
         .from('members')
-        .select('branch_id')
+        .select('branch_id, full_name')
         .eq('id', borrowerId)
         .maybeSingle();
     final branchId = member?['branch_id'] as String?;
 
     final result = await _client.from('loans').insert({
       'customer_id': borrowerId,
+      'member_id': borrowerId,
+      if (member?['full_name'] != null) 'member_name': member!['full_name'],
       'loan_number': loanNumber,
       'amount': principal,
       'principal': principal,
@@ -189,7 +185,7 @@ class LoansRepository {
       'status': 'active',
       'first_installment_date': firstInstallmentDate.toIso8601String(),
       'first_emi_date': firstInstallmentDate.toIso8601String(),
-      'disbursement_date': now.toIso8601String(),
+      'disbursement_date': effectiveDisbursementDate.toIso8601String(),
       'start_date': now.toIso8601String(),
       'created_at': now.toIso8601String(),
       'updated_at': now.toIso8601String(),
@@ -203,16 +199,30 @@ class LoansRepository {
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
     }).select('id').single();
 
-    return result['id'] as String;
+    final loanId = result['id'] as String;
+
+    await _logRepo?.log(
+      action: 'Loan Disbursed',
+      details:
+          'Amount: ₹$principal, Loan ID: $loanId, Borrower ID: $borrowerId',
+      type: ActivityType.financialTransaction,
+    );
+
+    return loanId;
   }
 
   Future<void> createLoanFromMap(Map<String, dynamic> data) async {
     data['org_id'] = _orgId;
+    // Ensure member_id is populated (same as customer_id if missing)
+    data['member_id'] ??= data['customer_id'];
     await _client.from('loans').insert(data);
   }
 
   Future<void> updateLoanStatus(String id, String status) async {
-    await _client.from('loans').update({'status': status}).eq('id', id);
+    final result = await _client.from('loans').update({'status': status}).eq('id', id).select();
+    if (result.isEmpty) {
+      throw Exception('Update failed: no rows affected. Check permissions or loan ID.');
+    }
   }
 
   Future<void> updateLoan(
@@ -235,12 +245,33 @@ class LoansRepository {
     String? tenureUnit,
     String? remarks,
     String? purpose,
+    DateTime? disbursementDate,
   }) async {
     final data = <String, dynamic>{};
-    if (borrowerId != null) data['customer_id'] = borrowerId;
+    if (borrowerId != null) {
+      data['customer_id'] = borrowerId;
+      data['member_id'] = borrowerId;
+      // Also sync denormalized member_name
+      try {
+        final member = await _client
+            .from('members')
+            .select('full_name')
+            .eq('id', borrowerId)
+            .maybeSingle();
+        if (member != null && member['full_name'] != null) {
+          data['member_name'] = member['full_name'];
+        }
+      } catch (_) {}
+    }
     if (principal != null) {
       data['amount'] = principal;
       data['principal'] = principal;
+      // Update outstanding amounts when principal changes
+      if (totalExposure == null) {
+        data['outstanding_amount'] = principal;
+        data['outstanding_balance'] = principal;
+        data['total_repayable'] = principal;
+      }
     }
     if (interestRate != null) data['interest_rate'] = interestRate;
     if (tenureMonths != null) data['tenure_months'] = tenureMonths;
@@ -266,9 +297,59 @@ class LoansRepository {
     if (tenureUnit != null) data['tenure_unit'] = tenureUnit;
     if (remarks != null) data['remarks'] = remarks;
     if (purpose != null) data['purpose'] = purpose;
+    if (disbursementDate != null) {
+      data['disbursement_date'] = disbursementDate.toIso8601String();
+    }
     data['updated_at'] = DateTime.now().toIso8601String();
 
-    await _client.from('loans').update(data).eq('id', id);
+    final result = await _client.from('loans').update(data).eq('id', id).select();
+    if (result.isEmpty) {
+      throw Exception('Update failed: no rows affected. Check permissions or loan ID.');
+    }
+
+    // Regenerate EMI schedule if key terms changed
+    final bool scheduleAffectingChange = principal != null ||
+        tenureMonths != null ||
+        interestRate != null ||
+        firstInstallmentDate != null ||
+        estimatedInstallment != null ||
+        interestLogic != null ||
+        frequency != null;
+
+    if (scheduleAffectingChange) {
+      try {
+        // Delete old EMI schedule rows for this loan
+        await _client.from('emi_schedule').delete().eq('loan_id', id);
+
+        // Fetch the updated loan to get full terms for regeneration
+        final updatedRow = result.first;
+        final double loanPrincipal = ((updatedRow['amount'] ?? updatedRow['principal']) as num?)?.toDouble() ?? 0.0;
+        final double loanInterestRate = (updatedRow['interest_rate'] as num?)?.toDouble() ?? 0.0;
+        final int loanTenure = updatedRow['tenure_months'] as int? ?? 12;
+        final String loanInterestType = updatedRow['interest_type'] as String? ?? 'flat';
+        final double loanEmiAmount = (updatedRow['emi_amount'] as num?)?.toDouble() ?? 0.0;
+        final String? memberId = (updatedRow['member_id'] ?? updatedRow['customer_id'])?.toString();
+        final String? loanFrequency = updatedRow['frequency'] as String?;
+        final DateTime startDate = (updatedRow['first_emi_date'] ?? updatedRow['first_installment_date']) != null
+            ? DateTime.parse((updatedRow['first_emi_date'] ?? updatedRow['first_installment_date']) as String)
+            : DateTime.now();
+
+        final emiRepo = EMIRepository(_client, _orgId);
+        await emiRepo.generateSchedule(
+          id,
+          principal: loanPrincipal,
+          interestRate: loanInterestRate,
+          tenureMonths: loanTenure,
+          interestType: loanInterestType,
+          startDate: startDate,
+          emiAmount: loanEmiAmount,
+          memberId: memberId,
+          frequency: loanFrequency,
+        );
+      } catch (_) {
+        // EMI regeneration failure should not block the loan update
+      }
+    }
   }
 
   Future<void> settleLoan(String loanId, double amount) async {
@@ -279,11 +360,14 @@ class LoansRepository {
         (loan.outstandingBalance - amount).clamp(0.0, double.infinity);
     final newStatus = newBalance <= 0 ? 'closed' : 'active';
 
-    await _client.from('loans').update({
+    final result = await _client.from('loans').update({
       'status': newStatus,
       'outstanding_balance': newBalance,
       'outstanding_amount': newBalance,
-    }).eq('id', loanId);
+    }).eq('id', loanId).select();
+    if (result.isEmpty) {
+      throw Exception('Settle failed: no rows affected. Check permissions or loan ID.');
+    }
   }
 
   Future<void> deleteLoan(String loanId) async {

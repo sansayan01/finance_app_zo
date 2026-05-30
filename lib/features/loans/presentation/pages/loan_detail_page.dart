@@ -1616,7 +1616,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   child: Row(
                     children: [
                       Expanded(
-                        flex: (principalPct * 1000).toInt(),
+                        flex: (principalPct * 1000).toInt().clamp(1, 999),
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -1638,7 +1638,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         ),
                       ),
                       Expanded(
-                        flex: ((1 - principalPct) * 1000).toInt(),
+                        flex: ((1 - principalPct) * 1000).toInt().clamp(1, 999),
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -1703,39 +1703,37 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     color: theme.dividerColor.withValues(alpha: 0.3),
                   ),
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: Colors.amber.shade600,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade600,
+                            borderRadius: BorderRadius.circular(3),
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Interest',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                        color: theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.5))),
-                                Text(AppFormatters.formatCurrency(totalInterest),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w800)),
-                              ],
-                            ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Interest',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.5))),
+                              Text(AppFormatters.formatCurrency(totalInterest),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w800)),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(width: 12),
                   // Percentage badges
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -2240,45 +2238,55 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           Expanded(
               flex: 1,
               child: Text('${emi.emiNumber}',
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall
                       ?.copyWith(fontWeight: FontWeight.w700))),
           Expanded(
               flex: 2,
               child: Text(
                   '${emi.dueDate.day}/${emi.dueDate.month}/${emi.dueDate.year}',
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall)),
           Expanded(
               flex: 2,
               child: Text(AppFormatters.formatCurrency(emi.principal),
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall)),
           Expanded(
               flex: 2,
               child: Text(AppFormatters.formatCurrency(emi.interest),
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall)),
           Expanded(
               flex: 2,
               child: Text(AppFormatters.formatCurrency(emi.emiAmount),
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall
                       ?.copyWith(fontWeight: FontWeight.w700))),
           Expanded(
               flex: 2,
               child: Text(AppFormatters.formatCurrency(emi.balanceAfter),
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.primary))),
           Expanded(
               flex: 1,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                clipBehavior: Clip.hardEdge,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(emi.status.name.substring(0, 3).toUpperCase(),
+                      style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: color)),
                 ),
-                child: Text(emi.status.name.substring(0, 3).toUpperCase(),
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: color)),
               )),
         ],
       ),
@@ -3892,19 +3900,23 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             onPressed: () async {
               final amount = double.tryParse(controller.text) ?? 0.0;
               final messenger = ScaffoldMessenger.of(context);
-              Navigator.pop(context);
               try {
                 await ref
                     .read(loansRepositoryProvider)
                     .settleLoan(loan.id, amount);
+                if (!mounted) return;
+                Navigator.pop(context);
                 ref.invalidate(loanDetailProvider(loan.id));
                 ref.invalidate(loansProvider);
-                if (!mounted) return;
+                ref.invalidate(loanSummaryProvider);
+                ref.invalidate(dashboardLoansProvider);
+                ref.invalidate(overdueLoansProvider);
                 messenger.showSnackBar(SnackBar(
                     content: Text(
                         'Settlement of ${AppFormatters.formatCurrency(amount)} processed')));
               } catch (e) {
                 if (!mounted) return;
+                Navigator.pop(context);
                 messenger.showSnackBar(
                     SnackBar(content: Text('Settlement failed: $e')));
               }
@@ -3930,6 +3942,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             newStatus.name,
           );
       ref.invalidate(loanDetailProvider(widget.loanId));
+      ref.invalidate(loansProvider);
+      ref.invalidate(loanSummaryProvider);
+      ref.invalidate(dashboardLoansProvider);
+      ref.invalidate(overdueLoansProvider);
       if (!mounted) return;
       messenger.showSnackBar(
           SnackBar(content: Text('Status: ${newStatus.name.toUpperCase()}')));

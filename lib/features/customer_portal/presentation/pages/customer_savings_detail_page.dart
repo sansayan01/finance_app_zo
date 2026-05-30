@@ -414,24 +414,44 @@ class _CustomerSavingsDetailPageState
                                       phone: memberData?['phone'] ?? '',
                                     );
 
-                                    // Map transactions
+                                    // Map transactions with opening balance calculation
                                     final transactionsAsync = ref.read(customerSavingsTransactionsProvider(widget.savingsId));
                                     final transactions = transactionsAsync.valueOrNull ?? [];
+                                    final now = DateTime.now();
+                                    final periodStart = now.subtract(const Duration(days: 365));
+                                    double openingBalance = 0;
                                     final deposits = <SavingsStatementTx>[];
                                     final withdrawals = <SavingsStatementTx>[];
                                     for (final t in transactions) {
-                                      final tx = SavingsStatementTx(
-                                        date: t.transactionDate ?? DateTime.now(),
-                                        amount: t.amount,
-                                        description: t.description ?? t.type,
-                                        paymentMode: t.paymentMode,
-                                      );
-                                      if (t.type == 'savingsWithdrawal' || t.type == 'withdrawal') {
-                                        withdrawals.add(tx);
+                                      final date = t.transactionDate ?? DateTime.now();
+                                      final isBeforePeriod = date.isBefore(periodStart);
+
+                                      if (isBeforePeriod) {
+                                        // Pre-period transactions contribute to opening balance
+                                        if (t.type == 'savingsWithdrawal' || t.type == 'withdrawal') {
+                                          openingBalance -= t.amount;
+                                        } else {
+                                          openingBalance += t.amount;
+                                        }
                                       } else {
-                                        deposits.add(tx);
+                                        // In-period transactions go into deposits/withdrawals lists
+                                        final tx = SavingsStatementTx(
+                                          date: date,
+                                          amount: t.amount,
+                                          description: t.description ?? t.type,
+                                          paymentMode: t.paymentMode,
+                                        );
+                                        if (t.type == 'savingsWithdrawal' || t.type == 'withdrawal') {
+                                          withdrawals.add(tx);
+                                        } else {
+                                          deposits.add(tx);
+                                        }
                                       }
                                     }
+
+                                    final periodDeposits = deposits.fold<double>(0, (s, t) => s + t.amount);
+                                    final periodWithdrawals = withdrawals.fold<double>(0, (s, t) => s + t.amount);
+                                    final closingBalance = openingBalance + periodDeposits - periodWithdrawals;
 
                                     // Build plan block
                                     final planBlock = SavingsStatementPlanBlock(
@@ -440,8 +460,8 @@ class _CustomerSavingsDetailPageState
                                       status: savings.status,
                                       targetAmount: savings.targetAmount,
                                       currentAmount: savings.currentAmount,
-                                      openingBalance: 0,
-                                      closingBalance: savings.currentAmount,
+                                      openingBalance: openingBalance,
+                                      closingBalance: closingBalance,
                                       interestRate: savings.interestRate,
                                       maturityDate: savings.maturityDate ?? DateTime.now().add(const Duration(days: 365)),
                                       collectionType: 'monthly',
@@ -453,20 +473,19 @@ class _CustomerSavingsDetailPageState
 
                                     // Build portfolio summary
                                     final portfolio = SavingsStatementPortfolioSummary(
-                                      openingBalance: 0,
-                                      totalDeposits: deposits.fold(0.0, (s, t) => s + t.amount),
-                                      totalWithdrawals: withdrawals.fold(0.0, (s, t) => s + t.amount),
+                                      openingBalance: openingBalance,
+                                      totalDeposits: periodDeposits,
+                                      totalWithdrawals: periodWithdrawals,
                                       interestEarned: 0,
-                                      closingBalance: savings.currentAmount,
+                                      closingBalance: closingBalance,
                                       activePlans: savings.status == 'active' ? 1 : 0,
                                       totalPlans: 1,
                                     );
 
                                     // Generate PDF using admin template
-                                    final now = DateTime.now();
                                     final statementData = SavingsStatementData(
                                       customer: customer,
-                                      periodStart: now.subtract(const Duration(days: 365)),
+                                      periodStart: periodStart,
                                       periodEnd: now,
                                       plans: [planBlock],
                                       portfolio: portfolio,

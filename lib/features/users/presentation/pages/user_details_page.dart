@@ -129,6 +129,17 @@ class UserDetailsPage extends ConsumerWidget {
         me.role == UserRole.superAdmin;
   }
 
+  /// Returns true when the current user can edit this profile.
+  /// Only executiveAdmin, manager (branch_manager), and superAdmin can edit.
+  /// Collection agents and customers see read-only.
+  bool _canEditUser(WidgetRef ref) {
+    final me = ref.watch(currentUserProvider);
+    if (me == null) return false;
+    return me.role == UserRole.superAdmin ||
+        me.role == UserRole.executiveAdmin ||
+        me.role == UserRole.manager;
+  }
+
   /// Container that holds every admin-only section. Rendered only when
   /// [_isAdminViewer] is true.
   Widget _buildAdminSection(
@@ -2179,17 +2190,19 @@ class UserDetailsPage extends ConsumerWidget {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit_rounded, size: 20),
-                  SizedBox(width: 12),
-                  Text('Edit Profile',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                ],
+            if (_canEditUser(ref)) ...[
+              const PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text('Edit Profile',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                  ],
+                ),
               ),
-            ),
+            ],
             const PopupMenuItem(
               value: 'export',
               child: Row(
@@ -2201,37 +2214,39 @@ class UserDetailsPage extends ConsumerWidget {
                 ],
               ),
             ),
-            const PopupMenuDivider(),
-            if (ref.watch(currentUserProvider)?.role ==
-                UserRole.executiveAdmin) ...[
-              PopupMenuItem(
-                value: 'deactivate',
-                child: Row(
-                  children: [
-                    Icon(Icons.no_accounts_rounded,
-                        size: 20, color: Colors.orange[400]),
-                    const SizedBox(width: 12),
-                    Text('Deactivate Member',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.orange[400])),
-                  ],
-                ),
-              ),
+            if (_canEditUser(ref)) ...[
               const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_forever_rounded,
-                        size: 20, color: Colors.red),
-                    SizedBox(width: 12),
-                    Text('Delete Permanently',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700, color: Colors.red)),
-                  ],
+              if (ref.watch(currentUserProvider)?.role ==
+                  UserRole.executiveAdmin) ...[
+                PopupMenuItem(
+                  value: 'deactivate',
+                  child: Row(
+                    children: [
+                      Icon(Icons.no_accounts_rounded,
+                          size: 20, color: Colors.orange[400]),
+                      const SizedBox(width: 12),
+                      Text('Deactivate Member',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange[400])),
+                    ],
+                  ),
                 ),
-              ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_forever_rounded,
+                          size: 20, color: Colors.red),
+                      SizedBox(width: 12),
+                      Text('Delete Permanently',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ],
         ),
@@ -2341,7 +2356,9 @@ class UserDetailsPage extends ConsumerWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => _showAvatarOptions(context, ref, user),
+                  onTap: _canEditUser(ref)
+                      ? () => _showAvatarOptions(context, ref, user)
+                      : null,
                   child: Hero(
                     tag: 'user_avatar_${user.id}',
                     child: Stack(
@@ -2384,37 +2401,38 @@ class UserDetailsPage extends ConsumerWidget {
                                   ),
                                 ),
                         ),
-                        // Camera badge
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              color: primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: theme.scaffoldBackgroundColor,
-                                  width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: primary.withValues(alpha: 0.4),
-                                    blurRadius: 6),
-                              ],
+                        // Camera badge (only for users who can edit)
+                        if (_canEditUser(ref))
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: primary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: theme.scaffoldBackgroundColor,
+                                    width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: primary.withValues(alpha: 0.4),
+                                      blurRadius: 6),
+                                ],
+                              ),
+                              child: avatarState.isLoading
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(5),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.camera_alt_rounded,
+                                      size: 13, color: Colors.white),
                             ),
-                            child: avatarState.isLoading
-                                ? const Padding(
-                                    padding: EdgeInsets.all(5),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.camera_alt_rounded,
-                                    size: 13, color: Colors.white),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -3503,6 +3521,40 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Defense-in-depth: block collection agents from editing profiles
+    final viewerRole = ref.watch(currentUserProvider)?.role;
+    if (viewerRole == UserRole.collectionAgent) {
+      return Container(
+        height: 200,
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.elevatedDark
+              : Colors.white,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock_outline_rounded, size: 48, color: Colors.grey),
+              SizedBox(height: 12),
+              Text(
+                'Access Denied',
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w700, color: Colors.grey),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Collection agents cannot edit customer profiles.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;

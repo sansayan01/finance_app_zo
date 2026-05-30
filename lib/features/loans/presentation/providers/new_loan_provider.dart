@@ -4,12 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/loans_repository.dart';
 import 'loan_providers.dart';
 import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider, dashboardLoansProvider, todayStatsProvider, todayAgendaProvider;
+import '../../../../core/constants/enums.dart' show TenureUnit;
 
 enum InterestLogic { reducingBalance, flat }
 
 enum CollectionType { daily, weekly, monthly, yearly }
-
-enum TenureUnit { days, weeks, months, years }
 
 enum InterestMode { rate, amount }
 
@@ -46,6 +45,7 @@ class NewLoanState {
   final CollectionType collectionType;
   final InterestLogic interestLogic;
   final DateTime? firstInstallmentDate;
+  final DateTime? disbursementDate;
   final bool isLoading;
 
   NewLoanState({
@@ -61,6 +61,7 @@ class NewLoanState {
     this.collectionType = CollectionType.monthly,
     this.interestLogic = InterestLogic.reducingBalance,
     this.firstInstallmentDate,
+    this.disbursementDate,
     this.isLoading = false,
   });
 
@@ -77,6 +78,7 @@ class NewLoanState {
     CollectionType? collectionType,
     InterestLogic? interestLogic,
     DateTime? firstInstallmentDate,
+    DateTime? disbursementDate,
     bool? isLoading,
   }) {
     return NewLoanState(
@@ -92,6 +94,7 @@ class NewLoanState {
       collectionType: collectionType ?? this.collectionType,
       interestLogic: interestLogic ?? this.interestLogic,
       firstInstallmentDate: firstInstallmentDate ?? this.firstInstallmentDate,
+      disbursementDate: disbursementDate ?? this.disbursementDate,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -359,6 +362,8 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
       state = state.copyWith(interestLogic: logic);
   void updateFirstInstallmentDate(DateTime date) =>
       state = state.copyWith(firstInstallmentDate: date);
+  void updateDisbursementDate(DateTime date) =>
+      state = state.copyWith(disbursementDate: date);
 
   Future<void> createLoan() async {
     if (state.borrowerId == null) throw Exception('Please select a borrower');
@@ -377,6 +382,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
         interestLogic: state.interestLogic.name,
         firstInstallmentDate: state.firstInstallmentDate ??
             DateTime.now().add(const Duration(days: 30)),
+        disbursementDate: state.disbursementDate ?? DateTime.now(),
         estimatedInstallment: state.estimatedInstallment,
         totalExposure: state.totalExposure,
         interestMode: state.interestMode.name,

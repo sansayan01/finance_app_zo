@@ -3,6 +3,7 @@ import '../../../../core/constants/enums.dart';
 class LoanModel {
   final String id;
   final String customerId;
+  final String? memberId;
   final String? planId;
   final String? staffId;
   final String loanNumber;
@@ -36,6 +37,7 @@ class LoanModel {
   LoanModel({
     required this.id,
     required this.customerId,
+    this.memberId,
     this.planId,
     this.staffId,
     required this.loanNumber,
@@ -93,9 +95,9 @@ class LoanModel {
   }
 
   factory LoanModel.fromJson(Map<String, dynamic> json) {
-    // Handle Supabase join format (support both profiles and customers aliases)
+    // Handle Supabase join format (customer_id FK → members table)
     final profilesJson =
-        (json['profiles'] ?? json['customers']) as Map<String, dynamic>?;
+        (json['members'] ?? json['profiles'] ?? json['customers']) as Map<String, dynamic>?;
     final staffJson = json['staff'] as Map<String, dynamic>?;
 
     return LoanModel(
@@ -103,6 +105,7 @@ class LoanModel {
       customerId: json['customer_id'] as String? ??
           json['borrower_id'] as String? ??
           '',
+      memberId: json['member_id'] as String?,
       planId: json['plan_id'] as String?,
       staffId: json['staff_id'] as String?,
       loanNumber: json['loan_number'] as String? ??

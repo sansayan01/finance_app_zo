@@ -15,8 +15,12 @@ class SavingsModel {
   final int totalInstallments;
   final double maturityAmount;
   final DateTime? nextDueDate;
+  final DateTime? startDate;
+  final String? tenureUnit;
+  final int tenure;
   final String? orgId;
   final DateTime? updatedAt;
+  final double openingBalance;
 
   SavingsModel({
     required this.id,
@@ -35,8 +39,12 @@ class SavingsModel {
     this.totalInstallments = 12,
     this.maturityAmount = 0.0,
     this.nextDueDate,
+    this.startDate,
+    this.tenureUnit,
+    this.tenure = 12,
     this.orgId,
     this.updatedAt,
+    this.openingBalance = 0,
   });
 
   factory SavingsModel.fromJson(Map<String, dynamic> json) {
@@ -59,10 +67,16 @@ class SavingsModel {
       nextDueDate: json['next_due_date'] != null
           ? DateTime.tryParse(json['next_due_date'] as String)
           : null,
+      startDate: json['start_date'] != null
+          ? DateTime.tryParse(json['start_date'] as String)
+          : null,
+      tenureUnit: json['tenure_unit'] as String?,
+      tenure: (json['tenure'] as num?)?.toInt() ?? 12,
       orgId: json['org_id'] as String?,
       updatedAt: json['updated_at'] != null
           ? DateTime.tryParse(json['updated_at'] as String)
           : null,
+      openingBalance: (json['opening_balance'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -83,7 +97,11 @@ class SavingsModel {
       'premature_penalty': prematurePenalty,
       'total_installments': totalInstallments,
       'maturity_amount': maturityAmount,
+      if (startDate != null) 'start_date': startDate!.toIso8601String().split('T')[0],
+      if (tenureUnit != null) 'tenure_unit': tenureUnit,
+      'tenure': tenure,
       if (orgId != null) 'org_id': orgId,
+      'opening_balance': openingBalance,
     };
   }
 }

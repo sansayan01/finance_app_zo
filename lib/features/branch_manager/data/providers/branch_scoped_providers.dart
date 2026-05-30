@@ -21,11 +21,11 @@ final branchLoansProvider =
         .eq('branch_id', branchId)
         .order('created_at', ascending: false);
     final list = response as List<dynamic>;
-    // Map 'customer' alias to 'profiles' key expected by LoanModel
+    // Map 'customer' alias to 'members' key expected by LoanModel
     return list.map((item) {
       final map = Map<String, dynamic>.from(item as Map<String, dynamic>);
-      if (map.containsKey('customer') && !map.containsKey('profiles')) {
-        map['profiles'] = map['customer'];
+      if (map.containsKey('customer') && !map.containsKey('members')) {
+        map['members'] = map['customer'];
       }
       return LoanModel.fromJson(map);
     }).toList();

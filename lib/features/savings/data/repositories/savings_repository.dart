@@ -15,17 +15,20 @@ class SavingsRepository {
     required String collectionType,
     required double penalty,
     required int totalInstallments,
+    DateTime? startDate,
+    int tenure = 12,
+    String? tenureUnit,
+    double openingBalance = 0,
   }) async {
-    // Calculate the first next_due_date based on collection type
-    final now = DateTime.now();
+    // Use provided start date or default to today
+    final now = startDate ?? DateTime.now();
     DateTime nextDueDate;
     int? collectionDayOfWeek;
     int? collectionDayOfMonth;
 
     switch (collectionType) {
       case 'daily':
-        nextDueDate = DateTime(now.year, now.month, now.day)
-            .add(const Duration(days: 1));
+        nextDueDate = DateTime(now.year, now.month, now.day);
         break;
       case 'weekly':
         nextDueDate = DateTime(now.year, now.month, now.day)
@@ -37,8 +40,7 @@ class SavingsRepository {
         collectionDayOfMonth = now.day;
         break;
       default:
-        nextDueDate = DateTime(now.year, now.month, now.day)
-            .add(const Duration(days: 1));
+        nextDueDate = DateTime(now.year, now.month, now.day);
     }
 
     final insertData = <String, dynamic>{
@@ -52,8 +54,16 @@ class SavingsRepository {
       'total_installments': totalInstallments,
       'target_amount': maturityAmount,
       'status': 'active',
+      'start_date': now.toIso8601String().split('T')[0],
       'next_due_date': nextDueDate.toIso8601String().split('T')[0],
+      'tenure': tenure,
+      'opening_balance': openingBalance,
+      'current_amount': openingBalance,
     };
+
+    if (tenureUnit != null) {
+      insertData['tenure_unit'] = tenureUnit;
+    }
 
     if (collectionDayOfWeek != null) {
       insertData['collection_day_of_week'] = collectionDayOfWeek;
@@ -131,6 +141,12 @@ class SavingsRepository {
         nextDueDate: json['next_due_date'] != null
             ? DateTime.tryParse(json['next_due_date'].toString())
             : null,
+        startDate: json['start_date'] != null
+            ? DateTime.tryParse(json['start_date'].toString())
+            : null,
+        tenureUnit: json['tenure_unit']?.toString(),
+        tenure: (json['tenure'] as num?)?.toInt() ?? 12,
+        openingBalance: (json['opening_balance'] as num?)?.toDouble() ?? 0,
       );
     }).toList();
   }
@@ -197,9 +213,12 @@ class SavingsRepository {
     final newBalance = saving.currentAmount + amount;
 
     // 1. Update savings plan balance
-    await _client.from('savings_plans').update({
+    final updateResult = await _client.from('savings_plans').update({
       'current_amount': newBalance,
-    }).eq('id', savingId);
+    }).eq('id', savingId).select();
+    if (updateResult.isEmpty) {
+      throw Exception('Failed to update savings plan balance - not found or access denied');
+    }
 
     // 2. Record transaction
     await _client.from('transactions').insert({
@@ -216,11 +235,17 @@ class SavingsRepository {
 
   Future<void> updateSavingMetadata(
       String id, Map<String, dynamic> data) async {
-    await _client.from('savings_plans').update(data).eq('id', id);
+    final result = await _client.from('savings_plans').update(data).eq('id', id).select();
+    if (result.isEmpty) {
+      throw Exception('Update failed: no rows affected. Check permissions or saving ID.');
+    }
   }
 
   Future<void> deleteSavingPlan(String id) async {
-    await _client.from('savings_plans').delete().eq('id', id);
+    final result = await _client.from('savings_plans').delete().eq('id', id).select();
+    if (result.isEmpty) {
+      throw Exception('Failed to delete savings plan - not found or access denied');
+    }
   }
 
   /// Permanently deletes an RD/savings plan along with all of its
@@ -229,13 +254,16 @@ class SavingsRepository {
   Future<void> deleteSavingPlanCascade(String id) async {
     // 1. Detach transactions (FK is ON DELETE SET NULL but we delete
     //    them outright since they belong to this plan's history).
-    await _client.from('transactions').delete().eq('savings_id', id);
+    await _client.from('transactions').delete().eq('savings_id', id).select();
 
     // 2. Delete collection records (FK is NO ACTION — must go first).
-    await _client.from('savings_collections').delete().eq('savings_plan_id', id);
+    await _client.from('savings_collections').delete().eq('savings_plan_id', id).select();
 
     // 3. Delete the plan itself.
-    await _client.from('savings_plans').delete().eq('id', id);
+    final result = await _client.from('savings_plans').delete().eq('id', id).select();
+    if (result.isEmpty) {
+      throw Exception('Failed to delete savings plan cascade - plan not found');
+    }
   }
 
   /// Closes a savings/RD plan.
@@ -254,25 +282,43 @@ class SavingsRepository {
     final hasHistory = (collections as List).isNotEmpty;
 
     if (hasHistory) {
-      await _client
+      final result = await _client
           .from('savings_plans')
-          .update({'status': 'closed'}).eq('id', id);
+          .update({'status': 'closed'}).eq('id', id).select();
+      if (result.isEmpty) {
+        throw Exception('Failed to close savings plan - not found or access denied');
+      }
     } else {
-      await _client.from('savings_plans').delete().eq('id', id);
+      final result = await _client.from('savings_plans').delete().eq('id', id).select();
+      if (result.isEmpty) {
+        throw Exception('Failed to delete savings plan - not found or access denied');
+      }
     }
   }
 
   Future<void> setSavingStatus(String id, String status) async {
-    await _client.from('savings_plans').update({'status': status}).eq('id', id);
+    final result = await _client.from('savings_plans').update({'status': status}).eq('id', id).select();
+    if (result.isEmpty) {
+      throw Exception('Failed to set savings status - not found or access denied');
+    }
   }
 
   Future<void> recalculateBalance(String savingId) async {
+    // Read opening_balance from the plan so balance starts from it
+    final plan = await _client
+        .from('savings_plans')
+        .select('opening_balance')
+        .eq('id', savingId)
+        .maybeSingle();
+    final openingBalance =
+        (plan?['opening_balance'] as num?)?.toDouble() ?? 0;
+
     final rows = await _client
         .from('transactions')
         .select('type, amount')
         .eq('savings_id', savingId);
 
-    double balance = 0;
+    double balance = openingBalance;
     for (final r in rows as List) {
       final t = r['type'] as String?;
       final amt = (r['amount'] as num?)?.toDouble() ?? 0;
@@ -284,8 +330,11 @@ class SavingsRepository {
     }
     if (balance < 0) balance = 0;
 
-    await _client
+    final result = await _client
         .from('savings_plans')
-        .update({'current_amount': balance}).eq('id', savingId);
+        .update({'current_amount': balance}).eq('id', savingId).select();
+    if (result.isEmpty) {
+      throw Exception('Failed to recalculate balance - savings plan not found or access denied');
+    }
   }
 }

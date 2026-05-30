@@ -12,7 +12,7 @@ import '../../../members/data/models/member_model.dart';
 import '../../../members/presentation/providers/member_providers.dart';
 import '../providers/new_loan_provider.dart';
 import '../providers/loan_providers.dart';
-import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
+import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider, dashboardLoansProvider, todayStatsProvider, todayAgendaProvider, overdueLoansProvider;
 import '../../data/models/loan_model.dart';
 
 class EditLoanPage extends ConsumerStatefulWidget {
@@ -85,7 +85,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
     _purposeController.text = loan.purpose ?? '';
     _remarksController.text = loan.remarks ?? '';
 
-    notifier.updateBorrower(loan.customerId);
+    notifier.updateBorrower(loan.memberId ?? loan.customerId);
     notifier.updatePrincipal(loan.amount);
     notifier.updateInterestRate(loan.interestRate);
     notifier.updateTenureValue(loan.tenureMonths);
@@ -317,6 +317,10 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
       ref.invalidate(loanDetailProvider(widget.loanId));
       ref.invalidate(loanSummaryProvider);
       ref.invalidate(emiScheduleProvider(widget.loanId));
+      ref.invalidate(dashboardLoansProvider);
+      ref.invalidate(todayStatsProvider);
+      ref.invalidate(todayAgendaProvider);
+      ref.invalidate(overdueLoansProvider);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

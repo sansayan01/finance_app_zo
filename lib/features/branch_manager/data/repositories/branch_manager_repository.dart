@@ -342,7 +342,7 @@ class BranchManagerRepository {
   /// Get all loans for a branch
   Future<List<Map<String, dynamic>>> getBranchLoans(String branchId) async {
     final response = await _client.from('loans').select(
-        '*, profiles:customer_id(full_name, phone)')
+        '*, members:customer_id(full_name, phone)')
         .eq('branch_id', branchId)
         .order('created_at', ascending: false);
 
@@ -369,7 +369,7 @@ class BranchManagerRepository {
 
     final loans = await _client
         .from('loans')
-        .select('*, profiles:customer_id(full_name, phone)')
+        .select('*, members:customer_id(full_name, phone)')
         .eq('customer_id', memberId)
         .order('created_at', ascending: false);
 

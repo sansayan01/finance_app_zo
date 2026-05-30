@@ -8,8 +8,8 @@ class CollectionRepository {
 
   CollectionRepository(this._client, this._orgId);
 
-  /// Get today's due EMIs for a staff member
-  Future<List<Map<String, dynamic>>> getTodayDueEmis(String staffId) async {
+  /// Get today's due EMIs for a branch
+  Future<List<Map<String, dynamic>>> getTodayDueEmis(String staffId, String branchId) async {
     final today = DateTime.now().toIso8601String().split('T').first;
     final response = await _client
         .from('loans')
@@ -41,7 +41,7 @@ class CollectionRepository {
             penalty_amount
           )
         ''')
-        .eq('agent_id', staffId)
+        .eq('branch_id', branchId)
         .eq('org_id', _orgId)
         .eq('status', 'active');
 
@@ -64,12 +64,12 @@ class CollectionRepository {
     return result;
   }
 
-  /// Get overdue EMIs for a staff member
-  Future<List<Map<String, dynamic>>> getOverdueEmis(String staffId) async {
+  /// Get overdue EMIs for a branch
+  Future<List<Map<String, dynamic>>> getOverdueEmis(String staffId, String branchId) async {
     final response = await _client
         .from('overdue_loans_view')
         .select()
-        .eq('agent_id', staffId)
+        .eq('branch_id', branchId)
         .order('due_date', ascending: true);
 
     return List<Map<String, dynamic>>.from(response);

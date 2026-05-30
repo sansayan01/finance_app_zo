@@ -25,10 +25,10 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 final todayDueEmisProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
-  if (profile == null) return [];
+  if (profile == null || profile.branchId == null) return [];
 
   final repository = ref.watch(collectionRepositoryProvider);
-  return repository.getTodayDueEmis(profile.id);
+  return repository.getTodayDueEmis(profile.id, profile.branchId!);
 });
 
 // Alias for CollectionListPage
@@ -38,10 +38,10 @@ final todayEmisProvider = todayDueEmisProvider;
 final overdueEmisProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final profile = await ref.watch(staffProfileProvider.future);
-  if (profile == null) return [];
+  if (profile == null || profile.branchId == null) return [];
 
   final repository = ref.watch(collectionRepositoryProvider);
-  return repository.getOverdueEmis(profile.id);
+  return repository.getOverdueEmis(profile.id, profile.branchId!);
 });
 
 // Today's collections
@@ -233,13 +233,31 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
           amountCollected: amountCollected,
           outstandingBalance: outstandingBalance,
         );
+
+        // Log activity for timeline (non-blocking)
+        _logActivity(
+          staffId: staffId,
+          entityId: result.id,
+          amount: amountCollected,
+          memberName: memberName,
+          paymentMode: paymentMode.name,
+        );
       } catch (e) {
         // Fallback to offline queue
+        final staffProfile = await _ref.read(staffProfileProvider.future);
+        final orgId = _ref.read(currentOrgIdProvider);
+
         await _syncNotifier.queueOperation(
           operation: 'INSERT',
           table: 'collections',
           data: {
+            'org_id': orgId,
+            'branch_id': staffProfile?.branchId,
             'staff_id': staffId,
+            'collected_by_user_id': staffProfile?.userId ?? staffId,
+            'collected_by_name': staffProfile?.fullName ?? '',
+            'collected_by_role': staffProfile?.role.dbValue ?? 'collectionAgent',
+            'collected_at': DateTime.now().toIso8601String(),
             'loan_id': loanId,
             'loan_schedule_id': loanScheduleId,
             'member_id': memberId,
@@ -384,6 +402,37 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
       });
     } catch (e) {
       debugPrint('SMS log error: $e');
+    }
+  }
+
+  /// Logs collection activity to activity_logs for the timeline. Never blocks collection flow.
+  void _logActivity({
+    required String staffId,
+    required String entityId,
+    required double amount,
+    required String memberName,
+    required String paymentMode,
+  }) async {
+    try {
+      final client = _ref.read(supabaseClientProvider);
+      final orgId = _ref.read(currentOrgIdProvider);
+
+      await client.from('activity_logs').insert({
+        'org_id': orgId,
+        'staff_id': staffId,
+        'action': 'collection_recorded',
+        'entity_type': 'collection',
+        'entity_id': entityId,
+        'details': 'Collected Rs${amount.toStringAsFixed(0)} from $memberName',
+        'metadata': {
+          'amount': amount,
+          'member_name': memberName,
+          'payment_mode': paymentMode,
+        },
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Failed to log activity: $e');
     }
   }
 }

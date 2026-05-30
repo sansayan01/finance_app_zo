@@ -7,6 +7,7 @@ import '../../../loans/data/models/loan_model.dart';
 import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../savings/data/providers/savings_providers.dart';
+import '../../../staff/data/providers/collection_providers.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 
 import '../../../../core/services/offline_queue_service.dart';
@@ -122,13 +123,16 @@ final staffTodaysDuesProvider = FutureProvider.autoDispose<List<StaffDueItem>>((
 
 final staffTodayStatsProvider = FutureProvider.autoDispose<StaffTodayStats>((ref) async {
   final duesAsync = ref.watch(staffTodaysDuesProvider);
-  final transactionsRepo = ref.watch(transactionsRepositoryProvider);
-  final stats = await transactionsRepo.getTodayStats();
+  final statsAsync = ref.watch(todayCollectionStatsProvider);
+  final stats = statsAsync.value ?? {
+    'total_collected': 0.0,
+    'collection_count': 0,
+  };
 
   final dues = duesAsync.value ?? [];
   final target = dues.fold<double>(0, (sum, d) => sum + d.amount);
-  final collected = (stats['collected'] as double?) ?? 0.0;
-  final collectedCount = (stats['collectionCount'] as int?) ?? 0;
+  final collected = (stats['total_collected'] as double?) ?? 0.0;
+  final collectedCount = (stats['collection_count'] as int?) ?? 0;
 
   final queue = OfflineQueueService();
   final pendingSync = await queue.pendingCount;

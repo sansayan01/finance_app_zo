@@ -1393,8 +1393,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     }
     if (payment['collection_time'] != null) {
       try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['collection_time'] as String));
+        final dateStr = payment['collection_date'] as String?;
+        final timeStr = payment['collection_time'] as String;
+        DateTime? dt;
+        if (dateStr != null) {
+          dt = DateTime.tryParse('${dateStr}T$timeStr');
+        }
+        dt ??= DateTime.tryParse(timeStr);
+        if (dt != null) return AppFormatters.convertToIST(dt);
       } catch (_) {}
     }
     return AppFormatters.convertToIST(DateTime.now());
@@ -4653,8 +4659,14 @@ class _PaymentHistorySection extends ConsumerWidget {
     }
     if (payment['collection_time'] != null) {
       try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['collection_time'] as String));
+        final dateStr = payment['collection_date'] as String?;
+        final timeStr = payment['collection_time'] as String;
+        DateTime? dt;
+        if (dateStr != null) {
+          dt = DateTime.tryParse('${dateStr}T$timeStr');
+        }
+        dt ??= DateTime.tryParse(timeStr);
+        if (dt != null) return AppFormatters.convertToIST(dt);
       } catch (_) {}
     }
     return AppFormatters.convertToIST(DateTime.now());

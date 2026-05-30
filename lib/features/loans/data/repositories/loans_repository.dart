@@ -156,13 +156,27 @@ class LoansRepository {
 
     double totalInterest = totalExposure - principal;
 
-    // Look up the member's branch_id
+    // Look up the member's branch_id and assigned agent
     final member = await _client
         .from('members')
-        .select('branch_id, full_name')
+        .select('branch_id, full_name, agent_id')
         .eq('id', borrowerId)
         .maybeSingle();
     final branchId = member?['branch_id'] as String?;
+
+    // Auto-assign collection agent: prefer member's agent_id, else pick one from branch
+    String? assignedAgentId = member?['agent_id'] as String?;
+    if (assignedAgentId == null && branchId != null) {
+      final agent = await _client
+          .from('profiles')
+          .select('id')
+          .eq('branch_id', branchId)
+          .eq('org_id', _orgId)
+          .eq('role', 'collectionAgent')
+          .limit(1)
+          .maybeSingle();
+      assignedAgentId = agent?['id'] as String?;
+    }
 
     final result = await _client.from('loans').insert({
       'customer_id': borrowerId,
@@ -191,6 +205,8 @@ class LoansRepository {
       'updated_at': now.toIso8601String(),
       'org_id': _orgId,
       if (branchId != null) 'branch_id': branchId,
+      if (assignedAgentId != null) 'staff_id': assignedAgentId,
+      if (assignedAgentId != null) 'agent_id': assignedAgentId,
       if (interestMode != null) 'interest_mode': interestMode,
       if (interestRateBasis != null) 'interest_rate_basis': interestRateBasis,
       if (interestAmount != null) 'interest_amount': interestAmount,

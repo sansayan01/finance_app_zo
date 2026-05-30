@@ -102,7 +102,7 @@ class CollectionModel extends Equatable {
       gpsAccuracy: (json['gps_accuracy'] as num?)?.toDouble(),
       gpsAddress: json['gps_address'] as String?,
       collectionDate: DateTime.parse(json['collection_date'] as String),
-      collectionTime: DateTime.parse(json['collection_time'] as String),
+      collectionTime: _parseCollectionTime(json['collection_date'] as String?, json['collection_time']),
       syncStatus: _parseSyncState(json['sync_status'] as String?),
       localId: json['local_id'] as String?,
       syncAttempts: json['sync_attempts'] as int? ?? 0,
@@ -204,6 +204,20 @@ class CollectionModel extends Equatable {
       default:
         return PaymentMode.cash;
     }
+  }
+
+  static DateTime _parseCollectionTime(String? dateStr, dynamic timeValue) {
+    // time without time zone comes back as a bare string like "14:30:00"
+    // which DateTime.parse cannot handle. Combine with date first.
+    if (timeValue is DateTime) return timeValue;
+    final timeStr = timeValue?.toString();
+    if (timeStr == null || timeStr.isEmpty) return DateTime.now();
+    if (dateStr != null && dateStr.isNotEmpty) {
+      final combined = DateTime.tryParse('${dateStr}T$timeStr');
+      if (combined != null) return combined;
+    }
+    // Fallback: try parsing as-is (full ISO string or epoch)
+    return DateTime.tryParse(timeStr) ?? DateTime.now();
   }
 
   static SyncState _parseSyncState(String? value) {

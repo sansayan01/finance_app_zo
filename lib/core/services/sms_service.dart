@@ -61,4 +61,22 @@ class SmsService {
         'Date: $dateStr $timeStr\n'
         'Thank you!';
   }
+
+  /// Build the SMS message for a savings deposit notification.
+  String buildSavingsSms({
+    required String amount,
+    required String collectorName,
+    required String orgName,
+    required String? planName,
+    required double newBalance,
+    required DateTime date,
+  }) {
+    final dateStr = DateFormat('dd-MMM-yyyy').format(date);
+    final timeStr = DateFormat('hh:mm a').format(date);
+    final plan = planName != null && planName.isNotEmpty ? planName : 'Savings';
+    return '$amount deposited to $plan by $collectorName, $orgName.\n'
+        'New Balance: ₹${newBalance.toStringAsFixed(0)}\n'
+        'Date: $dateStr $timeStr\n'
+        'Thank you!';
+  }
 }

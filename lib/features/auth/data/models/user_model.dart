@@ -29,6 +29,7 @@ class UserModel {
   final String id;
   final String email;
   final String fullName;
+  final String? fatherName;
   final String? phone;
   final UserRole? role;
   final String? avatarUrl;
@@ -43,6 +44,7 @@ class UserModel {
     required this.id,
     required this.email,
     required this.fullName,
+    this.fatherName,
     this.phone,
     this.role,
     this.avatarUrl,
@@ -60,6 +62,7 @@ class UserModel {
       email: json['email'] as String? ?? '',
       fullName:
           json['full_name'] as String? ?? json['fullName'] as String? ?? '',
+      fatherName: (json['father_name'] ?? json['fatherName'])?.toString(),
       phone: json['phone'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       orgId: json['org_id'] as String?,
@@ -79,6 +82,7 @@ class UserModel {
       'id': id,
       'email': email,
       'full_name': fullName,
+      'father_name': fatherName,
       'phone': phone,
       'role': role?.name,
       'avatar_url': avatarUrl,
@@ -135,6 +139,7 @@ class ProfileModel {
   final String? userId;
   final String? fullName;
   final String? phone;
+  final String? fatherName;
   final String? pan;
   final String? aadhar;
   final String? email;
@@ -168,6 +173,7 @@ class ProfileModel {
     this.userId,
     this.fullName,
     this.phone,
+    this.fatherName,
     this.pan,
     this.aadhar,
     this.address,
@@ -199,6 +205,7 @@ class ProfileModel {
       userId: json['user_id']?.toString(),
       fullName: (json['full_name'] ?? json['fullName'])?.toString(),
       phone: json['phone']?.toString(),
+      fatherName: json['father_name']?.toString(),
       pan: json['pan']?.toString(),
       aadhar: json['aadhar']?.toString(),
       address: json['address']?.toString(),
@@ -241,6 +248,7 @@ class ProfileModel {
       userId: json['user_id']?.toString(),
       fullName: (json['full_name'] ?? json['name'])?.toString(),
       phone: json['phone']?.toString(),
+      fatherName: json['father_name']?.toString(),
       pan: json['pan']?.toString(),
       aadhar: json['aadhar']?.toString(),
       address: json['address']?.toString(),
@@ -317,6 +325,7 @@ class ProfileModel {
       'id': id,
       'user_id': userId,
       'full_name': fullName,
+      'father_name': fatherName,
       'phone': phone,
       'pan': pan,
       'aadhar': aadhar,

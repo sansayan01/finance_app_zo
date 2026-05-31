@@ -3264,6 +3264,7 @@ class _EditProfileSheet extends ConsumerStatefulWidget {
 
 class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   late TextEditingController _nameController;
+  late TextEditingController _fatherNameController;
   late TextEditingController _phoneController;
   late TextEditingController _aadharController;
   late TextEditingController _panController;
@@ -3279,7 +3280,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.user.fullName);
-    
+    _fatherNameController =
+        TextEditingController(text: widget.user.fatherName ?? '');
+
     final rawPhone = widget.user.phone?.replaceAll(RegExp(r'\D'), '') ?? '';
     if (rawPhone.length == 10) {
       _phoneController = TextEditingController(
@@ -3309,6 +3312,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   @override
   void dispose() {
     _nameController.dispose();
+    _fatherNameController.dispose();
     _phoneController.dispose();
     _aadharController.dispose();
     _panController.dispose();
@@ -3420,6 +3424,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       // These columns may or may not exist depending on the DB schema version.
       // We include them only if they have values, and catch errors gracefully.
       final extraFields = <String, String>{
+        'father_name': _fatherNameController.text.trim(),
         'aadhar': aadharVal,
         'pan': panVal,
         'employee_id': _employeeIdController.text.trim(),
@@ -3658,6 +3663,18 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                             primary: primary,
                           ),
                           second: _buildInputField(
+                            label: 'FATHER\'S NAME',
+                            hint: 'Enter father\'s name',
+                            controller: _fatherNameController,
+                            theme: theme,
+                            isDark: isDark,
+                            primary: primary,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTwoColumn(
+                          isNarrow: isNarrow,
+                          first: _buildInputField(
                             label: 'MOBILE NUMBER',
                             hint: '98765 43210',
                             icon: Icons.phone_android_outlined,
@@ -3672,17 +3689,16 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                             isDark: isDark,
                             primary: primary,
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildInputField(
-                          label: 'EMAIL ADDRESS',
-                          hint: 'example@domain.com',
-                          icon: Icons.alternate_email_rounded,
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          theme: theme,
-                          isDark: isDark,
-                          primary: primary,
+                          second: _buildInputField(
+                            label: 'EMAIL ADDRESS',
+                            hint: 'example@domain.com',
+                            icon: Icons.alternate_email_rounded,
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            theme: theme,
+                            isDark: isDark,
+                            primary: primary,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         _buildInputField(

@@ -19,6 +19,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  late TextEditingController _fatherNameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _addressController;
@@ -39,6 +40,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     super.initState();
     final user = ref.read(currentUserProvider);
     _nameController = TextEditingController(text: user?.fullName);
+    _fatherNameController = TextEditingController(text: user?.fatherName ?? '');
     _phoneController = TextEditingController(text: user?.phone);
     _emailController = TextEditingController(text: user?.email);
     _addressController = TextEditingController();
@@ -51,6 +53,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _fatherNameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _addressController.dispose();
@@ -71,6 +74,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     final success = await ref.read(authProvider.notifier).updateProfile(
           fullName: _nameController.text.trim(),
+          fatherName: _fatherNameController.text.trim().isNotEmpty
+              ? _fatherNameController.text.trim()
+              : null,
           phone: _phoneController.text.trim(),
           email: _emailController.text.trim(),
           address: _addressController.text.trim().isNotEmpty
@@ -193,6 +199,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   label: 'Full Name',
                                   controller: _nameController,
                                   icon: Icons.badge_outlined,
+                                  isDark: isDark),
+                              const SizedBox(height: 16),
+                              _ProfileTextField(
+                                  label: "Father's Name",
+                                  controller: _fatherNameController,
+                                  icon: Icons.people_outline_rounded,
                                   isDark: isDark),
                               const SizedBox(height: 16),
                               _ProfileTextField(

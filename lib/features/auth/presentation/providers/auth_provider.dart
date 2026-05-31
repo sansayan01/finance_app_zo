@@ -235,6 +235,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> updateProfile({
     required String fullName,
+    String? fatherName,
     String? phone,
     String? email,
     String? address,
@@ -247,6 +248,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _repository.updateProfile(
         fullName: fullName,
+        fatherName: fatherName,
         phone: phone,
         email: email,
         address: address,

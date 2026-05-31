@@ -1,6 +1,7 @@
 class CustomerProfileModel {
   final String memberId;
   final String fullName;
+  final String? fatherName;
   final String phone;
   final String? email;
   final String kycStatus;
@@ -21,6 +22,7 @@ class CustomerProfileModel {
   const CustomerProfileModel({
     required this.memberId,
     required this.fullName,
+    this.fatherName,
     required this.phone,
     this.email,
     required this.kycStatus,
@@ -43,6 +45,7 @@ class CustomerProfileModel {
     return CustomerProfileModel(
       memberId: json['id']?.toString() ?? '',
       fullName: json['full_name']?.toString() ?? '',
+      fatherName: json['father_name']?.toString(),
       phone: json['phone']?.toString() ?? '',
       email: json['email']?.toString(),
       kycStatus: json['kyc_status']?.toString() ?? 'pending',
@@ -69,6 +72,7 @@ class CustomerProfileModel {
   Map<String, dynamic> toJson() {
     return {
       'full_name': fullName,
+      'father_name': fatherName,
       'phone': phone,
       'email': email,
       'kyc_status': kycStatus,

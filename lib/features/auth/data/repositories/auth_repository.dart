@@ -307,6 +307,7 @@ class AuthRepository {
       fullName: user.userMetadata?['full_name'] as String? ??
           (profile != null ? profile['full_name'] as String? : null) ??
           '',
+      fatherName: profile?['father_name'] as String?,
       phone:
           user.phone ?? (profile != null ? profile['phone'] as String? : null),
       role: role,
@@ -364,6 +365,7 @@ class AuthRepository {
 
   Future<void> updateProfile({
     required String fullName,
+    String? fatherName,
     String? phone,
     String? email,
     String? address,
@@ -386,6 +388,7 @@ class AuthRepository {
         'full_name': fullName,
         'phone': phone,
       };
+      if (fatherName != null) updates['father_name'] = fatherName;
       if (address != null) updates['address'] = address;
       if (pan != null) updates['pan'] = pan;
       if (aadhar != null) updates['aadhar'] = aadhar;

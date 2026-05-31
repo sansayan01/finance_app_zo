@@ -563,6 +563,7 @@ class UserRepository {
 
   Future<void> createUser({
     required String fullName,
+    String? fatherName,
     required String email,
     required String phone,
     required UserRole role,
@@ -610,6 +611,7 @@ class UserRepository {
         'email': email,
         'password': password,
         'full_name': fullName,
+        'father_name': fatherName,
         'phone': phone,
         'role': role.name,
         'aadhar': aadhar,
@@ -633,6 +635,7 @@ class UserRepository {
     final profileResult = await _client.from('profiles').upsert({
       'user_id': authUserId,
       'full_name': fullName,
+      'father_name': fatherName,
       'email': email,
       'phone': phone,
       'role': role.name,
@@ -655,6 +658,7 @@ class UserRepository {
         await _client.from('members').insert({
           'org_id': _orgId,
           'full_name': fullName,
+          'father_name': fatherName,
           'phone': phone,
           'email': email,
           'branch_id': branchId,

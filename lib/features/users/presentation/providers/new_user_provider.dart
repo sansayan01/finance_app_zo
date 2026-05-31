@@ -7,6 +7,7 @@ import 'user_list_provider.dart';
 
 class NewUserState {
   final String fullName;
+  final String fatherName;
   final String email;
   final String mobileNumber;
   final UserRole role;
@@ -20,6 +21,7 @@ class NewUserState {
 
   NewUserState({
     this.fullName = '',
+    this.fatherName = '',
     this.email = '',
     this.mobileNumber = '',
     this.role = UserRole.collectionAgent,
@@ -34,6 +36,7 @@ class NewUserState {
 
   NewUserState copyWith({
     String? fullName,
+    String? fatherName,
     String? email,
     String? mobileNumber,
     UserRole? role,
@@ -47,6 +50,7 @@ class NewUserState {
   }) {
     return NewUserState(
       fullName: fullName ?? this.fullName,
+      fatherName: fatherName ?? this.fatherName,
       email: email ?? this.email,
       mobileNumber: mobileNumber ?? this.mobileNumber,
       role: role ?? this.role,
@@ -73,6 +77,7 @@ class NewUserNotifier extends StateNotifier<NewUserState> {
   NewUserNotifier(this._ref, this._repository) : super(NewUserState());
 
   void updateFullName(String value) => state = state.copyWith(fullName: value);
+  void updateFatherName(String value) => state = state.copyWith(fatherName: value);
   void updateEmail(String value) => state = state.copyWith(email: value);
   void updateMobileNumber(String value) =>
       state = state.copyWith(mobileNumber: value);
@@ -93,6 +98,7 @@ class NewUserNotifier extends StateNotifier<NewUserState> {
     try {
       await _repository.createUser(
         fullName: state.fullName,
+        fatherName: state.fatherName,
         email: state.email,
         phone: state.mobileNumber,
         role: state.role,

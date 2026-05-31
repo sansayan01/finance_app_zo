@@ -24,6 +24,7 @@ class NewUserPage extends ConsumerStatefulWidget {
 
 class _NewUserPageState extends ConsumerState<NewUserPage> {
   final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _fatherNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _employeeIdController = TextEditingController();
@@ -44,6 +45,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = ref.read(newUserProvider);
       _fullNameController.text = state.fullName;
+      _fatherNameController.text = state.fatherName;
       _emailController.text = state.email;
       if (state.mobileNumber.isNotEmpty) {
         final rawMobile = state.mobileNumber;
@@ -85,6 +87,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
   @override
   void dispose() {
     _fullNameController.dispose();
+    _fatherNameController.dispose();
     _emailController.dispose();
     _mobileController.dispose();
     _employeeIdController.dispose();
@@ -542,6 +545,20 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                   isDark: isDark,
                 ),
                 second: _buildInputField(
+                  label: 'FATHER\'S NAME',
+                  hint: 'Enter father\'s name',
+                  controller: _fatherNameController,
+                  textCapitalization: TextCapitalization.words,
+                  onChanged: (val) =>
+                      ref.read(newUserProvider.notifier).updateFatherName(val),
+                  theme: theme,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildTwoColumn(
+                isNarrow: isNarrow,
+                first: _buildInputField(
                   label: 'EMAIL ADDRESS',
                   hint: 'staff@microflow.pro',
                   icon: Icons.mail_outline_rounded,
@@ -553,11 +570,7 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                   theme: theme,
                   isDark: isDark,
                 ),
-              ),
-              const SizedBox(height: 20),
-              _buildTwoColumn(
-                isNarrow: isNarrow,
-                first: _buildInputField(
+                second: _buildInputField(
                   label: 'MOBILE NUMBER',
                   hint: '98765 43210',
                   icon: Icons.phone_android_outlined,
@@ -571,6 +584,20 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                   onChanged: (val) => ref
                       .read(newUserProvider.notifier)
                       .updateMobileNumber(val.replaceAll(RegExp(r'\D'), '')),
+                  theme: theme,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildTwoColumn(
+                isNarrow: isNarrow,
+                first: _buildInputField(
+                  label: 'RESIDENTIAL ADDRESS',
+                  hint: 'Enter complete home address',
+                  icon: Icons.home_outlined,
+                  controller: _addressController,
+                  textCapitalization: TextCapitalization.words,
+                  onChanged: (val) {},
                   theme: theme,
                   isDark: isDark,
                 ),
@@ -597,17 +624,6 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              _buildInputField(
-                label: 'RESIDENTIAL ADDRESS',
-                hint: 'Enter complete home address',
-                icon: Icons.home_outlined,
-                controller: _addressController,
-                textCapitalization: TextCapitalization.words,
-                onChanged: (val) {},
-                theme: theme,
-                isDark: isDark,
               ),
             ],
           ),

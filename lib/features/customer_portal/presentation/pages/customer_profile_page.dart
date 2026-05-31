@@ -175,6 +175,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
           SliverToBoxAdapter(child: _fadeSlide(0, _buildAvatarSection(context, profile, isDark))),
           SliverToBoxAdapter(child: _fadeSlide(1, _buildSection(context, 'Personal Info', Icons.person_rounded, isDark, [
             _infoRow(context, 'Full Name', profile.fullName, isDark, editable: true, onEdit: () => _editField(context, 'full_name', 'Full Name', profile.fullName, profile)),
+            _infoRow(context, "Father's Name", profile.fatherName ?? '--', isDark, editable: true, onEdit: () => _editField(context, 'father_name', "Father's Name", profile.fatherName ?? '', profile)),
             _infoRow(context, 'Phone', profile.phone, isDark, editable: true, onEdit: () => _editField(context, 'phone', 'Phone', profile.phone, profile)),
             _infoRow(context, 'Email', profile.email ?? '--', isDark),
             _infoRow(context, 'Date of Birth', profile.formattedDob, isDark, editable: true, onEdit: () => _pickDate(context, profile)),

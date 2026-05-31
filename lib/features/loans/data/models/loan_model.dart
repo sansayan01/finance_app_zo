@@ -12,6 +12,7 @@ class LoanModel {
   final int tenureMonths;
   final int? tenureValue;
   final String? tenureUnit;
+  final String? frequency;
   final double emiAmount;
   final double totalInterest;
   final double totalRepayable;
@@ -46,6 +47,7 @@ class LoanModel {
     required this.tenureMonths,
     this.tenureValue,
     this.tenureUnit,
+    this.frequency,
     required this.emiAmount,
     required this.totalInterest,
     required this.totalRepayable,
@@ -115,6 +117,7 @@ class LoanModel {
       tenureMonths: json['tenure_months'] as int? ?? 12,
       tenureValue: json['tenure_value'] as int?,
       tenureUnit: json['tenure_unit'] as String?,
+      frequency: json['frequency'] as String?,
       emiAmount: (json['emi_amount'] ?? json['estimated_installment'] ?? 0.0)
           .toDouble(),
       totalInterest: (json['total_interest'] ?? 0.0).toDouble(),
@@ -181,6 +184,7 @@ class LoanModel {
       'tenure_months': tenureMonths,
       if (tenureValue != null) 'tenure_value': tenureValue,
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
+      if (frequency != null) 'frequency': frequency,
       'emi_amount': emiAmount,
       'total_interest': totalInterest,
       'total_repayable': totalRepayable,

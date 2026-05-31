@@ -88,7 +88,24 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
     notifier.updateBorrower(loan.memberId ?? loan.customerId);
     notifier.updatePrincipal(loan.amount);
     notifier.updateInterestRate(loan.interestRate);
-    notifier.updateTenureValue(loan.tenureMonths);
+    notifier.updateTenureValue(loan.tenureValue ?? loan.tenureMonths);
+
+    // Set tenure unit if available
+    if (loan.tenureUnit != null) {
+      final unit = TenureUnit.values.where((e) => e.name == loan.tenureUnit).toList();
+      if (unit.isNotEmpty) {
+        notifier.updateTenureUnit(unit.first);
+        _tenureController.text = (loan.tenureValue ?? loan.tenureMonths).toString();
+      }
+    }
+
+    // Set collection type from loan frequency
+    if (loan.frequency != null) {
+      final ct = CollectionType.values.where((e) => e.name == loan.frequency).toList();
+      if (ct.isNotEmpty) {
+        notifier.updateCollectionType(ct.first);
+      }
+    }
 
     if (loan.firstEmiDate != null) {
       notifier.updateFirstInstallmentDate(loan.firstEmiDate!);
@@ -287,8 +304,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             frequency: state.collectionType.name,
             collectionType: state.collectionType.name,
             interestLogic: state.interestLogic.name,
-            firstInstallmentDate: state.firstInstallmentDate ??
-                DateTime.now().add(const Duration(days: 30)),
+            firstInstallmentDate: state.firstInstallmentDate,
             estimatedInstallment: state.estimatedInstallment,
             totalExposure: state.totalExposure,
             interestMode: state.interestMode.name,

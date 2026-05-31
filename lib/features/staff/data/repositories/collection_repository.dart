@@ -602,7 +602,7 @@ class CollectionRepository {
 
       await _client.from('emi_schedule').update({
         'is_paid': false,
-        'status': 'upcoming',
+        'status': 'pending',
         'paid_on': null,
         'payment_mode': null,
         'amount_paid': 0,

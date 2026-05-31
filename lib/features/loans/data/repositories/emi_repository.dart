@@ -20,7 +20,7 @@ class EMIRepository {
         try {
           final loanResponse = await _client
               .from('loans')
-              .select('amount, principal, interest_rate, tenure_months, interest_type, emi_amount, customer_id, member_id, frequency, first_emi_date, first_installment_date, disbursement_date')
+              .select('amount, principal, interest_rate, tenure_months, tenure_value, tenure_unit, interest_type, emi_amount, customer_id, member_id, frequency, first_emi_date, first_installment_date, disbursement_date')
               .eq('id', loanId)
               .maybeSingle();
           if (loanResponse != null) {
@@ -31,6 +31,8 @@ class EMIRepository {
             final double emiAmount = (loanResponse['emi_amount'] as num?)?.toDouble() ?? 0.0;
             final String? memberId = loanResponse['customer_id']?.toString() ?? loanResponse['member_id']?.toString();
             final String? frequency = loanResponse['frequency'] as String?;
+            final int? tenureValue = loanResponse['tenure_value'] as int?;
+            final String? tenureUnit = loanResponse['tenure_unit'] as String?;
             final DateTime startDate = (loanResponse['first_emi_date'] ?? loanResponse['first_installment_date']) != null
                 ? DateTime.parse((loanResponse['first_emi_date'] ?? loanResponse['first_installment_date']) as String)
                 : (loanResponse['disbursement_date'] != null
@@ -47,6 +49,8 @@ class EMIRepository {
               emiAmount: emiAmount,
               memberId: memberId,
               frequency: frequency,
+              tenureValue: tenureValue,
+              tenureUnit: tenureUnit,
             );
 
             response = await _client
@@ -249,6 +253,8 @@ class EMIRepository {
     required double emiAmount,
     String? memberId,
     String? frequency,
+    int? tenureValue,
+    String? tenureUnit,
   }) async {
     try {
       // Try RPC first, verify it actually created rows
@@ -276,21 +282,46 @@ class EMIRepository {
         final annualRate = interestRate / 100;
         final monthlyRate = annualRate / 12;
 
-        // Determine number of installments based on frequency
+        // Determine number of installments based on tenure unit and frequency
         final freq = frequency ?? 'monthly';
         int numberOfInstallments;
-        switch (freq) {
-          case 'daily':
-            numberOfInstallments = tenureMonths * 30;
+
+        // If tenureUnit/tenureValue are provided, use them directly
+        final effectiveTenureUnit = tenureUnit ?? 'months';
+        final effectiveTenureValue = tenureValue ?? tenureMonths;
+
+        switch (effectiveTenureUnit) {
+          case 'days':
+            numberOfInstallments = freq == 'daily'
+                ? effectiveTenureValue
+                : (effectiveTenureValue / (freq == 'weekly' ? 7 : 30)).round();
             break;
-          case 'weekly':
-            numberOfInstallments = (tenureMonths * 30 / 7).round();
+          case 'weeks':
+            numberOfInstallments = freq == 'daily'
+                ? effectiveTenureValue * 7
+                : effectiveTenureValue;
             break;
-          case 'yearly':
-            numberOfInstallments = (tenureMonths / 12).round().clamp(1, 100);
+          case 'years':
+            numberOfInstallments = freq == 'daily'
+                ? effectiveTenureValue * 365
+                : freq == 'weekly'
+                    ? (effectiveTenureValue * 52)
+                    : effectiveTenureValue * 12;
             break;
-          default: // monthly
-            numberOfInstallments = tenureMonths;
+          default: // months
+            switch (freq) {
+              case 'daily':
+                numberOfInstallments = effectiveTenureValue * 30;
+                break;
+              case 'weekly':
+                numberOfInstallments = (effectiveTenureValue * 30 / 7).round();
+                break;
+              case 'yearly':
+                numberOfInstallments = (effectiveTenureValue / 12).round().clamp(1, 100);
+                break;
+              default:
+                numberOfInstallments = effectiveTenureValue;
+            }
         }
 
         // Recalculate EMI for the actual number of installments

@@ -638,10 +638,14 @@ class _StaffTodayPaymentsPageState
     final today = now.toIso8601String().split('T').first;
 
     if (payment.type == PaymentType.savings) {
+      final planId = payment.id.endsWith('_today')
+          ? payment.id.substring(0, payment.id.length - 6)
+          : payment.id;
+
       // 1. Record collection log
       await client.from('savings_collections').insert({
         'org_id': profile.orgId,
-        'savings_plan_id': payment.id,
+        'savings_plan_id': planId,
         'member_id': payment.memberId,
         'member_name': payment.memberName,
         'member_phone': payment.memberPhone,
@@ -660,7 +664,7 @@ class _StaffTodayPaymentsPageState
       final plan = await client
           .from('savings_plans')
           .select('collection_type, collection_day_of_week, collection_day_of_month, current_amount')
-          .eq('id', payment.id)
+          .eq('id', planId)
           .maybeSingle();
 
       DateTime nextDue;
@@ -690,13 +694,13 @@ class _StaffTodayPaymentsPageState
         'next_due_date': nextDue.toIso8601String().split('T').first,
         'current_amount': currentBalance + amount,
         'updated_at': now.toIso8601String(),
-      }).eq('id', payment.id);
+      }).eq('id', planId);
 
       // 4. Transaction record
       await client.from('transactions').insert({
         'member_id': payment.memberId,
         'member_name': payment.memberName,
-        'savings_id': payment.id,
+        'savings_id': planId,
         'amount': amount,
         'type': 'savingsDeposit',
         'payment_mode': paymentMode,
@@ -1286,7 +1290,7 @@ class _StaffTodayPaymentsPageState
             child: _StatCard(
               icon: Icons.warning_amber_rounded,
               label: 'Overdue',
-              value: currencyFormat.format(summary.totalPending),
+              value: currencyFormat.format(summary.totalOverdue),
               count: '${summary.countOverdue}',
               color: AppColors.error,
               isDark: isDark,

@@ -351,6 +351,8 @@ class LoansRepository {
         final double loanEmiAmount = (updatedRow['emi_amount'] as num?)?.toDouble() ?? 0.0;
         final String? memberId = (updatedRow['member_id'] ?? updatedRow['customer_id'])?.toString();
         final String? loanFrequency = updatedRow['frequency'] as String?;
+        final int? loanTenureValue = updatedRow['tenure_value'] as int?;
+        final String? loanTenureUnit = updatedRow['tenure_unit'] as String?;
         final DateTime startDate = (updatedRow['first_emi_date'] ?? updatedRow['first_installment_date']) != null
             ? DateTime.parse((updatedRow['first_emi_date'] ?? updatedRow['first_installment_date']) as String)
             : DateTime.now();
@@ -366,6 +368,8 @@ class LoansRepository {
           emiAmount: loanEmiAmount,
           memberId: memberId,
           frequency: loanFrequency,
+          tenureValue: loanTenureValue,
+          tenureUnit: loanTenureUnit,
         );
       } catch (_) {
         // EMI regeneration failure should not block the loan update

@@ -414,6 +414,8 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
           emiAmount: state.estimatedInstallment,
           memberId: state.borrowerId,
           frequency: state.collectionType.name,
+          tenureValue: state.tenureValue,
+          tenureUnit: state.tenureUnit.name,
         );
       } catch (e) {
         debugPrint('Warning: EMI schedule generation failed: $e');

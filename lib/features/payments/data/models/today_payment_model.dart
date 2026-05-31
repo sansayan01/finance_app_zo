@@ -131,6 +131,7 @@ class TodayPaymentSummary {
   final double totalDue;
   final double totalCollected;
   final double totalPending;
+  final double totalOverdue;
   final double totalPenalty;
   final int countDue;
   final int countCollected;
@@ -141,6 +142,7 @@ class TodayPaymentSummary {
     required this.totalDue,
     required this.totalCollected,
     required this.totalPending,
+    required this.totalOverdue,
     required this.totalPenalty,
     required this.countDue,
     required this.countCollected,
@@ -158,6 +160,7 @@ class TodayPaymentSummary {
     double totalDue = 0;
     double totalCollected = 0;
     double totalPending = 0;
+    double totalOverdue = 0;
     double totalPenalty = 0;
     int countDue = 0;
     int countCollected = 0;
@@ -171,7 +174,7 @@ class TodayPaymentSummary {
         totalCollected += p.amountCollected ?? p.amountExpected;
         countCollected++;
       } else if (p.isOverdue) {
-        totalPending += p.amountExpected;
+        totalOverdue += p.amountExpected;
         countOverdue++;
       } else {
         totalPending += p.amountExpected;
@@ -184,6 +187,7 @@ class TodayPaymentSummary {
       totalDue: totalDue,
       totalCollected: totalCollected,
       totalPending: totalPending,
+      totalOverdue: totalOverdue,
       totalPenalty: totalPenalty,
       countDue: countDue,
       countCollected: countCollected,

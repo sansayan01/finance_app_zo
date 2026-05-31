@@ -8,6 +8,7 @@ class CustomerSavingsModel {
   final int? tenureMonths;
   final DateTime? maturityDate;
   final String status;
+  final String collectionType;
 
   CustomerSavingsModel({
     required this.id,
@@ -19,6 +20,7 @@ class CustomerSavingsModel {
     this.tenureMonths,
     this.maturityDate,
     required this.status,
+    this.collectionType = 'monthly',
   });
 
   factory CustomerSavingsModel.fromJson(Map<String, dynamic> json) {
@@ -34,7 +36,23 @@ class CustomerSavingsModel {
           ? DateTime.tryParse(json['maturity_date'].toString())
           : null,
       status: json['status']?.toString() ?? 'active',
+      collectionType: json['collection_type']?.toString() ?? 'monthly',
     );
+  }
+
+  /// Display label for the collection frequency
+  String get frequencyLabel {
+    switch (collectionType) {
+      case 'daily':
+        return 'Daily';
+      case 'weekly':
+        return 'Weekly';
+      case 'yearly':
+        return 'Yearly';
+      case 'monthly':
+      default:
+        return 'Monthly';
+    }
   }
 
   String get displayName => planName ?? 'Savings Account';

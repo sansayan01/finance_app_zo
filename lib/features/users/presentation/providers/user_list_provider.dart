@@ -264,6 +264,8 @@ class UserAdminNotifier extends StateNotifier<AsyncValue<void>> {
     for (final tab in UserHubTab.values) {
       // Force the StateNotifier to rebuild + reload page 1.
       _ref.invalidate(userHubPageProvider(tab));
+      // Explicitly trigger a reload on the new notifier instance
+      _ref.read(userHubPageProvider(tab).notifier).loadFirstPage();
     }
   }
 
@@ -380,6 +382,7 @@ class UserListNotifier extends StateNotifier<AsyncValue<List<ProfileModel>>> {
       _ref.invalidate(userStatsProvider);
       for (final tab in UserHubTab.values) {
         _ref.invalidate(userHubPageProvider(tab));
+        _ref.read(userHubPageProvider(tab).notifier).loadFirstPage();
       }
     } catch (e) {
       rethrow;

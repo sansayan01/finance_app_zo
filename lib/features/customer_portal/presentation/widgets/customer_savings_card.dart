@@ -140,7 +140,7 @@ class CustomerSavingsCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Monthly: \u20b9${savings.monthlyDeposit.toStringAsFixed(0)}',
+                        '${savings.frequencyLabel}: \u20b9${savings.monthlyDeposit.toStringAsFixed(0)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.success.withValues(
                             alpha: isDark ? 0.8 : 0.7,

@@ -686,14 +686,62 @@ class UserRepository {
 
     final userId = profile?['user_id'] as String?;
 
-    await _client.from('profiles').delete().eq('id', id);
+    // Find and soft-delete the linked member record
+    try {
+      final member = await _client
+          .from('members')
+          .select('id')
+          .eq('profile_id', id)
+          .maybeSingle();
+      if (member != null) {
+        final memberId = member['id'] as String;
+        // Nullify savings member_id to avoid cascade delete
+        await _client
+            .from('savings')
+            .update({'member_id': null})
+            .eq('member_id', memberId);
+        // Try hard delete first, fall back to soft-delete (RLS workaround)
+        final deletedMember = await _client
+            .from('members')
+            .delete()
+            .eq('id', memberId)
+            .select();
+        if (deletedMember.isEmpty && memberId.isNotEmpty) {
+          // RLS blocked the delete → set kyc_status to mark as removed
+          await _client
+              .from('members')
+              .update({'kyc_status': 'rejected'})
+              .eq('id', memberId);
+        }
+      }
+    } catch (_) {
+      // Members record may not exist — that's fine
+    }
+
+    // Try hard delete first (subject to RLS)
+    final deleted = await _client
+        .from('profiles')
+        .delete()
+        .eq('id', id)
+        .select();
+
+    if (deleted.isEmpty) {
+      // Hard delete blocked by RLS → soft-delete by setting status.
+      // The Team tab already excludes inactive/suspended users via
+      // excludeStatuses: {suspended, inactive} in user_list_provider.dart.
+      // The user will appear in the Suspended tab for admin review.
+      await _client
+          .from('profiles')
+          .update({'status': 'inactive'})
+          .eq('id', id);
+    }
 
     if (userId != null) {
       try {
         await _client.functions
             .invoke('delete-user', body: {'user_id': userId});
       } catch (_) {
-        // Ignore — profile already deleted.
+        // Edge function may not be deployed yet — that's fine.
       }
     }
   }

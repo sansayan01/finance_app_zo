@@ -101,7 +101,9 @@ class UserRepository {
           .from('profiles')
           .select('*, branch:branches!branch_id(id, name)')
           .eq('org_id', _orgId)
-          .eq('role', 'customer');
+          .eq('role', 'customer')
+          .not('status', 'eq', 'inactive')
+          .not('status', 'eq', 'suspended');
 
       if (branchId != null && branchId.isNotEmpty) {
         profileQuery = profileQuery.eq('branch_id', branchId);
@@ -130,7 +132,8 @@ class UserRepository {
         var membersQuery = _client
             .from('members')
             .select('*, branch:branches(id, name)')
-            .eq('org_id', _orgId);
+            .eq('org_id', _orgId)
+            .not('kyc_status', 'eq', 'rejected');
 
         if (branchId != null && branchId.isNotEmpty) {
           membersQuery = membersQuery.eq('branch_id', branchId);
@@ -688,10 +691,17 @@ class UserRepository {
 
     // Find and soft-delete the linked member record
     try {
-      final member = await _client
+      // First try to find member by profile_id, then by member's own id
+      // (Customers tab passes member.id directly)
+      var member = await _client
           .from('members')
           .select('id')
           .eq('profile_id', id)
+          .maybeSingle();
+      member ??= await _client
+          .from('members')
+          .select('id')
+          .eq('id', id)
           .maybeSingle();
       if (member != null) {
         final memberId = member['id'] as String;

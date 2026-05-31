@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/storage_providers.dart';
+import '../../../../core/providers/sms_provider.dart';
+import '../../../../core/services/sms_service.dart';
 import '../services/offline_sync_engine.dart';
 
 // Sync engine provider
@@ -92,6 +95,18 @@ class SyncStatusNotifier extends StateNotifier<SyncUIState> {
       }
 
       final result = await _engine.syncAll();
+
+      // Flush pending SMS queue after successful sync
+      try {
+        final client = Supabase.instance.client;
+        final smsService = SmsService();
+        // We don't have ref here to get orgId, so try to get it from client context
+        await flushPendingSmsQueue(
+          smsService: smsService,
+          supabaseClient: client,
+          orgId: null,
+        );
+      } catch (_) {}
 
       state = state.copyWith(
         isSyncing: false,

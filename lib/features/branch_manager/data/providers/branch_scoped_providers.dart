@@ -163,6 +163,7 @@ final branchMembersProvider =
         .select('*')
         .eq('org_id', orgId)
         .eq('branch_id', branchId)
+        .not('kyc_status', 'eq', 'rejected')
         .order('full_name');
     return List<Map<String, dynamic>>.from(response as List<dynamic>);
   } catch (e) {

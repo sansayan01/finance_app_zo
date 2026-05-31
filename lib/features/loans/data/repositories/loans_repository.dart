@@ -163,10 +163,14 @@ class LoansRepository {
         .select('branch_id, full_name, agent_id')
         .eq('id', borrowerId)
         .maybeSingle();
-    final branchId = member?['branch_id'] as String?;
+    if (member == null) {
+      throw Exception(
+          'Selected borrower no longer exists. Please refresh and try again.');
+    }
+    final branchId = member['branch_id'] as String?;
 
     // Auto-assign collection agent: prefer member's agent_id, else pick one from branch
-    String? assignedAgentId = member?['agent_id'] as String?;
+    String? assignedAgentId = member['agent_id'] as String?;
     if (assignedAgentId == null && branchId != null) {
       final agent = await _client
           .from('profiles')
@@ -182,7 +186,7 @@ class LoansRepository {
     final result = await _client.from('loans').insert({
       'customer_id': borrowerId,
       'member_id': borrowerId,
-      if (member?['full_name'] != null) 'member_name': member!['full_name'],
+      if (member['full_name'] != null) 'member_name': member['full_name'],
       'loan_number': loanNumber,
       'amount': principal,
       'principal': principal,

@@ -8,8 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/sms_provider.dart';
-import '../../../../core/providers/branding_provider.dart';
-import '../../../../core/providers/org_provider.dart';
 import '../../../payments/data/models/today_payment_model.dart';
 import '../../../payments/data/providers/payment_providers.dart' show TodayPaymentData;
 import '../../../payments/data/utils/payment_export.dart';
@@ -710,7 +708,7 @@ class _StaffTodayPaymentsPageState
       });
 
       // 5. Send SMS notification (non-blocking, fire-and-forget)
-      _sendSavingsSms(
+      ref.read(collectionSmsSenderProvider).sendSavingsSms(
         memberPhone: payment.memberPhone,
         memberName: payment.memberName,
         memberId: payment.memberId,
@@ -800,13 +798,13 @@ class _StaffTodayPaymentsPageState
       });
 
       // 5. Send SMS notification (non-blocking, fire-and-forget)
-      _sendEmiSms(
+      ref.read(collectionSmsSenderProvider).sendEmiSms(
         memberPhone: payment.memberPhone,
         memberName: payment.memberName,
         memberId: payment.memberId,
         loanNumber: payment.loanNumber,
         amount: amount,
-        outstandingBalance: null, // already updated in step 3
+        outstandingBalance: null,
         staffId: profile.id,
         collectorName: profile.fullName,
       );
@@ -836,167 +834,6 @@ class _StaffTodayPaymentsPageState
       });
     } catch (e) {
       debugPrint('Failed to log activity: $e');
-    }
-  }
-
-  /// Sends SMS for savings deposit. Fire-and-forget, never blocks collection.
-  void _sendSavingsSms({
-    required String? memberPhone,
-    required String memberName,
-    required String? memberId,
-    required double amount,
-    required String? planName,
-    required double newBalance,
-    required String staffId,
-    required String collectorName,
-  }) async {
-    try {
-      if (memberPhone == null || memberPhone.isEmpty) {
-        await _logSms(
-          memberId: memberId,
-          memberPhone: memberPhone ?? '',
-          message: '',
-          status: 'skipped',
-          errorMessage: 'No phone number',
-          staffId: staffId,
-        );
-        return;
-      }
-
-      final smsService = ref.read(smsServiceProvider);
-      final branding = ref.read(brandingProvider).valueOrNull;
-      final orgName = branding?.displayName ?? 'MicroFlow Finance';
-
-      final message = smsService.buildSavingsSms(
-        amount: '\u20b9${amount.toStringAsFixed(0)}',
-        collectorName: collectorName,
-        orgName: orgName,
-        planName: planName,
-        newBalance: newBalance,
-        date: DateTime.now(),
-      );
-
-      final sent = await smsService.sendSms(
-        phoneNumber: memberPhone,
-        message: message,
-      );
-
-      await _logSms(
-        memberId: memberId,
-        memberPhone: memberPhone,
-        message: message,
-        status: sent ? 'sent' : 'failed',
-        staffId: staffId,
-        recipientName: memberName,
-      );
-    } catch (e) {
-      debugPrint('Savings SMS error: $e');
-      await _logSms(
-        memberId: memberId,
-        memberPhone: memberPhone ?? '',
-        message: '',
-        status: 'failed',
-        errorMessage: e.toString(),
-        staffId: staffId,
-      );
-    }
-  }
-
-  /// Sends SMS for EMI payment. Fire-and-forget, never blocks collection.
-  void _sendEmiSms({
-    required String? memberPhone,
-    required String memberName,
-    required String? memberId,
-    required String? loanNumber,
-    required double amount,
-    required double? outstandingBalance,
-    required String staffId,
-    required String collectorName,
-  }) async {
-    try {
-      if (memberPhone == null || memberPhone.isEmpty) {
-        await _logSms(
-          memberId: memberId,
-          memberPhone: memberPhone ?? '',
-          message: '',
-          status: 'skipped',
-          errorMessage: 'No phone number',
-          staffId: staffId,
-        );
-        return;
-      }
-
-      final smsService = ref.read(smsServiceProvider);
-      final branding = ref.read(brandingProvider).valueOrNull;
-      final orgName = branding?.displayName ?? 'MicroFlow Finance';
-
-      final balance = outstandingBalance != null
-          ? '\u20b9${outstandingBalance.toStringAsFixed(0)}'
-          : 'N/A';
-
-      final message = smsService.buildCollectionSms(
-        amount: '\u20b9${amount.toStringAsFixed(0)}',
-        collectorName: collectorName,
-        orgName: orgName,
-        loanNumber: loanNumber ?? 'N/A',
-        outstandingBalance: balance,
-        date: DateTime.now(),
-      );
-
-      final sent = await smsService.sendSms(
-        phoneNumber: memberPhone,
-        message: message,
-      );
-
-      await _logSms(
-        memberId: memberId,
-        memberPhone: memberPhone,
-        message: message,
-        status: sent ? 'sent' : 'failed',
-        staffId: staffId,
-        recipientName: memberName,
-      );
-    } catch (e) {
-      debugPrint('EMI SMS error: $e');
-      await _logSms(
-        memberId: memberId,
-        memberPhone: memberPhone ?? '',
-        message: '',
-        status: 'failed',
-        errorMessage: e.toString(),
-        staffId: staffId,
-      );
-    }
-  }
-
-  /// Logs SMS to sms_notifications table for audit trail.
-  Future<void> _logSms({
-    String? memberId,
-    required String memberPhone,
-    required String message,
-    required String status,
-    String? errorMessage,
-    required String staffId,
-    String? recipientName,
-  }) async {
-    try {
-      final client = ref.read(supabaseClientProvider);
-      final orgId = ref.read(currentOrgIdProvider);
-
-      await client.from('sms_notifications').insert({
-        'org_id': orgId,
-        'member_id': memberId,
-        'member_phone': memberPhone,
-        'recipient_phone': memberPhone,
-        'recipient_name': recipientName,
-        'collector_name': staffId,
-        'message': message,
-        'status': status,
-        'error_message': errorMessage,
-        'sent_by': staffId,
-      });
-    } catch (e) {
-      debugPrint('SMS log error: $e');
     }
   }
 

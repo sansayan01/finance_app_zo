@@ -1,0 +1,428 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../constants/app_colors.dart';
+import '../../providers/sms_config_provider.dart';
+import '../../providers/sms_provider.dart';
+import '../../widgets/glass_card.dart';
+
+class SmsSettingsPage extends ConsumerWidget {
+  const SmsSettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final config = ref.watch(smsConfigProvider);
+    final configNotifier = ref.read(smsConfigProvider.notifier);
+    final permissionAsync = ref.watch(smsPermissionProvider);
+
+    return Scaffold(
+      backgroundColor:
+          isDark ? const Color(0xFF0A0A0B) : const Color(0xFFF8F9FE),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: Icon(Icons.arrow_back_rounded,
+              color: isDark ? Colors.white70 : Colors.black87),
+        ),
+        title: Text('SMS Settings',
+            style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : Colors.black87)),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPermissionCard(theme, isDark, permissionAsync),
+              const SizedBox(height: 24),
+              GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionHeader(theme, 'Auto-Send Settings',
+                        Icons.send_rounded),
+                    const Divider(height: 1),
+                    const SizedBox(height: 4),
+                    _switchTile(
+                      theme: theme,
+                      title: 'SMS on Collection',
+                      subtitle: 'Send receipt SMS after each collection',
+                      icon: Icons.receipt_long_outlined,
+                      value: config.smsOnCollection,
+                      onChanged: (_) => configNotifier.toggleSmsOnCollection(),
+                    ),
+                    _switchTile(
+                      theme: theme,
+                      title: 'SMS on Savings Deposit',
+                      subtitle: 'Send confirmation SMS after savings deposit',
+                      icon: Icons.account_balance_wallet_outlined,
+                      value: config.smsOnSavings,
+                      onChanged: (_) => configNotifier.toggleSmsOnSavings(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionHeader(theme, 'Auto-Reminders',
+                        Icons.notifications_active_rounded),
+                    const Divider(height: 1),
+                    const SizedBox(height: 4),
+                    _switchTile(
+                      theme: theme,
+                      title: 'Due EMI Reminders',
+                      subtitle:
+                          'Auto-send reminders for due and overdue EMIs',
+                      icon: Icons.alarm_outlined,
+                      value: config.reminderEnabled,
+                      onChanged: (_) => configNotifier.toggleReminder(),
+                    ),
+                    if (config.reminderEnabled) ...[
+                      const SizedBox(height: 12),
+                      _timePickerTile(
+                        context: context,
+                        theme: theme,
+                        isDark: isDark,
+                        time: config.reminderTime,
+                        onChanged: (time) =>
+                            configNotifier.setReminderTime(time),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionHeader(theme, 'SMS History',
+                        Icons.history_rounded),
+                    const Divider(height: 1),
+                    const SizedBox(height: 4),
+                    _infoTile(
+                      theme: theme,
+                      title: 'View Sent SMS',
+                      subtitle: 'Check SMS notification audit log',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('SMS history coming in next update')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => permissionAsync.whenData((granted) {
+                    if (!granted) {
+                      openAppSettings();
+                    }
+                  }),
+                  icon: permissionAsync.when(
+                    data: (granted) => Icon(
+                      granted ? Icons.check_circle : Icons.warning_rounded,
+                      color: granted ? Colors.green : Colors.orange,
+                    ),
+                    loading: () => const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2)),
+                    error: (_, __) => const Icon(Icons.error_outline,
+                        color: Colors.red),
+                  ),
+                  label: Text(
+                    permissionAsync.when(
+                      data: (granted) =>
+                          granted ? 'SMS Permission Granted' : 'Grant SMS Permission',
+                      loading: () => 'Checking Permission...',
+                      error: (_, __) => 'Permission Error',
+                    ),
+                    style: TextStyle(
+                      color: permissionAsync.whenOrNull(
+                              data: (g) => g ? Colors.green : Colors.orange) ??
+                          Colors.grey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(
+                      color: permissionAsync.whenOrNull(
+                              data: (g) =>
+                                  g ? Colors.green : Colors.orange) ??
+                          Colors.grey,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionCard(
+      ThemeData theme, bool isDark, AsyncValue<bool> permissionAsync) {
+    return permissionAsync.when(
+      data: (granted) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: granted
+                  ? [Colors.green.shade700, Colors.green.shade500]
+                  : [Colors.orange.shade700, Colors.orange.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: (granted ? Colors.green : Colors.orange)
+                    .withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Icon(
+                granted ? Icons.sms_rounded : Icons.sms_failed_rounded,
+                color: Colors.white,
+                size: 32,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      granted ? 'SMS Ready' : 'SMS Permission Needed',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      granted
+                          ? 'SMS can be sent from this device'
+                          : 'Grant SMS permission to send reminders',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _sectionHeader(ThemeData theme, String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Text(title,
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _switchTile({
+    required ThemeData theme,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, size: 18, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5))),
+              ],
+            ),
+          ),
+          Switch.adaptive(value: value, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+
+  Widget _timePickerTile({
+    required BuildContext context,
+    required ThemeData theme,
+    required bool isDark,
+    required String time,
+    required ValueChanged<String> onChanged,
+  }) {
+    return InkWell(
+      onTap: () async {
+        final parts = time.split(':');
+        final initialHour = int.tryParse(parts[0]) ?? 8;
+        final initialMinute = int.tryParse(parts[1]) ?? 0;
+        final picked = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay(hour: initialHour, minute: initialMinute),
+        );
+        if (picked != null) {
+          onChanged(
+              '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.schedule_rounded,
+                  size: 18, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Reminder Time',
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  Text('Send reminders at this time daily',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5))),
+                ],
+              ),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                time,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                    fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoTile({
+    required ThemeData theme,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.history_rounded,
+                  size: 18, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  Text(subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5))),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -43,6 +43,17 @@ class SavingsRepository {
         nextDueDate = DateTime(now.year, now.month, now.day);
     }
 
+    // Verify member exists before insert (FK fk_splans_member → members.id)
+    final memberExists = await _client
+        .from('members')
+        .select('id')
+        .eq('id', memberId)
+        .maybeSingle();
+    if (memberExists == null) {
+      throw Exception(
+          'Selected member no longer exists. Please refresh and try again.');
+    }
+
     final insertData = <String, dynamic>{
       'member_id': memberId,
       'org_id': _orgId,

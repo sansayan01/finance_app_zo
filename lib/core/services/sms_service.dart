@@ -79,4 +79,26 @@ class SmsService {
         'Date: $dateStr $timeStr\n'
         'Thank you!';
   }
+
+  /// Build a reminder SMS for a due or overdue EMI.
+  String buildReminderSms({
+    required String memberName,
+    required String orgName,
+    required String loanNumber,
+    required double dueAmount,
+    required double? outstandingBalance,
+    required DateTime dueDate,
+    bool isOverdue = false,
+  }) {
+    final dateStr = DateFormat('dd-MMM-yyyy').format(dueDate);
+    final label = isOverdue ? 'OVERDUE' : 'DUE';
+    final bal = outstandingBalance != null
+        ? 'Balance: ₹${outstandingBalance.toStringAsFixed(0)}'
+        : '';
+    return 'Hi $memberName,\n'
+        'Your EMI of ₹${dueAmount.toStringAsFixed(0)} is $label on $dateStr.\n'
+        'Loan: $loanNumber | $bal\n'
+        '$orgName\n'
+        'Please pay on time to avoid late charges. Thank you!';
+  }
 }

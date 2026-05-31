@@ -124,6 +124,15 @@ class SettingsPageV2 extends ConsumerWidget {
                     _buildSectionHeader(theme, 'SYSTEM CONNECTIVITY'),
                     _buildMenuCard(
                       theme: theme,
+                      icon: Icons.sms_rounded,
+                      title: 'SMS & Notifications',
+                      subtitle: 'Configure auto-reminders, collection receipts, and preferences',
+                      color: Colors.green,
+                      onTap: () => context.push('/settings/sms'),
+                    ).animate().fadeIn(delay: 170.ms).slideY(begin: 0.05, end: 0),
+                    const SizedBox(height: 12),
+                    _buildMenuCard(
+                      theme: theme,
                       icon: Icons.integration_instructions_outlined,
                       title: 'Integrations & Third-Party APIs',
                       subtitle: 'Configure NVIDIA NIM, Twilio SMS alerts, WhatsApp, and SMTP',

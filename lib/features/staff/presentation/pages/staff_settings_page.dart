@@ -89,6 +89,18 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
               ], index: 1),
               const SizedBox(height: 16),
               _buildSection(
+                  theme, isDark, 'Notifications', Icons.notifications_outlined, [
+                _buildActionTile(
+                    theme,
+                    'SMS Settings',
+                    'Collection receipts, reminders, and preferences',
+                    Icons.sms_rounded,
+                    AppColors.primary, () {
+                  context.push('/staff/settings/sms');
+                }),
+              ], index: 2),
+              const SizedBox(height: 16),
+              _buildSection(
                   theme, isDark, 'Account', Icons.person_outline_rounded, [
                 _buildActionTile(
                     theme,
@@ -113,7 +125,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                     _biometricEnabled, (v) {
                   setState(() => _biometricEnabled = v);
                 }),
-              ], index: 2),
+              ], index: 3),
               const SizedBox(height: 16),
               _buildSection(
                   theme, isDark, 'Support', Icons.help_outline_rounded, [
@@ -131,7 +143,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                     Icons.bug_report_outlined,
                     Colors.orange,
                     () {}),
-              ], index: 3),
+              ], index: 4),
               const SizedBox(height: 16),
               _buildSection(
                   theme, isDark, 'About', Icons.info_outline_rounded, [
@@ -147,7 +159,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                         '-'),
                 _buildInfoTile(theme, 'Branch',
                     profileAsync.valueOrNull?.branchName ?? '-'),
-              ], index: 4),
+              ], index: 5),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,

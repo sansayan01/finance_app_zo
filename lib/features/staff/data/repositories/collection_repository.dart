@@ -525,15 +525,127 @@ class CollectionRepository {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  /// Hard delete a collection with cascade revert (executive admin only)
+  /// Hard delete a loan collection with cascade revert (executive admin only).
+  /// Tries RPC first; if it doesn't exist, falls back to client-side revert.
   Future<Map<String, dynamic>> deleteCollection(String collectionId) async {
     try {
-      final response = await _client.rpc('delete_collection', params: {
+      final response = await _client.rpc('delete_loan_collection', params: {
         'p_collection_id': collectionId,
       });
       return response as Map<String, dynamic>;
-    } catch (e) {
-      throw Exception('Failed to delete collection: $e');
+    } catch (_) {
+      // RPC not available — do a client-side revert
+      return _deleteCollectionWithRevert(collectionId);
     }
+  }
+
+  /// Client-side fallback for deleteCollection when the RPC doesn't exist.
+  /// Deletes the collection, finds and deletes the matching transaction,
+  /// unmarks the most recently paid EMIs, and restores the loan outstanding.
+  Future<Map<String, dynamic>> _deleteCollectionWithRevert(
+      String collectionId) async {
+    // 1. Fetch the collection to know what to revert
+    final collection = await _client
+        .from('collections')
+        .select('loan_id, amount_collected, member_id, org_id')
+        .eq('id', collectionId)
+        .maybeSingle();
+    if (collection == null) {
+      throw Exception('Collection not found');
+    }
+
+    final loanId = collection['loan_id'] as String?;
+    final amountCollected =
+        (collection['amount_collected'] as num?)?.toDouble() ?? 0;
+    final memberId = collection['member_id'] as String?;
+
+    // 2. Delete the collection record
+    await _client.from('collections').delete().eq('id', collectionId);
+
+    if (loanId == null || amountCollected <= 0) {
+      return {'success': true, 'fallback': true, 'note': 'no loan to revert'};
+    }
+
+    // 3. Find and delete the matching transaction (best effort)
+    try {
+      final tx = await _client
+          .from('transactions')
+          .select('id')
+          .eq('loan_id', loanId)
+          .eq('amount', amountCollected)
+          .eq('member_id', memberId ?? '')
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (tx != null) {
+        await _client.from('transactions').delete().eq('id', tx['id']);
+      }
+    } catch (_) {
+      // Non-fatal — proceed with EMI/loan revert
+    }
+
+    // 4. Unmark the most recently paid EMIs (reverse order) to undo
+    //    the effect of this collection.
+    double remaining = amountCollected;
+    final paidEmis = await _client
+        .from('emi_schedule')
+        .select('id, emi_amount')
+        .eq('loan_id', loanId)
+        .eq('is_paid', true)
+        .order('paid_on', ascending: false)
+        .order('emi_number', ascending: false);
+
+    for (final emi in paidEmis) {
+      if (remaining <= 0) break;
+      final emiAmount = (emi['emi_amount'] as num?)?.toDouble() ?? 0;
+
+      await _client.from('emi_schedule').update({
+        'is_paid': false,
+        'status': 'upcoming',
+        'paid_on': null,
+        'payment_mode': null,
+        'amount_paid': 0,
+      }).eq('id', emi['id']);
+
+      remaining -= emiAmount;
+    }
+
+    // 5. Restore loan outstanding balance
+    try {
+      final loan = await _client
+          .from('loans')
+          .select('outstanding_amount, outstanding_balance')
+          .eq('id', loanId)
+          .maybeSingle();
+
+      if (loan != null) {
+        final currentOutstanding =
+            (loan['outstanding_amount'] as num?)?.toDouble() ??
+            (loan['outstanding_balance'] as num?)?.toDouble() ??
+            0.0;
+
+        final restoredOutstanding = currentOutstanding + amountCollected;
+
+        final updateData = <String, dynamic>{
+          'outstanding_amount': restoredOutstanding,
+          'outstanding_balance': restoredOutstanding,
+        };
+        // Restore status from closed to active
+        if (loan['status'] == 'closed') {
+          updateData['status'] = 'active';
+        }
+        await _client.from('loans').update(updateData).eq('id', loanId);
+      }
+    } catch (_) {
+      // Non-fatal — best-effort revert
+    }
+
+    return {
+      'success': true,
+      'fallback': true,
+      'loan_id': loanId,
+      'restored_amount': amountCollected,
+    };
   }
 }

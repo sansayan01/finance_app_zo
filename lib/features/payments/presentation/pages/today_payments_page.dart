@@ -402,10 +402,38 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
 
   void _showQuickCollect(TodayPayment payment) {
     int installmentCount = 1;
-    final amountController = TextEditingController(
-        text: payment.amountExpected.toStringAsFixed(0));
     String selectedMode = 'cash';
     bool isSubmitting = false;
+    int overdueCount = 0;
+    bool hasCurrent = false;
+    bool dataLoaded = false;
+
+    Future<void> loadQuickCollectOverdue(StateSetter setSheetState) async {
+      if (payment.type == PaymentType.emi && payment.loanId != null) {
+        try {
+          final schedule =
+              await ref.read(emiScheduleProvider(payment.loanId!).future);
+          final today = DateTime.now();
+          final todayDate = DateTime(today.year, today.month, today.day);
+          final unpaid =
+              schedule.where((e) => e.status != EMIStatus.paid).toList();
+          if (mounted) {
+            setSheetState(() {
+              overdueCount =
+                  unpaid.where((e) => e.dueDate.isBefore(todayDate)).length;
+              hasCurrent = unpaid.length > overdueCount;
+            });
+          }
+        } catch (_) {}
+      } else if (payment.type == PaymentType.savings) {
+        if (mounted) {
+          setSheetState(() {
+            overdueCount = payment.isOverdue ? 1 : 0;
+            hasCurrent = !payment.isOverdue;
+          });
+        }
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -419,9 +447,57 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
           final currencyFormat =
               NumberFormat.currency(symbol: '₹', decimalDigits: 0);
 
-          void updateAmount() {
-            amountController.text =
-                (payment.amountExpected * installmentCount).toStringAsFixed(0);
+          // Load overdue data on first build
+          if (!dataLoaded) {
+            dataLoaded = true;
+            loadQuickCollectOverdue(setSheetState);
+          }
+
+          double totalAmount() =>
+              installmentCount * payment.amountExpected;
+
+          int overdueToPay() =>
+              installmentCount < overdueCount
+                  ? installmentCount
+                  : overdueCount;
+          int remainingAfterOverdue() =>
+              installmentCount - overdueToPay();
+          int currentToPay() =>
+              remainingAfterOverdue() > 0 && hasCurrent ? 1 : 0;
+          int advanceToPay() =>
+              remainingAfterOverdue() - currentToPay();
+
+          Widget buildDistRow(String label, String value, Color color,
+              IconData? icon,
+              {bool isTotal = false}) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 14, color: color),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: isTotal ? 13 : 12,
+                      fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
+                      color: isTotal ? Colors.black87 : Colors.grey.shade700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: isTotal ? 14 : 12,
+                      fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           return Padding(
@@ -513,7 +589,6 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                         onPressed: installmentCount > 1
                             ? () => setSheetState(() {
                                   installmentCount--;
-                                  updateAmount();
                                 })
                             : null,
                         icon: const Icon(Icons.remove_circle_outline_rounded),
@@ -545,7 +620,6 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                         onPressed: installmentCount < 12
                             ? () => setSheetState(() {
                                   installmentCount++;
-                                  updateAmount();
                                 })
                             : null,
                         icon: const Icon(Icons.add_circle_outline_rounded),
@@ -577,9 +651,10 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                         TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 const SizedBox(height: 8),
                 TextFormField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  readOnly: true,
+                  controller: TextEditingController(
+                      text: totalAmount().toStringAsFixed(0)),
+                  keyboardType: TextInputType.none,
                   decoration: InputDecoration(
                     prefixText: '\u20b9 ',
                     prefixStyle: const TextStyle(
@@ -606,6 +681,58 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Payment distribution breakdown
+                if (overdueToPay() > 0 ||
+                    currentToPay() > 0 ||
+                    advanceToPay() > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text('Payment Distribution',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 12)),
+                        const SizedBox(height: 10),
+                        if (overdueToPay() > 0)
+                          buildDistRow(
+                              '${overdueToPay()} Overdue',
+                              currencyFormat.format(
+                                  overdueToPay() * payment.amountExpected),
+                              AppColors.error,
+                              Icons.warning_amber_rounded),
+                        if (currentToPay() > 0)
+                          buildDistRow(
+                              '${currentToPay()} Current',
+                              currencyFormat.format(
+                                  currentToPay() * payment.amountExpected),
+                              AppColors.warning,
+                              Icons.schedule_rounded),
+                        if (advanceToPay() > 0)
+                          buildDistRow(
+                              '${advanceToPay()} Advance',
+                              currencyFormat.format(
+                                  advanceToPay() * payment.amountExpected),
+                              AppColors.info,
+                              Icons.trending_up_rounded),
+                        const Divider(height: 20),
+                        buildDistRow(
+                          'Total',
+                          currencyFormat.format(totalAmount()),
+                          AppColors.success,
+                          null,
+                          isTotal: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 // Payment mode
                 const Text('Payment Mode',
@@ -679,9 +806,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                         onPressed: isSubmitting
                             ? null
                             : () async {
-                                final amount = double.tryParse(
-                                        amountController.text) ??
-                                    0;
+                                final amount = totalAmount();
                                 if (amount <= 0) {
                                   ScaffoldMessenger.of(context)
                                       .showSnackBar(const SnackBar(
@@ -765,7 +890,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                         label: Text(
                           isSubmitting
                               ? 'Processing...'
-                              : 'Collect ${currencyFormat.format(double.tryParse(amountController.text) ?? 0)}',
+                              : 'Collect ${currencyFormat.format(totalAmount())}',
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
@@ -1695,10 +1820,6 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       );
     }
 
-    final userRole = ref.watch(currentUserProvider)?.role;
-    final isExecAdmin =
-        userRole == UserRole.executiveAdmin || userRole == UserRole.superAdmin;
-
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(todayPaymentsProvider);
@@ -1719,103 +1840,11 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
             onCollect: !p.isCollected
                 ? () => _showQuickCollect(p)
                 : null,
-            onDelete: (isExecAdmin && p.isCollected && p.collectionId != null)
-                ? () => _deleteCollection(p)
-                : null,
+
           );
         },
       ),
     );
-  }
-
-  Future<void> _deleteCollection(TodayPayment payment) async {
-    if (payment.collectionId == null) return;
-
-    final currencyFormat =
-        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.delete_forever_rounded, color: AppColors.error),
-            SizedBox(width: 10),
-            Text('Delete Collection'),
-          ],
-        ),
-        content: Text(
-          'Are you sure you want to delete this collection of '
-          '${currencyFormat.format(payment.amountCollected ?? payment.amountExpected)}? '
-          'This will revert the outstanding amount and cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      final repo = ref.read(collectionRepositoryProvider);
-      await repo.deleteCollection(payment.collectionId!);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'Collection of ${currencyFormat.format(payment.amountCollected ?? payment.amountExpected)} deleted'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
-      }
-
-      // Refresh all relevant providers
-      ref.invalidate(todayPaymentsProvider);
-      ref.invalidate(todayCollectionsProvider);
-      ref.invalidate(todayCollectionStatsProvider);
-      ref.invalidate(todayDueEmisProvider);
-      ref.invalidate(dashboardLoansProvider);
-      ref.invalidate(loanSummaryProvider);
-      ref.invalidate(todayStatsProvider);
-      ref.invalidate(todayAgendaProvider);
-      if (payment.loanId != null) {
-        ref.invalidate(loansProvider);
-        ref.invalidate(loanDetailProvider(payment.loanId!));
-        ref.invalidate(emiScheduleProvider(payment.loanId!));
-        ref.invalidate(paymentHistoryProvider(payment.loanId!));
-      }
-      if (payment.type == PaymentType.savings) {
-        ref.invalidate(allSavingsProvider);
-        ref.invalidate(savingsSummaryProvider);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Delete failed: $e'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
-      }
-    }
   }
 
   Future<void> _makePhoneCall(String phone) async {
@@ -2150,8 +2179,6 @@ class _PaymentCard extends StatelessWidget {
   final VoidCallback onRemind;
   final VoidCallback onTap;
   final VoidCallback? onCollect;
-  final VoidCallback? onDelete;
-
   const _PaymentCard({
     required this.payment,
     required this.isDark,
@@ -2159,7 +2186,6 @@ class _PaymentCard extends StatelessWidget {
     required this.onRemind,
     required this.onTap,
     this.onCollect,
-    this.onDelete,
   });
 
   @override
@@ -2302,7 +2328,7 @@ class _PaymentCard extends StatelessWidget {
               ),
 
               // Overdue + action buttons
-              if (payment.isOverdue || !payment.isCollected || onDelete != null) ...[
+              if (payment.isOverdue || !payment.isCollected) ...[
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -2332,12 +2358,6 @@ class _PaymentCard extends StatelessWidget {
                         ),
                       ),
                     const Spacer(),
-                    if (onDelete != null && payment.isCollected)
-                      _CompactAction(
-                        icon: Icons.delete_outline_rounded,
-                        color: AppColors.error,
-                        onTap: onDelete!,
-                      ),
                     if (!payment.isCollected) ...[
                       if (onCall != null)
                         _CompactAction(

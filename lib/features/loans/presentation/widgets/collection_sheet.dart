@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_spacing.dart';
+import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/utils/formatters.dart';
-import '../providers/loan_providers.dart';
-import '../../data/models/emi_schedule_model.dart';
-import '../../data/models/loan_model.dart';
+import '../../../../core/widgets/payment_mode_chips.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
+import '../../../savings/data/providers/savings_providers.dart';
+import '../../data/models/emi_schedule_model.dart';
+import '../../data/models/loan_model.dart';
+import '../providers/loan_providers.dart';
 
 class CollectionSheet extends ConsumerStatefulWidget {
   final LoanModel loan;
@@ -26,72 +29,176 @@ class CollectionSheet extends ConsumerStatefulWidget {
 }
 
 class _CollectionSheetState extends ConsumerState<CollectionSheet> {
-  final _amountController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  PaymentMode _selectedMode = PaymentMode.cash;
+  int _installmentCount = 1;
+  String _selectedMode = 'cash';
   bool _isSubmitting = false;
+  bool _isLoadingSchedule = true;
+
+  List<EMIScheduleModel> _unpaidEMIs = [];
+  int _overdueCount = 0;
+  bool _hasCurrent = false;
 
   @override
   void initState() {
     super.initState();
-    _amountController.text = widget.emi?.emiAmount.toStringAsFixed(2) ??
-        widget.loan.emiAmount.toStringAsFixed(2);
+    _loadSchedule();
   }
+
+  Future<void> _loadSchedule() async {
+    try {
+      final schedule =
+          await ref.read(emiScheduleProvider(widget.loan.id).future);
+      final today = DateTime.now();
+      // Strip time so we compare dates only (dueDate is midnight, today has time)
+      final todayDate = DateTime(today.year, today.month, today.day);
+      final unpaid = schedule
+          .where((e) => e.status != EMIStatus.paid)
+          .toList()
+        ..sort((a, b) => a.emiNumber.compareTo(b.emiNumber));
+
+      if (mounted) {
+        setState(() {
+          _unpaidEMIs = unpaid;
+          _overdueCount =
+              unpaid.where((e) => e.dueDate.isBefore(todayDate)).length;
+          _hasCurrent = unpaid.length > _overdueCount;
+          _isLoadingSchedule = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingSchedule = false);
+      }
+    }
+  }
+
+  int get _overdueToPay =>
+      _installmentCount < _overdueCount
+          ? _installmentCount
+          : _overdueCount;
+
+  int get _remainingAfterOverdue => _installmentCount - _overdueToPay;
+
+  int get _currentToPay =>
+      _remainingAfterOverdue > 0 && _hasCurrent ? 1 : 0;
+
+  int get _advanceToPay => _remainingAfterOverdue - _currentToPay;
+
+  double get _totalAmount => _installmentCount * widget.loan.emiAmount;
 
   @override
   void dispose() {
-    _amountController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSubmitting = true);
     HapticFeedback.mediumImpact();
 
     try {
-      final repository = ref.read(emiRepositoryProvider);
+      final client = Supabase.instance.client;
       final user = ref.read(currentUserProvider);
+      if (user == null || user.orgId == null) {
+        throw Exception('User not found');
+      }
 
-      final amount = double.tryParse(_amountController.text) ?? 0;
-      if (amount <= 0) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please enter a valid amount')),
-          );
+      final profile = await client
+          .from('profiles')
+          .select('id, full_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      final staffId = profile?['id'] as String?;
+      if (staffId == null) {
+        throw Exception('Staff profile not found');
+      }
+      final now = DateTime.now();
+      final today = now.toIso8601String().split('T').first;
+      final amount = _totalAmount;
+      final installmentCount = _installmentCount;
+
+      // 1. Record collection log
+      await client.from('collections').insert({
+        'org_id': user.orgId!,
+        'staff_id': staffId,
+        'loan_id': widget.loan.id,
+        'member_id': widget.loan.memberId,
+        'member_name': widget.loan.customerName ?? 'Unknown',
+        'member_phone': widget.loan.customerPhone,
+        'loan_number': widget.loan.loanNumber,
+        'amount_expected': widget.loan.emiAmount * installmentCount,
+        'amount_collected': amount,
+        'is_partial': false,
+        'collection_type': 'emi',
+        'payment_mode': _selectedMode,
+        'collection_date': today,
+        'collection_time':
+            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
+        'sync_status': 'synced',
+      });
+
+      // 2. Transaction record (trigger handles EMI marking)
+      await client.from('transactions').insert({
+        'loan_id': widget.loan.id,
+        'member_id': widget.loan.memberId,
+        'member_name': widget.loan.customerName ?? 'Unknown',
+        'type': TransactionType.emiPayment.name,
+        'amount': amount,
+        'payment_mode': _selectedMode,
+        'description': installmentCount > 1
+            ? '$installmentCount EMIs paid via $_selectedMode'
+            : 'EMI payment via $_selectedMode',
+        'org_id': user.orgId!,
+        'created_at': now.toIso8601String(),
+      });
+
+      // 3. Update loan balance
+      final loanResp = await client
+          .from('loans')
+          .select('outstanding_amount, outstanding_balance')
+          .eq('id', widget.loan.id)
+          .maybeSingle();
+
+      if (loanResp != null) {
+        final currentBalance =
+            ((loanResp['outstanding_amount'] ?? loanResp['outstanding_balance'])
+                    as num?)
+                ?.toDouble() ?? 0;
+        final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
+
+        final updateData = <String, dynamic>{
+          'outstanding_amount': newBalance,
+          'outstanding_balance': newBalance,
+          'updated_at': now.toIso8601String(),
+        };
+
+        if (newBalance <= 0) {
+          updateData['status'] = 'closed';
+          updateData['closed_date'] = today;
         }
-        return;
+
+        await client.from('loans').update(updateData).eq('id', widget.loan.id);
       }
 
-      if (widget.emi != null) {
-        // Record payment against specific EMI
-        await repository.recordPayment(
-          emiId: widget.emi!.id,
-          loanId: widget.loan.id,
-          amount: amount,
-          paymentMode: _selectedMode.name,
-          notes: _notesController.text.trim().isEmpty
-              ? null
-              : _notesController.text.trim(),
-          agentId: user?.id,
-        );
-      } else {
-        // Record payment without EMI schedule (manual collection)
-        await repository.recordManualPayment(
-          loanId: widget.loan.id,
-          amount: amount,
-          paymentMode: _selectedMode.name,
-          notes: _notesController.text.trim().isEmpty
-              ? null
-              : _notesController.text.trim(),
-          agentId: user?.id,
-        );
-      }
+      // 4. Activity log
+      try {
+        await client.from('activity_logs').insert({
+          'org_id': user.orgId!,
+          'staff_id': staffId,
+          'action': 'collection_recorded',
+          'entity_type': 'collection',
+          'entity_id': widget.loan.id,
+          'details':
+              'Collected Rs${amount.toStringAsFixed(0)} from ${widget.loan.customerName}',
+          'metadata': {
+            'amount': amount,
+            'installment_count': installmentCount,
+            'payment_mode': _selectedMode,
+          },
+          'created_at': now.toIso8601String(),
+        });
+      } catch (_) {}
 
-      // Invalidate providers to refresh UI
+      // 5. Invalidate providers
       ref.invalidate(emiScheduleProvider(widget.loan.id));
       ref.invalidate(loanDetailProvider(widget.loan.id));
       ref.invalidate(paymentHistoryProvider(widget.loan.id));
@@ -99,19 +206,21 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       ref.invalidate(dashboardLoansProvider);
       ref.invalidate(activeLoansProvider);
       ref.invalidate(loanSummaryProvider);
+      ref.invalidate(allSavingsProvider);
 
       if (mounted) {
-        final scaffoldMessenger = ScaffoldMessenger.of(context);
-        Navigator.pop(context);
         HapticFeedback.heavyImpact();
-        scaffoldMessenger.showSnackBar(
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Collected ${AppFormatters.formatCurrency(amount)} successfully'),
-            backgroundColor: Colors.green,
+              '${installmentCount > 1 ? '$installmentCount installments \u00b7 ' : ''}'
+              '\u20b9${amount.toStringAsFixed(0)} collected from ${widget.loan.customerName}',
+            ),
+            backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -121,10 +230,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Collection failed: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -136,303 +245,445 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
 
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom +
             MediaQuery.of(context).padding.bottom +
-            AppSpacing.xxl +
-            20, // Extra buffer for custom bottom bars
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.xl,
+            20,
+        left: 20,
+        right: 20,
+        top: 12,
       ),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: AppColors.successGradient,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.payment_rounded,
+                    color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Quick Collect',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
                     Text(
-                      widget.emi != null
-                          ? 'Collect Installment'
-                          : 'Collect Payment',
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w900),
+                      '${widget.loan.customerName} \u00b7 ${widget.loan.loanNumber}'
+                      '${widget.loan.emiAmount > 0 ? ' \u00b7 EMI \u20b9${widget.loan.emiAmount.toStringAsFixed(0)}' : ''}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Info row
+          if (!_isLoadingSchedule) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.12)),
+              ),
+              child: Row(
+                children: [
+                  if (_overdueCount > 0) ...[
+                    const Icon(Icons.warning_amber_rounded,
+                        size: 16, color: AppColors.error),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$_overdueCount overdue',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.error,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(width: 1, height: 14, color: Colors.grey.shade300),
+                    const SizedBox(width: 12),
+                  ],
+                  Text(
+                    'EMI \u20b9${widget.loan.emiAmount.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_unpaidEMIs.isNotEmpty) ...[
+                    Text(
+                      '${_unpaidEMIs.length} remaining',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ] else ...[
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Installment count selector
+          const Text('Number of Installments',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: _installmentCount > 1
+                      ? () => setState(() {
+                            _installmentCount--;
+                          })
+                      : null,
+                  icon:
+                      const Icon(Icons.remove_circle_outline_rounded),
+                  color: AppColors.primary,
+                  disabledColor: Colors.grey.shade300,
+                ),
+                Column(
+                  children: [
+                    Text(
+                      '$_installmentCount',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
                     ),
                     Text(
-                      widget.emi != null
-                          ? 'EMI #${widget.emi!.emiNumber} · ${widget.loan.loanNumber}'
-                          : '${widget.loan.loanNumber} · Manual Collection',
-                      style: theme.textTheme.bodySmall,
+                      _installmentCount == 1
+                          ? 'installment'
+                          : 'installments',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
                 IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
+                  onPressed: _installmentCount < 12
+                      ? () => setState(() {
+                            _installmentCount++;
+                          })
+                      : null,
+                  icon: const Icon(Icons.add_circle_outline_rounded),
+                  color: AppColors.primary,
+                  disabledColor: Colors.grey.shade300,
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xl),
-
-            // EMI Info Card or Loan Info Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: primary.withValues(alpha: 0.15)),
-              ),
-              child: widget.emi != null
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Due Date',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${widget.emi!.dueDate.day}/${widget.emi!.dueDate.month}/${widget.emi!.dueDate.year}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'Expected Amount',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AppFormatters.formatCurrency(
-                                  widget.emi!.emiAmount),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Outstanding Balance',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AppFormatters.formatCurrency(
-                                  widget.loan.status == LoanStatus.closed
-                                      ? 0.0
-                                      : widget.loan.outstandingBalance),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'EMI Amount',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AppFormatters.formatCurrency(
-                                  widget.loan.emiAmount),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            Text(
-              'COLLECTION AMOUNT',
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: 1),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-              style: theme.textTheme.headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.w900, color: primary),
-              decoration: InputDecoration(
-                prefixText: '₹ ',
-                prefixStyle: theme.textTheme.headlineSmall
-                    ?.copyWith(color: primary, fontWeight: FontWeight.w900),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.3),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Colors.red),
+          ),
+          if (_installmentCount > 1) ...[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                '$_installmentCount \u00d7 ${currencyFormat.format(widget.loan.emiAmount)} = ${currencyFormat.format(_totalAmount)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
                 ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter amount';
-                }
-                final amount = double.tryParse(value);
-                if (amount == null || amount <= 0) {
-                  return 'Enter a valid amount';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'PAYMENT MODE',
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: 1),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildModeOption(PaymentMode.cash, Icons.payments_outlined),
-                const SizedBox(width: 12),
-                _buildModeOption(PaymentMode.upi, Icons.qr_code_2_rounded),
-                const SizedBox(width: 12),
-                _buildModeOption(
-                    PaymentMode.bankTransfer, Icons.account_balance_rounded),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'NOTES (OPTIONAL)',
-              style: theme.textTheme.labelSmall
-                  ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: 1),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _notesController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                hintText: 'Add a note about this collection...',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Confirm Collection',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 16)),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
+          const SizedBox(height: 20),
 
-  Widget _buildModeOption(PaymentMode mode, IconData icon) {
-    final isSelected = _selectedMode == mode;
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedMode = mode),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? primary.withValues(alpha: 0.1)
-                : Colors.transparent,
-            border: Border.all(
-              color: isSelected
-                  ? primary
-                  : theme.dividerColor.withValues(alpha: 0.2),
-              width: 2,
+          // Read-only total amount
+          const Text('Total Amount',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 8),
+          TextFormField(
+            readOnly: true,
+            controller: TextEditingController(
+                text: _totalAmount.toStringAsFixed(0)),
+            keyboardType: TextInputType.none,
+            decoration: InputDecoration(
+              prefixText: '\u20b9 ',
+              prefixStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.success,
+                fontSize: 20,
+              ),
+              hintText: 'Amount',
+              filled: true,
+              fillColor: AppColors.success.withValues(alpha: 0.06),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(
+                    color: AppColors.success, width: 2),
+              ),
             ),
-            borderRadius: BorderRadius.circular(16),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-          child: Column(
+          const SizedBox(height: 20),
+
+          // Distribution breakdown
+          if (!_isLoadingSchedule && (_overdueToPay > 0 || _currentToPay > 0 || _advanceToPay > 0)) ...[
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  const Text('Payment Distribution',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 12)),
+                  const SizedBox(height: 10),
+                  if (_overdueToPay > 0)
+                    _buildDistributionRow(
+                        '$_overdueToPay Overdue',
+                        currencyFormat.format(
+                            _overdueToPay * widget.loan.emiAmount),
+                        AppColors.error,
+                        Icons.warning_amber_rounded),
+                  if (_currentToPay > 0)
+                    _buildDistributionRow(
+                        '$_currentToPay Current',
+                        currencyFormat.format(
+                            _currentToPay * widget.loan.emiAmount),
+                        AppColors.warning,
+                        Icons.schedule_rounded),
+                  if (_advanceToPay > 0)
+                    _buildDistributionRow(
+                        '$_advanceToPay Advance',
+                        currencyFormat.format(
+                            _advanceToPay * widget.loan.emiAmount),
+                        AppColors.info,
+                        Icons.trending_up_rounded),
+                  const Divider(height: 20),
+                  _buildDistributionRow(
+                    'Total',
+                    currencyFormat.format(_totalAmount),
+                    AppColors.success,
+                    null,
+                    isTotal: true,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          // Payment mode chips
+          const Text('Payment Mode',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 10),
+          Row(
             children: [
-              Icon(icon,
-                  color: isSelected ? primary : theme.colorScheme.onSurface,
-                  size: 24),
-              const SizedBox(height: 8),
-              Text(
-                mode.name.toUpperCase(),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: isSelected ? primary : theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w900,
+              Expanded(
+                child: PaymentModeChip(
+                  icon: Icons.money_rounded,
+                  label: 'Cash',
+                  isSelected: _selectedMode == 'cash',
+                  onTap: () => setState(() => _selectedMode = 'cash'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PaymentModeChip(
+                  icon: Icons.qr_code_rounded,
+                  label: 'UPI',
+                  isSelected: _selectedMode == 'upi',
+                  onTap: () => setState(() => _selectedMode = 'upi'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PaymentModeChip(
+                  icon: Icons.account_balance_rounded,
+                  label: 'Bank',
+                  isSelected: _selectedMode == 'bank_transfer',
+                  onTap: () => setState(
+                      () => _selectedMode = 'bank_transfer'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PaymentModeChip(
+                  icon: Icons.receipt_rounded,
+                  label: 'Cheque',
+                  isSelected: _selectedMode == 'cheque',
+                  onTap: () =>
+                      setState(() => _selectedMode = 'cheque'),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: _isSubmitting
+                      ? null
+                      : _submit,
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.check_circle_rounded,
+                          size: 18),
+                  label: Text(
+                    _isSubmitting
+                        ? 'Processing...'
+                        : 'Collect ${currencyFormat.format(_totalAmount)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(0, 52),
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistributionRow(String label, String value, Color color,
+      IconData? icon,
+      {bool isTotal = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isTotal ? 13 : 12,
+              fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
+              color: isTotal ? Colors.black87 : Colors.grey.shade700,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: isTotal ? 14 : 12,
+              fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
+              color: isTotal ? color : color,
+            ),
+          ),
+        ],
       ),
     );
   }

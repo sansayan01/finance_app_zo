@@ -11,7 +11,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/payment_mode_chips.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/providers/org_provider.dart';
@@ -41,6 +43,11 @@ class SavingDetailPage extends ConsumerStatefulWidget {
 class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<double> _scrollOffset = ValueNotifier<double>(0);
+
+  // Dialog state variables (persist across StatefulBuilder rebuilds)
+  int _depositInstallmentCount = 1;
+  String _depositSelectedMode = 'cash';
+  bool _depositIsSubmitting = false;
 
   @override
   void initState() {
@@ -953,136 +960,684 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   void _showDepositDialog(SavingsModel saving) {
-    final controller =
-        TextEditingController(text: saving.monthlyDeposit.toString());
-    showDialog(
+    final perInstallmentAmount = saving.monthlyDeposit;
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+
+    // Reset dialog state
+    _depositInstallmentCount = 1;
+    _depositSelectedMode = 'cash';
+    _depositIsSubmitting = false;
+
+    final now = DateTime.now();
+    // Strip time so we compare dates only (nextDueDate is midnight, now has time)
+    final todayDate = DateTime(now.year, now.month, now.day);
+    int overdueCount = 0;
+    if (saving.nextDueDate != null && saving.nextDueDate!.isBefore(todayDate)) {
+      switch (saving.collectionType.toLowerCase()) {
+        case 'daily':
+          overdueCount = now.difference(saving.nextDueDate!).inDays;
+          break;
+        case 'weekly':
+          overdueCount =
+              (now.difference(saving.nextDueDate!).inDays / 7).floor();
+          break;
+        case 'monthly':
+        default:
+          overdueCount = (now.year - saving.nextDueDate!.year) * 12 +
+              (now.month - saving.nextDueDate!.month);
+          if (overdueCount < 0) overdueCount = 0;
+          break;
+      }
+    }
+    final hasCurrent = overdueCount >= 0;
+
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        bool isSubmitting = false;
-        bool isSuccess = false;
-        
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: isSuccess 
-                  ? null 
-                  : const Text('Record Deposit', style: TextStyle(fontWeight: FontWeight.w800)),
-              content: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: isSuccess
-                    ? Padding(
-                        key: const ValueKey('success'),
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 64),
-                            ),
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Deposit Successful',
-                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '₹${controller.text} added to vault.',
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
-                            ),
-                          ],
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          double totalAmount() =>
+              _depositInstallmentCount * perInstallmentAmount;
+
+          int overdueToPay() =>
+              _depositInstallmentCount < overdueCount
+                  ? _depositInstallmentCount
+                  : overdueCount;
+          int remainingAfterOverdue() =>
+              _depositInstallmentCount - overdueToPay();
+          int currentToPay() =>
+              remainingAfterOverdue() > 0 && hasCurrent ? 1 : 0;
+          int advanceToPay() =>
+              remainingAfterOverdue() - currentToPay();
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom +
+                  MediaQuery.of(ctx).padding.bottom +
+                  20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: AppColors.successGradient,
                         ),
-                      )
-                    : TextField(
-                        key: const ValueKey('input'),
-                        controller: controller,
-                        keyboardType: TextInputType.number,
-                        autofocus: true,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-                        decoration: InputDecoration(
-                          labelText: 'Amount',
-                          prefixText: '₹ ',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.savings_rounded,
+                          color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Record Deposit',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                          filled: true,
-                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${saving.memberName} \u00b7 ${saving.planName}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Info row
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.12)),
+                  ),
+                  child: Row(
+                    children: [
+                      if (overdueCount > 0) ...[
+                        const Icon(Icons.warning_amber_rounded,
+                            size: 16, color: AppColors.error),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$overdueCount overdue',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.error,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                            width: 1,
+                            height: 14,
+                            color: Colors.grey.shade300),
+                        const SizedBox(width: 12),
+                      ],
+                      Text(
+                        'Deposit \u20b9${perInstallmentAmount.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
                         ),
                       ),
-              ),
-              actions: isSuccess
-                  ? []
-                  : [
-                      TextButton(
-                          onPressed: isSubmitting ? null : () => Navigator.pop(dialogContext),
-                          child: const Text('Cancel')),
-                      ElevatedButton(
-                        onPressed: isSubmitting
-                            ? null
-                            : () async {
-                                final amount = double.tryParse(controller.text) ?? 0;
-                                if (amount <= 0) return;
-
-                                setState(() => isSubmitting = true);
-
-                                try {
-                                  await ref
-                                      .read(savingsRepositoryProvider)
-                                      .recordDeposit(widget.savingId, amount);
-
-                                  HapticFeedback.heavyImpact();
-                                  
-                                  setState(() {
-                                    isSubmitting = false;
-                                    isSuccess = true;
-                                  });
-
-                                  // Wait for user to see the success message
-                                  await Future.delayed(const Duration(milliseconds: 1800));
-
-                                  if (!mounted) return;
-                                  ref.invalidate(savingDetailProvider(widget.savingId));
-                                  ref.invalidate(savingTransactionsProvider(widget.savingId));
-                                  ref.invalidate(allSavingsProvider);
-                                  ref.invalidate(savingsSummaryProvider);
-                                  ref.invalidate(pendingDepositsProvider);
-                                  
-                                  if (dialogContext.mounted) {
-                                    Navigator.of(dialogContext).pop();
-                                  }
-                                } catch (e) {
-                                  setState(() => isSubmitting = false);
-                                  ScaffoldMessenger.of(this.context).showSnackBar(
-                                    SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
-                                  );
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
+                      const Spacer(),
+                      if (saving.nextDueDate != null)
+                        Text(
+                          'Due ${AppFormatters.formatDate(saving.nextDueDate!)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
                         ),
-                        child: isSubmitting
-                            ? const SizedBox(
-                                width: 20, 
-                                height: 20, 
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                              )
-                            : const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Installment count selector
+                const Text('Number of Installments',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: _depositInstallmentCount > 1
+                            ? () => setSheetState(
+                                () => _depositInstallmentCount--)
+                            : null,
+                        icon: const Icon(
+                            Icons.remove_circle_outline_rounded),
+                        color: AppColors.primary,
+                        disabledColor: Colors.grey.shade300,
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            '$_depositInstallmentCount',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          Text(
+                            _depositInstallmentCount == 1
+                                ? 'installment'
+                                : 'installments',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: _depositInstallmentCount < 12
+                            ? () => setSheetState(
+                                () => _depositInstallmentCount++)
+                            : null,
+                        icon: const Icon(
+                            Icons.add_circle_outline_rounded),
+                        color: AppColors.primary,
+                        disabledColor: Colors.grey.shade300,
                       ),
                     ],
-            );
-          },
-        );
-      },
+                  ),
+                ),
+                if (_depositInstallmentCount > 1) ...[
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '$_depositInstallmentCount \u00d7 ${currencyFormat.format(perInstallmentAmount)} = ${currencyFormat.format(totalAmount())}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+
+                // Read-only total amount
+                const Text('Total Amount',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  readOnly: true,
+                  controller: TextEditingController(
+                      text: totalAmount().toStringAsFixed(0)),
+                  keyboardType: TextInputType.none,
+                  decoration: InputDecoration(
+                    prefixText: '\u20b9 ',
+                    prefixStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
+                      fontSize: 20,
+                    ),
+                    hintText: 'Amount',
+                    filled: true,
+                    fillColor: AppColors.success.withValues(alpha: 0.06),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(
+                          color: AppColors.success, width: 2),
+                    ),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Distribution breakdown
+                if (overdueToPay() > 0 ||
+                    currentToPay() > 0 ||
+                    advanceToPay() > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text('Deposit Distribution',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12)),
+                        const SizedBox(height: 10),
+                        if (overdueToPay() > 0)
+                          _buildDistRow(
+                              '${overdueToPay()} Overdue',
+                              currencyFormat.format(
+                                  overdueToPay() *
+                                      perInstallmentAmount),
+                              AppColors.error,
+                              Icons.warning_amber_rounded),
+                        if (currentToPay() > 0)
+                          _buildDistRow(
+                              '${currentToPay()} Current',
+                              currencyFormat.format(
+                                  currentToPay() *
+                                      perInstallmentAmount),
+                              AppColors.warning,
+                              Icons.schedule_rounded),
+                        if (advanceToPay() > 0)
+                          _buildDistRow(
+                              '${advanceToPay()} Advance',
+                              currencyFormat.format(
+                                  advanceToPay() *
+                                      perInstallmentAmount),
+                              AppColors.info,
+                              Icons.trending_up_rounded),
+                        const Divider(height: 20),
+                        _buildDistRow(
+                          'Total',
+                          currencyFormat.format(totalAmount()),
+                          AppColors.success,
+                          null,
+                          isTotal: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Payment mode chips
+                const Text('Payment Mode',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: PaymentModeChip(
+                        icon: Icons.money_rounded,
+                        label: 'Cash',
+                        isSelected: _depositSelectedMode == 'cash',
+                        onTap: () => setSheetState(
+                            () => _depositSelectedMode = 'cash'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: PaymentModeChip(
+                        icon: Icons.qr_code_rounded,
+                        label: 'UPI',
+                        isSelected: _depositSelectedMode == 'upi',
+                        onTap: () => setSheetState(
+                            () => _depositSelectedMode = 'upi'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: PaymentModeChip(
+                        icon: Icons.account_balance_rounded,
+                        label: 'Bank',
+                        isSelected: _depositSelectedMode == 'bank_transfer',
+                        onTap: () => setSheetState(
+                            () => _depositSelectedMode = 'bank_transfer'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: PaymentModeChip(
+                        icon: Icons.receipt_rounded,
+                        label: 'Cheque',
+                        isSelected: _depositSelectedMode == 'cheque',
+                        onTap: () => setSheetState(
+                            () => _depositSelectedMode = 'cheque'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: _depositIsSubmitting
+                            ? null
+                            : () async {
+                                final amount = totalAmount();
+                                if (amount <= 0) return;
+
+                                setSheetState(
+                                    () => _depositIsSubmitting = true);
+                                HapticFeedback.mediumImpact();
+
+                                try {
+                                  final client =
+                                      Supabase.instance.client;
+                                  final user = ref.read(
+                                      currentUserProvider);
+                                  if (user == null ||
+                                      user.orgId == null) {
+                                    throw Exception(
+                                        'User not found');
+                                  }
+
+                                  final profile = await client
+                                      .from('profiles')
+                                      .select('id, full_name')
+                                      .eq('user_id', user.id)
+                                      .maybeSingle();
+                                  final staffId =
+                                      profile?['id'] as String?;
+
+                                  final now = DateTime.now();
+                                  final today = now
+                                      .toIso8601String()
+                                      .split('T')
+                                      .first;
+
+                                  // 1. Record collection log
+                                  await client
+                                      .from('savings_collections')
+                                      .insert({
+                                    'org_id': user.orgId!,
+                                    'savings_plan_id':
+                                        widget.savingId,
+                                    'member_id': saving.memberId,
+                                    'member_name':
+                                        saving.memberName,
+                                    'member_phone': '',
+                                    'amount_expected':
+                                        perInstallmentAmount *
+                                            _depositInstallmentCount,
+                                    'amount_collected': amount,
+                                    'is_partial': false,
+                                    'payment_mode': _depositSelectedMode,
+                                    'collection_date': today,
+                                    'staff_id': staffId,
+                                    'sync_status': 'synced',
+                                  });
+
+                                  // 2. Advance next_due_date
+                                  DateTime nextDue;
+                                  switch (saving
+                                      .collectionType
+                                      .toLowerCase()) {
+                                    case 'weekly':
+                                      nextDue = now.add(Duration(
+                                          days:
+                                              7 * _depositInstallmentCount));
+                                      break;
+                                    case 'monthly':
+                                      final targetDay =
+                                          saving.nextDueDate
+                                                  ?.day ??
+                                              now.day;
+                                      final targetMonth =
+                                          now.month +
+                                              _depositInstallmentCount;
+                                      final targetYear =
+                                          now.year +
+                                              ((targetMonth -
+                                                      1) ~/
+                                                  12);
+                                      final adjustedMonth =
+                                          ((targetMonth - 1) %
+                                                  12) +
+                                              1;
+                                      final daysInMonth = DateTime(
+                                              targetYear,
+                                              adjustedMonth + 1,
+                                              0)
+                                          .day;
+                                      nextDue = DateTime(
+                                        targetYear,
+                                        adjustedMonth,
+                                        targetDay > daysInMonth
+                                            ? daysInMonth
+                                            : targetDay,
+                                      );
+                                      break;
+                                    default: // daily
+                                      nextDue = now.add(Duration(
+                                          days:
+                                              _depositInstallmentCount));
+                                  }
+
+                                  // 3. Update savings plan
+                                  final currentBalance =
+                                      saving.currentAmount;
+                                  await client
+                                      .from('savings_plans')
+                                      .update({
+                                    'next_due_date': nextDue
+                                        .toIso8601String()
+                                        .split('T')
+                                        .first,
+                                    'current_amount':
+                                        currentBalance + amount,
+                                    'updated_at':
+                                        now.toIso8601String(),
+                                  }).eq('id', widget.savingId);
+
+                                  // 4. Transaction record
+                                  await client
+                                      .from('transactions')
+                                      .insert({
+                                    'member_id': saving.memberId,
+                                    'member_name':
+                                        saving.memberName,
+                                    'savings_id': widget.savingId,
+                                    'amount': amount,
+                                    'type':
+                                        TransactionType
+                                            .savingsDeposit.name,
+                                    'payment_mode': _depositSelectedMode,
+                                    'description':
+                                        _depositInstallmentCount > 1
+                                            ? '$_depositInstallmentCount installments deposited via $_depositSelectedMode'
+                                            : 'Savings deposit via $_depositSelectedMode',
+                                    'org_id': user.orgId!,
+                                    'created_at':
+                                        now.toIso8601String(),
+                                  });
+
+                                  setSheetState(() =>
+                                      _depositIsSubmitting = false);
+                                  HapticFeedback.heavyImpact();
+
+                                  // 5. Invalidate providers
+                                  ref.invalidate(savingDetailProvider(
+                                      widget.savingId));
+                                  ref.invalidate(
+                                      savingTransactionsProvider(
+                                          widget.savingId));
+                                  ref.invalidate(allSavingsProvider);
+                                  ref.invalidate(
+                                      savingsSummaryProvider);
+                                  ref.invalidate(
+                                      pendingDepositsProvider);
+
+                                  if (ctx.mounted) {
+                                    Navigator.pop(ctx);
+                                  }
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text(
+                                        '${_depositInstallmentCount > 1 ? '$_depositInstallmentCount installments \u00b7 ' : ''}\u20b9${amount.toStringAsFixed(0)} deposited to ${saving.memberName}\'s vault',
+                                      ),
+                                      backgroundColor:
+                                          AppColors.success,
+                                      behavior:
+                                          SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(
+                                                  12)),
+                                    ));
+                                  }
+                                } catch (e) {
+                                  setSheetState(
+                                      () => _depositIsSubmitting = false);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text(
+                                          'Deposit failed: $e'),
+                                      backgroundColor:
+                                          AppColors.error,
+                                    ));
+                                  }
+                                }
+                              },
+                        icon: _depositIsSubmitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white),
+                              )
+                            : const Icon(
+                                Icons.check_circle_rounded,
+                                size: 18),
+                        label: Text(
+                          _depositIsSubmitting
+                              ? 'Processing...'
+                              : 'Deposit ${currencyFormat.format(totalAmount())}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, 52),
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDistRow(String label, String value, Color color,
+      IconData? icon,
+      {bool isTotal = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isTotal ? 13 : 12,
+              fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
+              color: isTotal ? Colors.black87 : Colors.grey.shade700,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: isTotal ? 14 : 12,
+              fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1388,7 +1943,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                 'Next Installment',
                 AppFormatters.formatDate(saving.nextDueDate!),
                 theme,
-                valueColor: saving.nextDueDate!.isBefore(DateTime.now())
+                valueColor: saving.nextDueDate!.isBefore(
+                    DateTime(DateTime.now().year, DateTime.now().month,
+                        DateTime.now().day))
                     ? AppColors.error
                     : AppColors.primary,
                 isBold: true),

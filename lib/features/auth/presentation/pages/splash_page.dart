@@ -2,7 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/providers/branding_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -12,105 +13,190 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage> {
+  String _displayName = 'MicroFlow Pro';
+  String _iconPreset = 'default';
+  String? _logoUrl;
+  bool _ready = false;
+
   @override
   void initState() {
     super.initState();
-    _navigateToLogin();
+    _loadAndNavigate();
   }
 
-  Future<void> _navigateToLogin() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      context.go('/auth');
+  Future<void> _loadAndNavigate() async {
+    // 1. Load cached branding from SharedPreferences (instant)
+    await _loadCachedBranding();
+    setState(() => _ready = true);
+
+    // 2. Try to load branding from existing auth session (user may already be logged in)
+    await _loadBrandingFromSession();
+
+    // 3. Wait a moment to show the splash
+    await Future.delayed(const Duration(milliseconds: 1200));
+    if (mounted) context.go('/auth');
+  }
+
+  /// If user has an existing Supabase session, fetch org branding directly
+  Future<void> _loadBrandingFromSession() async {
+    try {
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
+      if (user == null) return;
+
+      // Get user's org from profiles
+      final profile = await client
+          .from('profiles')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (profile == null || profile['org_id'] == null) return;
+      final orgId = profile['org_id'] as String;
+
+      // Fetch org branding
+      final org = await client
+          .from('organizations')
+          .select('name, display_name, icon_preset, logo_url')
+          .eq('id', orgId)
+          .maybeSingle();
+
+      if (org == null || !mounted) return;
+
+      final name = (org['display_name'] as String?) ??
+          (org['name'] as String?) ??
+          'MicroFlow Pro';
+      final preset = (org['icon_preset'] as String?) ?? 'default';
+      final logo = org['logo_url'] as String?;
+
+      setState(() {
+        _displayName = name;
+        _iconPreset = preset;
+        _logoUrl = logo;
+      });
+
+      // Cache for next launch
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('splash_display_name', name);
+      await prefs.setString('splash_icon_preset', preset);
+      await prefs.setString('splash_logo_url', logo ?? '');
+    } catch (e) {
+      // Silently fail — will show cached or default
+      debugPrint('[Splash] Session branding load failed: $e');
     }
+  }
+
+  Future<void> _loadCachedBranding() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final name = prefs.getString('splash_display_name');
+      final preset = prefs.getString('splash_icon_preset');
+      final logo = prefs.getString('splash_logo_url');
+      if (name != null) _displayName = name;
+      if (preset != null) _iconPreset = preset;
+      if (logo != null && logo.isNotEmpty) _logoUrl = logo;
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final brandingAsync = ref.watch(brandingProvider);
-    final branding = brandingAsync.valueOrNull;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final assetPath = 'assets/icons/preset_$_iconPreset.png';
+    final hasLogo = _logoUrl != null && _logoUrl!.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F1219) : const Color(0xFF1A5CFF),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // App Icon
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: branding?.logoUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: branding!.logoUrl!,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 200,
-                        memCacheHeight: 200,
-                        errorWidget: (_, __, ___) => const Icon(
-                          Icons.account_balance_rounded,
-                          size: 50,
-                          color: Color(0xFF1A5CFF),
-                        ),
-                      )
-                    : const Icon(
-                        Icons.account_balance_rounded,
-                        size: 50,
-                        color: Color(0xFF1A5CFF),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // App Name
-            Text(
-              branding?.displayName ?? 'MicroFlow Pro',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Tagline
-            Text(
-              'Smart Financial Management',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.8),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 48),
-
-            // Loading indicator
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Colors.white.withValues(alpha: 0.8),
+      backgroundColor:
+          isDark ? const Color(0xFF0F1219) : const Color(0xFF1A5CFF),
+      body: AnimatedOpacity(
+        opacity: _ready ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 400),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App Icon
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: hasLogo
+                      ? CachedNetworkImage(
+                          imageUrl: _logoUrl!,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 200,
+                          memCacheHeight: 200,
+                          errorWidget: (_, __, ___) =>
+                              _buildPresetIcon(assetPath),
+                        )
+                      : _buildPresetIcon(assetPath),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // App Name
+              Text(
+                _displayName,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+
+              // Tagline
+              Text(
+                'Smart Financial Management',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 48),
+
+              // Loading indicator
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPresetIcon(String assetPath) {
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.cover,
+      width: 100,
+      height: 100,
+      errorBuilder: (_, __, ___) => const Icon(
+        Icons.account_balance_rounded,
+        size: 50,
+        color: Color(0xFF1A5CFF),
       ),
     );
   }

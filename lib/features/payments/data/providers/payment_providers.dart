@@ -520,6 +520,9 @@ final todayPaymentsProvider =
         collectedAt: isCollected && existingCollection['created_at'] != null
             ? DateTime.tryParse(existingCollection['created_at'])
             : null,
+        collectionId: isCollected
+            ? existingCollection['id'] as String?
+            : null,
       ));
     }
   } catch (e, stack) {

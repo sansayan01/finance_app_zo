@@ -9,7 +9,9 @@ import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../home/data/providers/dashboard_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../savings/data/providers/savings_providers.dart';
 import '../../data/models/transaction_model.dart';
+import '../../../loans/presentation/providers/loan_providers.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
@@ -103,16 +105,67 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     if (confirmed != true) return;
 
     final ids = _selectedIds.toList();
+    final txns = _transactions.where((t) => ids.contains(t.id)).toList();
+
     final repo = ref.read(transactionsRepositoryProvider);
     try {
       await repo.deleteTransactions(ids);
+
+      // Recalculate savings balances for any deleted savings transactions
+      final affectedSavingsIds = txns
+          .where((t) => t.savingsId != null)
+          .map((t) => t.savingsId!)
+          .toSet();
+      for (final sid in affectedSavingsIds) {
+        try {
+          await ref.read(savingsRepositoryProvider).recalculateBalance(sid);
+        } catch (_) {
+          // Best-effort per plan
+        }
+      }
+
+      // Recalculate loan balances for any deleted loan transactions
+      final affectedLoanIds = txns
+          .where((t) => t.loanId != null)
+          .map((t) => t.loanId!)
+          .toSet();
+      for (final lid in affectedLoanIds) {
+        try {
+          await ref.read(loansRepositoryProvider).recalculateLoanBalance(lid);
+        } catch (_) {
+          // Best-effort per loan
+        }
+      }
+
       if (!mounted) return;
       _exitSelection();
       _resetAndReload();
-      // Refresh every home/dashboard widget that derives from transactions
+      // Refresh every widget that derives from transactions
       ref.invalidate(todayStatsProvider);
       ref.invalidate(recentTransactionsProvider);
       ref.invalidate(dashboardTransactionsProvider);
+      
+      // Refresh savings data if any savings transactions were deleted
+      if (affectedSavingsIds.isNotEmpty) {
+        ref.invalidate(allSavingsProvider);
+        ref.invalidate(savingsSummaryProvider);
+        for (final sid in affectedSavingsIds) {
+          ref.invalidate(savingDetailProvider(sid));
+          ref.invalidate(savingTransactionsProvider(sid));
+        }
+      }
+
+      // Refresh loan data if any loan transactions were deleted
+      if (affectedLoanIds.isNotEmpty) {
+        ref.invalidate(dashboardLoansProvider);
+        ref.invalidate(loanSummaryProvider);
+        for (final lid in affectedLoanIds) {
+          ref.invalidate(loanDetailProvider(lid));
+          ref.invalidate(emiScheduleProvider(lid));
+          ref.invalidate(paymentHistoryProvider(lid));
+        }
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Deleted ${ids.length} transaction${ids.length == 1 ? '' : 's'}')),
       );
@@ -226,46 +279,46 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     child: _selectionMode
                         ? _buildSelectionBar(theme, primary)
                         : Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.arrow_back_rounded,
+                                color: primary, size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(Icons.arrow_back_rounded,
-                                      color: primary, size: 20),
+                              Text(
+                                'FINANCIAL TIMELINE',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                  fontSize: 10,
+                                  color: primary,
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'FINANCIAL TIMELINE',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 2,
-                                        fontSize: 10,
-                                        color: primary,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Transaction History',
-                                      style: theme.textTheme.headlineSmall?.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: -0.8,
-                                      ),
-                                    ),
-                                  ],
+                              Text(
+                                'Transaction History',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.8,
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                      ],
+                    ),
                   ).animate().fadeIn(duration: 400.ms),
                 ),
 
@@ -461,7 +514,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           ),
         ),
       ),
-     ),
+    ),
     );
   }
 

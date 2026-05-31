@@ -304,15 +304,22 @@ class SavingsRepository {
   }
 
   Future<void> recalculateBalance(String savingId) async {
-    // Read opening_balance from the plan so balance starts from it
+    // Read plan metadata
     final plan = await _client
         .from('savings_plans')
-        .select('opening_balance')
+        .select('''
+          opening_balance,
+          collection_type,
+          start_date
+        ''')
         .eq('id', savingId)
         .maybeSingle();
     final openingBalance =
         (plan?['opening_balance'] as num?)?.toDouble() ?? 0;
+    final collectionType = plan?['collection_type'] as String? ?? 'monthly';
+    final startDateStr = plan?['start_date'] as String?;
 
+    // Recalculate current_amount from remaining transactions
     final rows = await _client
         .from('transactions')
         .select('type, amount')
@@ -330,11 +337,105 @@ class SavingsRepository {
     }
     if (balance < 0) balance = 0;
 
+    // Recalculate next_due_date based on remaining collection history
+    final lastCollection = await _client
+        .from('savings_collections')
+        .select('collection_date')
+        .eq('savings_plan_id', savingId)
+        .order('collection_date', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    DateTime? newNextDue;
+    if (lastCollection != null && lastCollection['collection_date'] != null) {
+      final lastDate = DateTime.parse(lastCollection['collection_date'] as String);
+      switch (collectionType.toLowerCase()) {
+        case 'daily':
+          newNextDue = lastDate.add(const Duration(days: 1));
+          break;
+        case 'weekly':
+          newNextDue = lastDate.add(const Duration(days: 7));
+          break;
+        default:
+          newNextDue = DateTime(lastDate.year, lastDate.month + 1, lastDate.day);
+      }
+    } else if (startDateStr != null) {
+      // No collections left — revert to start_date
+      newNextDue = DateTime.parse(startDateStr);
+    }
+
+    final updateData = <String, dynamic>{
+      'current_amount': balance,
+    };
+    if (newNextDue != null) {
+      updateData['next_due_date'] = newNextDue.toIso8601String().split('T').first;
+    }
+
     final result = await _client
         .from('savings_plans')
-        .update({'current_amount': balance}).eq('id', savingId).select();
+        .update(updateData).eq('id', savingId).select();
     if (result.isEmpty) {
       throw Exception('Failed to recalculate balance - savings plan not found or access denied');
     }
+  }
+
+  /// Delete a savings collection by [savingsCollectionId].
+  /// Finds the matching transaction and delegates to the RPC (with fallback).
+  Future<void> deleteSavingsCollection(String savingsCollectionId) async {
+    // Fetch the savings collection to get savings_plan_id and amount
+    final collection = await _client
+        .from('savings_collections')
+        .select('savings_plan_id, amount_collected, member_id')
+        .eq('id', savingsCollectionId)
+        .maybeSingle();
+    if (collection == null) {
+      throw Exception('Savings collection not found');
+    }
+
+    final savingsPlanId = collection['savings_plan_id'] as String?;
+    final amount = (collection['amount_collected'] as num?)?.toDouble() ?? 0;
+    final memberId = collection['member_id'] as String?;
+
+    if (savingsPlanId == null) {
+      throw Exception('Savings collection has no savings_plan_id');
+    }
+
+    // Find the matching transaction
+    final tx = await _client
+        .from('transactions')
+        .select('id')
+        .eq('savings_id', savingsPlanId)
+        .eq('amount', amount)
+        .eq('member_id', memberId ?? '')
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    // Try RPC first
+    if (tx != null) {
+      try {
+        await _client.rpc('delete_savings_transaction', params: {
+          'p_transaction_id': tx['id'],
+        });
+        return;
+      } catch (_) {
+        // RPC failed — fall through to manual deletion
+      }
+    }
+
+    // Fallback: delete collection + transaction + recalculate
+    await _client
+        .from('savings_collections')
+        .delete()
+        .eq('id', savingsCollectionId);
+
+    if (tx != null) {
+      await _client
+          .from('transactions')
+          .delete()
+          .eq('id', tx['id']);
+    }
+
+    await recalculateBalance(savingsPlanId);
   }
 }

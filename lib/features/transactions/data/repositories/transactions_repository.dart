@@ -157,14 +157,65 @@ class TransactionsRepository {
     await _client.from('transactions').update(patch).eq('id', id);
   }
 
+  /// Permanently deletes a transaction row.
+  ///
+  /// This is the **history/timeline** path — it only removes the ledger entry.
+  /// The caller (saving_detail_page) follows up with recalculateBalance() to
+  /// fix current_amount and next_due_date, but the savings_collections record
+  /// is intentionally kept so the collection stays visible in Today Payments.
+  ///
+  /// To delete a collection and fully revert financial data (collection record,
+  /// transaction, balance, due dates), use SavingsRepository.deleteSavingsCollection
+  /// instead.
   Future<void> deleteTransaction(String id) async {
-    // Use RPC that also reverts EMI status and collection
-    try {
-      await _client.rpc('delete_transaction_with_revert', params: {
+    // 1. Fetch the transaction to determine its type
+    final txData = await _client
+        .from('transactions')
+        .select('id, type, loan_id, savings_id, amount, member_id')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (txData == null) {
+      throw Exception('Transaction not found');
+    }
+
+    final type = txData['type'] as String?;
+    final loanId = txData['loan_id'] as String?;
+    final savingsId = txData['savings_id'] as String?;
+    final amount = (txData['amount'] as num?)?.toDouble() ?? 0.0;
+    final memberId = txData['member_id'] as String?;
+
+    if (type == TransactionType.emiPayment.name && loanId != null) {
+      // --- Full revert for loan EMI ---
+      // Find the matching collection and use delete_loan_collection RPC
+      // which atomically: unmarks EMIs, restores outstanding, deletes collection + transaction
+      final col = await _client
+          .from('collections')
+          .select('id')
+          .eq('loan_id', loanId)
+          .eq('amount_collected', amount)
+          .eq('member_id', memberId ?? '')
+          .order('collection_time', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (col != null) {
+        await _client.rpc('delete_loan_collection', params: {
+          'p_collection_id': col['id'],
+        });
+      } else {
+        // No matching collection — just delete the transaction
+        await _client.from('transactions').delete().eq('id', id);
+      }
+    } else if (type == TransactionType.savingsDeposit.name && savingsId != null) {
+      // --- Full revert for savings deposit ---
+      // delete_savings_transaction RPC atomically: deletes collection,
+      // recalculates balance + due date, deletes transaction
+      await _client.rpc('delete_savings_transaction', params: {
         'p_transaction_id': id,
       });
-    } catch (_) {
-      // Fallback to plain delete if RPC fails
+    } else {
+      // --- Simple transaction deletion (no revert needed) ---
       await _client.from('transactions').delete().eq('id', id);
     }
   }

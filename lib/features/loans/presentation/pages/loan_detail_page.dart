@@ -30,6 +30,7 @@ import '../../data/services/loan_statement_archive_service.dart';
 import '../widgets/collection_sheet.dart';
 import '../widgets/statement_options_sheet.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../savings/data/providers/savings_providers.dart';
 
 class LoanDetailPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -3875,14 +3876,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Confirm Settlement'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Enter the final settlement amount to close this loan.',
-                style: Theme.of(context).textTheme.bodySmall),
+                style: Theme.of(dialogContext).textTheme.bodySmall),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
@@ -3900,7 +3901,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('CANCEL')),
           ElevatedButton(
             onPressed: () async {
@@ -3910,8 +3911,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 await ref
                     .read(loansRepositoryProvider)
                     .settleLoan(loan.id, amount);
-                if (!mounted) return;
-                Navigator.pop(context);
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
                 ref.invalidate(loanDetailProvider(loan.id));
                 ref.invalidate(loansProvider);
                 ref.invalidate(loanSummaryProvider);
@@ -3921,8 +3922,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     content: Text(
                         'Settlement of ${AppFormatters.formatCurrency(amount)} processed')));
               } catch (e) {
-                if (!mounted) return;
-                Navigator.pop(context);
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
                 messenger.showSnackBar(
                     SnackBar(content: Text('Settlement failed: $e')));
               }
@@ -4570,7 +4571,7 @@ class _PaymentHistorySection extends ConsumerWidget {
                 final payment = payments[index];
                 return InkWell(
                   onTap: () =>
-                      _showPaymentDetailSheet(context, payment, theme),
+                      _showPaymentDetailSheet(context, ref, payment, theme),
                   borderRadius: BorderRadius.circular(16),
                   child: _buildPaymentTile(payment, theme),
                 );
@@ -4580,7 +4581,7 @@ class _PaymentHistorySection extends ConsumerWidget {
             // View All button
             if (payments.length > 5)
               InkWell(
-                onTap: () => _showFullPaymentHistory(context, payments, theme),
+                onTap: () => _showFullPaymentHistory(context, ref, payments, theme),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Row(
@@ -4673,12 +4674,15 @@ class _PaymentHistorySection extends ConsumerWidget {
   }
 
   void _showPaymentDetailSheet(
-      BuildContext context, Map<String, dynamic> payment, ThemeData theme) {
+      BuildContext context, WidgetRef ref, Map<String, dynamic> payment, ThemeData theme) {
     final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
     final paymentMode = payment['payment_mode'] as String? ?? 'cash';
     final enteredAt = _getPaymentDate(payment);
     final notes = payment['notes'] as String?;
     final transactionId = payment['transaction_id'] as String?;
+
+    final currentUser = ref.read(currentUserProvider);
+    final bool canDelete = currentUser?.role == UserRole.executiveAdmin;
 
     showModalBottomSheet(
       context: context,
@@ -4800,6 +4804,26 @@ class _PaymentHistorySection extends ConsumerWidget {
                   ),
                 ),
               ),
+              if (canDelete) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _confirmDeletePayment(context, ref, payment);
+                    },
+                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                    label: const Text('Delete Payment', style: TextStyle(color: Colors.red)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -4808,7 +4832,7 @@ class _PaymentHistorySection extends ConsumerWidget {
   }
 
   void _showFullPaymentHistory(
-      BuildContext context, List<Map<String, dynamic>> payments, ThemeData theme) {
+      BuildContext context, WidgetRef ref, List<Map<String, dynamic>> payments, ThemeData theme) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -4884,7 +4908,7 @@ class _PaymentHistorySection extends ConsumerWidget {
                       return InkWell(
                         onTap: () {
                           Navigator.pop(ctx);
-                          _showPaymentDetailSheet(context, payment, theme);
+                          _showPaymentDetailSheet(context, ref, payment, theme);
                         },
                         borderRadius: BorderRadius.circular(16),
                         child: _buildPaymentTile(payment, theme),
@@ -4898,6 +4922,76 @@ class _PaymentHistorySection extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _confirmDeletePayment(
+      BuildContext context, WidgetRef ref, Map<String, dynamic> payment) {
+    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+    final formattedAmount = AppFormatters.formatCurrency(amount);
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Payment?'),
+        content: Text(
+            'This will permanently delete the payment of $formattedAmount and reverse the outstanding loan balance.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await _deletePayment(context, ref, payment);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePayment(
+      BuildContext context, WidgetRef ref, Map<String, dynamic> payment) async {
+    final transactionId = payment['transaction_id'] as String?;
+    if (transactionId == null) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      // 1. Delete transaction (which also deletes matching collection in repo trigger)
+      await ref
+          .read(transactionsRepositoryProvider)
+          .deleteTransaction(transactionId);
+
+      // 2. Recalculate outstanding balance & EMI schedule status
+      await ref
+          .read(loansRepositoryProvider)
+          .recalculateLoanBalance(loanId);
+
+      // 3. Invalidate providers to update UI
+      ref.invalidate(loanDetailProvider(loanId));
+      ref.invalidate(emiScheduleProvider(loanId));
+      ref.invalidate(paymentHistoryProvider(loanId));
+      ref.invalidate(dashboardLoansProvider);
+      ref.invalidate(loanSummaryProvider);
+
+      HapticFeedback.mediumImpact();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Payment deleted & balance reversed successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Delete failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildPaymentTile(Map<String, dynamic> payment, ThemeData theme) {

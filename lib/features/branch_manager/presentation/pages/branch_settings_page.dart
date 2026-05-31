@@ -446,6 +446,9 @@ class BranchSettingsPage extends ConsumerWidget {
   // ─── Branch Targets Card ───────────────────────────────────────────
   Widget _buildBranchTargetsCard(
       ThemeData theme, WidgetRef ref, String branchId, BuildContext context) {
+    final now = DateTime.now();
+    final targetsAsync = ref.watch(branchTargetsProvider((branchId, now.month, now.year)));
+
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -460,53 +463,69 @@ class BranchSettingsPage extends ConsumerWidget {
                   style: theme.textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.bold)),
               const Spacer(),
-              GestureDetector(
-                onTap: () => _showEditTargetsDialog(context, ref, branchId),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+              targetsAsync.when(
+                data: (targets) => GestureDetector(
+                  onTap: () => _showEditTargetsDialog(context, ref, branchId, targets),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('Edit',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary)),
                   ),
-                  child: const Text('Edit',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary)),
                 ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            'Set monthly collection and member growth targets for your branch.',
+            'Monthly collection, disbursement and member growth targets.',
             style: TextStyle(
                 fontSize: 12,
                 color: theme.textTheme.bodySmall?.color
                     ?.withValues(alpha: 0.6)),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: Colors.amber.withValues(alpha: 0.25)),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.construction_rounded,
-                    size: 16, color: Colors.amber),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Targets are stored locally. Server-side sync coming soon.',
-                    style: TextStyle(fontSize: 12, color: Colors.amber),
-                  ),
+          const SizedBox(height: 16),
+          targetsAsync.when(
+            data: (targets) {
+              final colTarget = (targets['collection_target'] as num?)?.toDouble() ?? 0.0;
+              final disTarget = (targets['loans_disbursed_target'] as num?)?.toDouble() ?? 0.0;
+              final memTarget = (targets['new_members_target'] as num?)?.toInt() ?? 0;
+
+              return Column(
+                children: [
+                  _infoRow(theme, 'Collection Target', '₹${colTarget.toStringAsFixed(0)}'),
+                  const SizedBox(height: 8),
+                  _infoRow(theme, 'Disbursement Target', '₹${disTarget.toStringAsFixed(0)}'),
+                  const SizedBox(height: 8),
+                  _infoRow(theme, 'New Members Target', '$memTarget'),
+                ],
+              );
+            },
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-              ],
+              ),
+            ),
+            error: (err, _) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Failed to load targets: $err',
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              ),
             ),
           ),
         ],
@@ -744,12 +763,13 @@ class BranchSettingsPage extends ConsumerWidget {
 
   // ─── Edit Targets Dialog ───────────────────────────────────────────
   void _showEditTargetsDialog(
-      BuildContext context, WidgetRef ref, String branchId) {
+      BuildContext context, WidgetRef ref, String branchId, Map<String, dynamic> initialTargets) {
     final collectionController =
-        TextEditingController(text: '500000');
-    final memberController = TextEditingController(text: '20');
+        TextEditingController(text: ((initialTargets['collection_target'] as num?)?.toDouble() ?? 500000.0).toStringAsFixed(0));
+    final memberController =
+        TextEditingController(text: ((initialTargets['new_members_target'] as num?)?.toInt() ?? 20).toString());
     final disbursementController =
-        TextEditingController(text: '1000000');
+        TextEditingController(text: ((initialTargets['loans_disbursed_target'] as num?)?.toDouble() ?? 1000000.0).toStringAsFixed(0));
 
     showModalBottomSheet(
       context: context,
@@ -850,13 +870,44 @@ class BranchSettingsPage extends ConsumerWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: Save to branch_targets table when migration is applied
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Targets saved locally'),
-                    backgroundColor: AppColors.success,
-                  ));
+                onPressed: () async {
+                  final colTarget = double.tryParse(collectionController.text) ?? 0.0;
+                  final disTarget = double.tryParse(disbursementController.text) ?? 0.0;
+                  final memTarget = double.tryParse(memberController.text) ?? 0.0;
+
+                  try {
+                    final now = DateTime.now();
+                    await ref.read(branchManagerRepositoryProvider).updateBranchTargets(
+                      branchId,
+                      now.month,
+                      now.year,
+                      {
+                        'collection_target': colTarget,
+                        'loans_disbursed_target': disTarget,
+                        'new_members_target': memTarget,
+                      },
+                    );
+
+                    ref.invalidate(branchTargetsProvider((branchId, now.month, now.year)));
+                    ref.invalidate(branchManagerDashboardProvider);
+
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Targets saved successfully'),
+                        backgroundColor: AppColors.success,
+                      ));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Failed to save targets: $e'),
+                        backgroundColor: Colors.redAccent,
+                      ));
+                    }
+                  }
                 },
                 icon: const Icon(Icons.save_rounded, size: 18),
                 label: const Text('Save Targets',

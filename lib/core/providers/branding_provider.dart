@@ -17,6 +17,7 @@ class BrandingConfig {
   final String? splashScreenUrl;
   final bool useCustomBranding;
   final bool showPoweredBy;
+  final String iconPreset;
 
   const BrandingConfig({
     required this.orgId,
@@ -29,10 +30,11 @@ class BrandingConfig {
     this.splashScreenUrl,
     this.useCustomBranding = false,
     this.showPoweredBy = true,
+    this.iconPreset = 'default',
   });
 
   factory BrandingConfig.defaultConfig(String orgId) {
-    return BrandingConfig(orgId: orgId);
+    return BrandingConfig(orgId: orgId, iconPreset: 'default');
   }
 
   factory BrandingConfig.fromJson(Map<String, dynamic>? json, String orgId) {
@@ -135,7 +137,8 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
             display_name,
             logo_url,
             brand_color,
-            primary_color
+            primary_color,
+            icon_preset
           ''').eq('id', orgId).maybeSingle();
 
       if (response != null) {
@@ -153,6 +156,7 @@ class BrandingNotifier extends StateNotifier<AsyncValue<BrandingConfig>> {
           splashScreenUrl: null,
           useCustomBranding: false,
           showPoweredBy: true,
+          iconPreset: response['icon_preset'] as String? ?? 'default',
         );
 
         // Cache the configuration

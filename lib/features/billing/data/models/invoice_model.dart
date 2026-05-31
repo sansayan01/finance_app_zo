@@ -33,7 +33,12 @@ class InvoiceModel {
 
   bool get isPaid => status == 'paid';
   bool get isOpen => status == 'open';
-  bool get isOverdue => status == 'open' && dueDate.isBefore(DateTime.now());
+  bool get isOverdue {
+    if (status != 'open') return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return dueDate.isBefore(today);
+  }
 
   String get statusDisplay => status[0].toUpperCase() + status.substring(1);
 

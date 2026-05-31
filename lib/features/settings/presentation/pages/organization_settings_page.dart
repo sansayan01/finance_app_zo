@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/powered_by_badge.dart';
@@ -181,6 +183,17 @@ class _OrganizationSettingsPageState
                 : _displayNameCtrl.text.trim(),
             iconPreset: _selectedIconPreset,
           );
+
+      // Update splash screen cache so next app launch shows new branding
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('splash_display_name',
+          _displayNameCtrl.text.trim().isEmpty
+              ? _legalNameCtrl.text.trim()
+              : _displayNameCtrl.text.trim());
+      await prefs.setString('splash_icon_preset', _selectedIconPreset);
+
+      // Also reload the branding provider to pick up icon_preset
+      await ref.read(brandingProvider.notifier).loadBranding();
 
       ref.invalidate(_orgSettingsProvider);
       ref.invalidate(currentOrgProvider);

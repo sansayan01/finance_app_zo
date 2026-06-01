@@ -304,7 +304,9 @@ final branchTodayPaymentsProvider =
     }
 
     for (final col in collections) {
-      // Filter by branch via loan lookup
+      // Filter by branch via loan lookup.
+      // Savings collections have no loan_id — they are handled in section 3,
+      // so skip them here to avoid duplicates.
       final loanId = col['loan_id'];
       if (loanId == null) continue;
       final loan = collectionLoansMap[loanId];
@@ -363,10 +365,11 @@ final branchTodayPaymentsProvider =
     final dayOfMonth = selectedDate.day;
 
     // Fetch active savings plans with member join for branch filtering
+    // NOTE: 'id' is included in the nested member select so memberId is non-null
     final allActivePlans = await client
         .from('savings_plans')
         .select(
-            'id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id, members:member_id(full_name, phone, branch_id, agent_id)')
+            'id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id, members:member_id(id, full_name, phone, branch_id, agent_id)')
         .eq('org_id', orgId)
         .eq('status', 'active');
 
@@ -403,8 +406,13 @@ final branchTodayPaymentsProvider =
 
       if (nextDue != null) {
         final nextDueDate = DateTime.tryParse(nextDue);
-        if (nextDueDate != null && !nextDueDate.isAfter(selectedDate)) {
-          return true;
+        if (nextDueDate != null) {
+          // Normalise to date-only to avoid timezone skew (DB dates are UTC midnight)
+          final nextDateOnly = DateTime(nextDueDate.year, nextDueDate.month, nextDueDate.day);
+          final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+          if (!nextDateOnly.isAfter(selectedDateOnly)) {
+            return true;
+          }
         }
         return false;
       }
@@ -474,8 +482,13 @@ final branchTodayPaymentsProvider =
             : null,
       ));
 
-      // For daily collections that are overdue, also add a pending entry for today
-      if (isOverdue && (plan['collection_type'] ?? 'monthly') == 'daily') {
+      // For daily collections that are overdue and not yet collected,
+      // add a SEPARATE pending entry for today's collection.
+      final collectionType = plan['collection_type'] ?? 'daily';
+      if (!isCollected &&
+          isOverdue &&
+          collectionType == 'daily' &&
+          !selectedDateOnly.isAfter(DateTime.now())) {
         payments.add(TodayPayment(
           id: '${plan['id']}_today',
           type: PaymentType.savings,
@@ -489,8 +502,11 @@ final branchTodayPaymentsProvider =
           agentName: null,
           amountExpected:
               (plan['monthly_deposit'] as num?)?.toDouble() ?? 0,
+          amountCollected: null,
           dueDate: DateTime.parse(dateStr),
-          planName: plan['plan_name'],
+          planName: '${plan['plan_name']} (Today)',
+          paymentMode: null,
+          collectedAt: null,
         ));
       }
     }

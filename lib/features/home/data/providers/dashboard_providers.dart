@@ -67,24 +67,36 @@ final overdueLoansProvider = FutureProvider.autoDispose<List<LoanModel>>((ref) a
 final todayAgendaProvider = FutureProvider.autoDispose<List<dynamic>>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null || orgId.isEmpty) return [];
+
   final agenda = <dynamic>[];
+  final today = DateTime.now().toIso8601String().split('T').first;
+
+  // 1. Fetch overdue/due EMIs
   try {
-    final today = DateTime.now().toIso8601String().split('T').first;
     final dues = await client
         .from('emi_schedule')
-        .select('*, loans!fk_emi_loan(customer_id, members!fk_loans_customer(full_name))')
-        .eq('org_id', orgId ?? '')
+        .select('id, emi_number, due_date, emi_amount, loan_id, loans!fk_emi_loan(customer_id, members!fk_loans_customer(full_name))')
+        .eq('org_id', orgId)
         .lte('due_date', today)
         .eq('is_paid', false)
         .order('due_date', ascending: true)
         .limit(5);
-    agenda.addAll(dues);
+    agenda.addAll(dues as List);
   } catch (_) {}
-  if (agenda.isEmpty) {
-    final loans = await ref.watch(dashboardLoansProvider.future);
-    final savings = await ref.watch(dashboardSavingsProvider.future);
-    if (loans.isNotEmpty) agenda.add(loans.first);
-    if (savings.isNotEmpty) agenda.add(savings.first);
-  }
+
+  // 2. Fetch savings/RD plans due today or overdue
+  try {
+    final savingsDues = await client
+        .from('savings_plans')
+        .select('id, plan_name, monthly_deposit, collection_type, next_due_date, member_id, members:member_id(full_name)')
+        .eq('org_id', orgId)
+        .eq('status', 'active')
+        .lte('next_due_date', today)
+        .order('next_due_date', ascending: true)
+        .limit(5);
+    agenda.addAll(savingsDues as List);
+  } catch (_) {}
+
   return agenda;
 });

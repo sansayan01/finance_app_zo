@@ -31,6 +31,7 @@ import '../../data/services/savings_statement_csv_service.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show pendingDepositsProvider, recentTransactionsProvider,
         dashboardTransactionsProvider, todayStatsProvider;
+import '../../../payments/data/providers/payment_providers.dart';
 
 class SavingDetailPage extends ConsumerStatefulWidget {
   final String savingId;
@@ -2302,6 +2303,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       ref.invalidate(savingTransactionsProvider(widget.savingId));
       ref.invalidate(allSavingsProvider);
       ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(todayPaymentsProvider);
       ref
           .read(savingTxPagerProvider(widget.savingId).notifier)
           .refresh();
@@ -2362,6 +2364,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       ref.invalidate(savingTransactionsProvider(widget.savingId));
       ref.invalidate(allSavingsProvider);
       ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(todayPaymentsProvider);
       ref
           .read(savingTxPagerProvider(widget.savingId).notifier)
           .refresh();

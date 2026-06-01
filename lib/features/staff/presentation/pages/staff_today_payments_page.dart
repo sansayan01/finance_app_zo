@@ -889,7 +889,23 @@ class _StaffTodayPaymentsPageState
           ? payment.id.substring(0, payment.id.length - 6)
           : payment.id;
 
-      // 1. Record collection log
+      // 1. Create transaction FIRST so we can link it to the collection
+      final txResult = await client.from('transactions').insert({
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'savings_id': planId,
+        'amount': amount,
+        'type': 'savingsDeposit',
+        'payment_mode': paymentMode,
+        'description': installmentCount > 1
+            ? '$installmentCount installments deposited via $paymentMode'
+            : 'Savings deposit via $paymentMode',
+        'org_id': profile.orgId,
+        'created_at': now.toIso8601String(),
+      }).select('id').single();
+      final transactionId = txResult['id'] as String;
+
+      // 2. Record collection log (linked to transaction)
       await client.from('savings_collections').insert({
         'org_id': profile.orgId,
         'savings_plan_id': planId,
@@ -905,6 +921,7 @@ class _StaffTodayPaymentsPageState
         'collected_by_name': profile.fullName,
         'collected_by_role': profile.role.dbValue,
         'sync_status': 'synced',
+        'transaction_id': transactionId,
       });
 
       // 2. Advance next_due_date by installmentCount periods
@@ -943,22 +960,7 @@ class _StaffTodayPaymentsPageState
         'updated_at': now.toIso8601String(),
       }).eq('id', planId);
 
-      // 4. Transaction record
-      await client.from('transactions').insert({
-        'member_id': payment.memberId,
-        'member_name': payment.memberName,
-        'savings_id': planId,
-        'amount': amount,
-        'type': 'savingsDeposit',
-        'payment_mode': paymentMode,
-        'description': installmentCount > 1
-            ? '$installmentCount installments deposited via $paymentMode'
-            : 'Savings deposit via $paymentMode',
-        'org_id': profile.orgId,
-        'created_at': now.toIso8601String(),
-      });
-
-      // 5. Send SMS notification (non-blocking, fire-and-forget)
+      // 4. Send SMS notification (non-blocking, fire-and-forget)
       ref.read(collectionSmsSenderProvider).sendSavingsSms(
         memberPhone: payment.memberPhone,
         memberName: payment.memberName,

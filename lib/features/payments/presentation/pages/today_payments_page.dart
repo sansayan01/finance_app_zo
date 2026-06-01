@@ -949,7 +949,23 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
           ? payment.id.substring(0, payment.id.length - 6)
           : payment.id;
 
-      // 1. Record collection log
+      // 1. Create transaction FIRST so we can link it to the collection
+      final txResult = await client.from('transactions').insert({
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'savings_id': planId,
+        'amount': amount,
+        'type': 'savingsDeposit',
+        'payment_mode': paymentMode,
+        'description': installmentCount > 1
+            ? '$installmentCount installments deposited via $paymentMode'
+            : 'Savings deposit via $paymentMode',
+        'org_id': user.orgId!,
+        'created_at': now.toIso8601String(),
+      }).select('id').single();
+      final transactionId = txResult['id'] as String;
+
+      // 2. Record collection log (linked to transaction)
       await client.from('savings_collections').insert({
         'org_id': user.orgId!,
         'savings_plan_id': planId,
@@ -963,9 +979,10 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
         'collection_date': today,
         'staff_id': staffId,
         'sync_status': 'synced',
+        'transaction_id': transactionId,
       });
 
-      // 2. Advance next_due_date by installmentCount periods
+      // 3. Advance next_due_date by installmentCount periods
       final plan = await client
           .from('savings_plans')
           .select('collection_type, collection_day_of_week, collection_day_of_month, current_amount')
@@ -994,27 +1011,12 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       final currentBalance =
           ((plan?['current_amount']) as num?)?.toDouble() ?? 0.0;
 
-      // 3. Update savings plan
+      // 4. Update savings plan
       await client.from('savings_plans').update({
         'next_due_date': nextDue.toIso8601String().split('T').first,
         'current_amount': currentBalance + amount,
         'updated_at': now.toIso8601String(),
       }).eq('id', planId);
-
-      // 4. Transaction record
-      await client.from('transactions').insert({
-        'member_id': payment.memberId,
-        'member_name': payment.memberName,
-        'savings_id': planId,
-        'amount': amount,
-        'type': 'savingsDeposit',
-        'payment_mode': paymentMode,
-        'description': installmentCount > 1
-            ? '$installmentCount installments deposited via $paymentMode'
-            : 'Savings deposit via $paymentMode',
-        'org_id': user.orgId!,
-        'created_at': now.toIso8601String(),
-      });
 
       // 5. Send SMS notification (non-blocking, fire-and-forget)
       ref.read(collectionSmsSenderProvider).sendSavingsSms(

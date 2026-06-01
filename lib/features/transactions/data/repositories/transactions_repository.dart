@@ -159,19 +159,17 @@ class TransactionsRepository {
 
   /// Permanently deletes a transaction row.
   ///
-  /// This is the **history/timeline** path — it only removes the ledger entry.
-  /// The caller (saving_detail_page) follows up with recalculateBalance() to
-  /// fix current_amount and next_due_date, but the savings_collections record
-  /// is intentionally kept so the collection stays visible in Today Payments.
+  /// For EMI / savings-deposit transactions, this also reverts the linked
+  /// collection (deletes savings_collections or unmarks EMIs + restores the
+  /// loan outstanding) so the financial state stays consistent.
   ///
-  /// To delete a collection and fully revert financial data (collection record,
-  /// transaction, balance, due dates), use SavingsRepository.deleteSavingsCollection
-  /// instead.
+  /// Tries the server-side RPC first for atomicity; falls back to a
+  /// client-side revert if the RPC is missing or fails (e.g. RLS).
   Future<void> deleteTransaction(String id) async {
     // 1. Fetch the transaction to determine its type
     final txData = await _client
         .from('transactions')
-        .select('id, type, loan_id, savings_id, amount, member_id')
+        .select('id, type, loan_id, savings_id, amount, member_id, org_id')
         .eq('id', id)
         .maybeSingle();
 
@@ -184,11 +182,10 @@ class TransactionsRepository {
     final savingsId = txData['savings_id'] as String?;
     final amount = (txData['amount'] as num?)?.toDouble() ?? 0.0;
     final memberId = txData['member_id'] as String?;
+    final orgId = txData['org_id'] as String?;
 
     if (type == TransactionType.emiPayment.name && loanId != null) {
       // --- Full revert for loan EMI ---
-      // Find the matching collection and use delete_loan_collection RPC
-      // which atomically: unmarks EMIs, restores outstanding, deletes collection + transaction
       final col = await _client
           .from('collections')
           .select('id')
@@ -200,23 +197,215 @@ class TransactionsRepository {
           .maybeSingle();
 
       if (col != null) {
-        await _client.rpc('delete_loan_collection', params: {
-          'p_collection_id': col['id'],
-        });
-      } else {
-        // No matching collection — just delete the transaction
-        await _client.from('transactions').delete().eq('id', id);
+        try {
+          await _client.rpc('delete_loan_collection', params: {
+            'p_collection_id': col['id'],
+          });
+          return;
+        } catch (_) {
+          // RPC missing or blocked — fall through to client-side revert
+        }
+        await _deleteLoanCollectionClientSide(
+          collectionId: col['id'] as String,
+          loanId: loanId,
+          amount: amount,
+          orgId: orgId,
+        );
+        return;
       }
-    } else if (type == TransactionType.savingsDeposit.name && savingsId != null) {
-      // --- Full revert for savings deposit ---
-      // delete_savings_transaction RPC atomically: deletes collection,
-      // recalculates balance + due date, deletes transaction
-      await _client.rpc('delete_savings_transaction', params: {
-        'p_transaction_id': id,
-      });
-    } else {
-      // --- Simple transaction deletion (no revert needed) ---
+
+      // No matching collection — just delete the transaction
       await _client.from('transactions').delete().eq('id', id);
+      return;
+    }
+
+    if (type == TransactionType.savingsDeposit.name && savingsId != null) {
+      // --- Full revert for savings deposit ---
+      try {
+        await _client.rpc('delete_savings_transaction', params: {
+          'p_transaction_id': id,
+        });
+        return;
+      } catch (_) {
+        // RPC missing or blocked — fall through to client-side revert
+      }
+      await _deleteSavingsDepositClientSide(
+        transactionId: id,
+        savingsPlanId: savingsId,
+        amount: amount,
+        memberId: memberId,
+        orgId: orgId,
+      );
+      return;
+    }
+
+    // --- Simple transaction deletion (no revert needed) ---
+    await _client.from('transactions').delete().eq('id', id);
+  }
+
+  /// Client-side fallback: revert a loan collection without the RPC.
+  /// Unmarks the most recently paid EMIs and restores the loan outstanding.
+  Future<void> _deleteLoanCollectionClientSide({
+    required String collectionId,
+    required String loanId,
+    required double amount,
+    String? orgId,
+  }) async {
+    // 1. Delete the collection record
+    await _client.from('collections').delete().eq('id', collectionId);
+
+    // 2. Find and delete the matching transaction (best effort)
+    try {
+      final tx = await _client
+          .from('transactions')
+          .select('id')
+          .eq('loan_id', loanId)
+          .eq('amount', amount)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+      if (tx != null) {
+        await _client.from('transactions').delete().eq('id', tx['id']);
+      }
+    } catch (_) {
+      // Non-fatal
+    }
+
+    // 3. Unmark the most recently paid EMIs (reverse order)
+    try {
+      double remaining = amount;
+      final paidEmis = await _client
+          .from('emi_schedule')
+          .select('id, emi_amount')
+          .eq('loan_id', loanId)
+          .eq('is_paid', true)
+          .order('paid_on', ascending: false)
+          .order('emi_number', ascending: false);
+
+      for (final emi in paidEmis) {
+        if (remaining <= 0) break;
+        final emiAmount = (emi['emi_amount'] as num?)?.toDouble() ?? 0;
+        await _client.from('emi_schedule').update({
+          'is_paid': false,
+          'status': 'pending',
+          'paid_on': null,
+          'payment_mode': null,
+          'amount_paid': 0,
+        }).eq('id', emi['id']);
+        remaining -= emiAmount;
+      }
+    } catch (_) {
+      // Non-fatal
+    }
+
+    // 4. Restore the loan outstanding balance
+    try {
+      final loan = await _client
+          .from('loans')
+          .select('outstanding_amount, outstanding_balance, status')
+          .eq('id', loanId)
+          .maybeSingle();
+      if (loan != null) {
+        final currentOutstanding =
+            (loan['outstanding_amount'] as num?)?.toDouble() ??
+                (loan['outstanding_balance'] as num?)?.toDouble() ??
+                0.0;
+        final restored = currentOutstanding + amount;
+        final updateData = <String, dynamic>{
+          'outstanding_amount': restored,
+          'outstanding_balance': restored,
+        };
+        if (loan['status'] == 'closed') {
+          updateData['status'] = 'active';
+        }
+        await _client.from('loans').update(updateData).eq('id', loanId);
+      }
+    } catch (_) {
+      // Non-fatal — best-effort revert
+    }
+  }
+
+  /// Client-side fallback: revert a savings deposit without the RPC.
+  /// Deletes the savings_collections record, then triggers a balance recalc
+  /// via the recalculate_savings_balance SECURITY DEFINER RPC.
+  Future<void> _deleteSavingsDepositClientSide({
+    required String transactionId,
+    required String savingsPlanId,
+    required double amount,
+    String? memberId,
+    String? orgId,
+  }) async {
+    // 1. Delete the transaction first (FK safety)
+    await _client.from('transactions').delete().eq('id', transactionId);
+
+    // 2. Delete matching savings_collections record
+    try {
+      // First try precise match by transaction_id
+      final byTxId = await _client
+          .from('savings_collections')
+          .select('id')
+          .eq('transaction_id', transactionId)
+          .limit(1)
+          .maybeSingle();
+
+      if (byTxId != null) {
+        await _client.from('savings_collections').delete().eq('id', byTxId['id']);
+      } else {
+        // Fallback: match by amount for legacy data without transaction_id
+        var q = _client
+            .from('savings_collections')
+            .select('id')
+            .eq('savings_plan_id', savingsPlanId)
+            .or(
+              'amount_collected.eq.$amount,amount_expected.eq.$amount',
+            );
+        if (memberId != null) q = q.eq('member_id', memberId);
+        if (orgId != null) q = q.eq('org_id', orgId);
+        final col = await q.limit(1).maybeSingle();
+        if (col != null) {
+          await _client.from('savings_collections').delete().eq('id', col['id']);
+        }
+      }
+    } catch (_) {
+      // Non-fatal
+    }
+
+    // 3. Recalculate the plan balance via RPC (SECURITY DEFINER — bypasses RLS)
+    try {
+      await _client.rpc('recalculate_savings_balance', params: {
+        'p_savings_id': savingsPlanId,
+      });
+    } catch (_) {
+      // Fallback to direct update if the RPC isn't deployed yet
+      try {
+        final plan = await _client
+            .from('savings_plans')
+            .select('opening_balance, collection_type, start_date')
+            .eq('id', savingsPlanId)
+            .maybeSingle();
+        final opening =
+            (plan?['opening_balance'] as num?)?.toDouble() ?? 0.0;
+        final rows = await _client
+            .from('transactions')
+            .select('type, amount')
+            .eq('savings_id', savingsPlanId);
+        double balance = opening;
+        for (final r in rows as List) {
+          final t = r['type'] as String?;
+          final amt = (r['amount'] as num?)?.toDouble() ?? 0.0;
+          if (t == TransactionType.savingsWithdrawal.name) {
+            balance -= amt;
+          } else {
+            balance += amt;
+          }
+        }
+        if (balance < 0) balance = 0;
+        await _client.from('savings_plans').update({
+          'current_amount': balance,
+        }).eq('id', savingsPlanId);
+      } catch (_) {
+        // Give up silently — the delete still removed the ledger entry
+      }
     }
   }
 

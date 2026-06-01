@@ -12,6 +12,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../savings/data/providers/savings_providers.dart';
 import '../../data/models/transaction_model.dart';
 import '../../../loans/presentation/providers/loan_providers.dart';
+import '../../../payments/data/providers/payment_providers.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
@@ -119,8 +120,13 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       for (final sid in affectedSavingsIds) {
         try {
           await ref.read(savingsRepositoryProvider).recalculateBalance(sid);
-        } catch (_) {
-          // Best-effort per plan
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Revert failed for savings $sid: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ));
+          }
         }
       }
 
@@ -132,8 +138,13 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       for (final lid in affectedLoanIds) {
         try {
           await ref.read(loansRepositoryProvider).recalculateLoanBalance(lid);
-        } catch (_) {
-          // Best-effort per loan
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Revert failed for loan $lid: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ));
+          }
         }
       }
 
@@ -144,6 +155,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       ref.invalidate(todayStatsProvider);
       ref.invalidate(recentTransactionsProvider);
       ref.invalidate(dashboardTransactionsProvider);
+      ref.invalidate(todayPaymentsProvider);
       
       // Refresh savings data if any savings transactions were deleted
       if (affectedSavingsIds.isNotEmpty) {

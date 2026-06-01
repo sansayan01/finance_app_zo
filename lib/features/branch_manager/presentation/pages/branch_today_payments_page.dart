@@ -909,6 +909,23 @@ class _BranchTodayPaymentsPageState
           ? payment.id.substring(0, payment.id.length - 6)
           : payment.id;
 
+      // 1. Create transaction FIRST so we can link it to the collection
+      final txResult = await client.from('transactions').insert({
+        'member_id': payment.memberId,
+        'member_name': payment.memberName,
+        'savings_id': planId,
+        'amount': amount,
+        'type': 'savingsDeposit',
+        'payment_mode': paymentMode,
+        'description': installmentCount > 1
+            ? '$installmentCount installments deposited via $paymentMode'
+            : 'Savings deposit via $paymentMode',
+        'org_id': user.orgId!,
+        'created_at': now.toIso8601String(),
+      }).select('id').single();
+      final transactionId = txResult['id'] as String;
+
+      // 2. Record collection log (linked to transaction)
       await client.from('savings_collections').insert({
         'org_id': user.orgId!,
         'savings_plan_id': planId,
@@ -923,6 +940,7 @@ class _BranchTodayPaymentsPageState
         'collection_date': today,
         'staff_id': staffId,
         'sync_status': 'synced',
+        'transaction_id': transactionId,
       });
 
       final plan = await client
@@ -963,20 +981,6 @@ class _BranchTodayPaymentsPageState
         'current_amount': currentBalance + amount,
         'updated_at': now.toIso8601String(),
       }).eq('id', planId);
-
-      await client.from('transactions').insert({
-        'member_id': payment.memberId,
-        'member_name': payment.memberName,
-        'savings_id': planId,
-        'amount': amount,
-        'type': 'savingsDeposit',
-        'payment_mode': paymentMode,
-        'description': installmentCount > 1
-            ? '$installmentCount installments deposited via $paymentMode'
-            : 'Savings deposit via $paymentMode',
-        'org_id': user.orgId!,
-        'created_at': now.toIso8601String(),
-      });
 
       // Send SMS notification (fire-and-forget)
       final collectorName = profile?['full_name'] as String? ?? 'Staff';

@@ -535,8 +535,14 @@ final todayPaymentsProvider =
             : null,
       ));
 
-      // For daily collections that are overdue, also add a pending entry for today
-      if (isOverdue && (plan['collection_type'] ?? 'monthly') == 'daily') {
+      // For daily collections that are overdue and not yet collected,
+      // add a SEPARATE pending entry for today's collection.
+      // This way the user sees both the overdue entry AND today's pending entry.
+      final collectionType = plan['collection_type'] ?? 'daily';
+      if (!isCollected &&
+          isOverdue &&
+          collectionType == 'daily' &&
+          !selectedDateOnly.isAfter(DateTime.now())) {
         payments.add(TodayPayment(
           id: '${plan['id']}_today',
           type: PaymentType.savings,
@@ -549,8 +555,12 @@ final todayPaymentsProvider =
           agentId: member['agent_id'],
           agentName: null,
           amountExpected: (plan['monthly_deposit'] as num?)?.toDouble() ?? 0,
+          amountCollected: null,
           dueDate: DateTime.parse(dateStr),
-          planName: plan['plan_name'],
+          planName: '${plan['plan_name']} (Today)',
+          paymentMode: null,
+          collectedAt: null,
+          collectionId: null,
         ));
       }
     }

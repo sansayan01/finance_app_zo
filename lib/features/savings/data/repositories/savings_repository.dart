@@ -195,12 +195,17 @@ class SavingsRepository {
   Future<SavingsSummary> getSavingsSummary() async {
     try {
       final plans = await getActiveSavingsPlans();
+      final totalSavings = plans.fold<double>(0, (sum, p) => sum + p.currentAmount);
+      final averageBalance = plans.isEmpty ? 0.0 : totalSavings / plans.length;
+      // Estimated interest = sum of (current_amount - opening_balance) across all plans
+      final interestEarned = plans.fold<double>(
+          0, (sum, p) => sum + (p.currentAmount - p.openingBalance).clamp(0.0, double.infinity));
 
       return SavingsSummary(
-        totalSavings: 0, // Needs real balance from transactions
+        totalSavings: totalSavings,
         activeAccounts: plans.length,
-        averageBalance: 0,
-        interestEarned: 0,
+        averageBalance: averageBalance,
+        interestEarned: interestEarned,
       );
     } catch (e) {
       return SavingsSummary(
@@ -315,6 +320,18 @@ class SavingsRepository {
   }
 
   Future<void> recalculateBalance(String savingId) async {
+    // Prefer the SECURITY DEFINER RPC — it bypasses RLS so the recalc
+    // can't silently fail when a manager/agent deletes a transaction.
+    try {
+      final res = await _client.rpc('recalculate_savings_balance', params: {
+        'p_savings_id': savingId,
+      });
+      final ok = res is Map && res['success'] == true;
+      if (ok) return;
+    } catch (_) {
+      // RPC not deployed yet — fall through to client-side recalc
+    }
+
     // Read plan metadata
     final plan = await _client
         .from('savings_plans')
@@ -393,10 +410,10 @@ class SavingsRepository {
   /// Delete a savings collection by [savingsCollectionId].
   /// Finds the matching transaction and delegates to the RPC (with fallback).
   Future<void> deleteSavingsCollection(String savingsCollectionId) async {
-    // Fetch the savings collection to get savings_plan_id and amount
+    // Fetch the savings collection to get linked transaction_id and plan info
     final collection = await _client
         .from('savings_collections')
-        .select('savings_plan_id, amount_collected, member_id')
+        .select('savings_plan_id, amount_collected, member_id, transaction_id')
         .eq('id', savingsCollectionId)
         .maybeSingle();
     if (collection == null) {
@@ -406,27 +423,32 @@ class SavingsRepository {
     final savingsPlanId = collection['savings_plan_id'] as String?;
     final amount = (collection['amount_collected'] as num?)?.toDouble() ?? 0;
     final memberId = collection['member_id'] as String?;
+    final linkedTxId = collection['transaction_id'] as String?;
 
     if (savingsPlanId == null) {
       throw Exception('Savings collection has no savings_plan_id');
     }
 
-    // Find the matching transaction
-    final tx = await _client
-        .from('transactions')
-        .select('id')
-        .eq('savings_id', savingsPlanId)
-        .eq('amount', amount)
-        .eq('member_id', memberId ?? '')
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
+    // Find the linked transaction — prefer transaction_id, fall back to amount match
+    String? txId = linkedTxId;
+    if (txId == null) {
+      final tx = await _client
+          .from('transactions')
+          .select('id')
+          .eq('savings_id', savingsPlanId)
+          .eq('amount', amount)
+          .eq('member_id', memberId ?? '')
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+      txId = tx?['id'] as String?;
+    }
 
-    // Try RPC first
-    if (tx != null) {
+    // Try RPC first (handles collection + transaction + recalc in one shot)
+    if (txId != null) {
       try {
         await _client.rpc('delete_savings_transaction', params: {
-          'p_transaction_id': tx['id'],
+          'p_transaction_id': txId,
         });
         return;
       } catch (_) {
@@ -440,11 +462,11 @@ class SavingsRepository {
         .delete()
         .eq('id', savingsCollectionId);
 
-    if (tx != null) {
+    if (txId != null) {
       await _client
           .from('transactions')
           .delete()
-          .eq('id', tx['id']);
+          .eq('id', txId);
     }
 
     await recalculateBalance(savingsPlanId);

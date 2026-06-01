@@ -7,11 +7,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../core/providers/sms_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../payments/data/models/today_payment_model.dart';
 import '../../../payments/data/providers/payment_providers.dart' show TodayPaymentData;
 import '../../../payments/data/utils/payment_export.dart';
+import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../data/providers/branch_payment_providers.dart';
 import '../../data/providers/branch_manager_providers.dart';
 import '../../data/providers/branch_scoped_providers.dart';
@@ -381,6 +383,36 @@ class _BranchTodayPaymentsPageState
         text: payment.amountExpected.toStringAsFixed(0));
     String selectedMode = 'cash';
     bool isSubmitting = false;
+    int overdueCount = 0;
+    bool hasCurrent = false;
+    bool dataLoaded = false;
+
+    Future<void> loadQuickCollectOverdue(StateSetter setSheetState) async {
+      if (payment.type == PaymentType.emi && payment.loanId != null) {
+        try {
+          final schedule =
+              await ref.read(emiScheduleProvider(payment.loanId!).future);
+          final today = DateTime.now();
+          final todayDate = DateTime(today.year, today.month, today.day);
+          final unpaid =
+              schedule.where((e) => e.status != EMIStatus.paid).toList();
+          if (mounted) {
+            setSheetState(() {
+              overdueCount =
+                  unpaid.where((e) => e.dueDate.isBefore(todayDate)).length;
+              hasCurrent = unpaid.length > overdueCount;
+            });
+          }
+        } catch (_) {}
+      } else if (payment.type == PaymentType.savings) {
+        if (mounted) {
+          setSheetState(() {
+            overdueCount = payment.isOverdue ? 1 : 0;
+            hasCurrent = !payment.isOverdue;
+          });
+        }
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -394,10 +426,62 @@ class _BranchTodayPaymentsPageState
           final currencyFormat =
               NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
 
+          // Load overdue data on first build
+          if (!dataLoaded) {
+            dataLoaded = true;
+            loadQuickCollectOverdue(setSheetState);
+          }
+
           void updateAmount() {
             amountController.text =
                 (payment.amountExpected * installmentCount)
                     .toStringAsFixed(0);
+          }
+
+          double totalAmount() =>
+              installmentCount * payment.amountExpected;
+          int overdueToPay() =>
+              installmentCount < overdueCount
+                  ? installmentCount
+                  : overdueCount;
+          int remainingAfterOverdue() =>
+              installmentCount - overdueToPay();
+          int currentToPay() =>
+              remainingAfterOverdue() > 0 && hasCurrent ? 1 : 0;
+          int advanceToPay() =>
+              remainingAfterOverdue() - currentToPay();
+
+          Widget buildDistRow(String label, String value, Color color,
+              IconData? icon,
+              {bool isTotal = false}) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 14, color: color),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: isTotal ? 13 : 12,
+                      fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
+                      color: isTotal ? Colors.black87 : Colors.grey.shade700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: isTotal ? 14 : 12,
+                      fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           return Padding(
@@ -566,6 +650,59 @@ class _BranchTodayPaymentsPageState
                       fontSize: 20, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 20),
+
+                // Payment distribution breakdown
+                if (overdueToPay() > 0 ||
+                    currentToPay() > 0 ||
+                    advanceToPay() > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text('Payment Distribution',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 12)),
+                        const SizedBox(height: 10),
+                        if (overdueToPay() > 0)
+                          buildDistRow(
+                              '${overdueToPay()} Overdue',
+                              currencyFormat.format(
+                                  overdueToPay() * payment.amountExpected),
+                              AppColors.error,
+                              Icons.warning_amber_rounded),
+                        if (currentToPay() > 0)
+                          buildDistRow(
+                              '${currentToPay()} Current',
+                              currencyFormat.format(
+                                  currentToPay() * payment.amountExpected),
+                              AppColors.warning,
+                              Icons.schedule_rounded),
+                        if (advanceToPay() > 0)
+                          buildDistRow(
+                              '${advanceToPay()} Advance',
+                              currencyFormat.format(
+                                  advanceToPay() * payment.amountExpected),
+                              AppColors.info,
+                              Icons.trending_up_rounded),
+                        const Divider(height: 20),
+                        buildDistRow(
+                          'Total',
+                          currencyFormat.format(totalAmount()),
+                          AppColors.success,
+                          null,
+                          isTotal: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
                 const Text('Payment Mode',
                     style:
                         TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),

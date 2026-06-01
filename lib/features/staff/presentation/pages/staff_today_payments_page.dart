@@ -7,10 +7,12 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../../core/providers/sms_provider.dart';
 import '../../../payments/data/models/today_payment_model.dart';
 import '../../../payments/data/providers/payment_providers.dart' show TodayPaymentData;
 import '../../../payments/data/utils/payment_export.dart';
+import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../branch_manager/data/providers/branch_payment_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
 import '../../data/providers/staff_providers.dart';
@@ -105,6 +107,117 @@ class _StaffTodayPaymentsPageState
                 )),
             const SizedBox(height: 16),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showFilterSheet() {
+    final filters = ref.read(branchPaymentFilterProvider);
+    final branchId = ref.read(staffBranchIdProvider).valueOrNull;
+    if (branchId == null) return;
+
+    final agentsAsync = ref.read(branchPaymentAgentsProvider(branchId));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filters',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  TextButton(
+                    onPressed: () {
+                      ref
+                          .read(branchPaymentFilterProvider.notifier)
+                          .resetFilters();
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Reset'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Agent',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              const SizedBox(height: 8),
+              agentsAsync.when(
+                loading: () => const LinearProgressIndicator(),
+                error: (e, _) => Text('Error: $e'),
+                data: (agents) => Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilterChip(
+                      label: const Text('All Agents'),
+                      selected: filters.agentId == null,
+                      onSelected: (_) {
+                        ref
+                            .read(branchPaymentFilterProvider.notifier)
+                            .setAgent(null);
+                      },
+                      selectedColor:
+                          AppColors.primary.withValues(alpha: 0.15),
+                      checkmarkColor: AppColors.primary,
+                    ),
+                    ...agents.map((a) => FilterChip(
+                          label: Text(a['name']!),
+                          selected: filters.agentId == a['id'],
+                          onSelected: (_) {
+                            ref
+                                .read(branchPaymentFilterProvider.notifier)
+                                .setAgent(a['id']);
+                          },
+                          selectedColor:
+                              AppColors.primary.withValues(alpha: 0.15),
+                          checkmarkColor: AppColors.primary,
+                        )),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Apply Filters',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -262,6 +375,36 @@ class _StaffTodayPaymentsPageState
         text: payment.amountExpected.toStringAsFixed(0));
     String selectedMode = 'cash';
     bool isSubmitting = false;
+    int overdueCount = 0;
+    bool hasCurrent = false;
+    bool dataLoaded = false;
+
+    Future<void> loadQuickCollectOverdue(StateSetter setSheetState) async {
+      if (payment.type == PaymentType.emi && payment.loanId != null) {
+        try {
+          final schedule =
+              await ref.read(emiScheduleProvider(payment.loanId!).future);
+          final today = DateTime.now();
+          final todayDate = DateTime(today.year, today.month, today.day);
+          final unpaid =
+              schedule.where((e) => e.status != EMIStatus.paid).toList();
+          if (mounted) {
+            setSheetState(() {
+              overdueCount =
+                  unpaid.where((e) => e.dueDate.isBefore(todayDate)).length;
+              hasCurrent = unpaid.length > overdueCount;
+            });
+          }
+        } catch (_) {}
+      } else if (payment.type == PaymentType.savings) {
+        if (mounted) {
+          setSheetState(() {
+            overdueCount = payment.isOverdue ? 1 : 0;
+            hasCurrent = !payment.isOverdue;
+          });
+        }
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -278,6 +421,58 @@ class _StaffTodayPaymentsPageState
           void updateAmount() {
             amountController.text =
                 (payment.amountExpected * installmentCount).toStringAsFixed(0);
+          }
+
+          // Load overdue data on first build
+          if (!dataLoaded) {
+            dataLoaded = true;
+            loadQuickCollectOverdue(setSheetState);
+          }
+
+          double totalAmount() =>
+              installmentCount * payment.amountExpected;
+          int overdueToPay() =>
+              installmentCount < overdueCount
+                  ? installmentCount
+                  : overdueCount;
+          int remainingAfterOverdue() =>
+              installmentCount - overdueToPay();
+          int currentToPay() =>
+              remainingAfterOverdue() > 0 && hasCurrent ? 1 : 0;
+          int advanceToPay() =>
+              remainingAfterOverdue() - currentToPay();
+
+          Widget buildDistRow(String label, String value, Color color,
+              IconData? icon,
+              {bool isTotal = false}) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 14, color: color),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: isTotal ? 13 : 12,
+                      fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
+                      color: isTotal ? Colors.black87 : Colors.grey.shade700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: isTotal ? 14 : 12,
+                      fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           return Padding(
@@ -462,6 +657,58 @@ class _StaffTodayPaymentsPageState
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Payment distribution breakdown
+                if (overdueToPay() > 0 ||
+                    currentToPay() > 0 ||
+                    advanceToPay() > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text('Payment Distribution',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 12)),
+                        const SizedBox(height: 10),
+                        if (overdueToPay() > 0)
+                          buildDistRow(
+                              '${overdueToPay()} Overdue',
+                              currencyFormat.format(
+                                  overdueToPay() * payment.amountExpected),
+                              AppColors.error,
+                              Icons.warning_amber_rounded),
+                        if (currentToPay() > 0)
+                          buildDistRow(
+                              '${currentToPay()} Current',
+                              currencyFormat.format(
+                                  currentToPay() * payment.amountExpected),
+                              AppColors.warning,
+                              Icons.schedule_rounded),
+                        if (advanceToPay() > 0)
+                          buildDistRow(
+                              '${advanceToPay()} Advance',
+                              currencyFormat.format(
+                                  advanceToPay() * payment.amountExpected),
+                              AppColors.info,
+                              Icons.trending_up_rounded),
+                        const Divider(height: 20),
+                        buildDistRow(
+                          'Total',
+                          currencyFormat.format(totalAmount()),
+                          AppColors.success,
+                          null,
+                          isTotal: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 // Payment mode
                 const Text('Payment Mode',
@@ -942,6 +1189,15 @@ class _StaffTodayPaymentsPageState
               icon: const Icon(Icons.search_rounded),
               onPressed: () => setState(() => _showSearch = true),
             ),
+            IconButton(
+              icon: Icon(
+                Icons.filter_list_rounded,
+                color: filters.agentId != null
+                    ? AppColors.primary
+                    : null,
+              ),
+              onPressed: _showFilterSheet,
+            ),
             PopupMenuButton(
               icon: const Icon(Icons.more_vert_rounded),
               shape: RoundedRectangleBorder(
@@ -1057,6 +1313,7 @@ class _StaffTodayPaymentsPageState
                     children: [
                       _buildSummaryHero(summary, isDark),
                       _buildQuickStats(summary, isDark),
+                      if (filters.agentId != null) _buildActiveFilters(filters, isDark),
                       const SizedBox(height: 8),
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -1294,6 +1551,56 @@ class _StaffTodayPaymentsPageState
               count: '${summary.countOverdue}',
               color: AppColors.error,
               isDark: isDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Active Filters
+  Widget _buildActiveFilters(BranchPaymentFilterState filters, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.filter_alt_rounded,
+              size: 16, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Filtered by: Agent',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () =>
+                ref.read(branchPaymentFilterProvider.notifier).resetFilters(),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Clear',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
         ],

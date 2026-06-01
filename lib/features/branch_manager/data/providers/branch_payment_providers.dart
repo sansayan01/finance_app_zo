@@ -432,10 +432,17 @@ final branchTodayPaymentsProvider =
       final isCollected = existingCollection != null;
 
       final nextDueStr = plan['next_due_date'] as String?;
+      final nextDueParsed =
+          nextDueStr != null ? DateTime.tryParse(nextDueStr) : null;
+      final nextDateOnly = nextDueParsed != null
+          ? DateTime(
+              nextDueParsed.year, nextDueParsed.month, nextDueParsed.day)
+          : null;
+      final selectedDateOnly = DateTime(
+          selectedDate.year, selectedDate.month, selectedDate.day);
       final isOverdue = !isCollected &&
-          nextDueStr != null &&
-          DateTime.parse(nextDueStr).isBefore(DateTime(
-              selectedDate.year, selectedDate.month, selectedDate.day));
+          nextDateOnly != null &&
+          nextDateOnly.isBefore(selectedDateOnly);
 
       payments.add(TodayPayment(
         id: plan['id'],
@@ -466,6 +473,26 @@ final branchTodayPaymentsProvider =
             ? DateTime.tryParse(existingCollection['created_at'])
             : null,
       ));
+
+      // For daily collections that are overdue, also add a pending entry for today
+      if (isOverdue && (plan['collection_type'] ?? 'monthly') == 'daily') {
+        payments.add(TodayPayment(
+          id: '${plan['id']}_today',
+          type: PaymentType.savings,
+          status: PaymentStatus.pending,
+          memberName: member['full_name'] ?? 'Unknown',
+          memberPhone: member['phone'],
+          memberId: member['id'],
+          branchId: branchId,
+          branchName: null,
+          agentId: member['agent_id'],
+          agentName: null,
+          amountExpected:
+              (plan['monthly_deposit'] as num?)?.toDouble() ?? 0,
+          dueDate: DateTime.parse(dateStr),
+          planName: plan['plan_name'],
+        ));
+      }
     }
   } catch (e, stack) {
     debugPrint('Error fetching branch savings dues: $e');

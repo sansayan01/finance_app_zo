@@ -21,8 +21,11 @@ final authStateProvider = StreamProvider<User?>((ref) {
 
 final supabaseUserProvider = Provider<User?>((ref) {
   try {
+    // Watch the stream for real-time updates (sign-out, token refresh)
     final authState = ref.watch(authStateProvider);
-    return authState.whenOrNull(data: (user) => user);
+    final streamUser = authState.whenOrNull(data: (user) => user);
+    // Fallback: read currentUser synchronously (available immediately on app start)
+    return streamUser ?? Supabase.instance.client.auth.currentUser;
   } catch (e) {
     return null;
   }

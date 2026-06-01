@@ -14,13 +14,7 @@ final staffRepositoryProvider = Provider<StaffRepository>((ref) {
 
 // Current staff profile
 final staffProfileProvider = FutureProvider<StaffProfileModel?>((ref) async {
-  final authState = ref.watch(authStateProvider);
-  final user = authState.when(
-    data: (user) => user,
-    loading: () => null,
-    error: (_, __) => null,
-  );
-
+  final user = ref.watch(supabaseUserProvider);
   if (user == null) return null;
 
   final repository = ref.watch(staffRepositoryProvider);

@@ -917,12 +917,9 @@ class _MemberCard extends StatelessWidget {
     return GlassCard(
       padding: const EdgeInsets.all(14),
       onTap: () {
-        if (profileId != null) {
-          context.go('/staff/user-hub/$profileId');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('This member has no linked user account')),
-          );
+        final navigateId = profileId ?? member['id'] as String?;
+        if (navigateId != null) {
+          context.go('/staff/user-hub/$navigateId');
         }
       },
       child: Column(

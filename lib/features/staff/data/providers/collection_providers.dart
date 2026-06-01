@@ -177,7 +177,9 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
         collectorName: collectorName,
         orgName: branding?.displayName,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('SMS dispatch error: $e');
+    }
   }
 
   Future<void> recordCollection({

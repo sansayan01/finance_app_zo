@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -23,7 +24,10 @@ class SmsService {
 
   Future<bool> _sendAndroidSms(String phone, String msg) async {
     final status = await Permission.sms.request();
-    if (!status.isGranted) return false;
+    if (!status.isGranted) {
+      debugPrint('SMS permission not granted');
+      return false;
+    }
 
     try {
       final result = await _channel.invokeMethod('send_sms', {
@@ -32,6 +36,7 @@ class SmsService {
       });
       return result == true;
     } catch (e) {
+      debugPrint('SMS send failed for $phone: $e');
       return false;
     }
   }

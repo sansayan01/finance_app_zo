@@ -13,7 +13,7 @@ import '../../data/providers/staff_providers.dart';
 import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../widgets/receipt_generator.dart';
-import '../../data/providers/sms_provider.dart';
+
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/smokey_background.dart';
@@ -579,14 +579,6 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
             final orgName = branding?.displayName;
 
             final profile = ref.read(staffProfileProvider).valueOrNull;
-            final collectorName = profile?.fullName ?? 'Agent';
-
-            // Fire SMS notification to customer (background, non-blocking)
-            ref.read(collectionSmsSenderProvider).sendCollectionSms(
-              collection: collection,
-              collectorName: collectorName,
-              orgName: orgName,
-            );
 
             final receiptText = ReceiptGenerator.generateTextReceipt(
               receiptNumber: ReceiptGenerator.generateReceiptNumber(

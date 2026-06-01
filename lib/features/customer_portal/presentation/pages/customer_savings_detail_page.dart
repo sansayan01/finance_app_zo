@@ -381,7 +381,7 @@ class _CustomerSavingsDetailPageState
                                   setSheetState(() => step = 'loading');
                                   try {
                                     final supabase = Supabase.instance.client;
-                                    final orgId = ref.read(currentOrgProvider).valueOrNull?['id']?.toString() ?? '';
+                                    final orgId = ref.read(currentOrgIdOrThrowProvider);
 
                                     // Fetch org info
                                     final orgData = await supabase

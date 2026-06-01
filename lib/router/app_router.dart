@@ -757,7 +757,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/customer/receipt',
             builder: (context, state) {
-              final args = state.extra as Map<String, dynamic>;
+              final args = state.extra as Map<String, dynamic>?;
+              if (args == null) {
+                return const Scaffold(
+                  body: Center(child: Text('Receipt data not found')),
+                );
+              }
               return CustomerReceiptPage(
                 transactionId: args['transactionId'] as String,
                 amount: args['amount'] as double,

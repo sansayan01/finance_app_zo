@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/core/constants/app_colors.dart';
 import 'package:microflow_pro/core/constants/app_spacing.dart';
 import 'package:microflow_pro/core/widgets/shimmer_card.dart';
+import '../../data/models/customer_notification_model.dart';
 import '../../data/providers/customer_notifications_providers.dart';
 import '../../data/providers/customer_member_provider.dart';
 import '../widgets/customer_notification_tile.dart';
@@ -50,12 +51,12 @@ class _CustomerNotificationsPageState
     super.dispose();
   }
 
-  bool _matchesFilter(dynamic n) {
+  bool _matchesFilter(CustomerNotificationModel n) {
     switch (_filter) {
       case _NotificationFilter.all:
         return true;
       case _NotificationFilter.unread:
-        return !(n.isRead as bool);
+        return !n.isRead;
       case _NotificationFilter.emi:
         return n.type == 'payment_due' || n.type == 'emi_reminder';
       case _NotificationFilter.savings:

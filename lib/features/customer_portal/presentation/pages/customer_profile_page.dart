@@ -276,7 +276,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
         : profile.kycStatus == 'rejected'
             ? AppColors.error
             : AppColors.warning;
-    final kycLabel = profile.kycStatus[0].toUpperCase() + profile.kycStatus.substring(1);
+    final kycLabel = (profile.kycStatus.isNotEmpty ? profile.kycStatus[0].toUpperCase() + profile.kycStatus.substring(1) : 'Pending');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),

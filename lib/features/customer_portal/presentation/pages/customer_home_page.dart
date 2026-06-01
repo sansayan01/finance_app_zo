@@ -92,7 +92,11 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
       extendBody: true,
       body: memberIdAsync.when(
         loading: () => _buildShimmerLoading(context),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => _buildErrorState(
+          context,
+          e,
+          onRetry: () => ref.invalidate(currentCustomerIdProvider),
+        ),
         data: (memberId) {
           if (memberId == null) {
             return const CustomerEmptyState(
@@ -104,7 +108,11 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
           }
           return dashboardAsync.when(
             loading: () => _buildShimmerLoading(context),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => _buildErrorState(
+              context,
+              e,
+              onRetry: () => ref.invalidate(customerDashboardProvider),
+            ),
             data: (dashboard) {
               if (dashboard == null) {
                 return const CustomerEmptyState(
@@ -118,6 +126,101 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildErrorState(
+    BuildContext context,
+    Object error, {
+    required VoidCallback onRetry,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: (AppColors.error).withValues(alpha: isDark ? 0.15 : 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 32,
+                color: AppColors.error,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Something went wrong',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isDark
+                    ? AppColors.textTertiaryDark
+                    : AppColors.textTertiaryLight,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: onRetry,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 28, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: AppColors.premiumGradient,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Retry',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1350,14 +1453,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     }).toList();
 
     if (data.every((d) => d.amount == 0)) {
-      return [
-        MonthlyPaymentData(label: _monthLabel(now.month - 5), amount: 1500),
-        MonthlyPaymentData(label: _monthLabel(now.month - 4), amount: 2000),
-        MonthlyPaymentData(label: _monthLabel(now.month - 3), amount: 1800),
-        MonthlyPaymentData(label: _monthLabel(now.month - 2), amount: 2500),
-        MonthlyPaymentData(label: _monthLabel(now.month - 1), amount: 2200),
-        MonthlyPaymentData(label: _monthLabel(now.month), amount: 3000),
-      ];
+      return [];
     }
     return data;
   }
@@ -1381,20 +1477,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     }).toList();
 
     if (data.every((v) => v == 0)) {
-      return [
-        MonthlyPaymentData(label: _monthLabel(now.month - 5),
-            amount: currentTotal > 0 ? currentTotal * 0.5 : 2000),
-        MonthlyPaymentData(label: _monthLabel(now.month - 4),
-            amount: currentTotal > 0 ? currentTotal * 0.6 : 2500),
-        MonthlyPaymentData(label: _monthLabel(now.month - 3),
-            amount: currentTotal > 0 ? currentTotal * 0.75 : 3200),
-        MonthlyPaymentData(label: _monthLabel(now.month - 2),
-            amount: currentTotal > 0 ? currentTotal * 0.8 : 3500),
-        MonthlyPaymentData(label: _monthLabel(now.month - 1),
-            amount: currentTotal > 0 ? currentTotal * 0.9 : 4100),
-        MonthlyPaymentData(label: _monthLabel(now.month),
-            amount: currentTotal > 0 ? currentTotal : 5000),
-      ];
+      return [];
     }
 
     List<MonthlyPaymentData> list = [];

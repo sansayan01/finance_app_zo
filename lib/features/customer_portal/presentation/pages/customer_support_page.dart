@@ -1049,7 +1049,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                       itemBuilder: (context, index) {
                         final msg = messages[index];
                         final isCustomer = msg.senderId ==
-                            ref.read(currentCustomerIdSyncProvider);
+                            ref.read(currentProfileIdSyncProvider);
                         return _ChatBubble(
                           message: msg.message,
                           isCustomer: isCustomer,
@@ -1326,14 +1326,14 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
     final msg = _messageController.text.trim();
     if (msg.isEmpty) return;
 
-    final customerId = ref.read(currentCustomerIdSyncProvider);
-    if (customerId == null) return;
+    final profileId = ref.read(currentProfileIdSyncProvider);
+    if (profileId == null) return;
 
     final success = await ref
         .read(ticketMessageProvider.notifier)
         .addMessage(
           ticketId: widget.ticket.id,
-          senderId: customerId,
+          senderId: profileId,
           message: msg,
         );
 

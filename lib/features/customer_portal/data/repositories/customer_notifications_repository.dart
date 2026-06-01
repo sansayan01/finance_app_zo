@@ -20,7 +20,7 @@ class CustomerNotificationsRepository {
               CustomerNotificationModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 
@@ -47,7 +47,7 @@ class CustomerNotificationsRepository {
           .eq('is_read', false);
       return (data as List).length;
     } catch (e) {
-      return 0;
+      rethrow;
     }
   }
 }

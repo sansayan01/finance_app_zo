@@ -30,16 +30,16 @@ class CustomerEmiModel {
   factory CustomerEmiModel.fromJson(Map<String, dynamic> json) {
     return CustomerEmiModel(
       id: json['id']?.toString() ?? '',
-      emiNumber: (json['emi_number'] ?? 0) as int,
+      emiNumber: (json['emi_number'] as num?)?.toInt() ?? 0,
       dueDate: json['due_date'] != null
           ? DateTime.tryParse(json['due_date'].toString())
           : null,
-      emiAmount: (json['emi_amount'] ?? 0).toDouble(),
+      emiAmount: (json['emi_amount'] as num?)?.toDouble() ?? 0,
       amountPaid: (json['amount_paid'] as num?)?.toDouble() ??
-          ((json['is_paid'] == true) ? (json['emi_amount'] ?? 0).toDouble() : 0),
-      principal: (json['principal'] ?? 0).toDouble(),
-      interest: (json['interest'] ?? 0).toDouble(),
-      balanceAfter: (json['balance_after'] ?? 0).toDouble(),
+          ((json['is_paid'] == true) ? (json['emi_amount'] as num?)?.toDouble() ?? 0 : 0),
+      principal: (json['principal'] as num?)?.toDouble() ?? 0,
+      interest: (json['interest'] as num?)?.toDouble() ?? 0,
+      balanceAfter: (json['balance_after'] as num?)?.toDouble() ?? 0,
       isPaid: json['is_paid'] as bool? ?? false,
       paidOn: json['paid_on'] != null
           ? DateTime.tryParse(json['paid_on'].toString())
@@ -47,9 +47,7 @@ class CustomerEmiModel {
               ? DateTime.tryParse(json['paid_date'].toString())
               : null,
       status: json['status']?.toString() ?? 'pending',
-      penaltyAmount: json['penalty_amount'] != null
-          ? (json['penalty_amount']).toDouble()
-          : null,
+      penaltyAmount: (json['penalty_amount'] as num?)?.toDouble(),
     );
   }
 

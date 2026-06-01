@@ -190,7 +190,7 @@ class BranchRepository {
   Future<List<Map<String, dynamic>>> getBranchMembers(String branchId) async {
     final response = await _client
         .from('members')
-        .select('id, full_name, phone, status')
+        .select('id, full_name, phone, status, profile_id')
         .eq('branch_id', branchId)
         .order('full_name')
         .limit(200);

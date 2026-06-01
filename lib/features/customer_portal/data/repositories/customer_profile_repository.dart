@@ -11,8 +11,9 @@ class CustomerProfileRepository {
       final memberData = await _client
           .from('members')
           .select(
-            'id, full_name, phone, email, kyc_status, area, village, address, '
-            'aadhar, pan, profile_id, created_at',
+            'id, full_name, father_name, phone, email, kyc_status, area, village, address, '
+            'aadhar_number, pan_number, date_of_birth, gender, occupation, monthly_income, '
+            'profile_id, created_at',
           )
           .eq('id', memberId)
           .eq('org_id', _orgId)
@@ -74,17 +75,31 @@ class CustomerProfileRepository {
     Map<String, dynamic> data,
   ) async {
     try {
+      // Only send fields that exist on the members table
+      const allowedFields = {
+        'full_name', 'father_name', 'phone', 'email', 'kyc_status',
+        'area', 'village', 'address', 'aadhar_number', 'pan_number',
+        'date_of_birth', 'gender', 'occupation', 'monthly_income',
+      };
+      final sanitized = <String, dynamic>{};
+      for (final entry in data.entries) {
+        if (allowedFields.contains(entry.key)) {
+          sanitized[entry.key] = entry.value;
+        }
+      }
+      if (sanitized.isEmpty) return true;
+
       await _client
           .from('members')
-          .update(data)
+          .update(sanitized)
           .eq('id', memberId)
           .eq('org_id', _orgId);
 
       // Sync full_name / phone / email back to profiles table
       final profileSync = <String, dynamic>{};
-      if (data.containsKey('full_name')) profileSync['full_name'] = data['full_name'];
-      if (data.containsKey('phone')) profileSync['phone'] = data['phone'];
-      if (data.containsKey('email')) profileSync['email'] = data['email'];
+      if (sanitized.containsKey('full_name')) profileSync['full_name'] = sanitized['full_name'];
+      if (sanitized.containsKey('phone')) profileSync['phone'] = sanitized['phone'];
+      if (sanitized.containsKey('email')) profileSync['email'] = sanitized['email'];
       if (profileSync.isNotEmpty) {
         try {
           // Get the profile_id from this member row

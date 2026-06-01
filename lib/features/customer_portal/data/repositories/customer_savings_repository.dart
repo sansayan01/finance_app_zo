@@ -20,7 +20,7 @@ class CustomerSavingsRepository {
           .map((e) => CustomerSavingsModel.fromJson(e))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 
@@ -30,11 +30,12 @@ class CustomerSavingsRepository {
           .from('savings_plans')
           .select()
           .eq('id', savingsId)
+          .eq('org_id', _orgId)
           .maybeSingle();
       if (data == null) return null;
       return CustomerSavingsModel.fromJson(data);
     } catch (e) {
-      return null;
+      rethrow;
     }
   }
 
@@ -64,7 +65,7 @@ class CustomerSavingsRepository {
               CustomerTransactionModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 }

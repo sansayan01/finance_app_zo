@@ -26,7 +26,7 @@ final currentCustomerIdProvider = FutureProvider<String?>((ref) async {
         .limit(1)
         .maybeSingle();
 
-    if (profile == null) return user.id;
+    if (profile == null) return null;
 
     final profileId = profile['id'] as String;
 
@@ -42,8 +42,39 @@ final currentCustomerIdProvider = FutureProvider<String?>((ref) async {
     }
   } catch (_) {}
 
-  // Fallback: use the profile id
-  return user.id;
+  // No member found for this user
+  return null;
+});
+
+/// Returns the profiles.id for the current auth user.
+///
+/// Chain: auth.uid() -> profiles.user_id -> profiles.id
+/// Needed for tables with FK to profiles.id (e.g. customer_ticket_messages.sender_id).
+final currentProfileIdProvider = FutureProvider<String?>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return null;
+
+  final client = ref.watch(supabaseClientProvider);
+  try {
+    final profile = await client
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+    if (profile != null) {
+      return profile['id'] as String;
+    }
+  } catch (_) {}
+
+  return null;
+});
+
+/// Synchronous version that returns null while loading.
+final currentProfileIdSyncProvider = Provider<String?>((ref) {
+  final asyncValue = ref.watch(currentProfileIdProvider);
+  return asyncValue.valueOrNull;
 });
 
 /// Synchronous version that returns null while loading.

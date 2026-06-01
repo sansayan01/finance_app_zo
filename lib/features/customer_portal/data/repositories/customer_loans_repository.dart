@@ -20,7 +20,7 @@ class CustomerLoansRepository {
           .map((e) => CustomerLoanModel.fromJson(e))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 
@@ -30,11 +30,12 @@ class CustomerLoansRepository {
           .from('loans')
           .select()
           .eq('id', loanId)
+          .eq('org_id', _orgId)
           .maybeSingle();
       if (data == null) return null;
       return CustomerLoanModel.fromJson(data);
     } catch (e) {
-      return null;
+      rethrow;
     }
   }
 
@@ -50,7 +51,7 @@ class CustomerLoansRepository {
           .map((e) => CustomerEmiModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 }

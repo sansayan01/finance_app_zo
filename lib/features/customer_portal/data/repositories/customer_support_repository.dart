@@ -19,7 +19,7 @@ class CustomerSupportRepository {
           .map((e) => CustomerTicketModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 
@@ -61,7 +61,7 @@ class CustomerSupportRepository {
               CustomerTicketMessageModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 

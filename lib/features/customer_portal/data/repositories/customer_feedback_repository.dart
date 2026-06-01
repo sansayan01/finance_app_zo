@@ -22,7 +22,7 @@ class CustomerFeedbackRepository {
           .map((e) => CustomerFeedbackModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      return [];
+      rethrow;
     }
   }
 

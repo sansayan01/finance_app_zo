@@ -1,411 +1,136 @@
+// lib/core/providers/sms_provider.dart
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/sms_outbox_service.dart';
 import '../services/sms_service.dart';
 import '../../providers/supabase_provider.dart';
 import 'org_provider.dart';
 import 'storage_providers.dart';
+import 'sms_outbox_provider.dart';
 import '../../features/staff/data/models/collection_model.dart';
 
 /// Provides the SmsService singleton.
 final smsServiceProvider = Provider<SmsService>((ref) => SmsService());
 
-/// Whether SMS permission is currently granted.
-/// TODO(sms-reliability): this provider is being replaced by the native
-/// `check_permission` method in SmsSenderPlugin. Removal tracked in Task 8/12.
-final smsPermissionProvider = FutureProvider<bool>((ref) async {
-  if (Platform.isAndroid) {
-    return (await Permission.sms.status).isGranted;
-  }
-  return true;
-});
-
-// ─── Offline SMS Queue ────────────────────────────────────────────────
-
 const _pendingSmsQueueKey = 'pending_sms_queue';
 
-Future<void> queuePendingSms(Map<String, dynamic> smsData) async {
-  final prefs = await SharedPreferences.getInstance();
-  final queueStr = prefs.getString(_pendingSmsQueueKey);
-  final queue = queueStr != null
-      ? (jsonDecode(queueStr) as List).cast<Map<String, dynamic>>()
-      : <Map<String, dynamic>>[];
-  smsData['queued_at'] = DateTime.now().toIso8601String();
-  smsData['attempts'] = 0;
-  queue.add(smsData);
-  await prefs.setString(_pendingSmsQueueKey, jsonEncode(queue));
-}
-
-Future<void> flushPendingSmsQueue({
-  required SmsService smsService,
-  required dynamic supabaseClient,
-  required String? orgId,
-}) async {
-  final prefs = await SharedPreferences.getInstance();
-  final queueStr = prefs.getString(_pendingSmsQueueKey);
-  if (queueStr == null) return;
-
-  final queue = (jsonDecode(queueStr) as List).cast<Map<String, dynamic>>();
-  if (queue.isEmpty) return;
-
-  final remaining = <Map<String, dynamic>>[];
-  for (final item in queue) {
-    try {
-      final phone = item['phone'] as String;
-      final message = item['message'] as String;
-      final sent = await smsService.sendSms(phoneNumber: phone, message: message);
-      if (sent && supabaseClient != null) {
-        await supabaseClient.from('sms_notifications').insert({
-          'org_id': orgId,
-          'member_id': item['member_id'],
-          'member_phone': phone,
-          'recipient_phone': phone,
-          'recipient_name': item['recipient_name'],
-          'collector_name': item['collector_name'],
-          'message': message,
-          'status': 'sent',
-          'platform': Platform.isAndroid ? 'android' : 'ios',
-          'sent_by': item['sent_by'],
-        });
-      }
-    } catch (_) {
-      item['attempts'] = (item['attempts'] as int? ?? 0) + 1;
-      if ((item['attempts'] as int) < 5) {
-        remaining.add(item);
-      }
-    }
-  }
-
-  await prefs.setString(_pendingSmsQueueKey, jsonEncode(remaining));
-}
-
 /// Handles sending SMS notifications and logging to Supabase.
-class CollectionSmsSender {
+/// StateNotifier so its in-flight state survives Riverpod invalidation.
+class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   final SmsService _smsService;
   final dynamic _client;
   final String? _orgId;
   final SharedPreferences _prefs;
+  final Ref _ref;
 
-  CollectionSmsSender(this._smsService, this._client, this._orgId, this._prefs);
+  CollectionSmsSender(this._smsService, this._client, this._orgId, this._prefs, this._ref)
+      : super(const CollectionSmsState());
 
   Future<bool> _isSmsEnabled(String key) async {
     return _prefs.getBool(key) ?? true;
   }
 
-  /// Send an SMS notification for a collection.
-  Future<void> sendCollectionSms({
-    required CollectionModel collection,
-    required String collectorName,
-    String? orgName,
-  }) async {
-    final enabled = await _isSmsEnabled('sms_on_collection');
-    if (!enabled) return;
-
-    try {
-      final phone = collection.memberPhone;
-      if (phone == null || phone.isEmpty) {
-        await _logSms(
-          collectionId: collection.id,
-          memberId: collection.memberId,
-          recipientPhone: '',
-          recipientName: collection.memberName,
-          collectorName: collectorName,
-          message: '',
-          status: 'skipped',
-          errorMessage: 'No phone number',
-          sentBy: collection.staffId,
-        );
-        return;
-      }
-
-      final message = _smsService.buildCollectionSms(
-        amount: '₹${collection.amountCollected.toStringAsFixed(0)}',
-        collectorName: collectorName,
-        orgName: orgName ?? 'MicroFlow Finance',
-        loanNumber: collection.loanNumber ?? 'N/A',
-        outstandingBalance: '₹${collection.amountExpected.toStringAsFixed(0)}',
-        date: collection.collectionTime,
-      );
-
-      final sent = await _smsService.sendSms(
-        phoneNumber: phone,
-        message: message,
-      );
-
-      if (sent) {
-        await _logSms(
-          collectionId: collection.id,
-          memberId: collection.memberId,
-          recipientPhone: phone,
-          recipientName: collection.memberName,
-          collectorName: collectorName,
-          message: message,
-          status: 'sent',
-          sentBy: collection.staffId,
-        );
-      } else {
-        await _queueOrLogFailure(
-          collectionId: collection.id,
-          memberId: collection.memberId,
-          recipientPhone: phone,
-          recipientName: collection.memberName,
-          collectorName: collectorName,
-          message: message,
-          sentBy: collection.staffId,
-        );
-      }
-    } catch (e) {
-      debugPrint('Collection SMS failed: $e');
-      await _queueOrLogFailure(
-        collectionId: collection.id,
-        memberId: collection.memberId,
-        recipientPhone: collection.memberPhone ?? '',
-        recipientName: collection.memberName,
-        collectorName: collectorName,
-        message: _smsService.buildCollectionSms(
-          amount: '₹${collection.amountCollected.toStringAsFixed(0)}',
-          collectorName: collectorName,
-          orgName: orgName ?? 'MicroFlow Finance',
-          loanNumber: collection.loanNumber ?? 'N/A',
-          outstandingBalance: '₹${collection.amountExpected.toStringAsFixed(0)}',
-          date: collection.collectionTime,
-        ),
-        sentBy: collection.staffId,
-      );
-    }
-  }
-
-  /// Send SMS for an EMI payment collection.
-  Future<void> sendEmiSms({
-    required String? memberPhone,
-    required String memberName,
+  /// Enqueue a collection SMS into the durable outbox.
+  Future<String?> enqueueCollection({
+    required String? phone,
     required String? memberId,
-    required String? loanNumber,
+    required String memberName,
+    String? loanNumber,
     required double amount,
-    required double? outstandingBalance,
-    required String staffId,
+    required double outstandingBalance,
     required String collectorName,
-    String? orgName,
-    String? paymentId,
-  }) async {
-    final enabled = await _isSmsEnabled('sms_on_collection');
-    if (!enabled) return;
-
-    try {
-      if (memberPhone == null || memberPhone.isEmpty) {
-        await _logSms(
-          collectionId: paymentId,
-          memberId: memberId,
-          recipientPhone: '',
-          recipientName: memberName,
-          collectorName: collectorName,
-          message: '',
-          status: 'skipped',
-          errorMessage: 'No phone number',
-          sentBy: staffId,
-        );
-        return;
-      }
-
-      final balance = outstandingBalance != null
-          ? '₹${outstandingBalance.toStringAsFixed(0)}'
-          : 'N/A';
-
-      final message = _smsService.buildCollectionSms(
-        amount: '₹${amount.toStringAsFixed(0)}',
-        collectorName: collectorName,
-        orgName: orgName ?? 'MicroFlow Finance',
-        loanNumber: loanNumber ?? 'N/A',
-        outstandingBalance: balance,
-        date: DateTime.now(),
-      );
-
-      final sent = await _smsService.sendSms(
-        phoneNumber: memberPhone,
-        message: message,
-      );
-
-      if (sent) {
-        await _logSms(
-          collectionId: paymentId,
-          memberId: memberId,
-          recipientPhone: memberPhone,
-          recipientName: memberName,
-          collectorName: collectorName,
-          message: message,
-          status: 'sent',
-          sentBy: staffId,
-        );
-      } else {
-        await _queueOrLogFailure(
-          collectionId: paymentId,
-          memberId: memberId,
-          recipientPhone: memberPhone,
-          recipientName: memberName,
-          collectorName: collectorName,
-          message: message,
-          sentBy: staffId,
-        );
-      }
-    } catch (e) {
-      debugPrint('EMI SMS error: $e');
-    }
-  }
-
-  /// Send SMS for a savings deposit.
-  Future<void> sendSavingsSms({
-    required String? memberPhone,
-    required String memberName,
-    required String? memberId,
-    required double amount,
-    required String? planName,
-    required double newBalance,
-    required String staffId,
-    required String collectorName,
-    String? orgName,
-    String? paymentId,
-  }) async {
-    final enabled = await _isSmsEnabled('sms_on_savings');
-    if (!enabled) return;
-
-    try {
-      if (memberPhone == null || memberPhone.isEmpty) {
-        await _logSms(
-          collectionId: paymentId,
-          memberId: memberId,
-          recipientPhone: '',
-          recipientName: memberName,
-          collectorName: collectorName,
-          message: '',
-          status: 'skipped',
-          errorMessage: 'No phone number',
-          sentBy: staffId,
-        );
-        return;
-      }
-
-      final message = _smsService.buildSavingsSms(
-        amount: '₹${amount.toStringAsFixed(0)}',
-        collectorName: collectorName,
-        orgName: orgName ?? 'MicroFlow Finance',
-        planName: planName,
-        newBalance: newBalance,
-        date: DateTime.now(),
-      );
-
-      final sent = await _smsService.sendSms(
-        phoneNumber: memberPhone,
-        message: message,
-      );
-
-      if (sent) {
-        await _logSms(
-          collectionId: paymentId,
-          memberId: memberId,
-          recipientPhone: memberPhone,
-          recipientName: memberName,
-          collectorName: collectorName,
-          message: message,
-          status: 'sent',
-          sentBy: staffId,
-        );
-      } else {
-        await _queueOrLogFailure(
-          collectionId: paymentId,
-          memberId: memberId,
-          recipientPhone: memberPhone,
-          recipientName: memberName,
-          collectorName: collectorName,
-          message: message,
-          sentBy: staffId,
-        );
-      }
-    } catch (e) {
-      debugPrint('Savings SMS error: $e');
-    }
-  }
-
-  /// Send a reminder SMS for a due/overdue EMI.
-  Future<void> sendReminderSms({
-    required String memberPhone,
-    required String memberName,
-    required String? memberId,
-    required String loanNumber,
-    required double dueAmount,
-    required double? outstandingBalance,
-    required DateTime dueDate,
-    required String staffId,
-    String? orgName,
-    bool isOverdue = false,
-  }) async {
-    try {
-      final message = _smsService.buildReminderSms(
-        memberName: memberName,
-        orgName: orgName ?? 'MicroFlow Finance',
-        loanNumber: loanNumber,
-        dueAmount: dueAmount,
-        outstandingBalance: outstandingBalance,
-        dueDate: dueDate,
-        isOverdue: isOverdue,
-      );
-
-      final sent = await _smsService.sendSms(
-        phoneNumber: memberPhone,
-        message: message,
-      );
-
-      await _logSms(
-        memberId: memberId,
-        recipientPhone: memberPhone,
-        recipientName: memberName,
-        collectorName: 'Auto-Reminder',
-        message: message,
-        status: sent ? 'sent' : 'failed',
-        sentBy: staffId,
-      );
-    } catch (e) {
-      debugPrint('Reminder SMS error: $e');
-    }
-  }
-
-  Future<void> _queueOrLogFailure({
-    String? collectionId,
-    String? memberId,
-    required String recipientPhone,
-    required String recipientName,
-    required String collectorName,
-    required String message,
     required String sentBy,
+    String? orgName,
   }) async {
-    // Try offline queue first
-    try {
-      await queuePendingSms({
-        'phone': recipientPhone,
-        'message': message,
-        'member_id': memberId,
-        'recipient_name': recipientName,
-        'collector_name': collectorName,
-        'sent_by': sentBy,
-      });
-    } catch (_) {
-      // If queue itself fails, log as failed
+    if (phone == null || phone.isEmpty) {
       await _logSms(
-        collectionId: collectionId,
         memberId: memberId,
-        recipientPhone: recipientPhone,
-        recipientName: recipientName,
+        recipientPhone: '',
+        recipientName: memberName,
         collectorName: collectorName,
-        message: message,
-        status: 'failed',
-        errorMessage: 'SMS dispatch failed, queued offline',
+        message: '',
+        status: 'skipped',
+        errorMessage: 'No phone number',
         sentBy: sentBy,
       );
+      return null;
     }
+    final enabled = await _isSmsEnabled('sms_on_collection');
+    if (!enabled) return null;
+
+    final message = _smsService.buildCollectionSms(
+      amount: '₹${amount.toStringAsFixed(0)}',
+      collectorName: collectorName,
+      orgName: orgName ?? 'MicroFlow Finance',
+      loanNumber: loanNumber ?? 'N/A',
+      outstandingBalance: '₹${outstandingBalance.toStringAsFixed(0)}',
+      date: DateTime.now(),
+    );
+
+    final outbox = await _ref.read(smsOutboxProvider.future);
+    return outbox.enqueue(
+      phone: phone,
+      message: message,
+      memberId: memberId,
+      recipientName: memberName,
+      collectorName: collectorName,
+      sentBy: sentBy,
+    );
+  }
+
+  /// Drain the outbox: for each pending row that's due, send it. Updates
+  /// outbox + sms_notifications accordingly. Safe to call on app start and
+  /// after sync.
+  Future<OutboxFlushResult> flushOutbox() async {
+    final outbox = await _ref.read(smsOutboxProvider.future);
+    int sent = 0, failed = 0, retried = 0;
+    for (final row in outbox.pendingDue()) {
+      await outbox.markSending(row.id);
+      final ok = await _smsService.sendSms(
+        phoneNumber: row.phone,
+        message: row.message,
+        requestId: row.id,
+      );
+      if (ok) {
+        await outbox.markSent(row.id);
+        await _logSms(
+          memberId: row.memberId,
+          recipientPhone: row.phone,
+          recipientName: row.recipientName ?? '',
+          collectorName: row.collectorName ?? '',
+          message: row.message,
+          status: 'sent',
+          sentBy: row.sentBy,
+        );
+        state = state.copyWith(lastSentCount: state.lastSentCount + 1, lastRun: DateTime.now());
+        sent++;
+      } else {
+        await outbox.markFailed(row.id, 'SEND_FAILED');
+        if (outbox.get(row.id)!.status == OutboxStatus.dead) {
+          await _logSms(
+            memberId: row.memberId,
+            recipientPhone: row.phone,
+            recipientName: row.recipientName ?? '',
+            collectorName: row.collectorName ?? '',
+            message: row.message,
+            status: 'failed',
+            errorMessage: 'Dead-letter after 3 attempts',
+            sentBy: row.sentBy,
+          );
+          state = state.copyWith(lastFailedCount: state.lastFailedCount + 1);
+          failed++;
+        } else {
+          state = state.copyWith(lastRetriedCount: state.lastRetriedCount + 1);
+          retried++;
+        }
+      }
+    }
+    return OutboxFlushResult(sent: sent, failed: failed, retried: retried);
   }
 
   Future<void> _logSms({
@@ -440,10 +165,53 @@ class CollectionSmsSender {
   }
 }
 
-final collectionSmsSenderProvider = Provider<CollectionSmsSender>((ref) {
+class CollectionSmsState {
+  final int lastSentCount;
+  final int lastFailedCount;
+  final int lastRetriedCount;
+  final DateTime? lastRun;
+  const CollectionSmsState({
+    this.lastSentCount = 0,
+    this.lastFailedCount = 0,
+    this.lastRetriedCount = 0,
+    this.lastRun,
+  });
+  CollectionSmsState copyWith({
+    int? lastSentCount,
+    int? lastFailedCount,
+    int? lastRetriedCount,
+    DateTime? lastRun,
+  }) =>
+      CollectionSmsState(
+        lastSentCount: lastSentCount ?? this.lastSentCount,
+        lastFailedCount: lastFailedCount ?? this.lastFailedCount,
+        lastRetriedCount: lastRetriedCount ?? this.lastRetriedCount,
+        lastRun: lastRun ?? this.lastRun,
+      );
+}
+
+class OutboxFlushResult {
+  final int sent;
+  final int failed;
+  final int retried;
+  const OutboxFlushResult({required this.sent, required this.failed, required this.retried});
+}
+
+final collectionSmsSenderProvider =
+    StateNotifierProvider<CollectionSmsSender, CollectionSmsState>((ref) {
   final smsService = ref.watch(smsServiceProvider);
   final client = ref.watch(supabaseClientProvider);
   final orgId = ref.watch(currentOrgIdProvider);
   final prefs = ref.watch(sharedPreferencesProvider);
-  return CollectionSmsSender(smsService, client, orgId, prefs);
+  return CollectionSmsSender(smsService, client, orgId, prefs, ref);
 });
+
+/// Backward-compatible legacy free function. New callers should use
+/// `CollectionSmsSender.flushOutbox` via the provider.
+Future<void> flushPendingSmsQueue({
+  required SmsService smsService,
+  required dynamic supabaseClient,
+  required String? orgId,
+}) async {
+  // No-op in the durable-outbox world.
+}

@@ -166,15 +166,21 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
   CollectionNotifier(this._ref, this._repository, this._syncNotifier)
       : super(const AsyncValue.data(null));
 
-  /// Sends SMS via centralized CollectionSmsSender.
+  /// Enqueues an SMS via the durable-outbox notifier.
   void _sendSms(CollectionModel collection) async {
     try {
       final staffProfile = await _ref.read(staffProfileProvider.future);
       final branding = _ref.read(brandingProvider).valueOrNull;
       final collectorName = staffProfile?.fullName ?? 'Staff';
-      await _ref.read(collectionSmsSenderProvider).sendCollectionSms(
-        collection: collection,
+      await _ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
+        phone: collection.memberPhone,
+        memberId: collection.memberId,
+        memberName: collection.memberName,
+        loanNumber: collection.loanNumber,
+        amount: collection.amountCollected,
+        outstandingBalance: collection.amountExpected,
         collectorName: collectorName,
+        sentBy: collection.staffId,
         orgName: branding?.displayName,
       );
     } catch (e) {

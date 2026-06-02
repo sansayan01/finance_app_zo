@@ -27,6 +27,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   final String? _orgId;
   final SharedPreferences _prefs;
   final Ref _ref;
+  bool _flushing = false;
 
   CollectionSmsSender(this._smsService, this._client, this._orgId, this._prefs, this._ref)
       : super(const CollectionSmsState());
@@ -87,50 +88,67 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   /// outbox + sms_notifications accordingly. Safe to call on app start and
   /// after sync.
   Future<OutboxFlushResult> flushOutbox() async {
-    final outbox = await _ref.read(smsOutboxProvider.future);
-    int sent = 0, failed = 0, retried = 0;
-    for (final row in outbox.pendingDue()) {
-      await outbox.markSending(row.id);
-      final ok = await _smsService.sendSms(
-        phoneNumber: row.phone,
-        message: row.message,
-        requestId: row.id,
-      );
-      if (ok) {
-        await outbox.markSent(row.id);
-        await _logSms(
-          memberId: row.memberId,
-          recipientPhone: row.phone,
-          recipientName: row.recipientName ?? '',
-          collectorName: row.collectorName ?? '',
-          message: row.message,
-          status: 'sent',
-          sentBy: row.sentBy,
-        );
-        state = state.copyWith(lastSentCount: state.lastSentCount + 1, lastRun: DateTime.now());
-        sent++;
-      } else {
-        await outbox.markFailed(row.id, 'SEND_FAILED');
-        if (outbox.get(row.id)!.status == OutboxStatus.dead) {
-          await _logSms(
-            memberId: row.memberId,
-            recipientPhone: row.phone,
-            recipientName: row.recipientName ?? '',
-            collectorName: row.collectorName ?? '',
+    if (_flushing) {
+      return const OutboxFlushResult(sent: 0, failed: 0, retried: 0);
+    }
+    _flushing = true;
+    try {
+      final outbox = await _ref.read(smsOutboxProvider.future);
+      int sent = 0, failed = 0, retried = 0;
+      for (final row in outbox.pendingDue()) {
+        try {
+          await outbox.markSending(row.id);
+          final ok = await _smsService.sendSms(
+            phoneNumber: row.phone,
             message: row.message,
-            status: 'failed',
-            errorMessage: 'Dead-letter after 3 attempts',
-            sentBy: row.sentBy,
+            requestId: row.id,
           );
-          state = state.copyWith(lastFailedCount: state.lastFailedCount + 1);
-          failed++;
-        } else {
+          if (ok) {
+            await outbox.markSent(row.id);
+            await _logSms(
+              memberId: row.memberId,
+              recipientPhone: row.phone,
+              recipientName: row.recipientName ?? '',
+              collectorName: row.collectorName ?? '',
+              message: row.message,
+              status: 'sent',
+              sentBy: row.sentBy,
+            );
+            state = state.copyWith(lastSentCount: state.lastSentCount + 1, lastRun: DateTime.now());
+            sent++;
+          } else {
+            await outbox.markFailed(row.id, 'SEND_FAILED');
+            if (outbox.get(row.id)!.status == OutboxStatus.dead) {
+              await _logSms(
+                memberId: row.memberId,
+                recipientPhone: row.phone,
+                recipientName: row.recipientName ?? '',
+                collectorName: row.collectorName ?? '',
+                message: row.message,
+                status: 'failed',
+                errorMessage: 'Dead-letter after 3 attempts',
+                sentBy: row.sentBy,
+              );
+              state = state.copyWith(lastFailedCount: state.lastFailedCount + 1);
+              failed++;
+            } else {
+              state = state.copyWith(lastRetriedCount: state.lastRetriedCount + 1);
+              retried++;
+            }
+          }
+        } catch (e) {
+          // Exception during send: mark failed so the row re-enters the retry
+          // pipeline (otherwise it'd be stuck in `sending` until process restart).
+          await outbox.markFailed(row.id, 'EXCEPTION');
           state = state.copyWith(lastRetriedCount: state.lastRetriedCount + 1);
           retried++;
+          debugPrint('flushOutbox exception on row ${row.id}: $e');
         }
       }
+      return OutboxFlushResult(sent: sent, failed: failed, retried: retried);
+    } finally {
+      _flushing = false;
     }
-    return OutboxFlushResult(sent: sent, failed: failed, retried: retried);
   }
 
   Future<void> _logSms({

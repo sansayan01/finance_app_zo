@@ -8,6 +8,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'core/providers/storage_providers.dart';
 import 'core/providers/system_config_provider.dart';
 import 'core/config/env_config.dart';
+import 'core/services/sms_outbox_service.dart';
 import 'app.dart';
 
 Future<void> main() async {
@@ -53,6 +54,17 @@ Future<void> main() async {
 
     // 3b. Cache app version for update checks
     await initAppVersion();
+
+    // 3c. Migrate legacy SharedPreferences SMS queue into the new Hive outbox.
+    try {
+      final outbox = await SmsOutboxService.open();
+      final migrated = await migrateLegacyQueue(prefs, outbox);
+      if (migrated > 0) {
+        debugPrint('Migrated $migrated SMS queue entries to outbox');
+      }
+    } catch (e) {
+      debugPrint('SMS legacy migration failed: $e');
+    }
 
     // 4. Setup Global Error Handler for Production
     ErrorWidget.builder = (FlutterErrorDetails details) {

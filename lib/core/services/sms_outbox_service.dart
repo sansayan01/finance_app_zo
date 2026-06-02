@@ -1,5 +1,8 @@
 // lib/core/services/sms_outbox_service.dart
+import 'dart:convert';
+
 import 'package:hive/hive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 enum OutboxStatus { pending, sending, sent, failed, dead }
@@ -221,4 +224,35 @@ class OutboxRowAdapter extends TypeAdapter<OutboxRow> {
       ..writeByte(10)..write(obj.scheduledFor)
       ..writeByte(11)..write(obj.createdAt);
   }
+}
+
+/// One-shot migrator: read the legacy SharedPreferences queue (key
+/// `pending_sms_queue`) and enqueue each entry into the new outbox.
+/// Idempotent: deletes the key after a successful pass.
+Future<int> migrateLegacyQueue(SharedPreferences prefs, SmsOutboxService outbox) async {
+  final raw = prefs.getString('pending_sms_queue');
+  if (raw == null) return 0;
+  int migrated = 0;
+  try {
+    final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
+    for (final entry in list) {
+      final phone = entry['phone'] as String?;
+      final message = entry['message'] as String?;
+      if (phone == null || message == null) continue;
+      await outbox.enqueue(
+        phone: phone,
+        message: message,
+        memberId: entry['member_id'] as String?,
+        recipientName: entry['recipient_name'] as String?,
+        collectorName: entry['collector_name'] as String?,
+        sentBy: entry['sent_by'] as String? ?? 'migrated',
+      );
+      migrated++;
+    }
+    await prefs.remove('pending_sms_queue');
+  } catch (_) {
+    // Corrupt legacy payload — wipe so we don't keep retrying.
+    await prefs.remove('pending_sms_queue');
+  }
+  return migrated;
 }

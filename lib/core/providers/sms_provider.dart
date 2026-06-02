@@ -1,5 +1,4 @@
 // lib/core/providers/sms_provider.dart
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -12,12 +11,9 @@ import '../../providers/supabase_provider.dart';
 import 'org_provider.dart';
 import 'storage_providers.dart';
 import 'sms_outbox_provider.dart';
-import '../../features/staff/data/models/collection_model.dart';
 
 /// Provides the SmsService singleton.
 final smsServiceProvider = Provider<SmsService>((ref) => SmsService());
-
-const _pendingSmsQueueKey = 'pending_sms_queue';
 
 /// Handles sending SMS notifications and logging to Supabase.
 /// StateNotifier so its in-flight state survives Riverpod invalidation.

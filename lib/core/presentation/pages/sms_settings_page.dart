@@ -183,7 +183,30 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
   }
 
   Future<void> _pickSim(BuildContext context, SmsService svc) async {
-    final subs = await svc.pickSubscription();
+    if (!await svc.hasSmsPermission()) {
+      final granted = await svc.requestSmsPermission();
+      if (!granted) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('SMS permission is required to choose a SIM'),
+          ),
+        );
+        return;
+      }
+    }
+    final List<SmsSubscription> subs;
+    try {
+      subs = await svc.pickSubscription();
+    } on SmsPermissionRequiredException {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('SMS permission is required to choose a SIM'),
+        ),
+      );
+      return;
+    }
     if (!context.mounted) return;
     if (subs.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -191,6 +214,7 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
       );
       return;
     }
+    final isSyntheticDefault = subs.length == 1 && subs.first.subscriptionId == -1;
     final current = await svc.getSubscriptionId();
     if (!context.mounted) return;
     final picked = await showModalBottomSheet<int>(
@@ -198,15 +222,52 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: subs.map((s) {
-            final selected = current == s.subscriptionId;
-            return ListTile(
-              leading: Icon(selected ? Icons.check_circle : Icons.sim_card),
-              title: Text(s.displayName.isEmpty ? 'SIM ${s.simSlotIndex + 1}' : s.displayName),
-              subtitle: Text(s.carrierName),
-              onTap: () => Navigator.of(ctx).pop(s.subscriptionId),
-            );
-          }).toList(),
+          children: [
+            ...subs.map((s) {
+              final selected = current == s.subscriptionId;
+              return ListTile(
+                leading: Icon(selected ? Icons.check_circle : Icons.sim_card),
+                title: Text(s.displayName.isEmpty ? 'SIM ${s.simSlotIndex + 1}' : s.displayName),
+                subtitle: Text(s.carrierName),
+                onTap: () => Navigator.of(ctx).pop(s.subscriptionId),
+              );
+            }),
+            if (isSyntheticDefault)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(ctx)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'To choose a specific SIM, grant phone-state access in Settings.',
+                        style: Theme.of(ctx).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            svc.openAppSettings();
+                          },
+                          icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                          label: const Text('Open Settings'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

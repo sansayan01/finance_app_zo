@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
@@ -25,7 +27,6 @@ class SmsSenderPlugin(
 
     companion object {
         private const val SMS_PERMISSION_REQUEST_CODE = 10011
-        private const val READ_PHONE_STATE_REQUEST_CODE = 10012
         private const val TAG = "SmsSenderPlugin"
         private const val SMS_SENT_ACTION = "com.example.finance.SMS_SENT"
         private const val SMS_DELIVERED_ACTION = "com.example.finance.SMS_DELIVERED"
@@ -33,7 +34,6 @@ class SmsSenderPlugin(
     }
 
     private var pendingResult: MethodChannel.Result? = null
-    private var pendingPickSubscriptionResult: MethodChannel.Result? = null
     // requestId -> PendingSend that tracks per-part results.
     // All parts must arrive (or time out) before we resolve the Dart result.
     private val pendingById: ConcurrentHashMap<String, PendingSend> = ConcurrentHashMap()
@@ -69,14 +69,11 @@ class SmsSenderPlugin(
             "check_permission" -> result.success(hasSmsPermission())
             "request_permission" -> requestSmsPermission(result)
             "pick_subscription" -> {
-                if (!hasReadPhoneStatePermission()) {
-                    pendingPickSubscriptionResult = result
-                    ActivityCompat.requestPermissions(
-                        activity,
-                        arrayOf(android.Manifest.permission.READ_PHONE_STATE),
-                        READ_PHONE_STATE_REQUEST_CODE
-                    )
-                } else {
+                if (!hasSmsPermission()) {
+                    result.error("NEEDS_SMS_PERMISSION", "SMS permission required", null)
+                    return
+                }
+                if (hasReadPhoneStatePermission()) {
                     val payload = activeSubscriptions().map { mapOf(
                         "subscription_id" to it.subscriptionId,
                         "sim_slot_index" to it.simSlotIndex,
@@ -84,7 +81,16 @@ class SmsSenderPlugin(
                         "display_name" to (it.displayName?.toString() ?: ""),
                     ) }
                     result.success(payload)
+                } else {
+                    result.success(syntheticDefaultSubscription())
                 }
+            }
+            "open_app_settings" -> {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = Uri.fromParts("package", activity.packageName, null)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                activity.startActivity(intent)
+                result.success(true)
             }
             "set_subscription" -> {
                 val id = call.argument<Int>("subscription_id") ?: SLOT_DEFAULT
@@ -101,6 +107,17 @@ class SmsSenderPlugin(
         if (!hasReadPhoneStatePermission()) return emptyList()
         val sm = activity.getSystemService(SubscriptionManager::class.java) ?: return emptyList()
         return sm.activeSubscriptionInfoList ?: emptyList()
+    }
+
+    private fun syntheticDefaultSubscription(): List<Map<String, Any?>> {
+        return listOf(
+            mapOf(
+                "subscription_id" to -1,
+                "sim_slot_index" to 0,
+                "carrier_name" to "Default",
+                "display_name" to "Default SIM",
+            )
+        )
     }
 
     private fun hasReadPhoneStatePermission(): Boolean {
@@ -139,23 +156,6 @@ class SmsSenderPlugin(
                     grantResults[0] == PackageManager.PERMISSION_GRANTED
                 pendingResult?.success(granted)
                 pendingResult = null
-                true
-            }
-            READ_PHONE_STATE_REQUEST_CODE -> {
-                val granted = grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED
-                if (granted) {
-                    val payload = activeSubscriptions().map { mapOf(
-                        "subscription_id" to it.subscriptionId,
-                        "sim_slot_index" to it.simSlotIndex,
-                        "carrier_name" to (it.carrierName?.toString() ?: ""),
-                        "display_name" to (it.displayName?.toString() ?: ""),
-                    ) }
-                    pendingPickSubscriptionResult?.success(payload)
-                } else {
-                    pendingPickSubscriptionResult?.success(emptyList<Map<String, Any?>>())
-                }
-                pendingPickSubscriptionResult = null
                 true
             }
             else -> false

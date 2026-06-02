@@ -28,6 +28,17 @@ class SmsSubscription {
       );
 }
 
+/// Thrown when [SmsService.pickSubscription] is called but the user has not
+/// granted SEND_SMS permission. The UI should request the permission and
+/// re-invoke pickSubscription.
+class SmsPermissionRequiredException implements Exception {
+  final String message;
+  SmsPermissionRequiredException(this.message);
+
+  @override
+  String toString() => 'SmsPermissionRequiredException: $message';
+}
+
 class SmsService {
   static const _channel = MethodChannel('com.microflow/sms');
   static const _prefsKey = 'sms_subscription_id';
@@ -79,10 +90,43 @@ class SmsService {
   }
 
   /// Returns the list of active subscriptions on Android. Empty on iOS.
+  ///
+  /// Throws [SmsPermissionRequiredException] if SEND_SMS is not granted —
+  /// callers must check/request the permission first.
   Future<List<SmsSubscription>> pickSubscription() async {
     if (!Platform.isAndroid) return const [];
-    final raw = await _channel.invokeMethod<List<dynamic>>('pick_subscription');
-    return (raw ?? []).map((e) => SmsSubscription.fromMap(e)).toList();
+    try {
+      final raw = await _channel.invokeMethod<List<dynamic>>('pick_subscription');
+      return (raw ?? []).map((e) => SmsSubscription.fromMap(e)).toList();
+    } on PlatformException catch (e) {
+      if (e.code == 'NEEDS_SMS_PERMISSION') {
+        throw SmsPermissionRequiredException(
+          e.message ?? 'SMS permission required',
+        );
+      }
+      rethrow;
+    }
+  }
+
+  /// True if SEND_SMS is currently granted. Always true on non-Android.
+  Future<bool> hasSmsPermission() async {
+    if (!Platform.isAndroid) return true;
+    final granted = await _channel.invokeMethod<bool>('check_permission');
+    return granted == true;
+  }
+
+  /// Prompts the user for SEND_SMS. Returns true on grant.
+  Future<bool> requestSmsPermission() async {
+    if (!Platform.isAndroid) return true;
+    final granted = await _channel.invokeMethod<bool>('request_permission');
+    return granted == true;
+  }
+
+  /// Opens the app's system settings page so the user can grant optional
+  /// permissions (e.g. phone-state access for multi-SIM selection).
+  Future<void> openAppSettings() async {
+    if (!Platform.isAndroid) return;
+    await _channel.invokeMethod('open_app_settings');
   }
 
   /// Persist the chosen subscription id.

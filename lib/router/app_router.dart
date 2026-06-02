@@ -79,7 +79,7 @@ import '../core/constants/layout.dart';
 import '../core/presentation/pages/sms_history_page.dart';
 import '../core/presentation/pages/sms_settings_page.dart';
 import '../core/services/sms_scheduler_service.dart';
-import '../core/providers/sms_config_provider.dart';
+import '../core/providers/sms_outbox_provider.dart';
 
 // Super Admin Portal
 import '../features/super_admin/presentation/widgets/super_admin_shell.dart';
@@ -1085,8 +1085,13 @@ class _StaffShellState extends ConsumerState<StaffShell> {
 
   void _startSmsScheduler() {
     try {
-      final config = ref.read(smsConfigProvider);
-      _smsScheduler = SmsSchedulerService(config);
+      // The scheduler service pulls its outbox handle from the Riverpod
+      // graph via smsOutboxProvider. We `read` the async provider
+      // synchronously here — if it isn't ready yet we just no-op for this
+      // frame; the next post-frame callback will retry.
+      final outbox = ref.read(smsOutboxProvider).asData?.value;
+      if (outbox == null) return;
+      _smsScheduler = ref.read(smsSchedulerServiceProvider);
       _smsScheduler!.start();
     } catch (_) {}
   }

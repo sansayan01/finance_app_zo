@@ -24,7 +24,6 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   final String? _orgId;
   final SharedPreferences _prefs;
   final Ref _ref;
-  bool _flushing = false;
 
   CollectionSmsSender(this._smsService, this._client, this._orgId, this._prefs, this._ref)
       : super(const CollectionSmsState());
@@ -34,6 +33,10 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   }
 
   /// Enqueue a collection SMS into the durable outbox.
+  ///
+  /// [forceDispatch] is for testability only — it bypasses the
+  /// Android/iOS platform guard so unit tests can verify outbox-row creation
+  /// on a non-mobile host. Never set this in production.
   Future<String?> enqueueCollection({
     required String? phone,
     required String? memberId,
@@ -44,6 +47,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     required String collectorName,
     required String sentBy,
     String? orgName,
+    bool forceDispatch = false,
   }) async {
     if (phone == null || phone.isEmpty) {
       await _logSms(
@@ -59,7 +63,38 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       return null;
     }
     final enabled = await _isSmsEnabled('sms_on_collection');
-    if (!enabled) return null;
+    if (!enabled) {
+      await _logSms(
+        memberId: memberId,
+        recipientPhone: phone,
+        recipientName: memberName,
+        collectorName: collectorName,
+        message: '',
+        status: 'skipped',
+        errorMessage: 'SMS on collection disabled in settings',
+        sentBy: sentBy,
+      );
+      return null;
+    }
+
+    // Only Android has native programmatic SMS. iOS launches the system
+    // composer (best-effort, no programmatic confirmation). All other
+    // platforms (desktop, web, headless tests) skip cleanly with a logged
+    // reason instead of burning the outbox with a 30s backoff that will
+    // never succeed. `forceDispatch` is a test-only escape hatch.
+    if (!forceDispatch && !Platform.isAndroid && !Platform.isIOS) {
+      await _logSms(
+        memberId: memberId,
+        recipientPhone: phone,
+        recipientName: memberName,
+        collectorName: collectorName,
+        message: '',
+        status: 'skipped',
+        errorMessage: 'unsupported_platform: ${Platform.operatingSystem}',
+        sentBy: sentBy,
+      );
+      return null;
+    }
 
     final message = _smsService.buildCollectionSms(
       amount: '₹${amount.toStringAsFixed(0)}',
@@ -111,11 +146,15 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   /// Drain the outbox: for each pending row that's due, send it. Updates
   /// outbox + sms_notifications accordingly. Safe to call on app start and
   /// after sync.
+  ///
+  /// Concurrency: guarded by the module-level `_outboxDispatch` Completer so
+  /// this and the static `dispatchOutboxRow` (used by enqueueCollection and
+  /// the settings "retry now" tile) cannot overlap.
   Future<OutboxFlushResult> flushOutbox({SmsOutboxService? overrideOutbox}) async {
-    if (_flushing) {
+    if (_outboxDispatch != null && !_outboxDispatch!.isCompleted) {
       return const OutboxFlushResult(sent: 0, failed: 0, retried: 0);
     }
-    _flushing = true;
+    _outboxDispatch = Completer<void>();
     try {
       final outbox = overrideOutbox ?? await _ref.read(smsOutboxProvider.future);
       if (outbox == null) {
@@ -179,7 +218,8 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       }
       return OutboxFlushResult(sent: sent, failed: failed, retried: retried);
     } finally {
-      _flushing = false;
+      _outboxDispatch!.complete();
+      _outboxDispatch = null;
     }
   }
 
@@ -216,6 +256,13 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   }
 }
 
+/// Module-level in-flight guard. Because `dispatchOutboxRow` is a static
+/// function (it has to be — it must survive StateNotifier invalidation), the
+/// per-instance `_flushing` flag on `CollectionSmsSender` cannot see it. A
+/// top-level Completer is the simplest single source of truth: at most one
+/// dispatch or flush runs at a time, no matter who calls in.
+Completer<void>? _outboxDispatch;
+
 /// Dispatch a single outbox row to the platform. Bypasses the StateNotifier
 /// so it survives route teardown. Returns true if the row was sent.
 ///
@@ -233,61 +280,108 @@ Future<bool> dispatchOutboxRow({
   required dynamic supabaseClient,
   required String? orgId,
 }) async {
-  debugPrint('dispatchOutboxRow start: id=${row.id}, phone=${row.phone}, '
-      'messageLen=${row.message.length}, attempts=${row.attempts}');
+  // Bug C fix: serialize all dispatch entry points (static dispatchOutboxRow,
+  // instance flushOutbox, settings-page retry tile) through one lock.
+  if (_outboxDispatch != null && !_outboxDispatch!.isCompleted) {
+    debugPrint('dispatchOutboxRow: skipped (another dispatch in flight)');
+    return false;
+  }
+  _outboxDispatch = Completer<void>();
   try {
-    await outbox.markSending(row.id);
-    debugPrint('dispatchOutboxRow: marked sending');
-    // 30s hard timeout: if the native sender hangs, treat as a failure
-    // and let the outbox retry pipeline take over.
-    debugPrint('dispatchOutboxRow: calling sendSms...');
-    final ok = await smsService
-        .sendSms(
-          phoneNumber: row.phone,
-          message: row.message,
-          requestId: row.id,
-        )
-        .timeout(const Duration(seconds: 30));
-    debugPrint('dispatchOutboxRow: sendSms returned: $ok');
-    if (ok) {
-      await outbox.markSent(row.id);
-      debugPrint('dispatchOutboxRow: marked sent');
-      try {
-        await supabaseClient.from('sms_notifications').insert({
-          'org_id': orgId,
-          'member_id': row.memberId,
-          'member_phone': row.phone,
-          'recipient_phone': row.phone,
-          'recipient_name': row.recipientName,
-          'collector_name': row.collectorName,
-          'message': row.message,
-          'status': 'sent',
-          'platform': Platform.isAndroid ? 'android' : 'ios',
-          'sent_by': row.sentBy,
-        });
-        debugPrint('dispatchOutboxRow: sms_notifications insert: ok=true');
-      } catch (e, stack) {
-        debugPrint('dispatchOutboxRow: sms_notifications insert: ok=false, error=$e');
-        debugPrint('Stack: $stack');
+    debugPrint('dispatchOutboxRow start: id=${row.id}, phone=${row.phone}, '
+        'messageLen=${row.message.length}, attempts=${row.attempts}');
+    try {
+      await outbox.markSending(row.id);
+      debugPrint('dispatchOutboxRow: marked sending');
+      // 30s hard timeout: if the native sender hangs, treat as a failure
+      // and let the outbox retry pipeline take over.
+      debugPrint('dispatchOutboxRow: calling sendSms...');
+      final ok = await smsService
+          .sendSms(
+            phoneNumber: row.phone,
+            message: row.message,
+            requestId: row.id,
+          )
+          .timeout(const Duration(seconds: 30));
+      debugPrint('dispatchOutboxRow: sendSms returned: $ok');
+      if (ok) {
+        // Bug B note: on iOS, sendSms only confirms the system SMS composer
+        // was launched — there is no programmatic way to know if the user
+        // actually sent the message. We mark the outbox row as `sent` (we
+        // can't retry a human-cancelled composer-open anyway) but log the
+        // history row as `composer_opened` so the UI can distinguish
+        // confirmed sends from best-effort compose-opens.
+        final isIos = Platform.isIOS;
+        await outbox.markSent(row.id);
+        debugPrint('dispatchOutboxRow: marked sent');
+        try {
+          await supabaseClient.from('sms_notifications').insert({
+            'org_id': orgId,
+            'member_id': row.memberId,
+            'member_phone': row.phone,
+            'recipient_phone': row.phone,
+            'recipient_name': row.recipientName,
+            'collector_name': row.collectorName,
+            'message': row.message,
+            'status': isIos ? 'composer_opened' : 'sent',
+            'platform': isIos ? 'ios' : 'android',
+            'sent_by': row.sentBy,
+          });
+          debugPrint('dispatchOutboxRow: sms_notifications insert: ok=true');
+        } catch (e, stack) {
+          debugPrint('dispatchOutboxRow: sms_notifications insert: ok=false, error=$e');
+          debugPrint('Stack: $stack');
+        }
+        debugPrint('dispatchOutboxRow: end (sent)');
+        return true;
+      } else {
+        // Bug A fix: native send returned false — must call markFailed so the
+        // attempt counter increments and the row re-enters the backoff
+        // pipeline. Previously we only read attempts/lastError, leaving the
+        // row stuck in `sending` until process restart.
+        await outbox.markFailed(row.id, 'SEND_FAILED');
+        final updated = outbox.get(row.id);
+        final attempts = updated?.attempts ?? row.attempts;
+        final lastError = updated?.lastError ?? 'SEND_FAILED';
+        debugPrint('dispatchOutboxRow: marked failed (attempts=$attempts, lastError=$lastError)');
+        // If the row just hit the dead-letter threshold, log a 'failed'
+        // history row so the user sees the dead-letter in SMS history.
+        if (updated?.status == OutboxStatus.dead) {
+          try {
+            await supabaseClient.from('sms_notifications').insert({
+              'org_id': orgId,
+              'member_id': row.memberId,
+              'member_phone': row.phone,
+              'recipient_phone': row.phone,
+              'recipient_name': row.recipientName,
+              'collector_name': row.collectorName,
+              'message': row.message,
+              'status': 'failed',
+              'error_message': 'Dead-letter after $attempts attempts: $lastError',
+              'platform': Platform.isAndroid ? 'android' : 'ios',
+              'sent_by': row.sentBy,
+            });
+            debugPrint('dispatchOutboxRow: dead-letter sms_notifications insert: ok=true');
+          } catch (e, stack) {
+            debugPrint('dispatchOutboxRow: dead-letter sms_notifications insert failed: $e');
+            debugPrint('Stack: $stack');
+          }
+        }
+        debugPrint('dispatchOutboxRow: end (send-fail)');
+        return false;
       }
-      debugPrint('dispatchOutboxRow: end (sent)');
-      return true;
-    } else {
-      final after = outbox.get(row.id);
-      final attempts = after?.attempts ?? row.attempts;
-      final lastError = after?.lastError ?? 'SEND_FAILED';
-      debugPrint('dispatchOutboxRow: marked failed (attempts=$attempts, lastError=$lastError)');
-      debugPrint('dispatchOutboxRow: end (send-fail)');
+    } catch (e, stack) {
+      debugPrint('dispatchOutboxRow: exception for row ${row.id}: $e');
+      debugPrint('Stack: $stack');
+      try {
+        await outbox.markFailed(row.id, 'EXCEPTION');
+      } catch (_) {}
+      debugPrint('dispatchOutboxRow: end (exception)');
       return false;
     }
-  } catch (e, stack) {
-    debugPrint('dispatchOutboxRow: exception for row ${row.id}: $e');
-    debugPrint('Stack: $stack');
-    try {
-      await outbox.markFailed(row.id, 'EXCEPTION');
-    } catch (_) {}
-    debugPrint('dispatchOutboxRow: end (exception)');
-    return false;
+  } finally {
+    _outboxDispatch!.complete();
+    _outboxDispatch = null;
   }
 }
 
@@ -331,13 +425,3 @@ final collectionSmsSenderProvider =
   final prefs = ref.watch(sharedPreferencesProvider);
   return CollectionSmsSender(smsService, client, orgId, prefs, ref);
 });
-
-/// Backward-compatible legacy free function. New callers should use
-/// `CollectionSmsSender.flushOutbox` via the provider.
-Future<void> flushPendingSmsQueue({
-  required SmsService smsService,
-  required dynamic supabaseClient,
-  required String? orgId,
-}) async {
-  // No-op in the durable-outbox world.
-}

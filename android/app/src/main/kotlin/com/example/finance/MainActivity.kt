@@ -2,6 +2,7 @@ package com.example.finance
 
 import android.content.ComponentName
 import android.content.pm.PackageManager
+import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -9,6 +10,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
+import java.time.LocalTime
 import java.util.concurrent.TimeUnit
 
 class MainActivity : FlutterFragmentActivity() {
@@ -42,10 +44,23 @@ class MainActivity : FlutterFragmentActivity() {
         schedulerChannel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "enqueue_reminder_worker" -> {
+                    // Read the user-selected reminder time ("HH:mm"). If the
+                    // Dart side didn't send it, fall back to whatever was
+                    // persisted by a previous enqueue.
+                    val timeArg = call.argument<String>("time")
+                    val timeStr = timeArg
+                        ?: SmsBootReceiver.readStoredReminderTime(applicationContext)
+                        ?: "08:00"
+                    SmsBootReceiver.writeStoredReminderTime(applicationContext, timeStr)
+                    val data = Data.Builder()
+                        .putString(SmsReminderWorker.KEY_TIME, timeStr)
+                        .build()
                     WorkManager.getInstance(this).enqueueUniquePeriodicWork(
                         SmsReminderWorker.UNIQUE_NAME,
                         ExistingPeriodicWorkPolicy.KEEP,
-                        PeriodicWorkRequestBuilder<SmsReminderWorker>(1, TimeUnit.DAYS).build()
+                        PeriodicWorkRequestBuilder<SmsReminderWorker>(1, TimeUnit.DAYS)
+                            .setInputData(data)
+                            .build()
                     )
                     result.success(true)
                 }
@@ -129,7 +144,17 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
-        val request = PeriodicWorkRequestBuilder<SmsReminderWorker>(1, TimeUnit.DAYS).build()
+        // Use the user-selected time if a previous enqueue stored it;
+        // otherwise default to 08:00. The periodic work keeps running
+        // (KEEP policy) but the worker re-arms itself at the user time
+        // at the end of every pass — see SmsReminderWorker.doWork.
+        val timeStr = SmsBootReceiver.readStoredReminderTime(this) ?: "08:00"
+        val data = Data.Builder()
+            .putString(SmsReminderWorker.KEY_TIME, timeStr)
+            .build()
+        val request = PeriodicWorkRequestBuilder<SmsReminderWorker>(1, TimeUnit.DAYS)
+            .setInputData(data)
+            .build()
         WorkManager.getInstance(this)
             .enqueueUniquePeriodicWork(SmsReminderWorker.UNIQUE_NAME, ExistingPeriodicWorkPolicy.KEEP, request)
     }

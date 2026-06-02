@@ -86,7 +86,16 @@ class SmsService {
       path: phone,
       queryParameters: {'body': msg},
     );
-    return launchUrl(uri);
+    // Bug B fix: launchUrl returns true the moment the system SMS composer
+    // opens — not when the user taps Send. Treat any exception as a failure
+    // and otherwise return the actual launch result so the dispatcher can
+    // log a 'composer_opened' status instead of 'sent'.
+    try {
+      return await launchUrl(uri);
+    } catch (e) {
+      debugPrint('iOS sms composer launch failed for $phone: $e');
+      return false;
+    }
   }
 
   /// Returns the list of active subscriptions on Android. Empty on iOS.

@@ -137,6 +137,13 @@ class SmsSenderPlugin(
             result.success(true)
             return
         }
+        // Bug D fix: if a previous permission request is still in flight (e.g.
+        // user tapped "request permission" twice in quick succession), resolve
+        // the first one with `false` so its MethodChannel.Result is not leaked.
+        // Otherwise the first Flutter caller would hang forever and the second
+        // call would silently overwrite the only pendingResult.
+        pendingResult?.success(false)
+        pendingResult = null
         pendingResult = result
         ActivityCompat.requestPermissions(
             activity,
@@ -195,6 +202,16 @@ class SmsSenderPlugin(
             val parts: List<String> = if (message.length > 160) {
                 smsManager.divideMessage(message)
             } else listOf(message)
+
+            // Bug D fix: defensive guard against SmsManager.divideMessage
+            // returning an empty list (observed on a few OEM builds with
+            // weird GSM 7-bit tables). If we proceeded, maybeResolve would
+            // never fire and the row would be stuck in `sending` forever.
+            if (parts.isEmpty()) {
+                Log.e(TAG, "divideMessage returned 0 parts for req=$requestId, len=${message.length}")
+                result.error("EMPTY_PARTS", "no message parts", null)
+                return
+            }
 
             val pending = PendingSend(phone, message.length, parts.size, result = result)
             pendingById[requestId] = pending

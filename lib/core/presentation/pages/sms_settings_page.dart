@@ -134,20 +134,13 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
                       icon: Icons.refresh_rounded,
                       onTap: () async {
                         final outbox = await ref.read(smsOutboxProvider.future);
-                        // For every row that's pending (including in-backoff rows), dispatch directly.
-                        final pending = outbox.pendingAll();
-                        debugPrint('Retry-now: found ${pending.length} pending rows');
-                        for (final row in pending) {
-                          // Reset scheduledFor to now so dispatchOutboxRow picks it up.
-                          await outbox.replace(row.copyWith(scheduledFor: DateTime.now()));
-                          await dispatchOutboxRow(
-                            outbox: outbox,
-                            row: outbox.get(row.id)!,
-                            smsService: ref.read(smsServiceProvider),
-                            supabaseClient: ref.read(supabaseClientProvider),
-                            orgId: ref.read(currentOrgIdProvider),
-                          );
-                        }
+                        // Bug C fix: route through flushOutbox so the same
+                        // module-level dispatch lock is consulted (the manual
+                        // per-row loop here used to re-enter dispatch and
+                        // double-send on some real devices).
+                        await ref
+                            .read(collectionSmsSenderProvider.notifier)
+                            .flushOutbox(overrideOutbox: outbox);
                         if (mounted) setState(() {});
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

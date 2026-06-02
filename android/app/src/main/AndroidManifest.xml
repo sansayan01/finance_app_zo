@@ -156,7 +156,8 @@
         </provider>
         <receiver
             android:name=".SmsBootReceiver"
-            android:exported="true"
+            android:exported="false"
+            android:directBootAware="true"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

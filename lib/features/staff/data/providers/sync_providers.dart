@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/storage_providers.dart';
 import '../../../../core/providers/sms_provider.dart';
-import '../../../../core/services/sms_service.dart';
 import '../services/offline_sync_engine.dart';
 
 // Sync engine provider
@@ -29,7 +27,7 @@ final lastSyncTimeProvider = Provider<DateTime?>((ref) {
 final syncStatusProvider =
     StateNotifierProvider<SyncStatusNotifier, SyncUIState>((ref) {
   final engine = ref.watch(syncEngineProvider);
-  return SyncStatusNotifier(engine);
+  return SyncStatusNotifier(engine, ref);
 });
 
 class SyncUIState {
@@ -70,8 +68,9 @@ class SyncUIState {
 
 class SyncStatusNotifier extends StateNotifier<SyncUIState> {
   final OfflineSyncEngine _engine;
+  final Ref _ref;
 
-  SyncStatusNotifier(this._engine) : super(SyncUIState()) {
+  SyncStatusNotifier(this._engine, this._ref) : super(SyncUIState()) {
     _init();
   }
 
@@ -96,16 +95,11 @@ class SyncStatusNotifier extends StateNotifier<SyncUIState> {
 
       final result = await _engine.syncAll();
 
-      // Flush pending SMS queue after successful sync
+      // Flush pending SMS queue after successful sync. Uses the
+      // singleton notifier on the SMS provider so the durable outbox is
+      // drained through the same code path as the settings page.
       try {
-        final client = Supabase.instance.client;
-        final smsService = SmsService();
-        // We don't have ref here to get orgId, so try to get it from client context
-        await flushPendingSmsQueue(
-          smsService: smsService,
-          supabaseClient: client,
-          orgId: null,
-        );
+        await _ref.read(collectionSmsSenderProvider.notifier).flushOutbox();
       } catch (_) {}
 
       state = state.copyWith(

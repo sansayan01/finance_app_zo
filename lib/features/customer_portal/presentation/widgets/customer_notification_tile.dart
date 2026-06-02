@@ -36,20 +36,12 @@ class CustomerNotificationTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Gradient bar on left for unread
+              // Fixed-width unread bar
               if (!notification.isRead)
                 Container(
-                  width: 3.5,
-                  height: _estimateHeight(),
+                  width: 8,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        typeColor,
-                        typeColor.withValues(alpha: 0.4),
-                      ],
-                    ),
+                    color: typeColor,
                     borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(2),
                       bottomRight: Radius.circular(2),
@@ -184,14 +176,6 @@ class CustomerNotificationTile extends StatelessWidget {
         size: 18,
       ),
     );
-  }
-
-  double _estimateHeight() {
-    // Approximate height for the gradient bar
-    double h = 12; // padding top
-    h += 38; // icon height
-    h += 6; // spacing
-    return h;
   }
 
   Color _getTypeColor() {

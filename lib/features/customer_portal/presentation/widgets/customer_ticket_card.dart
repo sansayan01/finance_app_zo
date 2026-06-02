@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -235,6 +236,6 @@ class CustomerTicketCard extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    return DateFormat('dd MMM yyyy, hh:mm a').format(date);
   }
 }

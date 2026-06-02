@@ -58,20 +58,27 @@ class CustomerHomeRepository {
       final totalSavings =
           savings.fold(0.0, (sum, s) => sum + s.currentAmount);
 
-      // Find next EMI due
+      // Find next EMI due — single query for all active loans
       CustomerEmiModel? nextEmi;
-      for (final loan in activeLoans) {
+      if (activeLoans.isNotEmpty) {
         try {
+          final loanIds = activeLoans.map((l) => l.id).toList();
           final emiData = await _client
               .from('emi_schedule')
               .select()
-              .eq('loan_id', loan.id)
+              .inFilter('loan_id', loanIds)
               .eq('is_paid', false)
-              .order('due_date', ascending: true)
-              .limit(1);
-          if (emiData.isNotEmpty) {
-            final emi =
-                CustomerEmiModel.fromJson(emiData.first);
+              .order('due_date', ascending: true);
+
+          final emiList = (emiData as List)
+              .map((e) => CustomerEmiModel.fromJson(
+                    e is Map
+                        ? Map<String, dynamic>.from(e)
+                        : e as Map<String, dynamic>,
+                  ))
+              .toList();
+
+          for (final emi in emiList) {
             if (nextEmi == null ||
                 (emi.dueDate != null &&
                     nextEmi.dueDate != null &&

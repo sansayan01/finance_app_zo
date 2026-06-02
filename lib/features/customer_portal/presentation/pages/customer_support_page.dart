@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/layout.dart';
@@ -10,6 +11,7 @@ import '../../data/models/customer_ticket_model.dart';
 import '../widgets/customer_ticket_card.dart';
 import '../widgets/customer_empty_state.dart';
 import '../../data/providers/customer_member_provider.dart';
+import '../../data/providers/customer_realtime_providers.dart';
 
 enum _TicketFilter { all, open, inProgress, resolved }
 
@@ -297,7 +299,7 @@ class _CustomerSupportPageState extends ConsumerState<CustomerSupportPage>
                     children: [
                       _HeaderIconButton(
                         icon: Icons.arrow_back_ios_new_rounded,
-                        onTap: () => Navigator.of(context).pop(),
+                        onTap: () => context.pop(),
                         isDark: isDark,
                       ),
                       const Spacer(),
@@ -881,7 +883,7 @@ class _CreateTicketSheetState extends ConsumerState<_CreateTicketSheet> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
-        Navigator.of(context).pop();
+        context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Ticket submitted successfully'),
@@ -934,6 +936,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    ref.watch(realtimeTicketMessagesProvider(widget.ticket.id));
     final messagesAsync =
         ref.watch(customerTicketMessagesProvider(widget.ticket.id));
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
@@ -1190,7 +1193,7 @@ class _TicketDetailSheetState extends ConsumerState<_TicketDetailSheet> {
                 ),
               ),
               GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => context.pop(),
                 child: Container(
                   width: 32,
                   height: 32,

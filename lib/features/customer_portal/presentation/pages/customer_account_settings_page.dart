@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/layout.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/providers/customer_biometric_providers.dart';
+import '../../data/providers/customer_notification_preferences_provider.dart';
+import '../../data/providers/customer_profile_providers.dart';
 
 class CustomerAccountSettingsPage extends ConsumerStatefulWidget {
   const CustomerAccountSettingsPage({super.key});
@@ -24,14 +25,6 @@ class _CustomerAccountSettingsPageState
     with TickerProviderStateMixin {
   late AnimationController _staggerController;
 
-  // Notification preferences
-  bool _pushEnabled = true;
-  bool _emailEnabled = true;
-  bool _emiReminder1Day = true;
-  bool _emiReminder3Days = true;
-  bool _paymentConfirmation = true;
-  bool _savingsMilestone = true;
-
   @override
   void initState() {
     super.initState();
@@ -39,25 +32,6 @@ class _CustomerAccountSettingsPageState
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     )..forward();
-    _loadPreferences();
-  }
-
-  Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _pushEnabled = prefs.getBool('notif_push') ?? true;
-      _emailEnabled = prefs.getBool('notif_email') ?? true;
-      _emiReminder1Day = prefs.getBool('notif_emi_1day') ?? true;
-      _emiReminder3Days = prefs.getBool('notif_emi_3days') ?? true;
-      _paymentConfirmation = prefs.getBool('notif_payment') ?? true;
-      _savingsMilestone = prefs.getBool('notif_savings') ?? true;
-    });
-  }
-
-  Future<void> _savePref(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
   }
 
   @override
@@ -94,6 +68,21 @@ class _CustomerAccountSettingsPageState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final user = ref.watch(currentUserProvider);
+    final profileAsync = ref.watch(customerProfileProvider);
+    final profile = profileAsync.valueOrNull;
+
+    final kycStatus = (profile?.kycStatus ?? '').toLowerCase();
+    final kycLabel = kycStatus == 'verified'
+        ? 'Verified'
+        : kycStatus == 'rejected'
+            ? 'Rejected'
+            : 'Pending';
+    final kycColor = kycStatus == 'verified'
+        ? AppColors.success
+        : kycStatus == 'rejected'
+            ? AppColors.error
+            : AppColors.warning;
+    final roleLabel = user?.role?.name ?? 'customer';
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
@@ -196,7 +185,9 @@ class _CustomerAccountSettingsPageState
               0,
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: _buildProfileSummary(context, isDark, user),
+                child: _buildProfileSummary(
+                  context, isDark, user, kycLabel, kycColor, roleLabel,
+                ),
               ),
             ),
           ),
@@ -293,7 +284,13 @@ class _CustomerAccountSettingsPageState
   }
 
   Widget _buildProfileSummary(
-      BuildContext context, bool isDark, dynamic user) {
+    BuildContext context,
+    bool isDark,
+    dynamic user,
+    String kycLabel,
+    Color kycColor,
+    String roleLabel,
+  ) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -395,20 +392,14 @@ class _CustomerAccountSettingsPageState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildProfileStat(
-                      label: 'Account Status',
-                      value: 'Active',
-                      valueColor: AppColors.success,
-                      isDark: isDark,
-                    ),
-                    _buildProfileStat(
                       label: 'KYC Status',
-                      value: 'Verified',
-                      valueColor: AppColors.primary,
+                      value: kycLabel,
+                      valueColor: kycColor,
                       isDark: isDark,
                     ),
                     _buildProfileStat(
                       label: 'Member Role',
-                      value: 'Customer',
+                      value: roleLabel,
                       valueColor: AppColors.info,
                       isDark: isDark,
                     ),
@@ -723,6 +714,15 @@ class _CustomerAccountSettingsPageState
   }
 
   Widget _buildNotificationsSection(BuildContext context, bool isDark) {
+    final prefsAsync = ref.watch(customerNotificationPreferencesProvider);
+    final prefs = prefsAsync.valueOrNull;
+    final notifier = ref.read(customerNotificationPreferencesProvider.notifier);
+
+    bool readPref(bool Function(dynamic) selector, bool fallback) {
+      if (prefs == null) return fallback;
+      return selector(prefs);
+    }
+
     return GlassCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -733,11 +733,8 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.primary,
             title: 'Push Notifications',
             subtitle: 'Receive push alerts on your device',
-            value: _pushEnabled,
-            onChanged: (val) {
-              setState(() => _pushEnabled = val);
-              _savePref('notif_push', val);
-            },
+            value: readPref((p) => p.pushEnabled, true),
+            onChanged: (val) => notifier.toggle('pushEnabled', val),
           ),
           _buildDivider(isDark),
           _buildToggleTile(
@@ -746,11 +743,8 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.info,
             title: 'Email Notifications',
             subtitle: 'Get updates via email',
-            value: _emailEnabled,
-            onChanged: (val) {
-              setState(() => _emailEnabled = val);
-              _savePref('notif_email', val);
-            },
+            value: readPref((p) => p.emailEnabled, true),
+            onChanged: (val) => notifier.toggle('emailEnabled', val),
           ),
           _buildDivider(isDark),
           _buildToggleTile(
@@ -759,11 +753,8 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.accent,
             title: 'EMI Reminder (1 day before)',
             subtitle: 'Get reminded 1 day before EMI due',
-            value: _emiReminder1Day,
-            onChanged: (val) {
-              setState(() => _emiReminder1Day = val);
-              _savePref('notif_emi_1day', val);
-            },
+            value: readPref((p) => p.emiReminder1Day, true),
+            onChanged: (val) => notifier.toggle('emiReminder1Day', val),
           ),
           _buildDivider(isDark),
           _buildToggleTile(
@@ -772,11 +763,18 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.orange,
             title: 'EMI Reminder (3 days before)',
             subtitle: 'Get reminded 3 days before EMI due',
-            value: _emiReminder3Days,
-            onChanged: (val) {
-              setState(() => _emiReminder3Days = val);
-              _savePref('notif_emi_3days', val);
-            },
+            value: readPref((p) => p.emiReminder3Days, true),
+            onChanged: (val) => notifier.toggle('emiReminder3Days', val),
+          ),
+          _buildDivider(isDark),
+          _buildToggleTile(
+            context, isDark,
+            icon: Icons.event_available_rounded,
+            iconColor: AppColors.info,
+            title: 'EMI Reminder (on due date)',
+            subtitle: 'Get reminded on the EMI due date',
+            value: readPref((p) => p.emiReminderOnDue, true),
+            onChanged: (val) => notifier.toggle('emiReminderOnDue', val),
           ),
           _buildDivider(isDark),
           _buildToggleTile(
@@ -785,11 +783,8 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.success,
             title: 'Payment Confirmation',
             subtitle: 'Confirm when payment is recorded',
-            value: _paymentConfirmation,
-            onChanged: (val) {
-              setState(() => _paymentConfirmation = val);
-              _savePref('notif_payment', val);
-            },
+            value: readPref((p) => p.paymentConfirmation, true),
+            onChanged: (val) => notifier.toggle('paymentConfirmation', val),
           ),
           _buildDivider(isDark),
           _buildToggleTile(
@@ -798,11 +793,18 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.warning,
             title: 'Savings Milestones',
             subtitle: 'Celebrate when you reach savings goals',
-            value: _savingsMilestone,
-            onChanged: (val) {
-              setState(() => _savingsMilestone = val);
-              _savePref('notif_savings', val);
-            },
+            value: readPref((p) => p.savingsMilestone, true),
+            onChanged: (val) => notifier.toggle('savingsMilestone', val),
+          ),
+          _buildDivider(isDark),
+          _buildToggleTile(
+            context, isDark,
+            icon: Icons.campaign_rounded,
+            iconColor: AppColors.info,
+            title: 'System Alerts',
+            subtitle: 'Maintenance and announcements',
+            value: readPref((p) => p.systemAlerts, true),
+            onChanged: (val) => notifier.toggle('systemAlerts', val),
           ),
         ],
       ),
@@ -836,7 +838,8 @@ class _CustomerAccountSettingsPageState
             icon: Icons.description_rounded,
             iconColor: AppColors.info,
             title: 'Terms of Service',
-            onTap: () {},
+            // TODO: open real terms URL once published.
+            onTap: null,
           ),
           _buildDivider(isDark),
           _buildNavigationTile(
@@ -844,7 +847,8 @@ class _CustomerAccountSettingsPageState
             icon: Icons.privacy_tip_rounded,
             iconColor: AppColors.teal,
             title: 'Privacy Policy',
-            onTap: () {},
+            // TODO: open real privacy URL once published.
+            onTap: null,
           ),
           _buildDivider(isDark),
           _buildNavigationTile(
@@ -853,7 +857,8 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.warning,
             title: 'Rate This App',
             subtitle: 'Help us improve',
-            onTap: () {},
+            // TODO: deep-link to Play Store / App Store once listing is live.
+            onTap: null,
           ),
         ],
       ),
@@ -1018,149 +1023,165 @@ class _CustomerAccountSettingsPageState
   }
 
   void _showChangePasswordSheet(BuildContext context, bool isDark) {
-    final currentPwController = TextEditingController();
-    final newPwController = TextEditingController();
-    final confirmPwController = TextEditingController();
-    bool isLoading = false;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            return Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              padding: EdgeInsets.fromLTRB(
-                  24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom +
-                      MediaQuery.of(ctx).viewPadding.bottom +
-                      kBottomNavBarHeight +
-                      16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1C2030) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.black.withValues(alpha: 0.04),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Handle
-                  Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: (isDark ? Colors.white : Colors.black)
-                          .withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Change Password',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildPasswordField(
-                      currentPwController, 'Current Password', isDark),
-                  const SizedBox(height: 12),
-                  _buildPasswordField(
-                      newPwController, 'New Password', isDark),
-                  const SizedBox(height: 12),
-                  _buildPasswordField(
-                      confirmPwController, 'Confirm New Password', isDark),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primary, AppColors.accent],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: isLoading
-                              ? null
-                              : () async {
-                                  if (newPwController.text !=
-                                      confirmPwController.text) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'Passwords do not match')),
-                                    );
-                                    return;
-                                  }
-                                  final messenger = ScaffoldMessenger.of(context);
-                                  final navigator = Navigator.of(ctx);
-                                  setSheetState(() => isLoading = true);
-                                  try {
-                                    await ref
-                                        .read(authProvider.notifier)
-                                        .changePassword(
-                                          currentPassword:
-                                              currentPwController.text,
-                                          newPassword: newPwController.text,
-                                        );
-                                    if (ctx.mounted) navigator.pop();
-                                    messenger.showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'Password changed successfully')),
-                                    );
-                                  } catch (e) {
-                                    setSheetState(() => isLoading = false);
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              'Error: ${e.toString()}')),
-                                    );
-                                  }
-                                },
-                          borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white),
-                                    )
-                                  : const Text(
-                                      'Update Password',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
+        return _ChangePasswordSheet(isDark: isDark);
       },
     );
+  }
+}
+
+class _ChangePasswordSheet extends ConsumerStatefulWidget {
+  final bool isDark;
+  const _ChangePasswordSheet({required this.isDark});
+
+  @override
+  ConsumerState<_ChangePasswordSheet> createState() =>
+      _ChangePasswordSheetState();
+}
+
+class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
+  final _currentPwController = TextEditingController();
+  final _newPwController = TextEditingController();
+  final _confirmPwController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _currentPwController.dispose();
+    _newPwController.dispose();
+    _confirmPwController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        16,
+        24,
+        MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.of(context).viewPadding.bottom +
+            kBottomNavBarHeight +
+            16,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C2030) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.04),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black)
+                  .withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Change Password',
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildPasswordField(
+              _currentPwController, 'Current Password', isDark),
+          const SizedBox(height: 12),
+          _buildPasswordField(_newPwController, 'New Password', isDark),
+          const SizedBox(height: 12),
+          _buildPasswordField(
+              _confirmPwController, 'Confirm New Password', isDark),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.accent],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isLoading ? null : _handleUpdate,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Update Password',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleUpdate() async {
+    if (_newPwController.text != _confirmPwController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authProvider.notifier).changePassword(
+            currentPassword: _currentPwController.text,
+            newPassword: _newPwController.text,
+          );
+      if (!mounted) return;
+      context.pop();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Password changed successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      messenger.showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
   }
 
   Widget _buildPasswordField(
@@ -1168,6 +1189,7 @@ class _CustomerAccountSettingsPageState
     return TextField(
       controller: controller,
       obscureText: true,
+      enabled: !_isLoading,
       style: TextStyle(
           color: isDark ? Colors.white : const Color(0xFF0F172A)),
       decoration: InputDecoration(

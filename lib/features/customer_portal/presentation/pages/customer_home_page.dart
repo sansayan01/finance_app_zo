@@ -8,9 +8,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/sparkline_chart.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../data/providers/customer_connection_provider.dart';
 import '../../data/providers/customer_home_providers.dart';
 import '../../data/providers/customer_member_provider.dart';
 import '../../data/providers/customer_notifications_providers.dart';
+import '../../data/providers/customer_realtime_providers.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/models/customer_transaction_model.dart';
 import '../widgets/customer_empty_state.dart';
@@ -85,8 +87,20 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(realtimeNotificationsProvider);
+    ref.watch(realtimeMemberProfileProvider);
     final dashboardAsync = ref.watch(customerDashboardProvider);
     final memberIdAsync = ref.watch(currentCustomerIdProvider);
+
+    // Auto-retry when connectivity is restored
+    ref.listen<AsyncValue<bool>>(isOnlineProvider, (prev, next) {
+      final wasOffline = prev?.valueOrNull == false;
+      final isOnline = next.valueOrNull == true;
+      if (isOnline && wasOffline) {
+        ref.invalidate(customerDashboardProvider);
+        ref.invalidate(currentCustomerIdProvider);
+      }
+    });
 
     return Scaffold(
       extendBody: true,

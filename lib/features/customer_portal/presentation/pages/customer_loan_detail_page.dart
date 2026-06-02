@@ -263,7 +263,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
             children: [
               _CircleIconButton(
                 icon: Icons.arrow_back_rounded,
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => context.pop(),
                 isDark: isDark,
               ),
               const Spacer(),
@@ -1545,7 +1545,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
             children: [
               _CircleIconButton(
                 icon: Icons.arrow_back_rounded,
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => context.pop(),
                 isDark: isDark,
               ),
               const Spacer(),

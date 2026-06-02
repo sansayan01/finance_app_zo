@@ -425,14 +425,17 @@ class CustomerReceiptService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/receipt_$receiptNo.pdf');
     await file.writeAsBytes(bytes);
-
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path)],
-        subject: 'Payment Receipt $receiptNo',
-        text: 'Payment receipt for ${_money(amount)} - $receiptNo',
-      ),
-    );
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'Payment Receipt $receiptNo',
+          text: 'Payment receipt for ${_money(amount)} - $receiptNo',
+        ),
+      );
+    } finally {
+      if (await file.exists()) await file.delete();
+    }
   }
 
   /// Generates the receipt PDF and saves it to the device downloads directory.

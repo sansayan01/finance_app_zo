@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -313,7 +314,7 @@ class _CustomerFeedbackPageState extends ConsumerState<CustomerFeedbackPage>
                     children: [
                       _HeaderIconButton(
                         icon: Icons.arrow_back_ios_new_rounded,
-                        onTap: () => Navigator.of(context).pop(),
+                        onTap: () => context.pop(),
                         isDark: isDark,
                       ),
                     ],

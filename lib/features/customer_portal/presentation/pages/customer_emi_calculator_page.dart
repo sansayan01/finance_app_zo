@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -219,7 +220,7 @@ class _CustomerEmiCalculatorPageState
             children: [
               _buildGlassIconButton(
                 icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => context.pop(),
               ),
               const Spacer(),
               Text(

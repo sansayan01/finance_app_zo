@@ -1,5 +1,7 @@
-/// Pure EMI calculation service for the customer portal.
-/// No UI dependencies — returns raw numbers and schedule data.
+// Pure EMI calculation service for the customer portal.
+// No UI dependencies — returns raw numbers and schedule data.
+import 'dart:math' as math;
+
 class CustomerEmiCalculatorService {
   CustomerEmiCalculatorService._();
 
@@ -76,10 +78,6 @@ class CustomerEmiCalculatorService {
   // ── Helpers ──
 
   static double _pow(double base, int exponent) {
-    double result = 1;
-    for (int i = 0; i < exponent; i++) {
-      result *= base;
-    }
-    return result;
+    return math.pow(base, exponent).toDouble();
   }
 }

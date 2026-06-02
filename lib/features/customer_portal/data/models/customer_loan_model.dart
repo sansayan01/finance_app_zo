@@ -39,7 +39,8 @@ class CustomerLoanModel {
               .toDouble(),
       emiAmount: (json['emi_amount'] ?? 0).toDouble(),
       interestRate: (json['interest_rate'] ?? 0).toDouble(),
-      tenureMonths: (json['tenure_months'] ?? json['tenure_value'] ?? 0) as int,
+      tenureMonths:
+          ((json['tenure_months'] ?? json['tenure_value']) as num?)?.toInt() ?? 0,
       status: json['status']?.toString() ?? 'active',
       disbursementDate: json['disbursement_date'] != null
           ? DateTime.tryParse(json['disbursement_date'].toString())

@@ -108,8 +108,8 @@ class _CustomerSavingsMilestonesState extends State<CustomerSavingsMilestones>
             colors:
                 isGoalReached
                     ? [
-                      const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.15 : 0.08),
-                      const Color(0xFFF97316).withValues(alpha: isDark ? 0.06 : 0.03),
+                      AppColors.warning.withValues(alpha: isDark ? 0.15 : 0.08),
+                      AppColors.orange.withValues(alpha: isDark ? 0.06 : 0.03),
                     ]
                     : [
                       AppColors.primary.withValues(alpha: isDark ? 0.1 : 0.05),
@@ -129,7 +129,7 @@ class _CustomerSavingsMilestonesState extends State<CustomerSavingsMilestones>
                   decoration: BoxDecoration(
                     color:
                         isGoalReached
-                            ? const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.25 : 0.15)
+                            ? AppColors.warning.withValues(alpha: isDark ? 0.25 : 0.15)
                             : AppColors.primary.withValues(
                               alpha: isDark ? 0.2 : 0.12,
                             ),
@@ -140,7 +140,7 @@ class _CustomerSavingsMilestonesState extends State<CustomerSavingsMilestones>
                       BoxShadow(
                         color:
                             isGoalReached
-                                ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
+                                ? AppColors.warning.withValues(alpha: 0.2)
                                 : AppColors.primary.withValues(alpha: 0.15),
                         blurRadius: 12,
                         spreadRadius: 0,
@@ -153,7 +153,7 @@ class _CustomerSavingsMilestonesState extends State<CustomerSavingsMilestones>
                         : Icons.track_changes_rounded,
                     color:
                         isGoalReached
-                            ? const Color(0xFFF59E0B)
+                            ? AppColors.warning
                             : AppColors.primary,
                     size: 22,
                   ),
@@ -456,7 +456,7 @@ class _CustomerSavingsMilestonesState extends State<CustomerSavingsMilestones>
     bool isGoalReached,
   ) {
     final color =
-        isGoalReached ? const Color(0xFFF59E0B) : AppColors.success;
+        isGoalReached ? AppColors.warning : AppColors.success;
 
     return Container(
       width: double.infinity,
@@ -498,83 +498,89 @@ class _CustomerSavingsMilestonesState extends State<CustomerSavingsMilestones>
   }
 
   Widget _buildGoalReachedCard(bool isDark, ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.borderRadiusLg),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.18 : 0.12),
-            const Color(0xFFF97316).withValues(alpha: isDark ? 0.1 : 0.06),
-          ],
-        ),
-        border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.3 : 0.2),
-          width: 1.5,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Confetti-style decorative icons
-          ...List.generate(6, (i) {
-            final random = math.Random(i * 37);
-            return Positioned(
-              left: random.nextDouble() * 260,
-              top: random.nextDouble() * 40,
-              child: Icon(
-                [
-                  Icons.star_rounded,
-                  Icons.diamond_rounded,
-                  Icons.auto_awesome_rounded,
-                  Icons.local_fire_department_rounded,
-                  Icons.bolt_rounded,
-                  Icons.favorite_rounded,
-                ][i],
-                size: 10 + random.nextDouble() * 6,
-                color: [
-                  const Color(0xFFF59E0B),
-                  const Color(0xFFF97316),
-                  const Color(0xFFEF4444),
-                  const Color(0xFF10B981),
-                  AppColors.primary,
-                  AppColors.accent,
-                ][i].withValues(alpha: 0.25),
-              ),
-            );
-          }),
-          // Main content
-          Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use the actual card width so confetti positions scale with parent.
+        final cardWidth = constraints.maxWidth;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSpacing.borderRadiusLg),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.warning.withValues(alpha: isDark ? 0.18 : 0.12),
+                AppColors.orange.withValues(alpha: isDark ? 0.1 : 0.06),
+              ],
+            ),
+            border: Border.all(
+              color: AppColors.warning.withValues(alpha: isDark ? 0.3 : 0.2),
+              width: 1.5,
+            ),
+          ),
+          child: Stack(
             children: [
-              const Icon(
-                Icons.emoji_events_rounded,
-                color: Color(0xFFF59E0B),
-                size: 32,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Goal Achieved!',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFFF59E0B),
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Congratulations! You have reached your savings goal.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.7),
-                  fontWeight: FontWeight.w500,
-                ),
+              // Confetti-style decorative icons
+              ...List.generate(6, (i) {
+                final random = math.Random(i * 37);
+                return Positioned(
+                  left: random.nextDouble() * (cardWidth - 20),
+                  top: random.nextDouble() * 40,
+                  child: Icon(
+                    [
+                      Icons.star_rounded,
+                      Icons.diamond_rounded,
+                      Icons.auto_awesome_rounded,
+                      Icons.local_fire_department_rounded,
+                      Icons.bolt_rounded,
+                      Icons.favorite_rounded,
+                    ][i],
+                    size: 10 + random.nextDouble() * 6,
+                    color: [
+                      AppColors.warning,
+                      AppColors.orange,
+                      AppColors.error,
+                      AppColors.success,
+                      AppColors.primary,
+                      AppColors.accent,
+                    ][i].withValues(alpha: 0.25),
+                  ),
+                );
+              }),
+              // Main content
+              Column(
+                children: [
+                  Icon(
+                    Icons.emoji_events_rounded,
+                    color: AppColors.warning,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Goal Achieved!',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.warning,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Congratulations! You have reached your savings goal.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.warning.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

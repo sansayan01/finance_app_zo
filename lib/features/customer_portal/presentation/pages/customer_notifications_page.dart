@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:microflow_pro/core/constants/app_colors.dart';
 import 'package:microflow_pro/core/constants/app_spacing.dart';
 import 'package:microflow_pro/core/widgets/shimmer_card.dart';
 import '../../data/models/customer_notification_model.dart';
+import '../../data/providers/customer_connection_provider.dart';
 import '../../data/providers/customer_notifications_providers.dart';
 import '../../data/providers/customer_member_provider.dart';
+import '../../data/providers/customer_realtime_providers.dart';
 import '../widgets/customer_notification_tile.dart';
 import '../widgets/customer_empty_state.dart';
 
@@ -25,7 +28,6 @@ class _CustomerNotificationsPageState
     with TickerProviderStateMixin {
   late AnimationController _staggerController;
   late AnimationController _pulseController;
-  bool _staggerPlayed = false;
   _NotificationFilter _filter = _NotificationFilter.all;
 
   @override
@@ -72,8 +74,19 @@ class _CustomerNotificationsPageState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    ref.watch(realtimeNotificationsProvider);
     final notificationsAsync = ref.watch(customerNotificationsProvider);
     final unreadAsync = ref.watch(customerUnreadCountProvider);
+
+    // Auto-retry when connectivity is restored
+    ref.listen<AsyncValue<bool>>(isOnlineProvider, (prev, next) {
+      final wasOffline = prev?.valueOrNull == false;
+      final isOnline = next.valueOrNull == true;
+      if (isOnline && wasOffline) {
+        ref.invalidate(customerNotificationsProvider);
+        ref.invalidate(customerUnreadCountProvider);
+      }
+    });
 
     return Scaffold(
       extendBody: true,
@@ -109,16 +122,11 @@ class _CustomerNotificationsPageState
                   );
                 }
 
-                if (!_staggerPlayed) {
-                  _staggerPlayed = true;
-                }
-
                 return RefreshIndicator(
                   color: isDark ? AppColors.primaryDark : AppColors.primary,
                   backgroundColor:
                       isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
                   onRefresh: () async {
-                    _staggerPlayed = false;
                     _staggerController
                       ..reset()
                       ..forward();
@@ -385,7 +393,7 @@ class _CustomerNotificationsPageState
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () => context.pop(),
                   child: Container(
                     width: 40,
                     height: 40,

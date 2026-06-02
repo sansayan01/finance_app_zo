@@ -541,14 +541,17 @@ class _CustomerTransactionsPageState
     Iterable<CustomerTransactionModel> result = transactions;
     result = switch (_filter) {
       'emi' => result.where((t) => t.type == 'emiPayment'),
-      'deposit' => result.where((t) =>
-          t.type == 'savingsDeposit' ||
-          t.type == 'deposit' ||
-          t.type == 'collection'),
+      'deposit' => result.where(
+          (t) => t.type == 'savingsDeposit' || t.type == 'deposit'),
       'withdrawal' => result.where(
           (t) => t.type == 'savingsWithdrawal' || t.type == 'withdrawal'),
-      'credit' => result.where((t) => t.isCredit),
-      'debit' => result.where((t) => t.isDebit),
+      'credit' => result.where(
+          (t) => t.type == 'collection' || t.type == 'loanDisbursement'),
+      'debit' => result.where((t) =>
+          t.type == 'emiPayment' ||
+          t.type == 'savingsWithdrawal' ||
+          t.type == 'withdrawal' ||
+          t.type == 'penalty'),
       _ => result,
     };
     if (_query.isNotEmpty) {

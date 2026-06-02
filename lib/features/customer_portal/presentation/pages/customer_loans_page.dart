@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/shimmer_card.dart';
+import '../../data/providers/customer_connection_provider.dart';
 import '../../data/providers/customer_loans_providers.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../widgets/customer_loan_card.dart';
@@ -126,6 +127,15 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final loansAsync = ref.watch(customerLoansProvider);
+
+    // Auto-retry when connectivity is restored
+    ref.listen<AsyncValue<bool>>(isOnlineProvider, (prev, next) {
+      final wasOffline = prev?.valueOrNull == false;
+      final isOnline = next.valueOrNull == true;
+      if (isOnline && wasOffline) {
+        ref.invalidate(customerLoansProvider);
+      }
+    });
 
     final headerGradient = isDark
         ? const LinearGradient(

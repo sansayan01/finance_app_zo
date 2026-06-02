@@ -9,6 +9,7 @@ import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/models/customer_profile_model.dart';
 import '../../data/providers/customer_profile_providers.dart';
 import '../../data/providers/customer_member_provider.dart';
+import '../../data/providers/customer_realtime_providers.dart';
 import '../widgets/customer_empty_state.dart';
 
 class CustomerProfilePage extends ConsumerStatefulWidget {
@@ -61,6 +62,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(realtimeMemberProfileProvider);
     final profileAsync = ref.watch(customerProfileProvider);
     final memberIdAsync = ref.watch(currentCustomerIdProvider);
     final theme = Theme.of(context);

@@ -88,6 +88,18 @@ class CustomerNotificationPreferences {
         'systemAlerts': systemAlerts,
       };
 
+  /// Snake-case serialisation for Supabase upserts.
+  Map<String, dynamic> toSupabaseJson() => {
+        'push_enabled': pushEnabled,
+        'email_enabled': emailEnabled,
+        'emi_reminder_3_days': emiReminder3Days,
+        'emi_reminder_1_day': emiReminder1Day,
+        'emi_reminder_on_due': emiReminderOnDue,
+        'payment_confirmation': paymentConfirmation,
+        'savings_milestone': savingsMilestone,
+        'system_alerts': systemAlerts,
+      };
+
   factory CustomerNotificationPreferences.fromJson(Map<String, dynamic> json) {
     return CustomerNotificationPreferences(
       pushEnabled: json['pushEnabled'] as bool? ?? true,
@@ -98,6 +110,22 @@ class CustomerNotificationPreferences {
       paymentConfirmation: json['paymentConfirmation'] as bool? ?? true,
       savingsMilestone: json['savingsMilestone'] as bool? ?? true,
       systemAlerts: json['systemAlerts'] as bool? ?? true,
+    );
+  }
+
+  /// Read preferences from a Supabase row (snake_case keys).
+  factory CustomerNotificationPreferences.fromSupabaseJson(
+    Map<String, dynamic> json,
+  ) {
+    return CustomerNotificationPreferences(
+      pushEnabled: json['push_enabled'] as bool? ?? true,
+      emailEnabled: json['email_enabled'] as bool? ?? true,
+      emiReminder3Days: json['emi_reminder_3_days'] as bool? ?? true,
+      emiReminder1Day: json['emi_reminder_1_day'] as bool? ?? true,
+      emiReminderOnDue: json['emi_reminder_on_due'] as bool? ?? true,
+      paymentConfirmation: json['payment_confirmation'] as bool? ?? true,
+      savingsMilestone: json['savings_milestone'] as bool? ?? true,
+      systemAlerts: json['system_alerts'] as bool? ?? true,
     );
   }
 

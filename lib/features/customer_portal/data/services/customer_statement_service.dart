@@ -240,9 +240,13 @@ class CustomerStatementService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(await doc.save());
-    await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)]),
-    );
+    try {
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)]),
+      );
+    } finally {
+      if (await file.exists()) await file.delete();
+    }
   }
 
   /// Download / save a generated PDF document to the app's documents directory.

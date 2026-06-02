@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/layout.dart';
 import '../../../../core/theme/theme_provider.dart';
@@ -24,6 +25,26 @@ class _CustomerAccountSettingsPageState
     extends ConsumerState<CustomerAccountSettingsPage>
     with TickerProviderStateMixin {
   late AnimationController _staggerController;
+
+  Future<void> _launchURL(String urlString) async {
+    try {
+      final uri = Uri.parse(urlString);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $urlString';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open link: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -838,8 +859,7 @@ class _CustomerAccountSettingsPageState
             icon: Icons.description_rounded,
             iconColor: AppColors.info,
             title: 'Terms of Service',
-            // TODO: open real terms URL once published.
-            onTap: null,
+            onTap: () => _launchURL('https://microflowpro.com/terms'),
           ),
           _buildDivider(isDark),
           _buildNavigationTile(
@@ -847,8 +867,7 @@ class _CustomerAccountSettingsPageState
             icon: Icons.privacy_tip_rounded,
             iconColor: AppColors.teal,
             title: 'Privacy Policy',
-            // TODO: open real privacy URL once published.
-            onTap: null,
+            onTap: () => _launchURL('https://microflowpro.com/privacy'),
           ),
           _buildDivider(isDark),
           _buildNavigationTile(
@@ -857,8 +876,7 @@ class _CustomerAccountSettingsPageState
             iconColor: AppColors.warning,
             title: 'Rate This App',
             subtitle: 'Help us improve',
-            // TODO: deep-link to Play Store / App Store once listing is live.
-            onTap: null,
+            onTap: () => _launchURL('https://play.google.com/store/apps/details?id=com.microflowpro.app'),
           ),
         ],
       ),

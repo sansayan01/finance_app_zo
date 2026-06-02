@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.view.FlutterMain
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -25,8 +25,10 @@ class SmsReminderWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.Main) {
         var engine: FlutterEngine? = null
         try {
-            FlutterMain.startInitialization(applicationContext)
-            FlutterMain.ensureInitializationComplete(applicationContext, null)
+            // Modern Flutter (>= 2.x) initializes the engine automatically
+            // when FlutterEngine is constructed. FlutterMain.startInitialization
+            // and FlutterMain.ensureInitializationComplete are no longer
+            // required and have been removed from io.flutter.view.
             engine = FlutterEngine(applicationContext)
             val messenger = engine.dartExecutor.binaryMessenger
             engine.dartExecutor.executeDartEntrypoint(
@@ -37,11 +39,13 @@ class SmsReminderWorker(
             // Suspend until the Dart side completes the pass
             suspendCancellableCoroutine<Unit> { cont ->
                 channel.invokeMethod("run_reminder_pass", null, object : MethodChannel.Result {
-                    override fun success(result: Any?) = cont.resume(Unit) {}
-                    override fun error(code: String, msg: String?, details: Any?) =
+                    override fun success(result: Any?) { cont.resume(Unit) {} }
+                    override fun error(code: String, msg: String?, details: Any?) {
                         cont.resumeWithException(RuntimeException("sms_scheduler: $code: $msg"))
-                    override fun notImplemented() =
+                    }
+                    override fun notImplemented() {
                         cont.resumeWithException(RuntimeException("sms_scheduler: not implemented"))
+                    }
                 })
             }
             Result.success()

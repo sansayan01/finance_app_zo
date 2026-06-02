@@ -44,8 +44,56 @@ class _SmsHistoryPageState extends ConsumerState<SmsHistoryPage> {
       ),
       body: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Failed to load: $e')),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline,
+                    size: 48, color: theme.colorScheme.error.withValues(alpha: 0.7)),
+                const SizedBox(height: 12),
+                Text('Failed to load SMS history', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  '$e',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Check that the sms_notifications table exists and that RLS allows your session to read it.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ),
         data: (rows) {
+          if (rows.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.sms_failed_outlined,
+                        size: 48,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                    const SizedBox(height: 12),
+                    Text('No SMS history yet', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Messages you send will appear here. If you expected to see entries, check that the sms_notifications table exists in Supabase.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           final filtered = _statusFilter == 'all'
               ? rows
               : rows.where((r) => r['status'] == _statusFilter).toList();

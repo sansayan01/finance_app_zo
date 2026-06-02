@@ -6,6 +6,8 @@ import '../../constants/app_colors.dart';
 import '../../providers/sms_config_provider.dart';
 import '../../providers/sms_outbox_provider.dart';
 import '../../providers/sms_provider.dart';
+import '../../providers/org_provider.dart';
+import '../../../providers/supabase_provider.dart';
 import '../../services/sms_service.dart';
 import '../../widgets/glass_card.dart';
 
@@ -123,6 +125,35 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
                         await ref.read(collectionSmsSenderProvider.notifier)
                             .flushOutbox(overrideOutbox: o);
                         if (mounted) setState(() {});
+                      },
+                    ),
+                    _infoTile(
+                      theme: theme,
+                      title: 'Retry pending SMS now',
+                      subtitle: 'Force-dispatch any pending or stuck messages',
+                      icon: Icons.refresh_rounded,
+                      onTap: () async {
+                        final outbox = await ref.read(smsOutboxProvider.future);
+                        // For every row that's pending (including in-backoff rows), dispatch directly.
+                        final pending = outbox.pendingAll();
+                        debugPrint('Retry-now: found ${pending.length} pending rows');
+                        for (final row in pending) {
+                          // Reset scheduledFor to now so dispatchOutboxRow picks it up.
+                          await outbox.replace(row.copyWith(scheduledFor: DateTime.now()));
+                          await dispatchOutboxRow(
+                            outbox: outbox,
+                            row: outbox.get(row.id)!,
+                            smsService: ref.read(smsServiceProvider),
+                            supabaseClient: ref.read(supabaseClientProvider),
+                            orgId: ref.read(currentOrgIdProvider),
+                          );
+                        }
+                        if (mounted) setState(() {});
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Retry complete. Check logcat for details.')),
+                          );
+                        }
                       },
                     ),
                   ],

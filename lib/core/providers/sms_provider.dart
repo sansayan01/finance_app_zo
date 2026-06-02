@@ -233,10 +233,14 @@ Future<bool> dispatchOutboxRow({
   required dynamic supabaseClient,
   required String? orgId,
 }) async {
+  debugPrint('dispatchOutboxRow start: id=${row.id}, phone=${row.phone}, '
+      'messageLen=${row.message.length}, attempts=${row.attempts}');
   try {
     await outbox.markSending(row.id);
+    debugPrint('dispatchOutboxRow: marked sending');
     // 30s hard timeout: if the native sender hangs, treat as a failure
     // and let the outbox retry pipeline take over.
+    debugPrint('dispatchOutboxRow: calling sendSms...');
     final ok = await smsService
         .sendSms(
           phoneNumber: row.phone,
@@ -244,8 +248,10 @@ Future<bool> dispatchOutboxRow({
           requestId: row.id,
         )
         .timeout(const Duration(seconds: 30));
+    debugPrint('dispatchOutboxRow: sendSms returned: $ok');
     if (ok) {
       await outbox.markSent(row.id);
+      debugPrint('dispatchOutboxRow: marked sent');
       try {
         await supabaseClient.from('sms_notifications').insert({
           'org_id': orgId,
@@ -259,21 +265,28 @@ Future<bool> dispatchOutboxRow({
           'platform': Platform.isAndroid ? 'android' : 'ios',
           'sent_by': row.sentBy,
         });
+        debugPrint('dispatchOutboxRow: sms_notifications insert: ok=true');
       } catch (e, stack) {
-        debugPrint('sms_notifications insert failed for sent row ${row.id}: $e');
+        debugPrint('dispatchOutboxRow: sms_notifications insert: ok=false, error=$e');
         debugPrint('Stack: $stack');
       }
+      debugPrint('dispatchOutboxRow: end (sent)');
       return true;
     } else {
-      await outbox.markFailed(row.id, 'SEND_FAILED');
+      final after = outbox.get(row.id);
+      final attempts = after?.attempts ?? row.attempts;
+      final lastError = after?.lastError ?? 'SEND_FAILED';
+      debugPrint('dispatchOutboxRow: marked failed (attempts=$attempts, lastError=$lastError)');
+      debugPrint('dispatchOutboxRow: end (send-fail)');
       return false;
     }
   } catch (e, stack) {
-    debugPrint('dispatchOutboxRow exception for row ${row.id}: $e');
+    debugPrint('dispatchOutboxRow: exception for row ${row.id}: $e');
     debugPrint('Stack: $stack');
     try {
       await outbox.markFailed(row.id, 'EXCEPTION');
     } catch (_) {}
+    debugPrint('dispatchOutboxRow: end (exception)');
     return false;
   }
 }

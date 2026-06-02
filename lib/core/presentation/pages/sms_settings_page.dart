@@ -108,8 +108,11 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
                       title: 'Pending outbox',
                       subtitle: outboxAsync.when(
                         data: (o) {
+                          final all = o.pendingAll().length;
                           final due = o.pendingDue().length;
-                          return due == 0 ? 'No messages waiting' : '$due message(s) waiting to send';
+                          return all == 0
+                              ? 'No messages waiting'
+                              : '$all message(s) waiting ($due ready now)';
                         },
                         loading: () => 'Loading…',
                         error: (_, __) => 'Outbox error',

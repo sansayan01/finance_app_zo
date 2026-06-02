@@ -1,4 +1,5 @@
 // lib/core/providers/sms_provider.dart
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -70,7 +71,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     );
 
     final outbox = await _ref.read(smsOutboxProvider.future);
-    return outbox.enqueue(
+    final id = await outbox.enqueue(
       phone: phone,
       message: message,
       memberId: memberId,
@@ -78,6 +79,10 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       collectorName: collectorName,
       sentBy: sentBy,
     );
+    // Best-effort immediate flush so SMS go out without waiting for manual trigger.
+    // On failure, the row is already durable in the outbox and will retry on next flush.
+    unawaited(flushOutbox(overrideOutbox: outbox));
+    return id;
   }
 
   /// Drain the outbox: for each pending row that's due, send it. Updates
@@ -176,8 +181,9 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
         'platform': Platform.isAndroid ? 'android' : 'ios',
         'sent_by': sentBy,
       });
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Failed to log SMS notification: $e');
+      debugPrint('Stack: $stack');
     }
   }
 }

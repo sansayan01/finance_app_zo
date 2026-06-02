@@ -170,6 +170,16 @@ class SmsOutboxService {
         .toList();
   }
 
+  /// All rows in `pending` state, regardless of `scheduledFor`. Includes
+  /// rows currently in the backoff window after a failed send. Use this for
+  /// user-facing "messages waiting" counts; use [pendingDue] for dispatcher
+  /// "ready to send now" counts.
+  List<OutboxRow> pendingAll() {
+    return _box.values
+        .where((r) => r.status == OutboxStatus.pending)
+        .toList();
+  }
+
   Duration _backoff(int attempt) {
     switch (attempt) {
       case 1: return const Duration(seconds: 30);

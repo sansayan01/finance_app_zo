@@ -238,14 +238,15 @@ class SmsSenderPlugin(
 
     private fun maybeResolve(requestId: String) {
         val p = pendingById[requestId] ?: return
-        val total = p.parts
-        if (p.sentCount.get() + p.failureCount.get() < total) return
-        // All parts have reported
-        if (p.failureCount.get() > 0) {
-            p.result.error("SEND_FAILED", "${p.failureCount.get()}/$total parts failed", null)
+        if (p.sentCount.get() + p.failureCount.get() < p.parts) return
+        // First-write-wins: remove the entry first; if another thread already
+        // removed it, skip resolution so we never call result.success/error twice.
+        val removed = pendingById.remove(requestId) ?: return
+        val total = removed.parts
+        if (removed.failureCount.get() > 0) {
+            removed.result.error("SEND_FAILED", "${removed.failureCount.get()}/$total parts failed", null)
         } else {
-            p.result.success(true)
+            removed.result.success(true)
         }
-        pendingById.remove(requestId)
     }
 }

@@ -56,6 +56,13 @@ class OutboxRow {
   }
 }
 
+/// Durable queue for outbound SMS. Survives process death.
+/// Retry policy: 30s → 5m → 30m → dead-letter (after 3 failed attempts).
+///
+/// **Concurrency contract:** `markFailed`/`markSent`/`markSending` perform a
+/// read-modify-write against the Hive box. The intended call pattern is a
+/// single dispatcher coroutine processing one row at a time; concurrent
+/// mutations of the same id are not safe and may lose the second update.
 class SmsOutboxService {
   static const _boxName = 'sms_outbox_v1';
   static const _uuid = Uuid();

@@ -77,6 +77,7 @@ import '../features/staff/presentation/pages/staff_targets_page.dart';
 import '../features/staff/data/services/duty_auto_resume_service.dart';
 
 import '../core/constants/layout.dart';
+import '../core/presentation/pages/sms_history_page.dart';
 import '../core/presentation/pages/sms_settings_page.dart';
 import '../core/services/sms_scheduler_service.dart';
 import '../core/providers/sms_provider.dart';
@@ -296,6 +297,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/setup',
         builder: (context, state) => const SetupWizardPage(),
+      ),
+
+      // SMS History (top-level, accessible from any portal)
+      GoRoute(
+        path: '/sms-history',
+        builder: (context, state) => const SmsHistoryPage(),
       ),
 
       // Super Admin Panel

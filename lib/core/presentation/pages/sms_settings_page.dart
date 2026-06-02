@@ -184,7 +184,7 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
 
   Future<void> _pickSim(BuildContext context, SmsService svc) async {
     final subs = await svc.pickSubscription();
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (subs.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('This device has one SIM. Using it.')),
@@ -192,7 +192,7 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
       return;
     }
     final current = await svc.getSubscriptionId();
-    if (!mounted) return;
+    if (!context.mounted) return;
     final picked = await showModalBottomSheet<int>(
       context: context,
       builder: (ctx) => SafeArea(

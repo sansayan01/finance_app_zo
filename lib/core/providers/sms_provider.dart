@@ -83,13 +83,16 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
   /// Drain the outbox: for each pending row that's due, send it. Updates
   /// outbox + sms_notifications accordingly. Safe to call on app start and
   /// after sync.
-  Future<OutboxFlushResult> flushOutbox() async {
+  Future<OutboxFlushResult> flushOutbox({SmsOutboxService? overrideOutbox}) async {
     if (_flushing) {
       return const OutboxFlushResult(sent: 0, failed: 0, retried: 0);
     }
     _flushing = true;
     try {
-      final outbox = await _ref.read(smsOutboxProvider.future);
+      final outbox = overrideOutbox ?? await _ref.read(smsOutboxProvider.future);
+      if (outbox == null) {
+        return const OutboxFlushResult(sent: 0, failed: 0, retried: 0);
+      }
       int sent = 0, failed = 0, retried = 0;
       for (final row in outbox.pendingDue()) {
         try {

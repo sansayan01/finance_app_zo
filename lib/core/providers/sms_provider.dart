@@ -16,6 +16,8 @@ import '../../features/staff/data/models/collection_model.dart';
 final smsServiceProvider = Provider<SmsService>((ref) => SmsService());
 
 /// Whether SMS permission is currently granted.
+/// TODO(sms-reliability): this provider is being replaced by the native
+/// `check_permission` method in SmsSenderPlugin. Removal tracked in Task 8/12.
 final smsPermissionProvider = FutureProvider<bool>((ref) async {
   if (Platform.isAndroid) {
     return (await Permission.sms.status).isGranted;

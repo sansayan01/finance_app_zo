@@ -79,9 +79,32 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       collectorName: collectorName,
       sentBy: sentBy,
     );
-    // Best-effort immediate flush so SMS go out without waiting for manual trigger.
-    // On failure, the row is already durable in the outbox and will retry on next flush.
-    unawaited(flushOutbox(overrideOutbox: outbox));
+    // Dispatch this single row directly via the static function. This bypasses
+    // the StateNotifier so the dispatch survives route teardown (the user's
+    // collection page navigates away after enqueue).
+    final smsService = _smsService;
+    final client = _client;
+    final orgId = _orgId;
+    unawaited(dispatchOutboxRow(
+      outbox: outbox,
+      row: OutboxRow(
+        id: id,
+        phone: phone,
+        message: message,
+        memberId: memberId,
+        recipientName: memberName,
+        collectorName: collectorName,
+        sentBy: sentBy,
+        status: OutboxStatus.pending,
+        attempts: 0,
+        lastError: null,
+        scheduledFor: DateTime.now(),
+        createdAt: DateTime.now(),
+      ),
+      smsService: smsService,
+      supabaseClient: client,
+      orgId: orgId,
+    ));
     return id;
   }
 
@@ -102,11 +125,16 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       for (final row in outbox.pendingDue()) {
         try {
           await outbox.markSending(row.id);
-          final ok = await _smsService.sendSms(
-            phoneNumber: row.phone,
-            message: row.message,
-            requestId: row.id,
-          );
+          // Hard 30s timeout: if the native sender hangs (real-device issue
+          // observed when the activity gets torn down mid-send), surface it
+          // as an exception so the row is reset to pending and retried.
+          final ok = await _smsService
+              .sendSms(
+                phoneNumber: row.phone,
+                message: row.message,
+                requestId: row.id,
+              )
+              .timeout(const Duration(seconds: 30));
           if (ok) {
             await outbox.markSent(row.id);
             await _logSms(
@@ -185,6 +213,68 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       debugPrint('Failed to log SMS notification: $e');
       debugPrint('Stack: $stack');
     }
+  }
+}
+
+/// Dispatch a single outbox row to the platform. Bypasses the StateNotifier
+/// so it survives route teardown. Returns true if the row was sent.
+///
+/// Why this exists: when the user records a collection, the page navigates
+/// away almost immediately. The previous path called `flushOutbox` from
+/// `enqueueCollection` with `unawaited(...)`. If the StateNotifier was
+/// autoDispose'd or its `Ref` went stale before the future resolved, the
+/// in-flight `sendSms` call was effectively cancelled and the row was left
+/// stuck in `sending`. This function holds no Riverpod state of its own
+/// beyond the explicit outbox handle, so it cannot be invalidated mid-flight.
+Future<bool> dispatchOutboxRow({
+  required SmsOutboxService outbox,
+  required OutboxRow row,
+  required SmsService smsService,
+  required dynamic supabaseClient,
+  required String? orgId,
+}) async {
+  try {
+    await outbox.markSending(row.id);
+    // 30s hard timeout: if the native sender hangs, treat as a failure
+    // and let the outbox retry pipeline take over.
+    final ok = await smsService
+        .sendSms(
+          phoneNumber: row.phone,
+          message: row.message,
+          requestId: row.id,
+        )
+        .timeout(const Duration(seconds: 30));
+    if (ok) {
+      await outbox.markSent(row.id);
+      try {
+        await supabaseClient.from('sms_notifications').insert({
+          'org_id': orgId,
+          'member_id': row.memberId,
+          'member_phone': row.phone,
+          'recipient_phone': row.phone,
+          'recipient_name': row.recipientName,
+          'collector_name': row.collectorName,
+          'message': row.message,
+          'status': 'sent',
+          'platform': Platform.isAndroid ? 'android' : 'ios',
+          'sent_by': row.sentBy,
+        });
+      } catch (e, stack) {
+        debugPrint('sms_notifications insert failed for sent row ${row.id}: $e');
+        debugPrint('Stack: $stack');
+      }
+      return true;
+    } else {
+      await outbox.markFailed(row.id, 'SEND_FAILED');
+      return false;
+    }
+  } catch (e, stack) {
+    debugPrint('dispatchOutboxRow exception for row ${row.id}: $e');
+    debugPrint('Stack: $stack');
+    try {
+      await outbox.markFailed(row.id, 'EXCEPTION');
+    } catch (_) {}
+    return false;
   }
 }
 

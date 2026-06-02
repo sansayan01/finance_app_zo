@@ -9,6 +9,7 @@ import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.view.FlutterMain
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 class SmsReminderWorker(
@@ -21,22 +22,34 @@ class SmsReminderWorker(
         const val UNIQUE_NAME = "sms_reminder"
     }
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+    override suspend fun doWork(): Result = withContext(Dispatchers.Main) {
+        var engine: FlutterEngine? = null
         try {
             FlutterMain.startInitialization(applicationContext)
-            val engine = FlutterEngine(applicationContext)
+            FlutterMain.ensureInitializationComplete(applicationContext, null)
+            engine = FlutterEngine(applicationContext)
             val messenger = engine.dartExecutor.binaryMessenger
             engine.dartExecutor.executeDartEntrypoint(
                 DartExecutor.DartEntrypoint.createDefault()
             )
 
             val channel = MethodChannel(messenger, "com.microflow/sms_scheduler")
-            channel.invokeMethod("run_reminder_pass", null)
-            engine.destroy()
+            // Suspend until the Dart side completes the pass
+            suspendCancellableCoroutine<Unit> { cont ->
+                channel.invokeMethod("run_reminder_pass", null, object : MethodChannel.Result {
+                    override fun success(result: Any?) = cont.resume(Unit) {}
+                    override fun error(code: String, msg: String?, details: Any?) =
+                        cont.resumeWithException(RuntimeException("sms_scheduler: $code: $msg"))
+                    override fun notImplemented() =
+                        cont.resumeWithException(RuntimeException("sms_scheduler: not implemented"))
+                })
+            }
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Reminder worker failed: ${e.message}", e)
             Result.retry()
+        } finally {
+            engine?.destroy()
         }
     }
 }

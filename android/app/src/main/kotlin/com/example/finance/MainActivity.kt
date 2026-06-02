@@ -99,11 +99,9 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
-        androidx.work.WorkManager.initialize(this, androidx.work.Configuration.Builder().build())
-    }
-
-    override fun onResume() {
-        super.onResume()
+        val request = androidx.work.PeriodicWorkRequestBuilder<SmsReminderWorker>(1, java.util.concurrent.TimeUnit.DAYS).build()
+        androidx.work.WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(SmsReminderWorker.UNIQUE_NAME, androidx.work.ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
     override fun onRequestPermissionsResult(

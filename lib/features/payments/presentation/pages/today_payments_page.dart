@@ -1019,15 +1019,15 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       }).eq('id', planId);
 
       // 5. Send SMS notification (non-blocking, fire-and-forget)
-      ref.read(collectionSmsSenderProvider).sendSavingsSms(
-        memberPhone: payment.memberPhone,
-        memberName: payment.memberName,
+      ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
+        phone: payment.memberPhone,
         memberId: payment.memberId,
+        memberName: payment.memberName,
+        loanNumber: null,
         amount: amount,
-        planName: payment.planName,
-        newBalance: currentBalance + amount,
-        staffId: staffId,
+        outstandingBalance: currentBalance + amount,
         collectorName: collectorName,
+        sentBy: staffId,
       );
     } else {
       // EMI Payment flow
@@ -1105,15 +1105,15 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       });
 
       // 5. Send SMS notification (non-blocking, fire-and-forget)
-      ref.read(collectionSmsSenderProvider).sendEmiSms(
-        memberPhone: payment.memberPhone,
-        memberName: payment.memberName,
+      ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
+        phone: payment.memberPhone,
         memberId: payment.memberId,
+        memberName: payment.memberName,
         loanNumber: payment.loanNumber,
         amount: amount,
-        outstandingBalance: null,
-        staffId: staffId,
+        outstandingBalance: 0.0,
         collectorName: collectorName,
+        sentBy: staffId,
       );
     }
 

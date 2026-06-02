@@ -984,15 +984,15 @@ class _BranchTodayPaymentsPageState
 
       // Send SMS notification (fire-and-forget)
       final collectorName = profile?['full_name'] as String? ?? 'Staff';
-      ref.read(collectionSmsSenderProvider).sendSavingsSms(
-        memberPhone: payment.memberPhone,
-        memberName: payment.memberName,
+      ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
+        phone: payment.memberPhone,
         memberId: payment.memberId,
+        memberName: payment.memberName,
+        loanNumber: null,
         amount: amount,
-        planName: payment.planName,
-        newBalance: currentBalance + amount,
-        staffId: staffId,
+        outstandingBalance: currentBalance + amount,
         collectorName: collectorName,
+        sentBy: staffId,
       );
     } else {
       await client.from('collections').insert({
@@ -1064,15 +1064,15 @@ class _BranchTodayPaymentsPageState
 
       // Send SMS notification (fire-and-forget)
       final collectorName = profile?['full_name'] as String? ?? 'Staff';
-      ref.read(collectionSmsSenderProvider).sendEmiSms(
-        memberPhone: payment.memberPhone,
-        memberName: payment.memberName,
+      ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
+        phone: payment.memberPhone,
         memberId: payment.memberId,
+        memberName: payment.memberName,
         loanNumber: payment.loanNumber,
         amount: amount,
-        outstandingBalance: null,
-        staffId: staffId,
+        outstandingBalance: 0.0,
         collectorName: collectorName,
+        sentBy: staffId,
       );
     }
 

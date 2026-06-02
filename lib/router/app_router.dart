@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 // Chatbot
 import '../features/chatbot/presentation/widgets/floating_chatbot.dart';
@@ -80,10 +79,7 @@ import '../core/constants/layout.dart';
 import '../core/presentation/pages/sms_history_page.dart';
 import '../core/presentation/pages/sms_settings_page.dart';
 import '../core/services/sms_scheduler_service.dart';
-import '../core/providers/sms_provider.dart';
 import '../core/providers/sms_config_provider.dart';
-import '../core/providers/storage_providers.dart';
-import '../core/providers/org_provider.dart';
 
 // Super Admin Portal
 import '../features/super_admin/presentation/widgets/super_admin_shell.dart';
@@ -1089,13 +1085,8 @@ class _StaffShellState extends ConsumerState<StaffShell> {
 
   void _startSmsScheduler() {
     try {
-      final client = Supabase.instance.client;
       final config = ref.read(smsConfigProvider);
-      final smsService = ref.read(smsServiceProvider);
-      final orgId = ref.read(currentOrgIdProvider);
-      final prefs = ref.read(sharedPreferencesProvider);
-      final sender = CollectionSmsSender(smsService, client, orgId, prefs);
-      _smsScheduler = SmsSchedulerService(client, sender, config);
+      _smsScheduler = SmsSchedulerService(config);
       _smsScheduler!.start();
     } catch (_) {}
   }

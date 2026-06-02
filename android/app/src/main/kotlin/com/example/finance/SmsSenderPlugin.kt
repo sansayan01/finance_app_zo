@@ -25,6 +25,7 @@ class SmsSenderPlugin(
 
     companion object {
         private const val SMS_PERMISSION_REQUEST_CODE = 10011
+        private const val READ_PHONE_STATE_REQUEST_CODE = 10012
         private const val TAG = "SmsSenderPlugin"
         private const val SMS_SENT_ACTION = "com.example.finance.SMS_SENT"
         private const val SMS_DELIVERED_ACTION = "com.example.finance.SMS_DELIVERED"
@@ -32,6 +33,7 @@ class SmsSenderPlugin(
     }
 
     private var pendingResult: MethodChannel.Result? = null
+    private var pendingPickSubscriptionResult: MethodChannel.Result? = null
     // requestId -> PendingSend that tracks per-part results.
     // All parts must arrive (or time out) before we resolve the Dart result.
     private val pendingById: ConcurrentHashMap<String, PendingSend> = ConcurrentHashMap()
@@ -67,14 +69,22 @@ class SmsSenderPlugin(
             "check_permission" -> result.success(hasSmsPermission())
             "request_permission" -> requestSmsPermission(result)
             "pick_subscription" -> {
-                val infos = activeSubscriptions()
-                val payload = infos.map { mapOf(
-                    "subscription_id" to it.subscriptionId,
-                    "sim_slot_index" to it.simSlotIndex,
-                    "carrier_name" to (it.carrierName?.toString() ?: ""),
-                    "display_name" to (it.displayName?.toString() ?: ""),
-                ) }
-                result.success(payload)
+                if (!hasReadPhoneStatePermission()) {
+                    pendingPickSubscriptionResult = result
+                    ActivityCompat.requestPermissions(
+                        activity,
+                        arrayOf(android.Manifest.permission.READ_PHONE_STATE),
+                        READ_PHONE_STATE_REQUEST_CODE
+                    )
+                } else {
+                    val payload = activeSubscriptions().map { mapOf(
+                        "subscription_id" to it.subscriptionId,
+                        "sim_slot_index" to it.simSlotIndex,
+                        "carrier_name" to (it.carrierName?.toString() ?: ""),
+                        "display_name" to (it.displayName?.toString() ?: ""),
+                    ) }
+                    result.success(payload)
+                }
             }
             "set_subscription" -> {
                 val id = call.argument<Int>("subscription_id") ?: SLOT_DEFAULT
@@ -87,10 +97,16 @@ class SmsSenderPlugin(
     }
 
     private fun activeSubscriptions(): List<SubscriptionInfo> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            val sm = activity.getSystemService(SubscriptionManager::class.java) ?: return emptyList()
-            sm.activeSubscriptionInfoList ?: emptyList()
-        } else emptyList()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) return emptyList()
+        if (!hasReadPhoneStatePermission()) return emptyList()
+        val sm = activity.getSystemService(SubscriptionManager::class.java) ?: return emptyList()
+        return sm.activeSubscriptionInfoList ?: emptyList()
+    }
+
+    private fun hasReadPhoneStatePermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            activity, android.Manifest.permission.READ_PHONE_STATE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun hasSmsPermission(): Boolean {
@@ -117,14 +133,33 @@ class SmsSenderPlugin(
         permissions: Array<out String>,
         grantResults: IntArray
     ): Boolean {
-        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
-            val granted = grantResults.isNotEmpty() &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED
-            pendingResult?.success(granted)
-            pendingResult = null
-            return true
+        return when (requestCode) {
+            SMS_PERMISSION_REQUEST_CODE -> {
+                val granted = grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                pendingResult?.success(granted)
+                pendingResult = null
+                true
+            }
+            READ_PHONE_STATE_REQUEST_CODE -> {
+                val granted = grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                if (granted) {
+                    val payload = activeSubscriptions().map { mapOf(
+                        "subscription_id" to it.subscriptionId,
+                        "sim_slot_index" to it.simSlotIndex,
+                        "carrier_name" to (it.carrierName?.toString() ?: ""),
+                        "display_name" to (it.displayName?.toString() ?: ""),
+                    ) }
+                    pendingPickSubscriptionResult?.success(payload)
+                } else {
+                    pendingPickSubscriptionResult?.success(emptyList<Map<String, Any?>>())
+                }
+                pendingPickSubscriptionResult = null
+                true
+            }
+            else -> false
         }
-        return false
     }
 
     @Suppress("DEPRECATION")
@@ -180,12 +215,20 @@ class SmsSenderPlugin(
                 sentIntents.add(sentIntent)
                 deliveredIntents.add(deliveredIntent)
 
-                registerSentReceiver(requestId, i, phone, sentIntent)
-                registerDeliveredReceiver(requestId, i, phone, deliveredIntent)
+                registerSentReceiver(requestId, i, phone, sentIntent, "$SMS_SENT_ACTION.$requestId.$i")
+                registerDeliveredReceiver(requestId, i, phone, deliveredIntent, "$SMS_DELIVERED_ACTION.$requestId.$i")
             }
 
             if (parts.size > 1) {
-                smsManager.sendMultipartTextMessage(phone, null, parts, sentIntents, deliveredIntents)
+                // sendMultipartTextMessage takes a java.util.ArrayList<String>,
+                // not a Kotlin List<String>. Wrap explicitly.
+                smsManager.sendMultipartTextMessage(
+                    phone,
+                    null,
+                    ArrayList(parts),
+                    sentIntents,
+                    deliveredIntents
+                )
             } else {
                 smsManager.sendTextMessage(phone, null, message, sentIntents[0], deliveredIntents[0])
             }
@@ -198,8 +241,16 @@ class SmsSenderPlugin(
         }
     }
 
-    private fun registerSentReceiver(requestId: String, partIndex: Int, phone: String, intent: PendingIntent) {
-        val filter = IntentFilter(intent.intent.action)
+    private fun registerSentReceiver(
+        requestId: String,
+        partIndex: Int,
+        phone: String,
+        pendingIntent: PendingIntent,
+        action: String,
+    ) {
+        // The PendingIntent's underlying Intent is not directly accessible in
+        // modern Android, so we pass the action string in explicitly.
+        val filter = IntentFilter(action)
         activity.registerReceiver(object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, i: Intent?) {
                 val p = pendingById[requestId] ?: return
@@ -223,8 +274,14 @@ class SmsSenderPlugin(
         }, filter, Context.RECEIVER_NOT_EXPORTED)
     }
 
-    private fun registerDeliveredReceiver(requestId: String, partIndex: Int, phone: String, intent: PendingIntent) {
-        val filter = IntentFilter(intent.intent.action)
+    private fun registerDeliveredReceiver(
+        requestId: String,
+        partIndex: Int,
+        phone: String,
+        pendingIntent: PendingIntent,
+        action: String,
+    ) {
+        val filter = IntentFilter(action)
         activity.registerReceiver(object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, i: Intent?) {
                 when (resultCode) {

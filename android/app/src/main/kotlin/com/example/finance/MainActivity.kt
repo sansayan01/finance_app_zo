@@ -97,6 +97,11 @@ class MainActivity : FlutterFragmentActivity() {
         return true
     }
 
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        androidx.work.WorkManager.initialize(this, androidx.work.Configuration.Builder().build())
+    }
+
     override fun onResume() {
         super.onResume()
     }

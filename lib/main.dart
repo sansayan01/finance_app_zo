@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'core/providers/storage_providers.dart';
 import 'core/providers/system_config_provider.dart';
 import 'core/config/env_config.dart';
@@ -57,6 +58,7 @@ Future<void> main() async {
 
     // 3c. Migrate legacy SharedPreferences SMS queue into the new Hive outbox.
     try {
+      await Hive.initFlutter();
       final outbox = await SmsOutboxService.open();
       final migrated = await migrateLegacyQueue(prefs, outbox);
       if (migrated > 0) {

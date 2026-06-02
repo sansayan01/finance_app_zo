@@ -2,10 +2,14 @@ package com.example.finance
 
 import android.content.ComponentName
 import android.content.pm.PackageManager
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
+import java.util.concurrent.TimeUnit
 
 class MainActivity : FlutterFragmentActivity() {
     private val ICON_CHANNEL = "com.microflow.app_icon"
@@ -32,6 +36,32 @@ class MainActivity : FlutterFragmentActivity() {
         val smsChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SMS_CHANNEL)
         smsPlugin = SmsSenderPlugin(this, smsChannel)
         smsChannel.setMethodCallHandler(smsPlugin)
+
+        // SMS scheduler channel (delegates to SmsReminderWorker via WorkManager)
+        val schedulerChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.microflow/sms_scheduler")
+        schedulerChannel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "enqueue_reminder_worker" -> {
+                    WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                        SmsReminderWorker.UNIQUE_NAME,
+                        ExistingPeriodicWorkPolicy.KEEP,
+                        PeriodicWorkRequestBuilder<SmsReminderWorker>(1, TimeUnit.DAYS).build()
+                    )
+                    result.success(true)
+                }
+                "cancel_reminder_worker" -> {
+                    WorkManager.getInstance(this).cancelUniqueWork(SmsReminderWorker.UNIQUE_NAME)
+                    result.success(true)
+                }
+                "run_reminder_pass" -> {
+                    // The worker is invoking us from a freshly-spun-up Flutter engine.
+                    // For now just acknowledge; the Dart side (SmsSchedulerService.runReminderPass)
+                    // does the actual work.
+                    result.success(0)
+                }
+                else -> result.notImplemented()
+            }
+        }
 
         // App icon channel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ICON_CHANNEL)
@@ -99,9 +129,9 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
-        val request = androidx.work.PeriodicWorkRequestBuilder<SmsReminderWorker>(1, java.util.concurrent.TimeUnit.DAYS).build()
-        androidx.work.WorkManager.getInstance(this)
-            .enqueueUniquePeriodicWork(SmsReminderWorker.UNIQUE_NAME, androidx.work.ExistingPeriodicWorkPolicy.KEEP, request)
+        val request = PeriodicWorkRequestBuilder<SmsReminderWorker>(1, TimeUnit.DAYS).build()
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(SmsReminderWorker.UNIQUE_NAME, ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
     override fun onRequestPermissionsResult(

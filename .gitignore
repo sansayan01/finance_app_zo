@@ -95,3 +95,6 @@ temp/
 
 # Heap dumps
 *.hprof
+
+# Kilo config
+.kilo/

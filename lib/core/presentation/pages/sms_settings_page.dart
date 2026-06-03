@@ -6,8 +6,6 @@ import '../../constants/app_colors.dart';
 import '../../providers/sms_config_provider.dart';
 import '../../providers/sms_outbox_provider.dart';
 import '../../providers/sms_provider.dart';
-import '../../providers/org_provider.dart';
-import '../../../providers/supabase_provider.dart';
 import '../../services/sms_service.dart';
 import '../../widgets/glass_card.dart';
 

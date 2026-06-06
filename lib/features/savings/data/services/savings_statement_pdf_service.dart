@@ -1,87 +1,24 @@
 import 'dart:typed_data';
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../../core/models/statement_org_info.dart';
+import '../../../../core/utils/statement_formatters.dart';
 import 'savings_statement_models.dart';
 
-class SavingsStatementOrgInfo {
-  final String name;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? pincode;
-  final String? phone;
-  final String? email;
-  final String? gstNumber;
-  final Uint8List? logoBytes;
-
-  const SavingsStatementOrgInfo({
-    required this.name,
-    this.address,
-    this.city,
-    this.state,
-    this.pincode,
-    this.phone,
-    this.email,
-    this.gstNumber,
-    this.logoBytes,
-  });
-
-  String get fullAddress {
-    final parts = <String>[
-      if (address != null && address!.trim().isNotEmpty) address!.trim(),
-      if (city != null && city!.trim().isNotEmpty) city!.trim(),
-      if (state != null && state!.trim().isNotEmpty) state!.trim(),
-      if (pincode != null && pincode!.trim().isNotEmpty) pincode!.trim(),
-    ];
-    return parts.join(', ');
-  }
-}
+/// Backward-compatible alias — now backed by the shared [StatementOrgInfo].
+typedef SavingsStatementOrgInfo = StatementOrgInfo;
 
 class SavingsStatementPdfService {
-  static final _dateFmt = DateFormat('dd MMM yyyy');
+  /// Delegates to shared [StatementFormatters.money].
+  static String _money(num v) => StatementFormatters.money(v);
 
-  static String _money(num v) {
-    final negative = v < 0;
-    final n = v.abs();
-    final whole = n.truncate();
-    final fraction = ((n - whole) * 100).round();
-    final wholeStr = whole.toString();
-    String grouped;
-    if (wholeStr.length <= 3) {
-      grouped = wholeStr;
-    } else {
-      final last3 = wholeStr.substring(wholeStr.length - 3);
-      final rest = wholeStr.substring(0, wholeStr.length - 3);
-      final restRev = rest.split('').reversed.join();
-      final buf = StringBuffer();
-      for (var i = 0; i < restRev.length; i++) {
-        if (i > 0 && i % 2 == 0) buf.write(',');
-        buf.write(restRev[i]);
-      }
-      grouped = '${buf.toString().split('').reversed.join()},$last3';
-    }
-    final fracStr = fraction.toString().padLeft(2, '0');
-    return '${negative ? '-' : ''}Rs. $grouped.$fracStr';
-  }
+  /// Delegates to shared [StatementFormatters.date].
+  static String _date(DateTime d) => StatementFormatters.date(d);
 
-  static String _date(DateTime d) => _dateFmt.format(d);
-
-  static bool _isValidImage(Uint8List? bytes) {
-    if (bytes == null || bytes.length < 8) return false;
-    final isPng = bytes[0] == 0x89 &&
-        bytes[1] == 0x50 &&
-        bytes[2] == 0x4E &&
-        bytes[3] == 0x47 &&
-        bytes[4] == 0x0D &&
-        bytes[5] == 0x0A &&
-        bytes[6] == 0x1A &&
-        bytes[7] == 0x0A;
-    if (isPng) return true;
-    final isJpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
-    return isJpeg;
-  }
+  /// Delegates to shared [StatementFormatters.isValidImage].
+  static bool _isValidImage(Uint8List? bytes) =>
+      StatementFormatters.isValidImage(bytes);
 
   static pw.Widget? _safeImage(Uint8List? bytes,
       {double width = 80, double height = 80, pw.EdgeInsets? margin}) {
@@ -103,6 +40,7 @@ class SavingsStatementPdfService {
     required SavingsStatementOrgInfo org,
     String? statementRef,
     String? generatedByName,
+    Uint8List? qrPngBytes,
   }) async {
     final pdf = pw.Document(
       title: 'Savings Statement - ${data.customer.fullName}',
@@ -111,7 +49,7 @@ class SavingsStatementPdfService {
       subject: 'Savings Statement',
     );
 
-    final header1 = _buildHeader(org, data, statementRef);
+    final header1 = _buildHeader(org, data, statementRef, qrPngBytes);
     final headerN = _buildRunningHeader(org, data);
 
     pdf.addPage(
@@ -180,6 +118,7 @@ class SavingsStatementPdfService {
     SavingsStatementOrgInfo org,
     SavingsStatementData data,
     String? statementRef,
+    Uint8List? qrPngBytes,
   ) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -203,7 +142,7 @@ class SavingsStatementPdfService {
                   if (org.phone != null && org.phone!.isNotEmpty)
                     pw.Text('Ph: ${org.phone}',
                         style: pw.TextStyle(
-                            fontSize: 8, color: PdfColors.blueGrey600)),
+                           fontSize: 8, color: PdfColors.blueGrey600)),
                   if (org.email != null && org.email!.isNotEmpty)
                     pw.Text(org.email!,
                         style: pw.TextStyle(
@@ -211,7 +150,12 @@ class SavingsStatementPdfService {
                 ],
               ),
             ),
-            _safeImage(org.logoBytes, width: 60, height: 60) ?? pw.SizedBox(),
+            if (qrPngBytes != null)
+              _safeImage(qrPngBytes, width: 56, height: 56) ??
+                  pw.SizedBox(),
+            if (org.logoBytes != null)
+              _safeImage(org.logoBytes, width: 60, height: 60,
+                  margin: pw.EdgeInsets.only(left: 8)) ?? pw.SizedBox(),
           ],
         ),
         pw.SizedBox(height: 14),
@@ -524,6 +468,10 @@ class SavingsStatementPdfService {
                   _planMetric(
                       'Progress',
                       '${plan.progressPercent.toStringAsFixed(1)}% of target'),
+                  if (plan.totalInstallments != null && plan.paidInstallments != null)
+                    _planMetric(
+                        'Installments',
+                        '${plan.paidInstallments} of ${plan.totalInstallments}'),
                   if (plan.nextDueDate != null)
                     _planMetric('Next Due', _date(plan.nextDueDate!),
                         color: PdfColors.orange800)

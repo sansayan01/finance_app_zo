@@ -1,22 +1,12 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/widgets/glassmorphic_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/haptic_service.dart';
-
-final adminOrgListProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  final client = ref.read(supabaseClientProvider);
-  final orgs = await client
-      .from('organizations')
-      .select('id, name, slug, status, created_at')
-      .order('created_at', ascending: false);
-  return List<Map<String, dynamic>>.from(orgs);
-});
+import '../pages/admin_org_detail_page.dart';
 
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
@@ -418,30 +408,3 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class GlassmorphicCard extends StatelessWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-  const GlassmorphicCard({super.key, required this.child, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Material(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.04)
-              : Colors.white.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(20),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(20),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}

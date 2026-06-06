@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/providers/org_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -12,49 +13,83 @@ final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final client = ref.read(supabaseClientProvider);
   final orgId = ref.read(currentOrgIdOrThrowProvider);
 
-  final org =
-      await client.from('organizations').select().eq('id', orgId).single();
-  final staffData =
-      await client.from('staff_profiles').select('id').eq('org_id', orgId);
-  final memberData =
-      await client.from('members').select('id').eq('org_id', orgId);
-  final loansData = await client
-      .from('loans')
-      .select('status, amount, outstanding_amount')
-      .eq('org_id', orgId);
-  final recentCollections = await client
-      .from('collections')
-      .select(
-          'amount_collected, payment_mode, collection_date, member_name, created_at')
-      .eq('org_id', orgId)
-      .order('created_at', ascending: false)
-      .limit(5);
-  final activeLoans =
-      (loansData as List).where((l) => l['status'] == 'active').toList();
-  final totalLoans = loansData.length;
-  final totalDisbursed = loansData.fold<double>(
-      0, (s, l) => s + ((l['amount'] as num?)?.toDouble() ?? 0));
-  final totalOutstanding = activeLoans.fold<double>(
-      0, (s, l) => s + ((l['outstanding_amount'] as num?)?.toDouble() ?? 0));
-  final staff = await client
-      .from('staff_profiles')
-      .select('id, full_name, role, status, branch_id')
-      .eq('org_id', orgId)
-      .limit(10);
+  // Fetch org data with error handling
+  Map<String, dynamic> org;
+  try {
+    org = await client.from('organizations').select().eq('id', orgId).single();
+  } catch (e) {
+    throw Exception('Failed to load organization data: $e');
+  }
+
+  // Fetch related data with individual error handling
+  int staffCount = 0;
+  int memberCount = 0;
+  int totalLoans = 0;
+  int activeLoansCount = 0;
+  double totalDisbursed = 0;
+  double totalOutstanding = 0;
+  List<Map<String, dynamic>> recentCollections = [];
+  List<Map<String, dynamic>> staffList = [];
+
+  try {
+    final staffData =
+        await client.from('staff_profiles').select('id').eq('org_id', orgId);
+    staffCount = staffData.length;
+  } catch (_) {}
+
+  try {
+    final memberData =
+        await client.from('members').select('id').eq('org_id', orgId);
+    memberCount = memberData.length;
+  } catch (_) {}
+
+  try {
+    final loansData = await client
+        .from('loans')
+        .select('status, amount, outstanding_amount')
+        .eq('org_id', orgId);
+    final activeLoans =
+        (loansData as List).where((l) => l['status'] == 'active').toList();
+    totalLoans = loansData.length;
+    activeLoansCount = activeLoans.length;
+    totalDisbursed = loansData.fold<double>(
+        0, (s, l) => s + ((l['amount'] as num?)?.toDouble() ?? 0));
+    totalOutstanding = activeLoans.fold<double>(
+        0, (s, l) => s + ((l['outstanding_amount'] as num?)?.toDouble() ?? 0));
+  } catch (_) {}
+
+  try {
+    final collectionsData = await client
+        .from('collections')
+        .select(
+            'amount_collected, payment_mode, collection_date, member_name, created_at')
+        .eq('org_id', orgId)
+        .order('created_at', ascending: false)
+        .limit(5);
+    recentCollections = List<Map<String, dynamic>>.from(collectionsData);
+  } catch (_) {}
+
+  try {
+    final staffData = await client
+        .from('staff_profiles')
+        .select('id, full_name, role, status, branch_id')
+        .eq('org_id', orgId)
+        .limit(10);
+    staffList = List<Map<String, dynamic>>.from(staffData);
+  } catch (_) {}
 
   return {
     'org': org,
-    'staff_count': staffData.length,
-    'member_count': memberData.length,
+    'staff_count': staffCount,
+    'member_count': memberCount,
     'total_loans': totalLoans,
-    'active_loans': activeLoans.length,
+    'active_loans': activeLoansCount,
     'total_disbursed': totalDisbursed,
     'total_outstanding': totalOutstanding,
-    'recent_collections': List<Map<String, dynamic>>.from(recentCollections),
-    'staff': List<Map<String, dynamic>>.from(staff),
+    'recent_collections': recentCollections,
+    'staff': staffList,
   };
 });
-
 class AdminOrgDashboardPage extends ConsumerWidget {
   const AdminOrgDashboardPage({super.key});
 
@@ -133,8 +168,28 @@ class AdminOrgDashboardPage extends ConsumerWidget {
         ),
         GestureDetector(
           onTap: () async {
-            await authNotifier.signOut();
-            if (context.mounted) context.go('/auth');
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Sign Out'),
+                content: const Text('Are you sure you want to sign out?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Sign Out',
+                        style: TextStyle(color: AppColors.error)),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              await authNotifier.signOut();
+              if (context.mounted) context.go('/auth');
+            }
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -606,8 +661,8 @@ class AdminOrgDashboardPage extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                          c['collection_date']?.toString().substring(0, 10) ??
-                              '',
+                          AppFormatters.parseIsoDateShort(
+                              c['collection_date']?.toString()),
                           style: TextStyle(
                               fontSize: 11,
                               color: isDark

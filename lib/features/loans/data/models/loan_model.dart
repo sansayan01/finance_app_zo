@@ -34,6 +34,7 @@ class LoanModel {
   final String? customerName;
   final String? customerPhone;
   final String? staffName;
+  final String? staffPhone;
 
   LoanModel({
     required this.id,
@@ -67,6 +68,7 @@ class LoanModel {
     this.customerName,
     this.customerPhone,
     this.staffName,
+    this.staffPhone,
   });
 
   String get formattedTenure {
@@ -164,6 +166,7 @@ class LoanModel {
       customerName: profilesJson?['full_name'] as String?,
       customerPhone: profilesJson?['phone'] as String?,
       staffName: staffJson?['full_name'] as String?,
+      staffPhone: staffJson?['phone'] as String?,
     );
   }
 

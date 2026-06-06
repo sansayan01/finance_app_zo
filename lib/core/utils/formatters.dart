@@ -13,6 +13,9 @@ class AppFormatters {
     decimalDigits: 0,
   );
 
+  /// Returns the currency symbol (e.g. '₹') from the formatter.
+  static String get currencySymbol => _currencyFormat.currencySymbol;
+
   static final _percentFormat = NumberFormat.percentPattern();
 
   static final _dateFormat = DateFormat('dd MMM yyyy');
@@ -81,6 +84,29 @@ class AppFormatters {
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return formatDate(dateTime);
+  }
+
+  /// Parse an ISO 8601 date string (from Supabase) and return a formatted date.
+  /// Returns '-' if the string is null or cannot be parsed.
+  static String parseIsoDate(String? isoString) {
+    if (isoString == null || isoString.isEmpty) return '-';
+    try {
+      final date = DateTime.parse(isoString);
+      return formatDate(date);
+    } catch (_) {
+      return '-';
+    }
+  }
+
+  /// Parse an ISO 8601 date string and return a short formatted date.
+  static String parseIsoDateShort(String? isoString) {
+    if (isoString == null || isoString.isEmpty) return '-';
+    try {
+      final date = DateTime.parse(isoString);
+      return formatShortDate(date);
+    } catch (_) {
+      return '-';
+    }
   }
 
   static DateTime convertToIST(DateTime dateTime) {

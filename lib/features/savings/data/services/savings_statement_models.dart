@@ -57,7 +57,22 @@ class SavingsStatementPlanBlock {
       deposits.fold(0.0, (sum, t) => sum + t.amount);
   double get totalWithdrawn =>
       withdrawals.fold(0.0, (sum, t) => sum + t.amount);
-  double get interestAccrued => closingBalance * interestRate / 100;
+  /// Recurring Deposit interest earned so far.
+  ///
+  /// Uses the standard RD formula:
+  ///   Interest = P × n(n+1)/2 × r / (12 × 100)
+  /// where P = monthly installment, n = paid installments, r = annual rate %.
+  /// Falls back to simple balance-based estimate if installment counts are missing.
+  double get interestAccrued {
+    final paid = paidInstallments ?? 0;
+    final total = totalInstallments ?? 0;
+    if (paid > 0 && monthlyDeposit > 0) {
+      // Standard RD accrued interest (simple interest approximation)
+      return monthlyDeposit * paid * (paid + 1) * interestRate / (12 * 100);
+    }
+    // Fallback: simple interest on closing balance
+    return closingBalance * interestRate / 100;
+  }
   double get progressPercent =>
       targetAmount > 0 ? (currentAmount / targetAmount * 100).clamp(0, 100) : 0;
   int get installmentsRemaining =>

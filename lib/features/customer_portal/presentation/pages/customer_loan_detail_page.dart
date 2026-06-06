@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/enums.dart';
@@ -17,6 +18,8 @@ import '../../../../core/widgets/shimmer_card.dart';
 import '../../../loans/data/models/emi_schedule_model.dart';
 import '../../../loans/data/models/loan_model.dart';
 import '../../../loans/data/services/loan_statement_pdf_service.dart';
+import '../../../loans/data/services/loan_statement_excel_service.dart';
+import '../../../loans/data/services/loan_statement_csv_service.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
@@ -63,7 +66,16 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     final loanAsync = ref.watch(customerLoanDetailProvider(widget.loanId));
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
+      },
+      child: Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       extendBody: true,
@@ -75,6 +87,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           return _buildBody(context, loan);
         },
       ),
+    ),
     );
   }
 
@@ -89,7 +102,12 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     final statusBarHeight = mq.padding.top;
 
     // Estimated interest for breakdown chart.
-    final estimatedTotal = loan.emiAmount * loan.tenureMonths;
+    // TODO: Use loan.totalInterest / loan.totalRepayable from CustomerLoanModel
+    // once those fields are added to the model. The current formula only works
+    // for flat-rate loans. For reducing-balance loans the actual interest may differ.
+    final estimatedTotal = (loan.emiAmount > 0 && loan.tenureMonths > 0)
+        ? loan.emiAmount * loan.tenureMonths
+        : loan.amount;
     final estimatedInterest =
         (estimatedTotal - loan.amount).clamp(0.0, double.infinity);
 
@@ -102,6 +120,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
         ref.invalidate(customerEmiScheduleProvider(widget.loanId));
       },
       color: AppColors.primary,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
@@ -196,7 +215,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Secondary CTA: full schedule
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 7,
+              index: 6,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
@@ -208,7 +227,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Statement download
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 8,
+              index: 7,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
@@ -814,13 +833,17 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                   : Colors.black.withValues(alpha: 0.05),
             ),
           ),
-          child: Row(
+          child: Semantics(
+            button: true,
+            label: 'Download Statement',
+            child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.description_rounded,
                 color: AppColors.primary,
                 size: 20,
+                semanticLabel: 'Download Statement',
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
@@ -840,6 +863,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                 size: 18,
               ),
             ],
+          ),
           ),
         ),
       ),
@@ -1033,7 +1057,19 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                               child: InkWell(
                                 onTap: () async {
                                   HapticFeedback.lightImpact();
+
                                   setSheetState(() => step = 'loading');
+                                  // Compute period from selectedRange
+                                  final now = DateTime.now();
+                                  final DateTime periodStart;
+                                  final DateTime periodEnd = now;
+                                  if (selectedRange == '30') {
+                                    periodStart = now.subtract(const Duration(days: 30));
+                                  } else if (selectedRange == '90') {
+                                    periodStart = now.subtract(const Duration(days: 90));
+                                  } else {
+                                    periodStart = loan.disbursementDate ?? now;
+                                  }
                                   try {
                                     final supabase =
                                         Supabase.instance.client;
@@ -1137,19 +1173,45 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                             ))
                                         .toList();
 
-                                    // Generate PDF with admin template
-                                    final pdfBytes =
-                                        await LoanStatementPdfService
-                                            .buildCustomerStatement(
-                                      loan: adminLoan,
-                                      schedule: adminSchedule,
-                                      payments: payments,
-                                      org: org,
-                                    );
+                                    // Generate statement in the selected format
+                                    Uint8List fileBytes;
+                                    String fileExt;
+                                    if (selectedFormat == 'excel') {
+                                      fileBytes = LoanStatementExcelService.build(
+                                        loan: adminLoan,
+                                        schedule: adminSchedule,
+                                        payments: payments,
+                                        org: org,
+                                        periodStart: periodStart,
+                                        periodEnd: periodEnd,
+                                        variant: StatementVariant.customerStatement,
+                                      );
+                                      fileExt = 'xlsx';
+                                    } else if (selectedFormat == 'csv') {
+                                      fileBytes = LoanStatementCsvService.build(
+                                        loan: adminLoan,
+                                        schedule: adminSchedule,
+                                        payments: payments,
+                                        periodStart: periodStart,
+                                        periodEnd: periodEnd,
+                                        variant: StatementVariant.customerStatement,
+                                      );
+                                      fileExt = 'csv';
+                                    } else {
+                                      // PDF (default)
+                                      fileBytes = await LoanStatementPdfService
+                                          .buildCustomerStatement(
+                                        loan: adminLoan,
+                                        schedule: adminSchedule,
+                                        payments: payments,
+                                        org: org,
+                                      );
+                                      fileExt = 'pdf';
+                                    }
 
-                                    _generatedPdfBytes = pdfBytes;
+                                    _generatedPdfBytes = fileBytes;
                                     _statementFilename =
-                                        'loan_statement_${loan.loanNumber ?? loan.id}.pdf';
+                                        'loan_statement_${loan.loanNumber ?? loan.id}.$fileExt';
 
                                     if (ctx.mounted) {
                                       setSheetState(
@@ -1664,7 +1726,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
       case 'upcoming':
         return EMIStatus.pending;
       case 'pending':
-        return EMIStatus.pendingPayment;
+        return EMIStatus.pending;
       default:
         return EMIStatus.pending;
     }
@@ -1690,29 +1752,19 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     } else if (amount >= 100000) {
       return '${(amount / 100000).toStringAsFixed(2)} L';
     } else if (amount >= 1000) {
-      return _formatWithCommas(amount.round());
+      // Keep 2 decimal places to avoid precision loss (e.g. ₹1,500.75 → ₹1,501)
+      final fixed = amount.toStringAsFixed(2);
+      final parts = fixed.split('.');
+      final intPart = parts[0].replaceAllMapped(
+          RegExp(r'(\\d+?)(?=(\\d{3})+(?!\\d))'),
+          (Match m) => '${m[1]},');
+      return '₹$intPart.${parts[1]}';
     }
-    return amount.toStringAsFixed(0);
-  }
-
-  String _formatWithCommas(int number) {
-    final str = number.toString();
-    final buffer = StringBuffer();
-    int count = 0;
-    for (int i = str.length - 1; i >= 0; i--) {
-      if (count != 0 && count % 3 == 0) buffer.write(',');
-      buffer.write(str[i]);
-      count++;
-    }
-    return buffer.toString().split('').reversed.join();
+    return '₹${amount.toStringAsFixed(2)}';
   }
 
   String _formatDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return AppFormatters.formatDate(date);
   }
 }
 

@@ -1407,321 +1407,125 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
   Widget _buildSummaryHero(TodayPaymentSummary summary, bool isDark) {
     final currencyFormat =
         NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
-    final double progress = summary.countDue > 0
-        ? summary.countCollected / summary.countDue
-        : 0;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF4338CA), // Deep indigo
-                AppColors.primary,
-                AppColors.accent,
-                Color(0xFF9333EA), // Rich purple
-              ],
-              stops: [0.0, 0.35, 0.7, 1.0],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.4),
-                blurRadius: 28,
-                spreadRadius: -4,
-                offset: const Offset(0, 12),
-              ),
-              BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.2),
-                blurRadius: 48,
-                spreadRadius: 2,
-                offset: const Offset(0, 6),
-              ),
-            ],
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.accent],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-          child: Stack(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // ── Decorative background orbs with radial gradients ──
-              Positioned(
-                top: -40,
-                right: -30,
-                child: Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.08),
-                        Colors.white.withValues(alpha: 0.0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: -50,
-                right: 40,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.06),
-                        Colors.white.withValues(alpha: 0.0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 20,
-                right: -10,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: 0.05),
-                        Colors.white.withValues(alpha: 0.0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // ── Inner content ──
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Frosted label chip
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                  width: 0.5,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Icon(
-                                      Icons.account_balance_wallet_rounded,
-                                      color: Colors.white,
-                                      size: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'TOTAL DUE TODAY',
-                                    style: TextStyle(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.9),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Bold amount
-                            Text(
-                              currencyFormat.format(summary.totalDue),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -1.5,
-                                height: 1.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Payments count badge (vertical card)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
-                            width: 0.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const Icon(Icons.receipt_long_rounded,
-                                color: Colors.white, size: 18),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${summary.countDue}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                height: 1.0,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'payments',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.7),
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Gradient progress bar ──
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      height: 12,
-                      child: Stack(
-                        children: [
-                          // Track
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          // Fill
-                          FractionallySizedBox(
-                            widthFactor: progress.clamp(0.0, 1.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    Colors.white,
-                                    Color(0xFFC7D2FE),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 0),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                  Text(
+                    'Total Due Today',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 14),
-
-                  // ── Footer row ──
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline_rounded,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            size: 15,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${summary.countCollected} of ${summary.countDue} collected',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.trending_up_rounded,
-                              color: Colors.white.withValues(alpha: 0.9),
-                              size: 13,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${summary.completionPercent}%',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 4),
+                  Text(
+                    currencyFormat.format(summary.totalDue),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ],
               ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.people_rounded,
+                        color: Colors.white, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${summary.countDue} payments',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: summary.countDue > 0
+                  ? summary.countCollected / summary.countDue
+                  : 0,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${summary.countCollected} of ${summary.countDue} collected',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${summary.completionPercent}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -2111,122 +1915,61 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        // Subtle gradient background tinted with the stat color
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: isDark ? 0.08 : 0.05),
-            isDark ? AppColors.cardDark : AppColors.cardLight,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withValues(alpha: isDark ? 0.20 : 0.15),
+          color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
           width: 1,
         ),
-        boxShadow: [
-          // Outer soft shadow
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.3)
-                : color.withValues(alpha: 0.10),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-          // Inner highlight for depth
-          BoxShadow(
-            color: color.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              // Icon with gradient background
               Container(
-                padding: const EdgeInsets.all(9),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      color.withValues(alpha: 0.22),
-                      color.withValues(alpha: 0.10),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.12),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, size: 17, color: color),
+                child: Icon(icon, size: 14, color: color),
               ),
               const Spacer(),
-              // Count number — larger, bolder
               Text(
                 count,
                 style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
                   color: color,
-                  letterSpacing: -1.0,
-                  height: 1.0,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          // Label — refined, muted
+          const SizedBox(height: 10),
           Text(
-            label.toUpperCase(),
+            label,
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
               color: isDark
                   ? AppColors.textTertiaryDark
                   : AppColors.textTertiaryLight,
             ),
           ),
-          const SizedBox(height: 4),
-          // Value — clear, prominent
+          const SizedBox(height: 2),
           Text(
             value,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: isDark
                   ? AppColors.textPrimaryDark
                   : AppColors.textPrimaryLight,
-              letterSpacing: -0.3,
             ),
             overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 12),
-          // Bottom accent bar
-          Container(
-            height: 3,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  color,
-                  color.withValues(alpha: 0.4),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(2),
-            ),
           ),
         ],
       ),
@@ -2301,318 +2044,216 @@ class _PaymentCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: isDark ? AppColors.cardDark : AppColors.cardLight,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark
-                ? AppColors.separatorDark.withValues(alpha: 0.4)
-                : AppColors.separatorLight.withValues(alpha: 0.4),
-            width: 0.8,
+            color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
+            width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: (isDark ? Colors.black : Colors.grey.shade300)
-                  .withValues(alpha: isDark ? 0.4 : 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-              spreadRadius: -2,
-            ),
-            BoxShadow(
-              color: payment.typeColor.withValues(alpha: isDark ? 0.06 : 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
             children: [
-              // ── Left accent bar (type-colored) ──
-              Container(
-                width: 3,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      payment.typeColor,
-                      payment.typeColor.withValues(alpha: 0.4),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+              Row(
+                children: [
+                  // Left icon
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: payment.typeColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      payment.typeIcon,
+                      color: payment.typeColor,
+                      size: 22,
+                    ),
                   ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                  ),
-                ),
-              ),
-              // ── Main content ──
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Top section: icon + name + badge + amount ──
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-                      child: Row(
-                        children: [
-                          // Icon container
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  payment.typeColor.withValues(alpha: 0.16),
-                                  payment.typeColor.withValues(alpha: 0.06),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(13),
-                              border: Border.all(
-                                color: payment.typeColor.withValues(alpha: 0.12),
-                                width: 1,
-                              ),
-                            ),
-                            child: Icon(
-                              payment.typeIcon,
-                              color: payment.typeColor,
-                              size: 21,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Middle: name + details
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        payment.memberName,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 15,
-                                          letterSpacing: -0.3,
-                                          color: isDark
-                                              ? AppColors.textPrimaryDark
-                                              : AppColors.textPrimaryLight,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    // Status badge with dot indicator
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: payment.statusColor.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 6,
-                                            height: 6,
-                                            decoration: BoxDecoration(
-                                              color: payment.statusColor,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            payment.statusLabel,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.2,
-                                              color: payment.statusColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  '${payment.typeLabel}'
-                                  '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
-                                  '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
-                                  '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0.1,
-                                    color: isDark
-                                        ? AppColors.textTertiaryDark
-                                        : AppColors.textTertiaryLight,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Amount column
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                currencyFormat.format(payment.amountExpected),
+                  const SizedBox(width: 12),
+
+                  // Middle content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                payment.memberName,
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
-                                  letterSpacing: -0.3,
-                                  color: payment.statusColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                  color: isDark
+                                      ? AppColors.textPrimaryDark
+                                      : AppColors.textPrimaryLight,
                                 ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              if (payment.penaltyAmount > 0) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  '+${currencyFormat.format(payment.penaltyAmount)} penalty',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // ── Thin divider ──
-                    Container(
-                      height: 0.5,
-                      color: isDark
-                          ? AppColors.separatorDark.withValues(alpha: 0.5)
-                          : AppColors.separatorLight.withValues(alpha: 0.5),
-                    ),
-
-                    // ── Bottom row: time/due info + overdue badge + actions ──
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      child: Row(
-                        children: [
-                          // Time / Due info
-                          Icon(
-                            payment.isCollected
-                                ? Icons.check_circle_outline_rounded
-                                : Icons.schedule_rounded,
-                            size: 13,
-                            color: payment.isCollected
-                                ? AppColors.success
-                                : (isDark
-                                    ? AppColors.textTertiaryDark
-                                    : AppColors.textTertiaryLight),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            payment.isCollected && payment.collectedAt != null
-                                ? 'Collected at ${timeFormat.format(payment.collectedAt!)}'
-                                : 'Due today',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: payment.isCollected
-                                  ? AppColors.success
-                                  : (isDark
-                                      ? AppColors.textTertiaryDark
-                                      : AppColors.textTertiaryLight),
                             ),
-                          ),
-                          const Spacer(),
-
-                          // Overdue badge
-                          if (payment.isOverdue)
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.1),
+                                color: payment.statusColor
+                                    .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 11, color: AppColors.error),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    payment.overdueLabel,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.error,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                          // Action buttons
-                          if (!payment.isCollected) ...[
-                            if (payment.isOverdue) const SizedBox(width: 8),
-                            if (onCall != null)
-                              _CompactAction(
-                                icon: Icons.call_rounded,
-                                color: AppColors.success,
-                                onTap: onCall!,
-                              ),
-                            if (onCall != null) const SizedBox(width: 6),
-                            _CompactAction(
-                              icon: Icons.notifications_active_rounded,
-                              color: AppColors.warning,
-                              onTap: onRemind,
-                            ),
-                            if (onCollect != null) ...[
-                              const SizedBox(width: 6),
-                              GestureDetector(
-                                onTap: onCollect,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: AppColors.successGradient,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.payment_rounded,
-                                          size: 14, color: Colors.white),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'Collect',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              child: Text(
+                                payment.statusLabel,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: payment.statusColor,
                                 ),
                               ),
-                            ],
+                            ),
                           ],
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${payment.typeLabel}'
+                          '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
+                          '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
+                          '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.textTertiaryDark
+                                : AppColors.textTertiaryLight,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Right: amount
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        currencyFormat.format(payment.amountExpected),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: payment.statusColor,
+                        ),
+                      ),
+                      if (payment.penaltyAmount > 0) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '+${currencyFormat.format(payment.penaltyAmount)} penalty',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                      if (payment.isCollected &&
+                          payment.collectedAt != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          timeFormat.format(payment.collectedAt!),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark
+                                ? AppColors.textTertiaryDark
+                                : AppColors.textTertiaryLight,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+
+              // Overdue + action buttons
+              if (payment.isOverdue || !payment.isCollected) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    if (payment.isOverdue)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_rounded,
+                                size: 12, color: AppColors.error),
+                            const SizedBox(width: 4),
+                            Text(
+                              payment.overdueLabel,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const Spacer(),
+                    if (!payment.isCollected) ...[
+                      if (onCall != null)
+                        _CompactAction(
+                          icon: Icons.call_rounded,
+                          color: AppColors.success,
+                          onTap: onCall!,
+                        ),
+                      if (onCall != null) const SizedBox(width: 6),
+                      _CompactAction(
+                        icon: Icons.notifications_active_rounded,
+                        color: AppColors.warning,
+                        onTap: onRemind,
+                      ),
+                      if (onCollect != null) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: onCollect,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: AppColors.successGradient,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.payment_rounded,
+                                    size: 14, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Collect',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
                 ),
-              ),
+              ],
             ],
           ),
         ),

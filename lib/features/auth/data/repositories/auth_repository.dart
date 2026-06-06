@@ -172,59 +172,79 @@ class AuthRepository {
     String? phone,
     String? orgName,
   ) async {
-    String orgId = '00000000-0000-0000-0000-000000000001';
-    if (orgName != null && orgName.isNotEmpty) {
-      final slug = orgName
-          .toLowerCase()
-          .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-          .replaceAll(RegExp(r'^-|-$'), '');
-      final trialEnd =
-          DateTime.now().add(const Duration(days: 14)).toIso8601String();
-      try {
-        final orgResponse = await _client
-            .from('organizations')
-            .insert({
-              'name': orgName,
-              'slug': slug,
-              'status': 'trial',
-              'trial_ends_at': trialEnd,
-              'max_branches': 10,
-              'max_staff': 5,
-              'max_members': 100,
-              'created_by': user.id,
-            })
-            .select('id')
-            .single();
-        orgId = orgResponse['id'].toString();
-      } catch (e) {
-        // Org creation failed (e.g., slug conflict or RLS) — try to find existing org
-        try {
-          final existing = await _client
-              .from('organizations')
-              .select('id')
-              .eq('slug', slug)
-              .maybeSingle();
-          if (existing != null) {
-            orgId = existing['id'].toString();
-          }
-        } catch (_) {
-          // Use default org as last resort
-        }
-      }
+    if (orgName == null || orgName.isEmpty) {
+      throw StateError('Cannot create org and profile without an org name');
+    }
+    final slug = orgName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
 
-      // Create profile — use upsert to handle race conditions
+    if (slug.isEmpty) {
+      throw StateError(
+        'Organization name "$orgName" produces an empty slug — pick a name with letters or digits',
+      );
+    }
+
+    final trialEnd =
+        DateTime.now().add(const Duration(days: 14)).toIso8601String();
+
+    String? orgId;
+    // 1) Try to insert a brand-new org row.
+    try {
+      final orgResponse = await _client
+          .from('organizations')
+          .insert({
+            'name': orgName,
+            'slug': slug,
+            'status': 'trial',
+            'trial_ends_at': trialEnd,
+            'max_branches': 10,
+            'max_staff': 5,
+            'max_members': 100,
+            'created_by': user.id,
+          })
+          .select('id')
+          .single();
+      orgId = orgResponse['id'].toString();
+    } catch (_) {
+      // 2) Org creation failed (e.g. slug conflict or RLS) — try to find existing org.
       try {
-        await _client.from('profiles').upsert({
-          'user_id': user.id,
-          'full_name': fullName,
-          'email': email,
-          'phone': phone,
-          'role': 'executiveAdmin',
-          'org_id': orgId,
-        }, onConflict: 'user_id');
+        final existing = await _client
+            .from('organizations')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle();
+        if (existing != null) {
+          orgId = existing['id'].toString();
+        }
       } catch (_) {
-        // Profile creation failed — will be retried on next login
+        // fall through — the "no orgId" throw below handles it
       }
+    }
+
+    if (orgId == null) {
+      // Do NOT silently bind the user to a sentinel UUID — that caused
+      // cross-tenant data leakage. Bubble up so the caller can show an
+      // actionable error.
+      throw StateError(
+        'Failed to provision organization "$orgName". '
+        'Please try again or contact support if the issue persists.',
+      );
+    }
+
+    // Create profile — use upsert to handle race conditions
+    try {
+      await _client.from('profiles').upsert({
+        'user_id': user.id,
+        'full_name': fullName,
+        'email': email,
+        'phone': phone,
+        'role': 'executiveAdmin',
+        'org_id': orgId,
+      }, onConflict: 'user_id');
+    } catch (_) {
+      // Profile creation failed — will be retried on next login
     }
 
     final parsedDate = DateTime.tryParse(user.createdAt);
@@ -320,17 +340,20 @@ class AuthRepository {
 
   UserRole _parseRole(
       String? roleStr, String? email, Map<String, dynamic>? metadata) {
-    // 1. Explicit super admin override
-    if (email != null && email.toLowerCase() == 'msayan9733@gmail.com') {
-      return UserRole.superAdmin;
-    }
+    // Super admin status is determined exclusively by the role stored in the
+    // `profiles` table (or, for new signups, the role baked into auth
+    // metadata). Email-based privilege escalation is intentionally removed:
+    // super admins must be granted via the platform admin tools.
+    // (Parameter `email` retained for signature stability — the previous
+    // hard-coded override based on it was a security backdoor and has been
+    // removed.)
 
-    // 2. Check metadata role (set during signup)
+    // 1. Check metadata role (set during signup)
     final metadataRole = metadata?['role'] as String?;
     final effectiveRole = roleStr ?? metadataRole;
 
     if (effectiveRole == null) {
-      // 3. Fallback for new signups with org name (they are always executiveAdmins)
+      // 2. Fallback for new signups with org name (they are always executiveAdmins)
       if (metadata?['org_name'] != null) {
         return UserRole.executiveAdmin;
       }

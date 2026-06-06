@@ -139,6 +139,47 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
   }
 
   Future<void> _save() async {
+    // Validate inputs
+    if (_nameCtrl.text.trim().isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Organization name is required'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+      return;
+    }
+
+    if (_slugCtrl.text.trim().isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Organization slug is required'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+      return;
+    }
+
+    final maxBranches = int.tryParse(_branchesCtrl.text) ?? 5;
+    final maxStaff = int.tryParse(_staffCtrl.text) ?? 20;
+    final maxMembers = int.tryParse(_membersCtrl.text) ?? 500;
+
+    if (maxBranches <= 0 || maxStaff <= 0 || maxMembers <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Limits must be positive numbers'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+      return;
+    }
+
     setState(() => _isSaving = true);
     try {
       final client = ref.read(supabaseClientProvider);
@@ -149,9 +190,9 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
             .trim()
             .toLowerCase()
             .replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
-        'max_branches': int.tryParse(_branchesCtrl.text) ?? 5,
-        'max_staff': int.tryParse(_staffCtrl.text) ?? 20,
-        'max_members': int.tryParse(_membersCtrl.text) ?? 500,
+        'max_branches': maxBranches,
+        'max_staff': maxStaff,
+        'max_members': maxMembers,
         'primary_color': _primaryColorCtrl.text,
         'accent_color': _accentColorCtrl.text,
       }).eq('id', orgId);
@@ -251,8 +292,28 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
                       color: isDark ? Colors.white : const Color(0xFF0F172A)))),
           GestureDetector(
             onTap: () async {
-              await ref.read(authProvider.notifier).signOut();
-              if (context.mounted) context.go('/auth');
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Sign Out'),
+                  content: const Text('Are you sure you want to sign out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Sign Out',
+                          style: TextStyle(color: AppColors.error)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                await ref.read(authProvider.notifier).signOut();
+                if (context.mounted) context.go('/auth');
+              }
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -661,7 +722,7 @@ class _AdminOrgSettingsPageState extends ConsumerState<AdminOrgSettingsPage> {
           const SizedBox(height: 12),
           _buildActionTile(Icons.people_rounded, 'Manage Users',
               'Create admins, managers, and staff', isDark, () {
-            context.push('/admin/users');
+            context.push('/users');
           }),
           const SizedBox(height: 12),
           _buildActionTile(Icons.security_rounded, 'Security Settings',

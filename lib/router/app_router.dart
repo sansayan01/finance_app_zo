@@ -15,6 +15,7 @@ import '../features/payments/presentation/pages/today_payments_page.dart';
 // Super Admin (Admin pages still in use)
 import '../features/admin/presentation/pages/admin_org_detail_page.dart';
 import '../features/admin/presentation/pages/admin_org_settings_page.dart';
+import '../features/admin/presentation/pages/admin_org_dashboard_page.dart';
 
 // Auth
 import '../features/auth/presentation/pages/login_page.dart';
@@ -591,6 +592,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/live-map',
             builder: (context, state) => const ManagerLiveMapPage(),
           ),
+          // Admin Org Management Routes
+          GoRoute(
+            path: '/admin/my-org',
+            builder: (context, state) => const AdminOrgDashboardPage(),
+          ),
+          GoRoute(
+            path: '/admin/org/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return AdminOrgDetailPage(orgId: id);
+            },
+            routes: [
+              GoRoute(
+                path: 'settings',
+                builder: (context, state) => const AdminOrgSettingsPage(),
+              ),
+            ],
+          ),
         ],
       ),
 
@@ -962,10 +981,11 @@ class AdminShell extends ConsumerStatefulWidget {
 class _AdminShellState extends ConsumerState<AdminShell> {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith('/loans')) return 1;
-    if (location.startsWith('/savings')) return 2;
-    if (location.startsWith('/users')) return 3;
-    if (location.startsWith('/settings')) return 4;
+    if (location.startsWith('/payments')) return 1;
+    if (location.startsWith('/loans')) return 2;
+    if (location.startsWith('/savings')) return 3;
+    if (location.startsWith('/users')) return 4;
+    if (location.startsWith('/settings')) return 5;
     return 0;
   }
 
@@ -975,15 +995,18 @@ class _AdminShellState extends ConsumerState<AdminShell> {
         context.go('/');
         break;
       case 1:
-        context.go('/loans');
+        context.go('/payments');
         break;
       case 2:
-        context.go('/savings');
+        context.go('/loans');
         break;
       case 3:
-        context.go('/users');
+        context.go('/savings');
         break;
       case 4:
+        context.go('/users');
+        break;
+      case 5:
         context.go('/settings');
         break;
     }
@@ -1018,6 +1041,10 @@ class _AdminShellState extends ConsumerState<AdminShell> {
                         label: 'Dashboard',
                         icon: Icons.grid_view_outlined,
                         activeIcon: Icons.grid_view_rounded),
+                    HUDNavItem(
+                        label: 'Payments',
+                        icon: Icons.receipt_long_outlined,
+                        activeIcon: Icons.receipt_long_rounded),
                     HUDNavItem(
                         label: 'Loans',
                         icon: Icons.account_balance_outlined,
@@ -1647,6 +1674,7 @@ class _PremiumBottomBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: (items ?? [
                   const _NavData(Icons.grid_view_outlined, Icons.grid_view_rounded, 'Home'),
+                  const _NavData(Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Payments'),
                   const _NavData(Icons.account_balance_outlined, Icons.account_balance_rounded, 'Loans'),
                   const _NavData(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Savings'),
                   const _NavData(Icons.manage_accounts_outlined, Icons.manage_accounts_rounded, 'Users'),

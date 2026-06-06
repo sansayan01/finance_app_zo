@@ -4,40 +4,12 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../core/constants/enums.dart';
+import '../../../../core/models/statement_org_info.dart';
+import '../../../../core/utils/statement_formatters.dart';
 import '../models/loan_model.dart';
-import '../models/emi_schedule_model.dart';class LoanStatementOrgInfo {
-  final String name;
-  final String? address;
-  final String? city;
-  final String? state;
-  final String? pincode;
-  final String? phone;
-  final String? email;
-  final String? gstNumber;
-  final Uint8List? logoBytes;
-
-  const LoanStatementOrgInfo({
-    required this.name,
-    this.address,
-    this.city,
-    this.state,
-    this.pincode,
-    this.phone,
-    this.email,
-    this.gstNumber,
-    this.logoBytes,
-  });
-
-  String get fullAddress {
-    final parts = <String>[
-      if (address != null && address!.trim().isNotEmpty) address!.trim(),
-      if (city != null && city!.trim().isNotEmpty) city!.trim(),
-      if (state != null && state!.trim().isNotEmpty) state!.trim(),
-      if (pincode != null && pincode!.trim().isNotEmpty) pincode!.trim(),
-    ];
-    return parts.join(', ');
-  }
-}
+import '../models/emi_schedule_model.dart';
+/// Backward-compatible alias — now backed by the shared [StatementOrgInfo].
+typedef LoanStatementOrgInfo = StatementOrgInfo;
 
 class LoanStatementPayment {
   final DateTime date;
@@ -67,53 +39,14 @@ class LoanStatementPdfService {
   /// Manual Indian-style grouping so we don't need any locale data loaded
   /// (NumberFormat.currency with locale 'en_IN' throws when intl locale data
   /// isn't initialized, surfacing as "Unexpected null value").
-  static String _money(num v) {
-    final negative = v < 0;
-    final n = v.abs();
-    final whole = n.truncate();
-    final fraction = ((n - whole) * 100).round();
-    final wholeStr = whole.toString();
-
-    String grouped;
-    if (wholeStr.length <= 3) {
-      grouped = wholeStr;
-    } else {
-      final last3 = wholeStr.substring(wholeStr.length - 3);
-      final rest = wholeStr.substring(0, wholeStr.length - 3);
-      final restRev = rest.split('').reversed.join();
-      final buf = StringBuffer();
-      for (var i = 0; i < restRev.length; i++) {
-        if (i > 0 && i % 2 == 0) buf.write(',');
-        buf.write(restRev[i]);
-      }
-      grouped = '${buf.toString().split('').reversed.join()},$last3';
-    }
-    final fracStr = fraction.toString().padLeft(2, '0');
-    return '${negative ? '-' : ''}Rs. $grouped.$fracStr';
-  }
+  /// Delegates to shared [StatementFormatters.money].
+  static String _money(num v) => StatementFormatters.money(v);
 
   static String _date(DateTime d) => _dateFmt.format(d);
 
-  /// Returns true only if [bytes] looks like a real PNG or JPEG image.
-  /// pw.MemoryImage throws "Unexpected null value" deep inside the renderer
-  /// when fed garbage bytes (e.g. empty buffer, SVG, downloaded HTML error
-  /// page) — so we sniff the magic numbers before embedding.
-  static bool _isValidImage(Uint8List? bytes) {
-    if (bytes == null || bytes.length < 8) return false;
-    // PNG: 89 50 4E 47 0D 0A 1A 0A
-    final isPng = bytes[0] == 0x89 &&
-        bytes[1] == 0x50 &&
-        bytes[2] == 0x4E &&
-        bytes[3] == 0x47 &&
-        bytes[4] == 0x0D &&
-        bytes[5] == 0x0A &&
-        bytes[6] == 0x1A &&
-        bytes[7] == 0x0A;
-    if (isPng) return true;
-    // JPEG: FF D8 FF
-    final isJpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
-    return isJpeg;
-  }
+  /// Delegates to shared [StatementFormatters.isValidImage].
+  static bool _isValidImage(Uint8List? bytes) =>
+      StatementFormatters.isValidImage(bytes);
 
   static pw.Widget? _safeImage(Uint8List? bytes,
       {required double width, required double height, pw.EdgeInsets? margin}) {
@@ -191,7 +124,7 @@ class LoanStatementPdfService {
           summary,
           if (variant == StatementVariant.taxStatement) ...[
             pw.SizedBox(height: 16),
-            _buildTaxBlock(ledger),
+            _buildTaxBlock(ledger, org, periodStart, periodEnd),
           ],
         ],
       ),
@@ -397,7 +330,7 @@ class LoanStatementPdfService {
     double totalCredit = 0;
     double totalInterestPaid = 0;
     double totalPrincipalPaid = 0;
-
+    double totalPenalties = 0;
     // Disbursement row
     if (loan.disbursementDate != null &&
         !loan.disbursementDate!.isBefore(periodStart) &&
@@ -442,6 +375,11 @@ class LoanStatementPdfService {
           totalCredit += emi.emiAmount;
           totalInterestPaid += emi.interest;
           totalPrincipalPaid += emi.principal;
+          // Track penalties
+          if (emi.penaltyAmount > 0) {
+            totalPenalties += emi.penaltyAmount;
+            totalCredit += emi.penaltyAmount;
+          }
           rows.add(_LedgerRow(
             date: emi.paidOn!,
             emiNumber: emi.emiNumber,
@@ -450,10 +388,25 @@ class LoanStatementPdfService {
                 '(P: ${_money(emi.principal)}, I: ${_money(emi.interest)})',
             debit: 0,
             credit: emi.emiAmount,
+            penalty: emi.penaltyAmount,
             balance: balance,
             isPayment: true,
           ));
         }
+      } else if (emi.penaltyAmount > 0 && !emi.penaltyPaid) {
+        // Unpaid penalty on a pending/overdue EMI — add a penalty row.
+        totalPenalties += emi.penaltyAmount;
+        rows.add(_LedgerRow(
+          date: emi.dueDate,
+          emiNumber: emi.emiNumber,
+          description: 'Late fee / penalty — EMI #${emi.emiNumber}',
+          debit: 0,
+          credit: 0,
+          penalty: emi.penaltyAmount,
+          balance: balance + emi.penaltyAmount,
+          isPenalty: true,
+          status: emi.status,
+        ));
       }
     }
 
@@ -492,12 +445,13 @@ class LoanStatementPdfService {
       totalCredit: totalCredit,
       totalInterestPaid: totalInterestPaid,
       totalPrincipalPaid: totalPrincipalPaid,
+      totalPenalties: totalPenalties,
       closingBalance: balance,
     );
   }
 
   static pw.Widget _buildLedgerTable(_LedgerResult ledger) {
-    final headers = ['Date', 'EMI#', 'Description', 'Debit', 'Credit', 'Balance'];
+    final headers = ['Date', 'EMI#', 'Description', 'Debit', 'Credit', 'Penalty', 'Balance'];
     final data = ledger.rows.map((r) {
       return [
         _date(r.date),
@@ -505,6 +459,7 @@ class LoanStatementPdfService {
         r.description,
         r.debit > 0 ? _money(r.debit) : '',
         r.credit > 0 ? _money(r.credit) : '',
+        r.penalty > 0 ? _money(r.penalty) : '',
         _money(r.balance),
       ];
     }).toList();
@@ -536,14 +491,16 @@ class LoanStatementPdfService {
         3: pw.Alignment.centerRight,
         4: pw.Alignment.centerRight,
         5: pw.Alignment.centerRight,
+        6: pw.Alignment.centerRight,
       },
       columnWidths: {
-        0: const pw.FlexColumnWidth(2.0),
-        1: const pw.FlexColumnWidth(0.8),
-        2: const pw.FlexColumnWidth(5.0),
-        3: const pw.FlexColumnWidth(1.8),
-        4: const pw.FlexColumnWidth(1.8),
-        5: const pw.FlexColumnWidth(2.0),
+        0: const pw.FlexColumnWidth(1.8),
+        1: const pw.FlexColumnWidth(0.7),
+        2: const pw.FlexColumnWidth(4.2),
+        3: const pw.FlexColumnWidth(1.6),
+        4: const pw.FlexColumnWidth(1.6),
+        5: const pw.FlexColumnWidth(1.4),
+        6: const pw.FlexColumnWidth(1.8),
       },
       cellPadding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       rowDecoration: const pw.BoxDecoration(
@@ -572,6 +529,8 @@ class LoanStatementPdfService {
                 _kv('Total Credit', _money(ledger.totalCredit)),
                 _kv('Principal Paid', _money(ledger.totalPrincipalPaid)),
                 _kv('Interest Paid', _money(ledger.totalInterestPaid)),
+                if (ledger.totalPenalties > 0)
+                  _kv('Penalties', _money(ledger.totalPenalties)),
               ],
             ),
           ),
@@ -605,7 +564,13 @@ class LoanStatementPdfService {
     );
   }
 
-  static pw.Widget _buildTaxBlock(_LedgerResult ledger) {
+  static pw.Widget _buildTaxBlock(
+      _LedgerResult ledger, LoanStatementOrgInfo org,
+      DateTime periodStart, DateTime periodEnd) {
+    // Derive Indian financial year from period end date.
+    final fyEndYear = periodEnd.month >= 4 ? periodEnd.year : periodEnd.year - 1;
+    final fy = 'FY $fyEndYear-${(fyEndYear + 1).toString().substring(2)}';
+
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
@@ -620,14 +585,47 @@ class LoanStatementPdfService {
                   fontWeight: pw.FontWeight.bold,
                   letterSpacing: 0.5)),
           pw.SizedBox(height: 6),
+          _kv('Financial Year', fy),
+          _kv('Period', '${StatementFormatters.date(periodStart)} – ${StatementFormatters.date(periodEnd)}'),
+          if (org.gstNumber != null && org.gstNumber!.isNotEmpty)
+            _kv('GSTIN / TAN', org.gstNumber!),
+          pw.SizedBox(height: 6),
+          pw.Text('INTEREST & PRINCIPAL SUMMARY',
+              style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.grey700)),
+          pw.SizedBox(height: 4),
           _kv('Interest Paid (deductible under applicable sections)',
               _money(ledger.totalInterestPaid)),
           _kv('Principal Repaid', _money(ledger.totalPrincipalPaid)),
+          if (ledger.totalPenalties > 0)
+            _kv('Late Fees / Penalties', _money(ledger.totalPenalties)),
+          pw.SizedBox(height: 6),
+          pw.Text('APPLICABLE SECTIONS',
+              style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.grey700)),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            '• Section 80C — Principal repayment (up to ₹1,50,000 per FY)',
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+          ),
+          pw.Text(
+            '• Section 80E — Interest on education loan (no limit, 8 years)',
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+          ),
+          pw.Text(
+            '• Section 269SS/269T — Cash transaction limits (₹20,000)',
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+          ),
           pw.SizedBox(height: 6),
           pw.Text(
-            'This is a computer-generated summary of interest and principal '
-            'paid during the selected period. Please consult a tax advisor '
-            'for filing eligibility.',
+            'This is a computer-generated summary for the selected period. '
+            'Interest paid may be eligible for deduction under Sections 80C/80E '
+            'of the Income Tax Act, 1961. Please consult a qualified tax advisor '
+            'for filing eligibility and applicable limits.',
             style: const pw.TextStyle(
                 fontSize: 8, color: PdfColors.grey700),
           ),
@@ -1016,9 +1014,11 @@ class _LedgerRow {
   final String description;
   final double debit;
   final double credit;
+  final double penalty;
   final double balance;
   final bool isSchedule;
   final bool isPayment;
+  final bool isPenalty;
   final EMIStatus? status;
 
   _LedgerRow({
@@ -1027,9 +1027,11 @@ class _LedgerRow {
     required this.description,
     required this.debit,
     required this.credit,
+    this.penalty = 0,
     required this.balance,
     this.isSchedule = false,
     this.isPayment = false,
+    this.isPenalty = false,
     this.status,
   });
 }
@@ -1040,6 +1042,7 @@ class _LedgerResult {
   final double totalCredit;
   final double totalInterestPaid;
   final double totalPrincipalPaid;
+  final double totalPenalties;
   final double closingBalance;
 
   _LedgerResult({
@@ -1048,6 +1051,7 @@ class _LedgerResult {
     required this.totalCredit,
     required this.totalInterestPaid,
     required this.totalPrincipalPaid,
+    required this.totalPenalties,
     required this.closingBalance,
   });
 }

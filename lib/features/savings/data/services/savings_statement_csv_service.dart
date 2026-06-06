@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/statement_formatters.dart';
 import 'savings_statement_models.dart';
 
 class SavingsStatementCsvService {
-  static final _dateFmt = DateFormat('dd MMM yyyy');
+  static final _dateFmt = DateFormat('yyyy-MM-dd');
 
   static Uint8List build({
     required SavingsStatementData data,
@@ -71,7 +72,10 @@ class SavingsStatementCsvService {
       _writeln(buf, '');
     }
 
-    return utf8.encode(buf.toString()).buffer.asUint8List();
+    // Prepend UTF-8 BOM so Excel on Windows interprets encoding correctly.
+    final bom = [0xEF, 0xBB, 0xBF];
+    final content = utf8.encode(buf.toString());
+    return Uint8List.fromList(bom + content);
   }
 
   static void _writeln(StringBuffer buf, String line) {
@@ -85,27 +89,6 @@ class SavingsStatementCsvService {
     return s;
   }
 
-  static String _money(num v) {
-    final negative = v < 0;
-    final n = v.abs();
-    final whole = n.truncate();
-    final fraction = ((n - whole) * 100).round();
-    final wholeStr = whole.toString();
-    String grouped;
-    if (wholeStr.length <= 3) {
-      grouped = wholeStr;
-    } else {
-      final last3 = wholeStr.substring(wholeStr.length - 3);
-      final rest = wholeStr.substring(0, wholeStr.length - 3);
-      final restRev = rest.split('').reversed.join();
-      final buf = StringBuffer();
-      for (var i = 0; i < restRev.length; i++) {
-        if (i > 0 && i % 2 == 0) buf.write(',');
-        buf.write(restRev[i]);
-      }
-      grouped = '${buf.toString().split('').reversed.join()},$last3';
-    }
-    final fracStr = fraction.toString().padLeft(2, '0');
-    return '${negative ? '-' : ''}$grouped.$fracStr';
-  }
+  /// Delegates to shared [StatementFormatters.money].
+  static String _money(num v) => StatementFormatters.money(v);
 }

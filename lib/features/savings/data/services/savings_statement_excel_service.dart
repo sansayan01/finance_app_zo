@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/statement_formatters.dart';
 import 'savings_statement_models.dart';
 
 class SavingsStatementExcelService {
@@ -109,29 +110,8 @@ class SavingsStatementExcelService {
     return Uint8List.fromList(excel.save()!);
   }
 
-  static String _money(num v) {
-    final negative = v < 0;
-    final n = v.abs();
-    final whole = n.truncate();
-    final fraction = ((n - whole) * 100).round();
-    final wholeStr = whole.toString();
-    String grouped;
-    if (wholeStr.length <= 3) {
-      grouped = wholeStr;
-    } else {
-      final last3 = wholeStr.substring(wholeStr.length - 3);
-      final rest = wholeStr.substring(0, wholeStr.length - 3);
-      final restRev = rest.split('').reversed.join();
-      final buf = StringBuffer();
-      for (var i = 0; i < restRev.length; i++) {
-        if (i > 0 && i % 2 == 0) buf.write(',');
-        buf.write(restRev[i]);
-      }
-      grouped = '${buf.toString().split('').reversed.join()},$last3';
-    }
-    final fracStr = fraction.toString().padLeft(2, '0');
-    return '${negative ? '-' : ''}$grouped.$fracStr';
-  }
+  /// Delegates to shared [StatementFormatters.money].
+  static String _money(num v) => StatementFormatters.money(v);
 }
 
 class _TxRow {

@@ -3,12 +3,35 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/utils/error_formatter.dart';
+import '../../../../features/settings/data/models/activity_log_model.dart';
+import '../../../../features/settings/data/repositories/activity_log_repository.dart';
 
 final adminOrgDetailProvider =
     FutureProvider.family<Map<String, dynamic>?, String>((ref, orgId) async {
   final client = ref.read(supabaseClientProvider);
-  return client.from('organizations').select().eq('id', orgId).single();
+  // Filter out soft-deleted organizations from the read path.
+  return client
+      .from('organizations')
+      .select()
+      .eq('id', orgId)
+      .isFilter('deleted_at', null)
+      .maybeSingle();
+});
+
+/// Reactive list of all *active* (non-deleted, non-suspended) orgs.
+/// Re-fetches when `currentOrgProvider` emits.
+final adminOrgListProvider =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final client = ref.read(supabaseClientProvider);
+  final response = await client
+      .from('organizations')
+      .select()
+      .isFilter('deleted_at', null)
+      .order('created_at', ascending: false);
+  return (response as List).cast<Map<String, dynamic>>();
 });
 
 class AdminOrgDetailPage extends ConsumerWidget {
@@ -39,7 +62,7 @@ class AdminOrgDetailPage extends ConsumerWidget {
             error: (e, _) => Center(child: Text('Error: $e')),
             data: (org) {
               if (org == null) return const Center(child: Text('Not found'));
-              return _buildContent(context, org, isDark);
+              return _buildContent(context, ref, org, isDark);
             },
           ),
         ),
@@ -47,8 +70,8 @@ class AdminOrgDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(
-      BuildContext context, Map<String, dynamic> org, bool isDark) {
+  Widget _buildContent(BuildContext context, WidgetRef ref,
+      Map<String, dynamic> org, bool isDark) {
     final status = org['status'] as String? ?? 'unknown';
     final isActive = status == 'active';
     final statusColor = isActive ? AppColors.success : AppColors.warning;
@@ -67,7 +90,7 @@ class AdminOrgDetailPage extends ConsumerWidget {
               const SizedBox(height: 20),
               _buildLimitsCard(org, isDark),
               const SizedBox(height: 24),
-              _buildDangerZone(context, org['id'], isDark),
+              _buildDangerZone(context, ref, org['id'], isDark),
             ],
           ),
         ),
@@ -353,7 +376,8 @@ class AdminOrgDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildDangerZone(BuildContext context, String id, bool isDark) {
+  Widget _buildDangerZone(
+      BuildContext context, WidgetRef ref, String id, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -380,7 +404,7 @@ class AdminOrgDetailPage extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => _suspendOrg(context, id),
+              onPressed: () => _suspendOrg(context, ref, id),
               icon: const Icon(Icons.pause_rounded, size: 18),
               label: const Text('Suspend Organization'),
               style: OutlinedButton.styleFrom(
@@ -397,7 +421,7 @@ class AdminOrgDetailPage extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => _deleteOrg(context, id),
+              onPressed: () => _deleteOrg(context, ref, id),
               icon: const Icon(Icons.delete_rounded, size: 18),
               label: const Text('Delete Organization'),
               style: OutlinedButton.styleFrom(
@@ -415,44 +439,69 @@ class AdminOrgDetailPage extends ConsumerWidget {
   }
 
   String _formatDate(String? date) {
-    if (date == null || date.length < 10) return '-';
-    return date.substring(0, 10);
+    return AppFormatters.parseIsoDate(date);
   }
 
-  Future<void> _suspendOrg(BuildContext context, String id) async {
+  /// Suspend the organization. Revokes access for all members of the org
+  /// (via the `suspend_organization` RPC) and refreshes the detail screen.
+  Future<void> _suspendOrg(
+      BuildContext context, WidgetRef ref, String id) async {
+    final reason = await _showReasonDialog(
+      context,
+      title: 'Suspend Organization',
+      description:
+          'Suspended organizations will immediately lose access. '
+          'All members will be signed out.',
+      actionLabel: 'Suspend',
+      actionColor: AppColors.warning,
+    );
+    if (reason == null) return;
+
     try {
       final client = Supabase.instance.client;
-      await client
-          .from('organizations')
-          .update({'status': 'suspended'}).eq('id', id);
+      await client.rpc('suspend_organization', params: {
+        'p_org_id': id,
+        'p_reason': reason,
+      });
+
+      // Refresh detail provider so the new status shows up.
+      ref.invalidate(adminOrgDetailProvider(id));
+      ref.invalidate(adminOrgListProvider);
+
+      // Audit log (best-effort).
+      try {
+        await ActivityLogRepository(client).log(
+          action: 'Organization Suspended',
+          details: 'Suspended org $id. Reason: $reason',
+          type: ActivityType.securityAlert,
+        );
+      } catch (_) {}
+
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Organization suspended'),
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        showSuccessSnackBar(context, 'Organization suspended');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        showErrorSnackBar(context, e,
+            fallback: 'Failed to suspend organization');
       }
     }
   }
 
-  Future<void> _deleteOrg(BuildContext context, String id) async {
+  /// Soft-delete the organization. After this, the org is hidden from
+  /// every list, members are detached from it, and the slug becomes
+  /// available for re-use after the 30-day grace period.
+  Future<void> _deleteOrg(
+      BuildContext context, WidgetRef ref, String id) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Delete Organization?'),
         content: const Text(
-            'This will permanently delete all data. This cannot be undone.'),
+            'This will soft-delete the organization, sign out all members, '
+            'and free the slug for re-use after 30 days. This can be '
+            'restored from the audit log within the grace period.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -466,21 +515,111 @@ class AdminOrgDetailPage extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed == true) {
+    if (confirmed != true) return;
+
+    final reason = await _showReasonDialog(
+      context,
+      title: 'Reason for deletion',
+      description:
+          'This is required for audit. The organization record is kept for 30 days.',
+      actionLabel: 'Delete',
+      actionColor: AppColors.error,
+    );
+    if (reason == null) return;
+
+    try {
+      final client = Supabase.instance.client;
+      await client.rpc('soft_delete_organization', params: {
+        'p_org_id': id,
+        'p_reason': reason,
+      });
+
+      ref.invalidate(adminOrgDetailProvider(id));
+      ref.invalidate(adminOrgListProvider);
+
       try {
-        final client = Supabase.instance.client;
-        await client.from('organizations').delete().eq('id', id);
-        if (context.mounted) Navigator.pop(context);
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Error: $e'),
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ));
-        }
+        await ActivityLogRepository(client).log(
+          action: 'Organization Deleted',
+          details: 'Soft-deleted org $id. Reason: $reason',
+          type: ActivityType.securityAlert,
+        );
+      } catch (_) {}
+
+      if (context.mounted) {
+        // Force sign-out: the deleted org's members can no longer auth into
+        // any tenant-scoped data. The acting super admin stays signed in.
+        showSuccessSnackBar(
+            context, 'Organization deleted. Members have been signed out.');
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, e,
+            fallback: 'Failed to delete organization');
       }
     }
+  }
+
+  /// Generic reason-capture dialog used by Suspend / Delete.
+  /// Returns the entered reason, or null if the user cancelled.
+  Future<String?> _showReasonDialog(
+    BuildContext context, {
+    required String title,
+    required String description,
+    required String actionLabel,
+    required Color actionColor,
+  }) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(description,
+                  style: TextStyle(
+                      color: Theme.of(ctx)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7))),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                minLines: 2,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Reason',
+                  hintText: 'Required for audit log',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop<String?>(ctx, null),
+                child: const Text('Cancel',
+                    style: TextStyle(fontWeight: FontWeight.w600))),
+            TextButton(
+                onPressed: () {
+                  final text = controller.text.trim();
+                  if (text.isEmpty) return;
+                  Navigator.pop<String?>(ctx, text);
+                },
+                child: Text(actionLabel,
+                    style: TextStyle(
+                        color: actionColor, fontWeight: FontWeight.w700))),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    return result;
   }
 }

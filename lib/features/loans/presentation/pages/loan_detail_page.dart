@@ -14,6 +14,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/providers/branding_provider.dart';
@@ -32,6 +33,68 @@ import '../widgets/statement_options_sheet.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../savings/data/providers/savings_providers.dart';
 
+/// Default foreclosure/prepayment penalty rate (2%).
+/// Change this constant to adjust the rate globally.
+const double kDefaultForeclosureRate = 0.02;
+
+/// Extracts a payment date from a payment record, checking multiple fields.
+/// Used by both _LoanDetailPageState and _PaymentHistorySection.
+DateTime _getPaymentDate(Map<String, dynamic> payment) {
+  if (payment['entered_at'] != null) {
+    try {
+      return AppFormatters.convertToIST(
+          DateTime.parse(payment['entered_at'] as String));
+    } catch (_) {}
+  }
+  if (payment['created_at'] != null) {
+    try {
+      return AppFormatters.convertToIST(
+          DateTime.parse(payment['created_at'] as String));
+    } catch (_) {}
+  }
+  if (payment['transaction_time'] != null) {
+    try {
+      return AppFormatters.convertToIST(
+          DateTime.parse(payment['transaction_time'] as String));
+    } catch (_) {}
+  }
+  if (payment['collection_time'] != null) {
+    try {
+      final dateStr = payment['collection_date'] as String?;
+      final timeStr = payment['collection_time'] as String;
+      DateTime? dt;
+      if (dateStr != null) {
+        dt = DateTime.tryParse('${dateStr}T$timeStr');
+      }
+      dt ??= DateTime.tryParse(timeStr);
+      if (dt != null) return AppFormatters.convertToIST(dt);
+    } catch (_) {}
+  }
+  return AppFormatters.convertToIST(DateTime.now());
+}
+
+
+/// Builds a detail row with label and value.
+/// Used by both _LoanDetailPageState and _PaymentHistorySection.
+Widget _buildDetailRow(String label, String value, ThemeData theme,
+    {Color? valueColor}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+        Text(value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? theme.colorScheme.onSurface)),
+      ],
+    ),
+  );
+}
+
 class LoanDetailPage extends ConsumerStatefulWidget {
   final String loanId;
   const LoanDetailPage({super.key, required this.loanId});
@@ -44,6 +107,16 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<double> _scrollOffset = ValueNotifier(0);
   String _selectedEmiFilter = 'all';
+
+  /// Returns a short, display-friendly label for an [EMIStatus].
+  String _emiStatusLabel(EMIStatus status) => switch (status) {
+        EMIStatus.paid => 'PAID',
+        EMIStatus.pending => 'DUE',
+        EMIStatus.overdue => 'OD',
+        EMIStatus.waived => 'WAV',
+        EMIStatus.pendingPayment => 'PEND',
+        _ => status.name.toUpperCase(),
+      };
 
   @override
   void initState() {
@@ -215,7 +288,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(ThemeData theme, LoanModel? loan) {
+  PreferredSizeWidget _buildAppBar(ThemeData theme, LoanModel loan) {
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight),
       child: ValueListenableBuilder<double>(
@@ -264,7 +337,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 itemBuilder: (ctx) => [
-                  if (loan != null && loan.status != LoanStatus.closed)
+                  if (loan.status != LoanStatus.closed)
                     const PopupMenuItem(
                       value: 'edit',
                       child: Row(
@@ -275,37 +348,37 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         ],
                       ),
                     ),
-                  if (loan != null && loan.status == LoanStatus.defaultStatus)
+                  if (loan.status == LoanStatus.defaultStatus)
                     const PopupMenuItem(
                       value: 'reactivate',
                       child: Row(
                         children: [
                           Icon(Icons.play_circle_outline_rounded,
-                              size: 18, color: Colors.green),
+                              size: 18, color: AppColors.success),
                           SizedBox(width: 12),
                           Text('Reactivate Loan'),
                         ],
                       ),
                     )
-                  else if (loan != null && loan.status != LoanStatus.closed)
+                  else if (loan.status != LoanStatus.closed)
                     const PopupMenuItem(
                       value: 'default',
                       child: Row(
                         children: [
                           Icon(Icons.warning_amber_rounded,
-                              size: 18, color: Colors.orange),
+                              size: 18, color: AppColors.warning),
                           SizedBox(width: 12),
                           Text('Mark Defaulted'),
                         ],
                       ),
                     ),
-                  if (loan != null && loan.status != LoanStatus.closed)
+                  if (loan.status != LoanStatus.closed)
                     const PopupMenuItem(
                       value: 'restructure',
                       child: Row(
                         children: [
                           Icon(Icons.settings_suggest_rounded,
-                              size: 18, color: Colors.purple),
+                              size: 18, color: AppColors.accent),
                           SizedBox(width: 12),
                           Text('Restructure Loan'),
                         ],
@@ -337,10 +410,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     child: Row(
                       children: [
                         Icon(Icons.delete_outline_rounded,
-                            size: 18, color: Colors.red),
+                            size: 18, color: AppColors.error,
+                            semanticLabel: 'Delete Loan'),
                         SizedBox(width: 12),
                         Text('Delete Loan',
-                            style: TextStyle(color: Colors.red)),
+                            style: TextStyle(color: AppColors.error)),
                       ],
                     ),
                   ),
@@ -366,7 +440,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           shape: BoxShape.circle,
           gradient: RadialGradient(
             colors: [
-              const Color(0xFF5E5CE6).withValues(alpha: 0.3),
+              AppColors.primary.withValues(alpha: 0.3),
               Colors.transparent,
             ],
           ),
@@ -409,14 +483,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
 
         final now = DateTime.now();
-        final nextEmi = schedule.firstWhere(
-          (e) => e.status != EMIStatus.paid,
-          orElse: () => schedule.last,
-        );
-
-        if (nextEmi.status == EMIStatus.paid) {
+        final unpaidEmis = schedule.where((e) => e.status != EMIStatus.paid).toList();
+        if (unpaidEmis.isEmpty) {
           return const SizedBox.shrink();
         }
+        final nextEmi = unpaidEmis.first;
 
         final daysDiff = nextEmi.dueDate.difference(now).inDays;
         final isOverdue = daysDiff < 0;
@@ -428,15 +499,15 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         IconData alertIcon;
 
         if (isOverdue) {
-          alertColor = Colors.red;
+          alertColor = AppColors.error;
           alertText = '${daysDiff.abs()} days OVERDUE';
           alertIcon = Icons.error_rounded;
         } else if (isDueToday) {
-          alertColor = Colors.orange;
+          alertColor = AppColors.warning;
           alertText = 'DUE TODAY';
           alertIcon = Icons.schedule_rounded;
         } else if (isDueSoon) {
-          alertColor = Colors.orange;
+          alertColor = AppColors.warning;
           alertText = 'Due in $daysDiff days';
           alertIcon = Icons.calendar_today_rounded;
         } else {
@@ -469,7 +540,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                '· ${nextEmi.dueDate.day}/${nextEmi.dueDate.month}/${nextEmi.dueDate.year}',
+                '· ${AppFormatters.formatDate(nextEmi.dueDate)}',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
@@ -486,8 +557,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   Widget _buildDigitalPass(LoanModel loan, ThemeData theme) {
-    final progress =
-        (loan.amount - loan.outstandingBalance) / loan.totalRepayable;
+    final progress = loan.totalRepayable > 0 ? ((loan.amount - loan.outstandingBalance) / loan.totalRepayable).clamp(0.0, 1.0) : 0.0;
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
@@ -504,7 +574,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5E5CE6).withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             blurRadius: 40,
             offset: const Offset(0, 20),
           ),
@@ -542,7 +612,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       Text(
                         loan.loanNumber,
                         style: const TextStyle(
-                            fontFamily: 'JetBrains Mono',
                             fontWeight: FontWeight.w700,
                             letterSpacing: 2),
                       ),
@@ -590,7 +659,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       backgroundColor:
                           theme.colorScheme.onSurface.withValues(alpha: 0.1),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF5E5CE6)),
+                          AppColors.primary),
                     ),
                   ),
                 ],
@@ -607,8 +676,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     return scheduleAsync.when(
       data: (schedule) {
         final nextEmi = schedule.isNotEmpty
-            ? schedule.firstWhere((e) => e.status != EMIStatus.paid,
-                orElse: () => schedule.last)
+            ? schedule.where((e) => e.status != EMIStatus.paid).isNotEmpty
+                ? schedule.firstWhere((e) => e.status != EMIStatus.paid)
+                : null
             : null;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -617,7 +687,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             children: [
               if (loan.status != LoanStatus.closed)
                 _buildActionButton(
-                    'Collect', Icons.payments_rounded, const Color(0xFF5E5CE6),
+                    'Collect', Icons.payments_rounded, AppColors.primary,
                     () {
                   _showCollectionSheet(context, loan, nextEmi);
                 }),
@@ -645,27 +715,31 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Widget _buildActionButton(
       String label, IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.1),
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.1),
+              ),
+              child: Icon(icon, color: color, size: 28),
             ),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(height: 12),
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-        ],
+            const SizedBox(height: 12),
+            Text(label,
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          ],
+        ),
       ),
     );
   }
@@ -697,11 +771,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Filter tabs
-            _buildTimelineFilterTabs(schedule, theme, (filtered) {
-              // Rebuild with filtered schedule
-            }),
-            const SizedBox(height: 12),
             SizedBox(
               height: 170,
               child: ListView.separated(
@@ -727,59 +796,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildTimelineFilterTabs(List<EMIScheduleModel> schedule,
-      ThemeData theme, Function(List<EMIScheduleModel>) onFilter) {
-    final allCount = schedule.length;
-    final overdueCount = schedule
-        .where((e) =>
-            e.status == EMIStatus.overdue || e.status == EMIStatus.waived)
-        .length;
-    final upcomingCount =
-        schedule.where((e) => e.status == EMIStatus.pending).length;
-    final paidCount = schedule.where((e) => e.status == EMIStatus.paid).length;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: [
-          _buildFilterChip('All ($allCount)', true, theme),
-          const SizedBox(width: 8),
-          _buildFilterChip('Overdue ($overdueCount)', false, theme,
-              color: Colors.red),
-          const SizedBox(width: 8),
-          _buildFilterChip('Upcoming ($upcomingCount)', false, theme,
-              color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          _buildFilterChip('Paid ($paidCount)', false, theme,
-              color: Colors.green),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String label, bool isSelected, ThemeData theme,
-      {Color? color}) {
-    final chipColor = color ?? theme.colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? chipColor.withValues(alpha: 0.15)
-            : chipColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-            color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: isSelected
-                  ? chipColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-    );
-  }
+  // NOTE: _buildTimelineFilterTabs and _buildFilterChip removed (M1 fix).
+  // These were dead code — defined but never called, with no interactivity.
+  // The EMI filter functionality is handled by _buildEMIFilterChip / _selectedEmiFilter.
 
   Widget _buildTimelineCard(EMIScheduleModel emi, ThemeData theme,
       {bool isCurrent = false, VoidCallback? onTap}) {
@@ -787,8 +806,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final isOverdue =
         emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
     final color = isPaid
-        ? Colors.green
-        : (isOverdue ? Colors.red : theme.colorScheme.primary);
+        ? AppColors.success
+        : (isOverdue ? AppColors.error : theme.colorScheme.primary);
 
     return GestureDetector(
       onTap: onTap,
@@ -860,19 +879,19 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
+                  color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.payment_rounded, size: 12, color: Colors.red),
+                    Icon(Icons.payment_rounded, size: 12, color: AppColors.error),
                     SizedBox(width: 4),
                     Text('Collect',
                         style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: Colors.red)),
+                            color: AppColors.error)),
                   ],
                 ),
               ),
@@ -933,9 +952,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: (isPaid
-                                    ? Colors.green
+                                    ? AppColors.success
                                     : isOverdue
-                                        ? Colors.red
+                                        ? AppColors.error
                                         : theme.colorScheme.primary)
                                 .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(14),
@@ -947,9 +966,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                     ? Icons.warning_rounded
                                     : Icons.calendar_today_rounded,
                             color: isPaid
-                                ? Colors.green
+                                ? AppColors.success
                                 : isOverdue
-                                    ? Colors.red
+                                    ? AppColors.error
                                     : theme.colorScheme.primary,
                             size: 24,
                           ),
@@ -965,9 +984,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               Text(emi.status.name.toUpperCase(),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                       color: isPaid
-                                          ? Colors.green
+                                          ? AppColors.success
                                           : isOverdue
-                                              ? Colors.red
+                                              ? AppColors.error
                                               : theme.colorScheme.primary,
                                       fontWeight: FontWeight.w700)),
                             ],
@@ -1027,7 +1046,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           'Penalty',
                           AppFormatters.formatCurrency(emi.penaltyAmount),
                           theme,
-                          valueColor: Colors.red),
+                          valueColor: AppColors.error),
                     _buildDetailRow('Balance After',
                         AppFormatters.formatCurrency(emi.balanceAfter), theme),
                     if (emi.paidOn != null)
@@ -1048,10 +1067,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                             Navigator.pop(ctx);
                             _showCollectionSheet(context, loan, emi);
                           },
-                          icon: const Icon(Icons.payment_rounded),
+                          icon: const Icon(Icons.payment_rounded, semanticLabel: 'Collect Payment'),
                           label: const Text('Collect Payment'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: AppColors.success,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -1069,25 +1088,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, ThemeData theme,
-      {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-          Text(value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: valueColor ?? theme.colorScheme.onSurface)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildLoanIntelligence(LoanModel loan, ThemeData theme) {
     // Calculate insights using proper tenure logic
     final totalAmount = loan.totalRepayable;
@@ -1099,12 +1099,12 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         totalAmount > 0 ? (principal / totalAmount) * 100 : 0;
 
     // Calculate tenure in days properly based on tenureValue and tenureUnit
-    int tenureDays = _calculateTenureInDays(loan);
-    final costPerDay = tenureDays > 0 ? totalInterest / tenureDays : 0;
+    double tenureDays = _calculateTenureInDays(loan);
+    final costPerDay = tenureDays > 0 ? totalInterest / tenureDays : 0.0;
 
     // Calculate tenure in months for cost/month
     double tenureMonths = _calculateTenureInMonths(loan);
-    final costPerMonth = tenureMonths > 0 ? totalInterest / tenureMonths : 0;
+    final costPerMonth = tenureMonths > 0 ? totalInterest / tenureMonths : 0.0;
 
     // Effective interest rate (total interest / principal * 100)
     final effectiveRate = principal > 0 ? (totalInterest / principal) * 100 : 0;
@@ -1147,7 +1147,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   child: Container(
                     height: 14,
                     decoration: BoxDecoration(
-                      color: Colors.orange,
+                      color: AppColors.warning,
                       borderRadius: const BorderRadius.horizontal(
                           right: Radius.circular(8)),
                     ),
@@ -1181,7 +1181,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: Colors.orange,
+                      color: AppColors.warning,
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -1206,7 +1206,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   label: 'Effective Rate',
                   value: '${effectiveRate.toStringAsFixed(1)}%',
                   subtitle: 'Total interest cost',
-                  color: const Color(0xFF5E5CE6),
+                  color: AppColors.primary,
                   theme: theme,
                 ),
               ),
@@ -1215,9 +1215,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 child: _buildStatCard(
                   icon: Icons.calendar_today_rounded,
                   label: 'Cost/Month',
-                  value: '₹${costPerMonth.toStringAsFixed(0)}',
+                  value: AppFormatters.formatCurrency(costPerMonth),
                   subtitle: 'Interest per month',
-                  color: Colors.orange,
+                  color: AppColors.warning,
                   theme: theme,
                 ),
               ),
@@ -1232,9 +1232,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 child: _buildStatCard(
                   icon: Icons.today_rounded,
                   label: 'Cost/Day',
-                  value: '₹${costPerDay.toStringAsFixed(0)}',
+                  value: AppFormatters.formatCurrency(costPerDay),
                   subtitle: 'Interest per day',
-                  color: Colors.teal,
+                  color: AppColors.mint,
                   theme: theme,
                 ),
               ),
@@ -1273,29 +1273,29 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  int _calculateTenureInDays(LoanModel loan) {
+  double _calculateTenureInDays(LoanModel loan) {
     if (loan.tenureValue != null && loan.tenureUnit != null) {
       final unit = loan.tenureUnit!.toLowerCase();
       final value = loan.tenureValue!;
       switch (unit) {
         case 'day':
         case 'days':
-          return value;
+          return value.toDouble();
         case 'week':
         case 'weeks':
-          return value * 7;
+          return (value * 7).toDouble();
         case 'month':
         case 'months':
-          return value * 30;
+          return value * 30.44;
         case 'year':
         case 'years':
-          return value * 365;
+          return (value * 365).toDouble();
         default:
-          return value * 30;
+          return value * 30.44;
       }
     }
     // Fallback to tenureMonths
-    return loan.tenureMonths * 30;
+    return loan.tenureMonths.toDouble() * 30.44;
   }
 
   double _calculateTenureInMonths(LoanModel loan) {
@@ -1305,10 +1305,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       switch (unit) {
         case 'day':
         case 'days':
-          return value / 30;
+          return value / 30.44;
         case 'week':
         case 'weeks':
-          return value / 4.33;
+          return value / 4.348;
         case 'month':
         case 'months':
           return value.toDouble();
@@ -1373,39 +1373,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  DateTime _getPaymentDate(Map<String, dynamic> payment) {
-    if (payment['entered_at'] != null) {
-      try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['entered_at'] as String));
-      } catch (_) {}
-    }
-    if (payment['created_at'] != null) {
-      try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['created_at'] as String));
-      } catch (_) {}
-    }
-    if (payment['transaction_time'] != null) {
-      try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['transaction_time'] as String));
-      } catch (_) {}
-    }
-    if (payment['collection_time'] != null) {
-      try {
-        final dateStr = payment['collection_date'] as String?;
-        final timeStr = payment['collection_time'] as String;
-        DateTime? dt;
-        if (dateStr != null) {
-          dt = DateTime.tryParse('${dateStr}T$timeStr');
-        }
-        dt ??= DateTime.tryParse(timeStr);
-        if (dt != null) return AppFormatters.convertToIST(dt);
-      } catch (_) {}
-    }
-    return AppFormatters.convertToIST(DateTime.now());
-  }
+
+
 
   // ─── EMI Summary Hero ───────────────────────────────────────────
   Widget _buildEMISummaryHero(
@@ -1431,9 +1400,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final paidCount =
             schedule.where((e) => e.status == EMIStatus.paid).length;
         final overdueCount = schedule
-            .where((e) =>
-                e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.waived)
+            .where((e) => e.status == EMIStatus.overdue)
             .length;
         final upcomingCount =
             schedule.where((e) => e.status == EMIStatus.pending).length;
@@ -1473,7 +1440,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     value: progress.clamp(0.0, 1.0),
                     size: 72,
                     strokeWidth: 7,
-                    progressColor: Colors.green,
+                    progressColor: AppColors.success,
                     center: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1481,7 +1448,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           '${(progress * 100).toInt()}%',
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w900,
-                            color: Colors.green,
+                            color: AppColors.success,
                           ),
                         ),
                         Text('paid',
@@ -1500,10 +1467,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         Row(
                           children: [
                             _buildMiniStat(
-                                'Paid', '$paidCount', Colors.green, theme),
+                                'Paid', '$paidCount', AppColors.success, theme),
                             const SizedBox(width: 8),
                             _buildMiniStat(
-                                'Overdue', '$overdueCount', Colors.red, theme),
+                                'Overdue', '$overdueCount', AppColors.error, theme),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -1513,7 +1480,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                 theme.colorScheme.primary, theme),
                             const SizedBox(width: 8),
                             _buildMiniStat('Total', '$totalEmis',
-                                const Color(0xFF5E5CE6), theme),
+                                AppColors.primary, theme),
                           ],
                         ),
                       ],
@@ -1547,7 +1514,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               LinearProgressBar(
                 value: progress.clamp(0.0, 1.0),
                 height: 5,
-                progressColor: Colors.green,
+                progressColor: AppColors.success,
               ),
             ],
           ),
@@ -1785,9 +1752,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             break;
           case 'overdue':
             filtered = schedule
-                .where((e) =>
-                    e.status == EMIStatus.overdue ||
-                    e.status == EMIStatus.waived)
+                .where((e) => e.status == EMIStatus.overdue)
                 .toList();
             break;
           case 'upcoming':
@@ -1802,9 +1767,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final paidCount =
             schedule.where((e) => e.status == EMIStatus.paid).length;
         final overdueCount = schedule
-            .where((e) =>
-                e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.waived)
+            .where((e) => e.status == EMIStatus.overdue)
             .length;
         final upcomingCount =
             schedule.where((e) => e.status == EMIStatus.pending).length;
@@ -1823,11 +1786,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   const SizedBox(width: 8),
                   _buildEMIFilterChip(
                       'Paid ($paidCount)', 'paid', theme,
-                      color: Colors.green),
+                      color: AppColors.success),
                   const SizedBox(width: 8),
                   _buildEMIFilterChip(
                       'Overdue ($overdueCount)', 'overdue', theme,
-                      color: Colors.red),
+                      color: AppColors.error),
                   const SizedBox(width: 8),
                   _buildEMIFilterChip(
                       'Upcoming ($upcomingCount)', 'upcoming', theme,
@@ -1857,7 +1820,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: filtered.length > 5 ? 5 : filtered.length,
+                itemCount: filtered.length > 10 ? 10 : filtered.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final emi = filtered[index];
@@ -1865,7 +1828,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 },
               ),
               // View All button
-              if (filtered.length > 5) ...[
+              if (filtered.length > 10) ...[
                 const SizedBox(height: 12),
                 GestureDetector(
                   onTap: () =>
@@ -1924,8 +1887,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final isOverdue =
         emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
     final accentColor = isPaid
-        ? Colors.green
-        : (isOverdue ? Colors.red : theme.colorScheme.primary);
+        ? AppColors.success
+        : (isOverdue ? AppColors.error : theme.colorScheme.primary);
     final isDark = theme.brightness == Brightness.dark;
     final emiRatio =
         emi.emiAmount > 0 ? emi.principal / emi.emiAmount : 0.5;
@@ -1947,7 +1910,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           boxShadow: isOverdue
               ? [
                   BoxShadow(
-                    color: Colors.red.withValues(alpha: 0.06),
+                    color: AppColors.error.withValues(alpha: 0.06),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -1985,14 +1948,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.red.withValues(alpha: 0.1),
+                                color: AppColors.error.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: const Text('OVERDUE',
                                   style: TextStyle(
                                       fontSize: 8,
                                       fontWeight: FontWeight.w900,
-                                      color: Colors.red)),
+                                      color: AppColors.error)),
                             ),
                           ],
                         ],
@@ -2235,8 +2198,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final isPaid = emi.status == EMIStatus.paid;
     final isOverdue = emi.status == EMIStatus.overdue;
     final color = isPaid
-        ? Colors.green
-        : (isOverdue ? Colors.red : theme.colorScheme.primary);
+        ? AppColors.success
+        : (isOverdue ? AppColors.error : theme.colorScheme.primary);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -2251,7 +2214,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           Expanded(
               flex: 2,
               child: Text(
-                  '${emi.dueDate.day}/${emi.dueDate.month}/${emi.dueDate.year}',
+                  AppFormatters.formatDate(emi.dueDate),
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall)),
           Expanded(
@@ -2288,7 +2251,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(emi.status.name.substring(0, 3).toUpperCase(),
+                  child: Text(
+                      _emiStatusLabel(emi.status),
                       style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -2326,9 +2290,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final paidEmis =
             schedule.where((e) => e.status == EMIStatus.paid).toList();
         final overdueEmis = schedule
-            .where((e) =>
-                e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.waived)
+            .where((e) => e.status == EMIStatus.overdue)
             .toList();
 
         // Payment consistency score (% paid on time)
@@ -2364,7 +2326,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final expectedAmount =
             expectedEmis.fold<double>(0, (sum, e) => sum + e.emiAmount);
         final collectionEfficiency =
-            expectedAmount > 0 ? (paidAmount / expectedAmount) * 100 : 100;
+            (expectedAmount > 0 ? (paidAmount / expectedAmount) * 100 : 100).clamp(0.0, 100.0);
 
         // Risk classification
         int maxDaysPastDue = 0;
@@ -2378,7 +2340,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         IconData riskIcon;
         if (maxDaysPastDue >= 90) {
           riskLevel = 'High Risk';
-          riskColor = Colors.red;
+          riskColor = AppColors.error;
           riskIcon = Icons.dangerous_rounded;
         } else if (maxDaysPastDue >= 60) {
           riskLevel = 'Medium-High Risk';
@@ -2386,7 +2348,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           riskIcon = Icons.warning_rounded;
         } else if (maxDaysPastDue >= 30) {
           riskLevel = 'Medium Risk';
-          riskColor = Colors.orange;
+          riskColor = AppColors.warning;
           riskIcon = Icons.info_rounded;
         } else if (overdueEmis.isNotEmpty) {
           riskLevel = 'Low Risk';
@@ -2394,7 +2356,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           riskIcon = Icons.visibility_rounded;
         } else {
           riskLevel = 'Minimal Risk';
-          riskColor = Colors.green;
+          riskColor = AppColors.success;
           riskIcon = Icons.shield_rounded;
         }
 
@@ -2480,7 +2442,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
-                  value: percentagePaid / 100,
+                  value: (percentagePaid / 100).clamp(0.0, 1.0),
                   minHeight: 10,
                   backgroundColor: theme.colorScheme.surfaceContainerHighest
                       .withValues(alpha: 0.5),
@@ -2492,11 +2454,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('₹${AppFormatters.formatCurrency(paidAmount)} paid',
+                  Text('${AppFormatters.formatCurrency(paidAmount)} paid',
                       style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurface
                               .withValues(alpha: 0.5))),
-                  Text('₹${AppFormatters.formatCurrency(totalAmount)} total',
+                  Text('${AppFormatters.formatCurrency(totalAmount)} total',
                       style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurface
                               .withValues(alpha: 0.5))),
@@ -2515,10 +2477,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       value: '${consistencyScore.toStringAsFixed(0)}%',
                       subtitle: 'On-time payments',
                       color: consistencyScore >= 80
-                          ? Colors.green
+                          ? AppColors.success
                           : consistencyScore >= 50
-                              ? Colors.orange
-                              : Colors.red,
+                              ? AppColors.warning
+                              : AppColors.error,
                       theme: theme,
                     ),
                   ),
@@ -2534,10 +2496,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           ? 'No payments yet'
                           : 'Days since last',
                       color: daysSinceLastPayment <= 30
-                          ? Colors.green
+                          ? AppColors.success
                           : daysSinceLastPayment <= 60
-                              ? Colors.orange
-                              : Colors.red,
+                              ? AppColors.warning
+                              : AppColors.error,
                       theme: theme,
                     ),
                   ),
@@ -2555,10 +2517,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       value: '${collectionEfficiency.toStringAsFixed(0)}%',
                       subtitle: 'vs expected',
                       color: collectionEfficiency >= 90
-                          ? Colors.green
+                          ? AppColors.success
                           : collectionEfficiency >= 70
-                              ? Colors.orange
-                              : Colors.red,
+                              ? AppColors.warning
+                              : AppColors.error,
                       theme: theme,
                     ),
                   ),
@@ -2586,14 +2548,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   loan.status.name.toUpperCase(),
                   Icons.circle,
                   loan.status == LoanStatus.active
-                      ? Colors.green
-                      : Colors.orange,
+                      ? AppColors.success
+                      : AppColors.warning,
                   theme),
               const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(height: 1)),
               _buildHealthRow('Tenure', loan.formattedTenure,
-                  Icons.timelapse_rounded, const Color(0xFF5E5CE6), theme),
+                  Icons.timelapse_rounded, AppColors.primary, theme),
               const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(height: 1)),
@@ -2601,7 +2563,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   'Interest Type',
                   loan.interestType.name.toUpperCase(),
                   Icons.percent_rounded,
-                  Colors.orange,
+                  AppColors.warning,
                   theme),
             ],
           ),
@@ -2671,8 +2633,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         int overdueCount = 0;
 
         for (final emi in schedule) {
-          if (emi.status == EMIStatus.overdue ||
-              emi.status == EMIStatus.waived) {
+          if (emi.status == EMIStatus.overdue) {
             overdueCount++;
             final daysPast = now.difference(emi.dueDate).inDays;
             if (daysPast > maxDaysPastDue) {
@@ -2688,7 +2649,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
         if (maxDaysPastDue >= 90) {
           npaStatus = 'NPA - Non Performing Asset';
-          npaColor = Colors.red;
+          npaColor = AppColors.error;
           npaIcon = Icons.error_outline_rounded;
           npaDescription =
               'Loan is classified as NPA (90+ days overdue). Immediate action required.';
@@ -2700,7 +2661,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               'Loan is 60+ days overdue. High risk of becoming NPA.';
         } else if (maxDaysPastDue >= 30) {
           npaStatus = 'Special Mention (30 DPD)';
-          npaColor = Colors.orange;
+          npaColor = AppColors.warning;
           npaIcon = Icons.info_outline_rounded;
           npaDescription = 'Loan is 30+ days overdue. Monitor closely.';
         } else if (overdueCount > 0) {
@@ -2711,7 +2672,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               '$overdueCount overdue EMI(s). Keep under observation.';
         } else {
           npaStatus = 'Standard - Performing';
-          npaColor = Colors.green;
+          npaColor = AppColors.success;
           npaIcon = Icons.check_circle_outline_rounded;
           npaDescription = 'Loan is performing well. No overdue EMIs.';
         }
@@ -2794,11 +2755,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       error: (_, __) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text('Failed to load NPA info',
-            style: TextStyle(color: Colors.red)),
+            style: TextStyle(color: AppColors.error)),
       ),
     );
   }
@@ -2835,9 +2796,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     return scheduleAsync.when(
       data: (schedule) {
         final overdueEmis = schedule
-            .where((e) =>
-                e.status == EMIStatus.overdue ||
-                e.status == EMIStatus.waived)
+            .where((e) => e.status == EMIStatus.overdue)
             .toList();
 
         double totalPenalty =
@@ -2853,19 +2812,19 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           return Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.05),
+              color: AppColors.success.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.1)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.check_circle_rounded,
-                    color: Colors.green, size: 24),
+                    color: AppColors.success, size: 24),
                 const SizedBox(width: 12),
                 Text('No penalties accrued',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.green, fontWeight: FontWeight.w600)),
+                        color: AppColors.success, fontWeight: FontWeight.w600)),
               ],
             ),
           );
@@ -2877,13 +2836,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: unpaidPenalty > 0
-                    ? Colors.red.withValues(alpha: 0.08)
+                    ? AppColors.error.withValues(alpha: 0.08)
                     : theme.colorScheme.surfaceContainerHighest
                         .withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                     color: unpaidPenalty > 0
-                        ? Colors.red.withValues(alpha: 0.2)
+                        ? AppColors.error.withValues(alpha: 0.2)
                         : Colors.transparent),
               ),
               child: Column(
@@ -2903,8 +2862,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w900,
                                   color: unpaidPenalty > 0
-                                      ? Colors.red
-                                      : Colors.green)),
+                                      ? AppColors.error
+                                      : AppColors.success)),
                         ],
                       ),
                       Column(
@@ -2917,7 +2876,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           Text(AppFormatters.formatCurrency(unpaidPenalty),
                               style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.red)),
+                                  color: AppColors.error)),
                         ],
                       ),
                     ],
@@ -2934,7 +2893,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         Text(AppFormatters.formatCurrency(paidPenalty),
                             style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: Colors.green)),
+                                color: AppColors.success)),
                       ],
                     ),
                   ],
@@ -2961,21 +2920,21 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   return Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.05),
+                      color: AppColors.error.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                       border:
-                          Border.all(color: Colors.red.withValues(alpha: 0.1)),
+                          Border.all(color: AppColors.error.withValues(alpha: 0.1)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.1),
+                            color: AppColors.error.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.warning_rounded,
-                              color: Colors.red, size: 20),
+                              color: AppColors.error, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -2987,7 +2946,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                       ?.copyWith(fontWeight: FontWeight.w700)),
                               Text('$daysOverdue days overdue',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                      color: Colors.red,
+                                      color: AppColors.error,
                                       fontWeight: FontWeight.w600)),
                             ],
                           ),
@@ -2995,7 +2954,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         Text(AppFormatters.formatCurrency(emi.penaltyAmount),
                             style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w900,
-                                color: Colors.red)),
+                                color: AppColors.error)),
                       ],
                     ),
                   );
@@ -3009,21 +2968,22 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       error: (_, __) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text('Failed to load penalty info',
-            style: TextStyle(color: Colors.red)),
+            style: TextStyle(color: AppColors.error)),
       ),
     );
   }
 
   Widget _buildPrepaymentInfo(LoanModel loan, ThemeData theme) {
-    final foreclosureCharge = loan.outstandingBalance * 0.02;
+    // TODO: Make configurable per organization — currently hardcoded at 2%
+    final foreclosureCharge = loan.outstandingBalance * kDefaultForeclosureRate;
     final totalForeclosureAmount = loan.outstandingBalance + foreclosureCharge;
-    final interestSaved = loan.totalRepayable -
-        loan.amount -
-        (loan.totalRepayable - loan.outstandingBalance);
+    final totalInterest = loan.totalRepayable - loan.amount;
+    final remainingInterest = loan.outstandingBalance > loan.amount ? loan.outstandingBalance - loan.amount : 0.0;
+    final interestSaved = (totalInterest - remainingInterest).clamp(0.0, double.infinity);
 
     return Column(
       children: [
@@ -3034,13 +2994,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF5E5CE6).withValues(alpha: 0.1),
-                const Color(0xFF5E5CE6).withValues(alpha: 0.05),
+                AppColors.primary.withValues(alpha: 0.1),
+                AppColors.primary.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: const Color(0xFF5E5CE6).withValues(alpha: 0.2)),
+                color: AppColors.primary.withValues(alpha: 0.2)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3050,11 +3010,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5E5CE6).withValues(alpha: 0.15),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.account_balance_wallet_rounded,
-                        color: Color(0xFF5E5CE6), size: 24),
+                        color: AppColors.primary, size: 24),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -3070,7 +3030,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                 totalForeclosureAmount),
                             style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w900,
-                                color: const Color(0xFF5E5CE6))),
+                                color: AppColors.primary)),
                       ],
                     ),
                   ),
@@ -3089,25 +3049,25 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.08),
+                  color: AppColors.success.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.savings_rounded,
-                        color: Colors.green, size: 18),
+                        color: AppColors.success, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text('Potential Interest Saved',
                           style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.green,
+                              color: AppColors.success,
                               fontWeight: FontWeight.w600)),
                     ),
                     Text(
                         AppFormatters.formatCurrency(
                             interestSaved > 0 ? interestSaved : 0),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w900, color: Colors.green)),
+                            fontWeight: FontWeight.w900, color: AppColors.success)),
                   ],
                 ),
               ),
@@ -3153,7 +3113,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         Text(value,
             style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: isCharge ? Colors.red : null)),
+                color: isCharge ? AppColors.error : null)),
       ],
     );
   }
@@ -3174,9 +3134,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 width: 60,
                 height: 60,
                 decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: Color(0xFF5E5CE6)),
+                    shape: BoxShape.circle, color: AppColors.primary),
                 child: Center(
-                    child: Text((loan.customerName ?? '?')[0],
+                    child: Text((loan.customerName?.isNotEmpty == true ? loan.customerName![0] : '?'),
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
@@ -3221,11 +3181,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: AppColors.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.badge_rounded,
-                      color: Colors.orange, size: 20),
+                      color: AppColors.warning, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -3247,7 +3207,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   style: IconButton.styleFrom(
                       backgroundColor: theme.colorScheme.surface,
                       padding: const EdgeInsets.all(8)),
-                  onPressed: () => _makeCall(loan.staffName!),
+                  onPressed: () => _makeCall(loan.staffPhone ?? loan.customerPhone ?? ''),
                 ),
               ],
             ),
@@ -3297,8 +3257,22 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     if (options == null || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-        const SnackBar(content: Text('Generating statement…')));
+
+    // Show a loading dialog while generating the statement
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text('Generating statement…'),
+          ],
+        ),
+      ),
+    );
 
     try {
       final schedule = await ref.read(emiScheduleProvider(widget.loanId).future);
@@ -3448,10 +3422,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
 
         if (!mounted) return;
-        messenger.hideCurrentSnackBar();
+        Navigator.of(context).pop();
         messenger.showSnackBar(SnackBar(
           content: Text('Statement downloaded: $fileName'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ));
       } else {
         // Mobile/Desktop: save to documents directory
@@ -3493,7 +3467,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
 
         if (!mounted) return;
-        messenger.hideCurrentSnackBar();
+        Navigator.of(context).pop();
 
         await showModalBottomSheet(
           context: context,
@@ -3511,7 +3485,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.ios_share_rounded),
+                  leading: const Icon(Icons.ios_share_rounded, semanticLabel: 'Share'),
                   title: const Text('Share'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -3529,11 +3503,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     } catch (e, st) {
       debugPrint('Statement generation failed: $e\n$st');
       if (!mounted) return;
-      messenger.hideCurrentSnackBar();
+      Navigator.of(context).pop();
       messenger.showSnackBar(SnackBar(
-        content: Text('Failed: $e\n$st', maxLines: 6),
+        content: const Text('Failed to generate statement. Please try again.'),
         backgroundColor: Theme.of(context).colorScheme.error,
-        duration: const Duration(seconds: 15),
+        duration: const Duration(seconds: 5),
       ));
     }
   }
@@ -3578,7 +3552,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     ),
                     error: (e, _) => Padding(
                       padding: const EdgeInsets.all(20),
-                      child: Text('Failed to load: $e'),
+                      child: Text('Failed to load statements. Please try again.'),
                     ),
                     data: (rows) {
                       if (rows.isEmpty) {
@@ -3638,7 +3612,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                       value: 'delete',
                                       child: Text('Delete',
                                           style:
-                                              TextStyle(color: Colors.red))),
+                                              TextStyle(color: AppColors.error))),
                                 ],
                               ),
                             );
@@ -3815,7 +3789,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             matches
                 ? Icons.verified_rounded
                 : Icons.warning_amber_rounded,
-            color: matches ? Colors.green : Colors.red,
+            color: matches ? AppColors.success : AppColors.error,
             size: 40,
           ),
           title: Text(matches ? 'Integrity verified' : 'Hash mismatch!'),
@@ -3849,7 +3823,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
@@ -3891,7 +3865,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: 'Settlement Amount',
-                prefixText: '₹ ',
+                prefixText: '${AppFormatters.currencySymbol} ',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -3971,7 +3945,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       builder: (ctx) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.play_circle_outline_rounded, color: Colors.green),
+            Icon(Icons.play_circle_outline_rounded, color: AppColors.success),
             SizedBox(width: 12),
             Text('Reactivate Loan'),
           ],
@@ -3989,7 +3963,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             icon: const Icon(Icons.check_rounded, size: 18),
             label: const Text('Reactivate'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
               foregroundColor: Colors.white,
             ),
           ),
@@ -4016,7 +3990,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             Text('Loan Reactivated Successfully'),
           ],
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ));
@@ -4033,8 +4007,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     if (loan == null) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-        const SnackBar(content: Text('Checking for existing payments...')));
 
     try {
       final payments =
@@ -4044,7 +4016,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       final hasPayments = payments.isNotEmpty;
       final hasPaidEmis = schedule.any((e) => e.status == EMIStatus.paid);
 
-      if (!mounted) return;
+      if (!context.mounted) return;
       messenger.hideCurrentSnackBar();
 
       if (hasPayments || hasPaidEmis) {
@@ -4054,7 +4026,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             title: const Row(
               children: [
                 Icon(Icons.warning_amber_rounded,
-                    color: Colors.orange, size: 24),
+                    color: AppColors.warning, size: 24),
                 SizedBox(width: 8),
                 Text('Payments Recorded'),
               ],
@@ -4071,7 +4043,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppColors.error,
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => Navigator.pop(ctx, true),
@@ -4083,6 +4055,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
         if (confirmCascade != true) return;
       }
+
+      if (!context.mounted) return;
     } catch (e) {
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
@@ -4133,7 +4107,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Loan deleted successfully'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.success,
                     ),
                   );
                 }
@@ -4143,14 +4117,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Delete failed: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
                       duration: const Duration(seconds: 5),
                     ),
                   );
                 }
               }
             },
-            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
+            child: const Text('DELETE', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -4174,14 +4148,21 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       final daysDiff = nextEmi.dueDate.difference(DateTime.now()).inDays;
       if (daysDiff < 0) {
         dueInfo =
-            '\n\nYour EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is OVERDUE by ${daysDiff.abs()} days (Due: ${nextEmi.dueDate.day}/${nextEmi.dueDate.month}/${nextEmi.dueDate.year}).';
+            '\n\nYour EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is OVERDUE by ${daysDiff.abs()} days (Due: ${AppFormatters.formatDate(nextEmi.dueDate)}).';
       } else if (daysDiff == 0) {
         dueInfo =
             '\n\nYour EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is DUE TODAY.';
       } else {
         dueInfo =
-            '\n\nYour next EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is due in $daysDiff days (${nextEmi.dueDate.day}/${nextEmi.dueDate.month}/${nextEmi.dueDate.year}).';
+            '\n\nYour next EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is due in $daysDiff days (${AppFormatters.formatDate(nextEmi.dueDate)}).';
       }
+    }
+
+    if (loan.customerPhone == null || loan.customerPhone!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer phone number not available')),
+      );
+      return;
     }
 
     final msg = Uri.encodeComponent(
@@ -4222,6 +4203,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             icon: const Icon(Icons.sms_rounded, size: 18),
             onPressed: () async {
               Navigator.pop(ctx);
+
+              if (loan.customerPhone == null || loan.customerPhone!.isEmpty) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Customer phone number not available')),
+                );
+                return;
+              }
+
               final schedule =
                   await ref.read(emiScheduleProvider(widget.loanId).future);
               final nextEmi = schedule.isNotEmpty
@@ -4264,9 +4253,17 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             label: const Text('SMS'),
           ),
           ElevatedButton.icon(
-            icon: const Icon(Icons.chat_rounded, size: 18),
+            icon: const Icon(Icons.chat_rounded, size: 18, semanticLabel: 'WhatsApp'),
             onPressed: () async {
               Navigator.pop(ctx);
+
+              if (loan.customerPhone == null || loan.customerPhone!.isEmpty) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Customer phone number not available')),
+                );
+                return;
+              }
+
               final schedule =
                   await ref.read(emiScheduleProvider(widget.loanId).future);
               final nextEmi = schedule.isNotEmpty
@@ -4329,7 +4326,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) {
+        return PopScope(
+          onPopInvokedWithResult: (didPop, result) {
+            newTenureController.dispose();
+            newRateController.dispose();
+          },
+          child: AlertDialog(
         title: const Text('Restructure Loan'),
         content: SingleChildScrollView(
           child: Column(
@@ -4367,18 +4370,18 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: AppColors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.info_outline_rounded,
-                        color: Colors.orange, size: 20),
+                        color: AppColors.warning, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text('Restructuring will update the EMI schedule.',
                           style: dialogTheme.textTheme.bodySmall?.copyWith(
-                              color: Colors.orange,
+                              color: AppColors.warning,
                               fontWeight: FontWeight.w600)),
                     ),
                   ],
@@ -4409,7 +4412,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   interestRate: newRate,
                   tenureMonths: newTenure,
                   remarks:
-                      'Restructured on ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                      'Restructured on ${AppFormatters.formatDate(DateTime.now())}',
                 );
 
                 await ref.read(loansRepositoryProvider).updateLoanStatus(
@@ -4434,6 +4437,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           ),
         ],
       ),
+        );
+      },
     );
   }
 
@@ -4491,10 +4496,10 @@ class _PaymentHistorySection extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFF5E5CE6).withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: const Color(0xFF5E5CE6).withValues(alpha: 0.15)),
+                    color: AppColors.primary.withValues(alpha: 0.15)),
               ),
               child: Column(
                 children: [
@@ -4503,11 +4508,11 @@ class _PaymentHistorySection extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.15),
+                          color: AppColors.success.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(Icons.payments_rounded,
-                            color: Colors.green, size: 22),
+                            color: AppColors.success, size: 22),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -4521,7 +4526,7 @@ class _PaymentHistorySection extends ConsumerWidget {
                             Text(AppFormatters.formatCurrency(totalPaid),
                                 style: theme.textTheme.headlineSmall?.copyWith(
                                     fontWeight: FontWeight.w900,
-                                    color: Colors.green)),
+                                    color: AppColors.success)),
                           ],
                         ),
                       ),
@@ -4529,14 +4534,14 @@ class _PaymentHistorySection extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text('${payments.length} payments',
                             style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.green)),
+                                color: AppColors.success)),
                       ),
                     ],
                   ),
@@ -4605,11 +4610,11 @@ class _PaymentHistorySection extends ConsumerWidget {
       error: (_, __) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text('Failed to load payment history',
-            style: TextStyle(color: Colors.red)),
+            style: TextStyle(color: AppColors.error)),
       ),
     );
   }
@@ -4639,39 +4644,8 @@ class _PaymentHistorySection extends ConsumerWidget {
     );
   }
 
-  DateTime _getPaymentDate(Map<String, dynamic> payment) {
-    if (payment['entered_at'] != null) {
-      try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['entered_at'] as String));
-      } catch (_) {}
-    }
-    if (payment['created_at'] != null) {
-      try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['created_at'] as String));
-      } catch (_) {}
-    }
-    if (payment['transaction_time'] != null) {
-      try {
-        return AppFormatters.convertToIST(
-            DateTime.parse(payment['transaction_time'] as String));
-      } catch (_) {}
-    }
-    if (payment['collection_time'] != null) {
-      try {
-        final dateStr = payment['collection_date'] as String?;
-        final timeStr = payment['collection_time'] as String;
-        DateTime? dt;
-        if (dateStr != null) {
-          dt = DateTime.tryParse('${dateStr}T$timeStr');
-        }
-        dt ??= DateTime.tryParse(timeStr);
-        if (dt != null) return AppFormatters.convertToIST(dt);
-      } catch (_) {}
-    }
-    return AppFormatters.convertToIST(DateTime.now());
-  }
+
+
 
   void _showPaymentDetailSheet(
       BuildContext context, WidgetRef ref, Map<String, dynamic> payment, ThemeData theme) {
@@ -4695,7 +4669,8 @@ class _PaymentHistorySection extends ConsumerWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.fromLTRB(24, 24, 24,
+              24 + MediaQuery.of(context).padding.bottom + 90),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -4719,11 +4694,11 @@ class _PaymentHistorySection extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.receipt_long_rounded,
-                        color: Colors.green, size: 24),
+                        color: AppColors.success, size: 24),
                   ),
                   const SizedBox(width: 14),
                   const Expanded(
@@ -4752,7 +4727,7 @@ class _PaymentHistorySection extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.08),
+                  color: AppColors.success.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
@@ -4764,7 +4739,7 @@ class _PaymentHistorySection extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(AppFormatters.formatCurrency(amount),
                         style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900, color: Colors.green)),
+                            fontWeight: FontWeight.w900, color: AppColors.success)),
                   ],
                 ),
               ),
@@ -4776,7 +4751,7 @@ class _PaymentHistorySection extends ConsumerWidget {
                   paymentMode.replaceAll('_', ' ').toUpperCase(), theme),
               _buildDetailRow(
                   'Date & Time',
-                  '${enteredAt.day}/${enteredAt.month}/${enteredAt.year} ${enteredAt.hour.toString().padLeft(2, '0')}:${enteredAt.minute.toString().padLeft(2, '0')}',
+                  AppFormatters.formatDateTime(enteredAt),
                   theme),
               if (transactionId != null)
                 _buildDetailRow('Transaction ID', transactionId, theme),
@@ -4813,10 +4788,10 @@ class _PaymentHistorySection extends ConsumerWidget {
                       Navigator.pop(ctx);
                       _confirmDeletePayment(context, ref, payment);
                     },
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                    label: const Text('Delete Payment', style: TextStyle(color: Colors.red)),
+                    icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                    label: const Text('Delete Payment', style: TextStyle(color: AppColors.error)),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
+                      side: const BorderSide(color: AppColors.error),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
@@ -4869,11 +4844,11 @@ class _PaymentHistorySection extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.receipt_long_rounded,
-                            size: 20, color: Colors.green),
+                            size: 20, color: AppColors.success),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -4946,7 +4921,7 @@ class _PaymentHistorySection extends ConsumerWidget {
               Navigator.pop(dialogCtx);
               await _deletePayment(context, ref, payment);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -4981,14 +4956,14 @@ class _PaymentHistorySection extends ConsumerWidget {
       messenger.showSnackBar(
         const SnackBar(
           content: Text('Payment deleted & balance reversed successfully'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(
           content: Text('Delete failed: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -5005,27 +4980,27 @@ class _PaymentHistorySection extends ConsumerWidget {
     switch (paymentMode) {
       case 'cash':
         modeIcon = Icons.payments_rounded;
-        modeColor = Colors.green;
+        modeColor = AppColors.success;
         break;
       case 'upi':
         modeIcon = Icons.qr_code_rounded;
-        modeColor = Colors.purple;
+        modeColor = AppColors.accent;
         break;
       case 'bank_transfer':
         modeIcon = Icons.account_balance_rounded;
-        modeColor = Colors.blue;
+        modeColor = AppColors.info;
         break;
       case 'cheque':
         modeIcon = Icons.book_rounded;
-        modeColor = Colors.orange;
+        modeColor = AppColors.warning;
         break;
       case 'card':
         modeIcon = Icons.credit_card_rounded;
-        modeColor = Colors.teal;
+        modeColor = AppColors.mint;
         break;
       default:
         modeIcon = Icons.payments_rounded;
-        modeColor = Colors.green;
+        modeColor = AppColors.success;
     }
 
     return Container(
@@ -5054,7 +5029,7 @@ class _PaymentHistorySection extends ConsumerWidget {
                         fontWeight: FontWeight.w700, letterSpacing: 0.5)),
                 const SizedBox(height: 2),
                 Text(
-                    '${enteredAt.day}/${enteredAt.month}/${enteredAt.year} at ${enteredAt.hour.toString().padLeft(2, '0')}:${enteredAt.minute.toString().padLeft(2, '0')}',
+                    AppFormatters.formatDateTime(enteredAt),
                     style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface
                             .withValues(alpha: 0.5))),
@@ -5071,26 +5046,7 @@ class _PaymentHistorySection extends ConsumerWidget {
           ),
           Text(AppFormatters.formatCurrency(amount),
               style: theme.textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w900, color: Colors.green)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, ThemeData theme,
-      {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-          Text(value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: valueColor ?? theme.colorScheme.onSurface)),
+                  ?.copyWith(fontWeight: FontWeight.w900, color: AppColors.success)),
         ],
       ),
     );
@@ -5196,7 +5152,7 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
               Text('Note added successfully'),
             ],
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -5208,7 +5164,7 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
       if (mounted) {
         messenger.showSnackBar(SnackBar(
           content: Text('Failed to add note: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -5358,19 +5314,18 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                     final author = note['author'] as String;
                     final date = note['date'] as DateTime;
 
-                    final dateFormatted =
-                        '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+                    final dateFormatted = AppFormatters.formatDateTime(date);
 
                     return Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: isLatest
-                            ? const Color(0xFF5E5CE6).withValues(alpha: 0.08)
+                            ? AppColors.primary.withValues(alpha: 0.08)
                             : theme.colorScheme.surface.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(14),
                         border: isLatest
                             ? Border.all(
-                                color: const Color(0xFF5E5CE6)
+                                color: AppColors.primary
                                     .withValues(alpha: 0.2))
                             : null,
                       ),
@@ -5388,7 +5343,7 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: isLatest
-                                          ? const Color(0xFF5E5CE6)
+                                          ? AppColors.primary
                                           : theme.dividerColor,
                                     ),
                                   ),
@@ -5399,7 +5354,7 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 1,
                                       color: isLatest
-                                          ? const Color(0xFF5E5CE6)
+                                          ? AppColors.primary
                                           : theme.colorScheme.onSurface
                                               .withValues(alpha: 0.4),
                                     ),
@@ -5430,7 +5385,7 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                             children: [
                               CircleAvatar(
                                 radius: 10,
-                                backgroundColor: const Color(0xFF5E5CE6)
+                                backgroundColor: AppColors.primary
                                     .withValues(alpha: 0.1),
                                 child: Text(
                                   author.isNotEmpty
@@ -5439,7 +5394,7 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                                   style: const TextStyle(
                                       fontSize: 8,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF5E5CE6)),
+                                      color: AppColors.primary),
                                 ),
                               ),
                               const SizedBox(width: 6),
@@ -5479,7 +5434,7 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                           style: TextStyle(
                               fontSize: 11,
                               color: _notesController.text.length > 500
-                                  ? Colors.red
+                                  ? AppColors.error
                                   : theme.colorScheme.onSurface
                                       .withValues(alpha: 0.4))),
                     ),
@@ -5518,13 +5473,13 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                         icon: const Icon(Icons.add_rounded, size: 18),
                         label: const Text('Add Note'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5E5CE6),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                           disabledBackgroundColor:
-                              const Color(0xFF5E5CE6).withValues(alpha: 0.5),
+                              AppColors.primary.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -5549,11 +5504,11 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color:
-                                const Color(0xFF5E5CE6).withValues(alpha: 0.1),
+                                AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.add_rounded,
-                              size: 18, color: Color(0xFF5E5CE6)),
+                              size: 18, color: AppColors.primary),
                         ),
                         const SizedBox(width: 12),
                         Text('Add internal note...',
@@ -5605,7 +5560,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
     // Loan creation
     activities.add(_ActivityItem(
       icon: Icons.add_circle_rounded,
-      color: const Color(0xFF5E5CE6),
+      color: AppColors.primary,
       title: 'Loan Created',
       subtitle: 'Loan ${loan.loanNumber} created',
       date: loan.createdAt,
@@ -5616,7 +5571,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
     if (loan.disbursementDate != null) {
       activities.add(_ActivityItem(
         icon: Icons.currency_rupee_rounded,
-        color: Colors.green,
+        color: AppColors.success,
         title: 'Amount Disbursed',
         subtitle: AppFormatters.formatCurrency(loan.amount),
         date: loan.disbursementDate!,
@@ -5628,7 +5583,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
     if (loan.status == LoanStatus.active) {
       activities.add(_ActivityItem(
         icon: Icons.check_circle_rounded,
-        color: Colors.green,
+        color: AppColors.success,
         title: 'Loan Activated',
         subtitle: 'Status changed to Active',
         date: loan.updatedAt,
@@ -5637,7 +5592,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
     } else if (loan.status == LoanStatus.defaultStatus) {
       activities.add(_ActivityItem(
         icon: Icons.warning_rounded,
-        color: Colors.red,
+        color: AppColors.error,
         title: 'Loan Defaulted',
         subtitle: 'Status changed to Default',
         date: loan.updatedAt,
@@ -5646,7 +5601,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
     } else if (loan.status == LoanStatus.restructured) {
       activities.add(_ActivityItem(
         icon: Icons.settings_suggest_rounded,
-        color: Colors.purple,
+        color: AppColors.accent,
         title: 'Loan Restructured',
         subtitle: 'Terms modified',
         date: loan.updatedAt,
@@ -5671,7 +5626,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
       for (final emi in paidEmis) {
         activities.add(_ActivityItem(
           icon: Icons.payment_rounded,
-          color: Colors.blue,
+          color: AppColors.info,
           title: 'EMI #${emi.emiNumber} Paid',
           subtitle:
               '${AppFormatters.formatCurrency(emi.emiAmount)} via ${(emi.paymentMode?.name ?? 'unknown').replaceAll('_', ' ').split(' ').map((s) => s[0].toUpperCase() + s.substring(1)).join(' ')}',
@@ -5681,16 +5636,15 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
       }
 
       final overdueEmis = schedule
-          .where((e) =>
-              e.status == EMIStatus.overdue || e.status == EMIStatus.waived)
+          .where((e) => e.status == EMIStatus.overdue)
           .toList();
       for (final emi in overdueEmis) {
         activities.add(_ActivityItem(
           icon: Icons.warning_amber_rounded,
-          color: Colors.red,
+          color: AppColors.error,
           title: 'EMI #${emi.emiNumber} Overdue',
           subtitle:
-              'Due: ${emi.dueDate.day}/${emi.dueDate.month}/${emi.dueDate.year}',
+              'Due: ${AppFormatters.formatDate(emi.dueDate)}',
           date: emi.dueDate,
           type: 'alert',
         ));
@@ -5702,7 +5656,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
       final noteCount = loan.remarks!.split(' | ').length;
       activities.add(_ActivityItem(
         icon: Icons.note_add_rounded,
-        color: Colors.orange,
+        color: AppColors.warning,
         title: 'Notes Added',
         subtitle: '$noteCount internal note${noteCount > 1 ? 's' : ''}',
         date: loan.updatedAt,
@@ -5736,16 +5690,16 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
                   'All (${allActivities.length})', 'all', theme),
               const SizedBox(width: 8),
               _buildActivityFilterChip('Payments', 'payment', theme,
-                  color: Colors.blue),
+                  color: AppColors.info),
               const SizedBox(width: 8),
               _buildActivityFilterChip('Status', 'status', theme,
-                  color: Colors.green),
+                  color: AppColors.success),
               const SizedBox(width: 8),
               _buildActivityFilterChip('Alerts', 'alert', theme,
-                  color: Colors.red),
+                  color: AppColors.error),
               const SizedBox(width: 8),
               _buildActivityFilterChip('Notes', 'note', theme,
-                  color: Colors.orange),
+                  color: AppColors.warning),
             ],
           ),
         ),
@@ -5894,7 +5848,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
                           theme.colorScheme.onSurface.withValues(alpha: 0.6))),
               const SizedBox(height: 2),
               Text(
-                '${activity.date.day}/${activity.date.month}/${activity.date.year} at ${activity.date.hour.toString().padLeft(2, '0')}:${activity.date.minute.toString().padLeft(2, '0')}',
+                AppFormatters.formatDateTime(activity.date),
                 style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     fontSize: 11),

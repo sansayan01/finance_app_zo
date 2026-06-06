@@ -101,15 +101,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     final mq = MediaQuery.of(context);
     final statusBarHeight = mq.padding.top;
 
-    // Estimated interest for breakdown chart.
-    // TODO: Use loan.totalInterest / loan.totalRepayable from CustomerLoanModel
-    // once those fields are added to the model. The current formula only works
-    // for flat-rate loans. For reducing-balance loans the actual interest may differ.
-    final estimatedTotal = (loan.emiAmount > 0 && loan.tenureMonths > 0)
-        ? loan.emiAmount * loan.tenureMonths
-        : loan.amount;
-    final estimatedInterest =
-        (estimatedTotal - loan.amount).clamp(0.0, double.infinity);
+    final totalInterest = loan.totalInterest;
 
     final emiScheduleAsync =
         ref.watch(customerEmiScheduleProvider(widget.loanId));
@@ -162,7 +154,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                 child: CustomerLoanBreakdownChart(
                   paid: paidAmount,
                   outstanding: loan.outstandingBalance,
-                  interest: estimatedInterest,
+                  interest: totalInterest,
                 ),
               ),
             ),

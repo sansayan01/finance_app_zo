@@ -196,7 +196,7 @@ class _CustomerTransactionSearchState
           // ── Animated filter section ──
           SizeTransition(
             sizeFactor: _expandAnimation,
-            axisAlignment: -1,
+            alignment: Alignment.topCenter,
             child: FadeTransition(
               opacity: _expandAnimation,
               child: _buildFilterSection(theme, isDark),

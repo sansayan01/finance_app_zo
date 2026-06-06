@@ -516,6 +516,7 @@ class AdminOrgDetailPage extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
+    if (!context.mounted) return;
 
     final reason = await _showReasonDialog(
       context,

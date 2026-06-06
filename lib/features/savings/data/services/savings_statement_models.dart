@@ -65,7 +65,6 @@ class SavingsStatementPlanBlock {
   /// Falls back to simple balance-based estimate if installment counts are missing.
   double get interestAccrued {
     final paid = paidInstallments ?? 0;
-    final total = totalInstallments ?? 0;
     if (paid > 0 && monthlyDeposit > 0) {
       // Standard RD accrued interest (simple interest approximation)
       return monthlyDeposit * paid * (paid + 1) * interestRate / (12 * 100);

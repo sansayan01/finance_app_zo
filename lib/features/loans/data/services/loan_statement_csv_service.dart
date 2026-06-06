@@ -32,8 +32,8 @@ class LoanStatementCsvService {
     _writeln(buf, '# Loan Amount,${_money(loan.amount)}');
     _writeln(buf, '# Interest Rate,${loan.interestRate}%');
     _writeln(buf, '# Tenure,${loan.formattedTenure}');
-    _writeln(
-        buf, '# Period,${_dateFmt.format(periodStart)} - ${_dateFmt.format(periodEnd)}');
+    _writeln(buf,
+        '# Period,${_dateFmt.format(periodStart)} - ${_dateFmt.format(periodEnd)}');
     _writeln(buf, '');
 
     // EMI Schedule
@@ -54,26 +54,19 @@ class LoanStatementCsvService {
       _writeln(buf, 'Payment History');
       _writeln(buf, 'Date,Amount,Mode,Reference,Notes');
 
-      double runningOutstanding = loan.totalRepayable;
-      int idx = 1;
       for (final p in sorted) {
         _writeln(buf,
             '${_dateFmt.format(p.date)},${_money(p.amount)},${_escape(p.mode)},${_escape(p.referenceNumber ?? '')},${_escape(p.notes ?? '')}');
-        runningOutstanding -= p.amount;
-        idx++;
       }
       _writeln(buf, '');
     }
 
     // Summary
-    final totalPaid =
-        payments.fold<double>(0, (s, p) => s + p.amount);
+    final totalPaid = payments.fold<double>(0, (s, p) => s + p.amount);
     final totalPenalties =
         schedule.fold<double>(0, (s, e) => s + e.penaltyAmount);
-    final totalInterest =
-        schedule.fold<double>(0, (s, e) => s + e.interest);
-    final totalPrincipal =
-        schedule.fold<double>(0, (s, e) => s + e.principal);
+    final totalInterest = schedule.fold<double>(0, (s, e) => s + e.interest);
+    final totalPrincipal = schedule.fold<double>(0, (s, e) => s + e.principal);
 
     _writeln(buf, 'Summary');
     _writeln(buf, 'Total Paid,${_money(totalPaid)}');

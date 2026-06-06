@@ -115,7 +115,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         EMIStatus.overdue => 'OD',
         EMIStatus.waived => 'WAV',
         EMIStatus.pendingPayment => 'PEND',
-        _ => status.name.toUpperCase(),
       };
 
   @override
@@ -137,6 +136,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Widget build(BuildContext context) {
     final loanAsync = ref.watch(loanDetailProvider(widget.loanId));
     final scheduleAsync = ref.watch(emiScheduleProvider(widget.loanId));
+    final orgAsync = ref.watch(currentOrgProvider);
+    final org = orgAsync.value;
+    final orgSettings = org?['settings'] as Map<String, dynamic>?;
+    final foreclosureRate = (orgSettings?['foreclosure_rate'] as num?)?.toDouble() ?? kDefaultForeclosureRate;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -260,7 +263,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               _buildSectionHeader(
                                   'Prepayment & Foreclosure', theme),
                               const SizedBox(height: 16),
-                              _buildPrepaymentInfo(loan, theme),
+                              _buildPrepaymentInfo(loan, theme, foreclosureRate),
                               const SizedBox(height: 40),
                               _buildSectionHeader('Borrower Profile', theme),
                               const SizedBox(height: 16),
@@ -2977,9 +2980,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildPrepaymentInfo(LoanModel loan, ThemeData theme) {
-    // TODO: Make configurable per organization — currently hardcoded at 2%
-    final foreclosureCharge = loan.outstandingBalance * kDefaultForeclosureRate;
+  Widget _buildPrepaymentInfo(LoanModel loan, ThemeData theme, double foreclosureRate) {
+    final foreclosureCharge = loan.outstandingBalance * foreclosureRate;
     final totalForeclosureAmount = loan.outstandingBalance + foreclosureCharge;
     final totalInterest = loan.totalRepayable - loan.amount;
     final remainingInterest = loan.outstandingBalance > loan.amount ? loan.outstandingBalance - loan.amount : 0.0;
@@ -4016,7 +4018,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       final hasPayments = payments.isNotEmpty;
       final hasPaidEmis = schedule.any((e) => e.status == EMIStatus.paid);
 
-      if (!context.mounted) return;
+      if (!mounted) return;
       messenger.hideCurrentSnackBar();
 
       if (hasPayments || hasPaidEmis) {
@@ -4056,7 +4058,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         if (confirmCascade != true) return;
       }
 
-      if (!context.mounted) return;
+      if (!mounted) return;
     } catch (e) {
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
@@ -4138,6 +4140,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Future<void> _makeWhatsApp(LoanModel loan) async {
     final schedule = await ref.read(emiScheduleProvider(widget.loanId).future);
+    if (!mounted) return;
     final nextEmi = schedule.isNotEmpty
         ? schedule.firstWhere((e) => e.status != EMIStatus.paid,
             orElse: () => schedule.last)

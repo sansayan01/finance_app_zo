@@ -131,7 +131,8 @@
       "Bash(flutter analyze:*)",
       "mcp__supabase__apply_migration",
       "mcp__supabase__list_branches",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(python3:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

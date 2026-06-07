@@ -5,11 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/widgets/payment_mode_chips.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
-import '../../../savings/data/providers/savings_providers.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../../data/models/loan_model.dart';
 import '../providers/loan_providers.dart';
@@ -32,11 +31,8 @@ class CollectionSheet extends ConsumerStatefulWidget {
 class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   String _selectedMode = 'cash';
   bool _isSubmitting = false;
-  bool _isLoadingSchedule = true;
 
-  List<EMIScheduleModel> _unpaidEMIs = [];
   List<EMIScheduleModel> _allEMIs = [];
-  int _overdueCount = 0;
   /// IDs of EMIs the user has selected for payment.
   final Set<String> _selectedEmiIds = {};
 
@@ -50,30 +46,13 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     try {
       final schedule =
           await ref.read(emiScheduleProvider(widget.loan.id).future);
-      final today = DateTime.now();
-      // Strip time so we compare dates only (dueDate is midnight, today has time)
-      final todayDate = DateTime(today.year, today.month, today.day);
-      final unpaid = schedule
-          .where((e) => e.status != EMIStatus.paid)
-          .toList()
-        ..sort((a, b) => a.emiNumber.compareTo(b.emiNumber));
 
       if (mounted) {
         setState(() {
           _allEMIs = schedule;
-          _unpaidEMIs = unpaid;
-          _overdueCount =
-              unpaid.where((e) => e.dueDate.isBefore(todayDate)).length;
-          _isLoadingSchedule = false;
-
-          // Do NOT auto-select — user chooses via the calendar popup.
         });
       }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isLoadingSchedule = false);
-      }
-    }
+    } catch (_) {}
   }
 
   /// The currently selected unpaid EMIs (looked up from the full schedule).
@@ -92,6 +71,85 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  // ─── Theme Helpers ───
+  bool get _isDark =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  Color get _cardColor =>
+      _isDark ? AppColors.cardDark : AppColors.cardLight;
+
+  Color get _textPrimary =>
+      _isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+
+  Color get _textSecondary =>
+      _isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+
+  Color get _fillColor =>
+      _isDark ? AppColors.fillDark : AppColors.fillLight;
+
+  Color get _separator =>
+      _isDark ? AppColors.separatorDark : AppColors.separatorLight;
+
+  // ─── Premium Payment Mode Chip ───
+  Widget _buildPaymentModeChip({
+    required IconData icon,
+    required String label,
+    required String mode,
+  }) {
+    final isSelected = _selectedMode == mode;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMode = mode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: isSelected
+            ? BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                    spreadRadius: -2,
+                  ),
+                ],
+              )
+            : BoxDecoration(
+                color: _fillColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _separator,
+                  width: 1,
+                ),
+              ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected
+                  ? Colors.white
+                  : _textSecondary,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? Colors.white
+                    : _textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _submit() async {
@@ -215,7 +273,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       ref.invalidate(dashboardLoansProvider);
       ref.invalidate(activeLoansProvider);
       ref.invalidate(loanSummaryProvider);
-      ref.invalidate(allSavingsProvider);
 
       if (mounted) {
         HapticFeedback.heavyImpact();
@@ -259,27 +316,86 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Quick Collect',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+      // ─── 1. Premium Gradient AppBar ───
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(120),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.accent],
             ),
-            Text(
-              '${widget.loan.customerName} \u00b7 ${widget.loan.loanNumber}'
-              '${widget.loan.emiAmount > 0 ? ' \u00b7 EMI \u20b9${widget.loan.emiAmount.toStringAsFixed(0)}' : ''}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  // Close button with frosted glass circle
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.close_rounded,
+                          color: Colors.white, size: 22),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Quick Collect',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3)),
+                        const SizedBox(height: 4),
+                        // Frosted glass pill for customer info
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${widget.loan.customerName} \u00b7 ${widget.loan.loanNumber}',
+                            style: TextStyle(
+                                color:
+                                    Colors.white.withValues(alpha: 0.9),
+                                fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // EMI amount badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'EMI \u20b9${widget.loan.emiAmount.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.pop(context),
+          ),
         ),
       ),
       body: SafeArea(
@@ -290,124 +406,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             children: [
               const SizedBox(height: 8),
 
-              // Info row
-              if (!_isLoadingSchedule) ...[
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.12)),
-                  ),
-                  child: Row(
-                    children: [
-                      if (_overdueCount > 0) ...[
-                        const Icon(Icons.warning_amber_rounded,
-                            size: 16, color: AppColors.error),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$_overdueCount overdue',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.error,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                            width: 1, height: 14, color: Colors.grey.shade300),
-                        const SizedBox(width: 12),
-                      ],
-                      Text(
-                        'EMI \u20b9${widget.loan.emiAmount.toStringAsFixed(0)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_unpaidEMIs.isNotEmpty)
-                        Text(
-                          '${_unpaidEMIs.length} remaining',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ] else ...[
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2)),
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              // EMI payment summary
-              if (_selectedEMIs.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      AppColors.primary.withValues(alpha: 0.08),
-                      AppColors.primary.withValues(alpha: 0.03),
-                    ]),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.15)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _selectedEMIs.length == 1
-                            ? Icons.schedule_rounded
-                            : Icons.payments_rounded,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _selectedEMIs.length == 1
-                                  ? 'Paying EMI #${_primarySelectedEMI!.emiNumber} (${DateFormat('dd MMM').format(_primarySelectedEMI!.dueDate)})'
-                                  : 'Paying ${_selectedEMIs.length} EMIs',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${_selectedEMIs.length} \u00d7 ${currencyFormat.format(widget.loan.emiAmount)} = ${currencyFormat.format(_totalAmount)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.primary.withValues(alpha: 0.7),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
               // EMI selector (scrollable)
               Expanded(
                 child: SingleChildScrollView(
@@ -415,7 +413,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                   child: EmiPaymentSelector(
                     emis: _allEMIs,
                     emiAmount: widget.loan.emiAmount,
-                    multiSelect: true,
                     initialSelectedIds: _selectedEmiIds.toList(),
                     onSelectionChanged: (selected) {
                       setState(() {
@@ -430,130 +427,220 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
               const SizedBox(height: 16),
 
-              // Read-only total amount
-              const Text('Total Amount',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 8),
-              TextFormField(
-                readOnly: true,
-                controller:
-                    TextEditingController(text: _totalAmount.toStringAsFixed(0)),
-                keyboardType: TextInputType.none,
-                decoration: InputDecoration(
-                  prefixText: '\u20b9 ',
-                  prefixStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
-                    fontSize: 20,
-                  ),
-                  hintText: 'Amount',
-                  filled: true,
-                  fillColor: AppColors.success.withValues(alpha: 0.06),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide:
-                        const BorderSide(color: AppColors.success, width: 2),
-                  ),
-                ),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+              // ─── 4. Total Amount → Premium Display ───
+              GlassCard(
+                padding: const EdgeInsets.all(14),
+                borderRadius: 16,
+                backgroundColor: _totalAmount > 0
+                    ? AppColors.success.withValues(alpha: 0.06)
+                    : _cardColor,
+                borderColor: _totalAmount > 0
+                    ? AppColors.success.withValues(alpha: 0.2)
+                    : null,
+                elevated: _totalAmount > 0,
+                child: Row(
+                  children: [
+                    // Gradient circle with currency symbol
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _totalAmount > 0
+                              ? AppColors.successGradient
+                              : AppColors.premiumGradient,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '\u20b9',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Amount',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          AnimatedSwitcher(
+                            duration:
+                                const Duration(milliseconds: 300),
+                            child: Text(
+                              currencyFormat
+                                  .format(_totalAmount),
+                              key: ValueKey(
+                                  _totalAmount.toStringAsFixed(0)),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: _totalAmount > 0
+                                    ? AppColors.success
+                                    : _textPrimary,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Payment mode chips
+              // ─── 5. Payment Mode Chips → Gradient Selection ───
               const Text('Payment Mode',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 13)),
               const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
-                    child: PaymentModeChip(
+                    child: _buildPaymentModeChip(
                       icon: Icons.money_rounded,
                       label: 'Cash',
-                      isSelected: _selectedMode == 'cash',
-                      onTap: () => setState(() => _selectedMode = 'cash'),
+                      mode: 'cash',
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: PaymentModeChip(
+                    child: _buildPaymentModeChip(
                       icon: Icons.qr_code_rounded,
                       label: 'UPI',
-                      isSelected: _selectedMode == 'upi',
-                      onTap: () => setState(() => _selectedMode = 'upi'),
+                      mode: 'upi',
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: PaymentModeChip(
+                    child: _buildPaymentModeChip(
                       icon: Icons.account_balance_rounded,
                       label: 'Bank',
-                      isSelected: _selectedMode == 'bank_transfer',
-                      onTap: () =>
-                          setState(() => _selectedMode = 'bank_transfer'),
+                      mode: 'bank_transfer',
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: PaymentModeChip(
+                    child: _buildPaymentModeChip(
                       icon: Icons.receipt_rounded,
                       label: 'Cheque',
-                      isSelected: _selectedMode == 'cheque',
-                      onTap: () => setState(() => _selectedMode = 'cheque'),
+                      mode: 'cheque',
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // Action buttons
+              // ─── 6. Action Buttons → Premium Style ───
               Row(
                 children: [
+                  // Cancel — frosted glass
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: _fillColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _separator,
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: _textSecondary,
+                            ),
+                          ),
                         ),
                       ),
-                      child: const Text('Cancel'),
                     ),
                   ),
                   const SizedBox(width: 12),
+                  // Collect — gradient with glow
                   Expanded(
                     flex: 2,
-                    child: ElevatedButton.icon(
-                      onPressed:
-                          _isSubmitting || _selectedEmiIds.isEmpty ? null : _submit,
-                      icon: _isSubmitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.check_circle_rounded, size: 18),
-                      label: Text(
-                        _isSubmitting
-                            ? 'Processing...'
-                            : 'Collect ${currencyFormat.format(_totalAmount)}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(0, 52),
-                        backgroundColor: AppColors.success,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    child: GestureDetector(
+                      onTap: _isSubmitting || _selectedEmiIds.isEmpty
+                          ? null
+                          : _submit,
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [
+                            AppColors.success,
+                            AppColors.mint,
+                          ]),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: _isSubmitting ||
+                                  _selectedEmiIds.isEmpty
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: AppColors.success
+                                        .withValues(alpha: 0.35),
+                                    blurRadius: 16,
+                                    offset:
+                                        const Offset(0, 6),
+                                    spreadRadius: -4,
+                                  ),
+                                ],
+                        ),
+                        child: Center(
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize:
+                                      MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                        Icons
+                                            .check_circle_rounded,
+                                        size: 20,
+                                        color:
+                                            Colors.white),
+                                    const SizedBox(
+                                        width: 8),
+                                    Text(
+                                      'Collect ${currencyFormat.format(_totalAmount)}',
+                                      style: const TextStyle(
+                                        fontWeight:
+                                            FontWeight.w700,
+                                        fontSize: 15,
+                                        color:
+                                            Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
                     ),

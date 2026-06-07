@@ -18,6 +18,9 @@ import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../branch_manager/data/providers/branch_payment_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
 import '../../data/providers/staff_providers.dart';
+import '../../../savings/data/models/savings_model.dart';
+import '../../../loans/data/models/loan_model.dart';
+import '../../../loans/presentation/widgets/collection_sheet.dart';
 
 class StaffTodayPaymentsPage extends ConsumerStatefulWidget {
   const StaffTodayPaymentsPage({super.key});
@@ -386,7 +389,77 @@ class _StaffTodayPaymentsPageState
     );
   }
 
+  Future<void> _openSavingsCollection(TodayPayment payment) async {
+    // Fetch the full savings plan
+    final client = ref.read(supabaseClientProvider);
+    final planId = payment.id.endsWith('_today')
+        ? payment.id.substring(0, payment.id.length - 6)
+        : payment.id;
+    try {
+      final response = await client
+          .from('savings_plans')
+          .select()
+          .eq('id', planId)
+          .maybeSingle();
+      if (response != null && mounted) {
+        final plan = SavingsModel.fromJson(response);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => CollectionSheet.savings(savingsPlan: plan),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load savings plan: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _openEmiCollection(TodayPayment payment) async {
+    if (payment.loanId == null) return;
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final response = await client
+          .from('loans')
+          .select()
+          .eq('id', payment.loanId!)
+          .maybeSingle();
+      if (response != null && mounted) {
+        final loan = LoanModel.fromJson(response);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => CollectionSheet(loan: loan),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load loan: $e')),
+        );
+      }
+    }
+  }
+
   void _showQuickCollect(TodayPayment payment) {
+    // For savings payments, open the premium CollectionSheet
+    if (payment.type == PaymentType.savings) {
+      _openSavingsCollection(payment);
+      return;
+    }
+
+    // For EMI payments, open the premium CollectionSheet if we have a loan
+    if (payment.type == PaymentType.emi && payment.loanId != null) {
+      _openEmiCollection(payment);
+      return;
+    }
+
+    // Fallback: legacy bottom sheet for edge cases
     int installmentCount = 1;
     final amountController = TextEditingController(
         text: payment.amountExpected.toStringAsFixed(0));

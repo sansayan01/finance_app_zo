@@ -109,11 +109,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   String _selectedEmiFilter = 'all';
 
   /// Returns a short, display-friendly label for an [EMIStatus].
+  /// Always pass [EMIScheduleModel.effectiveStatus] (not the raw `status`)
+  /// so the label reflects the actual overdue state computed from `dueDate`.
   String _emiStatusLabel(EMIStatus status) => switch (status) {
         EMIStatus.paid => 'PAID',
         EMIStatus.pending => 'DUE',
-        EMIStatus.overdue => 'OD',
-        EMIStatus.waived => 'WAV',
+        EMIStatus.overdue => 'OVERDUE',
+        EMIStatus.waived => 'WAIVED',
         EMIStatus.pendingPayment => 'PEND',
       };
 
@@ -486,7 +488,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
 
         final now = DateTime.now();
-        final unpaidEmis = schedule.where((e) => e.status != EMIStatus.paid).toList();
+        final unpaidEmis = schedule
+            .where((e) =>
+                e.status != EMIStatus.paid && e.status != EMIStatus.waived)
+            .toList();
         if (unpaidEmis.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -679,8 +684,14 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     return scheduleAsync.when(
       data: (schedule) {
         final nextEmi = schedule.isNotEmpty
-            ? schedule.where((e) => e.status != EMIStatus.paid).isNotEmpty
-                ? schedule.firstWhere((e) => e.status != EMIStatus.paid)
+            ? schedule
+                .where((e) =>
+                    e.status != EMIStatus.paid &&
+                    e.status != EMIStatus.waived)
+                .isNotEmpty
+                ? schedule.firstWhere((e) =>
+                    e.status != EMIStatus.paid &&
+                    e.status != EMIStatus.waived)
                 : null
             : null;
         return Padding(
@@ -764,8 +775,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         // Find current EMI (next upcoming or first overdue)
         int currentEmiIndex = -1;
         for (int i = 0; i < schedule.length; i++) {
-          if (schedule[i].status == EMIStatus.pending ||
-              schedule[i].status == EMIStatus.overdue) {
+          if (schedule[i].status != EMIStatus.paid &&
+              schedule[i].status != EMIStatus.waived) {
             currentEmiIndex = i;
             break;
           }
@@ -806,8 +817,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Widget _buildTimelineCard(EMIScheduleModel emi, ThemeData theme,
       {bool isCurrent = false, VoidCallback? onTap}) {
     final isPaid = emi.status == EMIStatus.paid;
-    final isOverdue =
-        emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
+    final isOverdue = emi.isOverdue;
     final color = isPaid
         ? AppColors.success
         : (isOverdue ? AppColors.error : theme.colorScheme.primary);
@@ -847,7 +857,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8)),
-                  child: Text(emi.status.name.toUpperCase(),
+                  child: Text(_emiStatusLabel(emi.effectiveStatus),
                       style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -908,8 +918,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   void _showEMIDetailSheet(
       EMIScheduleModel emi, LoanModel loan, ThemeData theme) {
     final isPaid = emi.status == EMIStatus.paid;
-    final isOverdue =
-        emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
+    final isOverdue = emi.isOverdue;
 
     showModalBottomSheet(
       context: context,
@@ -984,7 +993,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               Text('EMI #${emi.emiNumber}',
                                   style: theme.textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.w900)),
-                              Text(emi.status.name.toUpperCase(),
+                              Text(_emiStatusLabel(emi.effectiveStatus),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                       color: isPaid
                                           ? AppColors.success
@@ -1402,11 +1411,12 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final totalEmis = schedule.length;
         final paidCount =
             schedule.where((e) => e.status == EMIStatus.paid).length;
-        final overdueCount = schedule
-            .where((e) => e.status == EMIStatus.overdue)
+        final overdueCount = schedule.where((e) => e.isOverdue).length;
+        final upcomingCount = schedule
+            .where((e) =>
+                e.status != EMIStatus.paid &&
+                !e.isOverdue)
             .length;
-        final upcomingCount =
-            schedule.where((e) => e.status == EMIStatus.pending).length;
         final totalPaid = schedule
             .where((e) => e.status == EMIStatus.paid)
             .fold<double>(0, (s, e) => s + e.emiAmount);
@@ -1754,13 +1764,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 schedule.where((e) => e.status == EMIStatus.paid).toList();
             break;
           case 'overdue':
-            filtered = schedule
-                .where((e) => e.status == EMIStatus.overdue)
-                .toList();
+            filtered = schedule.where((e) => e.isOverdue).toList();
             break;
           case 'upcoming':
             filtered = schedule
-                .where((e) => e.status == EMIStatus.pending)
+                .where((e) =>
+                    e.status != EMIStatus.paid &&
+                    !e.isOverdue)
                 .toList();
             break;
           default:
@@ -1769,11 +1779,12 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
         final paidCount =
             schedule.where((e) => e.status == EMIStatus.paid).length;
-        final overdueCount = schedule
-            .where((e) => e.status == EMIStatus.overdue)
+        final overdueCount = schedule.where((e) => e.isOverdue).length;
+        final upcomingCount = schedule
+            .where((e) =>
+                e.status != EMIStatus.paid &&
+                !e.isOverdue)
             .length;
-        final upcomingCount =
-            schedule.where((e) => e.status == EMIStatus.pending).length;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1887,8 +1898,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Widget _buildEMICard(
       EMIScheduleModel emi, ThemeData theme, LoanModel loan, int index) {
     final isPaid = emi.status == EMIStatus.paid;
-    final isOverdue =
-        emi.status == EMIStatus.overdue || emi.status == EMIStatus.waived;
+    final isOverdue = emi.isOverdue;
     final accentColor = isPaid
         ? AppColors.success
         : (isOverdue ? AppColors.error : theme.colorScheme.primary);
@@ -2199,7 +2209,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Widget _buildEMIRow(EMIScheduleModel emi, ThemeData theme) {
     final isPaid = emi.status == EMIStatus.paid;
-    final isOverdue = emi.status == EMIStatus.overdue;
+    final isOverdue = emi.isOverdue;
     final color = isPaid
         ? AppColors.success
         : (isOverdue ? AppColors.error : theme.colorScheme.primary);
@@ -2255,7 +2265,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                      _emiStatusLabel(emi.status),
+                      _emiStatusLabel(emi.effectiveStatus),
                       style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -2292,9 +2302,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final totalEmis = schedule.length;
         final paidEmis =
             schedule.where((e) => e.status == EMIStatus.paid).toList();
-        final overdueEmis = schedule
-            .where((e) => e.status == EMIStatus.overdue)
-            .toList();
+        final overdueEmis = schedule.where((e) => e.isOverdue).toList();
 
         // Payment consistency score (% paid on time)
         final paidOnTime = paidEmis.where((e) {
@@ -2636,7 +2644,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         int overdueCount = 0;
 
         for (final emi in schedule) {
-          if (emi.status == EMIStatus.overdue) {
+          if (emi.isOverdue) {
             overdueCount++;
             final daysPast = now.difference(emi.dueDate).inDays;
             if (daysPast > maxDaysPastDue) {
@@ -2798,9 +2806,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
     return scheduleAsync.when(
       data: (schedule) {
-        final overdueEmis = schedule
-            .where((e) => e.status == EMIStatus.overdue)
-            .toList();
+        final overdueEmis = schedule.where((e) => e.isOverdue).toList();
 
         double totalPenalty =
             schedule.fold<double>(0, (s, e) => s + e.penaltyAmount);
@@ -3231,12 +3237,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   // --- Handlers ---
   void _showCollectionSheet(
       BuildContext context, LoanModel loan, EMIScheduleModel? emi) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => CollectionSheet(loan: loan, emi: emi),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => CollectionSheet(loan: loan, emi: emi),
+      ),
     );
   }
 
@@ -5638,9 +5643,7 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
         ));
       }
 
-      final overdueEmis = schedule
-          .where((e) => e.status == EMIStatus.overdue)
-          .toList();
+        final overdueEmis = schedule.where((e) => e.isOverdue).toList();
       for (final emi in overdueEmis) {
         activities.add(_ActivityItem(
           icon: Icons.warning_amber_rounded,

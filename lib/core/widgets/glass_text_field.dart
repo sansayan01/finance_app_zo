@@ -12,6 +12,7 @@ class GlassTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
   final int maxLines;
+  final List<String>? autofillHints;
 
   const GlassTextField({
     super.key,
@@ -25,6 +26,7 @@ class GlassTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.maxLines = 1,
+    this.autofillHints,
   });
 
   @override
@@ -36,6 +38,7 @@ class GlassTextField extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       maxLines: maxLines,
+      autofillHints: autofillHints,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,

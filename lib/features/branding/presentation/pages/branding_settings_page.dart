@@ -277,6 +277,7 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
         Expanded(
           child: TextFormField(
             controller: controller,
+            autofillHints: const [AutofillHints.name],
             decoration: InputDecoration(
               labelText: label,
               border: const OutlineInputBorder(),
@@ -322,6 +323,7 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
           children: [
             TextFormField(
               controller: _loginTitleController,
+              autofillHints: const [AutofillHints.name],
               decoration: const InputDecoration(
                 labelText: 'Login Title',
                 border: OutlineInputBorder(),
@@ -330,6 +332,7 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _loginSubtitleController,
+              autofillHints: const [AutofillHints.name],
               decoration: const InputDecoration(
                 labelText: 'Login Subtitle',
                 border: OutlineInputBorder(),
@@ -382,6 +385,7 @@ class _BrandingSettingsPageState extends ConsumerState<BrandingSettingsPage> {
           children: [
             TextFormField(
               controller: _customDomainController,
+              autofillHints: const [AutofillHints.url],
               decoration: InputDecoration(
                 labelText: 'Custom Domain',
                 hintText: 'app.yourcompany.com',

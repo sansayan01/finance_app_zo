@@ -297,6 +297,7 @@ class _OrganizationProfilePageState
                         label: 'Website / Domain',
                         hint: 'example.com',
                         keyboardType: TextInputType.url,
+                        autofillHints: const [AutofillHints.url],
                       ),
                     ],
                   ).animate().fadeIn().slideY(begin: 0.04, end: 0),
@@ -341,6 +342,7 @@ class _OrganizationProfilePageState
                         controller: _addressCtrl,
                         label: 'Street Address',
                         maxLines: 2,
+                        autofillHints: const [AutofillHints.streetAddressLine1],
                       ),
                       Row(
                         children: [
@@ -348,6 +350,7 @@ class _OrganizationProfilePageState
                             child: _TextField(
                               controller: _cityCtrl,
                               label: 'City',
+                              autofillHints: const [AutofillHints.addressCity],
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -355,6 +358,7 @@ class _OrganizationProfilePageState
                             child: _TextField(
                               controller: _stateCtrl,
                               label: 'State',
+                              autofillHints: const [AutofillHints.addressState],
                             ),
                           ),
                         ],
@@ -367,6 +371,7 @@ class _OrganizationProfilePageState
                           FilteringTextInputFormatter.digitsOnly
                         ],
                         maxLength: 6,
+                        autofillHints: const [AutofillHints.postalCode],
                       ),
                     ],
                   ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.04, end: 0),
@@ -379,11 +384,13 @@ class _OrganizationProfilePageState
                         controller: _phoneCtrl,
                         label: 'Phone',
                         keyboardType: TextInputType.phone,
+                        autofillHints: const [AutofillHints.telephoneNumber],
                       ),
                       _TextField(
                         controller: _emailCtrl,
                         label: 'Email',
                         keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return null;
                           final ok = RegExp(r'^[^@]+@[^@]+\.[^@]+')
@@ -541,7 +548,10 @@ class _TextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.validator,
     this.inputFormatters,
+    this.autofillHints,
   });
+
+  final List<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -555,6 +565,7 @@ class _TextField extends StatelessWidget {
         textCapitalization: textCapitalization,
         validator: validator,
         inputFormatters: inputFormatters,
+        autofillHints: autofillHints,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,

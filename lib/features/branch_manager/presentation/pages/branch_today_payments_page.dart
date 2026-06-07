@@ -624,6 +624,7 @@ class _BranchTodayPaymentsPageState
                 TextFormField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
+                  autofillHints: const [AutofillHints.transactionAmount],
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly
                   ],

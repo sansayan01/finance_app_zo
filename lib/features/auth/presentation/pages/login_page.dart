@@ -293,6 +293,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   icon: Icons.alternate_email_rounded,
                   isDark: isDark,
                   primary: primary,
+                  autofillHints: const [AutofillHints.email],
                 ),
                 const SizedBox(height: 24),
                 _buildField(
@@ -303,6 +304,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   isDark: isDark,
                   primary: primary,
                   obscureText: _obscurePassword,
+                  autofillHints: const [AutofillHints.password],
                   suffix: IconButton(
                     icon: Icon(
                         _obscurePassword
@@ -341,6 +343,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     required Color primary,
     bool obscureText = false,
     Widget? suffix,
+    List<String>? autofillHints,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,6 +361,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         TextFormField(
           controller: controller,
           obscureText: obscureText,
+          autofillHints: autofillHints,
           style: TextStyle(
             color: isDark ? Colors.white : Colors.black,
             fontWeight: FontWeight.w600,

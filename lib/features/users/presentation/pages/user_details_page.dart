@@ -1224,6 +1224,7 @@ class UserDetailsPage extends ConsumerWidget {
                     controller: passwordController,
                     obscureText: obscurePassword,
                     onChanged: (_) => setState(() {}),
+                    autofillHints: const [AutofillHints.newPassword],
                     decoration: InputDecoration(
                       labelText: 'New Password',
                       hintText: 'Min 6 characters',
@@ -1247,6 +1248,7 @@ class UserDetailsPage extends ConsumerWidget {
                     controller: confirmController,
                     obscureText: obscurePassword,
                     onChanged: (_) => setState(() {}),
+                    autofillHints: const [AutofillHints.newPassword],
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
                       border: OutlineInputBorder(

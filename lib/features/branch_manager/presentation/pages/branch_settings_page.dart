@@ -610,6 +610,7 @@ class BranchSettingsPage extends ConsumerWidget {
                   TextFormField(
                     controller: currentPwController,
                     obscureText: obscureCurrent,
+                    autofillHints: const [AutofillHints.password],
                     decoration: InputDecoration(
                       labelText: 'Current Password',
                       prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -633,6 +634,7 @@ class BranchSettingsPage extends ConsumerWidget {
                   TextFormField(
                     controller: newPwController,
                     obscureText: obscureNew,
+                    autofillHints: const [AutofillHints.newPassword],
                     decoration: InputDecoration(
                       labelText: 'New Password',
                       prefixIcon: const Icon(Icons.lock, size: 20),
@@ -658,6 +660,7 @@ class BranchSettingsPage extends ConsumerWidget {
                   TextFormField(
                     controller: confirmPwController,
                     obscureText: obscureConfirm,
+                    autofillHints: const [AutofillHints.newPassword],
                     decoration: InputDecoration(
                       labelText: 'Confirm New Password',
                       prefixIcon: const Icon(Icons.lock, size: 20),
@@ -831,6 +834,7 @@ class BranchSettingsPage extends ConsumerWidget {
               controller: collectionController,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              autofillHints: const [AutofillHints.transactionAmount],
               decoration: InputDecoration(
                 labelText: 'Monthly Collection Target',
                 prefixText: '\u20B9 ',
@@ -845,6 +849,7 @@ class BranchSettingsPage extends ConsumerWidget {
               controller: disbursementController,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              autofillHints: const [AutofillHints.transactionAmount],
               decoration: InputDecoration(
                 labelText: 'Monthly Disbursement Target',
                 prefixText: '\u20B9 ',
@@ -859,6 +864,7 @@ class BranchSettingsPage extends ConsumerWidget {
               controller: memberController,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              autofillHints: const [AutofillHints.transactionAmount],
               decoration: InputDecoration(
                 labelText: 'New Members Target',
                 border: OutlineInputBorder(

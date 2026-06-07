@@ -1,0 +1,52 @@
+# Lighthouse fixes:
+# - Cache-Control with 'immutable' directive for hashed/static assets
+# - URL patterns matching Flutter's content-hash filenames
+# - Security headers
+
+/*
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; frame-ancestors 'self'
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)
+
+# HTML and bootstrap files - no-cache to pick up updates quickly
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+
+/flutter_bootstrap.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/flutter.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/flutter_service_worker.js
+  Cache-Control: no-cache
+
+# Manifest files - no-cache for updates
+/*.json
+  Cache-Control: no-cache, must-revalidate
+
+# Hashed static assets - immutable for long cache
+# Flutter content-hash filenames (e.g., main.dart.js, flutter*.js)
+/main.dart*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/manifest*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/canvaskit/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Flutter CSS and custom styles - immutable (hash-based on deploy)
+/style.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/styles.css
+  Cache-Control: public, max-age=31536000, immutable

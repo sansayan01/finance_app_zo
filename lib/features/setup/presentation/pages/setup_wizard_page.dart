@@ -401,6 +401,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     int? maxLength,
     List<TextInputFormatter>? inputFormatters,
     bool required = true,
+    List<String>? autofillHints,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -409,6 +410,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         keyboardType: keyboardType,
         maxLength: maxLength,
         inputFormatters: inputFormatters,
+        autofillHints: autofillHints,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, size: 20),
@@ -444,6 +446,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               controller: _orgAddressController,
               label: 'Address',
               icon: Icons.location_on_outlined,
+              autofillHints: const [AutofillHints.streetAddressLine1],
             ),
             Row(
               children: [
@@ -452,6 +455,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     controller: _orgCityController,
                     label: 'City',
                     icon: Icons.location_city_outlined,
+                    autofillHints: const [AutofillHints.addressCity],
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -460,6 +464,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     controller: _orgStateController,
                     label: 'State',
                     icon: Icons.map_outlined,
+                    autofillHints: const [AutofillHints.addressState],
                   ),
                 ),
               ],
@@ -474,6 +479,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     keyboardType: TextInputType.number,
                     maxLength: 6,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    autofillHints: const [AutofillHints.postalCode],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Pincode is required';
@@ -492,6 +498,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     keyboardType: TextInputType.phone,
                     maxLength: 10,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    autofillHints: const [AutofillHints.telephoneNumber],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Phone is required';
@@ -508,6 +515,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               label: 'Organization Email',
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Email is required';
@@ -549,6 +557,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               keyboardType: TextInputType.phone,
               maxLength: 10,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              autofillHints: const [AutofillHints.telephoneNumber],
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Phone is required';
@@ -561,6 +570,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               controller: _ownerAddressController,
               label: 'Address',
               icon: Icons.home_outlined,
+              autofillHints: const [AutofillHints.streetAddressLine1],
             ),
             Row(
               children: [
@@ -569,6 +579,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     controller: _ownerCityController,
                     label: 'City',
                     icon: Icons.location_city_outlined,
+                    autofillHints: const [AutofillHints.addressCity],
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -577,6 +588,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     controller: _ownerStateController,
                     label: 'State',
                     icon: Icons.map_outlined,
+                    autofillHints: const [AutofillHints.addressState],
                   ),
                 ),
               ],
@@ -588,6 +600,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               keyboardType: TextInputType.number,
               maxLength: 6,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              autofillHints: const [AutofillHints.postalCode],
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Pincode is required';
@@ -664,6 +677,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               controller: _branchAddressController,
               label: 'Branch Address',
               icon: Icons.location_on_outlined,
+              autofillHints: const [AutofillHints.streetAddressLine1],
             ),
             Row(
               children: [
@@ -672,6 +686,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     controller: _branchCityController,
                     label: 'City',
                     icon: Icons.location_city_outlined,
+                    autofillHints: const [AutofillHints.addressCity],
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -680,6 +695,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     controller: _branchStateController,
                     label: 'State',
                     icon: Icons.map_outlined,
+                    autofillHints: const [AutofillHints.addressState],
                   ),
                 ),
               ],
@@ -694,6 +710,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     keyboardType: TextInputType.number,
                     maxLength: 6,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    autofillHints: const [AutofillHints.postalCode],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Pincode is required';
@@ -712,6 +729,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     keyboardType: TextInputType.phone,
                     maxLength: 10,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    autofillHints: const [AutofillHints.telephoneNumber],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Phone is required';
@@ -728,6 +746,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               label: 'Branch Email (Optional)',
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
               required: false,
             ),
             const SizedBox(height: 16),

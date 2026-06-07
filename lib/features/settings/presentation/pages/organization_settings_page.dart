@@ -361,6 +361,7 @@ class _OrganizationSettingsPageState
           label: 'Website / Domain',
           hint: 'example.com',
           keyboardType: TextInputType.url,
+          autofillHints: const [AutofillHints.url],
         ),
       ],
     ).animate().fadeIn().slideY(begin: 0.04, end: 0);
@@ -419,15 +420,18 @@ class _OrganizationSettingsPageState
           controller: _addressCtrl,
           label: 'Street Address',
           maxLines: 2,
+          autofillHints: const [AutofillHints.streetAddressLine1],
         ),
         Row(
           children: [
             Expanded(
-              child: _OrgTextField(controller: _cityCtrl, label: 'City'),
+              child: _OrgTextField(controller: _cityCtrl, label: 'City',
+                  autofillHints: const [AutofillHints.addressCity]),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _OrgTextField(controller: _stateCtrl, label: 'State'),
+              child: _OrgTextField(controller: _stateCtrl, label: 'State',
+                  autofillHints: const [AutofillHints.addressState]),
             ),
           ],
         ),
@@ -437,6 +441,7 @@ class _OrganizationSettingsPageState
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           maxLength: 6,
+          autofillHints: const [AutofillHints.postalCode],
         ),
       ],
     ).animate(delay: 150.ms).fadeIn().slideY(begin: 0.04, end: 0);
@@ -451,11 +456,13 @@ class _OrganizationSettingsPageState
           controller: _phoneCtrl,
           label: 'Phone',
           keyboardType: TextInputType.phone,
+          autofillHints: const [AutofillHints.telephoneNumber],
         ),
         _OrgTextField(
           controller: _emailCtrl,
           label: 'Email',
           keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
           validator: (v) {
             if (v == null || v.trim().isEmpty) return null;
             final ok = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim());
@@ -613,7 +620,10 @@ class _OrgTextField extends StatelessWidget {
     this.validator,
     this.inputFormatters,
     this.onChanged,
+    this.autofillHints,
   });
+
+  final List<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -628,6 +638,7 @@ class _OrgTextField extends StatelessWidget {
         validator: validator,
         inputFormatters: inputFormatters,
         onChanged: onChanged,
+        autofillHints: autofillHints,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,

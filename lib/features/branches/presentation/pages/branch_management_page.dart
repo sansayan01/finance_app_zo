@@ -680,17 +680,20 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                     required: true, hint: 'e.g., BR001'),
                 const SizedBox(height: 16),
                 _buildTextField(_addressCtrl, 'Address',
-                    Icons.location_on_outlined, isDark),
+                    Icons.location_on_outlined, isDark,
+                    autofillHints: const [AutofillHints.streetAddressLine1]),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                         child: _buildTextField(_cityCtrl, 'City',
-                            Icons.location_city_rounded, isDark)),
+                            Icons.location_city_rounded, isDark,
+                            autofillHints: const [AutofillHints.addressCity])),
                     const SizedBox(width: 12),
                     Expanded(
                         child: _buildTextField(
-                            _stateCtrl, 'State', Icons.map_outlined, isDark)),
+                            _stateCtrl, 'State', Icons.map_outlined, isDark,
+                            autofillHints: const [AutofillHints.addressState])),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -698,16 +701,19 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                   children: [
                     Expanded(
                         child: _buildTextField(_pincodeCtrl, 'Pincode',
-                            Icons.pin_drop_rounded, isDark)),
+                            Icons.pin_drop_rounded, isDark,
+                            autofillHints: const [AutofillHints.postalCode])),
                     const SizedBox(width: 12),
                     Expanded(
                         child: _buildTextField(
-                            _phoneCtrl, 'Phone', Icons.phone_rounded, isDark)),
+                            _phoneCtrl, 'Phone', Icons.phone_rounded, isDark,
+                            autofillHints: const [AutofillHints.telephoneNumber])),
                   ],
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
-                    _emailCtrl, 'Email', Icons.email_outlined, isDark),
+                    _emailCtrl, 'Email', Icons.email_outlined, isDark,
+                    autofillHints: const [AutofillHints.email]),
                 const SizedBox(height: 24),
                 _buildManagerDropdown(isDark),
                 const SizedBox(height: 24),
@@ -743,9 +749,10 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
 
   Widget _buildTextField(
       TextEditingController ctrl, String label, IconData icon, bool isDark,
-      {bool required = false, String? hint}) {
+      {bool required = false, String? hint, List<String>? autofillHints}) {
     return TextFormField(
       controller: ctrl,
+      autofillHints: autofillHints,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

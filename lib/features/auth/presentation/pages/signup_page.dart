@@ -190,6 +190,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           children: [
             TextFormField(
               controller: _orgController,
+              autofillHints: const [AutofillHints.organizationName],
               decoration: const InputDecoration(
                 labelText: 'Organization Name',
                 prefixIcon: Icon(Icons.business_outlined, size: 22),
@@ -204,6 +205,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
+              autofillHints: const [AutofillHints.name],
               decoration: const InputDecoration(
                 labelText: 'Full Name',
                 prefixIcon: Icon(Icons.person_outlined, size: 22),
@@ -217,6 +219,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
               decoration: const InputDecoration(
                 labelText: 'Email',
                 prefixIcon: Icon(Icons.email_outlined, size: 22),
@@ -231,6 +234,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
+              autofillHints: const [AutofillHints.telephoneNumber],
               decoration: const InputDecoration(
                 labelText: 'Phone',
                 prefixIcon: Icon(Icons.phone_outlined, size: 22),
@@ -245,6 +249,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             TextFormField(
               controller: _passwordController,
               obscureText: _obscurePassword,
+              autofillHints: const [AutofillHints.newPassword],
               decoration: InputDecoration(
                 labelText: 'Password',
                 prefixIcon: const Icon(Icons.lock_outlined, size: 22),
@@ -272,6 +277,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: _obscureConfirmPassword,
+              autofillHints: const [AutofillHints.newPassword],
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 prefixIcon: const Icon(Icons.lock_outlined, size: 22),

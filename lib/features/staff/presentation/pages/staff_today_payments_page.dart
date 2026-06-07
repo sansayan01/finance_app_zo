@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -36,6 +38,11 @@ class _StaffTodayPaymentsPageState
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        HapticFeedback.selectionClick();
+      }
+    });
   }
 
   @override
@@ -64,6 +71,7 @@ class _StaffTodayPaymentsPageState
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
+      HapticFeedback.selectionClick();
       ref.read(branchPaymentFilterProvider.notifier).setDate(picked);
     }
   }
@@ -101,6 +109,7 @@ class _StaffTodayPaymentsPageState
                       ? Icon(Icons.check_circle, color: AppColors.primary)
                       : null,
                   onTap: () {
+                    HapticFeedback.selectionClick();
                     ref.read(branchPaymentFilterProvider.notifier).setSortBy(sort);
                     Navigator.pop(ctx);
                   },
@@ -152,6 +161,7 @@ class _StaffTodayPaymentsPageState
                           TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                   TextButton(
                     onPressed: () {
+                      HapticFeedback.selectionClick();
                       ref
                           .read(branchPaymentFilterProvider.notifier)
                           .resetFilters();
@@ -204,7 +214,10 @@ class _StaffTodayPaymentsPageState
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.pop(ctx);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -263,6 +276,7 @@ class _StaffTodayPaymentsPageState
               title: const Text('Share Summary'),
               subtitle: const Text('Share text summary via any app'),
               onTap: () async {
+                HapticFeedback.selectionClick();
                 Navigator.pop(ctx);
                 final text = PaymentExport.generateSummaryText(
                     data, filters.dateLabel);
@@ -287,6 +301,7 @@ class _StaffTodayPaymentsPageState
               title: const Text('Export CSV'),
               subtitle: const Text('Download payment data as CSV file'),
               onTap: () async {
+                HapticFeedback.selectionClick();
                 Navigator.pop(ctx);
                 try {
                   await PaymentExport.shareCsv(
@@ -314,6 +329,7 @@ class _StaffTodayPaymentsPageState
               title: const Text('Copy Summary'),
               subtitle: const Text('Copy summary to clipboard'),
               onTap: () async {
+                HapticFeedback.selectionClick();
                 Navigator.pop(ctx);
                 final text = PaymentExport.generateSummaryText(
                     data, filters.dateLabel);
@@ -347,6 +363,7 @@ class _StaffTodayPaymentsPageState
           ),
           ElevatedButton(
             onPressed: () {
+              HapticFeedback.mediumImpact();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text('Reminder sent to ${payment.memberName}'),
@@ -562,10 +579,13 @@ class _StaffTodayPaymentsPageState
                     children: [
                       IconButton(
                         onPressed: installmentCount > 1
-                            ? () => setSheetState(() {
+                            ? () {
+                                HapticFeedback.selectionClick();
+                                setSheetState(() {
                                   installmentCount--;
                                   updateAmount();
-                                })
+                                });
+                              }
                             : null,
                         icon: const Icon(Icons.remove_circle_outline_rounded),
                         color: AppColors.primary,
@@ -594,10 +614,13 @@ class _StaffTodayPaymentsPageState
                       ),
                       IconButton(
                         onPressed: installmentCount < 12
-                            ? () => setSheetState(() {
+                            ? () {
+                                HapticFeedback.selectionClick();
+                                setSheetState(() {
                                   installmentCount++;
                                   updateAmount();
-                                })
+                                });
+                              }
                             : null,
                         icon: const Icon(Icons.add_circle_outline_rounded),
                         color: AppColors.primary,
@@ -722,8 +745,10 @@ class _StaffTodayPaymentsPageState
                         icon: Icons.money_rounded,
                         label: 'Cash',
                         isSelected: selectedMode == 'cash',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'cash'),
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setSheetState(() => selectedMode = 'cash');
+                        },
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -732,8 +757,10 @@ class _StaffTodayPaymentsPageState
                         icon: Icons.qr_code_rounded,
                         label: 'UPI',
                         isSelected: selectedMode == 'upi',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'upi'),
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setSheetState(() => selectedMode = 'upi');
+                        },
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -742,8 +769,11 @@ class _StaffTodayPaymentsPageState
                         icon: Icons.account_balance_rounded,
                         label: 'Bank',
                         isSelected: selectedMode == 'bank_transfer',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'bank_transfer'),
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setSheetState(
+                              () => selectedMode = 'bank_transfer');
+                        },
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -752,8 +782,10 @@ class _StaffTodayPaymentsPageState
                         icon: Icons.receipt_rounded,
                         label: 'Cheque',
                         isSelected: selectedMode == 'cheque',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'cheque'),
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setSheetState(() => selectedMode = 'cheque');
+                        },
                       ),
                     ),
                   ],
@@ -807,6 +839,7 @@ class _StaffTodayPaymentsPageState
                                     installmentCount: installmentCount,
                                   );
 
+                                  HapticFeedback.heavyImpact();
                                   navigator.pop();
                                   messenger.showSnackBar(SnackBar(
                                     content: Text(
@@ -822,6 +855,7 @@ class _StaffTodayPaymentsPageState
                                     ref.invalidate(branchTodayPaymentsProvider(branchId));
                                   }
                                 } catch (e) {
+                                  HapticFeedback.heavyImpact();
                                   setSheetState(
                                       () => isSubmitting = false);
                                   if (mounted) {
@@ -1101,7 +1135,7 @@ class _StaffTodayPaymentsPageState
         backgroundColor:
             isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
         appBar: AppBar(title: const Text('Today\'s Payments')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const _ShimmerLoading(),
       );
     }
 
@@ -1189,7 +1223,10 @@ class _StaffTodayPaymentsPageState
           if (!_showSearch) ...[
             IconButton(
               icon: const Icon(Icons.search_rounded),
-              onPressed: () => setState(() => _showSearch = true),
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                setState(() => _showSearch = true);
+              },
             ),
             IconButton(
               icon: Icon(
@@ -1198,7 +1235,10 @@ class _StaffTodayPaymentsPageState
                     ? AppColors.primary
                     : null,
               ),
-              onPressed: _showFilterSheet,
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                _showFilterSheet();
+              },
             ),
             PopupMenuButton(
               icon: const Icon(Icons.more_vert_rounded),
@@ -1218,9 +1258,12 @@ class _StaffTodayPaymentsPageState
                         : 'Enable Auto-refresh'),
                     dense: true,
                   ),
-                  onTap: () => ref
-                      .read(branchPaymentFilterProvider.notifier)
-                      .toggleAutoRefresh(),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    ref
+                        .read(branchPaymentFilterProvider.notifier)
+                        .toggleAutoRefresh();
+                  },
                 ),
                 PopupMenuItem(
                   child: const ListTile(
@@ -1238,6 +1281,7 @@ class _StaffTodayPaymentsPageState
                     dense: true,
                   ),
                   onTap: () {
+                    HapticFeedback.mediumImpact();
                     ref.invalidate(branchTodayPaymentsProvider(branchId));
                   },
                 ),
@@ -1247,7 +1291,7 @@ class _StaffTodayPaymentsPageState
         ],
       ),
       body: paymentsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _ShimmerLoading(),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -1314,40 +1358,10 @@ class _StaffTodayPaymentsPageState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildSummaryHero(summary, isDark),
-                      _buildQuickStats(summary, isDark),
+                      _buildQuickStats(summary, isDark, branchId),
                       if (filters.agentId != null) _buildActiveFilters(filters, isDark),
                       const SizedBox(height: 8),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.fillDark
-                              : AppColors.fillLight,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: TabBar(
-                          controller: _tabController,
-                          labelColor: Colors.white,
-                          unselectedLabelColor: isDark
-                              ? AppColors.textTertiaryDark
-                              : AppColors.textTertiaryLight,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          indicator: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          dividerColor: Colors.transparent,
-                          labelStyle: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13),
-                          unselectedLabelStyle: const TextStyle(
-                              fontWeight: FontWeight.w500, fontSize: 13),
-                          tabs: [
-                            Tab(text: 'Pending (${pending.length})'),
-                            Tab(text: 'Overdue (${overdue.length})'),
-                            Tab(text: 'Collected (${collected.length})'),
-                          ],
-                        ),
-                      ),
+                      _buildSegmentedTabs(pending.length, overdue.length, collected.length, isDark),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -1360,11 +1374,11 @@ class _StaffTodayPaymentsPageState
                   controller: _tabController,
                   children: [
                     _buildPaymentList(pending, isDark, 'No pending payments',
-                        Icons.schedule_rounded, branchId),
+                        'Everything is up to date!', Icons.schedule_rounded, AppColors.warning, branchId),
                     _buildPaymentList(overdue, isDark, 'No overdue payments',
-                        Icons.warning_amber_rounded, branchId),
+                        'No one is behind schedule', Icons.warning_amber_rounded, AppColors.error, branchId),
                     _buildPaymentList(collected, isDark, 'No collections yet',
-                        Icons.check_circle_outline_rounded, branchId),
+                        'Payments you collect will appear here', Icons.check_circle_outline_rounded, AppColors.success, branchId),
                   ],
                 ),
               ),
@@ -1374,7 +1388,10 @@ class _StaffTodayPaymentsPageState
       ),
       floatingActionButton: paymentsAsync.maybeWhen(
         data: (data) => FloatingActionButton.extended(
-          onPressed: () => _showShareSheet(data),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            _showShareSheet(data);
+          },
           icon: const Icon(Icons.ios_share_rounded, size: 20),
           label: const Text('Export',
               style: TextStyle(fontWeight: FontWeight.w600)),
@@ -1387,10 +1404,13 @@ class _StaffTodayPaymentsPageState
     );
   }
 
-  // Summary Hero Card
+  // Summary Hero Card — premium animated version
   Widget _buildSummaryHero(TodayPaymentSummary summary, bool isDark) {
     final currencyFormat =
         NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final progress = summary.countDue > 0
+        ? (summary.countCollected / summary.countDue).clamp(0.0, 1.0)
+        : 0.0;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -1399,65 +1419,161 @@ class _StaffTodayPaymentsPageState
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.accent],
+          colors: AppColors.auroraGradient,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Left: label + amount
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.calendar_today_rounded,
+                              size: 12, color: Colors.white),
+                          SizedBox(width: 4),
+                          Text(
+                            'TODAY',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Total Due Today',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    _AnimatedCurrencyCounter(
+                      value: summary.totalDue,
+                      currencyFormat: currencyFormat,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.8,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Icon(Icons.people_rounded,
+                            color: Colors.white, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${summary.countDue} payments',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Right: circular progress ring
+              _CircularProgressRing(
+                progress: progress,
+                centerText: '${summary.completionPercent}%',
+                subtext: 'done',
+                size: 92,
+                strokeWidth: 8,
+                trackColor: Colors.white.withValues(alpha: 0.2),
+                progressColor: Colors.white,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text(
-                    'Total Due Today',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(width: 6),
                   Text(
-                    currencyFormat.format(summary.totalDue),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+                    '${summary.countCollected} of ${summary.countDue} collected',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.95),
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.people_rounded,
-                        color: Colors.white, size: 16),
-                    const SizedBox(width: 6),
+                    const Icon(Icons.payments_rounded,
+                        color: Colors.white, size: 12),
+                    const SizedBox(width: 4),
                     Text(
-                      '${summary.countDue} payments',
+                      currencyFormat.format(summary.totalCollected),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -1465,57 +1581,21 @@ class _StaffTodayPaymentsPageState
               ),
             ],
           ),
-          const SizedBox(height: 20),
-
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: summary.countDue > 0
-                  ? summary.countCollected / summary.countDue
-                  : 0,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${summary.countCollected} of ${summary.countDue} collected',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${summary.completionPercent}%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
-    );
+    )
+        .animate()
+        .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+        .slideY(
+            begin: -0.05,
+            end: 0,
+            duration: 400.ms,
+            curve: Curves.easeOutCubic);
   }
 
-  // Quick Stats Row
-  Widget _buildQuickStats(TodayPaymentSummary summary, bool isDark) {
+  // Quick Stats Row — tappable to switch tabs
+  Widget _buildQuickStats(
+      TodayPaymentSummary summary, bool isDark, String branchId) {
     final currencyFormat =
         NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
 
@@ -1531,6 +1611,9 @@ class _StaffTodayPaymentsPageState
               count: '${summary.countCollected}',
               color: AppColors.success,
               isDark: isDark,
+              index: 2,
+              tabController: _tabController,
+              delayMs: 0,
             ),
           ),
           const SizedBox(width: 10),
@@ -1542,6 +1625,9 @@ class _StaffTodayPaymentsPageState
               count: '${summary.countPending}',
               color: AppColors.warning,
               isDark: isDark,
+              index: 0,
+              tabController: _tabController,
+              delayMs: 60,
             ),
           ),
           const SizedBox(width: 10),
@@ -1553,9 +1639,69 @@ class _StaffTodayPaymentsPageState
               count: '${summary.countOverdue}',
               color: AppColors.error,
               isDark: isDark,
+              index: 1,
+              tabController: _tabController,
+              delayMs: 120,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Premium Segmented Tab Bar
+  Widget _buildSegmentedTabs(
+      int pendingCount, int overdueCount, int collectedCount, bool isDark) {
+    final tabs = [
+      _TabInfo('Pending', pendingCount, Icons.schedule_rounded, AppColors.warning),
+      _TabInfo('Overdue', overdueCount, Icons.warning_amber_rounded, AppColors.error),
+      _TabInfo('Collected', collectedCount, Icons.check_circle_rounded, AppColors.success),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.fillDark : AppColors.fillLight,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        labelColor: Colors.white,
+        unselectedLabelColor: isDark
+            ? AppColors.textTertiaryDark
+            : AppColors.textTertiaryLight,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: AppColors.premiumGradient,
+          ),
+          borderRadius: BorderRadius.circular(11),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        dividerColor: Colors.transparent,
+        labelStyle:
+            const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+        unselectedLabelStyle:
+            const TextStyle(fontWeight: FontWeight.w500, fontSize: 12.5),
+        tabs: tabs.map((t) {
+          return Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(t.icon, size: 14),
+                const SizedBox(width: 6),
+                Text('${t.label} (${t.count})'),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -1610,70 +1756,126 @@ class _StaffTodayPaymentsPageState
     );
   }
 
-  // Payment List
+  // Payment List — with staggered animations and swipe actions
   Widget _buildPaymentList(
-      List<TodayPayment> payments, bool isDark, String emptyMessage,
-      IconData emptyIcon, String branchId) {
+      List<TodayPayment> payments, bool isDark, String emptyTitle,
+      String emptySubtitle, IconData emptyIcon, Color emptyColor,
+      String branchId) {
     if (payments.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)
-                    .withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(emptyIcon,
-                  size: 48,
-                  color: isDark
-                      ? AppColors.textTertiaryDark
-                      : AppColors.textTertiaryLight),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              emptyMessage,
-              style: TextStyle(
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondaryLight,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      return _AnimatedEmptyState(
+        title: emptyTitle,
+        subtitle: emptySubtitle,
+        icon: emptyIcon,
+        color: emptyColor,
+        isDark: isDark,
       );
     }
 
     return RefreshIndicator(
       onRefresh: () async {
+        HapticFeedback.lightImpact();
         ref.invalidate(branchTodayPaymentsProvider(branchId));
       },
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         itemCount: payments.length,
         itemBuilder: (context, index) {
-          return _PaymentCard(
-            payment: payments[index],
+          final payment = payments[index];
+          final card = _PaymentCard(
+            payment: payment,
             isDark: isDark,
-            onCall: payments[index].memberPhone != null
-                ? () => _makePhoneCall(payments[index].memberPhone!)
+            onCall: payment.memberPhone != null
+                ? () => _makePhoneCall(payment.memberPhone!)
                 : null,
-            onRemind: () => _sendReminder(payments[index]),
-            onTap: () => _showPaymentDetails(payments[index]),
-            onCollect: !payments[index].isCollected
-                ? () => _showQuickCollect(payments[index])
+            onRemind: () => _sendReminder(payment),
+            onTap: () => _showPaymentDetails(payment),
+            onCollect: !payment.isCollected
+                ? () => _showQuickCollect(payment)
                 : null,
+          );
+
+          // Stagger animation
+          final animatedCard = card
+              .animate(delay: Duration(milliseconds: index * 35))
+              .fadeIn(duration: 350.ms, curve: Curves.easeOut)
+              .slideY(
+                begin: 0.08,
+                end: 0,
+                duration: 350.ms,
+                curve: Curves.easeOutCubic,
+              );
+
+          // Swipe-to-action (only for uncollected items)
+          if (payment.isCollected) return animatedCard;
+          return Dismissible(
+            key: ValueKey('pay_${payment.id}'),
+            direction: DismissDirection.horizontal,
+            confirmDismiss: (_) async => false, // never auto-dismiss
+            background: _buildSwipeBackground(
+              isDark,
+              payment.memberPhone != null
+                  ? Icons.call_rounded
+                  : Icons.notifications_active_rounded,
+              payment.memberPhone != null ? 'Call' : 'Remind',
+              payment.memberPhone != null
+                  ? AppColors.success
+                  : AppColors.warning,
+              Alignment.centerLeft,
+            ),
+            secondaryBackground: _buildSwipeBackground(
+              isDark,
+              Icons.payment_rounded,
+              'Collect',
+              AppColors.primary,
+              Alignment.centerRight,
+            ),
+            onUpdate: (details) {
+              if (details.progress > 0.3 &&
+                  details.progress < 0.35) {
+                HapticFeedback.selectionClick();
+              }
+            },
+            child: animatedCard,
           );
         },
       ),
     );
   }
 
+  Widget _buildSwipeBackground(
+      bool isDark, IconData icon, String label, Color color, Alignment align) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      alignment: align,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: align == Alignment.centerRight
+            ? [
+                Text(label,
+                    style: TextStyle(
+                        color: color, fontWeight: FontWeight.w700)),
+                const SizedBox(width: 6),
+                Icon(icon, color: color, size: 20),
+              ]
+            : [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 6),
+                Text(label,
+                    style: TextStyle(
+                        color: color, fontWeight: FontWeight.w700)),
+              ],
+      ),
+    );
+  }
+
   Future<void> _makePhoneCall(String phone) async {
+    HapticFeedback.lightImpact();
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -1824,6 +2026,7 @@ class _StaffTodayPaymentsPageState
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
+                          HapticFeedback.lightImpact();
                           Navigator.pop(ctx);
                           _makePhoneCall(payment.memberPhone!);
                         },
@@ -1843,6 +2046,7 @@ class _StaffTodayPaymentsPageState
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
+                          HapticFeedback.mediumImpact();
                           Navigator.pop(ctx);
                           _sendReminder(payment);
                         },
@@ -1869,7 +2073,7 @@ class _StaffTodayPaymentsPageState
   }
 }
 
-// Stat Card
+// Tappable Stat Card with active-state styling and stagger animation
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -1877,6 +2081,9 @@ class _StatCard extends StatelessWidget {
   final String count;
   final Color color;
   final bool isDark;
+  final int index;
+  final TabController tabController;
+  final int delayMs;
 
   const _StatCard({
     required this.icon,
@@ -1885,70 +2092,109 @@ class _StatCard extends StatelessWidget {
     required this.count,
     required this.color,
     required this.isDark,
+    required this.index,
+    required this.tabController,
+    required this.delayMs,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : AppColors.cardLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.separatorDark : AppColors.separatorLight,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 14, color: color),
+    return AnimatedBuilder(
+      animation: tabController,
+      builder: (context, _) {
+        final isActive = tabController.index == index;
+        return GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            tabController.animateTo(index);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? color.withValues(alpha: 0.12)
+                  : (isDark ? AppColors.cardDark : AppColors.cardLight),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isActive
+                    ? color.withValues(alpha: 0.4)
+                    : (isDark
+                        ? AppColors.separatorDark
+                        : AppColors.separatorLight),
+                width: isActive ? 1.5 : 1,
               ),
-              const Spacer(),
-              Text(
-                count,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: color,
+              boxShadow: isActive
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.18),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      )
+                    ]
+                  : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(icon, size: 14, color: color),
+                    ),
+                    const Spacer(),
+                    Text(
+                      count,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: isDark
-                  ? AppColors.textTertiaryDark
-                  : AppColors.textTertiaryLight,
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.textTertiaryDark
+                        : AppColors.textTertiaryLight,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: isDark
-                  ? AppColors.textPrimaryDark
-                  : AppColors.textPrimaryLight,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
+        );
+      },
+    )
+        .animate(delay: Duration(milliseconds: 100 + delayMs))
+        .fadeIn(duration: 350.ms, curve: Curves.easeOut)
+        .slideY(
+            begin: 0.15,
+            end: 0,
+            duration: 350.ms,
+            curve: Curves.easeOutCubic);
   }
 }
 
@@ -2186,18 +2432,27 @@ class _PaymentCard extends StatelessWidget {
                         _CompactAction(
                           icon: Icons.call_rounded,
                           color: AppColors.success,
-                          onTap: onCall!,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            onCall!();
+                          },
                         ),
                       if (onCall != null) const SizedBox(width: 6),
                       _CompactAction(
                         icon: Icons.notifications_active_rounded,
                         color: AppColors.warning,
-                        onTap: onRemind,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          onRemind();
+                        },
                       ),
                       if (onCollect != null) ...[
                         const SizedBox(width: 6),
                         GestureDetector(
-                          onTap: onCollect,
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            onCollect!();
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
@@ -2206,6 +2461,14 @@ class _PaymentCard extends StatelessWidget {
                                 colors: AppColors.successGradient,
                               ),
                               borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.success
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
@@ -2313,6 +2576,325 @@ class _ModeChip extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PREMIUM HELPER WIDGETS
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _TabInfo {
+  final String label;
+  final int count;
+  final IconData icon;
+  final Color color;
+  _TabInfo(this.label, this.count, this.icon, this.color);
+}
+
+// Animated currency counter that tweens from 0 to value
+class _AnimatedCurrencyCounter extends StatelessWidget {
+  final double value;
+  final NumberFormat currencyFormat;
+  final TextStyle style;
+  const _AnimatedCurrencyCounter({
+    required this.value,
+    required this.currencyFormat,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: value),
+      duration: const Duration(milliseconds: 1100),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) {
+        return Text(
+          currencyFormat.format(v),
+          style: style,
+        );
+      },
+    );
+  }
+}
+
+// Circular progress ring with animated arc and center label
+class _CircularProgressRing extends StatelessWidget {
+  final double progress;
+  final String centerText;
+  final String subtext;
+  final double size;
+  final double strokeWidth;
+  final Color trackColor;
+  final Color progressColor;
+
+  const _CircularProgressRing({
+    required this.progress,
+    required this.centerText,
+    required this.subtext,
+    this.size = 80,
+    this.strokeWidth = 7,
+    required this.trackColor,
+    required this.progressColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: progress),
+            duration: const Duration(milliseconds: 1200),
+            curve: Curves.easeOutCubic,
+            builder: (context, p, _) {
+              return SizedBox(
+                width: size,
+                height: size,
+                child: CustomPaint(
+                  painter: _RingPainter(
+                    progress: p,
+                    strokeWidth: strokeWidth,
+                    trackColor: trackColor,
+                    progressColor: progressColor,
+                  ),
+                ),
+              );
+            },
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                centerText,
+                style: TextStyle(
+                  color: progressColor,
+                  fontSize: size * 0.22,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtext,
+                style: TextStyle(
+                  color: progressColor.withValues(alpha: 0.7),
+                  fontSize: size * 0.11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  final double progress;
+  final double strokeWidth;
+  final Color trackColor;
+  final Color progressColor;
+
+  _RingPainter({
+    required this.progress,
+    required this.strokeWidth,
+    required this.trackColor,
+    required this.progressColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    final trackPaint = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, radius, trackPaint);
+
+    if (progress > 0) {
+      final progressPaint = Paint()
+        ..color = progressColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        rect,
+        -3.14159 / 2, // start at top
+        progress * 2 * 3.14159,
+        false,
+        progressPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.progress != progress ||
+      old.progressColor != progressColor ||
+      old.trackColor != trackColor;
+}
+
+// Shimmer loading state
+class _ShimmerLoading extends StatelessWidget {
+  const _ShimmerLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? AppColors.fillDark : Colors.grey.shade300;
+    final highlight = isDark ? AppColors.elevatedDark : Colors.grey.shade100;
+
+    return Shimmer.fromColors(
+      baseColor: base,
+      highlightColor: highlight,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          Container(
+            height: 160,
+            decoration: BoxDecoration(
+              color: base,
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: List.generate(
+              3,
+              (i) => Expanded(
+                child: Container(
+                  height: 90,
+                  margin: EdgeInsets.only(right: i < 2 ? 10 : 0),
+                  decoration: BoxDecoration(
+                    color: base,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: base,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...List.generate(
+            4,
+            (i) => Container(
+              height: 100,
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: base,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Animated empty state with pulsing icon
+class _AnimatedEmptyState extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final bool isDark;
+
+  const _AnimatedEmptyState({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withValues(alpha: 0.12),
+                    color.withValues(alpha: 0.04),
+                  ],
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: color.withValues(alpha: 0.15),
+                  width: 2,
+                ),
+              ),
+              child:
+                  Icon(icon, size: 56, color: color.withValues(alpha: 0.7)),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(
+                  duration: 1800.ms,
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.06, 1.06),
+                  curve: Curves.easeInOut,
+                ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimaryLight,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.textTertiaryDark
+                    : AppColors.textTertiaryLight,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      )
+          .animate()
+          .fadeIn(duration: 500.ms, curve: Curves.easeOut)
+          .slideY(
+              begin: 0.1,
+              end: 0,
+              duration: 500.ms,
+              curve: Curves.easeOutCubic),
     );
   }
 }

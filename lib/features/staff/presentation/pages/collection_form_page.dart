@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
 import 'package:microflow_pro/core/constants/enums.dart' as cm;
@@ -18,6 +19,8 @@ import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/smokey_background.dart';
 import '../widgets/premium_helpers.dart';
+import '../../../loans/presentation/providers/loan_providers.dart' show emiScheduleProvider;
+import '../../../loans/data/models/emi_schedule_model.dart';
 
 class CollectionFormPage extends ConsumerStatefulWidget {
   final String loanId;
@@ -50,6 +53,12 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
   String _memberPhone = '';
   String? _loanScheduleId;
 
+  // EMI selector state
+  List<EMIScheduleModel> _unpaidEMIs = [];
+  bool _isLoadingSchedule = true;
+  EMIScheduleModel? _selectedEmi;
+  bool _hasManuallyEditedAmount = false;
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +72,8 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
       final member = widget.loanData!['members'] ?? {};
 
       setState(() {
-        _amountExpected = (schedule['emi'] as num?)?.toDouble() ?? 0;
+        _amountExpected = (schedule['emi'] as num?)?.toDouble() ??
+            (schedule['emi_amount'] as num?)?.toDouble() ?? 0;
         _memberName =
             member['full_name'] ?? widget.loanData!['member_name'] ?? '';
         _memberId = member['id']?.toString() ??
@@ -74,6 +84,52 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
       });
 
       _amountController.text = _amountExpected.toStringAsFixed(0);
+      _loadEmiSchedule();
+    } else {
+      _loadEmiSchedule();
+    }
+  }
+
+  Future<void> _loadEmiSchedule() async {
+    try {
+      final schedule =
+          await ref.read(emiScheduleProvider(widget.loanId).future);
+      final unpaid = schedule
+          .where((e) => e.status != cm.EMIStatus.paid &&
+              e.status != cm.EMIStatus.waived)
+          .toList()
+        ..sort((a, b) => a.emiNumber.compareTo(b.emiNumber));
+
+      if (!mounted) return;
+
+      // Default to the current_schedule EMI if available, else the first unpaid
+      EMIScheduleModel? defaultSelection;
+      if (_loanScheduleId != null) {
+        defaultSelection = unpaid
+            .where((e) => e.id == _loanScheduleId)
+            .firstOrNull;
+      }
+      defaultSelection ??= unpaid.firstOrNull;
+
+      setState(() {
+        _unpaidEMIs = unpaid;
+        _selectedEmi = defaultSelection;
+        _isLoadingSchedule = false;
+      });
+
+      // If we found a default selection and the user hasn't manually edited,
+      // update the amount to match
+      if (defaultSelection != null && !_hasManuallyEditedAmount) {
+        final amt = defaultSelection.emiAmount;
+        setState(() {
+          _amountExpected = amt;
+        });
+        _amountController.text = amt.toStringAsFixed(0);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingSchedule = false);
+      }
     }
   }
 
@@ -106,6 +162,10 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
                 _buildMemberCard(theme, isDark),
                 const SizedBox(height: 20),
                 _buildAmountSection(theme, isDark),
+                if (!_isLoadingSchedule && _unpaidEMIs.length > 1) ...[
+                  const SizedBox(height: 20),
+                  _buildEmiSelectorSection(theme, isDark),
+                ],
                 const SizedBox(height: 20),
                 _buildPaymentModeSection(theme, isDark),
                 const SizedBox(height: 20),
@@ -254,6 +314,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.number,
+            autofillHints: const [AutofillHints.transactionAmount],
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w900,
               color: AppColors.primary,
@@ -297,6 +358,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
             onChanged: (value) {
               final amount = double.tryParse(value) ?? 0;
               setState(() {
+                _hasManuallyEditedAmount = true;
                 _isPartial = amount < _amountExpected && amount > 0;
               });
             },
@@ -529,6 +591,274 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmiSelectorSection(ThemeData theme, bool isDark) {
+    if (_unpaidEMIs.isEmpty) return const SizedBox.shrink();
+
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final dateFormat = DateFormat('dd MMM yyyy');
+    bool isOverdue(EMIScheduleModel emi) {
+      if (emi.status == cm.EMIStatus.paid || emi.status == cm.EMIStatus.waived) {
+        return false;
+      }
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return emi.dueDate.isBefore(today);
+    }
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PremiumHelpers.sectionHeader(theme, 'EMI Selection',
+              icon: Icons.event_repeat_rounded),
+
+          // Selected EMI summary banner
+          if (_selectedEmi != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.08),
+                    AppColors.primary.withValues(alpha: 0.03),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  PremiumHelpers.gradientIconContainer(
+                    Icons.receipt_long_rounded,
+                    AppColors.primary,
+                    size: 36,
+                    iconSize: 18,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Paying EMI #${_selectedEmi!.emiNumber}',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${currencyFormat.format(_selectedEmi!.emiAmount)} due on ${dateFormat.format(_selectedEmi!.dueDate)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: (isDark
+                                    ? AppColors.textSecondaryDark
+                                    : AppColors.textSecondaryLight)
+                                .withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // EMI list
+          Container(
+            constraints: const BoxConstraints(maxHeight: 280),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.grey.shade200,
+              ),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: const EdgeInsets.all(4),
+              itemCount: _unpaidEMIs.length,
+              separatorBuilder: (_, __) => Divider(
+                height: 1,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.grey.shade200,
+              ),
+              itemBuilder: (context, index) {
+                final emi = _unpaidEMIs[index];
+                final isSelected = _selectedEmi?.id == emi.id;
+                final overdue = isOverdue(emi);
+
+                final statusColor = overdue
+                    ? AppColors.error
+                    : (emi.dueDate.day == DateTime.now().day &&
+                            emi.dueDate.month == DateTime.now().month &&
+                            emi.dueDate.year == DateTime.now().year)
+                        ? AppColors.warning
+                        : AppColors.info;
+
+                final statusLabel = overdue
+                    ? '${DateTime.now().difference(emi.dueDate).inDays}d overdue'
+                    : 'Pending';
+
+                return InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() {
+                      _selectedEmi = emi;
+                      _loanScheduleId = emi.id;
+                      if (!_hasManuallyEditedAmount) {
+                        _amountExpected = emi.emiAmount;
+                        _amountController.text =
+                            emi.emiAmount.toStringAsFixed(0);
+                      }
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary.withValues(alpha: 0.06)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        // Selection indicator
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : (isDark
+                                      ? Colors.white38
+                                      : Colors.grey.shade400),
+                              width: 2,
+                            ),
+                          ),
+                          child: isSelected
+                              ? const Icon(Icons.check,
+                                  size: 14, color: Colors.white)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+
+                        // EMI info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'EMI #${emi.emiNumber}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : isDark
+                                              ? Colors.white70
+                                              : Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      statusLabel,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: statusColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Due ${dateFormat.format(emi.dueDate)}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark
+                                      ? Colors.white38
+                                      : Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Amount
+                        Text(
+                          currencyFormat.format(emi.emiAmount),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected
+                                ? AppColors.primary
+                                : isDark
+                                    ? Colors.white70
+                                    : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Count info
+          if (_unpaidEMIs.length > 1) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                '${_unpaidEMIs.length} unpaid EMIs remaining',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: (isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight)
+                      .withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

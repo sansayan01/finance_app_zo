@@ -199,33 +199,38 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   label: 'Full Name',
                                   controller: _nameController,
                                   icon: Icons.badge_outlined,
-                                  isDark: isDark),
+                                  isDark: isDark,
+                                  autofillHints: const [AutofillHints.name]),
                               const SizedBox(height: 16),
                               _ProfileTextField(
                                   label: "Father's Name",
                                   controller: _fatherNameController,
                                   icon: Icons.people_outline_rounded,
-                                  isDark: isDark),
+                                  isDark: isDark,
+                                  autofillHints: const [AutofillHints.name]),
                               const SizedBox(height: 16),
                               _ProfileTextField(
                                   label: 'Email Address',
                                   controller: _emailController,
                                   icon: Icons.email_outlined,
                                   isDark: isDark,
-                                  keyboardType: TextInputType.emailAddress),
+                                  keyboardType: TextInputType.emailAddress,
+                                  autofillHints: const [AutofillHints.email]),
                               const SizedBox(height: 16),
                               _ProfileTextField(
                                   label: 'Phone Number',
                                   controller: _phoneController,
                                   icon: Icons.phone_outlined,
                                   isDark: isDark,
-                                  keyboardType: TextInputType.phone),
+                                  keyboardType: TextInputType.phone,
+                                  autofillHints: const [AutofillHints.telephoneNumber]),
                               const SizedBox(height: 16),
                               _ProfileTextField(
                                   label: 'Residential Address',
                                   controller: _addressController,
                                   icon: Icons.home_outlined,
-                                  isDark: isDark),
+                                  isDark: isDark,
+                                  autofillHints: const [AutofillHints.streetAddressLine1]),
                             ],
                           ),
                         )
@@ -307,21 +312,24 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   controller: _currentPasswordController,
                                   icon: Icons.lock_open_rounded,
                                   isDark: isDark,
-                                  isPassword: true),
+                                  isPassword: true,
+                                  autofillHints: const [AutofillHints.password]),
                               const SizedBox(height: 16),
                               _ProfileTextField(
                                   label: 'New Password',
                                   controller: _newPasswordController,
                                   icon: Icons.vpn_key_outlined,
                                   isDark: isDark,
-                                  isPassword: true),
+                                  isPassword: true,
+                                  autofillHints: const [AutofillHints.newPassword]),
                               const SizedBox(height: 16),
                               _ProfileTextField(
                                   label: 'Confirm New Password',
                                   controller: _confirmPasswordController,
                                   icon: Icons.check_circle_outline_rounded,
                                   isDark: isDark,
-                                  isPassword: true),
+                                  isPassword: true,
+                                  autofillHints: const [AutofillHints.newPassword]),
                               const SizedBox(height: 24),
                               GlassButton(
                                   label: 'Change Password',
@@ -376,7 +384,10 @@ class _ProfileTextField extends StatelessWidget {
     required this.isDark,
     this.isPassword = false,
     this.keyboardType,
+    this.autofillHints,
   });
+
+  final List<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -405,6 +416,7 @@ class _ProfileTextField extends StatelessWidget {
             controller: controller,
             obscureText: isPassword,
             keyboardType: keyboardType,
+            autofillHints: autofillHints,
             style: theme.textTheme.bodyMedium
                 ?.copyWith(fontWeight: FontWeight.w600),
             decoration: InputDecoration(

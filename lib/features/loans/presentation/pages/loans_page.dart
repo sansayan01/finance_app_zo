@@ -610,6 +610,7 @@ class _AnalyticsCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -625,7 +626,7 @@ class _AnalyticsCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const Spacer(),
+                const SizedBox(height: 8),
                 Text(
                   label,
                   style: TextStyle(

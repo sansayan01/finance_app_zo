@@ -166,6 +166,7 @@ class _CashDepositPageState extends ConsumerState<CashDepositPage> {
       child: TextFormField(
         controller: _amountController,
         keyboardType: TextInputType.number,
+        autofillHints: const [AutofillHints.transactionAmount],
         style: theme.textTheme.headlineMedium
             ?.copyWith(fontWeight: FontWeight.w900, color: AppColors.primary),
         decoration: InputDecoration(

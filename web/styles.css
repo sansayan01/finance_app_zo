@@ -1,0 +1,78 @@
+/*
+ * Lighthouse fix: "'appearance' should be listed after '-webkit-appearance'".
+ *
+ * Flutter web's engine injects a stylesheet where `-webkit-appearance`
+ * is declared before the standard `appearance`. The CSS spec says the
+ * standard property must come after any vendor-prefixed variant so the
+ * standard wins when supported. We re-declare the correct order here.
+ *
+ * This file is loaded after the engine stylesheet, so our declarations
+ * take precedence.
+ */
+
+/* Apply to common form/input elements that Flutter renders */
+input,
+select,
+textarea,
+button,
+[type="checkbox"],
+[type="radio"],
+[type="range"],
+[type="search"],
+[type="text"],
+[type="number"],
+[type="tel"],
+[type="url"],
+[type="email"],
+[type="date"],
+[type="datetime-local"],
+[type="month"],
+[type="week"],
+[type="time"],
+::-webkit-search-cancel-button,
+::-webkit-search-decoration,
+::-webkit-textfield-decoration-container,
+::-webkit-inner-spin-button,
+::-webkit-slider-runnable-track,
+::-webkit-slider-thumb,
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Explicit ordering rule for properties that commonly trigger the warning */
+input[type="checkbox"],
+input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
+}

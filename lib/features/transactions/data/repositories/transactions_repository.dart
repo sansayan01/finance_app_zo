@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/utils/formatters.dart' show AppFormatters;
 import '../models/transaction_model.dart';
 
 class TransactionsRepository {
@@ -11,20 +12,22 @@ class TransactionsRepository {
 
   Future<List<TransactionModel>> getRecentTransactions({int limit = 10}) async {
     try {
-      // RLS enforces org isolation — no need for client-side org_id filter
       final response = await _client
           .from('transactions')
           .select('id, type, amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
+          .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
 
       final list = response as List;
       if (list.isEmpty) return [];
 
-      return list
+      final txns = list
           .map((json) =>
               TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
           .toList();
+
+      return _resolveMemberNames(txns);
     } catch (e) {
       debugPrint('getRecentTransactions error: $e');
       return [];
@@ -42,7 +45,8 @@ class TransactionsRepository {
     try {
       var query = _client
           .from('transactions')
-          .select();
+          .select()
+          .eq('org_id', _orgId);
 
       if (typeFilter != null) {
         query = query.eq('type', typeFilter.name);
@@ -59,13 +63,68 @@ class TransactionsRepository {
       final list = response as List;
       if (list.isEmpty) return [];
 
-      return list
+      final txns = list
           .map((json) =>
               TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
           .toList();
+
+      return _resolveMemberNames(txns);
     } catch (e) {
       debugPrint('getTransactionsPaginated error: $e');
       return [];
+    }
+  }
+
+  /// Batch-resolve member names for transactions with missing names.
+  Future<List<TransactionModel>> _resolveMemberNames(
+      List<TransactionModel> txns) async {
+    final missingIds = <String>{};
+    for (final t in txns) {
+      if (t.memberName.isEmpty && t.memberId.isNotEmpty) {
+        missingIds.add(t.memberId);
+      }
+    }
+    if (missingIds.isEmpty) return txns;
+
+    try {
+      final members = await _client
+          .from('members')
+          .select('id, full_name')
+          .inFilter('id', missingIds.toList());
+
+      final nameMap = <String, String>{};
+      for (final m in members as List) {
+        final id = m['id']?.toString() ?? '';
+        final name = m['full_name']?.toString() ?? '';
+        if (id.isNotEmpty && name.isNotEmpty) nameMap[id] = name;
+      }
+
+      return txns.map((t) {
+        if (t.memberName.isEmpty && nameMap.containsKey(t.memberId)) {
+          return TransactionModel(
+            id: t.id,
+            memberId: t.memberId,
+            memberName: nameMap[t.memberId]!,
+            type: t.type,
+            amount: t.amount,
+            loanId: t.loanId,
+            savingsId: t.savingsId,
+            createdAt: t.createdAt,
+            description: t.description,
+            paymentMode: t.paymentMode,
+            agentId: t.agentId,
+            collectedByUserId: t.collectedByUserId,
+            collectedByName: t.collectedByName,
+            collectedByRole: t.collectedByRole,
+            collectedAt: t.collectedAt,
+            collectionMethod: t.collectionMethod,
+          );
+        }
+        return t;
+      }).toList();
+    } catch (e) {
+      debugPrint('_resolveMemberNames error: $e');
+      return txns;
     }
   }
 
@@ -80,15 +139,18 @@ class TransactionsRepository {
       final response = await _client
           .from('transactions')
           .select('id, type, amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
+          .eq('org_id', _orgId)
           .filter('created_at', 'gte', startOfDay.toIso8601String())
           .filter('created_at', 'lt', endOfDay.toIso8601String())
           .order('created_at', ascending: false)
           .limit(limit);
 
-      return (response as List)
+      final txns = (response as List)
           .map((json) =>
               TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
           .toList();
+
+      return _resolveMemberNames(txns);
     } catch (e) {
       debugPrint('getTransactionsByDate error: $e');
       return [];
@@ -103,6 +165,7 @@ class TransactionsRepository {
       final response = await _client
           .from('transactions')
           .select()
+          .eq('org_id', _orgId)
           .eq('member_id', memberId)
           .inFilter('type', [
         TransactionType.savingsDeposit.name,
@@ -128,6 +191,7 @@ class TransactionsRepository {
       final response = await _client
           .from('transactions')
           .select('id, type, amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
+          .eq('org_id', _orgId)
           .eq('savings_id', savingsId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
@@ -335,10 +399,7 @@ class TransactionsRepository {
     String? memberId,
     String? orgId,
   }) async {
-    // 1. Delete the transaction first (FK safety)
-    await _client.from('transactions').delete().eq('id', transactionId);
-
-    // 2. Delete matching savings_collections record
+    // 1. Delete matching savings_collections record first (FK safety)
     try {
       // First try precise match by transaction_id
       final byTxId = await _client
@@ -370,6 +431,9 @@ class TransactionsRepository {
       // Non-fatal
     }
 
+    // 2. Delete the transaction (safe now — FK dependency removed)
+    await _client.from('transactions').delete().eq('id', transactionId);
+
     // 3. Recalculate the plan balance via RPC (SECURITY DEFINER — bypasses RLS)
     try {
       await _client.rpc('recalculate_savings_balance', params: {
@@ -388,6 +452,7 @@ class TransactionsRepository {
         final rows = await _client
             .from('transactions')
             .select('type, amount')
+            .eq('org_id', _orgId)
             .eq('savings_id', savingsPlanId);
         double balance = opening;
         for (final r in rows as List) {
@@ -437,7 +502,7 @@ class TransactionsRepository {
       'payment_mode': paymentMode?.name,
       'description': description,
       'org_id': _orgId,
-      'created_at': DateTime.now().toIso8601String(),
+      'created_at': AppFormatters.nowIST(),
     });
   }
 
@@ -450,6 +515,7 @@ class TransactionsRepository {
       final response = await _client
           .from('transactions')
           .select('type, amount')
+          .eq('org_id', _orgId)
           .filter('created_at', 'gte', startOfDay.toIso8601String())
           .filter('created_at', 'lt', endOfDay.toIso8601String());
 

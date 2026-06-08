@@ -59,8 +59,10 @@ class PaymentFilterState {
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     if (diff == -1) return 'Tomorrow';
-    if (diff > 0 && diff <= 7) return '$diff days ago';
-    return '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+    // Show exact date with full month name
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${selectedDate.day} ${months[selectedDate.month - 1]} ${selectedDate.year}';
   }
 }
 
@@ -409,7 +411,7 @@ final todayPaymentsProvider =
     // Fetch all savings collections for the selected date
     final collectionsToday = await client
         .from('savings_collections')
-        .select('id, savings_plan_id, amount_collected, payment_mode, created_at')
+        .select('id, savings_plan_id, amount_collected, payment_mode, collection_time, created_at')
         .eq('org_id', orgId)
         .eq('collection_date', dateStr);
 
@@ -527,8 +529,12 @@ final todayPaymentsProvider =
             : (nextDueStr != null ? DateTime.parse(nextDueStr) : DateTime.parse(dateStr)),
         planName: plan['plan_name'],
         paymentMode: isCollected ? existingCollection['payment_mode'] : null,
-        collectedAt: isCollected && existingCollection['created_at'] != null
-            ? DateTime.tryParse(existingCollection['created_at'])
+        collectedAt: isCollected
+            ? (existingCollection['collection_time'] != null
+                ? DateTime.tryParse('${existingCollection['collection_date']}T${existingCollection['collection_time']}')
+                : (existingCollection['created_at'] != null
+                    ? DateTime.tryParse(existingCollection['created_at'])
+                    : null))
             : null,
         collectionId: isCollected
             ? existingCollection['id'] as String?

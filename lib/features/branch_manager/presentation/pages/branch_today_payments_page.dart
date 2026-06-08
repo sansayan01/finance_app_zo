@@ -1303,7 +1303,8 @@ class _PaymentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormat =
         NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
-    final timeFormat = DateFormat('hh:mm a');
+    final timeFormat = DateFormat('dd MMM, hh:mm a');
+    final dateFormat = DateFormat('dd MMM yyyy');
 
     return GestureDetector(
       onTap: onTap,
@@ -1400,16 +1401,21 @@ class _PaymentCard extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.error)),
                       ],
-                      if (payment.isCollected &&
-                          payment.collectedAt != null) ...[
-                        const SizedBox(height: 2),
-                        Text(timeFormat.format(payment.collectedAt!),
-                            style: TextStyle(
-                                fontSize: 10,
-                                color: isDark
-                                    ? AppColors.textTertiaryDark
-                                    : AppColors.textTertiaryLight)),
-                      ],
+                      const SizedBox(height: 2),
+                      Text(
+                        payment.isCollected && payment.collectedAt != null
+                            ? 'Collected at ${timeFormat.format(payment.collectedAt!)}'
+                            : 'Due: ${dateFormat.format(payment.dueDate)}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: payment.isCollected
+                              ? AppColors.success
+                              : (isDark
+                                  ? AppColors.textTertiaryDark
+                                  : AppColors.textTertiaryLight),
+                        ),
+                      ),
                     ],
                   ),
                 ],

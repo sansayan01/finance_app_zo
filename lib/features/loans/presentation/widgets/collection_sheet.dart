@@ -5,11 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/utils/formatters.dart' show AppFormatters;
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
-    show dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
+    show dashboardLoansProvider, dashboardTransactionsProvider, activeLoansProvider, loanSummaryProvider;
 import '../../../savings/data/models/savings_model.dart';
 import '../../../savings/data/models/savings_installment_model.dart';
 import '../../../savings/data/providers/savings_providers.dart' show allSavingsProvider;
@@ -307,6 +308,25 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     final timeStr =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
 
+    // Resolve member name: prefer joined data, fallback to DB lookup
+    String memberName = widget.loan!.customerName ?? '';
+    if (memberName.isEmpty) {
+      final memberId = widget.loan!.customerId.isNotEmpty
+          ? widget.loan!.customerId
+          : widget.loan!.memberId;
+      if (memberId != null) {
+        try {
+          final member = await client
+              .from('members')
+              .select('full_name')
+              .eq('id', memberId)
+              .maybeSingle();
+          memberName = member?['full_name']?.toString() ?? '';
+        } catch (_) {}
+      }
+    }
+    if (memberName.isEmpty) memberName = 'Unknown';
+
     // 1. Insert ONE collection per selected EMI (each targets exactly one EMI)
     for (final emi in _selectedEMIs) {
       await client.from('collections').insert({
@@ -314,7 +334,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         'staff_id': staffId,
         'loan_id': widget.loan!.id,
         'member_id': widget.loan!.memberId,
-        'member_name': widget.loan!.customerName ?? 'Unknown',
+        'member_name': memberName,
         'member_phone': widget.loan!.customerPhone,
         'loan_number': widget.loan!.loanNumber,
         'amount_expected': widget.loan!.emiAmount,
@@ -333,7 +353,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     await client.from('transactions').insert({
       'loan_id': widget.loan!.id,
       'member_id': widget.loan!.memberId,
-      'member_name': widget.loan!.customerName ?? 'Unknown',
+      'member_name': memberName,
       'type': TransactionType.emiPayment.name,
       'amount': amount,
       'payment_mode': _selectedMode,
@@ -341,7 +361,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
           ? '$selectedCount EMIs paid via $_selectedMode'
           : 'EMI #${_primarySelectedEMI?.emiNumber ?? ''} payment via $_selectedMode',
       'org_id': user.orgId!,
-      'created_at': now.toIso8601String(),
+      'created_at': AppFormatters.nowIST(),
     });
 
     // 3. Update loan balance
@@ -399,6 +419,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     ref.invalidate(paymentHistoryProvider(widget.loan!.id));
     ref.invalidate(loansProvider);
     ref.invalidate(dashboardLoansProvider);
+    ref.invalidate(dashboardTransactionsProvider);
     ref.invalidate(activeLoansProvider);
     ref.invalidate(loanSummaryProvider);
   }
@@ -413,6 +434,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     final now = DateTime.now();
     final today = now.toIso8601String().split('T').first;
     final amount = _totalAmount;
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
 
     // 1. Create transaction
     final txResult = await client.from('transactions').insert({
@@ -425,7 +448,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'description':
           '${_selectedSavingsDates.length} installments deposited via $_selectedMode',
       'org_id': profile.orgId,
-      'created_at': now.toIso8601String(),
+      'created_at': AppFormatters.nowIST(),
     }).select('id').single();
     final transactionId = txResult['id'] as String;
 
@@ -440,6 +463,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'is_partial': false,
       'payment_mode': _selectedMode,
       'collection_date': today,
+      'collection_time': timeStr,
       'staff_id': profile.id,
       'collected_by_name': profile.fullName,
       'collected_by_role': profile.role.dbValue,
@@ -497,6 +521,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     // 5. Invalidate savings providers
     try {
       ref.invalidate(allSavingsProvider);
+      ref.invalidate(dashboardTransactionsProvider);
     } catch (_) {}
   }
 

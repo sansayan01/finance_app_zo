@@ -112,4 +112,10 @@ class AppFormatters {
   static DateTime convertToIST(DateTime dateTime) {
     return dateTime.toLocal();
   }
+
+  static String nowIST() {
+    final now = DateTime.now();
+    final ist = now.toUtc().add(const Duration(hours: 5, minutes: 30));
+    return ist.toIso8601String().replaceFirst('Z', '+05:30');
+  }
 }

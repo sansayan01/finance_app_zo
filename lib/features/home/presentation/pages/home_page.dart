@@ -1226,7 +1226,7 @@ class _TransactionItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      AppFormatters.formatRelativeTime(transaction.createdAt),
+                      AppFormatters.formatTime(transaction.createdAt),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 10,
                         color: theme.textTheme.bodySmall?.color

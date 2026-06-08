@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/utils/formatters.dart' show AppFormatters;
 import '../models/emi_schedule_model.dart';
 
 class EMIRepository {
@@ -84,7 +85,7 @@ class EMIRepository {
       // 1. Update EMI Schedule
       await _client.from('emi_schedule').update({
         'status': 'paid',
-        'paid_on': now.toUtc().toIso8601String(),
+        'paid_on': AppFormatters.nowIST(),
         'payment_mode': paymentMode,
       }).eq('id', emiId);
 
@@ -100,8 +101,8 @@ class EMIRepository {
         if (loan == null) return;
         memberId = loan['customer_id']?.toString() ?? loan['member_id']?.toString();
         memberName = loan['member_name']?.toString();
-        // If member_name is null on loan, look up from members table
-        if (memberName == null && memberId != null) {
+        // If member_name is null/empty on loan, look up from members table
+        if ((memberName == null || memberName.isEmpty) && memberId != null) {
           final member = await _client
               .from('members')
               .select('full_name')
@@ -122,8 +123,8 @@ class EMIRepository {
         'description':
             'EMI payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
-        'entered_at': now.toUtc().toIso8601String(),
-        'created_at': now.toUtc().toIso8601String(),
+        'entered_at': AppFormatters.nowIST(),
+        'created_at': AppFormatters.nowIST(),
       });
 
       // 3. Update loan's outstanding balance
@@ -183,7 +184,8 @@ class EMIRepository {
         if (loan == null) return;
         memberId = loan['customer_id']?.toString() ?? loan['member_id']?.toString();
         memberName = loan['member_name']?.toString();
-        if (memberName == null && memberId != null) {
+        // If member_name is null/empty on loan, look up from members table
+        if ((memberName == null || memberName.isEmpty) && memberId != null) {
           final member = await _client
               .from('members')
               .select('full_name')
@@ -204,8 +206,8 @@ class EMIRepository {
         'description':
             'Manual payment via $paymentMode${notes != null ? ': $notes' : ''}',
         'org_id': _orgId,
-        'entered_at': now.toUtc().toIso8601String(),
-        'created_at': now.toUtc().toIso8601String(),
+        'entered_at': AppFormatters.nowIST(),
+        'created_at': AppFormatters.nowIST(),
       });
 
       // 2. Update loan's outstanding balance

@@ -838,7 +838,7 @@ class _TransactionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  AppFormatters.formatRelativeTime(transaction.createdAt),
+                  AppFormatters.formatTime(transaction.createdAt),
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 11,
                     color: theme.textTheme.bodySmall?.color

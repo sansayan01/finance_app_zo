@@ -1616,7 +1616,8 @@ class _PaymentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormat =
         NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
-    final timeFormat = DateFormat('hh:mm a');
+    final timeFormat = DateFormat('dd MMM, hh:mm a');
+    final dateFormat = DateFormat('dd MMM yyyy');
 
     return GestureDetector(
       onTap: onTap,
@@ -1838,8 +1839,8 @@ class _PaymentCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             payment.isCollected && payment.collectedAt != null
-                                ? 'Collected at ${timeFormat.format(payment.collectedAt!)}'
-                                : 'Due today',
+                                ? timeFormat.format(payment.collectedAt!)
+                                : 'Due: ${dateFormat.format(payment.dueDate)}',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,

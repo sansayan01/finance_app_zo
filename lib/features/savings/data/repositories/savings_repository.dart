@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/utils/formatters.dart' show AppFormatters;
 import '../models/savings_model.dart';
 
 class SavingsRepository {
@@ -245,7 +246,7 @@ class SavingsRepository {
       'type': TransactionType.savingsDeposit.name,
       'org_id': _orgId,
       'description': 'Deposit into Savings Vault',
-      'created_at': DateTime.now().toIso8601String(),
+      'created_at': AppFormatters.nowIST(),
     });
   }
 
@@ -268,12 +269,12 @@ class SavingsRepository {
   /// dependent rows. Use with care — this is irreversible and removes
   /// the entire transaction history for the plan.
   Future<void> deleteSavingPlanCascade(String id) async {
-    // 1. Detach transactions (FK is ON DELETE SET NULL but we delete
-    //    them outright since they belong to this plan's history).
-    await _client.from('transactions').delete().eq('savings_id', id).select();
-
-    // 2. Delete collection records (FK is NO ACTION — must go first).
+    // 1. Delete collection records first (FK safety — FK is NO ACTION,
+    //    must be removed before the parent transaction/plan).
     await _client.from('savings_collections').delete().eq('savings_plan_id', id).select();
+
+    // 2. Delete transactions (belong to this plan's history).
+    await _client.from('transactions').delete().eq('savings_id', id).select();
 
     // 3. Delete the plan itself.
     final result = await _client.from('savings_plans').delete().eq('id', id).select();

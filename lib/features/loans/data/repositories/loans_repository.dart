@@ -91,13 +91,26 @@ class LoansRepository {
         }
       }
 
+      // Query total collected from transactions table
+      double totalCollected = 0;
+      try {
+        final collectedResponse = await _client
+            .from('transactions')
+            .select('amount')
+            .eq('org_id', _orgId)
+            .eq('type', 'emiPayment');
+        for (final row in collectedResponse) {
+          totalCollected += double.tryParse(row['amount'].toString()) ?? 0;
+        }
+      } catch (_) {}
+
       return LoanSummary(
         totalLoans: totalLoans,
         activeLoans: activeLoans,
         defaultLoans: defaultLoans,
         totalOutstanding: totalOutstanding,
         totalDisbursed: totalDisbursed,
-        totalCollected: 0, // Would need transaction history
+        totalCollected: totalCollected,
         overdueAmount: overdueAmount,
         parPercentage: totalLoans == 0 ? 0 : (defaultLoans / totalLoans) * 100,
       );

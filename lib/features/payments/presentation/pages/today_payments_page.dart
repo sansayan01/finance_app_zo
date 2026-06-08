@@ -4,19 +4,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/enums.dart';
-import '../../../../core/providers/sms_provider.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../home/data/providers/dashboard_providers.dart' show dashboardLoansProvider, loanSummaryProvider, todayAgendaProvider;
-import '../../../staff/data/providers/collection_providers.dart';
 import '../../data/models/today_payment_model.dart';
 import '../../data/providers/payment_providers.dart';
 import '../../data/utils/payment_export.dart';
-import '../../../loans/presentation/providers/loan_providers.dart';
-import '../../../savings/data/providers/savings_providers.dart';
+import '../../../savings/data/models/savings_model.dart';
+import '../../../loans/data/models/loan_model.dart';
+import '../../../loans/presentation/widgets/collection_sheet.dart';
+import '../../../../providers/supabase_provider.dart';
 
 class TodayPaymentsPage extends ConsumerStatefulWidget {
   const TodayPaymentsPage({super.key});
@@ -399,750 +395,74 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
   }
 
   void _showQuickCollect(TodayPayment payment) {
-    int installmentCount = 1;
-    String selectedMode = 'cash';
-    bool isSubmitting = false;
-    int overdueCount = 0;
-    bool hasCurrent = false;
-    bool dataLoaded = false;
-
-    Future<void> loadQuickCollectOverdue(StateSetter setSheetState) async {
-      if (payment.type == PaymentType.emi && payment.loanId != null) {
-        try {
-          final schedule =
-              await ref.read(emiScheduleProvider(payment.loanId!).future);
-          final today = DateTime.now();
-          final todayDate = DateTime(today.year, today.month, today.day);
-          final unpaid =
-              schedule.where((e) => e.status != EMIStatus.paid).toList();
-          if (mounted) {
-            setSheetState(() {
-              overdueCount =
-                  unpaid.where((e) => e.dueDate.isBefore(todayDate)).length;
-              hasCurrent = unpaid.length > overdueCount;
-            });
-          }
-        } catch (_) {}
-      } else if (payment.type == PaymentType.savings) {
-        if (mounted) {
-          setSheetState(() {
-            overdueCount = payment.isOverdue ? 1 : 0;
-            hasCurrent = !payment.isOverdue;
-          });
-        }
-      }
+    if (payment.type == PaymentType.savings) {
+      _openSavingsCollection(payment);
+    } else if (payment.type == PaymentType.emi && payment.loanId != null) {
+      _openEmiCollection(payment);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to collect — missing payment data')),
+      );
     }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) {
-          final currencyFormat =
-              NumberFormat.currency(symbol: '₹', decimalDigits: 0);
-
-          // Load overdue data on first build
-          if (!dataLoaded) {
-            dataLoaded = true;
-            loadQuickCollectOverdue(setSheetState);
-          }
-
-          double totalAmount() =>
-              installmentCount * payment.amountExpected;
-
-          int overdueToPay() =>
-              installmentCount < overdueCount
-                  ? installmentCount
-                  : overdueCount;
-          int remainingAfterOverdue() =>
-              installmentCount - overdueToPay();
-          int currentToPay() =>
-              remainingAfterOverdue() > 0 && hasCurrent ? 1 : 0;
-          int advanceToPay() =>
-              remainingAfterOverdue() - currentToPay();
-
-          Widget buildDistRow(String label, String value, Color color,
-              IconData? icon,
-              {bool isTotal = false}) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 14, color: color),
-                    const SizedBox(width: 6),
-                  ],
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: isTotal ? 13 : 12,
-                      fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
-                      color: isTotal ? Colors.black87 : Colors.grey.shade700,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: isTotal ? 14 : 12,
-                      fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Padding(
-            padding: EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 12,
-              bottom: MediaQuery.of(ctx).viewInsets.bottom +
-                  MediaQuery.of(ctx).padding.bottom +
-                  20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: AppColors.successGradient,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.payment_rounded,
-                          color: Colors.white, size: 24),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Quick Collect',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${payment.memberName} \u00b7 ${payment.typeLabel}'
-                            '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
-                            '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Installment count selector
-                const Text('Number of Installments',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                const SizedBox(height: 10),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.15)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        onPressed: installmentCount > 1
-                            ? () => setSheetState(() {
-                                  installmentCount--;
-                                })
-                            : null,
-                        icon: const Icon(Icons.remove_circle_outline_rounded),
-                        color: AppColors.primary,
-                        disabledColor: Colors.grey.shade300,
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            '$installmentCount',
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          Text(
-                            installmentCount == 1
-                                ? 'installment'
-                                : 'installments',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        onPressed: installmentCount < 12
-                            ? () => setSheetState(() {
-                                  installmentCount++;
-                                })
-                            : null,
-                        icon: const Icon(Icons.add_circle_outline_rounded),
-                        color: AppColors.primary,
-                        disabledColor: Colors.grey.shade300,
-                      ),
-                    ],
-                  ),
-                ),
-                if (installmentCount > 1) ...[
-                  const SizedBox(height: 6),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      '$installmentCount × ${currencyFormat.format(payment.amountExpected)} = ${currencyFormat.format(payment.amountExpected * installmentCount)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 20),
-
-                // Amount field
-                const Text('Total Amount',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  readOnly: true,
-                  controller: TextEditingController(
-                      text: totalAmount().toStringAsFixed(0)),
-                  keyboardType: TextInputType.none,
-                  decoration: InputDecoration(
-                    prefixText: '\u20b9 ',
-                    prefixStyle: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.success,
-                      fontSize: 20,
-                    ),
-                    hintText: 'Enter amount',
-                    filled: true,
-                    fillColor: AppColors.success.withValues(alpha: 0.06),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide:
-                          const BorderSide(color: AppColors.success, width: 2),
-                    ),
-                  ),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Payment distribution breakdown
-                if (overdueToPay() > 0 ||
-                    currentToPay() > 0 ||
-                    advanceToPay() > 0) ...[
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        const Text('Payment Distribution',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 12)),
-                        const SizedBox(height: 10),
-                        if (overdueToPay() > 0)
-                          buildDistRow(
-                              '${overdueToPay()} Overdue',
-                              currencyFormat.format(
-                                  overdueToPay() * payment.amountExpected),
-                              AppColors.error,
-                              Icons.warning_amber_rounded),
-                        if (currentToPay() > 0)
-                          buildDistRow(
-                              '${currentToPay()} Current',
-                              currencyFormat.format(
-                                  currentToPay() * payment.amountExpected),
-                              AppColors.warning,
-                              Icons.schedule_rounded),
-                        if (advanceToPay() > 0)
-                          buildDistRow(
-                              '${advanceToPay()} Advance',
-                              currencyFormat.format(
-                                  advanceToPay() * payment.amountExpected),
-                              AppColors.info,
-                              Icons.trending_up_rounded),
-                        const Divider(height: 20),
-                        buildDistRow(
-                          'Total',
-                          currencyFormat.format(totalAmount()),
-                          AppColors.success,
-                          null,
-                          isTotal: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-
-                // Payment mode
-                const Text('Payment Mode',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ModeChip(
-                        icon: Icons.money_rounded,
-                        label: 'Cash',
-                        isSelected: selectedMode == 'cash',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'cash'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ModeChip(
-                        icon: Icons.qr_code_rounded,
-                        label: 'UPI',
-                        isSelected: selectedMode == 'upi',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'upi'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ModeChip(
-                        icon: Icons.account_balance_rounded,
-                        label: 'Bank',
-                        isSelected: selectedMode == 'bank_transfer',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'bank_transfer'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ModeChip(
-                        icon: Icons.receipt_rounded,
-                        label: 'Cheque',
-                        isSelected: selectedMode == 'cheque',
-                        onTap: () =>
-                            setSheetState(() => selectedMode = 'cheque'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(0, 52),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: const Text('Cancel'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton.icon(
-                        onPressed: isSubmitting
-                            ? null
-                            : () async {
-                                final amount = totalAmount();
-                                if (amount <= 0) {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(const SnackBar(
-                                    content: Text('Enter a valid amount'),
-                                    backgroundColor: Colors.redAccent,
-                                  ));
-                                  return;
-                                }
-
-                                final navigator = Navigator.of(ctx);
-                                final messenger = ScaffoldMessenger.of(context);
-
-                                setSheetState(() => isSubmitting = true);
-
-                                try {
-                                  await _recordCollection(
-                                    payment: payment,
-                                    amount: amount,
-                                    paymentMode: selectedMode,
-                                    installmentCount: installmentCount,
-                                  );
-
-                                  navigator.pop();
-                                  messenger.showSnackBar(SnackBar(
-                                    content: Text(
-                                        '${installmentCount > 1 ? '$installmentCount installments · ' : ''}\u20b9${amount.toStringAsFixed(0)} collected from ${payment.memberName}'),
-                                    backgroundColor: AppColors.success,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                  ));
-                                  ref.invalidate(todayPaymentsProvider);
-                                  try {
-                                    ref.invalidate(todayCollectionsProvider);
-                                    ref.invalidate(todayCollectionStatsProvider);
-                                    ref.invalidate(todayDueEmisProvider);
-                                    ref.invalidate(dashboardLoansProvider);
-                                    ref.invalidate(loanSummaryProvider);
-                                    ref.invalidate(todayStatsProvider);
-                                    ref.invalidate(todayAgendaProvider);
-                                    
-                                    // Invalidate specific loan providers if loanId exists
-                                    if (payment.loanId != null) {
-                                      ref.invalidate(loansProvider);
-                                      ref.invalidate(loanDetailProvider(payment.loanId!));
-                                      ref.invalidate(emiScheduleProvider(payment.loanId!));
-                                      ref.invalidate(paymentHistoryProvider(payment.loanId!));
-                                    }
-                                    
-                                    // Invalidate savings providers
-                                    if (payment.type == PaymentType.savings) {
-                                      final pid = payment.id.endsWith('_today')
-                                          ? payment.id.substring(0, payment.id.length - 6)
-                                          : payment.id;
-                                      ref.invalidate(allSavingsProvider);
-                                      ref.invalidate(savingsSummaryProvider);
-                                      ref.invalidate(savingDetailProvider(pid));
-                                      ref.invalidate(savingTransactionsProvider(pid));
-                                      ref.invalidate(savingTxPagerProvider(pid));
-                                    }
-                                  } catch (_) {}
-                                  } catch (e) {
-                                  setSheetState(
-                                      () => isSubmitting = false);
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: Text('Collection failed: $e'),
-                                      backgroundColor: Colors.redAccent,
-                                    ));
-                                  }
-                                }
-                              },
-                        icon: isSubmitting
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.check_circle_rounded,
-                                size: 18),
-                        label: Text(
-                          isSubmitting
-                              ? 'Processing...'
-                              : 'Collect ${currencyFormat.format(totalAmount())}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(0, 52),
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
   }
 
-  Future<void> _recordCollection({
-    required TodayPayment payment,
-    required double amount,
-    required String paymentMode,
-    int installmentCount = 1,
-  }) async {
-    final client = Supabase.instance.client;
-    final user = ref.read(currentUserProvider);
-    if (user == null || user.orgId == null) {
-      throw Exception('User not found');
-    }
-
-    final profile = await client
-        .from('profiles')
-        .select('id, full_name')
-        .eq('user_id', user.id)
-        .maybeSingle();
-    final staffId = profile?['id'] as String?;
-    if (staffId == null) {
-      throw Exception('Staff profile not found');
-    }
-    final collectorName = profile?['full_name'] as String? ?? 'Admin';
-
-    final now = DateTime.now();
-    final today = now.toIso8601String().split('T').first;
-
-    if (payment.type == PaymentType.savings) {
-      // Extract real plan ID (daily pending entries have _today suffix)
-      final planId = payment.id.endsWith('_today')
-          ? payment.id.substring(0, payment.id.length - 6)
-          : payment.id;
-
-      // 1. Create transaction FIRST so we can link it to the collection
-      final txResult = await client.from('transactions').insert({
-        'member_id': payment.memberId,
-        'member_name': payment.memberName,
-        'savings_id': planId,
-        'amount': amount,
-        'type': 'savingsDeposit',
-        'payment_mode': paymentMode,
-        'description': installmentCount > 1
-            ? '$installmentCount installments deposited via $paymentMode'
-            : 'Savings deposit via $paymentMode',
-        'org_id': user.orgId!,
-        'created_at': now.toIso8601String(),
-      }).select('id').single();
-      final transactionId = txResult['id'] as String;
-
-      // 2. Record collection log (linked to transaction)
-      await client.from('savings_collections').insert({
-        'org_id': user.orgId!,
-        'savings_plan_id': planId,
-        'member_id': payment.memberId,
-        'member_name': payment.memberName,
-        'member_phone': payment.memberPhone,
-        'amount_expected': payment.amountExpected * installmentCount,
-        'amount_collected': amount,
-        'is_partial': amount < (payment.amountExpected * installmentCount),
-        'payment_mode': paymentMode,
-        'collection_date': today,
-        'staff_id': staffId,
-        'sync_status': 'synced',
-        'transaction_id': transactionId,
-      });
-
-      // 3. Advance next_due_date by installmentCount periods
-      final plan = await client
+  Future<void> _openSavingsCollection(TodayPayment payment) async {
+    final client = ref.read(supabaseClientProvider);
+    final planId = payment.id.endsWith('_today')
+        ? payment.id.substring(0, payment.id.length - 6)
+        : payment.id;
+    try {
+      final response = await client
           .from('savings_plans')
-          .select('collection_type, collection_day_of_week, collection_day_of_month, current_amount')
+          .select()
           .eq('id', planId)
           .maybeSingle();
-
-      DateTime nextDue;
-      final collectionType = plan?['collection_type'] ?? 'daily';
-      switch (collectionType) {
-        case 'weekly':
-          nextDue = now.add(Duration(days: 7 * installmentCount));
-          break;
-        case 'monthly':
-          final targetDay = plan?['collection_day_of_month'] ?? now.day;
-          final targetMonth = now.month + installmentCount;
-          final targetYear = now.year + ((targetMonth - 1) ~/ 12);
-          final adjustedMonth = ((targetMonth - 1) % 12) + 1;
-          final daysInMonth = DateTime(targetYear, adjustedMonth + 1, 0).day;
-          nextDue = DateTime(targetYear, adjustedMonth,
-              targetDay > daysInMonth ? daysInMonth : targetDay);
-          break;
-        default: // daily
-          nextDue = now.add(Duration(days: installmentCount));
+      if (response != null && mounted) {
+        final plan = SavingsModel.fromJson(response);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => CollectionSheet.savings(savingsPlan: plan),
+          ),
+        );
       }
-
-      final currentBalance =
-          ((plan?['current_amount']) as num?)?.toDouble() ?? 0.0;
-
-      // 4. Update savings plan
-      await client.from('savings_plans').update({
-        'next_due_date': nextDue.toIso8601String().split('T').first,
-        'current_amount': currentBalance + amount,
-        'updated_at': now.toIso8601String(),
-      }).eq('id', planId);
-
-      // 5. Send SMS notification (non-blocking, fire-and-forget)
-      ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
-        phone: payment.memberPhone,
-        memberId: payment.memberId,
-        memberName: payment.memberName,
-        loanNumber: null,
-        amount: amount,
-        outstandingBalance: currentBalance + amount,
-        collectorName: collectorName,
-        sentBy: staffId,
-      );
-    } else {
-      // EMI Payment flow
-
-      // 1. Record collection log
-      await client.from('collections').insert({
-        'org_id': user.orgId!,
-        'staff_id': staffId,
-        'loan_id': payment.loanId,
-        'member_id': payment.memberId,
-        'member_name': payment.memberName,
-        'member_phone': payment.memberPhone,
-        'loan_number': payment.loanNumber,
-        'amount_expected': payment.amountExpected * installmentCount,
-        'amount_collected': amount,
-        'is_partial': amount < (payment.amountExpected * installmentCount),
-        'collection_type': 'emi',
-        'payment_mode': paymentMode,
-        'collection_date': today,
-        'collection_time':
-            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
-        'sync_status': 'synced',
-      });
-
-      // 2. Mark EMIs as paid (handled by DB trigger on collection insert)
-      // The trigger 'update_schedule_on_collection' automatically marks
-      // the correct number of EMIs based on amount_collected.
-      if (payment.loanId != null) {
-        // 3. Update loan outstanding balance
-        final loan = await client
-            .from('loans')
-            .select('outstanding_amount, outstanding_balance')
-            .eq('id', payment.loanId!)
-            .maybeSingle();
-
-        if (loan != null) {
-          final currentBalance = ((loan['outstanding_amount'] ??
-                      loan['outstanding_balance']) as num?)
-                  ?.toDouble() ??
-              0.0;
-          final newBalance =
-              (currentBalance - amount).clamp(0.0, currentBalance);
-
-          final updateData = <String, dynamic>{
-            'outstanding_amount': newBalance,
-            'outstanding_balance': newBalance,
-            'updated_at': now.toIso8601String(),
-          };
-
-          if (newBalance <= 0) {
-            updateData['status'] = 'closed';
-            updateData['closed_date'] = today;
-          }
-
-          await client
-              .from('loans')
-              .update(updateData)
-              .eq('id', payment.loanId!);
-        }
-      }
-
-      // 4. Transaction record
-      await client.from('transactions').insert({
-        'loan_id': payment.loanId,
-        'member_id': payment.memberId,
-        'member_name': payment.memberName,
-        'type': 'emiPayment',
-        'amount': amount,
-        'payment_mode': paymentMode,
-        'description': installmentCount > 1
-            ? '$installmentCount EMIs paid via $paymentMode'
-            : 'EMI payment via $paymentMode',
-        'org_id': user.orgId!,
-        'created_at': now.toIso8601String(),
-      });
-
-      // 5. Send SMS notification (non-blocking, fire-and-forget)
-      ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
-        phone: payment.memberPhone,
-        memberId: payment.memberId,
-        memberName: payment.memberName,
-        loanNumber: payment.loanNumber,
-        amount: amount,
-        outstandingBalance: 0.0,
-        collectorName: collectorName,
-        sentBy: staffId,
-      );
-    }
-
-    // Log activity for timeline (non-blocking)
-    try {
-      await client.from('activity_logs').insert({
-        'org_id': user.orgId!,
-        'staff_id': staffId,
-        'action': payment.type == PaymentType.savings
-            ? 'savings_collection_recorded'
-            : 'collection_recorded',
-        'entity_type':
-            payment.type == PaymentType.savings ? 'savings' : 'collection',
-        'entity_id': payment.id,
-        'details':
-            'Collected Rs${amount.toStringAsFixed(0)} from ${payment.memberName}',
-        'metadata': {
-          'amount': amount,
-          'member_name': payment.memberName,
-          'payment_mode': paymentMode,
-          'installment_count': installmentCount,
-          'type': payment.type == PaymentType.savings ? 'savings' : 'emi',
-        },
-        'created_at': now.toIso8601String(),
-      });
     } catch (e) {
-      debugPrint('Failed to log activity: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load savings plan: $e')),
+        );
+      }
     }
   }
+
+  Future<void> _openEmiCollection(TodayPayment payment) async {
+    if (payment.loanId == null) return;
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final response = await client
+          .from('loans')
+          .select()
+          .eq('id', payment.loanId!)
+          .maybeSingle();
+      if (response != null && mounted) {
+        final loan = LoanModel.fromJson(response);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => CollectionSheet(loan: loan),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load loan: $e')),
+        );
+      }
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -2648,54 +1968,3 @@ class _CompactAction extends StatelessWidget {
   }
 }
 
-class _ModeChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ModeChip({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.success.withValues(alpha: 0.12)
-              : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.success : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? AppColors.success : Colors.grey.shade600,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.success : Colors.grey.shade700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

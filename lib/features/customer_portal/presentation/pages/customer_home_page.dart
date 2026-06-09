@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/sparkline_chart.dart';
@@ -278,7 +279,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final memberName = dashboard['memberName'] as String? ?? 'Member';
-    final kycStatus = dashboard['kycStatus'] as String?;
+    final avatarUrl = dashboard['avatarUrl'] as String?;
     final area = dashboard['area'] as String?;
     final activeLoans = dashboard['activeLoans'] as int;
     final totalOutstanding = dashboard['totalOutstanding'] as double;
@@ -316,8 +317,8 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                 child: _section(
                   0,
                   _buildPremiumHeader(
-                    context, ref, memberName, area, isDark,
-                    kycStatus, totalSavings, totalOutstanding,
+                    context, ref, memberName, avatarUrl, area, isDark,
+                    totalSavings, totalOutstanding,
                   ),
                 ),
               ),
@@ -383,10 +384,19 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                 ),
               ),
 
+            // Your Loans
+            if (activeLoansList.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _section(
+                  4,
+                  _buildYourLoans(context, isDark, activeLoansList),
+                ),
+              ),
+
             // Quick Actions
             SliverToBoxAdapter(
               child: _section(
-                4,
+                5,
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                   child: _buildPremiumQuickActions(context),
@@ -397,7 +407,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
             // Charts Section
             SliverToBoxAdapter(
               child: _section(
-                5,
+                6,
                 CustomerDashboardCharts(
                   paymentTrend: paymentTrend,
                   savingsGrowth: savingsGrowth,
@@ -411,7 +421,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
             // Transactions Header
             SliverToBoxAdapter(
               child: _section(
-                6,
+                7,
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
                   child: Row(
@@ -535,9 +545,9 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
     BuildContext context,
     WidgetRef ref,
     String memberName,
+    String? avatarUrl,
     String? area,
     bool isDark,
-    String? kycStatus,
     double totalSavings,
     double totalOutstanding,
   ) {
@@ -589,14 +599,6 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                                     height: 52,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          AppColors.primaryLight,
-                                          AppColors.accentLight,
-                                        ],
-                                      ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: AppColors.primaryLight
@@ -612,18 +614,98 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                                         ),
                                       ],
                                     ),
-                                    child: Center(
-                                      child: Text(
-                                        memberName.isNotEmpty
-                                            ? memberName[0].toUpperCase()
-                                            : 'M',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
+                                    child: ClipOval(
+                                      child: avatarUrl != null && avatarUrl.isNotEmpty
+                                          ? CachedNetworkImage(
+                                              imageUrl: avatarUrl,
+                                              width: 52,
+                                              height: 52,
+                                              fit: BoxFit.cover,
+                                              placeholder: (_, __) => Container(
+                                                width: 52,
+                                                height: 52,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: [
+                                                      AppColors.primaryLight,
+                                                      AppColors.accentLight,
+                                                    ],
+                                                  ),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    memberName.isNotEmpty
+                                                        ? memberName[0].toUpperCase()
+                                                        : 'M',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 22,
+                                                      fontWeight: FontWeight.w800,
+                                                      letterSpacing: -0.5,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              errorWidget: (_, __, ___) => Container(
+                                                width: 52,
+                                                height: 52,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: [
+                                                      AppColors.primaryLight,
+                                                      AppColors.accentLight,
+                                                    ],
+                                                  ),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    memberName.isNotEmpty
+                                                        ? memberName[0].toUpperCase()
+                                                        : 'M',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 22,
+                                                      fontWeight: FontWeight.w800,
+                                                      letterSpacing: -0.5,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : Container(
+                                              width: 52,
+                                              height: 52,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: [
+                                                    AppColors.primaryLight,
+                                                    AppColors.accentLight,
+                                                  ],
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  memberName.isNotEmpty
+                                                      ? memberName[0].toUpperCase()
+                                                      : 'M',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.w800,
+                                                    letterSpacing: -0.5,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                     ),
                                   );
                                 },
@@ -730,42 +812,6 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                                         color: Colors.white.withValues(alpha: 0.75),
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                          // KYC alert
-                          if (kycStatus != null && kycStatus != 'verified')
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: Colors.amber.withValues(alpha: 0.25),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.shield_rounded,
-                                        color: Colors.amber, size: 18),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        kycStatus == 'pending'
-                                            ? 'KYC verification pending'
-                                            : 'KYC rejected — update documents',
-                                        style: const TextStyle(
-                                          color: Colors.amber,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                        ),
                                       ),
                                     ),
                                   ],
@@ -1311,6 +1357,360 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
         ],
       ),
     );
+  }
+
+  // ─── YOUR LOANS ─────────────────────────────────────────────────────────────
+
+  Widget _buildYourLoans(
+    BuildContext context,
+    bool isDark,
+    List<CustomerLoanModel> activeLoans,
+  ) {
+    final theme = Theme.of(context);
+    final totalOutstanding = activeLoans.fold(0.0, (sum, l) => sum + l.outstandingBalance);
+    final totalPaid = activeLoans.fold(0.0, (sum, l) => sum + (l.amount - l.outstandingBalance));
+    final totalAmount = activeLoans.fold(0.0, (sum, l) => sum + l.amount);
+    final overallProgress = totalAmount > 0 ? (totalPaid / totalAmount).clamp(0.0, 1.0) : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [AppColors.primary, AppColors.accent],
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Your Loans',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimaryLight,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => context.push('/customer/loans'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                        AppColors.accent.withValues(alpha: isDark ? 0.1 : 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.12),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${activeLoans.length} ${activeLoans.length == 1 ? 'loan' : 'loans'}',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: AppColors.primary,
+                        size: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          // Summary card with progress
+          GlassCard(
+            borderRadius: 20,
+            padding: EdgeInsets.zero,
+            elevated: true,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: isDark ? 0.1 : 0.05),
+                    isDark ? const Color(0xFF1A1F3A) : Colors.white,
+                  ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Progress bar with stats
+                    Row(
+                      children: [
+                        // Circular progress
+                        SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                width: 56,
+                                height: 56,
+                                child: CircularProgressIndicator(
+                                  value: overallProgress,
+                                  strokeWidth: 5,
+                                  backgroundColor: isDark
+                                      ? AppColors.fillDark
+                                      : AppColors.fillLight,
+                                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              ),
+                              Text(
+                                '${(overallProgress * 100).toStringAsFixed(0)}%',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Overall Repayment',
+                                style: TextStyle(
+                                  color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                                      .withValues(alpha: 0.5),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatCurrencyHome(totalPaid),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              Text(
+                                'of ${_formatCurrencyHome(totalAmount)} disbursed',
+                                style: TextStyle(
+                                  color: (isDark ? Colors.white : const Color(0xFF0F172A))
+                                      .withValues(alpha: 0.4),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Outstanding amount
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: isDark ? 0.15 : 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.warning.withValues(alpha: isDark ? 0.3 : 0.15),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                _formatCurrencyHome(totalOutstanding),
+                                style: const TextStyle(
+                                  color: AppColors.warning,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              Text(
+                                'Left',
+                                style: TextStyle(
+                                  color: AppColors.warning.withValues(alpha: 0.7),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Individual loan chips
+                    ...activeLoans.map((loan) => _buildLoanChip(context, loan, isDark)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoanChip(BuildContext context, CustomerLoanModel loan, bool isDark) {
+    final theme = Theme.of(context);
+    final progress = (loan.paidPercentage / 100).clamp(0.0, 1.0);
+    final chipColor = loan.isOverdue ? AppColors.error : AppColors.primary;
+
+    return GestureDetector(
+      onTap: () => context.push('/customer/loans/${loan.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : Colors.black.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.05),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Loan icon
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    chipColor.withValues(alpha: isDark ? 0.25 : 0.15),
+                    chipColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                loan.isOverdue ? Icons.warning_rounded : Icons.receipt_long_rounded,
+                color: chipColor,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Loan info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    loan.loanNumber ?? 'Loan',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${_formatCurrencyHome(loan.emiAmount)} EMI  ·  ${loan.purpose ?? ''}',
+                    style: TextStyle(
+                      color: (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)
+                          .withValues(alpha: 0.8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Mini progress + outstanding
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _formatCurrencyHome(loan.outstandingBalance),
+                  style: TextStyle(
+                    color: chipColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: 60,
+                  height: 4,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: isDark ? AppColors.fillDark : AppColors.fillLight,
+                      valueColor: AlwaysStoppedAnimation<Color>(chipColor),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.2),
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatCurrencyHome(double amount) {
+    if (amount >= 10000000) {
+      return '\u20b9${(amount / 10000000).toStringAsFixed(2)}Cr';
+    }
+    if (amount >= 100000) {
+      return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
+    } else if (amount >= 1000) {
+      return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return '\u20b9${amount.toStringAsFixed(0)}';
   }
 
   // ─── PREMIUM QUICK ACTIONS ───────────────────────────────────────────────

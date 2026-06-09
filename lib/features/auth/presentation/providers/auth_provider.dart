@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:local_auth/local_auth.dart';
@@ -75,34 +76,36 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repository.getCurrentUser();
       if (user != null) {
-        // Biometric check
-        final prefs = await SharedPreferences.getInstance();
-        final biometricEnabled = prefs.getBool('biometricAuth') ?? false;
+        // Biometric check — skip on web (local_auth not supported)
+        if (!kIsWeb) {
+          final prefs = await SharedPreferences.getInstance();
+          final biometricEnabled = prefs.getBool('biometricAuth') ?? false;
 
-        if (biometricEnabled) {
-          final LocalAuthentication auth = LocalAuthentication();
-          final bool canAuthenticateWithBiometrics =
-              await auth.canCheckBiometrics;
-          final bool canAuthenticate =
-              canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+          if (biometricEnabled) {
+            final LocalAuthentication auth = LocalAuthentication();
+            final bool canAuthenticateWithBiometrics =
+                await auth.canCheckBiometrics;
+            final bool canAuthenticate =
+                canAuthenticateWithBiometrics || await auth.isDeviceSupported();
 
-          if (canAuthenticate) {
-            try {
-              final bool didAuthenticate = await auth.authenticate(
-                localizedReason: 'Please authenticate to access MicroFlow Pro',
-                persistAcrossBackgrounding: true,
-                biometricOnly: false,
-              );
+            if (canAuthenticate) {
+              try {
+                final bool didAuthenticate = await auth.authenticate(
+                  localizedReason: 'Please authenticate to access MicroFlow Pro',
+                  persistAcrossBackgrounding: true,
+                  biometricOnly: false,
+                );
 
-              if (!didAuthenticate) {
+                if (!didAuthenticate) {
+                  await _repository.signOut();
+                  state = state.copyWith(status: AuthStatus.unauthenticated);
+                  return;
+                }
+              } on PlatformException catch (_) {
                 await _repository.signOut();
                 state = state.copyWith(status: AuthStatus.unauthenticated);
                 return;
               }
-            } on PlatformException catch (_) {
-              await _repository.signOut();
-              state = state.copyWith(status: AuthStatus.unauthenticated);
-              return;
             }
           }
         }

@@ -30,6 +30,7 @@ class _CustomerSavingsPageState extends ConsumerState<CustomerSavingsPage>
 
   double _previousBalance = 0;
   double _targetBalance = 0;
+  bool _hasAnimated = false;
 
   String _filter = 'all'; // all | active | completed
 
@@ -68,7 +69,8 @@ class _CustomerSavingsPageState extends ConsumerState<CustomerSavingsPage>
   }
 
   void _scheduleAnimations(double total) {
-    if (_targetBalance == total) return;
+    if (_hasAnimated && _targetBalance == total) return;
+    _hasAnimated = true;
     _previousBalance = _targetBalance;
     _targetBalance = total;
     _staggerController.reset();

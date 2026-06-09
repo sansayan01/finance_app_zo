@@ -32,7 +32,7 @@ class CustomerHomeRepository {
             .limit(5),
         _client
             .from('members')
-            .select('full_name, phone, kyc_status, area, village')
+            .select('full_name, phone, kyc_status, area, village, profile_id')
             .eq('id', memberId)
             .maybeSingle(),
       ]);
@@ -51,6 +51,20 @@ class CustomerHomeRepository {
       final transactions = transactionsData
           .map((e) => CustomerTransactionModel.fromJson(e))
           .toList();
+
+      // Fetch avatar from profiles table
+      String? avatarUrl;
+      final profileId = memberData?['profile_id'] as String?;
+      if (profileId != null) {
+        try {
+          final profileData = await _client
+              .from('profiles')
+              .select('avatar_url')
+              .eq('id', profileId)
+              .maybeSingle();
+          avatarUrl = profileData?['avatar_url'] as String?;
+        } catch (_) {}
+      }
 
       final activeLoans = loans.where((l) => l.status == 'active').toList();
       final totalOutstanding =
@@ -95,6 +109,7 @@ class CustomerHomeRepository {
         'kycStatus': memberData?['kyc_status'] as String?,
         'area': memberData?['area'] as String?,
         'village': memberData?['village'] as String?,
+        'avatarUrl': avatarUrl,
         'activeLoans': activeLoans.length,
         'totalOutstanding': totalOutstanding,
         'totalSavings': totalSavings,

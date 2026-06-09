@@ -57,6 +57,22 @@ class CustomerSavingsModel {
 
   String get displayName => planName ?? 'Savings Account';
 
+  /// Human-readable tenure label based on collection type, e.g. "365d",
+  /// "52w", "12mo".
+  String get tenureLabel {
+    final installments = tenureMonths; // total_installments from DB
+    if (installments == null || installments <= 0) return '';
+    switch (collectionType) {
+      case 'daily':
+        return '${installments}d';
+      case 'weekly':
+        return '${installments}w';
+      case 'monthly':
+      default:
+        return '${installments}mo';
+    }
+  }
+
   double get progressPercentage {
     if (targetAmount <= 0) return 0;
     return (currentAmount / targetAmount * 100).clamp(0, 100);

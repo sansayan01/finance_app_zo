@@ -64,7 +64,7 @@ class SavingsRepository {
       'collection_type': collectionType,
       'premature_penalty': penalty,
       'total_installments': totalInstallments,
-      'target_amount': maturityAmount,
+      'target_amount': openingBalance + (installmentAmount * totalInstallments),
       'status': 'active',
       'start_date': now.toIso8601String().split('T')[0],
       'next_due_date': nextDueDate.toIso8601String().split('T')[0],

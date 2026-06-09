@@ -132,7 +132,9 @@
       "mcp__supabase__apply_migration",
       "mcp__supabase__list_branches",
       "Bash(git push:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx skills:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

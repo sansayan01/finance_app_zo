@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +37,12 @@ Future<void> main() async {
         url: EnvConfig.supabaseUrl,
         anonKey: EnvConfig.supabaseAnonKey,
         debug: true,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('⏰ Supabase initialization timed out');
+          throw TimeoutException('Supabase connection timed out');
+        },
       );
       debugPrint('✅ Supabase initialized');
     } catch (e) {
@@ -45,11 +53,15 @@ Future<void> main() async {
     final prefs = await SharedPreferences.getInstance();
     debugPrint('✅ SharedPreferences initialized');
 
-    // 3a. Initialize Mapbox
-    if (EnvConfig.mapboxAccessToken.isNotEmpty) {
-      MapboxOptions.setAccessToken(EnvConfig.mapboxAccessToken);
-      debugPrint('✅ Mapbox token configured');
-    } else {
+    // 3a. Initialize Mapbox (skip on web — Mapbox SDK not supported)
+    if (!kIsWeb && EnvConfig.mapboxAccessToken.isNotEmpty) {
+      try {
+        MapboxOptions.setAccessToken(EnvConfig.mapboxAccessToken);
+        debugPrint('✅ Mapbox token configured');
+      } catch (e) {
+        debugPrint('⚠️ Mapbox init failed: $e');
+      }
+    } else if (EnvConfig.mapboxAccessToken.isEmpty) {
       debugPrint('⚠️ Mapbox access token not set');
     }
 

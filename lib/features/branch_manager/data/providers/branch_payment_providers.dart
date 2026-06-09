@@ -357,25 +357,45 @@ final branchTodayPaymentsProvider =
 
   // -------------------------------------------------------
   // 3. SAVINGS — savings_plans has no branch_id,
-  //    join with members to filter by branch_id at query level
+  //    fetch plans then members separately (sequential queries per project pattern)
   // -------------------------------------------------------
   try {
     final selectedDate = filters.selectedDate;
     final dayOfWeek = selectedDate.weekday - 1; // 0=Mon, 6=Sun
     final dayOfMonth = selectedDate.day;
 
-    // Fetch active savings plans with member join for branch filtering
-    // NOTE: 'id' is included in the nested member select so memberId is non-null
+    // Fetch all active savings plans
     final allActivePlans = await client
         .from('savings_plans')
         .select(
-            'id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id, members:member_id(id, full_name, phone, branch_id, agent_id)')
+            'id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id')
         .eq('org_id', orgId)
         .eq('status', 'active');
 
-    // Filter to branch via member join result
-    final branchPlans = (allActivePlans as List).where((plan) {
-      final member = plan['members'] as Map<String, dynamic>?;
+    // Collect unique member IDs
+    final memberIds = (allActivePlans as List)
+        .map((p) => p['member_id'])
+        .where((id) => id != null)
+        .toSet()
+        .toList();
+
+    // Fetch member details in bulk
+    Map<String, Map<String, dynamic>> membersMap = {};
+    if (memberIds.isNotEmpty) {
+      final members = await client
+          .from('members')
+          .select('id, full_name, phone, branch_id, agent_id')
+          .inFilter('id', memberIds);
+      for (final member in members) {
+        membersMap[member['id'] as String] = member;
+      }
+    }
+
+    // Filter plans to this branch via member lookup
+    final branchPlans = allActivePlans.where((plan) {
+      final memberId = plan['member_id'];
+      if (memberId == null) return false;
+      final member = membersMap[memberId as String];
       return member?['branch_id'] == branchId;
     }).toList();
 
@@ -428,7 +448,9 @@ final branchTodayPaymentsProvider =
     }).toList();
 
     for (final plan in savingsDues) {
-      final member = plan['members'] as Map<String, dynamic>?;
+      final memberId = plan['member_id'] as String?;
+      if (memberId == null) continue;
+      final member = membersMap[memberId];
       if (member == null) continue;
 
       // Apply agent filter

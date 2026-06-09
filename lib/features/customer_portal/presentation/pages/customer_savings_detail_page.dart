@@ -151,6 +151,36 @@ class _CustomerSavingsDetailPageState
     final remaining =
         (s.targetAmount - s.currentAmount).clamp(0.0, double.infinity);
     if (remaining <= 0) return 'Goal achieved';
+
+    // Use maturity date when available for an accurate ETA
+    if (s.maturityDate != null) {
+      final now = DateTime.now();
+      final diff = s.maturityDate!.difference(now);
+      if (diff.isNegative || diff.inDays <= 0) return 'Maturity reached';
+
+      // Format based on collection type
+      switch (s.collectionType) {
+        case 'daily':
+          final days = diff.inDays;
+          return '~${days}d to goal';
+        case 'weekly':
+          final weeks = (diff.inDays / 7).ceil();
+          return '~${weeks}w to goal';
+        case 'monthly':
+        default:
+          final months = (diff.inDays / 30.44).ceil();
+          if (months <= 1) return '~1 month to goal';
+          if (months < 12) return '~$months months to goal';
+          final years = months ~/ 12;
+          final rem = months % 12;
+          if (rem == 0) {
+            return '~$years yr${years == 1 ? '' : 's'} to goal';
+          }
+          return '~${years}y ${rem}m to goal';
+      }
+    }
+
+    // Fallback: estimate from monthly deposit
     if (s.monthlyDeposit <= 0) return 'Set a monthly deposit';
     final months = (remaining / s.monthlyDeposit).ceil();
     if (months <= 1) return '~1 month to goal';
@@ -464,7 +494,7 @@ class _CustomerSavingsDetailPageState
                                       closingBalance: closingBalance,
                                       interestRate: savings.interestRate,
                                       maturityDate: savings.maturityDate ?? DateTime.now().add(const Duration(days: 365)),
-                                      collectionType: 'monthly',
+                                      collectionType: savings.collectionType,
                                       monthlyDeposit: savings.monthlyDeposit,
                                       maturityAmount: savings.targetAmount,
                                       deposits: deposits,
@@ -1295,10 +1325,10 @@ class _CustomerSavingsDetailPageState
             label: 'Interest Rate',
             value: '${savings.interestRate.toStringAsFixed(1)}%',
           ),
-          if (savings.tenureMonths != null)
+          if (savings.tenureLabel.isNotEmpty)
             _DetailRow(
               label: 'Tenure',
-              value: '${savings.tenureMonths} months',
+              value: savings.tenureLabel,
             ),
           if (savings.maturityDate != null)
             _DetailRow(
@@ -1551,8 +1581,8 @@ class _CustomerSavingsDetailPageState
                           if (savings != null) ...[
                             const SizedBox(height: 4),
                             _TypeChip(
-                              label: savings.tenureMonths != null
-                                  ? 'Recurring · ${savings.tenureMonths}mo'
+                              label: savings.tenureLabel.isNotEmpty
+                                  ? 'Recurring · ${savings.tenureLabel}'
                                   : 'Savings Plan',
                             ),
                           ],

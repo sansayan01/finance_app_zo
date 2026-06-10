@@ -63,6 +63,7 @@ import '../features/members/presentation/pages/member_onboarding_page.dart';
 // Staff Portal
 import '../features/staff/presentation/pages/staff_home_dashboard.dart';
 import '../features/staff/presentation/pages/staff_today_payments_page.dart';
+import '../features/payments/presentation/pages/today_payments_page.dart';
 import '../features/staff/presentation/pages/staff_user_hub_page.dart';
 import '../features/staff/presentation/pages/staff_timeline_page.dart';
 import '../features/staff/presentation/pages/staff_map_page.dart';
@@ -448,7 +449,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/payments',
-            builder: (context, state) => const StaffTodayPaymentsPage(),
+            builder: (context, state) => const TodayPaymentsPage(),
           ),
           GoRoute(
             path: '/loans',

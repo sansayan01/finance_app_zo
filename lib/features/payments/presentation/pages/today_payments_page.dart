@@ -1895,11 +1895,10 @@ class _PaymentCard extends StatelessWidget {
             // ── Bottom Section ──
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
-              child: Row(
+              child: Column(
                 children: [
-                  // Amount
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // Row 1: Amount + Due date
+                  Row(
                     children: [
                       Text(
                         currencyFormat.format(payment.amountExpected),
@@ -1911,21 +1910,13 @@ class _PaymentCard extends StatelessWidget {
                         ),
                       ),
                       if (payment.penaltyAmount > 0) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(width: 4),
                         Text(
                           '+${currencyFormat.format(payment.penaltyAmount)} penalty',
                           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.error),
                         ),
                       ],
-                    ],
-                  ),
-
-                  const Spacer(),
-
-                  // Due date or collected time
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                      const Spacer(),
                       Icon(
                         payment.isCollected
                             ? Icons.check_circle_outline_rounded
@@ -1951,75 +1942,78 @@ class _PaymentCard extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(width: 12),
-
-                  // Overdue badge
-                  if (payment.isOverdue)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.access_time_rounded, size: 12, color: AppColors.error),
-                          const SizedBox(width: 4),
-                          Text(
-                            payment.overdueLabel,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.error),
+                  // Row 2: Overdue badge + Action buttons
+                  if (payment.isOverdue || !payment.isCollected) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        if (payment.isOverdue)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.access_time_rounded, size: 12, color: AppColors.error),
+                                const SizedBox(width: 4),
+                                Text(
+                                  payment.overdueLabel,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.error),
+                                ),
+                              ],
+                            ),
                           ),
+                        const Spacer(),
+                        if (!payment.isCollected) ...[
+                          if (onCall != null)
+                            _ActionCircle(
+                              icon: Icons.call_rounded,
+                              color: AppColors.success,
+                              onTap: onCall!,
+                            ),
+                          if (onCall != null) const SizedBox(width: 8),
+                          _ActionCircle(
+                            icon: Icons.notifications_active_rounded,
+                            color: AppColors.warning,
+                            onTap: onRemind,
+                          ),
+                          if (onCollect != null) ...[
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: onCollect,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(colors: AppColors.successGradient),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.success.withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.payment_rounded, size: 14, color: Colors.white),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'Collect',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ),
+                      ],
                     ),
-
-                  // Action buttons
-                  if (!payment.isCollected) ...[
-                    if (payment.isOverdue) const SizedBox(width: 10),
-                    if (onCall != null)
-                      _ActionCircle(
-                        icon: Icons.call_rounded,
-                        color: AppColors.success,
-                        onTap: onCall!,
-                      ),
-                    if (onCall != null) const SizedBox(width: 8),
-                    _ActionCircle(
-                      icon: Icons.notifications_active_rounded,
-                      color: AppColors.warning,
-                      onTap: onRemind,
-                    ),
-                    if (onCollect != null) ...[
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: onCollect,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: AppColors.successGradient),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.success.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.payment_rounded, size: 14, color: Colors.white),
-                              SizedBox(width: 5),
-                              Text(
-                                'Collect',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ],
               ),

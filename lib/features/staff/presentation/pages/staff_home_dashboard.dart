@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 
 import '../../../../core/widgets/shimmer_card.dart';
@@ -27,6 +28,11 @@ import '../../../../core/widgets/glass_card.dart';
 // ignore: unused_import
 import '../../../../core/widgets/glass_button.dart';
 import '../widgets/premium_helpers.dart';
+import '../../../home/data/providers/dashboard_providers.dart'
+    show dashboardLoansProvider, dashboardSavingsProvider;
+import '../../../loans/data/models/loan_model.dart';
+import '../../../savings/data/models/savings_model.dart';
+import '../../../../core/constants/enums.dart';
 
 class StaffHomeDashboard extends ConsumerStatefulWidget {
   const StaffHomeDashboard({super.key});
@@ -404,13 +410,17 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
       case 3:
         return PremiumHelpers.staggeredAnimation(_buildQuickActions(theme, isDark), index: 3);
       case 4:
-        return PremiumHelpers.staggeredAnimation(_buildAgendaSection(theme), index: 4);
+        return PremiumHelpers.staggeredAnimation(_buildActiveLoansSection(theme, isDark), index: 4);
       case 5:
-        return PremiumHelpers.staggeredAnimation(const ActivityFeedTimeline(), index: 5);
+        return PremiumHelpers.staggeredAnimation(_buildSavingsOverviewSection(theme, isDark), index: 5);
       case 6:
-        return PremiumHelpers.staggeredAnimation(_buildStatsSummary(theme, isDark), index: 6);
+        return PremiumHelpers.staggeredAnimation(_buildAgendaSection(theme), index: 6);
       case 7:
-        return PremiumHelpers.staggeredAnimation(const LeaderboardSnapshot(), index: 7);
+        return PremiumHelpers.staggeredAnimation(const ActivityFeedTimeline(), index: 7);
+      case 8:
+        return PremiumHelpers.staggeredAnimation(_buildStatsSummary(theme, isDark), index: 8);
+      case 9:
+        return PremiumHelpers.staggeredAnimation(const LeaderboardSnapshot(), index: 9);
       default:
         return const SizedBox.shrink();
     }
@@ -891,6 +901,586 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
           ),
         ),
       ),
+    );
+  }
+
+  // ─── Active Loans Section ───
+
+  Widget _buildActiveLoansSection(ThemeData theme, bool isDark) {
+    final loansAsync = ref.watch(dashboardLoansProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [AppColors.primary, AppColors.accent],
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Active Loans',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () => context.push('/staff/loans'),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                      AppColors.accent.withValues(alpha: isDark ? 0.1 : 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'View All',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: AppColors.primary,
+                      size: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        loansAsync.when(
+          data: (loans) {
+            if (loans.isEmpty) {
+              return GlassCard(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.account_balance_outlined,
+                          size: 32,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.3)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No active loans',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return Column(
+              children: loans
+                  .take(3)
+                  .map((loan) => Padding(
+                        key: ValueKey(loan.id),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: StaffLoanCard(
+                          loan: loan,
+                          onTap: () => context.push('/staff/loans/${loan.id}'),
+                        ),
+                      ))
+                  .toList(),
+            );
+          },
+          loading: () => Column(
+            children: List.generate(
+                2,
+                (_) => const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: ShimmerCard(height: 120),
+                    )),
+          ),
+          error: (_, __) => GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Text('Unable to load loans',
+                  style: theme.textTheme.bodySmall),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── Savings Overview Section ───
+
+  Widget _buildSavingsOverviewSection(ThemeData theme, bool isDark) {
+    final savingsAsync = ref.watch(dashboardSavingsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [AppColors.teal, AppColors.mint],
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Savings',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () => context.push('/staff/savings'),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.teal.withValues(alpha: isDark ? 0.15 : 0.08),
+                      AppColors.mint.withValues(alpha: isDark ? 0.1 : 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        AppColors.teal.withValues(alpha: isDark ? 0.2 : 0.12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'View All',
+                      style: TextStyle(
+                        color: AppColors.teal,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: AppColors.teal,
+                      size: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        savingsAsync.when(
+          data: (savings) {
+            if (savings.isEmpty) {
+              return GlassCard(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.savings_outlined,
+                          size: 32,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.3)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No savings plans',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return Column(
+              children: savings
+                  .take(3)
+                  .map((plan) => Padding(
+                        key: ValueKey(plan.id),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: StaffSavingsCard(
+                          savings: plan,
+                          onTap: () =>
+                              context.push('/staff/savings/${plan.id}'),
+                        ),
+                      ))
+                  .toList(),
+            );
+          },
+          loading: () => Column(
+            children: List.generate(
+                2,
+                (_) => const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: ShimmerCard(height: 120),
+                    )),
+          ),
+          error: (_, __) => GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Text('Unable to load savings',
+                  style: theme.textTheme.bodySmall),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Staff Loan Card ───
+
+class StaffLoanCard extends StatelessWidget {
+  final LoanModel loan;
+  final VoidCallback? onTap;
+
+  const StaffLoanCard({super.key, required this.loan, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final progress = loan.amount > 0
+        ? (1 - (loan.outstandingBalance / loan.amount)).clamp(0.0, 1.0)
+        : 0.0;
+
+    final statusColor = loan.status == LoanStatus.active
+        ? AppColors.success
+        : loan.status == LoanStatus.defaultStatus
+            ? AppColors.error
+            : AppColors.warning;
+
+    final currencyFmt = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
+
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.15),
+                        AppColors.primary.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      (loan.customerName ?? '?')[0].toUpperCase(),
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loan.customerName ?? 'Unknown',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        loan.loanNumber,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          fontFamily: 'JetBrains Mono',
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    loan.status.name.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 5,
+                backgroundColor: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.04),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _StaffStat(
+                  label: 'Principal',
+                  value: currencyFmt.format(loan.amount),
+                ),
+                _StaffStat(
+                  label: 'EMI',
+                  value: currencyFmt.format(loan.emiAmount),
+                ),
+                _StaffStat(
+                  label: 'Outstanding',
+                  value: currencyFmt.format(loan.outstandingBalance),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Staff Savings Card ───
+
+class StaffSavingsCard extends StatelessWidget {
+  final SavingsModel savings;
+  final VoidCallback? onTap;
+
+  const StaffSavingsCard({super.key, required this.savings, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final progress = savings.targetAmount > 0
+        ? (savings.currentAmount / savings.targetAmount).clamp(0.0, 1.0)
+        : 0.0;
+
+    final currencyFmt = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
+
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.teal.withValues(alpha: 0.15),
+                        AppColors.teal.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.savings_rounded,
+                      color: AppColors.teal,
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        savings.planName,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        savings.memberName,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.teal.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    savings.status.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.teal,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 5,
+                backgroundColor: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.04),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.teal),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _StaffStat(
+                  label: 'Target',
+                  value: currencyFmt.format(savings.targetAmount),
+                ),
+                _StaffStat(
+                  label: 'Monthly',
+                  value: currencyFmt.format(savings.monthlyDeposit),
+                ),
+                _StaffStat(
+                  label: 'Saved',
+                  value: currencyFmt.format(savings.currentAmount),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Stat helper ───
+
+class _StaffStat extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _StaffStat({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+            fontSize: 10,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            letterSpacing: -0.2,
+          ),
+        ),
+      ],
     );
   }
 }

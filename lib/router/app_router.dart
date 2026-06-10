@@ -10,7 +10,7 @@ import '../features/chatbot/presentation/widgets/floating_chatbot.dart';
 import '../features/branches/presentation/pages/branch_management_page.dart';
 
 // Payments
-import '../features/payments/presentation/pages/today_payments_page.dart';
+
 
 // Super Admin (Admin pages still in use)
 import '../features/admin/presentation/pages/admin_org_detail_page.dart';
@@ -448,7 +448,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/payments',
-            builder: (context, state) => const TodayPaymentsPage(),
+            builder: (context, state) => const StaffTodayPaymentsPage(),
           ),
           GoRoute(
             path: '/loans',
@@ -881,6 +881,41 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/staff/targets',
             builder: (context, state) => const StaffTargetsPage(),
+          ),
+          // ── Loans & Savings (view only) ──
+          GoRoute(
+            path: '/staff/loans',
+            builder: (context, state) => LoansPage(
+              showCreateButton: false,
+              onLoanTap: (loanId) => context.push('/staff/loans/$loanId'),
+            ),
+          ),
+          GoRoute(
+            path: '/staff/loans/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return LoanDetailPage(
+                loanId: id,
+                showEditButton: false,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/staff/savings',
+            builder: (context, state) => SavingsPage(
+              showCreateButton: false,
+              onSavingTap: (savingId) => context.push('/staff/savings/$savingId'),
+            ),
+          ),
+          GoRoute(
+            path: '/staff/savings/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return SavingDetailPage(
+                savingId: id,
+                showEditButton: false,
+              );
+            },
           ),
         ],
       ),

@@ -411,7 +411,7 @@ final todayPaymentsProvider =
     // Fetch all savings collections for the selected date
     final collectionsToday = await client
         .from('savings_collections')
-        .select('id, savings_plan_id, amount_collected, payment_mode, collection_time, created_at')
+        .select('id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
         .eq('org_id', orgId)
         .eq('collection_date', dateStr);
 
@@ -530,8 +530,8 @@ final todayPaymentsProvider =
         planName: plan['plan_name'],
         paymentMode: isCollected ? existingCollection['payment_mode'] : null,
         collectedAt: isCollected
-            ? (existingCollection['collection_time'] != null
-                ? DateTime.tryParse('${existingCollection['collection_date']}T${existingCollection['collection_time']}')
+            ? (existingCollection['collected_at'] != null
+                ? DateTime.tryParse(existingCollection['collected_at'])
                 : (existingCollection['created_at'] != null
                     ? DateTime.tryParse(existingCollection['created_at'])
                     : null))

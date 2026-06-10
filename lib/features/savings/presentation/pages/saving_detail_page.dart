@@ -34,7 +34,13 @@ import '../../../payments/data/providers/payment_providers.dart';
 
 class SavingDetailPage extends ConsumerStatefulWidget {
   final String savingId;
-  const SavingDetailPage({super.key, required this.savingId});
+  final bool showEditButton;
+
+  const SavingDetailPage({
+    super.key,
+    required this.savingId,
+    this.showEditButton = true,
+  });
 
   @override
   ConsumerState<SavingDetailPage> createState() => _SavingDetailPageState();
@@ -461,7 +467,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                   final isExecAdmin = ref.read(currentUserProvider)?.role ==
                       UserRole.executiveAdmin;
                   return [
-                    const PopupMenuItem(value: 'edit', child: Text('Edit Vault')),
+                    if (widget.showEditButton)
+                      const PopupMenuItem(value: 'edit', child: Text('Edit Vault')),
                     PopupMenuItem(
                       value: isPaused ? 'resume' : 'pause',
                       child: Row(
@@ -487,10 +494,11 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Close Account',
-                            style: TextStyle(color: Colors.red))),
+                    if (widget.showEditButton)
+                      const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Close Account',
+                              style: TextStyle(color: Colors.red))),
                     if (isExecAdmin)
                       const PopupMenuItem(
                         value: 'delete_permanent',

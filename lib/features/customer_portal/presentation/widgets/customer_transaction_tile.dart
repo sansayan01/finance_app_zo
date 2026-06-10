@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../data/models/customer_transaction_model.dart';
 
 class CustomerTransactionTile extends StatelessWidget {
@@ -120,7 +121,7 @@ class CustomerTransactionTile extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 3),
                         child: Text(
-                          _formatDate(transaction.transactionDate!),
+                          AppFormatters.formatDateTime(transaction.transactionDate!),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isDark
                                 ? AppColors.textTertiaryDark
@@ -175,15 +176,5 @@ class CustomerTransactionTile extends StatelessWidget {
       'collection' => 'Collection',
       _ => transaction.type[0].toUpperCase() + transaction.type.substring(1),
     };
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dateOnly = DateTime(date.year, date.month, date.day);
-
-    if (dateOnly == today) return 'Today';
-    if (dateOnly == today.subtract(const Duration(days: 1))) return 'Yesterday';
-    return '${date.day}/${date.month}/${date.year}';
   }
 }

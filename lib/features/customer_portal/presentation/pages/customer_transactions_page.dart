@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/customer_home_providers.dart';
 import '../../data/models/customer_transaction_model.dart';
@@ -453,14 +454,6 @@ class _CustomerTransactionsPageState
 
   Map<String, List<CustomerTransactionModel>> _groupByDate(
       List<CustomerTransactionModel> txns) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
-
     final groups = <String, List<CustomerTransactionModel>>{};
     // Sort newest first.
     final sorted = [...txns]
@@ -472,18 +465,7 @@ class _CustomerTransactionsPageState
       if (d == null) {
         key = 'Earlier';
       } else {
-        final dOnly = DateTime(d.year, d.month, d.day);
-        if (dOnly == today) {
-          key = 'Today';
-        } else if (dOnly == yesterday) {
-          key = 'Yesterday';
-        } else if (dOnly.isAfter(today.subtract(const Duration(days: 7)))) {
-          key = 'This Week';
-        } else if (d.year == now.year && d.month == now.month) {
-          key = 'This Month';
-        } else {
-          key = '${monthNames[d.month - 1]} ${d.year}';
-        }
+        key = AppFormatters.formatDate(d);
       }
       groups.putIfAbsent(key, () => []).add(t);
     }

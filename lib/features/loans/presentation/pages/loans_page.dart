@@ -18,7 +18,14 @@ import '../providers/loan_providers.dart';
 import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 
 class LoansPage extends ConsumerStatefulWidget {
-  const LoansPage({super.key});
+  final void Function(String loanId)? onLoanTap;
+  final bool showCreateButton;
+
+  const LoansPage({
+    super.key,
+    this.onLoanTap,
+    this.showCreateButton = true,
+  });
 
   @override
   ConsumerState<LoansPage> createState() => _LoansPageState();
@@ -197,17 +204,18 @@ class _LoansPageState extends ConsumerState<LoansPage>
                               ),
                             ),
                             const SizedBox(width: 16),
-                            GlassButton(
-                              label: 'DEPLOY',
-                              width: 110,
-                              height: 48,
-                              fontSize: 14,
-                              icon: Icons.add_circle_outline_rounded,
-                              onTap: () => context.push('/loans/new'),
-                            )
-                                .animate()
-                                .fadeIn(delay: 200.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
+                            if (widget.showCreateButton)
+                              GlassButton(
+                                label: 'DEPLOY',
+                                width: 110,
+                                height: 48,
+                                fontSize: 14,
+                                icon: Icons.add_circle_outline_rounded,
+                                onTap: () => context.push('/loans/new'),
+                              )
+                                  .animate()
+                                  .fadeIn(delay: 200.ms)
+                                  .scale(begin: const Offset(0.9, 0.9)),
                           ],
                         ),
                       ],
@@ -294,7 +302,12 @@ class _LoansPageState extends ConsumerState<LoansPage>
                           (ctx, i) {
                             final card = Padding(
                               padding: const EdgeInsets.only(bottom: 24),
-                              child: _PremiumLoanCard(loan: filtered[i]),
+                              child: _PremiumLoanCard(
+                                loan: filtered[i],
+                                onTap: widget.onLoanTap != null
+                                    ? () => widget.onLoanTap!(filtered[i].id)
+                                    : null,
+                              ),
                             );
                             // Only animate first 10 items to avoid
                             // creating animation controllers off-screen
@@ -670,7 +683,8 @@ class _AnalyticsCard extends StatelessWidget {
 
 class _PremiumLoanCard extends StatelessWidget {
   final LoanModel loan;
-  const _PremiumLoanCard({required this.loan});
+  final VoidCallback? onTap;
+  const _PremiumLoanCard({required this.loan, this.onTap});
 
   Future<void> _makeCall(String phone) async {
     final url = Uri.parse('tel:$phone');
@@ -705,7 +719,11 @@ class _PremiumLoanCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       onTap: () {
         HapticFeedback.selectionClick();
-        context.push('/loans/${loan.id}');
+        if (onTap != null) {
+          onTap!();
+        } else {
+          context.push('/loans/${loan.id}');
+        }
       },
       child: Column(
         children: [

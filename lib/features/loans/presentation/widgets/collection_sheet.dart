@@ -434,8 +434,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     final now = DateTime.now();
     final today = now.toIso8601String().split('T').first;
     final amount = _totalAmount;
-    final timeStr =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
 
     // 1. Create transaction
     final txResult = await client.from('transactions').insert({
@@ -463,10 +461,11 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'is_partial': false,
       'payment_mode': _selectedMode,
       'collection_date': today,
-      'collection_time': timeStr,
+      'collected_at': DateTime.now().toUtc().toIso8601String(),
       'staff_id': profile.id,
       'collected_by_name': profile.fullName,
       'collected_by_role': profile.role.dbValue,
+      'collected_by_user_id': profile.id,
       'sync_status': 'synced',
       'transaction_id': transactionId,
     });

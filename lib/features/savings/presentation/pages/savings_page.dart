@@ -14,7 +14,14 @@ import '../../data/providers/savings_providers.dart';
 import '../../../home/data/providers/dashboard_providers.dart';
 
 class SavingsPage extends ConsumerStatefulWidget {
-  const SavingsPage({super.key});
+  final void Function(String savingId)? onSavingTap;
+  final bool showCreateButton;
+
+  const SavingsPage({
+    super.key,
+    this.onSavingTap,
+    this.showCreateButton = true,
+  });
 
   @override
   ConsumerState<SavingsPage> createState() => _SavingsPageState();
@@ -122,12 +129,14 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                 )
               ],
             ),
-            child: IconButton(
-              onPressed: () => context.push('/savings/new'),
-              icon: const Icon(Icons.add_rounded, size: 28),
-              color: Colors.white,
-              tooltip: 'New Savings Plan',
-            ),
+            child: widget.showCreateButton
+                ? IconButton(
+                    onPressed: () => context.push('/savings/new'),
+                    icon: const Icon(Icons.add_rounded, size: 28),
+                    color: Colors.white,
+                    tooltip: 'New Savings Plan',
+                  )
+                : const SizedBox.shrink(),
           ),
         ),
       ],
@@ -486,7 +495,11 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                   child: GestureDetector(
                     onTap: () {
                       HapticFeedback.selectionClick();
-                      context.push('/savings/${saving.id}');
+                      if (widget.onSavingTap != null) {
+                        widget.onSavingTap!(saving.id);
+                      } else {
+                        context.push('/savings/${saving.id}');
+                      }
                     },
                     child: _PremiumSavingCard(saving: saving),
                   ),

@@ -97,7 +97,13 @@ Widget _buildDetailRow(String label, String value, ThemeData theme,
 
 class LoanDetailPage extends ConsumerStatefulWidget {
   final String loanId;
-  const LoanDetailPage({super.key, required this.loanId});
+  final bool showEditButton;
+
+  const LoanDetailPage({
+    super.key,
+    required this.loanId,
+    this.showEditButton = true,
+  });
 
   @override
   ConsumerState<LoanDetailPage> createState() => _LoanDetailPageState();
@@ -342,7 +348,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 itemBuilder: (ctx) => [
-                  if (loan.status != LoanStatus.closed)
+                  if (loan.status != LoanStatus.closed && widget.showEditButton)
                     const PopupMenuItem(
                       value: 'edit',
                       child: Row(
@@ -353,7 +359,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         ],
                       ),
                     ),
-                  if (loan.status == LoanStatus.defaultStatus)
+                  if (loan.status == LoanStatus.defaultStatus && widget.showEditButton)
                     const PopupMenuItem(
                       value: 'reactivate',
                       child: Row(
@@ -365,7 +371,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         ],
                       ),
                     )
-                  else if (loan.status != LoanStatus.closed)
+                  else if (loan.status != LoanStatus.closed && widget.showEditButton)
                     const PopupMenuItem(
                       value: 'default',
                       child: Row(
@@ -377,7 +383,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         ],
                       ),
                     ),
-                  if (loan.status != LoanStatus.closed)
+                  if (loan.status != LoanStatus.closed && widget.showEditButton)
                     const PopupMenuItem(
                       value: 'restructure',
                       child: Row(
@@ -409,20 +415,22 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       ],
                     ),
                   ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline_rounded,
-                            size: 18, color: AppColors.error,
-                            semanticLabel: 'Delete Loan'),
-                        SizedBox(width: 12),
-                        Text('Delete Loan',
-                            style: TextStyle(color: AppColors.error)),
-                      ],
+                  if (widget.showEditButton) ...[
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded,
+                              size: 18, color: AppColors.error,
+                              semanticLabel: 'Delete Loan'),
+                          SizedBox(width: 12),
+                          Text('Delete Loan',
+                              style: TextStyle(color: AppColors.error)),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ],
@@ -3603,23 +3611,24 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                     await _deleteArchived(r);
                                   }
                                 },
-                                itemBuilder: (_) => const [
-                                  PopupMenuItem(
+                                itemBuilder: (_) => [
+                                  const PopupMenuItem(
                                       value: 'download',
                                       child: Text('Open')),
-                                  PopupMenuItem(
+                                  const PopupMenuItem(
                                       value: 'share', child: Text('Share')),
-                                  PopupMenuItem(
+                                  const PopupMenuItem(
                                       value: 'email',
                                       child: Text('Email to customer')),
-                                  PopupMenuItem(
+                                  const PopupMenuItem(
                                       value: 'verify',
                                       child: Text('Verify integrity')),
-                                  PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('Delete',
-                                          style:
-                                              TextStyle(color: AppColors.error))),
+                                  if (widget.showEditButton)
+                                    const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Text('Delete',
+                                            style:
+                                                TextStyle(color: AppColors.error))),
                                 ],
                               ),
                             );

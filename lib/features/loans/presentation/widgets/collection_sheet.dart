@@ -11,6 +11,8 @@ import '../../../../providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show dashboardLoansProvider, dashboardTransactionsProvider, activeLoansProvider, loanSummaryProvider;
+import '../../../../core/providers/branding_provider.dart';
+import '../../../../core/providers/sms_provider.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../savings/data/models/savings_installment_model.dart';
 import '../../../savings/data/providers/savings_providers.dart' show allSavingsProvider;
@@ -390,6 +392,45 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       }
 
       await client.from('loans').update(updateData).eq('id', widget.loan!.id);
+
+      // 3b. Dispatch SMS
+      try {
+        debugPrint('CollectionSheet: initiating SMS dispatch...');
+        String? phone = widget.loan!.customerPhone;
+        
+        // Fallback: fetch phone from members table if missing in loan model
+        if (phone == null || phone.isEmpty) {
+          debugPrint('CollectionSheet: phone missing in loan model, fetching from members table...');
+          final memberInfo = await client
+              .from('members')
+              .select('phone, phone_number, mobile')
+              .eq('id', widget.loan!.customerId)
+              .maybeSingle();
+          phone = (memberInfo?['phone'] ?? 
+                  memberInfo?['phone_number'] ?? 
+                  memberInfo?['mobile'])?.toString();
+        }
+
+        final branding = ref.read(brandingProvider).valueOrNull;
+        if (phone != null && phone.isNotEmpty) {
+          debugPrint('CollectionSheet: enqueuing SMS to $phone');
+          await ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
+                phone: phone,
+                memberId: widget.loan!.memberId,
+                memberName: memberName,
+                loanNumber: widget.loan!.loanNumber,
+                amount: amount,
+                outstandingBalance: newBalance,
+                collectorName: profile?['full_name'] ?? 'Staff',
+                sentBy: staffId,
+                orgName: branding?.displayName,
+              );
+        } else {
+          debugPrint('CollectionSheet: skipping SMS, phone number still null or empty');
+        }
+      } catch (e) {
+        debugPrint('SMS collection dispatch failed: $e');
+      }
     }
 
     // 4. Activity log
@@ -496,6 +537,34 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'current_amount': plan.currentAmount + amount,
       'updated_at': now.toIso8601String(),
     }).eq('id', plan.id);
+
+    // 3b. Dispatch SMS
+    try {
+      final memberInfo = await client
+          .from('members')
+          .select('phone_number, mobile, phone')
+          .eq('id', plan.memberId)
+          .maybeSingle();
+      final phone = (memberInfo?['phone_number'] ??
+              memberInfo?['mobile'] ??
+              memberInfo?['phone'])
+          ?.toString();
+
+      final branding = ref.read(brandingProvider).valueOrNull;
+      await ref.read(collectionSmsSenderProvider.notifier).enqueueSavings(
+            phone: phone,
+            memberId: plan.memberId,
+            memberName: plan.memberName,
+            planName: plan.planName,
+            amount: amount,
+            newBalance: plan.currentAmount + amount,
+            collectorName: profile.fullName,
+            sentBy: profile.id,
+            orgName: branding?.displayName,
+          );
+    } catch (e) {
+      debugPrint('SMS savings dispatch failed: $e');
+    }
 
     // 4. Activity log
     try {

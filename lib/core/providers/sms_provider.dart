@@ -50,6 +50,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     bool forceDispatch = false,
   }) async {
     if (phone == null || phone.isEmpty) {
+      debugPrint('CollectionSmsSender: skipping enqueueCollection, phone is empty');
       await _logSms(
         memberId: memberId,
         recipientPhone: '',
@@ -64,6 +65,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     }
     final enabled = await _isSmsEnabled('sms_on_collection');
     if (!enabled) {
+      debugPrint('CollectionSmsSender: skipping enqueueCollection, sms_on_collection is disabled');
       await _logSms(
         memberId: memberId,
         recipientPhone: phone,
@@ -77,12 +79,9 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       return null;
     }
 
-    // Only Android has native programmatic SMS. iOS launches the system
-    // composer (best-effort, no programmatic confirmation). All other
-    // platforms (desktop, web, headless tests) skip cleanly with a logged
-    // reason instead of burning the outbox with a 30s backoff that will
-    // never succeed. `forceDispatch` is a test-only escape hatch.
+    // Only Android has native programmatic SMS.
     if (!forceDispatch && !Platform.isAndroid && !Platform.isIOS) {
+      debugPrint('CollectionSmsSender: skipping enqueueCollection, unsupported platform: ${Platform.operatingSystem}');
       await _logSms(
         memberId: memberId,
         recipientPhone: phone,
@@ -94,6 +93,29 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
         sentBy: sentBy,
       );
       return null;
+    }
+
+    // Proactive permission check for Android
+    if (Platform.isAndroid && !forceDispatch) {
+      final hasPermission = await _smsService.hasSmsPermission();
+      if (!hasPermission) {
+        debugPrint('CollectionSmsSender: SMS permission missing, requesting...');
+        final granted = await _smsService.requestSmsPermission();
+        if (!granted) {
+          debugPrint('CollectionSmsSender: SMS permission denied by user');
+          await _logSms(
+            memberId: memberId,
+            recipientPhone: phone,
+            recipientName: memberName,
+            collectorName: collectorName,
+            message: '',
+            status: 'failed',
+            errorMessage: 'SMS permission denied',
+            sentBy: sentBy,
+          );
+          return null;
+        }
+      }
     }
 
     final message = _smsService.buildCollectionSms(
@@ -117,6 +139,132 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     // Dispatch this single row directly via the static function. This bypasses
     // the StateNotifier so the dispatch survives route teardown (the user's
     // collection page navigates away after enqueue).
+    final smsService = _smsService;
+    final client = _client;
+    final orgId = _orgId;
+    unawaited(dispatchOutboxRow(
+      outbox: outbox,
+      row: OutboxRow(
+        id: id,
+        phone: phone,
+        message: message,
+        memberId: memberId,
+        recipientName: memberName,
+        collectorName: collectorName,
+        sentBy: sentBy,
+        status: OutboxStatus.pending,
+        attempts: 0,
+        lastError: null,
+        scheduledFor: DateTime.now(),
+        createdAt: DateTime.now(),
+      ),
+      smsService: smsService,
+      supabaseClient: client,
+      orgId: orgId,
+    ));
+    return id;
+  }
+
+  /// Enqueue a savings deposit SMS into the durable outbox.
+  Future<String?> enqueueSavings({
+    required String? phone,
+    required String? memberId,
+    required String memberName,
+    String? planName,
+    required double amount,
+    required double newBalance,
+    required String collectorName,
+    required String sentBy,
+    String? orgName,
+    bool forceDispatch = false,
+  }) async {
+    if (phone == null || phone.isEmpty) {
+      debugPrint('CollectionSmsSender: skipping enqueueSavings, phone is empty');
+      await _logSms(
+        memberId: memberId,
+        recipientPhone: '',
+        recipientName: memberName,
+        collectorName: collectorName,
+        message: '',
+        status: 'skipped',
+        errorMessage: 'No phone number',
+        sentBy: sentBy,
+      );
+      return null;
+    }
+    final enabled = await _isSmsEnabled('sms_on_savings');
+    if (!enabled) {
+      debugPrint('CollectionSmsSender: skipping enqueueSavings, sms_on_savings is disabled');
+      await _logSms(
+        memberId: memberId,
+        recipientPhone: phone,
+        recipientName: memberName,
+        collectorName: collectorName,
+        message: '',
+        status: 'skipped',
+        errorMessage: 'SMS on savings disabled in settings',
+        sentBy: sentBy,
+      );
+      return null;
+    }
+
+    if (!forceDispatch && !Platform.isAndroid && !Platform.isIOS) {
+      debugPrint('CollectionSmsSender: skipping enqueueSavings, unsupported platform: ${Platform.operatingSystem}');
+      await _logSms(
+        memberId: memberId,
+        recipientPhone: phone,
+        recipientName: memberName,
+        collectorName: collectorName,
+        message: '',
+        status: 'skipped',
+        errorMessage: 'unsupported_platform: ${Platform.operatingSystem}',
+        sentBy: sentBy,
+      );
+      return null;
+    }
+
+    // Proactive permission check for Android
+    if (Platform.isAndroid && !forceDispatch) {
+      final hasPermission = await _smsService.hasSmsPermission();
+      if (!hasPermission) {
+        debugPrint('CollectionSmsSender: SMS permission missing, requesting...');
+        final granted = await _smsService.requestSmsPermission();
+        if (!granted) {
+          debugPrint('CollectionSmsSender: SMS permission denied by user');
+          await _logSms(
+            memberId: memberId,
+            recipientPhone: phone,
+            recipientName: memberName,
+            collectorName: collectorName,
+            message: '',
+            status: 'failed',
+            errorMessage: 'SMS permission denied',
+            sentBy: sentBy,
+          );
+          return null;
+        }
+      }
+    }
+
+    final message = _smsService.buildSavingsSms(
+      amount: '₹${amount.toStringAsFixed(0)}',
+      collectorName: collectorName,
+      orgName: orgName ?? 'MicroFlow Finance',
+      planName: planName,
+      newBalance: newBalance,
+      date: DateTime.now(),
+    );
+
+    final outbox = await _ref.read(smsOutboxProvider.future);
+    final id = await outbox.enqueue(
+      phone: phone,
+      message: message,
+      memberId: memberId,
+      recipientName: memberName,
+      collectorName: collectorName,
+      sentBy: sentBy,
+    );
+
     final smsService = _smsService;
     final client = _client;
     final orgId = _orgId;

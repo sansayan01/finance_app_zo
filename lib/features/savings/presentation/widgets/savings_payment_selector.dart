@@ -1493,7 +1493,7 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
                                 24,
                                 16,
                                 24,
-                                MediaQuery.of(context).padding.bottom + 16),
+                                MediaQuery.of(context).padding.bottom + 80),
                             child: SizedBox(
                               width: double.infinity,
                               height: 56,

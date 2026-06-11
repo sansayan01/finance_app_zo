@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../models/today_payment_model.dart';
+import '../../../../core/constants/enums.dart';
 
 // Filter state
 class PaymentFilterState {
@@ -167,13 +168,14 @@ final todayPaymentsProvider =
   final user = ref.watch(currentUserProvider);
   debugPrint('todayPaymentsProvider: user = $user');
   debugPrint('todayPaymentsProvider: user.orgId = ${user?.orgId}');
-  if (user == null || user.orgId == null) {
-    debugPrint('todayPaymentsProvider: user or orgId is null, returning empty payments');
+  if (user == null) {
+    debugPrint('todayPaymentsProvider: user is null, returning empty payments');
     return const TodayPaymentData(payments: []);
   }
 
   final client = Supabase.instance.client;
-  final orgId = user.orgId!;
+  final orgId = user.orgId;
+  final isSuperAdmin = user.role == UserRole.superAdmin;
   final filters = ref.watch(paymentFilterProvider);
   final d = filters.selectedDate;
   final dateStr = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -183,22 +185,22 @@ final todayPaymentsProvider =
 
   try {
     // 1. Fetch EMI dues for the selected date (due on that day + overdue)
-    final emiDues = await client
+    final emiBase = client
         .from('emi_schedule')
         .select('id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
-        .eq('org_id', orgId)
-        .eq('due_date', dateStr)
+        .eq('due_date', dateStr);
+    final emiDues = await (isSuperAdmin ? emiBase : emiBase.eq('org_id', orgId!))
         .order('due_date', ascending: true);
 
     // Also fetch overdue EMIs (due before selected date, still unpaid)
     List<dynamic> overdueEmis = [];
     try {
-      overdueEmis = await client
+      final overdueBase = client
           .from('emi_schedule')
           .select('id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
-          .eq('org_id', orgId)
           .lt('due_date', dateStr)
-          .eq('is_paid', false)
+          .eq('is_paid', false);
+      overdueEmis = await (isSuperAdmin ? overdueBase : overdueBase.eq('org_id', orgId!))
           .order('due_date', ascending: true);
     } catch (e) {
       debugPrint('Error fetching overdue EMIs: $e');
@@ -289,7 +291,7 @@ final todayPaymentsProvider =
         emiNumber: emi['emi_number']?.toString(),
         paymentMode: emi['payment_mode'],
         collectedAt: emi['paid_on'] != null
-            ? DateTime.tryParse(emi['paid_on'])
+            ? DateTime.tryParse(emi['paid_on'])?.toLocal()
             : null,
       ));
     }
@@ -303,11 +305,11 @@ final todayPaymentsProvider =
 
   try {
     // 2. Fetch collections for the selected date
-    final collections = await client
+    final collectionsBase = client
         .from('collections')
         .select('id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, member_id, staff_id, remarks')
-        .eq('org_id', orgId)
-        .eq('collection_date', dateStr)
+        .eq('collection_date', dateStr);
+    final collections = await (isSuperAdmin ? collectionsBase : collectionsBase.eq('org_id', orgId!))
         .order('collection_time', ascending: false);
 
     for (final col in collections) {
@@ -348,7 +350,7 @@ final todayPaymentsProvider =
           loanId: col['loan_id'],
           paymentMode: col['payment_mode'],
           collectedAt: col['collection_time'] != null
-              ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')
+              ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')?.toLocal()
               : null,
           remarks: col['remarks'],
           collectionId: col['id'] as String?,
@@ -402,18 +404,20 @@ final todayPaymentsProvider =
     final dayOfMonth = selectedDate.day;
 
     // First fetch savings plans
-    final allActivePlans = await client
+    var plansQuery = client
         .from('savings_plans')
         .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id')
-        .eq('org_id', orgId)
         .eq('status', 'active');
+    if (!isSuperAdmin) plansQuery = plansQuery.eq('org_id', orgId!);
+    final allActivePlans = await plansQuery;
 
     // Fetch all savings collections for the selected date
-    final collectionsToday = await client
+    var savingsColQuery = client
         .from('savings_collections')
         .select('id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
-        .eq('org_id', orgId)
         .eq('collection_date', dateStr);
+    if (!isSuperAdmin) savingsColQuery = savingsColQuery.eq('org_id', orgId!);
+    final collectionsToday = await savingsColQuery;
 
     final collectionsMap = {
       for (final col in collectionsToday as List)
@@ -531,7 +535,7 @@ final todayPaymentsProvider =
         paymentMode: isCollected ? existingCollection['payment_mode'] : null,
         collectedAt: isCollected
             ? (existingCollection['collected_at'] != null
-                ? DateTime.tryParse(existingCollection['collected_at'])
+                ? DateTime.tryParse(existingCollection['collected_at'])?.toLocal()
                 : (existingCollection['created_at'] != null
                     ? DateTime.tryParse(existingCollection['created_at'])
                     : null))

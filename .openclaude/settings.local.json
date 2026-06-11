@@ -134,7 +134,18 @@
       "Bash(git push:*)",
       "Bash(python3:*)",
       "WebFetch(domain:github.com)",
-      "Bash(npx skills:*)"
+      "Bash(npx skills:*)",
+      "Bash(flutter devices:*)",
+      "Bash(adb disconnect:*)",
+      "Bash(adb connect:*)",
+      "Bash(where adb:*)",
+      "Bash(adb.exe connect:*)",
+      "Read(//d/Projects/finance_app_zo/$LOCALAPPDATA/Android/Sdk/platform-tools/**)",
+      "Read(//d/Projects/finance_app_zo/$HOME/AppData/Local/Android/Sdk/platform-tools/**)",
+      "Read(//c//**)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" connect:*)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" devices:*)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" disconnect:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

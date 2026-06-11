@@ -19,34 +19,72 @@ import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 class SmsSenderPlugin(
-    private val activity: Activity,
-    private val channel: MethodChannel
+    private val context: Context,
+    private val channel: MethodChannel,
+    private var activity: Activity? = null
 ) : MethodChannel.MethodCallHandler {
 
     companion object {
         private const val SMS_PERMISSION_REQUEST_CODE = 10011
         private const val TAG = "SmsSenderPlugin"
         private const val SMS_SENT_ACTION = "com.example.finance.SMS_SENT"
-        private const val SMS_DELIVERED_ACTION = "com.example.finance.SMS_DELIVERED"
         private const val SLOT_DEFAULT = -1
     }
 
-    private var pendingResult: MethodChannel.Result? = null
-    // requestId -> PendingSend that tracks per-part results.
-    // All parts must arrive (or time out) before we resolve the Dart result.
+    private var pendingPermissionResult: MethodChannel.Result? = null
     private val pendingById: ConcurrentHashMap<String, PendingSend> = ConcurrentHashMap()
     private var cachedSubscriptionId: Int = SLOT_DEFAULT
 
     private data class PendingSend(
         val phone: String,
-        val messageLength: Int,
         val parts: Int,
-        val sentCount: java.util.concurrent.atomic.AtomicInteger = java.util.concurrent.atomic.AtomicInteger(0),
-        val failureCount: java.util.concurrent.atomic.AtomicInteger = java.util.concurrent.atomic.AtomicInteger(0),
+        val sentCount: AtomicInteger = AtomicInteger(0),
+        val failureCount: AtomicInteger = AtomicInteger(0),
         val result: MethodChannel.Result,
     )
+
+    private val smsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != SMS_SENT_ACTION) return
+            
+            val requestId = intent.getStringExtra("request_id") ?: return
+            val partIndex = intent.getIntExtra("part_index", -1)
+            val p = pendingById[requestId] ?: return
+            
+            val code = resultCode
+            if (code != Activity.RESULT_OK) {
+                p.failureCount.incrementAndGet()
+                Log.e(TAG, "SMS part $partIndex for req=$requestId failed with code $code")
+            } else {
+                p.sentCount.incrementAndGet()
+            }
+
+            if (p.sentCount.get() + p.failureCount.get() == p.parts) {
+                val removed = pendingById.remove(requestId) ?: return
+                if (removed.failureCount.get() > 0) {
+                    removed.result.error("SEND_FAILED", "${removed.failureCount.get()}/${removed.parts} parts failed", null)
+                } else {
+                    removed.result.success(true)
+                }
+            }
+        }
+    }
+
+    init {
+        val filter = IntentFilter(SMS_SENT_ACTION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(smsReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(smsReceiver, filter)
+        }
+    }
+
+    fun setActivity(act: Activity?) {
+        this.activity = act
+    }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
@@ -59,11 +97,6 @@ class SmsSenderPlugin(
                     result.error("INVALID_ARGS", "phone, message, request_id are required", null)
                     return
                 }
-                if (pendingById.containsKey(requestId)) {
-                    // Defensive: same id reused, drop the duplicate
-                    result.error("DUPLICATE_REQUEST_ID", "request_id already in flight", null)
-                    return
-                }
                 sendSms(phone, message, requestId, subscriptionId, result)
             }
             "check_permission" -> result.success(hasSmsPermission())
@@ -73,24 +106,30 @@ class SmsSenderPlugin(
                     result.error("NEEDS_SMS_PERMISSION", "SMS permission required", null)
                     return
                 }
-                if (hasReadPhoneStatePermission()) {
-                    val payload = activeSubscriptions().map { mapOf(
+                val subs = activeSubscriptions()
+                if (subs.isEmpty()) {
+                    result.success(syntheticDefaultSubscription())
+                } else {
+                    val payload = subs.map { mapOf(
                         "subscription_id" to it.subscriptionId,
                         "sim_slot_index" to it.simSlotIndex,
                         "carrier_name" to (it.carrierName?.toString() ?: ""),
                         "display_name" to (it.displayName?.toString() ?: ""),
                     ) }
                     result.success(payload)
-                } else {
-                    result.success(syntheticDefaultSubscription())
                 }
             }
             "open_app_settings" -> {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.data = Uri.fromParts("package", activity.packageName, null)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                activity.startActivity(intent)
-                result.success(true)
+                val act = activity
+                if (act != null) {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.data = Uri.fromParts("package", act.packageName, null)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    act.startActivity(intent)
+                    result.success(true)
+                } else {
+                    result.error("NO_ACTIVITY", "Cannot open settings without activity", null)
+                }
             }
             "set_subscription" -> {
                 val id = call.argument<Int>("subscription_id") ?: SLOT_DEFAULT
@@ -104,9 +143,32 @@ class SmsSenderPlugin(
 
     private fun activeSubscriptions(): List<SubscriptionInfo> {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) return emptyList()
-        if (!hasReadPhoneStatePermission()) return emptyList()
-        val sm = activity.getSystemService(SubscriptionManager::class.java) ?: return emptyList()
-        return sm.activeSubscriptionInfoList ?: emptyList()
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            return emptyList()
+        }
+        val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+        return sm?.activeSubscriptionInfoList ?: emptyList()
+    }
+
+    /** Find the first subscription that has actual cellular service (IN_SERVICE). */
+    private fun findWorkingSubscriptionId(): Int {
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
+            ?: return SLOT_DEFAULT
+
+        for (sub in activeSubscriptions()) {
+            val subTm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                tm.createForSubscriptionId(sub.subscriptionId)
+            } else {
+                tm
+            }
+            val state = subTm.serviceState?.state
+            if (state == android.telephony.ServiceState.STATE_IN_SERVICE) {
+                Log.d(TAG, "Found working SIM: subId=${sub.subscriptionId}, carrier=${sub.carrierName}")
+                return sub.subscriptionId
+            }
+        }
+        Log.w(TAG, "No SIM with cellular service found")
+        return SLOT_DEFAULT
     }
 
     private fun syntheticDefaultSubscription(): List<Map<String, Any?>> {
@@ -120,77 +182,57 @@ class SmsSenderPlugin(
         )
     }
 
-    private fun hasReadPhoneStatePermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            activity, android.Manifest.permission.READ_PHONE_STATE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
     private fun hasSmsPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            activity, android.Manifest.permission.SEND_SMS
-        ) == PackageManager.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(context, android.Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestSmsPermission(result: MethodChannel.Result) {
+        val act = activity
+        if (act == null) {
+            result.error("NO_ACTIVITY", "Cannot request permission in background", null)
+            return
+        }
         if (hasSmsPermission()) {
             result.success(true)
             return
         }
-        // Bug D fix: if a previous permission request is still in flight (e.g.
-        // user tapped "request permission" twice in quick succession), resolve
-        // the first one with `false` so its MethodChannel.Result is not leaked.
-        // Otherwise the first Flutter caller would hang forever and the second
-        // call would silently overwrite the only pendingResult.
-        pendingResult?.success(false)
-        pendingResult = null
-        pendingResult = result
-        ActivityCompat.requestPermissions(
-            activity,
-            arrayOf(android.Manifest.permission.SEND_SMS),
-            SMS_PERMISSION_REQUEST_CODE
-        )
+        pendingPermissionResult?.success(false)
+        pendingPermissionResult = result
+        ActivityCompat.requestPermissions(act, arrayOf(android.Manifest.permission.SEND_SMS), SMS_PERMISSION_REQUEST_CODE)
     }
 
-    fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ): Boolean {
-        return when (requestCode) {
-            SMS_PERMISSION_REQUEST_CODE -> {
-                val granted = grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED
-                pendingResult?.success(granted)
-                pendingResult = null
-                true
-            }
-            else -> false
+    fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
+        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            pendingPermissionResult?.success(granted)
+            pendingPermissionResult = null
+            return true
         }
+        return false
     }
 
-    @Suppress("DEPRECATION")
-    private fun sendSms(
-        phone: String,
-        message: String,
-        requestId: String,
-        subscriptionIdArg: Int,
-        result: MethodChannel.Result
-    ) {
+    private fun sendSms(phone: String, message: String, requestId: String, subIdArg: Int, result: MethodChannel.Result) {
         try {
             if (!hasSmsPermission()) {
                 result.error("PERMISSION_DENIED", "SMS permission not granted", null)
                 return
             }
 
-            val subId = if (subscriptionIdArg != SLOT_DEFAULT) subscriptionIdArg else cachedSubscriptionId
-            val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (subId != SLOT_DEFAULT) {
-                    activity.getSystemService(SmsManager::class.java)
-                        .createForSubscriptionId(subId)
-                } else {
-                    activity.getSystemService(SmsManager::class.java)
+            var subId = if (subIdArg != SLOT_DEFAULT) subIdArg else cachedSubscriptionId
+
+            // Auto-select the first SIM with actual service if subId is still default
+            if (subId == SLOT_DEFAULT) {
+                val workingSubId = findWorkingSubscriptionId()
+                if (workingSubId != SLOT_DEFAULT) {
+                    subId = workingSubId
+                    Log.d(TAG, "Auto-selected working SIM subscription: $subId")
                 }
+            }
+
+            @Suppress("DEPRECATION")
+            val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val base = context.getSystemService(SmsManager::class.java)
+                if (subId != SLOT_DEFAULT) base.createForSubscriptionId(subId) else base
             } else {
                 if (subId != SLOT_DEFAULT && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
                     SmsManager.getSmsManagerForSubscriptionId(subId)
@@ -199,128 +241,40 @@ class SmsSenderPlugin(
                 }
             }
 
-            val parts: List<String> = if (message.length > 160) {
-                smsManager.divideMessage(message)
-            } else listOf(message)
-
-            // Bug D fix: defensive guard against SmsManager.divideMessage
-            // returning an empty list (observed on a few OEM builds with
-            // weird GSM 7-bit tables). If we proceeded, maybeResolve would
-            // never fire and the row would be stuck in `sending` forever.
+            val parts = smsManager.divideMessage(message)
             if (parts.isEmpty()) {
-                Log.e(TAG, "divideMessage returned 0 parts for req=$requestId, len=${message.length}")
-                result.error("EMPTY_PARTS", "no message parts", null)
+                result.error("EMPTY_MESSAGE", "Message divided into 0 parts", null)
                 return
             }
 
-            val pending = PendingSend(phone, message.length, parts.size, result = result)
+            val pending = PendingSend(phone, parts.size, result = result)
             pendingById[requestId] = pending
 
-            val sentIntents = ArrayList<PendingIntent?>(parts.size)
-            val deliveredIntents = ArrayList<PendingIntent?>(parts.size)
+            val sentIntents = ArrayList<PendingIntent>(parts.size)
             for (i in parts.indices) {
-                val sentIntent = PendingIntent.getBroadcast(
-                    activity, ("$requestId:$i").hashCode(),
-                    Intent("$SMS_SENT_ACTION.$requestId.$i").setPackage(activity.packageName),
-                    PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
-                )
-                val deliveredIntent = PendingIntent.getBroadcast(
-                    activity, ("$requestId:d:$i").hashCode(),
-                    Intent("$SMS_DELIVERED_ACTION.$requestId.$i").setPackage(activity.packageName),
-                    PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
-                )
-                sentIntents.add(sentIntent)
-                deliveredIntents.add(deliveredIntent)
-
-                registerSentReceiver(requestId, i, phone, sentIntent, "$SMS_SENT_ACTION.$requestId.$i")
-                registerDeliveredReceiver(requestId, i, phone, deliveredIntent, "$SMS_DELIVERED_ACTION.$requestId.$i")
+                val intent = Intent(SMS_SENT_ACTION).apply {
+                    putExtra("request_id", requestId)
+                    putExtra("part_index", i)
+                    `package` = context.packageName
+                }
+                val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                }
+                sentIntents.add(PendingIntent.getBroadcast(context, (requestId + i).hashCode(), intent, flags))
             }
 
             if (parts.size > 1) {
-                // sendMultipartTextMessage takes a java.util.ArrayList<String>,
-                // not a Kotlin List<String>. Wrap explicitly.
-                smsManager.sendMultipartTextMessage(
-                    phone,
-                    null,
-                    ArrayList(parts),
-                    sentIntents,
-                    deliveredIntents
-                )
+                smsManager.sendMultipartTextMessage(phone, null, ArrayList(parts), sentIntents, null)
             } else {
-                smsManager.sendTextMessage(phone, null, message, sentIntents[0], deliveredIntents[0])
+                smsManager.sendTextMessage(phone, null, message, sentIntents[0], null)
             }
-
-            Log.d(TAG, "SMS dispatch initiated to $phone (req=$requestId, parts=${parts.size}, subId=$subId)")
+            Log.d(TAG, "Sent SMS to $phone (req=$requestId, parts=${parts.size})")
         } catch (e: Exception) {
-            Log.e(TAG, "SMS exception to $phone: ${e.message}", e)
+            Log.e(TAG, "Failed to send SMS", e)
             pendingById.remove(requestId)
             result.error("SEND_FAILED", e.message, null)
-        }
-    }
-
-    private fun registerSentReceiver(
-        requestId: String,
-        partIndex: Int,
-        phone: String,
-        pendingIntent: PendingIntent,
-        action: String,
-    ) {
-        // The PendingIntent's underlying Intent is not directly accessible in
-        // modern Android, so we pass the action string in explicitly.
-        val filter = IntentFilter(action)
-        activity.registerReceiver(object : BroadcastReceiver() {
-            override fun onReceive(ctx: Context?, i: Intent?) {
-                val p = pendingById[requestId] ?: return
-                val total = p.parts
-                val code = resultCode
-                val resolved: Pair<String, Any?>? = when (code) {
-                    Activity.RESULT_OK -> { p.sentCount.incrementAndGet(); null }
-                    SmsManager.RESULT_ERROR_GENERIC_FAILURE -> "SEND_FAILED" to "Generic failure"
-                    SmsManager.RESULT_ERROR_NO_SERVICE -> "NO_SERVICE" to "No cellular service"
-                    SmsManager.RESULT_ERROR_NULL_PDU -> "NULL_PDU" to "Null PDU"
-                    SmsManager.RESULT_ERROR_RADIO_OFF -> "RADIO_OFF" to "Airplane mode or radio off"
-                    else -> "SEND_FAILED" to "Unknown error code: $code"
-                }
-                if (resolved != null) {
-                    p.failureCount.incrementAndGet()
-                    Log.e(TAG, "SMS part $partIndex/$total for req=$requestId to $phone failed: ${resolved.second}")
-                }
-                try { activity.unregisterReceiver(this) } catch (_: Exception) {}
-                maybeResolve(requestId)
-            }
-        }, filter, Context.RECEIVER_NOT_EXPORTED)
-    }
-
-    private fun registerDeliveredReceiver(
-        requestId: String,
-        partIndex: Int,
-        phone: String,
-        pendingIntent: PendingIntent,
-        action: String,
-    ) {
-        val filter = IntentFilter(action)
-        activity.registerReceiver(object : BroadcastReceiver() {
-            override fun onReceive(ctx: Context?, i: Intent?) {
-                when (resultCode) {
-                    Activity.RESULT_OK -> Log.d(TAG, "SMS part $partIndex delivered to $phone (req=$requestId)")
-                    else -> Log.w(TAG, "SMS part $partIndex NOT delivered to $phone (req=$requestId, code=$resultCode)")
-                }
-                try { activity.unregisterReceiver(this) } catch (_: Exception) {}
-            }
-        }, filter, Context.RECEIVER_NOT_EXPORTED)
-    }
-
-    private fun maybeResolve(requestId: String) {
-        val p = pendingById[requestId] ?: return
-        if (p.sentCount.get() + p.failureCount.get() < p.parts) return
-        // First-write-wins: remove the entry first; if another thread already
-        // removed it, skip resolution so we never call result.success/error twice.
-        val removed = pendingById.remove(requestId) ?: return
-        val total = removed.parts
-        if (removed.failureCount.get() > 0) {
-            removed.result.error("SEND_FAILED", "${removed.failureCount.get()}/$total parts failed", null)
-        } else {
-            removed.result.success(true)
         }
     }
 }

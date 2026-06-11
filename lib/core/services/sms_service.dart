@@ -52,10 +52,14 @@ class SmsService {
     required String requestId,
     int? subscriptionId,
   }) async {
+    // Normalize phone number: remove all non-digit characters except leading '+'
+    // This handles spaces, dashes, and other formatting that SmsManager might reject.
+    final normalizedPhone = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    
     if (Platform.isAndroid) {
-      return _sendAndroidSms(phoneNumber, message, requestId, subscriptionId);
+      return _sendAndroidSms(normalizedPhone, message, requestId, subscriptionId);
     } else {
-      return _sendIosSms(phoneNumber, message);
+      return _sendIosSms(normalizedPhone, message);
     }
   }
 
@@ -170,7 +174,13 @@ class SmsService {
     return ok ? 'Sent successfully' : 'Send failed (check logs or run adb logcat)';
   }
 
-  /// Build the SMS message for a collection notification.
+  /// Build the SMS message for a collection (loan repayment) receipt.
+  ///
+  /// Professional, white-labeled receipt format:
+  /// ━━━━━━━━━━━━━━━━━━━
+  /// [OrgName]
+  /// PAYMENT RECEIVED ✓
+  /// ━━━━━━━━━━━━━━━━━━━
   String buildCollectionSms({
     required String amount,
     required String collectorName,
@@ -179,15 +189,21 @@ class SmsService {
     required String outstandingBalance,
     required DateTime date,
   }) {
-    final dateStr = DateFormat('dd-MMM-yyyy').format(date);
+    final dateStr = DateFormat('dd MMM yyyy').format(date);
     final timeStr = DateFormat('hh:mm a').format(date);
-    return '$amount received from $collectorName, $orgName.\n'
-        'Loan: $loanNumber | Bal: $outstandingBalance\n'
-        'Date: $dateStr $timeStr\n'
-        'Thank you!';
+    return '$orgName\n'
+        'Payment Received\n'
+        '─────────────\n'
+        'Amount: $amount\n'
+        'Loan: $loanNumber\n'
+        'Outstanding: $outstandingBalance\n'
+        'Collected by: $collectorName\n'
+        'Date: $dateStr, $timeStr\n'
+        '─────────────\n'
+        'Thank you for your payment!';
   }
 
-  /// Build the SMS message for a savings deposit notification.
+  /// Build the SMS message for a savings deposit receipt.
   String buildSavingsSms({
     required String amount,
     required String collectorName,
@@ -196,13 +212,19 @@ class SmsService {
     required double newBalance,
     required DateTime date,
   }) {
-    final dateStr = DateFormat('dd-MMM-yyyy').format(date);
+    final dateStr = DateFormat('dd MMM yyyy').format(date);
     final timeStr = DateFormat('hh:mm a').format(date);
     final plan = planName != null && planName.isNotEmpty ? planName : 'Savings';
-    return '$amount deposited to $plan by $collectorName, $orgName.\n'
-        'New Balance: ₹${newBalance.toStringAsFixed(0)}\n'
-        'Date: $dateStr $timeStr\n'
-        'Thank you!';
+    return '$orgName\n'
+        'Deposit Received\n'
+        '─────────────\n'
+        'Amount: $amount\n'
+        'Plan: $plan\n'
+        'Balance: ₹${newBalance.toStringAsFixed(0)}\n'
+        'Collected by: $collectorName\n'
+        'Date: $dateStr, $timeStr\n'
+        '─────────────\n'
+        'Thank you for saving with us!';
   }
 
   /// Build a reminder SMS for a due or overdue EMI.
@@ -215,15 +237,26 @@ class SmsService {
     required DateTime dueDate,
     bool isOverdue = false,
   }) {
-    final dateStr = DateFormat('dd-MMM-yyyy').format(dueDate);
-    final label = isOverdue ? 'OVERDUE' : 'DUE';
-    final bal = outstandingBalance != null
-        ? 'Balance: ₹${outstandingBalance.toStringAsFixed(0)}'
-        : '';
-    return 'Hi $memberName,\n'
-        'Your EMI of ₹${dueAmount.toStringAsFixed(0)} is $label on $dateStr.\n'
-        'Loan: $loanNumber | $bal\n'
-        '$orgName\n'
-        'Please pay on time to avoid late charges. Thank you!';
+    final dateStr = DateFormat('dd MMM yyyy').format(dueDate);
+    if (isOverdue) {
+      return '$orgName\n'
+          'OVERDUE PAYMENT\n'
+          '─────────────\n'
+          'Hi $memberName,\n'
+          'EMI of ₹${dueAmount.toStringAsFixed(0)} was due on $dateStr.\n'
+          'Loan: $loanNumber\n'
+          '${outstandingBalance != null ? 'Outstanding: ₹${outstandingBalance.toStringAsFixed(0)}\n' : ''}'
+          '─────────────\n'
+          'Please clear dues to avoid late fees.';
+    }
+    return '$orgName\n'
+        'EMI Reminder\n'
+        '─────────────\n'
+        'Hi $memberName,\n'
+        'Your EMI of ₹${dueAmount.toStringAsFixed(0)} is due on $dateStr.\n'
+        'Loan: $loanNumber\n'
+        '${outstandingBalance != null ? 'Outstanding: ₹${outstandingBalance.toStringAsFixed(0)}\n' : ''}'
+        '─────────────\n'
+        'Pay on time to avoid late charges.';
   }
 }

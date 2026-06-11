@@ -403,20 +403,18 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
           debugPrint('CollectionSheet: phone missing in loan model, fetching from members table...');
           final memberInfo = await client
               .from('members')
-              .select('phone, phone_number, mobile')
+              .select('phone')
               .eq('id', widget.loan!.customerId)
               .maybeSingle();
-          phone = (memberInfo?['phone'] ?? 
-                  memberInfo?['phone_number'] ?? 
-                  memberInfo?['mobile'])?.toString();
+          phone = memberInfo?['phone']?.toString();
         }
 
         final branding = ref.read(brandingProvider).valueOrNull;
         if (phone != null && phone.isNotEmpty) {
-          debugPrint('CollectionSheet: enqueuing SMS to $phone');
+          debugPrint('CollectionSheet: enqueuing SMS to $phone (memberId: ${widget.loan!.customerId})');
           await ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
                 phone: phone,
-                memberId: widget.loan!.memberId,
+                memberId: widget.loan!.customerId, // Use UUID here
                 memberName: memberName,
                 loanNumber: widget.loan!.loanNumber,
                 amount: amount,
@@ -542,13 +540,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     try {
       final memberInfo = await client
           .from('members')
-          .select('phone_number, mobile, phone')
+          .select('phone')
           .eq('id', plan.memberId)
           .maybeSingle();
-      final phone = (memberInfo?['phone_number'] ??
-              memberInfo?['mobile'] ??
-              memberInfo?['phone'])
-          ?.toString();
+      final phone = memberInfo?['phone']?.toString();
 
       final branding = ref.read(brandingProvider).valueOrNull;
       await ref.read(collectionSmsSenderProvider.notifier).enqueueSavings(

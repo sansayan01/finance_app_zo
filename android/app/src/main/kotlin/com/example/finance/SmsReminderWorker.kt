@@ -60,6 +60,12 @@ class SmsReminderWorker(
         try {
             engine = FlutterEngine(applicationContext)
             val messenger = engine.dartExecutor.binaryMessenger
+            
+            // Register SMS Sender plugin for background dispatch
+            val smsChannel = MethodChannel(messenger, "com.microflow/sms")
+            val smsPlugin = SmsSenderPlugin(applicationContext, smsChannel)
+            smsChannel.setMethodCallHandler(smsPlugin)
+
             engine.dartExecutor.executeDartEntrypoint(
                 DartExecutor.DartEntrypoint.createDefault()
             )

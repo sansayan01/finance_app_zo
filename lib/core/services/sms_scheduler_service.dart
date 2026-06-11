@@ -109,7 +109,7 @@ class SmsSchedulerService {
   ///                  emi_amount, outstanding_amount)
   ///   - public.loan_schedules(id, loan_id, due_date, is_paid, is_overdue,
   ///                            emi_amount)
-  ///   - public.members(id, full_name, phone, phone_number, phone_mobile)
+  ///   - public.members(id, full_name, phone)
   ///   - public.organizations(id, name)
   ///
   /// Any missing column or table will be caught and surfaced as a
@@ -139,8 +139,7 @@ class SmsSchedulerService {
             'id, due_date, emi_amount, emi, is_paid, is_overdue, '
             'loans!inner(id, org_id, customer_id, loan_number, '
             'emi_amount, outstanding_amount, status, '
-            'members!loans_customer_id_fkey(id, full_name, name, phone, '
-            'phone_number, mobile))',
+            'members!loans_customer_id_fkey(id, full_name, name, phone))',
           )
           .eq('loans.org_id', orgId)
           .lte('due_date', todayStr)
@@ -162,11 +161,13 @@ class SmsSchedulerService {
       try {
         final org = await _client
             .from('organizations')
-            .select('name')
+            .select('display_name, name')
             .eq('id', orgId)
             .maybeSingle();
-        if (org != null && org['name'] is String) {
-          orgName = org['name'] as String;
+        if (org != null) {
+          orgName = (org['display_name'] as String?) ??
+              (org['name'] as String?) ??
+              orgName;
         }
       } catch (_) {
         // Ignore — fall back to default orgName.

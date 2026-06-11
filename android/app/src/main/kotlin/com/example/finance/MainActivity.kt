@@ -36,7 +36,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         // SMS Sender plugin
         val smsChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SMS_CHANNEL)
-        smsPlugin = SmsSenderPlugin(this, smsChannel)
+        smsPlugin = SmsSenderPlugin(applicationContext, smsChannel, this)
         smsChannel.setMethodCallHandler(smsPlugin)
 
         // SMS scheduler channel (delegates to SmsReminderWorker via WorkManager)
@@ -123,13 +123,6 @@ class MainActivity : FlutterFragmentActivity() {
                 PackageManager.DONT_KILL_APP
             )
         }
-
-        val mainComponent = ComponentName(packageName, "$packageName.MainActivity")
-        pm.setComponentEnabledSetting(
-            mainComponent,
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-            PackageManager.DONT_KILL_APP
-        )
 
         val targetAlias = iconAliases[presetId]!!
         val targetComponent = ComponentName(packageName, "$packageName$targetAlias")

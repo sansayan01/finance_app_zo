@@ -32,6 +32,23 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     return _prefs.getBool(key) ?? true;
   }
 
+  /// Resolve the organization display name from the DB as a fallback.
+  Future<String> _resolveOrgName(String? callerOrgName) async {
+    if (callerOrgName != null && callerOrgName.isNotEmpty) return callerOrgName;
+    try {
+      final response = await _client
+          .from('organizations')
+          .select('display_name, name')
+          .eq('id', _orgId!)
+          .maybeSingle();
+      return (response?['display_name'] as String?) ??
+          (response?['name'] as String?) ??
+          'MicroFlow Finance';
+    } catch (_) {
+      return 'MicroFlow Finance';
+    }
+  }
+
   /// Enqueue a collection SMS into the durable outbox.
   ///
   /// [forceDispatch] is for testability only — it bypasses the
@@ -118,14 +135,19 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       }
     }
 
+    final resolvedOrgName = await _resolveOrgName(orgName);
     final message = _smsService.buildCollectionSms(
       amount: '₹${amount.toStringAsFixed(0)}',
       collectorName: collectorName,
-      orgName: orgName ?? 'MicroFlow Finance',
+      orgName: resolvedOrgName,
       loanNumber: loanNumber ?? 'N/A',
       outstandingBalance: '₹${outstandingBalance.toStringAsFixed(0)}',
       date: DateTime.now(),
     );
+
+    debugPrint('CollectionSmsSender: enqueuing message to $phone (len: ${message.length})');
+    final subId = await _smsService.getSubscriptionId();
+    debugPrint('CollectionSmsSender: using SIM subscriptionId: ${subId ?? "default (-1)"}');
 
     final outbox = await _ref.read(smsOutboxProvider.future);
     final id = await outbox.enqueue(
@@ -246,10 +268,11 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       }
     }
 
+    final resolvedOrgName = await _resolveOrgName(orgName);
     final message = _smsService.buildSavingsSms(
       amount: '₹${amount.toStringAsFixed(0)}',
       collectorName: collectorName,
-      orgName: orgName ?? 'MicroFlow Finance',
+      orgName: resolvedOrgName,
       planName: planName,
       newBalance: newBalance,
       date: DateTime.now(),

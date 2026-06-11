@@ -172,8 +172,23 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
       final staffProfile = await _ref.read(staffProfileProvider.future);
       final branding = _ref.read(brandingProvider).valueOrNull;
       final collectorName = staffProfile?.fullName ?? 'Staff';
+
+      // Fallback: fetch phone from members table if not in collection model
+      String? phone = collection.memberPhone;
+      if ((phone == null || phone.isEmpty) && collection.memberId != null) {
+        try {
+          final client = _ref.read(supabaseClientProvider);
+          final memberInfo = await client
+              .from('members')
+              .select('phone')
+              .eq('id', collection.memberId!)
+              .maybeSingle();
+          phone = memberInfo?['phone']?.toString();
+        } catch (_) {}
+      }
+
       await _ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
-        phone: collection.memberPhone,
+        phone: phone,
         memberId: collection.memberId,
         memberName: collection.memberName,
         loanNumber: collection.loanNumber,

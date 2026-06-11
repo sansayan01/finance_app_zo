@@ -1,0 +1,87 @@
+#center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.hero img {
+  height: 100px;
+  margin: 0 0.5rem;
+}
+
+.hero .base {
+  height: 170px;
+}
+
+.counter {
+  font-size: 1.2rem;
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: #646cff;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.counter:hover {
+  background: #535bf2;
+}
+
+.ticks {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 1.5rem 0;
+}
+
+#next-steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+#next-steps h2 {
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#next-steps li {
+  margin: 0.5rem 0;
+}
+
+#next-steps a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+  text-decoration: none;
+}
+
+#next-steps .logo {
+  height: 20px;
+}
+
+#next-steps .button-icon {
+  height: 16px;
+}
+
+#spacer {
+  height: 2rem;
+}

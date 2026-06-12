@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/progress_gauge.dart';
@@ -54,24 +55,7 @@ class _CustomerEmiSchedulePageState
 
   // ─── Indian currency formatting ───
   String _formatCurrency(double value) {
-    if (value.abs() >= 10000000) {
-      return '₹${(value / 10000000).toStringAsFixed(2)} Cr';
-    }
-    if (value.abs() >= 100000) {
-      return '₹${(value / 100000).toStringAsFixed(2)} L';
-    }
-    final n = value.round();
-    final s = n.toString();
-    if (s.length <= 3) return '₹$s';
-    final last3 = s.substring(s.length - 3);
-    final rest = s.substring(0, s.length - 3);
-    final buf = StringBuffer();
-    for (int i = 0; i < rest.length; i++) {
-      buf.write(rest[i]);
-      final remaining = rest.length - i - 1;
-      if (remaining > 0 && remaining % 2 == 0) buf.write(',');
-    }
-    return '₹${buf.toString()},$last3';
+    return NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0).format(value);
   }
 
   String _formatPlainAmount(double value) {
@@ -1424,7 +1408,7 @@ class _PremiumEmiRow extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            '₹${value >= 100000 ? '${(value / 100000).toStringAsFixed(1)}L' : value.round()}',
+            '₹${NumberFormat.currency(locale: 'en_IN', symbol: '', decimalDigits: 0).format(value)}',
             style: TextStyle(
               fontSize: expanded ? 11 : 10,
               fontWeight: FontWeight.w700,

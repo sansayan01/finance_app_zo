@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
@@ -815,22 +816,16 @@ class _KpiTile extends StatelessWidget {
     );
   }
 
-  /// Indian-style compact currency: K, L, Cr.
+  /// Indian-style compact currency using full comma-formatted numbers.
   String _formatIndian(double v, {bool signed = false}) {
     final negative = v < 0;
-    final n = v.abs();
     final sign = negative ? '-' : (signed && v > 0 ? '+' : '');
-    String body;
-    if (n >= 10000000) {
-      body = '${(n / 10000000).toStringAsFixed(2)} Cr';
-    } else if (n >= 100000) {
-      body = '${(n / 100000).toStringAsFixed(2)} L';
-    } else if (n >= 1000) {
-      body = '${(n / 1000).toStringAsFixed(1)} K';
-    } else {
-      body = n.toStringAsFixed(0);
-    }
-    return '$sign₹$body';
+    final formatted = NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '₹',
+      decimalDigits: 0,
+    ).format(v.abs());
+    return '$sign$formatted';
   }
 }
 

@@ -19,17 +19,12 @@ class CustomerCurrencyFormatter {
     return formatter.format(amount);
   }
 
-  /// Compact format: ₹1.5K, ₹2.3L, ₹1.2Cr
+  /// Indian comma-formatted: ₹10,00,000 instead of ₹10L
   static String formatCompact(num amount) {
-    if (amount.abs() >= 10000000) {
-      return '₹${(amount / 10000000).toStringAsFixed(1)}Cr';
-    }
-    if (amount.abs() >= 100000) {
-      return '₹${(amount / 100000).toStringAsFixed(1)}L';
-    }
-    if (amount.abs() >= 1000) {
-      return '₹${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '₹${amount.toStringAsFixed(0)}';
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '₹',
+      decimalDigits: 0,
+    ).format(amount);
   }
 }

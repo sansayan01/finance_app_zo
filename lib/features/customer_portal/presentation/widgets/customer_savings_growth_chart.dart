@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -122,7 +123,7 @@ class _CustomerSavingsGrowthChartState
                       ),
                     ),
                     child: Text(
-                      '${widget.data[_touchedIndex!].label}  ·  ${_formatAmount(widget.data[_touchedIndex!].amount)}',
+                      '${widget.data[_touchedIndex!].label}  ·  ₹${_formatAmount(widget.data[_touchedIndex!].amount)}',
                       style: TextStyle(
                         color: isDark
                             ? AppColors.successDark
@@ -226,7 +227,7 @@ class _CustomerSavingsGrowthChartState
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
                 return LineTooltipItem(
-                  _formatAmount(spot.y),
+                  '₹${_formatAmount(spot.y)}',
                   const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -355,20 +356,14 @@ class _CustomerSavingsGrowthChartState
   }
 
   String _formatAmount(double amount) {
-    if (amount >= 100000) {
-      return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
-    } else if (amount >= 1000) {
-      return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '\u20b9${amount.toStringAsFixed(0)}';
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '',
+      decimalDigits: 0,
+    ).format(amount);
   }
 
   String _formatAxisAmount(double amount) {
-    if (amount >= 100000) {
-      return '${(amount / 100000).toStringAsFixed(0)}L';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(0)}K';
-    }
-    return amount.toStringAsFixed(0);
+    return NumberFormat.decimalPattern('en_IN').format(amount);
   }
 }

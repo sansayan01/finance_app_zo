@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/formatters.dart';
@@ -1738,21 +1739,10 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     }
   }
 
+  static final _currencyFmt = NumberFormat.currency(locale: 'en_IN', symbol: '', decimalDigits: 0);
+
   String _formatAmount(double amount) {
-    if (amount >= 10000000) {
-      return '${(amount / 10000000).toStringAsFixed(2)} Cr';
-    } else if (amount >= 100000) {
-      return '${(amount / 100000).toStringAsFixed(2)} L';
-    } else if (amount >= 1000) {
-      // Keep 2 decimal places to avoid precision loss (e.g. ₹1,500.75 → ₹1,501)
-      final fixed = amount.toStringAsFixed(2);
-      final parts = fixed.split('.');
-      final intPart = parts[0].replaceAllMapped(
-          RegExp(r'(\\d+?)(?=(\\d{3})+(?!\\d))'),
-          (Match m) => '${m[1]},');
-      return '₹$intPart.${parts[1]}';
-    }
-    return '₹${amount.toStringAsFixed(2)}';
+    return _currencyFmt.format(amount);
   }
 
   String _formatDate(DateTime date) {

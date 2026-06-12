@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/aurora_background.dart';
@@ -79,26 +80,13 @@ class _CustomerSavingsPageState extends ConsumerState<CustomerSavingsPage>
     });
   }
 
-  /// Indian-style currency formatting (e.g. 12,34,567).
+  /// Indian-style currency formatting using full comma-formatted numbers.
   String _formatCurrency(double value) {
-    if (value.abs() >= 10000000) {
-      return '₹${(value / 10000000).toStringAsFixed(2)} Cr';
-    }
-    if (value.abs() >= 100000) {
-      return '₹${(value / 100000).toStringAsFixed(2)} L';
-    }
-    final n = value.round();
-    final s = n.toString();
-    if (s.length <= 3) return '₹$s';
-    final last3 = s.substring(s.length - 3);
-    final rest = s.substring(0, s.length - 3);
-    final buf = StringBuffer();
-    for (int i = 0; i < rest.length; i++) {
-      buf.write(rest[i]);
-      final remaining = rest.length - i - 1;
-      if (remaining > 0 && remaining % 2 == 0) buf.write(',');
-    }
-    return '₹${buf.toString()},$last3';
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '₹',
+      decimalDigits: 0,
+    ).format(value);
   }
 
   @override

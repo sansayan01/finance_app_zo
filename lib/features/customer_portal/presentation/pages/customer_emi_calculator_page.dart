@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -334,7 +335,7 @@ class _CustomerEmiCalculatorPageState
     return _buildSliderRow(
       isDark: isDark,
       label: 'Loan Amount',
-      valueDisplay: _formatCurrency(_loanAmount),
+      valueDisplay: '₹${_formatCurrency(_loanAmount)}',
       value: _loanAmount,
       min: 10000,
       max: 5000000,
@@ -487,7 +488,7 @@ class _CustomerEmiCalculatorPageState
                   curve: Curves.easeOutCubic,
                   builder: (context, value, _) {
                     return Text(
-                      _formatCurrency(value),
+                      '₹${_formatCurrency(value)}',
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.w800,
@@ -597,7 +598,7 @@ class _CustomerEmiCalculatorPageState
             curve: Curves.easeOutCubic,
             builder: (context, val, _) {
               return Text(
-                _formatCurrency(val),
+                '₹${_formatCurrency(val)}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -672,7 +673,7 @@ class _CustomerEmiCalculatorPageState
                       color: AppColors.indigo,
                       label: 'Principal',
                       percentage: '${principalPct.toStringAsFixed(1)}%',
-                      amount: _formatCurrency(principal),
+                      amount: '₹${_formatCurrency(principal)}',
                       isDark: isDark,
                     ),
                     const SizedBox(height: 16),
@@ -680,7 +681,7 @@ class _CustomerEmiCalculatorPageState
                       color: AppColors.accentLight,
                       label: 'Interest',
                       percentage: '${interestPct.toStringAsFixed(1)}%',
-                      amount: _formatCurrency(interest),
+                      amount: '₹${_formatCurrency(interest)}',
                       isDark: isDark,
                     ),
                   ],
@@ -937,39 +938,11 @@ class _CustomerEmiCalculatorPageState
   // ═══════════════════════════════════════════════════════════════════════════
 
   String _formatCurrency(double value) {
-    if (value >= 10000000) {
-      return '₹${(value / 10000000).toStringAsFixed(2)} Cr';
-    } else if (value >= 100000) {
-      return '₹${(value / 100000).toStringAsFixed(2)} L';
-    }
-    return '₹${_addCommas(value.toStringAsFixed(0))}';
+    return NumberFormat.currency(locale: 'en_IN', symbol: '', decimalDigits: 0).format(value);
   }
 
   String _formatCompact(double value) {
-    if (value >= 10000000) {
-      return '${(value / 10000000).toStringAsFixed(1)}Cr';
-    } else if (value >= 100000) {
-      return '${(value / 100000).toStringAsFixed(1)}L';
-    } else if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(1)}K';
-    }
-    return value.toStringAsFixed(0);
-  }
-
-  String _addCommas(String numberStr) {
-    final parts = numberStr.split('.');
-    final intPart = parts[0];
-    final result = StringBuffer();
-    int count = 0;
-    for (int i = intPart.length - 1; i >= 0; i--) {
-      result.write(intPart[i]);
-      count++;
-      if (count == 3 && i > 0) {
-        result.write(',');
-        count = 0;
-      }
-    }
-    return result.toString().split('').reversed.join();
+    return NumberFormat.currency(locale: 'en_IN', symbol: '', decimalDigits: 0).format(value);
   }
 }
 

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class CustomerProfileModel {
   final String memberId;
   final String fullName;
@@ -125,14 +127,11 @@ class CustomerProfileModel {
 
   String get formattedMonthlyIncome {
     if (monthlyIncome == null) return '--';
-    if (monthlyIncome! >= 10000000) {
-      return '\u20b9${(monthlyIncome! / 10000000).toStringAsFixed(1)}Cr';
-    } else if (monthlyIncome! >= 100000) {
-      return '\u20b9${(monthlyIncome! / 100000).toStringAsFixed(1)}L';
-    } else if (monthlyIncome! >= 1000) {
-      return '\u20b9${(monthlyIncome! / 1000).toStringAsFixed(1)}K';
-    }
-    return '\u20b9${monthlyIncome!.toStringAsFixed(0)}';
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '\u20b9',
+      decimalDigits: 0,
+    ).format(monthlyIncome!);
   }
 
   CustomerProfileModel copyWith({

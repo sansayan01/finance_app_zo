@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/sparkline_chart.dart';
@@ -863,7 +864,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                                   duration: const Duration(milliseconds: 1000),
                                   curve: Curves.easeOutCubic,
                                   builder: (context, value, _) => Text(
-                                    _formatCurrency(value),
+                                    '₹${_formatCurrency(value)}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 28,
@@ -1091,7 +1092,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                           duration: const Duration(milliseconds: 800),
                           curve: Curves.easeOutCubic,
                           builder: (context, value, _) => Text(
-                            '${netPositive ? '+' : '-'}${_formatSmallCurrency(value)}',
+                            '${netPositive ? '+' : '-'}₹${_formatSmallCurrency(value)}',
                             style: TextStyle(
                               color: netPositive ? AppColors.success : AppColors.rose,
                               fontSize: 16,
@@ -1130,7 +1131,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
           duration: const Duration(milliseconds: 800),
           curve: Curves.easeOutCubic,
           builder: (context, v, _) => Text(
-            _formatSmallCurrency(v),
+            '₹${_formatSmallCurrency(v)}',
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 16,
@@ -1231,8 +1232,8 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                     const SizedBox(height: 2),
                     Text(
                       emi.dueDate != null
-                          ? '${_formatDate(emi.dueDate!)}  ·  ${_formatCurrency(emi.emiAmount)}'
-                          : _formatCurrency(emi.emiAmount),
+                          ? '${_formatDate(emi.dueDate!)}  ·  ₹${_formatCurrency(emi.emiAmount)}'
+                          : '₹${_formatCurrency(emi.emiAmount)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: (isDark ? Colors.white : const Color(0xFF0F172A))
                             .withValues(alpha: 0.6),
@@ -1517,7 +1518,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _formatCurrencyHome(totalPaid),
+                                '₹${_formatCurrencyHome(totalPaid)}',
                                 style: TextStyle(
                                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                                   fontSize: 20,
@@ -1526,7 +1527,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                                 ),
                               ),
                               Text(
-                                'of ${_formatCurrencyHome(totalAmount)} disbursed',
+                                'of ₹${_formatCurrencyHome(totalAmount)} disbursed',
                                 style: TextStyle(
                                   color: (isDark ? Colors.white : const Color(0xFF0F172A))
                                       .withValues(alpha: 0.4),
@@ -1550,7 +1551,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                           child: Column(
                             children: [
                               Text(
-                                _formatCurrencyHome(totalOutstanding),
+                                '₹${_formatCurrencyHome(totalOutstanding)}',
                                 style: const TextStyle(
                                   color: AppColors.warning,
                                   fontSize: 14,
@@ -1647,7 +1648,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${_formatCurrencyHome(loan.emiAmount)} EMI  ·  ${loan.purpose ?? ''}',
+                    '₹${_formatCurrencyHome(loan.emiAmount)} EMI  ·  ${loan.purpose ?? ''}',
                     style: TextStyle(
                       color: (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)
                           .withValues(alpha: 0.8),
@@ -1666,7 +1667,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  _formatCurrencyHome(loan.outstandingBalance),
+                  '₹${_formatCurrencyHome(loan.outstandingBalance)}',
                   style: TextStyle(
                     color: chipColor,
                     fontSize: 13,
@@ -1702,15 +1703,8 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
   }
 
   String _formatCurrencyHome(double amount) {
-    if (amount >= 10000000) {
-      return '\u20b9${(amount / 10000000).toStringAsFixed(2)}Cr';
-    }
-    if (amount >= 100000) {
-      return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
-    } else if (amount >= 1000) {
-      return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '\u20b9${amount.toStringAsFixed(0)}';
+    if (amount == 0) return '0';
+    return NumberFormat.currency(locale: 'en_IN', symbol: '', decimalDigits: 0).format(amount);
   }
 
   // ─── PREMIUM QUICK ACTIONS ───────────────────────────────────────────────
@@ -1799,39 +1793,13 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
   }
 
   String _formatCurrency(double amount) {
-    const rupee = '\u20b9';
-    if (amount.abs() >= 10000000) {
-      return '$rupee${(amount / 10000000).toStringAsFixed(2)} Cr';
-    } else if (amount.abs() >= 100000) {
-      return '$rupee${(amount / 100000).toStringAsFixed(2)} L';
-    }
-    final whole = amount.truncate();
-    final wholeStr = _indianGroup(whole.abs());
-    return '${amount < 0 ? '-' : ''}$rupee$wholeStr';
+    if (amount == 0) return '0';
+    return NumberFormat.currency(locale: 'en_IN', symbol: '', decimalDigits: 0).format(amount);
   }
 
   String _formatSmallCurrency(double amount) {
-    const rupee = '\u20b9';
-    if (amount.abs() >= 100000) {
-      return '$rupee${(amount / 100000).toStringAsFixed(1)}L';
-    } else if (amount.abs() >= 1000) {
-      return '$rupee${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '$rupee${amount.toStringAsFixed(0)}';
-  }
-
-  String _indianGroup(int n) {
-    final s = n.toString();
-    if (s.length <= 3) return s;
-    final last3 = s.substring(s.length - 3);
-    final reversed = s.substring(0, s.length - 3).split('').reversed.join();
-    final groups = <String>[];
-    for (var i = 0; i < reversed.length; i += 2) {
-      groups.add(reversed.substring(
-          i, i + 2 > reversed.length ? reversed.length : i + 2));
-    }
-    final left = groups.map((g) => g.split('').reversed.join()).toList().reversed.join(',');
-    return '$left,$last3';
+    if (amount == 0) return '0';
+    return NumberFormat.currency(locale: 'en_IN', symbol: '', decimalDigits: 0).format(amount);
   }
 
   String _formatDate(DateTime date) {
@@ -2159,12 +2127,9 @@ class _PremiumStatCard extends StatelessWidget {
   });
 
   String _format(double v) {
-    const rupee = '\u20b9';
     if (!isCurrency) return v.toInt().toString();
-    if (v.abs() >= 10000000) return '$rupee${(v / 10000000).toStringAsFixed(2)}Cr';
-    if (v.abs() >= 100000) return '$rupee${(v / 100000).toStringAsFixed(2)}L';
-    if (v.abs() >= 1000) return '$rupee${(v / 1000).toStringAsFixed(1)}K';
-    return '$rupee${v.toStringAsFixed(0)}';
+    if (v == 0) return '₹0';
+    return NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0).format(v);
   }
 
   @override

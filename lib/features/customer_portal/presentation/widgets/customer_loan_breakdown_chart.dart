@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -145,7 +146,7 @@ class _CustomerLoanBreakdownChartState
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _formatAmount(total),
+                          '₹${_formatAmount(total)}',
                           style: TextStyle(
                             color: isDark
                                 ? AppColors.textPrimaryDark
@@ -323,7 +324,7 @@ class _CustomerLoanBreakdownChartState
           const SizedBox(width: AppSpacing.sm),
           // Amount
           Text(
-            _formatAmount(amount),
+            '₹${_formatAmount(amount)}',
             style: TextStyle(
               color: isDark
                   ? AppColors.textPrimaryDark
@@ -338,12 +339,11 @@ class _CustomerLoanBreakdownChartState
   }
 
   String _formatAmount(double amount) {
-    if (amount >= 100000) {
-      return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
-    } else if (amount >= 1000) {
-      return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '\u20b9${amount.toStringAsFixed(0)}';
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '',
+      decimalDigits: 0,
+    ).format(amount);
   }
 }
 

@@ -289,35 +289,11 @@ class _CustomerReceiptPageState extends ConsumerState<CustomerReceiptPage>
     }
   }
 
-  // ── Indian-style money format with L / Cr suffix ──
+  // ── Indian-style money format with full comma grouping ──
+  static final _moneyFmt = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+
   String _money(num v) {
-    final negative = v < 0;
-    final n = v.abs();
-    if (n >= 10000000) {
-      return '${negative ? '-' : ''}₹${(n / 10000000).toStringAsFixed(2)} Cr';
-    }
-    if (n >= 100000) {
-      return '${negative ? '-' : ''}₹${(n / 100000).toStringAsFixed(2)} L';
-    }
-    final whole = n.truncate();
-    final fraction = ((n - whole) * 100).round();
-    final wholeStr = whole.toString();
-    String grouped;
-    if (wholeStr.length <= 3) {
-      grouped = wholeStr;
-    } else {
-      final last3 = wholeStr.substring(wholeStr.length - 3);
-      final rest = wholeStr.substring(0, wholeStr.length - 3);
-      final restRev = rest.split('').reversed.join();
-      final buf = StringBuffer();
-      for (var i = 0; i < restRev.length; i++) {
-        if (i > 0 && i % 2 == 0) buf.write(',');
-        buf.write(restRev[i]);
-      }
-      grouped = '${buf.toString().split('').reversed.join()},$last3';
-    }
-    final fracStr = fraction.toString().padLeft(2, '0');
-    return '${negative ? '-' : ''}₹$grouped.$fracStr';
+    return _moneyFmt.format(v);
   }
 
   String _formatPaymentMode(String mode) {

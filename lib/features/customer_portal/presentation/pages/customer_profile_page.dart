@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/layout.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -566,9 +567,7 @@ class _CustomerProfilePageState extends ConsumerState<CustomerProfilePage>
   }
 
   String _formatCurrency(double amount) {
-    if (amount >= 100000) return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
-    if (amount >= 1000) return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
-    return '\u20b9${amount.toStringAsFixed(0)}';
+    return NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0).format(amount);
   }
 }
 

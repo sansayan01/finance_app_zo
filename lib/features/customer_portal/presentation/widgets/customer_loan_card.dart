@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -153,7 +154,7 @@ class CustomerLoanCard extends StatelessWidget {
                     _buildMetric(
                       context,
                       'Amount',
-                      _formatCurrency(loan.amount),
+                      '₹${_formatCurrency(loan.amount)}',
                       Icons.receipt_long_rounded,
                       isDark,
                     ),
@@ -176,7 +177,7 @@ class CustomerLoanCard extends StatelessWidget {
                     _buildMetric(
                       context,
                       'Outstanding',
-                      _formatCurrency(loan.outstandingBalance),
+                      '₹${_formatCurrency(loan.outstandingBalance)}',
                       Icons.account_balance_wallet_rounded,
                       isDark,
                       valueColor: loan.outstandingBalance > 0
@@ -202,7 +203,7 @@ class CustomerLoanCard extends StatelessWidget {
                     _buildMetric(
                       context,
                       'EMI',
-                      _formatCurrency(loan.emiAmount),
+                      '₹${_formatCurrency(loan.emiAmount)}',
                       Icons.calendar_month_rounded,
                       isDark,
                     ),
@@ -324,15 +325,11 @@ class CustomerLoanCard extends StatelessWidget {
   }
 
   String _formatCurrency(double amount) {
-    if (amount >= 10000000) {
-      return '\u20b9${(amount / 10000000).toStringAsFixed(2)}Cr';
-    }
-    if (amount >= 100000) {
-      return '\u20b9${(amount / 100000).toStringAsFixed(1)}L';
-    } else if (amount >= 1000) {
-      return '\u20b9${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '\u20b9${amount.toStringAsFixed(0)}';
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: '',
+      decimalDigits: 0,
+    ).format(amount);
   }
 }
 

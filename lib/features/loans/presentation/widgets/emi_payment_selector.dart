@@ -738,6 +738,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useSafeArea: true,
+      barrierColor: Colors.black87,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setPopupState) {
@@ -788,6 +789,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                       ),
                     ),
                     child: SafeArea(
+                      child: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -795,41 +797,48 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                           Container(
                             height: 4,
                             margin: const EdgeInsets.only(top: 12),
-                            width: 48,
+                            width: 64,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(2),
                               gradient: const LinearGradient(
                                   colors: [AppColors.primary, AppColors.accent]),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 18),
 
                           // ── Header ──
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            padding: const EdgeInsets.symmetric(horizontal: 28),
                             child: Row(
                               children: [
                                 // Gradient calendar icon
                                 Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 44,
+                                  height: 44,
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       colors: [AppColors.primary, AppColors.accent],
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(13),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.primary.withValues(alpha: 0.25),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
+                                        color: AppColors.primary.withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 5),
                                       ),
                                     ],
                                   ),
                                   child: const Icon(
                                     Icons.calendar_month_rounded,
-                                    size: 20,
+                                    size: 22,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -841,19 +850,30 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                       Text(
                                         'Select Payment Dates',
                                         style: TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 20,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: -0.5,
                                           color: _textPrimary(),
                                         ),
                                       ),
                                       if (tempSelected.isNotEmpty)
-                                        Text(
-                                          '${tempSelected.length} date${tempSelected.length > 1 ? 's' : ''} selected',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: _primaryColor(),
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 4),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(colors: [
+                                              _primaryColor(),
+                                              _primaryColor().withValues(alpha: 0.7),
+                                            ]),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            '${tempSelected.length} date${tempSelected.length > 1 ? 's' : ''} selected',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                     ],
@@ -904,9 +924,9 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                           // ── Selected dates chips ──
                           if (tempSelected.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              padding: const EdgeInsets.symmetric(horizontal: 28),
                               child: SizedBox(
-                                height: 36,
+                                height: 42,
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   itemCount: tempSelected.length,
@@ -917,90 +937,97 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                     final emisOnDate = _eventsForDay(date);
                                     final dateStr =
                                         DateFormat('dd MMM').format(date);
-                                    return AnimatedSlide(
-                                      offset: const Offset(0.2, 0),
+                                    return AnimatedScale(
+                                      scale: 1.0,
                                       duration: Duration(
-                                          milliseconds: 250 + (i * 50)),
+                                          milliseconds: 200 + (i * 30)),
                                       curve: Curves.easeOutCubic,
-                                      child: AnimatedOpacity(
-                                        opacity: 1.0,
-                                        duration: Duration(
-                                            milliseconds: 250 + (i * 50)),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(colors: [
-                                              AppColors.primary,
-                                              AppColors.accent,
-                                            ]),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: AppColors.primary
-                                                    .withValues(alpha: 0.3),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 3),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 14, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(colors: [
+                                            AppColors.primary,
+                                            AppColors.accent,
+                                          ]),
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.3),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 7,
+                                              height: 7,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.white.withValues(alpha: 0.8),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.white.withValues(alpha: 0.3),
+                                                    blurRadius: 4,
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.circle_rounded,
-                                                  size: 6, color: Colors.white.withValues(alpha: 0.7)),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                dateStr,
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Colors.white,
-                                                  letterSpacing: -0.2,
-                                                ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              dateStr,
+                                              style: const TextStyle(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                                letterSpacing: -0.2,
                                               ),
-                                              if (emisOnDate.length > 1) ...[
-                                                const SizedBox(width: 4),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white.withValues(alpha: 0.2),
-                                                    borderRadius: BorderRadius.circular(4),
-                                                  ),
-                                                  child: Text(
-                                                    '${emisOnDate.length}',
-                                                    style: TextStyle(
-                                                      fontSize: 9,
-                                                      fontWeight: FontWeight.w800,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
+                                            ),
+                                            if (emisOnDate.length > 1) ...[
+                                              const SizedBox(width: 5),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white.withValues(alpha: 0.22),
+                                                  borderRadius: BorderRadius.circular(5),
                                                 ),
-                                              ],
-                                              const SizedBox(width: 6),
-                                              GestureDetector(
-                                                onTap: () =>
-                                                    setPopupState(() {
-                                                  tempSelected.remove(date);
-                                                }),
-                                                child: Container(
-                                                  width: 18,
-                                                  height: 18,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: Colors.white
-                                                        .withValues(alpha: 0.2),
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.close_rounded,
-                                                    size: 11,
+                                                child: Text(
+                                                  '${emisOnDate.length}',
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w800,
                                                     color: Colors.white,
                                                   ),
                                                 ),
                                               ),
                                             ],
-                                          ),
+                                            const SizedBox(width: 6),
+                                            GestureDetector(
+                                              onTap: () =>
+                                                  setPopupState(() {
+                                                tempSelected.remove(date);
+                                              }),
+                                              child: Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.22),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.close_rounded,
+                                                  size: 12,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     );
@@ -1010,7 +1037,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                             ),
 
                           if (tempSelected.isNotEmpty)
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 14),
 
                           // ── Calendar ──
                           Padding(
@@ -1053,12 +1080,12 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: _primaryColor().withValues(alpha: 0.6),
-                                    width: 1.5,
+                                    width: 2,
                                   ),
                                 ),
                                 todayTextStyle: TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   color: _primaryColor(),
                                 ),
                                 selectedDecoration: BoxDecoration(
@@ -1070,15 +1097,15 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.primary.withValues(alpha: 0.4),
-                                      blurRadius: 10,
+                                      blurRadius: 12,
                                       spreadRadius: 1,
-                                      offset: const Offset(0, 2),
+                                      offset: const Offset(0, 3),
                                     ),
                                   ],
                                 ),
                                 selectedTextStyle: const TextStyle(
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   color: Colors.white,
                                 ),
                                 defaultTextStyle: TextStyle(
@@ -1118,19 +1145,27 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                   return Container(
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(colors: [
-                                        _errorColor().withValues(alpha: 0.12),
-                                        _errorColor().withValues(alpha: 0.06),
+                                        _errorColor().withValues(alpha: 0.15),
+                                        _errorColor().withValues(alpha: 0.07),
                                       ]),
-                                      borderRadius: BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: _errorColor().withValues(alpha: 0.2),
+                                        color: _errorColor().withValues(alpha: 0.25),
+                                        width: 1,
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: _errorColor().withValues(alpha: 0.08),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
                                       '${day.day}',
                                       style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                         color: _errorColor(),
                                       ),
@@ -1145,8 +1180,8 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                         decoration: TextDecoration.lineThrough,
-                                        decorationColor: _textTertiary().withValues(alpha: 0.25),
-                                        color: _textTertiary().withValues(alpha: 0.3),
+                                        decorationColor: _textTertiary().withValues(alpha: 0.3),
+                                        color: _textTertiary().withValues(alpha: 0.35),
                                       ),
                                     ),
                                   );
@@ -1195,10 +1230,10 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                           // ── Legend ──
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 4),
+                          horizontal: 28, vertical: 4),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                            horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
                           color: _isDark
                               ? Colors.white.withValues(alpha: 0.04)
@@ -1222,11 +1257,11 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
 
                     // ── Done Button ──
                     Padding(
-                      padding: EdgeInsets.fromLTRB(
+                      padding: const EdgeInsets.fromLTRB(
+                          28,
                           24,
-                          16,
-                          24,
-                          MediaQuery.of(context).padding.bottom + 80),
+                          28,
+                          48),
                       child: SizedBox(
                         width: double.infinity,
                         height: 56,
@@ -1264,7 +1299,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                           ),
                           child: Ink(
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
+                              gradient: LinearGradient(
                                 colors: [
                                   AppColors.primary,
                                   AppColors.accent,
@@ -1274,13 +1309,21 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.primary
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                                      .withValues(alpha: 0.4),
+                                  blurRadius: 16,
+                                  spreadRadius: -1,
+                                  offset: const Offset(0, 6),
+                                ),
+                                BoxShadow(
+                                  color: AppColors.accent
+                                      .withValues(alpha: 0.2),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
                             child: Container(
+                              height: 58,
                               alignment: Alignment.center,
                               child: Row(
                                 mainAxisAlignment:
@@ -1288,7 +1331,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                 children: [
                                   const Icon(
                                     Icons.check_circle_rounded,
-                                    size: 20,
+                                    size: 22,
                                     color: Colors.white,
                                   ),
                                   const SizedBox(width: 8),
@@ -1297,7 +1340,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                         ? 'Done'
                                         : 'Done (${tempSelected.length} date${tempSelected.length > 1 ? 's' : ''})',
                                     style: const TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: -0.3,
                                     ),
@@ -1311,6 +1354,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                     ),
                   ],
                 ),
+                      ),
               ),
             ),
           ),
@@ -1341,77 +1385,74 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
     final count = math.min(emis.length, 3);
 
     return Positioned(
-      bottom: 2,
-      child: Container(
-        padding: hasOverdue
-            ? const EdgeInsets.all(1.5)
-            : EdgeInsets.zero,
-        decoration: hasOverdue
-            ? BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: dotColor.withValues(alpha: 0.3),
-                  width: 1,
+      bottom: 3,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(count, (i) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(colors: [
+                dotColor,
+                dotColor.withValues(alpha: 0.7),
+              ]),
+              boxShadow: [
+                BoxShadow(
+                  color: dotColor.withValues(alpha: 0.5),
+                  blurRadius: 4,
                 ),
-              )
-            : null,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(count, (i) {
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              width: 6,
-              height: 6,
-              margin: const EdgeInsets.symmetric(horizontal: 0.5),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(colors: [
-                  dotColor,
-                  dotColor.withValues(alpha: 0.7),
-                ]),
-                boxShadow: [
-                  BoxShadow(
-                    color: dotColor.withValues(alpha: 0.5),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
-            );
-          }),
-        ),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }
 
   Widget _buildLegendDot(Color color, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.4),
-                blurRadius: 4,
-              ),
-            ],
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withValues(alpha: 0.15),
+          width: 0.5,
         ),
-        const SizedBox(width: 5),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: _textTertiary(),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.5),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: _textSecondary(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

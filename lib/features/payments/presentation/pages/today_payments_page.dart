@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/premium_calendar_sheet.dart';
 import '../../data/models/today_payment_model.dart';
 import '../../data/providers/payment_providers.dart';
 import '../../data/utils/payment_export.dart';
@@ -53,7 +54,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
 
   Future<void> _pickDate() async {
     final filters = ref.read(paymentFilterProvider);
-    final picked = await showDatePicker(
+    final picked = await PremiumCalendarSheet.show(
       context: context,
       initialDate: filters.selectedDate,
       firstDate: DateTime(2020),
@@ -349,7 +350,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
       _openEmiCollection(payment);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to collect — missing payment data')),
+        const SnackBar(content: Text('Unable to collect â€” missing payment data')),
       );
     }
   }
@@ -410,9 +411,9 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
     }
   }
 
-  // ────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   //  BUILD
-  // ────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   @override
   Widget build(BuildContext context) {
@@ -464,7 +465,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      filters.isToday ? "Today's Payments" : 'Payments · ${filters.dateLabel}',
+                      filters.isToday ? "Today's Payments" : 'Payments Â· ${filters.dateLabel}',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -611,38 +612,35 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
           final collected = data.collectedPayments;
           final overdue = data.overduePayments;
 
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // ── Hero Header ──
-              SliverToBoxAdapter(
-                child: _HeroHeader(
-                  summary: summary,
-                  isDark: isDark,
-                  filters: filters,
-                  onPickDate: _pickDate,
-                ),
+          return Column(
+            children: [
+              // Fixed hero header — never scrolls
+              _HeroHeader(
+                summary: summary,
+                isDark: isDark,
+                filters: filters,
+                onPickDate: _pickDate,
               ),
 
-              // ── Quick Stats ──
-              SliverToBoxAdapter(
-                child: _QuickStatsRow(summary: summary, isDark: isDark),
-              ),
+              // Scrollable list area
+              Expanded(
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    // Active Filters
+                    if (filters.branchId != null || filters.agentId != null)
+                      SliverToBoxAdapter(
+                        child: _ActiveFiltersBanner(
+                          filters: filters,
+                          onClear: () => ref.read(paymentFilterProvider.notifier).resetFilters(),
+                          isDark: isDark,
+                        ),
+                      ),
 
-              // ── Active Filters ──
-              if (filters.branchId != null || filters.agentId != null)
-                SliverToBoxAdapter(
-                  child: _ActiveFiltersBanner(
-                    filters: filters,
-                    onClear: () => ref.read(paymentFilterProvider.notifier).resetFilters(),
-                    isDark: isDark,
-                  ),
-                ),
-
-              // ── Section Title + Tab Bar ──
+                    // Section Title + Tab Bar
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -669,7 +667,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 ),
               ),
 
-              // ── Tab Bar ──
+              // â”€â”€ Tab Bar â”€â”€
               SliverToBoxAdapter(
                 child: _PremiumTabBar(
                   controller: _tabController,
@@ -680,7 +678,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 ),
               ),
 
-              // ── Tab Content ──
+              // â”€â”€ Tab Content â”€â”€
               SliverFillRemaining(
                 child: TabBarView(
                   controller: _tabController,
@@ -728,17 +726,20 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 ),
               ),
             ],
-          );
-        },
-      ),
-      floatingActionButton: paymentsAsync.maybeWhen(
-        data: (data) => _ExportFAB(
-          onPressed: () => _showShareSheet(data),
-          isDark: isDark,
+          ),
         ),
-        orElse: () => null,
-      ),
+      ],
     );
+  },
+),
+        floatingActionButton: paymentsAsync.maybeWhen(
+          data: (data) => _ExportFAB(
+            onPressed: () => _showShareSheet(data),
+            isDark: isDark,
+          ),
+          orElse: () => null,
+        ),
+      );
   }
 
   Future<void> _makePhoneCall(String phone) async {
@@ -917,9 +918,9 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  SHEET HANDLE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _SheetHandle extends StatelessWidget {
   const _SheetHandle();
@@ -939,9 +940,9 @@ class _SheetHandle extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  PREMIUM BOTTOM SHEET
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _PremiumBottomSheet extends StatelessWidget {
   final Widget child;
@@ -963,9 +964,9 @@ class _PremiumBottomSheet extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  HERO HEADER
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _HeroHeader extends StatelessWidget {
   final TodayPaymentSummary summary;
@@ -989,13 +990,13 @@ class _HeroHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(20, kToolbarHeight + 24, 20, 0),
+      margin: const EdgeInsets.fromLTRB(20, kToolbarHeight + 8, 20, 10),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
           child: Container(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -1062,7 +1063,7 @@ class _HeroHeader extends StatelessWidget {
                       children: [
                         // Label pill
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(24),
@@ -1099,118 +1100,111 @@ class _HeroHeader extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // Circular progress
-                        _CircularProgressRing(
-                          progress: progress,
-                          count: summary.countCollected,
-                          total: summary.countDue,
+                        // Circular progress ring
+                        SizedBox(
+                          width: 70,
+                          height: 70,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                width: 70, height: 70,
+                                child: CircularProgressIndicator(
+                                  value: 1.0,
+                                  strokeWidth: 6,
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              ),
+                              SizedBox(
+                                width: 70, height: 70,
+                                child: CircularProgressIndicator(
+                                  value: progress.clamp(0.0, 1.0),
+                                  strokeWidth: 6,
+                                  backgroundColor: Colors.transparent,
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                  strokeCap: StrokeCap.round,
+                                ),
+                              ),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${summary.countCollected}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  Text(
+                                    'done',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.5),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.6,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 8),
 
                     // Amount
                     Text(
                       currencyFormat.format(summary.totalDue),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 44,
+                        fontSize: 32,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -2.5,
                         height: 0.9,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 3),
                     Text(
                       'across ${summary.countDue} payments',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 14,
+                        fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 10),
 
-                    // Progress bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: SizedBox(
-                        height: 10,
-                        child: Stack(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: progress.clamp(0.0, 1.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Colors.white, Color(0xFFC7D2FE)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.4),
-                                      blurRadius: 12,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    // Footer row
+                    // ── Inline Stats Row ──
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Icon(Icons.check_circle_outline_rounded,
-                                color: Colors.white.withValues(alpha: 0.7), size: 17),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${summary.countCollected} of ${summary.countDue} collected',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                        _InlineStatTile(
+                          icon: Icons.check_circle_rounded,
+                          label: 'Collected',
+                          count: '${summary.countCollected}',
+                          amount: NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0).format(summary.totalCollected),
+                          color: const Color(0xFF34D399),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.trending_up_rounded,
-                                  color: Colors.white.withValues(alpha: 0.9), size: 15),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${summary.completionPercent}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(width: 8),
+                        _InlineStatTile(
+                          icon: Icons.schedule_rounded,
+                          label: 'Pending',
+                          count: '${summary.countPending}',
+                          amount: NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0).format(summary.totalPending),
+                          color: const Color(0xFFFBBF24),
+                        ),
+                        const SizedBox(width: 8),
+                        _InlineStatTile(
+                          icon: Icons.warning_amber_rounded,
+                          label: 'Overdue',
+                          count: '${summary.countOverdue}',
+                          amount: NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0).format(summary.totalOverdue),
+                          color: const Color(0xFFF87171),
                         ),
                       ],
                     ),
@@ -1225,10 +1219,12 @@ class _HeroHeader extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  CIRCULAR PROGRESS RING
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
+// REMOVED: _CircularProgressRing — stats moved inside hero header
+// ignore: unused_element
 class _CircularProgressRing extends StatelessWidget {
   final double progress;
   final int count;
@@ -1291,9 +1287,9 @@ class _CircularProgressRing extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  GLOW ORB
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _GlowOrb extends StatelessWidget {
   final double size;
@@ -1318,10 +1314,11 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  QUICK STATS ROW
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
+// ignore: unused_element
 class _QuickStatsRow extends StatelessWidget {
   final TodayPaymentSummary summary;
   final bool isDark;
@@ -1330,7 +1327,7 @@ class _QuickStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
       child: Row(
         children: [
           Expanded(
@@ -1371,9 +1368,9 @@ class _QuickStatsRow extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  STAT TILE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _StatTile extends StatelessWidget {
   final IconData icon;
@@ -1473,9 +1470,96 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+//  INLINE STAT TILE (inside hero header)
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+class _InlineStatTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String count;
+  final String amount;
+  final Color color;
+
+  const _InlineStatTile({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.amount,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 0.5,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(icon, size: 12, color: color),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  count,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                    letterSpacing: -1,
+                    height: 1.0,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.white.withValues(alpha: 0.8),
+                letterSpacing: -0.3,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  ACTIVE FILTERS BANNER
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _ActiveFiltersBanner extends StatelessWidget {
   final PaymentFilterState filters;
@@ -1546,9 +1630,9 @@ class _ActiveFiltersBanner extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  PREMIUM TAB BAR
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _PremiumTabBar extends StatelessWidget {
   final TabController controller;
@@ -1638,9 +1722,9 @@ class _TabPill extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  PAYMENT LIST
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _PaymentList extends StatelessWidget {
   final List<TodayPayment> payments;
@@ -1705,9 +1789,9 @@ class _PaymentList extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  EMPTY VIEW
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _EmptyView extends StatelessWidget {
   final String title;
@@ -1774,9 +1858,9 @@ class _EmptyView extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  PAYMENT CARD
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _PaymentCard extends StatelessWidget {
   final TodayPayment payment;
@@ -1827,7 +1911,7 @@ class _PaymentCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // ── Top Section ──
+            // â”€â”€ Top Section â”€â”€
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
               child: Row(
@@ -1883,7 +1967,7 @@ class _PaymentCard extends StatelessWidget {
               ),
             ),
 
-            // ── Divider ──
+            // â”€â”€ Divider â”€â”€
             Container(
               height: 1,
               margin: const EdgeInsets.symmetric(horizontal: 18),
@@ -1892,7 +1976,7 @@ class _PaymentCard extends StatelessWidget {
                   : const Color(0xFFF0F1F5),
             ),
 
-            // ── Bottom Section ──
+            // â”€â”€ Bottom Section â”€â”€
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
               child: Column(
@@ -2025,9 +2109,9 @@ class _PaymentCard extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  PAYMENT AVATAR
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _PaymentAvatar extends StatelessWidget {
   final PaymentType type;
@@ -2077,9 +2161,9 @@ class _PaymentAvatar extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  STATUS PILL
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _StatusPill extends StatelessWidget {
   final PaymentStatus status;
@@ -2139,9 +2223,9 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  ACTION CIRCLE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _ActionCircle extends StatelessWidget {
   final IconData icon;
@@ -2166,9 +2250,9 @@ class _ActionCircle extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  EXPORT FAB
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _ExportFAB extends StatelessWidget {
   final VoidCallback onPressed;
@@ -2204,9 +2288,9 @@ class _ExportFAB extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  FILTER CHIP
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _FilterChip extends StatelessWidget {
   final String label;
@@ -2251,9 +2335,9 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  FILTER SECTION
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _FilterSection extends StatelessWidget {
   final String label;
@@ -2273,9 +2357,9 @@ class _FilterSection extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  SHARE OPTION
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _ShareOption extends StatelessWidget {
   final IconData icon;
@@ -2311,9 +2395,9 @@ class _ShareOption extends StatelessWidget {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  DETAIL ROW
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 
 class _DetailRow extends StatelessWidget {
   final String label;

@@ -94,6 +94,18 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       if (mounted) {
         setState(() {
           _allEMIs = schedule;
+          // Auto-select first unpaid EMI if none selected yet
+          if (_selectedEmiIds.isEmpty && schedule.isNotEmpty) {
+            final unpaid = schedule
+                .where((e) =>
+                    e.status != EMIStatus.paid &&
+                    e.status != EMIStatus.waived)
+                .toList()
+              ..sort((a, b) => a.emiNumber.compareTo(b.emiNumber));
+            if (unpaid.isNotEmpty) {
+              _selectedEmiIds.add(unpaid.first.id);
+            }
+          }
         });
       }
     } catch (_) {}

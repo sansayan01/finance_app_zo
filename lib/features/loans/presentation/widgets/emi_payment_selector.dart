@@ -151,7 +151,6 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
     final overdueCount = unpaidEMIs.where((e) => e.isOverdue).length;
     final dueTodayCount = unpaidEMIs.where((e) => e.isDueToday).length;
     final paidCount = widget.emis.length - unpaidEMIs.length;
-    final selectedCount = _selectedIds.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,11 +177,6 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
           _buildQuickPayTab(overdueCount, dueTodayCount, unpaidEMIs.length)
         else
           _buildCustomTab(),
-
-        const SizedBox(height: 14),
-
-        // ── Total Section ──
-        _buildTotalSection(selectedCount),
       ],
     );
   }
@@ -756,129 +750,6 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // ── Total Section ──────────────────────────────────────────────────
-
-  Widget _buildTotalSection(int selectedCount) {
-    final hasSelection = selectedCount > 0;
-    final total = selectedCount * widget.emiAmount;
-    final currencyFormat =
-        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: hasSelection
-            ? LinearGradient(colors: [
-                _successColor().withValues(alpha: 0.12),
-                _successColor().withValues(alpha: 0.04),
-              ])
-            : LinearGradient(colors: [
-                _fillColor(),
-                _fillColor(),
-              ]),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: hasSelection
-              ? _successColor().withValues(alpha: 0.25)
-              : _borderColor().withValues(alpha: 0.5),
-        ),
-        boxShadow: hasSelection
-            ? [
-                BoxShadow(
-                  color: _successColor().withValues(alpha: 0.15),
-                  blurRadius: 16,
-                  spreadRadius: -4,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: Row(
-        children: [
-          // Gradient circle with animated icon
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: hasSelection
-                  ? LinearGradient(colors: [
-                      _successColor(),
-                      _successColor().withValues(alpha: 0.7),
-                    ])
-                  : null,
-              color: hasSelection ? null : _borderColor().withValues(alpha: 0.3),
-              boxShadow: hasSelection
-                  ? [
-                      BoxShadow(
-                        color: _successColor().withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        spreadRadius: -2,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Icon(
-              hasSelection ? Icons.check_rounded : Icons.touch_app_rounded,
-              size: 20,
-              color: hasSelection ? Colors.white : _textTertiary(),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hasSelection
-                      ? '$selectedCount EMI${selectedCount > 1 ? 's' : ''} selected'
-                      : 'Select EMI(s) to pay',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: hasSelection ? _textPrimary() : _textTertiary(),
-                  ),
-                ),
-                if (hasSelection) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    '$selectedCount \u00d7 ${currencyFormat.format(widget.emiAmount)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _textTertiary(),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // Animated total amount
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (child, anim) => ScaleTransition(
-              scale: anim,
-              child: child,
-            ),
-            child: Text(
-              currencyFormat.format(total),
-              key: ValueKey(total.toStringAsFixed(0)),
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.8,
-                color: hasSelection ? _successColor() : _textTertiary(),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

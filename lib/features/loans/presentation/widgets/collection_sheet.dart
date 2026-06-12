@@ -175,9 +175,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   bool get _isDark =>
       Theme.of(context).brightness == Brightness.dark;
 
-  Color get _cardColor =>
-      _isDark ? AppColors.cardDark : AppColors.cardLight;
-
   Color get _textPrimary =>
       _isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
@@ -709,83 +706,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                     : _buildLoanBody(currencyFormat),
               ),
 
-              const SizedBox(height: 16),
-
-              // ─── 4. Total Amount -- Premium Display ───
-              GlassCard(
-                padding: const EdgeInsets.all(14),
-                borderRadius: 16,
-                backgroundColor: _totalAmount > 0
-                    ? AppColors.success.withValues(alpha: 0.06)
-                    : _cardColor,
-                borderColor: _totalAmount > 0
-                    ? AppColors.success.withValues(alpha: 0.2)
-                    : null,
-                elevated: _totalAmount > 0,
-                child: Row(
-                  children: [
-                    // Gradient circle with currency symbol
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: _totalAmount > 0
-                              ? AppColors.successGradient
-                              : AppColors.premiumGradient,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          '\u20b9',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Amount',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: _textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          AnimatedSwitcher(
-                            duration:
-                                const Duration(milliseconds: 300),
-                            child: Text(
-                              currencyFormat
-                                  .format(_totalAmount),
-                              key: ValueKey(
-                                  _totalAmount.toStringAsFixed(0)),
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: _totalAmount > 0
-                                    ? AppColors.success
-                                    : _textPrimary,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 16),
 
               // ─── 5. Payment Mode Chips -- Gradient Selection ───

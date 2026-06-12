@@ -49,7 +49,19 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
     _selectedIds = Set<String>.from(widget.initialSelectedIds);
     _emiEvents = _buildEventMap();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() {}));
+    _tabController.addListener(() {
+      setState(() {});
+      // Open calendar when "Choose Dates" tab is selected
+      if (_tabController.index == 1) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showCalendarPopup(context).then((_) {
+            if (mounted) {
+              _tabController.animateTo(0);
+            }
+          });
+        });
+      }
+    });
 
     // Auto-select first unpaid EMI by default if nothing pre-selected
     if (_selectedIds.isEmpty) {
@@ -174,9 +186,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
 
         // ── Tab Content ──
         if (_tabController.index == 0)
-          _buildQuickPayTab(overdueCount, dueTodayCount, unpaidEMIs.length)
-        else
-          _buildCustomTab(),
+          _buildQuickPayTab(overdueCount, dueTodayCount, unpaidEMIs.length),
       ],
     );
   }
@@ -643,117 +653,6 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
     );
   }
 
-  // ── Custom Tab (Calendar) ──────────────────────────────────────────
-
-  Widget _buildCustomTab() {
-    return GestureDetector(
-      onTap: () => _showCalendarPopup(context),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: _isDark
-                ? [
-                    _primaryColor().withValues(alpha: 0.08),
-                    _primaryColor().withValues(alpha: 0.03),
-                  ]
-                : [
-                    _primaryColor().withValues(alpha: 0.06),
-                    _primaryColor().withValues(alpha: 0.02),
-                  ],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _primaryColor().withValues(alpha: 0.15)),
-          boxShadow: [
-            BoxShadow(
-              color: _primaryColor().withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Pulsing calendar icon
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 1.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              builder: (context, value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: child,
-                );
-              },
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_primaryColor(), _primaryColor().withValues(alpha: 0.7)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _primaryColor().withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.calendar_month_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Choose Specific Dates',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: _textPrimary(),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Pick exact EMI dates from the calendar',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _textTertiary(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: _fillColor(),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: _textSecondary(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ── Status summary ─────────────────────────────────────────────────
 
   Widget _buildStatusSummary(
@@ -816,7 +715,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
 
   // ── Calendar Popup ──────────────────────────────────────────────────
 
-  void _showCalendarPopup(BuildContext context) {
+  Future<void> _showCalendarPopup(BuildContext context) async {
     final tempSelected = Set<DateTime>.from(
       _selectedIds.expand((id) {
         final emi = widget.emis.firstWhere(

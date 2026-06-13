@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart' show DateUtils;
 import 'package:microflow_pro/core/constants/enums.dart';
 import '../models/collection_model.dart';
 
@@ -7,6 +8,19 @@ class CollectionRepository {
   final String _orgId;
 
   CollectionRepository(this._client, this._orgId);
+
+  /// Maximum allowed number of days a collection can be backdated.
+  static const Duration _maxBackdateWindow = Duration(days: 365);
+
+  /// Format [d] as an ISO-8601 date string (YYYY-MM-DD).
+  static String _formatDate(DateTime d) =>
+      d.toIso8601String().split('T').first;
+
+  /// Format [d] as an HH:mm:ss time string.
+  static String _formatTime(DateTime d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(d.hour)}:${two(d.minute)}:${two(d.second)}';
+  }
 
   /// Get today's due EMIs for a branch
   Future<List<Map<String, dynamic>>> getTodayDueEmis(String staffId, String branchId) async {
@@ -95,8 +109,45 @@ class CollectionRepository {
     double? gpsAccuracy,
     String? gpsAddress,
     String? remarks,
+    DateTime? collectionDate,
+    DateTime? collectionTime,
+    String? backdateReason,
   }) async {
     final now = DateTime.now();
+    final effectiveDate = collectionDate ?? now;
+    final effectiveTime = collectionTime ?? effectiveDate;
+
+    // Validate the supplied dates BEFORE constructing the payload so callers
+    // get fast, deterministic feedback instead of a server-side failure.
+    if (effectiveDate.isAfter(now)) {
+      throw ArgumentError(
+        'Cannot future-date collection: $effectiveDate is after now ($now).',
+      );
+    }
+
+    final today = DateTime(now.year, now.month, now.day);
+    final supplied = DateTime(
+        effectiveDate.year, effectiveDate.month, effectiveDate.day);
+    final backdateDelta = today.difference(supplied);
+
+    // Detect "backdated" by comparing calendar days (ignore time of day).
+    final isBackdated = !DateUtils.isSameDay(effectiveDate, now);
+
+    if (backdateDelta > _maxBackdateWindow) {
+      throw ArgumentError(
+        'Cannot backdate collection beyond 365 days '
+        '(requested $backdateDelta).',
+      );
+    }
+
+    // If the caller is recording a date strictly before today, a reason is
+    // mandatory for audit purposes.
+    if (isBackdated &&
+        (backdateReason == null || backdateReason.trim().isEmpty)) {
+      throw ArgumentError(
+        'A backdateReason is required when collectionDate is not today.',
+      );
+    }
 
     final payload = {
       'loan_id': loanId,
@@ -116,8 +167,10 @@ class CollectionRepository {
       'gps_lng': gpsLng,
       'gps_accuracy': gpsAccuracy,
       'gps_address': gpsAddress,
-      'collection_date': now.toIso8601String().split('T').first,
-      'collection_time': '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}',
+      'collection_date': _formatDate(effectiveDate),
+      'collection_time': _formatTime(effectiveTime),
+      'is_backdated': isBackdated ? true : null,
+      'backdate_reason': isBackdated ? backdateReason : null,
       'sync_status': 'synced',
       'remarks': remarks,
       'org_id': _orgId,

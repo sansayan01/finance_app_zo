@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import 'package:microflow_pro/core/constants/enums.dart';
@@ -222,6 +223,9 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
     String? gpsAddress,
     String? remarks,
     double? outstandingBalance,
+    DateTime? collectionDate,
+    DateTime? collectionTime,
+    String? backdateReason,
   }) async {
     state = const AsyncValue.loading();
 
@@ -245,6 +249,9 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
           gpsAccuracy: gpsAccuracy,
           gpsAddress: gpsAddress,
           remarks: remarks,
+          collectionDate: collectionDate,
+          collectionTime: collectionTime,
+          backdateReason: backdateReason,
         );
         state = AsyncValue.data(result);
 
@@ -274,6 +281,10 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
         // Fallback to offline queue
         final staffProfile = await _ref.read(staffProfileProvider.future);
         final orgId = _ref.read(currentOrgIdProvider);
+        final now = DateTime.now();
+        final effectiveDate = collectionDate ?? now;
+        final effectiveTime = collectionTime ?? effectiveDate;
+        final isBackdated = !DateUtils.isSameDay(effectiveDate, now);
 
         await _syncNotifier.queueOperation(
           operation: 'INSERT',
@@ -285,7 +296,7 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
             'collected_by_user_id': staffProfile?.userId ?? staffId,
             'collected_by_name': staffProfile?.fullName ?? '',
             'collected_by_role': staffProfile?.role.dbValue ?? 'collectionAgent',
-            'collected_at': DateTime.now().toIso8601String(),
+            'collected_at': now.toIso8601String(),
             'loan_id': loanId,
             'loan_schedule_id': loanScheduleId,
             'member_id': memberId,
@@ -303,14 +314,16 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
             'gps_address': gpsAddress,
             'remarks': remarks,
             'collection_date':
-                DateTime.now().toIso8601String().split('T').first,
-            'collection_time': '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}:${DateTime.now().second.toString().padLeft(2, '0')}',
+                effectiveDate.toIso8601String().split('T').first,
+            'collection_time':
+                '${effectiveTime.hour.toString().padLeft(2, '0')}:${effectiveTime.minute.toString().padLeft(2, '0')}:${effectiveTime.second.toString().padLeft(2, '0')}',
+            'is_backdated': isBackdated ? true : null,
+            'backdate_reason': isBackdated ? backdateReason : null,
             'sync_status': 'pending',
           },
         );
 
         // Return a local model for the offline queued collection
-        final now = DateTime.now();
         state = AsyncValue.data(CollectionModel(
           id: 'offline_${now.millisecondsSinceEpoch}',
           staffId: staffId,
@@ -324,8 +337,8 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
           gpsLng: gpsLng,
           gpsAccuracy: gpsAccuracy,
           gpsAddress: gpsAddress,
-          collectionDate: now,
-          collectionTime: now,
+          collectionDate: effectiveDate,
+          collectionTime: effectiveTime,
           createdAt: now,
           updatedAt: now,
           syncStatus: SyncState.pending,

@@ -43,6 +43,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
   final _amountController = TextEditingController();
   final _referenceController = TextEditingController();
   final _remarksController = TextEditingController();
+  final _backdateReasonController = TextEditingController();
 
   cm.PaymentMode _selectedPaymentMode = cm.PaymentMode.cash;
   bool _isSubmitting = false;
@@ -52,6 +53,11 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
   String _memberId = '';
   String _memberPhone = '';
   String? _loanScheduleId;
+
+  // Collection-date (backdate) state.
+  // null = "today"; non-null = a picked calendar date (time-of-day stays as
+  // current local time on submit).
+  DateTime? _customCollectionDate;
 
   // EMI selector state
   List<EMIScheduleModel> _unpaidEMIs = [];
@@ -139,6 +145,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     _amountController.dispose();
     _referenceController.dispose();
     _remarksController.dispose();
+    _backdateReasonController.dispose();
     super.dispose();
   }
 
@@ -166,6 +173,8 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
                   const SizedBox(height: 20),
                   _buildEmiSelectorSection(theme, isDark),
                 ],
+                const SizedBox(height: 20),
+                _buildCollectionDateSection(theme, isDark),
                 const SizedBox(height: 20),
                 _buildPaymentModeSection(theme, isDark),
                 const SizedBox(height: 20),
@@ -897,6 +906,207 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
     );
   }
 
+  Widget _buildCollectionDateSection(ThemeData theme, bool isDark) {
+    final isBackdated = _customCollectionDate != null;
+    final dateString = _customCollectionDate != null
+        ? DateFormat('dd MMM yyyy').format(_customCollectionDate!)
+        : 'Select Date';
+
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PremiumHelpers.sectionHeader(theme, 'Collection Date',
+              icon: Icons.calendar_today_rounded),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              // Today button
+              Expanded(
+                child: _buildDateTypeButton(
+                  isSelected: !isBackdated,
+                  label: 'Today',
+                  subLabel: DateFormat('dd MMM').format(DateTime.now()),
+                  icon: Icons.today_rounded,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _customCollectionDate = null;
+                      _backdateReasonController.clear();
+                    });
+                  },
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Custom/Backdate button
+              Expanded(
+                child: _buildDateTypeButton(
+                  isSelected: isBackdated,
+                  label: 'Backdate',
+                  subLabel: dateString,
+                  icon: Icons.edit_calendar_rounded,
+                  onTap: () async {
+                    HapticFeedback.selectionClick();
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: _customCollectionDate ?? DateTime.now().subtract(const Duration(days: 1)),
+                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                      lastDate: DateTime.now(),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: isDark
+                                ? const ColorScheme.dark(
+                                    primary: AppColors.primary,
+                                    onPrimary: Colors.white,
+                                    surface: Color(0xFF1E1E2E),
+                                    onSurface: Colors.white,
+                                  )
+                                : ColorScheme.light(
+                                    primary: AppColors.primary,
+                                    onPrimary: Colors.white,
+                                    surface: Colors.white,
+                                    onSurface: Colors.black87,
+                                  ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      final now = DateTime.now();
+                      final isToday = picked.year == now.year &&
+                          picked.month == now.month &&
+                          picked.day == now.day;
+                      setState(() {
+                        if (isToday) {
+                          _customCollectionDate = null;
+                          _backdateReasonController.clear();
+                        } else {
+                          _customCollectionDate = picked;
+                        }
+                      });
+                    }
+                  },
+                  theme: theme,
+                ),
+              ),
+            ],
+          ),
+          if (isBackdated) ...[
+            const SizedBox(height: 16),
+            // Reason text field
+            TextFormField(
+              controller: _backdateReasonController,
+              decoration: InputDecoration(
+                labelText: 'Reason for Backdating',
+                hintText: 'Enter reason (required)...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : theme.colorScheme.surface,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+              validator: (value) {
+                if (isBackdated && (value == null || value.trim().isEmpty)) {
+                  return 'Please enter a reason for backdating';
+                }
+                return null;
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateTypeButton({
+    required bool isSelected,
+    required String label,
+    required String subLabel,
+    required IconData icon,
+    required VoidCallback onTap,
+    required ThemeData theme,
+  }) {
+    final isDark = theme.brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.15),
+                    AppColors.accent.withValues(alpha: 0.08),
+                  ],
+                )
+              : null,
+          color: isSelected
+              ? null
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : theme.colorScheme.surface),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : theme.colorScheme.onSurface,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: isSelected
+                          ? AppColors.primary
+                          : theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subLabel,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: (isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight)
+                          .withValues(alpha: 0.7),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSubmitButton(
       ThemeData theme, AsyncValue<CollectionModel?> state) {
     return state.when(
@@ -1161,6 +1371,22 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
               : null,
           outstandingBalance:
               (widget.loanData?['outstanding_amount'] as num?)?.toDouble(),
+          collectionDate: _customCollectionDate,
+          collectionTime: _customCollectionDate != null
+              ? DateTime(
+                  _customCollectionDate!.year,
+                  _customCollectionDate!.month,
+                  _customCollectionDate!.day,
+                  DateTime.now().hour,
+                  DateTime.now().minute,
+                  DateTime.now().second,
+                )
+              : null,
+          backdateReason: _customCollectionDate != null
+              ? _backdateReasonController.text.isNotEmpty
+                  ? _backdateReasonController.text
+                  : null
+              : null,
         );
 
     setState(() => _isSubmitting = false);

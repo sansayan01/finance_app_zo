@@ -51,6 +51,13 @@ class CollectionModel extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Backdating
+  final bool isBackdated;
+  final String? backdateReason;
+  int get daysBackdated =>
+      DateTime.now().difference(collectionDate).inDays.clamp(0, 9999);
+  bool get isManualBackdated => isBackdated && daysBackdated > 0;
+
   const CollectionModel({
     required this.id,
     this.loanId,
@@ -79,6 +86,8 @@ class CollectionModel extends Equatable {
     this.remarks,
     required this.createdAt,
     required this.updatedAt,
+    this.isBackdated = false,
+    this.backdateReason,
   });
 
   factory CollectionModel.fromJson(Map<String, dynamic> json) {
@@ -112,6 +121,8 @@ class CollectionModel extends Equatable {
       remarks: json['remarks'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      isBackdated: json['is_backdated'] as bool? ?? false,
+      backdateReason: json['backdate_reason'] as String?,
     );
   }
 
@@ -144,6 +155,8 @@ class CollectionModel extends Equatable {
       'remarks': remarks,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'is_backdated': isBackdated,
+      'backdate_reason': backdateReason,
     };
   }
 
@@ -171,6 +184,8 @@ class CollectionModel extends Equatable {
       'sync_status': 'synced',
       'local_id': localId,
       'remarks': remarks,
+      if (isBackdated) 'is_backdated': isBackdated,
+      if (backdateReason != null) 'backdate_reason': backdateReason,
     };
   }
 
@@ -267,6 +282,8 @@ class CollectionModel extends Equatable {
     String? remarks,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isBackdated,
+    String? backdateReason,
   }) {
     return CollectionModel(
       id: id ?? this.id,
@@ -296,6 +313,8 @@ class CollectionModel extends Equatable {
       remarks: remarks ?? this.remarks,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isBackdated: isBackdated ?? this.isBackdated,
+      backdateReason: backdateReason ?? this.backdateReason,
     );
   }
 
@@ -328,5 +347,7 @@ class CollectionModel extends Equatable {
         remarks,
         createdAt,
         updatedAt,
+        isBackdated,
+        backdateReason,
       ];
 }

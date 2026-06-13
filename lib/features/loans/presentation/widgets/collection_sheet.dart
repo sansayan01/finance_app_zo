@@ -67,6 +67,9 @@ class CollectionSheet extends ConsumerStatefulWidget {
 class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   String _selectedMode = 'cash';
   bool _isSubmitting = false;
+  bool _isBackdated = false;
+  DateTime? _customCollectionDate;
+  final _backdateReasonController = TextEditingController();
 
   List<EMIScheduleModel> _allEMIs = [];
   /// IDs of EMIs the user has selected for payment.
@@ -168,7 +171,17 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
   @override
   void dispose() {
+    _backdateReasonController.dispose();
     super.dispose();
+  }
+
+  /// Append backdate info to a transaction description if applicable.
+  String _buildTxDescription({required String primary}) {
+    if (_customCollectionDate != null) {
+      final dateStr = DateFormat('dd MMM yyyy').format(_customCollectionDate!);
+      return '$primary (backdated: $dateStr)';
+    }
+    return primary;
   }
 
   // ─── Theme Helpers ───
@@ -248,6 +261,21 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   }
 
   Future<void> _submit() async {
+    // Validate backdate reason before proceeding
+    if (_isBackdated && _customCollectionDate != null &&
+        _backdateReasonController.text.trim().isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please provide a reason for backdating'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+      return;
+    }
     setState(() => _isSubmitting = true);
     HapticFeedback.mediumImpact();
 
@@ -353,10 +381,16 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         'is_partial': false,
         'collection_type': 'emi',
         'payment_mode': _selectedMode,
-        'collection_date': today,
+        'collection_date': _customCollectionDate != null
+            ? DateFormat('yyyy-MM-dd').format(_customCollectionDate!)
+            : today,
         'collection_time': timeStr,
         'sync_status': 'synced',
         'selected_schedule_id': emi.id,
+        if (_customCollectionDate != null) ...{
+          'backdate_reason': _backdateReasonController.text.trim(),
+          'is_backdated': true,
+        },
       });
     }
 
@@ -368,9 +402,11 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'type': TransactionType.emiPayment.name,
       'amount': amount,
       'payment_mode': _selectedMode,
-      'description': selectedCount > 1
-          ? '$selectedCount EMIs paid via $_selectedMode'
-          : 'EMI #${_primarySelectedEMI?.emiNumber ?? ''} payment via $_selectedMode',
+      'description': _buildTxDescription(
+        primary: selectedCount > 1
+            ? '$selectedCount EMIs paid via $_selectedMode'
+            : 'EMI #${_primarySelectedEMI?.emiNumber ?? ''} payment via $_selectedMode',
+      ),
       'org_id': user.orgId!,
       'created_at': AppFormatters.nowIST(),
     });
@@ -456,6 +492,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
           'payment_mode': _selectedMode,
           'selected_schedule_ids':
               _selectedEMIs.map((e) => e.id).toList(),
+          if (_customCollectionDate != null) ...{
+            'is_backdated': true,
+            'backdate_reason': _backdateReasonController.text.trim(),
+          },
         },
         'created_at': now.toIso8601String(),
       });
@@ -491,8 +531,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'amount': amount,
       'type': 'savingsDeposit',
       'payment_mode': _selectedMode,
-      'description':
-          '${_selectedSavingsDates.length} installments deposited via $_selectedMode',
+      'description': _buildTxDescription(
+        primary: '${_selectedSavingsDates.length} installments deposited via $_selectedMode',
+      ),
       'org_id': profile.orgId,
       'created_at': AppFormatters.nowIST(),
     }).select('id').single();
@@ -508,7 +549,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'amount_collected': amount,
       'is_partial': false,
       'payment_mode': _selectedMode,
-      'collection_date': today,
+      'collection_date': _customCollectionDate != null
+          ? DateFormat('yyyy-MM-dd').format(_customCollectionDate!)
+          : today,
       'collected_at': DateTime.now().toUtc().toIso8601String(),
       'staff_id': profile.id,
       'collected_by_name': profile.fullName,
@@ -516,6 +559,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'collected_by_user_id': profile.id,
       'sync_status': 'synced',
       'transaction_id': transactionId,
+      if (_customCollectionDate != null) ...{
+        'backdate_reason': _backdateReasonController.text.trim(),
+        'is_backdated': true,
+      },
     });
 
     // 3. Update plan balance and advance next_due_date
@@ -585,6 +632,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
           'installment_count': selectedCount,
           'payment_mode': _selectedMode,
           'savings_plan_id': plan.id,
+          if (_customCollectionDate != null) ...{
+            'is_backdated': true,
+            'backdate_reason': _backdateReasonController.text.trim(),
+          },
         },
         'created_at': now.toIso8601String(),
       });
@@ -706,6 +757,145 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                     : _buildLoanBody(currencyFormat),
               ),
 
+              const SizedBox(height: 16),
+
+              // ─── Collection Date ───
+              GlassCard(
+                padding: const EdgeInsets.all(14),
+                borderRadius: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Collection Date',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        // Today button
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isBackdated = false;
+                                _customCollectionDate = null;
+                                _backdateReasonController.clear();
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: !_isBackdated
+                                  ? BoxDecoration(
+                                      gradient: AppColors.primaryGradient,
+                                      borderRadius: BorderRadius.circular(12),
+                                    )
+                                  : BoxDecoration(
+                                      color: _fillColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: _separator, width: 1),
+                                    ),
+                              child: Center(
+                                child: Text(
+                                  'Today',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: !_isBackdated
+                                        ? Colors.white
+                                        : _textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Backdate button
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              final now = DateTime.now();
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: _customCollectionDate ?? now,
+                                firstDate: now.subtract(const Duration(days: 365)),
+                                lastDate: now,
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _isBackdated = true;
+                                  _customCollectionDate = picked;
+                                });
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: _isBackdated
+                                  ? BoxDecoration(
+                                      gradient: AppColors.primaryGradient,
+                                      borderRadius: BorderRadius.circular(12),
+                                    )
+                                  : BoxDecoration(
+                                      color: _fillColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: _separator, width: 1),
+                                    ),
+                              child: Center(
+                                child: Text(
+                                  _isBackdated && _customCollectionDate != null
+                                      ? DateFormat('dd MMM yyyy').format(_customCollectionDate!)
+                                      : 'Backdate',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _isBackdated
+                                        ? Colors.white
+                                        : _textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Backdate reason field
+                    if (_isBackdated && _customCollectionDate != null) ...[
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: _backdateReasonController,
+                        style: TextStyle(fontSize: 13, color: _textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'Reason for backdating (required)',
+                          hintStyle: TextStyle(color: _textSecondary, fontSize: 13),
+                          filled: true,
+                          fillColor: _fillColor,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: _separator),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: _separator),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
 
               // ─── 5. Payment Mode Chips -- Gradient Selection ───
@@ -857,83 +1047,27 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     );
   }
 
-  /// Build the loan (EMI) mode body: info card + EmiPaymentSelector.
+  /// Build the loan (EMI) mode body.
   Widget _buildLoanBody(NumberFormat currencyFormat) {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Loan info card
-          GlassCard(
-            padding: const EdgeInsets.all(14),
-            borderRadius: 16,
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.account_balance_rounded,
-                        color: Colors.white, size: 20),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.loan!.customerName ?? 'Unknown',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: _textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${widget.loan!.loanNumber} \u00b7 EMI \u20b9${widget.loan!.emiAmount.toStringAsFixed(0)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          // EMI selector
-          EmiPaymentSelector(
-            emis: _allEMIs,
-            emiAmount: widget.loan!.emiAmount,
-            initialSelectedIds: _selectedEmiIds.toList(),
-            onSelectionChanged: (selected) {
-              setState(() {
-                _selectedEmiIds
-                  ..clear()
-                  ..addAll(selected.map((e) => e.id));
-              });
-            },
-          ),
-        ],
+      child: EmiPaymentSelector(
+        emis: _allEMIs,
+        emiAmount: widget.loan!.emiAmount,
+        initialSelectedIds: _selectedEmiIds.toList(),
+        onSelectionChanged: (selected) {
+          setState(() {
+            _selectedEmiIds
+              ..clear()
+              ..addAll(selected.map((e) => e.id));
+          });
+        },
       ),
     );
   }
 
-  /// Build the savings mode body: plan info card + installment calendar.
+  /// Build the savings mode body: installment calendar.
   Widget _buildSavingsBody(NumberFormat currencyFormat) {
-    final plan = widget.savingsPlan!;
-    final paidCount =
-        _savingsSchedule.where((s) => s.isPaid).length;
-    final totalCount = _savingsSchedule.length;
     final selectedCount = _selectedSavingsDates.length;
 
     return SingleChildScrollView(
@@ -941,154 +1075,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Savings plan info card
-          GlassCard(
-            padding: const EdgeInsets.all(14),
-            borderRadius: 16,
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.success,
-                        AppColors.mint,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.savings_rounded,
-                        color: Colors.white, size: 20),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        plan.planName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: _textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${plan.collectionType} \u00b7 '
-                        '\u20b9${plan.monthlyDeposit.toStringAsFixed(0)}/installment \u00b7 '
-                        '$paidCount/$totalCount paid',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Progress ring
-                SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CircularProgressIndicator(
-                        value: totalCount > 0
-                            ? paidCount / totalCount
-                            : 0,
-                        strokeWidth: 4,
-                        backgroundColor: _separator,
-                        valueColor:
-                            AlwaysStoppedAnimation(AppColors.success),
-                      ),
-                      Center(
-                        child: Text(
-                          '$paidCount',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: _textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Target vs current
-          GlassCard(
-            padding: const EdgeInsets.all(14),
-            borderRadius: 16,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Target',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _textSecondary),
-                    ),
-                    Text(
-                      currencyFormat.format(plan.targetAmount),
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _textSecondary),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: plan.targetAmount > 0
-                        ? (plan.currentAmount / plan.targetAmount)
-                            .clamp(0.0, 1.0)
-                        : 0,
-                    minHeight: 6,
-                    backgroundColor: _separator,
-                    valueColor:
-                        AlwaysStoppedAnimation(AppColors.success),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Current',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.success),
-                    ),
-                    Text(
-                      currencyFormat.format(plan.currentAmount),
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.success),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
           // Selection summary
           if (selectedCount > 0)
             Padding(

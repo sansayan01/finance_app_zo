@@ -250,7 +250,15 @@ class TransactionsRepository {
 
     if (type == TransactionType.emiPayment.name && loanId != null) {
       // --- Full revert for loan EMI ---
-      final col = await _client
+      // The collection sheet inserts one row per EMI (each with
+      // amount_collected == emiAmount) but the transaction stores the
+      // total amount.  We find matching collections by loan_id + date
+      // and delete them all, then delete the transaction.
+      
+      List<Map<String, dynamic>> matchingCollections = [];
+
+      // Strategy 1: exact amount + member match (single EMI payment)
+      final exactMatch = await _client
           .from('collections')
           .select('id')
           .eq('loan_id', loanId)
@@ -260,25 +268,70 @@ class TransactionsRepository {
           .limit(1)
           .maybeSingle();
 
-      if (col != null) {
-        try {
-          await _client.rpc('delete_loan_collection', params: {
-            'p_collection_id': col['id'],
-          });
-          return;
-        } catch (_) {
-          // RPC missing or blocked — fall through to client-side revert
-        }
-        await _deleteLoanCollectionClientSide(
-          collectionId: col['id'] as String,
-          loanId: loanId,
-          amount: amount,
-          orgId: orgId,
-        );
-        return;
+      if (exactMatch != null) {
+        matchingCollections.add(Map<String, dynamic>.from(exactMatch as Map));
       }
 
-      // No matching collection — just delete the transaction
+      // Strategy 2: match by loan_id + same-day date (multi-EMI case)
+      // Only if Strategy 1 found nothing.
+      if (matchingCollections.isEmpty) {
+        try {
+          // Parse the transaction's created_at to get the date.
+          // created_at is stored as IST string via AppFormatters.nowIST().
+          final txData = await _client
+              .from('transactions')
+              .select('created_at')
+              .eq('id', id)
+              .maybeSingle();
+          
+          final txDateStr = txData?['created_at']?.toString() ?? '';
+          // Try ISO 8601 first, then common IST formats
+          DateTime? txDate = DateTime.tryParse(txDateStr);
+          txDate ??= DateTime.tryParse(txDateStr.replaceFirst(' ', 'T'));
+          
+          if (txDate != null) {
+            final dateStr = '${txDate.year}-${txDate.month.toString().padLeft(2, '0')}-${txDate.day.toString().padLeft(2, '0')}';
+            
+            final candidates = await _client
+                .from('collections')
+                .select('id, amount_collected')
+                .eq('loan_id', loanId)
+                .eq('collection_date', dateStr)
+                .order('collection_time', ascending: false);
+            
+            final list = candidates as List;
+            if (list.isNotEmpty) {
+              matchingCollections = list
+                  .map((c) => Map<String, dynamic>.from(c as Map))
+                  .toList();
+            }
+          }
+        } catch (_) {
+          // Fall through — will just delete the transaction
+        }
+      }
+
+      if (matchingCollections.isNotEmpty) {
+        // Delete each matching collection
+        for (final col in matchingCollections) {
+          final collectionId = col['id'] as String;
+          try {
+            await _client.rpc('delete_loan_collection', params: {
+              'p_collection_id': collectionId,
+            });
+          } catch (_) {
+            // RPC missing or blocked — fall through to client-side revert
+            await _deleteLoanCollectionClientSide(
+              collectionId: collectionId,
+              loanId: loanId,
+              amount: (col['amount_collected'] as num?)?.toDouble() ?? 0,
+              orgId: orgId,
+            );
+          }
+        }
+      }
+
+      // Always delete the transaction itself
       await _client.from('transactions').delete().eq('id', id);
       return;
     }

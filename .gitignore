@@ -91,7 +91,6 @@ tmp/
 temp/
 *.tmp
 *.temp
-.mcp.json
 
 # Heap dumps
 *.hprof

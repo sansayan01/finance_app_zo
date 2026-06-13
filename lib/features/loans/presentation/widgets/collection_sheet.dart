@@ -167,6 +167,22 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     return _selectedEMIs.fold<double>(0.0, (sum, e) => sum + e.emiAmount);
   }
 
+  /// Returns created_at timestamp: backdated date when active, else now.
+  String _getCreatedAt() {
+    if (_isBackdated && _customCollectionDate != null) {
+      final now = DateTime.now();
+      final backdated = DateTime(
+        _customCollectionDate!.year,
+        _customCollectionDate!.month,
+        _customCollectionDate!.day,
+        now.hour, now.minute, now.second,
+      );
+      final ist = backdated.toUtc().add(const Duration(hours: 5, minutes: 30));
+      return ist.toIso8601String().replaceFirst('Z', '+05:30');
+    }
+    return AppFormatters.nowIST();
+  }
+
   // ─── Theme Helpers ───
   bool get _isDark =>
       Theme.of(context).brightness == Brightness.dark;
@@ -367,7 +383,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             ? '$selectedCount EMIs paid via $_selectedMode'
             : 'EMI #${_primarySelectedEMI?.emiNumber ?? ''} payment via $_selectedMode',
       'org_id': user.orgId!,
-      'created_at': AppFormatters.nowIST(),
+      'created_at': _getCreatedAt(),
     });
 
     // 3. Update loan balance
@@ -488,7 +504,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'payment_mode': _selectedMode,
       'description': '${_selectedSavingsDates.length} installments deposited via $_selectedMode',
       'org_id': profile.orgId,
-      'created_at': AppFormatters.nowIST(),
+      'created_at': _getCreatedAt(),
     }).select('id').single();
     final transactionId = txResult['id'] as String;
 

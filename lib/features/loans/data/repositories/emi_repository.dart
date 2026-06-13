@@ -259,22 +259,26 @@ class EMIRepository {
     String? tenureUnit,
   }) async {
     try {
-      // Try RPC first, verify it actually created rows
+      // Try RPC first, but only for standard monthly tenure
+      // RPC ignores tenureValue/tenureUnit so it's wrong for days/weeks/years
+      final bool useRpc = (tenureUnit == null || tenureUnit == 'months');
       bool rpcWorked = false;
-      try {
-        await _client
-            .rpc('generate_emi_schedule', params: {'p_loan_id': loanId});
-        // Verify rows were created
-        final check = await _client
-            .from('emi_schedule')
-            .select('id')
-            .eq('loan_id', loanId)
-            .limit(1);
-        if ((check as List).isNotEmpty) {
-          rpcWorked = true;
+      if (useRpc) {
+        try {
+          await _client
+              .rpc('generate_emi_schedule', params: {'p_loan_id': loanId});
+          // Verify rows were created
+          final check = await _client
+              .from('emi_schedule')
+              .select('id')
+              .eq('loan_id', loanId)
+              .limit(1);
+          if ((check as List).isNotEmpty) {
+            rpcWorked = true;
+          }
+        } catch (e) {
+          // RPC failed, will use manual generation
         }
-      } catch (e) {
-        // RPC failed, will use manual generation
       }
 
       if (!rpcWorked) {

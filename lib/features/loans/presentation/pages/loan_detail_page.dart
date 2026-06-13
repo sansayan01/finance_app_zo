@@ -659,7 +659,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                   letterSpacing: 1,
                                   color: theme.colorScheme.onSurface
                                       .withValues(alpha: 0.5))),
-                          Text('${loan.interestRate}%',
+                          Text(AppFormatters.formatCurrency(loan.totalInterest),
                               style: theme.textTheme.titleLarge
                                   ?.copyWith(fontWeight: FontWeight.w900)),
                         ],

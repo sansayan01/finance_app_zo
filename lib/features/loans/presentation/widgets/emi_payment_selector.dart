@@ -169,7 +169,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
       mainAxisSize: MainAxisSize.min,
       children: [
         // ── Header ──
-        _buildHeader(unpaidEMIs.length),
+        _buildCompactHeader(unpaidEMIs.length),
 
         const SizedBox(height: 14),
 
@@ -193,63 +193,27 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
 
   // ── Header ──────────────────────────────────────────────────────────
 
-  Widget _buildHeader(int unpaidCount) {
-    return Row(
+  Widget _buildCompactHeader(int unpaidCount) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Gradient icon container
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_primaryColor(), _primaryColor().withValues(alpha: 0.7)],
+        if (_selectedIds.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [_successColor(), _successColor().withValues(alpha: 0.7)]),
+              borderRadius: BorderRadius.circular(6),
             ),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: _primaryColor().withValues(alpha: 0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+            child: Text(
+              '${_selectedIds.length} selected',
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
-            ],
+            ),
           ),
-          child: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 18),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'EMI Schedule',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
-                  color: _textPrimary(),
-                ),
-              ),
-              if (_selectedIds.isNotEmpty) ...[
-                const SizedBox(height: 3),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [_successColor(), _successColor().withValues(alpha: 0.7)]),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '${_selectedIds.length} selected',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
       ],
     );
   }

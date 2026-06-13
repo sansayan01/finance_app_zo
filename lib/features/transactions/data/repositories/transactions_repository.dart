@@ -252,9 +252,9 @@ class TransactionsRepository {
       // --- Full revert for loan EMI ---
       // The collection sheet inserts one row per EMI (each with
       // amount_collected == emiAmount) but the transaction stores the
-      // total amount.  We find matching collections by loan_id + date
+      // total amount.  We find matching collections by loan_id
       // and delete them all, then delete the transaction.
-      
+
       List<Map<String, dynamic>> matchingCollections = [];
 
       // Strategy 1: exact amount + member match (single EMI payment)
@@ -272,38 +272,42 @@ class TransactionsRepository {
         matchingCollections.add(Map<String, dynamic>.from(exactMatch as Map));
       }
 
-      // Strategy 2: match by loan_id + same-day date (multi-EMI case)
-      // Only if Strategy 1 found nothing.
+      // Strategy 2: find collections matching this payment event.
+      // For multi-EMI payments, one transaction (total amount) maps to
+      // multiple collection rows (per-EMI amounts) created at the same time.
       if (matchingCollections.isEmpty) {
         try {
-          // Parse the transaction's created_at to get the date.
-          // created_at is stored as IST string via AppFormatters.nowIST().
+          // Get the transaction's created_at to find the matching collections
           final txData = await _client
               .from('transactions')
               .select('created_at')
               .eq('id', id)
               .maybeSingle();
-          
+
           final txDateStr = txData?['created_at']?.toString() ?? '';
-          // Try ISO 8601 first, then common IST formats
           DateTime? txDate = DateTime.tryParse(txDateStr);
           txDate ??= DateTime.tryParse(txDateStr.replaceFirst(' ', 'T'));
-          
+
           if (txDate != null) {
-            final dateStr = '${txDate.year}-${txDate.month.toString().padLeft(2, '0')}-${txDate.day.toString().padLeft(2, '0')}';
-            
+            // Find collections within 1 minute of the transaction (same batch)
+            final txTimeStr = '${txDate.year}-${txDate.month.toString().padLeft(2, '0')}-${txDate.day.toString().padLeft(2, '0')}';
+
             final candidates = await _client
                 .from('collections')
-                .select('id, amount_collected')
+                .select('id, amount_collected, collection_time')
                 .eq('loan_id', loanId)
-                .eq('collection_date', dateStr)
+                .eq('collection_date', txTimeStr)
                 .order('collection_time', ascending: false);
-            
+
             final list = candidates as List;
             if (list.isNotEmpty) {
-              matchingCollections = list
-                  .map((c) => Map<String, dynamic>.from(c as Map))
-                  .toList();
+              double runningSum = 0;
+              for (final col in list) {
+                final colAmount = (col['amount_collected'] as num?)?.toDouble() ?? 0;
+                matchingCollections.add(Map<String, dynamic>.from(col as Map));
+                runningSum += colAmount;
+                if (runningSum >= amount - 0.01) break;
+              }
             }
           }
         } catch (_) {
@@ -407,7 +411,10 @@ class TransactionsRepository {
           'status': 'pending',
           'paid_on': null,
           'payment_mode': null,
-          'amount_paid': 0,
+          'amount_collected': 0,
+          'collected_by': null,
+          'transaction_id': null,
+          'collection_date': null,
         }).eq('id', emi['id']);
         remaining -= emiAmount;
       }

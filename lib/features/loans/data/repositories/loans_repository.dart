@@ -523,7 +523,7 @@ class LoansRepository {
           }).eq('id', emiId);
           remainingPayment -= emiAmount;
         } else {
-          // Unmark as paid
+          // Unmark as paid — clear ALL payment fields
           final dueDateStr = emi['due_date']?.toString();
           bool isOverdue = false;
           if (dueDateStr != null) {
@@ -538,6 +538,10 @@ class LoansRepository {
             'status': isOverdue ? 'overdue' : 'pending',
             'paid_on': null,
             'payment_mode': null,
+            'amount_collected': 0,
+            'collected_by': null,
+            'transaction_id': null,
+            'collection_date': null,
           }).eq('id', emiId);
         }
       }

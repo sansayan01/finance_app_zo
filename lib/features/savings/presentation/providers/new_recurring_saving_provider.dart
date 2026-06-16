@@ -19,6 +19,8 @@ class NewRecurringSavingState {
   final DateTime maturityDate;
   final double prematurePenalty;
   final bool isLoading;
+  final int installmentsPaid;
+  final double alreadyPaidAmount;
 
   NewRecurringSavingState({
     this.memberId,
@@ -32,6 +34,8 @@ class NewRecurringSavingState {
     DateTime? maturityDate,
     this.prematurePenalty = 2,
     this.isLoading = false,
+    this.installmentsPaid = 0,
+    this.alreadyPaidAmount = 0,
   })  : startDate = startDate ?? DateTime.now(),
         maturityDate = maturityDate ??
             _calculateMaturityDate(
@@ -83,6 +87,8 @@ class NewRecurringSavingState {
     DateTime? maturityDate,
     double? prematurePenalty,
     bool? isLoading,
+    int? installmentsPaid,
+    double? alreadyPaidAmount,
   }) {
     final newStartDate = startDate ?? this.startDate;
     final newTenure = tenure ?? this.tenure;
@@ -110,6 +116,8 @@ class NewRecurringSavingState {
       maturityDate: newMaturityDate,
       prematurePenalty: prematurePenalty ?? this.prematurePenalty,
       isLoading: isLoading ?? this.isLoading,
+      installmentsPaid: installmentsPaid ?? this.installmentsPaid,
+      alreadyPaidAmount: alreadyPaidAmount ?? this.alreadyPaidAmount,
     );
   }
 
@@ -147,6 +155,65 @@ class NewRecurringSavingState {
   double get estimatedInterest {
     return maturityAmount - totalCapitalInvested;
   }
+
+  /// Number of installments that have been paid, computed from alreadyPaidAmount.
+  int get installmentsPaidCount {
+    if (installmentAmount <= 0 || alreadyPaidAmount <= 0) return 0;
+    return (alreadyPaidAmount / installmentAmount).floor();
+  }
+
+  /// Number of installments past the next expected due installment.
+  int get overdueInstallments {
+    final expectedByNow = _expectedInstallmentsByDate(DateTime.now());
+    final overdue = expectedByNow - installmentsPaidCount;
+    return overdue > 0 ? overdue : 0;
+  }
+
+  /// Amount overdue (overdue installments × installment amount).
+  double get overdueAmount => overdueInstallments * installmentAmount;
+
+  /// Auto-calculated next due date based on installments paid.
+  DateTime get nextDueDateCalc => _computeNextDueDateFromStart(
+        startDate: startDate,
+        installmentsPaid: installmentsPaidCount,
+        collectionType: collectionType,
+      );
+
+  /// Expected number of installments from start to [date].
+  int _expectedInstallmentsByDate(DateTime date) {
+    final daysSinceStart = date.difference(startDate).inDays;
+    switch (collectionType) {
+      case CollectionType.daily:
+        return daysSinceStart + 1;
+      case CollectionType.weekly:
+        return (daysSinceStart ~/ 7) + 1;
+      case CollectionType.monthly:
+        int months = (date.year - startDate.year) * 12 +
+            (date.month - startDate.month);
+        if (date.day >= startDate.day) months++;
+        return months;
+    }
+  }
+
+  static DateTime _computeNextDueDateFromStart({
+    required DateTime startDate,
+    required int installmentsPaid,
+    required CollectionType collectionType,
+  }) {
+    final offset = installmentsPaid; // next unpaid index
+    switch (collectionType) {
+      case CollectionType.daily:
+        return startDate.add(Duration(days: offset));
+      case CollectionType.weekly:
+        return startDate.add(Duration(days: offset * 7));
+      case CollectionType.monthly:
+        return DateTime(
+          startDate.year,
+          startDate.month + offset,
+          startDate.day,
+        );
+    }
+  }
 }
 
 class NewRecurringSavingNotifier
@@ -176,24 +243,75 @@ class NewRecurringSavingNotifier
   void updatePrematurePenalty(double penalty) =>
       state = state.copyWith(prematurePenalty: penalty);
 
+  /// Update alreadyPaidAmount and auto-calculate installmentsPaid.
+  void updateAlreadyPaidAmount(double amount) {
+    final computedInstallments = state.installmentAmount > 0
+        ? (amount / state.installmentAmount).floor()
+        : 0;
+    state = state.copyWith(
+      alreadyPaidAmount: amount,
+      installmentsPaid: computedInstallments,
+    );
+  }
+
   Future<void> createSavingsPlan() async {
     if (state.memberId == null) throw Exception('Please select a member');
 
     state = state.copyWith(isLoading: true);
     try {
-      await _repository.createSavingsPlan(
-        memberId: state.memberId!,
-        installmentAmount: state.installmentAmount,
-        maturityAmount: state.maturityAmount,
-        maturityDate: state.maturityDate,
-        collectionType: state.collectionType.name,
-        penalty: state.prematurePenalty,
-        totalInstallments: state.totalInstallments,
-        startDate: state.startDate,
-        tenure: state.tenure,
-        tenureUnit: state.tenureUnit.name,
-        openingBalance: state.initialBalance,
-      );
+      // Route migrated accounts to the dedicated migration method
+      // which correctly computes current_amount, next_due_date, maturity_date
+      if (state.alreadyPaidAmount > 0) {
+        // Use installmentsPaidCount (live getter) instead of installmentsPaid (stale field)
+        // because installmentsPaid may be 0 if the user entered alreadyPaidAmount
+        // before setting the installmentAmount.
+        final paidDays = state.installmentsPaidCount;
+        final lastPayment = _lastPaymentDateFromStart(
+          startDate: state.startDate,
+          installmentsPaid: paidDays,
+          collectionType: state.collectionType,
+        );
+        final planId = await _repository.createMigrationSavingsPlan(
+          memberId: state.memberId!,
+          installmentAmount: state.installmentAmount,
+          totalReturnAmount: state.maturityAmount,
+          startDate: state.startDate,
+          tenure: state.tenure,
+          tenureUnit: state.tenureUnit.name,
+          collectionType: state.collectionType.name,
+          penalty: state.prematurePenalty,
+          installmentsPaid: paidDays,
+          lastPaymentDate: lastPayment,
+        );
+
+        // Create synthetic collection records for already-paid installments
+        // so deposit history shows up on the detail page
+        if (planId.isNotEmpty) {
+          await _repository.createMigrationCollectionRecords(
+            savingsPlanId: planId,
+            memberId: state.memberId!,
+            installmentAmount: state.installmentAmount,
+            installmentsPaid: paidDays,
+            startDate: state.startDate,
+            collectionType: state.collectionType.name,
+          );
+        }
+      } else {
+        await _repository.createSavingsPlan(
+          memberId: state.memberId!,
+          installmentAmount: state.installmentAmount,
+          maturityAmount: state.maturityAmount,
+          maturityDate: state.maturityDate,
+          collectionType: state.collectionType.name,
+          penalty: state.prematurePenalty,
+          totalInstallments: state.totalInstallments,
+          startDate: state.startDate,
+          tenure: state.tenure,
+          tenureUnit: state.tenureUnit.name,
+          openingBalance: state.initialBalance,
+          totalReturnAmount: state.alreadyPaidAmount,
+        );
+      }
 
       // Invalidate providers to refresh the list
       _ref.invalidate(allSavingsProvider);
@@ -210,6 +328,28 @@ class NewRecurringSavingNotifier
   }
 
   void reset() => state = NewRecurringSavingState();
+
+  /// Computes the date of the last paid installment from start + count.
+  static DateTime _lastPaymentDateFromStart({
+    required DateTime startDate,
+    required int installmentsPaid,
+    required CollectionType collectionType,
+  }) {
+    if (installmentsPaid <= 0) return startDate;
+    final offset = installmentsPaid - 1; // last paid index (0-based)
+    switch (collectionType) {
+      case CollectionType.daily:
+        return startDate.add(Duration(days: offset));
+      case CollectionType.weekly:
+        return startDate.add(Duration(days: offset * 7));
+      case CollectionType.monthly:
+        return DateTime(
+          startDate.year,
+          startDate.month + offset,
+          startDate.day,
+        );
+    }
+  }
 }
 
 final newRecurringSavingProvider =

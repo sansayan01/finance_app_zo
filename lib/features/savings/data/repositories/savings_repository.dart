@@ -20,6 +20,7 @@ class SavingsRepository {
     int tenure = 12,
     String? tenureUnit,
     double openingBalance = 0,
+    double totalReturnAmount = 0,
   }) async {
     // Use provided start date or default to today
     final now = startDate ?? DateTime.now();
@@ -71,6 +72,7 @@ class SavingsRepository {
       'tenure': tenure,
       'opening_balance': openingBalance,
       'current_amount': openingBalance,
+      'total_return_amount': totalReturnAmount,
     };
 
     if (tenureUnit != null) {
@@ -159,6 +161,11 @@ class SavingsRepository {
         tenureUnit: json['tenure_unit']?.toString(),
         tenure: (json['tenure'] as num?)?.toInt() ?? 12,
         openingBalance: (json['opening_balance'] as num?)?.toDouble() ?? 0,
+        totalReturnAmount: (json['total_return_amount'] as num?)?.toDouble() ?? 0,
+        installmentsPaid: (json['installments_paid'] as num?)?.toInt() ?? 0,
+        lastPaymentDate: json['last_payment_date'] != null
+            ? DateTime.tryParse(json['last_payment_date'].toString())
+            : null,
       );
     }).toList();
   }
@@ -262,6 +269,339 @@ class SavingsRepository {
     final result = await _client.from('savings_plans').delete().eq('id', id).select();
     if (result.isEmpty) {
       throw Exception('Failed to delete savings plan - not found or access denied');
+    }
+  }
+
+  /// Creates a migrated savings plan with historical data pre-populated.
+  ///
+  /// Unlike [createSavingsPlan], this accepts the already-known
+  /// [installmentsPaid], [lastPaymentDate], and [totalReturnAmount] so the
+  /// plan starts with its correct in-progress state rather than from zero.
+  ///
+  /// Returns the new plan's ID.
+  Future<String> createMigrationSavingsPlan({
+    required String memberId,
+    required double installmentAmount,
+    required double totalReturnAmount,
+    required DateTime startDate,
+    required int tenure,
+    required String tenureUnit,
+    required String collectionType,
+    required double penalty,
+    required int installmentsPaid,
+    required DateTime lastPaymentDate,
+    double openingBalance = 0,
+  }) async {
+    // --- Calculations ---
+    final int totalInstallments = _calculateTotalInstallments(
+      collectionType,
+      tenure,
+      tenureUnit,
+    );
+    final double maturityAmount =
+        totalReturnAmount > 0 ? totalReturnAmount : installmentAmount * totalInstallments;
+    final DateTime maturityDate = _calculateMaturityDate(
+      startDate,
+      tenure,
+      tenureUnit,
+    );
+    final double targetAmount =
+        openingBalance + (installmentAmount * totalInstallments);
+
+    // Compute current_amount = opening + (installmentsPaid * installmentAmount)
+    final double currentAmount =
+        openingBalance + (installmentsPaid * installmentAmount);
+
+    // Compute next_due_date based on how many installments are already paid
+    final DateTime nextDueDate = _computeNextDueDate(
+      startDate: startDate,
+      installmentsPaid: installmentsPaid,
+      collectionType: collectionType,
+    );
+
+    // Verify member exists (FK fk_splans_member → members.id)
+    final memberExists = await _client
+        .from('members')
+        .select('id')
+        .eq('id', memberId)
+        .maybeSingle();
+    if (memberExists == null) {
+      throw Exception(
+          'Selected member no longer exists. Please refresh and try again.');
+    }
+
+    // --- Collection-day helpers ---
+    int? collectionDayOfWeek;
+    int? collectionDayOfMonth;
+
+    if (collectionType == 'weekly') {
+      collectionDayOfWeek = nextDueDate.weekday - 1; // 0=Mon, 6=Sun
+    } else if (collectionType == 'monthly') {
+      collectionDayOfMonth = startDate.day;
+    }
+
+    // --- Insert plan ---
+    final insertData = <String, dynamic>{
+      'member_id': memberId,
+      'org_id': _orgId,
+      'monthly_deposit': installmentAmount,
+      'maturity_amount': maturityAmount,
+      'maturity_date': maturityDate.toIso8601String().split('T')[0],
+      'collection_type': collectionType,
+      'premature_penalty': penalty,
+      'total_installments': totalInstallments,
+      'target_amount': targetAmount,
+      'status': 'active',
+      'start_date': startDate.toIso8601String().split('T')[0],
+      'next_due_date': nextDueDate.toIso8601String().split('T')[0],
+      'tenure': tenure,
+      'tenure_unit': tenureUnit,
+      'opening_balance': openingBalance,
+      'current_amount': currentAmount,
+      // Migration-specific fields
+      'total_return_amount': totalReturnAmount,
+      'installments_paid': installmentsPaid,
+      'last_payment_date': lastPaymentDate.toIso8601String().split('T')[0],
+    };
+
+    if (collectionDayOfWeek != null) {
+      insertData['collection_day_of_week'] = collectionDayOfWeek;
+    }
+    if (collectionDayOfMonth != null) {
+      insertData['collection_day_of_month'] = collectionDayOfMonth;
+    }
+
+    final response = await _client
+        .from('savings_plans')
+        .insert(insertData)
+        .select('id')
+        .maybeSingle();
+
+    if (response == null) {
+      throw Exception('Failed to create migrated savings plan');
+    }
+
+    return response['id'].toString();
+  }
+
+  /// Creates synthetic [savings_collections] records for each installment
+  /// that was already paid in a migrated plan.
+  ///
+  /// Returns the number of collection records created.
+  Future<int> createMigrationCollectionRecords({
+    required String savingsPlanId,
+    required String memberId,
+    required double installmentAmount,
+    required int installmentsPaid,
+    required DateTime startDate,
+    required String collectionType,
+  }) async {
+    if (installmentsPaid <= 0) return 0;
+
+    // Fetch member name for the collection record
+    final member = await _client
+        .from('members')
+        .select('full_name')
+        .eq('id', memberId)
+        .maybeSingle();
+    final memberName = member?['full_name'] as String? ?? '';
+
+    final List<Map<String, dynamic>> records = [];
+    for (int i = 0; i < installmentsPaid; i++) {
+      final DateTime collectionDate = _computeCollectionDate(
+        startDate: startDate,
+        offset: i,
+        collectionType: collectionType,
+      );
+
+      records.add({
+        'org_id': _orgId,
+        'savings_plan_id': savingsPlanId,
+        'member_id': memberId,
+        'member_name': memberName,
+        'amount_expected': installmentAmount,
+        'amount_collected': installmentAmount,
+        'is_partial': false,
+        'payment_mode': 'cash',
+        'collection_date': collectionDate.toIso8601String().split('T')[0],
+        'collected_at': DateTime.now().toUtc().toIso8601String(),
+        'sync_status': 'synced',
+      });
+    }
+
+    if (records.isEmpty) return 0;
+
+    await _client.from('savings_collections').insert(records);
+
+    return records.length;
+  }
+
+  /// Calculates migration overdue information.
+  ///
+  /// Given the [startDate], how many [installmentsPaid], and the
+  /// [installmentAmount], this computes the expected schedule vs today.
+  ///
+  /// Returns a map with:
+  /// - `daysPaid` (int): total expected collection days from start to now
+  /// - `daysOverdue` (int): how many collection days are overdue
+  /// - `overdueAmount` (double): amount that should have been collected but wasn't
+  /// - `nextDueDate` (DateTime): the next expected collection date
+  Map<String, dynamic> calculateMigrationOverdue({
+    required DateTime startDate,
+    required int installmentsPaid,
+    required double installmentAmount,
+    DateTime? today,
+    String collectionType = 'monthly',
+  }) {
+    final DateTime now = today ?? DateTime.now();
+    final int daysSinceStart = now.difference(startDate).inDays;
+
+    // Calculate expected installments based on collection type
+    int expectedInstallments = 0;
+    DateTime nextDue;
+
+    switch (collectionType) {
+      case 'daily':
+        expectedInstallments = daysSinceStart + 1; // inclusive of day 0
+        nextDue = startDate.add(Duration(days: expectedInstallments));
+        break;
+      case 'weekly':
+        expectedInstallments = (daysSinceStart ~/ 7) + 1;
+        nextDue = startDate.add(Duration(days: expectedInstallments * 7));
+        break;
+      case 'monthly':
+        int months = (now.year - startDate.year) * 12 +
+            (now.month - startDate.month);
+        if (now.day >= startDate.day) months++;
+        expectedInstallments = months;
+        nextDue = DateTime(
+          startDate.year,
+          startDate.month + expectedInstallments,
+          startDate.day,
+        );
+        break;
+      default:
+        expectedInstallments = daysSinceStart + 1;
+        nextDue = startDate.add(Duration(days: expectedInstallments));
+    }
+
+    final int daysOverdue =
+        (expectedInstallments - installmentsPaid).clamp(0, expectedInstallments);
+    final double overdueAmount = daysOverdue * installmentAmount;
+
+    return {
+      'daysPaid': expectedInstallments,
+      'daysOverdue': daysOverdue,
+      'overdueAmount': overdueAmount,
+      'nextDueDate': nextDue,
+    };
+  }
+
+  // ── Private helpers ──────────────────────────────────────────────
+
+  /// Calculates total installments from tenure + unit.
+  int _calculateTotalInstallments(
+    String collectionType,
+    int tenure,
+    String tenureUnit,
+  ) {
+    switch (collectionType) {
+      case 'daily':
+        switch (tenureUnit) {
+          case 'weeks':
+            return tenure * 7;
+          case 'months':
+            return tenure * 30;
+          case 'years':
+            return tenure * 365;
+          default:
+            return tenure; // days
+        }
+      case 'weekly':
+        switch (tenureUnit) {
+          case 'months':
+            return tenure * 4;
+          case 'years':
+            return tenure * 52;
+          default:
+            return tenure;
+        }
+      case 'monthly':
+      default:
+        switch (tenureUnit) {
+          case 'years':
+            return tenure * 12;
+          default:
+            return tenure;
+        }
+    }
+  }
+
+  /// Calculates the maturity date from start + tenure + unit.
+  DateTime _calculateMaturityDate(
+    DateTime startDate,
+    int tenure,
+    String tenureUnit,
+  ) {
+    switch (tenureUnit) {
+      case 'days':
+        return startDate.add(Duration(days: tenure));
+      case 'weeks':
+        return startDate.add(Duration(days: tenure * 7));
+      case 'months':
+        return DateTime(
+          startDate.year,
+          startDate.month + tenure,
+          startDate.day,
+        );
+      case 'years':
+        return DateTime(
+          startDate.year + tenure,
+          startDate.month,
+          startDate.day,
+        );
+      default:
+        return DateTime(
+          startDate.year,
+          startDate.month + tenure,
+          startDate.day,
+        );
+    }
+  }
+
+  /// Computes the next due date given start + number of paid installments.
+  DateTime _computeNextDueDate({
+    required DateTime startDate,
+    required int installmentsPaid,
+    required String collectionType,
+  }) {
+    final int offset = installmentsPaid; // next unpaid index
+    return _computeCollectionDate(
+      startDate: startDate,
+      offset: offset,
+      collectionType: collectionType,
+    );
+  }
+
+  /// Returns the collection date for the given zero-based offset from start.
+  DateTime _computeCollectionDate({
+    required DateTime startDate,
+    required int offset,
+    required String collectionType,
+  }) {
+    switch (collectionType) {
+      case 'daily':
+        return startDate.add(Duration(days: offset));
+      case 'weekly':
+        return startDate.add(Duration(days: offset * 7));
+      case 'monthly':
+        return DateTime(
+          startDate.year,
+          startDate.month + offset,
+          startDate.day,
+        );
+      default:
+        return startDate.add(Duration(days: offset));
     }
   }
 

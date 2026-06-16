@@ -185,6 +185,22 @@ class _NewRecurringSavingPageState
               onPressed: state.isLoading
                   ? null
                   : () async {
+                      // Migration validation
+                      if (_isMigratedAccount) {
+                        if (state.alreadyPaidAmount <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                  'Already Paid Amount must be greater than 0 for migrated accounts'),
+                              backgroundColor: theme.colorScheme.error,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                          return;
+                        }
+                      }
                       try {
                         await ref
                             .read(newRecurringSavingProvider.notifier)
@@ -361,7 +377,7 @@ class _NewRecurringSavingPageState
 
           if (_isMigratedAccount) ...[
             const SizedBox(height: 20),
-            _buildLabel('OPENING BALANCE (EXISTING AMOUNT) (₹)', theme),
+            _buildLabel('ALREADY PAID AMOUNT (₹)', theme),
             const SizedBox(height: 10),
             _buildTextField(
               controller: _initialBalanceController,
@@ -370,7 +386,7 @@ class _NewRecurringSavingPageState
                 final parsed = double.tryParse(val) ?? 0;
                 ref
                     .read(newRecurringSavingProvider.notifier)
-                    .updateInitialBalance(parsed);
+                    .updateAlreadyPaidAmount(parsed);
               },
               theme: theme,
               isDark: isDark,
@@ -453,10 +469,11 @@ class _NewRecurringSavingPageState
             first: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLabel('START DATE', theme),
+                _buildLabel(_isMigratedAccount ? 'START DATE (BACKDATE ALLOWED)' : 'START DATE', theme),
                 const SizedBox(height: 10),
                 _buildDatePicker(
                   date: state.startDate,
+                  allowPastDates: _isMigratedAccount,
                   onPicked: (date) => ref
                       .read(newRecurringSavingProvider.notifier)
                       .updateStartDate(date),
@@ -663,9 +680,106 @@ class _NewRecurringSavingPageState
               ),
             ),
           ),
+
+          // ── Migration Summary Card ──
+          if (_isMigratedAccount) ...[
+            _buildDivider(theme),
+            _buildMigrationSummary(state, theme, isDark, primary),
+          ],
         ],
       ),
     ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04, end: 0);
+  }
+
+  // ═══════════════════════════════════════════════════
+  //  MIGRATION SUMMARY CARD
+  // ═══════════════════════════════════════════════════
+  Widget _buildMigrationSummary(NewRecurringSavingState state, ThemeData theme,
+      bool isDark, Color primary) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+              'Migration Summary', Icons.analytics_outlined, theme, primary),
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  isDark
+                      ? primary.withValues(alpha: 0.12)
+                      : primary.withValues(alpha: 0.08),
+                  isDark
+                      ? primary.withValues(alpha: 0.04)
+                      : primary.withValues(alpha: 0.02)
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                _buildMigrationRow(
+                    'Installments Paid',
+                    '${state.installmentsPaidCount}/${state.totalInstallments}',
+                    theme),
+                const SizedBox(height: 10),
+                _buildMigrationRow(
+                    'Overdue Installments', '${state.overdueInstallments}', theme,
+                    valueColor: state.overdueInstallments > 0
+                        ? (isDark ? AppColors.errorDark : AppColors.error)
+                        : null),
+                const SizedBox(height: 10),
+                _buildMigrationRow(
+                    'Current Balance',
+                    currencyFormat.format(state.alreadyPaidAmount),
+                    theme),
+                const SizedBox(height: 10),
+                _buildMigrationRow(
+                    'Overdue Amount',
+                    currencyFormat.format(state.overdueAmount),
+                    theme,
+                    valueColor: state.overdueAmount > 0
+                        ? (isDark ? AppColors.errorDark : AppColors.error)
+                        : null),
+                const SizedBox(height: 10),
+                _buildMigrationRow(
+                    'Next Due Date',
+                    DateFormat('dd MMM').format(state.nextDueDateCalc),
+                    theme),
+                const SizedBox(height: 10),
+                _buildMigrationRow(
+                    'Maturity Date',
+                    DateFormat('dd MMM yy').format(state.maturityDate),
+                    theme),
+              ],
+            ),
+          ).animate().fadeIn(duration: 400.ms),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.04, end: 0);
+  }
+
+  Widget _buildMigrationRow(String label, String value, ThemeData theme,
+      {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(fontWeight: FontWeight.w500)),
+        Text(value,
+            style: TextStyle(
+                color: valueColor ?? theme.colorScheme.onSurface,
+                fontSize: 14,
+                fontWeight: FontWeight.w700)),
+      ],
+    );
   }
 
   // ═══════════════════════════════════════════════════
@@ -752,7 +866,7 @@ class _NewRecurringSavingPageState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('OPENING BALANCE (EXISTING AMOUNT)',
+                            Text('ALREADY PAID AMOUNT',
                                 style: theme.textTheme.bodySmall
                                     ?.copyWith(fontWeight: FontWeight.w500)),
                             const SizedBox(height: 2),
@@ -975,6 +1089,7 @@ class _NewRecurringSavingPageState
     required Function(DateTime) onPicked,
     required ThemeData theme,
     required bool isDark,
+    bool allowPastDates = false,
   }) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -982,7 +1097,7 @@ class _NewRecurringSavingPageState
         final picked = await showDatePicker(
           context: context,
           initialDate: date,
-          firstDate: DateTime.now(),
+          firstDate: allowPastDates ? DateTime(2020) : DateTime.now(),
           lastDate: DateTime.now().add(const Duration(days: 3650)),
         );
         if (picked != null) onPicked(picked);

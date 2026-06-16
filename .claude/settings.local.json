@@ -36,6 +36,8 @@
     ]
   },
   "enabledMcpjsonServers": [
-    "supabase"
-  ]
+    "supabase",
+    "github"
+  ],
+  "enableAllProjectMcpServers": true
 }

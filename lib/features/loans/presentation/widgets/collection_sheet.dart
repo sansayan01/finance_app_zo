@@ -533,22 +533,29 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     // 3. Update plan balance and advance next_due_date
     final selectedCount = _selectedSavingsDates.length;
     final installmentCount = selectedCount;
+
+    // Use the LATEST selected date as the reference point (not DateTime.now())
+    // This ensures backdated payments advance next_due_date correctly.
+    final lastSelectedDate = _selectedSavingsDates
+        .map((key) => DateTime.parse(key))
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+
     DateTime nextDue;
     switch (plan.collectionType) {
       case 'weekly':
-        nextDue = now.add(Duration(days: 7 * installmentCount));
+        nextDue = lastSelectedDate.add(Duration(days: 7 * installmentCount));
         break;
       case 'monthly':
-        int targetMonth = now.month + installmentCount;
-        int targetYear = now.year + ((targetMonth - 1) ~/ 12);
+        int targetMonth = lastSelectedDate.month + installmentCount;
+        int targetYear = lastSelectedDate.year + ((targetMonth - 1) ~/ 12);
         targetMonth = ((targetMonth - 1) % 12) + 1;
-        int targetDay = now.day;
+        int targetDay = lastSelectedDate.day;
         int daysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
         if (targetDay > daysInMonth) targetDay = daysInMonth;
         nextDue = DateTime(targetYear, targetMonth, targetDay);
         break;
       default:
-        nextDue = now.add(Duration(days: installmentCount));
+        nextDue = lastSelectedDate.add(Duration(days: installmentCount));
     }
 
     await client.from('savings_plans').update({

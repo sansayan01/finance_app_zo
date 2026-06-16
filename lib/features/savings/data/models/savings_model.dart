@@ -21,6 +21,14 @@ class SavingsModel {
   final String? orgId;
   final DateTime? updatedAt;
   final double openingBalance;
+  final double totalReturnAmount;
+  final int installmentsPaid;
+  final DateTime? lastPaymentDate;
+
+  /// Computed: total return minus total capital invested (opening + installments * amount).
+  double get interestAmount => totalReturnAmount > 0
+      ? totalReturnAmount - (openingBalance + (monthlyDeposit * totalInstallments))
+      : 0;
 
   SavingsModel({
     required this.id,
@@ -45,6 +53,9 @@ class SavingsModel {
     this.orgId,
     this.updatedAt,
     this.openingBalance = 0,
+    this.totalReturnAmount = 0,
+    this.installmentsPaid = 0,
+    this.lastPaymentDate,
   });
 
   factory SavingsModel.fromJson(Map<String, dynamic> json) {
@@ -77,6 +88,11 @@ class SavingsModel {
           ? DateTime.tryParse(json['updated_at'] as String)
           : null,
       openingBalance: (json['opening_balance'] as num?)?.toDouble() ?? 0,
+      totalReturnAmount: (json['total_return_amount'] as num?)?.toDouble() ?? 0,
+      installmentsPaid: (json['installments_paid'] as num?)?.toInt() ?? 0,
+      lastPaymentDate: json['last_payment_date'] != null
+          ? DateTime.tryParse(json['last_payment_date'] as String)
+          : null,
     );
   }
 
@@ -102,7 +118,66 @@ class SavingsModel {
       'tenure': tenure,
       if (orgId != null) 'org_id': orgId,
       'opening_balance': openingBalance,
+      'total_return_amount': totalReturnAmount,
+      'installments_paid': installmentsPaid,
+      if (lastPaymentDate != null) 'last_payment_date': lastPaymentDate!.toIso8601String().split('T')[0],
     };
+  }
+
+  SavingsModel copyWith({
+    String? id,
+    String? memberId,
+    String? memberName,
+    String? planName,
+    double? targetAmount,
+    double? currentAmount,
+    double? monthlyDeposit,
+    double? interestRate,
+    DateTime? maturityDate,
+    DateTime? createdAt,
+    String? status,
+    String? collectionType,
+    double? prematurePenalty,
+    int? totalInstallments,
+    double? maturityAmount,
+    DateTime? nextDueDate,
+    DateTime? startDate,
+    String? tenureUnit,
+    int? tenure,
+    String? orgId,
+    DateTime? updatedAt,
+    double? openingBalance,
+    double? totalReturnAmount,
+    int? installmentsPaid,
+    DateTime? lastPaymentDate,
+  }) {
+    return SavingsModel(
+      id: id ?? this.id,
+      memberId: memberId ?? this.memberId,
+      memberName: memberName ?? this.memberName,
+      planName: planName ?? this.planName,
+      targetAmount: targetAmount ?? this.targetAmount,
+      currentAmount: currentAmount ?? this.currentAmount,
+      monthlyDeposit: monthlyDeposit ?? this.monthlyDeposit,
+      interestRate: interestRate ?? this.interestRate,
+      maturityDate: maturityDate ?? this.maturityDate,
+      createdAt: createdAt ?? this.createdAt,
+      status: status ?? this.status,
+      collectionType: collectionType ?? this.collectionType,
+      prematurePenalty: prematurePenalty ?? this.prematurePenalty,
+      totalInstallments: totalInstallments ?? this.totalInstallments,
+      maturityAmount: maturityAmount ?? this.maturityAmount,
+      nextDueDate: nextDueDate ?? this.nextDueDate,
+      startDate: startDate ?? this.startDate,
+      tenureUnit: tenureUnit ?? this.tenureUnit,
+      tenure: tenure ?? this.tenure,
+      orgId: orgId ?? this.orgId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      openingBalance: openingBalance ?? this.openingBalance,
+      totalReturnAmount: totalReturnAmount ?? this.totalReturnAmount,
+      installmentsPaid: installmentsPaid ?? this.installmentsPaid,
+      lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
+    );
   }
 }
 

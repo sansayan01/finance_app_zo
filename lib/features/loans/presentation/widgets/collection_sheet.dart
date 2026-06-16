@@ -531,22 +531,22 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     });
 
     // 3. Update plan balance and advance next_due_date
-    final selectedCount = _selectedSavingsDates.length;
-    final installmentCount = selectedCount;
-
     // Use the LATEST selected date as the reference point (not DateTime.now())
     // This ensures backdated payments advance next_due_date correctly.
     final lastSelectedDate = _selectedSavingsDates
         .map((key) => DateTime.parse(key))
         .reduce((a, b) => a.isAfter(b) ? a : b);
 
+    // Advance exactly one period from the last paid date.
+    // installmentCount is irrelevant here — lastSelectedDate already
+    // represents the furthest date being paid.
     DateTime nextDue;
     switch (plan.collectionType) {
       case 'weekly':
-        nextDue = lastSelectedDate.add(Duration(days: 7 * installmentCount));
+        nextDue = lastSelectedDate.add(const Duration(days: 7));
         break;
       case 'monthly':
-        int targetMonth = lastSelectedDate.month + installmentCount;
+        int targetMonth = lastSelectedDate.month + 1;
         int targetYear = lastSelectedDate.year + ((targetMonth - 1) ~/ 12);
         targetMonth = ((targetMonth - 1) % 12) + 1;
         int targetDay = lastSelectedDate.day;
@@ -555,12 +555,16 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         nextDue = DateTime(targetYear, targetMonth, targetDay);
         break;
       default:
-        nextDue = lastSelectedDate.add(Duration(days: installmentCount));
+        nextDue = lastSelectedDate.add(const Duration(days: 1));
     }
+
+    final selectedCount = _selectedSavingsDates.length;
 
     await client.from('savings_plans').update({
       'next_due_date': nextDue.toIso8601String().split('T').first,
       'current_amount': plan.currentAmount + amount,
+      'installments_paid': plan.installmentsPaid + selectedCount,
+      'last_payment_date': lastSelectedDate.toIso8601String().split('T').first,
       'updated_at': now.toIso8601String(),
     }).eq('id', plan.id);
 
@@ -601,7 +605,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             'Deposited Rs${amount.toStringAsFixed(0)} for ${plan.memberName} (${plan.planName})',
         'metadata': {
           'amount': amount,
-          'installment_count': selectedCount,
+          'installment_count': _selectedSavingsDates.length,
           'payment_mode': _selectedMode,
           'savings_plan_id': plan.id,
         },

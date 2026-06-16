@@ -381,7 +381,30 @@ class SavingsRepository {
       throw Exception('Failed to create migrated savings plan');
     }
 
-    return response['id'].toString();
+    final planId = response['id'].toString();
+
+    // Create a transaction record for the already-paid balance
+    // so deposit history shows up on the detail page
+    if (currentAmount > 0) {
+      final memberData = await _client
+          .from('members')
+          .select('full_name')
+          .eq('id', memberId)
+          .maybeSingle();
+
+      await _client.from('transactions').insert({
+        'member_id': memberId,
+        'member_name': memberData?['full_name'] as String? ?? '',
+        'savings_id': planId,
+        'amount': currentAmount,
+        'type': 'savingsDeposit',
+        'org_id': _orgId,
+        'description': 'Migrated balance — pre-existing deposit',
+        'created_at': startDate.toUtc().toIso8601String(),
+      });
+    }
+
+    return planId;
   }
 
   /// Creates synthetic [savings_collections] records for each installment

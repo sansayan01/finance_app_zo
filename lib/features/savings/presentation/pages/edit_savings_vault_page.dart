@@ -45,6 +45,7 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
   double _prematurePenalty = 2;
   TenureUnit _tenureUnit = TenureUnit.months;
   int _tenureValue = 12;
+  int _installmentsPaid = 0;
   bool _isSaving = false;
 
   @override
@@ -71,6 +72,7 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
     _startDate = saving.startDate ?? saving.createdAt;
     _maturityDate = saving.maturityDate;
     _prematurePenalty = saving.prematurePenalty;
+    _installmentsPaid = saving.installmentsPaid;
 
     final typeStr = saving.collectionType.toLowerCase();
     if (typeStr == 'daily') {
@@ -143,6 +145,29 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
 
   double get _calculatedEstimatedInterest {
     return _maturityAmount - _calculatedTotalCapitalInvested;
+  }
+
+  String _computeNextDueDate() {
+    final start = DateTime(_startDate.year, _startDate.month, _startDate.day);
+    DateTime next;
+    switch (_collectionType) {
+      case CollectionType.daily:
+        next = start.add(Duration(days: _installmentsPaid));
+        break;
+      case CollectionType.weekly:
+        next = start.add(Duration(days: _installmentsPaid * 7));
+        break;
+      case CollectionType.monthly:
+        int targetMonth = start.month + _installmentsPaid;
+        int targetYear = start.year + ((targetMonth - 1) ~/ 12);
+        targetMonth = ((targetMonth - 1) % 12) + 1;
+        int targetDay = start.day;
+        int daysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
+        if (targetDay > daysInMonth) targetDay = daysInMonth;
+        next = DateTime(targetYear, targetMonth, targetDay);
+        break;
+    }
+    return next.toIso8601String().split('T').first;
   }
 
   String _capitalize(String s) =>
@@ -328,6 +353,7 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
                               _startDate.toIso8601String().split('T')[0],
                           'maturity_date':
                               _maturityDate.toIso8601String().split('T')[0],
+                          'next_due_date': _computeNextDueDate(),
                           'collection_type': _collectionType.name,
                           'tenure_unit': _tenureUnit.name,
                           'tenure': _tenureValue,

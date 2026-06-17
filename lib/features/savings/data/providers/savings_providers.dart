@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/savings_model.dart';
+import '../models/savings_installment_model.dart';
 import '../repositories/savings_repository.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
@@ -139,4 +140,18 @@ final memberSavingsProvider =
     FutureProvider.family.autoDispose<List<SavingsModel>, String>((ref, memberId) async {
   final repo = ref.watch(savingsRepositoryProvider);
   return repo.getPlansByMemberId(memberId);
+});
+
+final savingsScheduleProvider =
+    FutureProvider.family.autoDispose<List<SavingsInstallment>, String>(
+        (ref, planId) async {
+  final client = ref.watch(supabaseClientProvider);
+  final repo = ref.watch(savingsRepositoryProvider);
+  final plan = await repo.getSavingPlanById(planId);
+  if (plan == null) return [];
+  final paidDates = await SavingsScheduleGenerator.fetchPaidDates(
+    client: client,
+    planId: planId,
+  );
+  return SavingsScheduleGenerator.generate(plan: plan, paidDates: paidDates);
 });

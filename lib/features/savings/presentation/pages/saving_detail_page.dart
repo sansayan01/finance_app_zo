@@ -18,10 +18,12 @@ import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/transactions/data/models/transaction_model.dart';
 import '../../../../providers/supabase_provider.dart';
 import '../../data/models/savings_model.dart';
+import '../../data/models/savings_installment_model.dart';
 import '../../data/providers/savings_providers.dart';
 import '../../data/services/savings_statement_models.dart';
 import '../../data/services/savings_statement_pdf_service.dart';
@@ -159,6 +161,10 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                             _buildSectionHeader('Vault Intelligence', theme),
                             const SizedBox(height: 16),
                             _buildIntelligenceCard(saving, theme),
+                            const SizedBox(height: 40),
+                            _buildSectionHeader('Upcoming Payments', theme),
+                            const SizedBox(height: 16),
+                            _buildSavingsUpcomingPayments(saving, theme),
                             const SizedBox(height: 40),
                             _buildSectionHeader('Yield Projection', theme),
                             const SizedBox(height: 16),
@@ -1306,6 +1312,123 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                 fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
                 color: valueColor)),
       ],
+    );
+  }
+
+  String _savingsStatusLabel(bool isPaid, bool isOverdue) {
+    if (isPaid) return 'PAID';
+    if (isOverdue) return 'OVERDUE';
+    return 'DUE';
+  }
+
+  Widget _buildSavingsUpcomingPayments(SavingsModel saving, ThemeData theme) {
+    final scheduleAsync = ref.watch(savingsScheduleProvider(saving.id));
+    return scheduleAsync.when(
+      data: (schedule) {
+        if (schedule.isEmpty) return const Text('No schedule found.');
+
+        int currentIndex = -1;
+        for (int i = 0; i < schedule.length; i++) {
+          if (!schedule[i].isPaid) {
+            currentIndex = i;
+            break;
+          }
+        }
+
+        return SizedBox(
+          height: 170,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: schedule.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final installment = schedule[index];
+              final isCurrent = index == currentIndex;
+              return _buildSavingsTimelineCard(installment, theme,
+                  isCurrent: isCurrent);
+            },
+          ),
+        );
+      },
+      loading: () => const ShimmerCard(height: 170),
+      error: (_, __) => const Text('Error loading schedule'),
+    );
+  }
+
+  Widget _buildSavingsTimelineCard(SavingsInstallment installment,
+      ThemeData theme, {bool isCurrent = false}) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final isPaid = installment.isPaid;
+    final isOverdue = !isPaid && installment.dueDate.isBefore(today);
+    final color = isPaid
+        ? AppColors.success
+        : (isOverdue ? AppColors.error : theme.colorScheme.primary);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: 150,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isCurrent ? color : color.withValues(alpha: 0.2),
+          width: isCurrent ? 2 : 1.5,
+        ),
+        boxShadow: isCurrent
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
+                child: Text(_savingsStatusLabel(isPaid, isOverdue),
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: color)),
+              ),
+              const Spacer(),
+              if (isCurrent)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+          const Spacer(),
+          Text('#${installment.number}',
+              style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+          Text(AppFormatters.formatCurrency(installment.amount),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(AppFormatters.formatDate(installment.dueDate),
+              style:
+                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 

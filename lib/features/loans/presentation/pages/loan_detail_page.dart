@@ -111,8 +111,10 @@ class LoanDetailPage extends ConsumerStatefulWidget {
 
 class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _timelineController = ScrollController();
   final ValueNotifier<double> _scrollOffset = ValueNotifier(0);
   String _selectedEmiFilter = 'all';
+  bool _hasScrolledTimeline = false;
 
   /// Returns a short, display-friendly label for an [EMIStatus].
   /// Always pass [EMIScheduleModel.effectiveStatus] (not the raw `status`)
@@ -136,6 +138,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _timelineController.dispose();
     _scrollOffset.dispose();
     super.dispose();
   }
@@ -780,14 +783,30 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       data: (schedule) {
         if (schedule.isEmpty) return const Text('No schedule found.');
 
-        // Find current EMI (next upcoming or first overdue)
-        int currentEmiIndex = -1;
-        for (int i = 0; i < schedule.length; i++) {
-          if (schedule[i].status != EMIStatus.paid &&
-              schedule[i].status != EMIStatus.waived) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        // Find the EMI closest to today's date
+        int currentEmiIndex = 0;
+        int bestDiff = today.difference(schedule[0].dueDate).inDays.abs();
+        for (int i = 1; i < schedule.length; i++) {
+          final diff = today.difference(schedule[i].dueDate).inDays.abs();
+          if (diff < bestDiff) {
+            bestDiff = diff;
             currentEmiIndex = i;
-            break;
           }
+        }
+
+        // Auto-scroll to today's card after first frame
+        if (currentEmiIndex > 0 && !_hasScrolledTimeline) {
+          _hasScrolledTimeline = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_timelineController.hasClients) {
+              final offset = currentEmiIndex * 162.0; // 150px card + 12px separator
+              _timelineController.jumpTo(offset.clamp(
+                  0.0, _timelineController.position.maxScrollExtent));
+            }
+          });
         }
 
         return Column(
@@ -796,6 +815,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             SizedBox(
               height: 170,
               child: ListView.separated(
+                controller: _timelineController,
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 itemCount: schedule.length,

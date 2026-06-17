@@ -50,7 +50,9 @@ class SavingDetailPage extends ConsumerStatefulWidget {
 
 class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _timelineController = ScrollController();
   final ValueNotifier<double> _scrollOffset = ValueNotifier<double>(0);
+  bool _hasScrolledTimeline = false;
 
   @override
   void initState() {
@@ -63,6 +65,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _timelineController.dispose();
     _scrollOffset.dispose();
     super.dispose();
   }
@@ -1327,17 +1330,36 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       data: (schedule) {
         if (schedule.isEmpty) return const Text('No schedule found.');
 
-        int currentIndex = -1;
-        for (int i = 0; i < schedule.length; i++) {
-          if (!schedule[i].isPaid) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        // Find the installment closest to today
+        int currentIndex = 0;
+        int bestDiff = today.difference(schedule[0].dueDate).inDays.abs();
+        for (int i = 1; i < schedule.length; i++) {
+          final diff = today.difference(schedule[i].dueDate).inDays.abs();
+          if (diff < bestDiff) {
+            bestDiff = diff;
             currentIndex = i;
-            break;
           }
+        }
+
+        // Auto-scroll to today's card after first frame
+        if (currentIndex > 0 && !_hasScrolledTimeline) {
+          _hasScrolledTimeline = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_timelineController.hasClients) {
+              final offset = currentIndex * 162.0; // 150px card + 12px separator
+              _timelineController.jumpTo(offset.clamp(
+                  0.0, _timelineController.position.maxScrollExtent));
+            }
+          });
         }
 
         return SizedBox(
           height: 170,
           child: ListView.separated(
+            controller: _timelineController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount: schedule.length,

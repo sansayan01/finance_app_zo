@@ -245,11 +245,218 @@ class LoansRepository {
     return loanId;
   }
 
-  Future<void> createLoanFromMap(Map<String, dynamic> data) async {
-    data['org_id'] = _orgId;
-    // Ensure member_id is populated (same as customer_id if missing)
-    data['member_id'] ??= data['customer_id'];
-    await _client.from('loans').insert(data);
+  /// Creates a migrated loan with pre-existing payment history.
+  ///
+  /// Unlike [createLoan], this accepts [paidEmis], [lastPaymentDate],
+  /// and a backdated [startDate] so the loan's history is preserved.
+  /// [outstandingBalance] is the current remaining principal.
+  /// [openingBalance] is the total amount already paid before migration.
+  Future<String> createMigrationLoan({
+    required String borrowerId,
+    required double principal,
+    required double interestRate,
+    required int tenureMonths,
+    required String frequency,
+    required String collectionType,
+    required String interestLogic,
+    required DateTime firstInstallmentDate,
+    required double estimatedInstallment,
+    required double totalExposure,
+    required int paidEmis,
+    required DateTime lastPaymentDate,
+    required double outstandingBalance,
+    double openingBalance = 0,
+    String? interestMode,
+    String? interestRateBasis,
+    double? interestAmount,
+    String? interestBasis,
+    int? tenureValue,
+    String? tenureUnit,
+    DateTime? disbursementDate,
+  }) async {
+    final now = DateTime.now();
+    final effectiveDisbursementDate = disbursementDate ?? firstInstallmentDate;
+    final loanNumber =
+        'L-${DateFormat('yyyyMMdd').format(now)}-${math.Random().nextInt(9999).toString().padLeft(4, '0')}';
+
+    double totalInterest = totalExposure - principal;
+
+    // Look up the member's branch_id and assigned agent
+    final member = await _client
+        .from('members')
+        .select('branch_id, full_name, agent_id')
+        .eq('id', borrowerId)
+        .maybeSingle();
+    if (member == null) {
+      throw Exception(
+          'Selected borrower no longer exists. Please refresh and try again.');
+    }
+    final branchId = member['branch_id'] as String?;
+
+    // Auto-assign collection agent
+    String? assignedAgentId = member['agent_id'] as String?;
+    if (assignedAgentId == null && branchId != null) {
+      final agent = await _client
+          .from('profiles')
+          .select('id')
+          .eq('branch_id', branchId)
+          .eq('org_id', _orgId)
+          .eq('role', 'collectionAgent')
+          .limit(1)
+          .maybeSingle();
+      assignedAgentId = agent?['id'] as String?;
+    }
+
+    final result = await _client.from('loans').insert({
+      'customer_id': borrowerId,
+      'member_id': borrowerId,
+      if (member['full_name'] != null) 'member_name': member['full_name'],
+      'loan_number': loanNumber,
+      'amount': principal,
+      'principal': principal,
+      'interest': totalInterest,
+      'total_interest': totalInterest,
+      'interest_rate': interestRate,
+      'tenure_months': tenureMonths,
+      'frequency': frequency,
+      'collection_type': collectionType,
+      'emi_amount': estimatedInstallment,
+      'outstanding_balance': outstandingBalance,
+      'outstanding_amount': outstandingBalance,
+      'total_repayable': totalExposure,
+      'interest_type': interestLogic,
+      'paid_emis': paidEmis,
+      'last_payment_date': lastPaymentDate.toIso8601String().split('T').first,
+      'status': 'active',
+      'first_installment_date': firstInstallmentDate.toIso8601String(),
+      'first_emi_date': firstInstallmentDate.toIso8601String(),
+      'disbursement_date': effectiveDisbursementDate.toIso8601String(),
+      'start_date': firstInstallmentDate.toIso8601String(),
+      'created_at': now.toIso8601String(),
+      'updated_at': now.toIso8601String(),
+      'org_id': _orgId,
+      if (branchId != null) 'branch_id': branchId,
+      if (assignedAgentId != null) 'staff_id': assignedAgentId,
+      if (assignedAgentId != null) 'agent_id': assignedAgentId,
+      if (interestMode != null) 'interest_mode': interestMode,
+      if (interestRateBasis != null) 'interest_rate_basis': interestRateBasis,
+      if (interestAmount != null) 'interest_amount': interestAmount,
+      if (interestBasis != null) 'interest_basis': interestBasis,
+      if (tenureValue != null) 'tenure_value': tenureValue,
+      if (tenureUnit != null) 'tenure_unit': tenureUnit,
+    }).select('id').single();
+
+    final loanId = result['id'] as String;
+
+    // Create synthetic transaction for pre-existing paid amount
+    if (openingBalance > 0) {
+      final memberData = await _client
+          .from('members')
+          .select('full_name')
+          .eq('id', borrowerId)
+          .maybeSingle();
+
+      await _client.from('transactions').insert({
+        'member_id': borrowerId,
+        'member_name': memberData?['full_name'] as String? ?? '',
+        'loan_id': loanId,
+        'amount': openingBalance,
+        'type': 'emiPayment',
+        'org_id': _orgId,
+        'description': 'Migrated loan — pre-existing payment history',
+        'created_at': lastPaymentDate.toUtc().toIso8601String(),
+      });
+    }
+
+    await _logRepo?.log(
+      action: 'Loan Migrated',
+      details:
+          'Amount: ₹$principal, Outstanding: ₹$outstandingBalance, Paid EMIs: $paidEmis, Loan ID: $loanId',
+      type: ActivityType.financialTransaction,
+    );
+
+    return loanId;
+  }
+
+  /// Creates synthetic [collections] records for each paid EMI in a migrated loan.
+  /// Returns the number of records created.
+  Future<int> createMigrationLoanCollectionRecords({
+    required String loanId,
+    required String memberId,
+    required double installmentAmount,
+    required int installmentsPaid,
+    required DateTime startDate,
+    required String collectionType,
+  }) async {
+    if (installmentsPaid <= 0) return 0;
+
+    final memberData = await _client
+        .from('members')
+        .select('full_name')
+        .eq('id', memberId)
+        .maybeSingle();
+    final memberName = memberData?['full_name'] as String? ?? '';
+
+    // Fetch already-paid EMI schedule rows so we can link each collection
+    // to its corresponding EMI via selected_schedule_id. This prevents the
+    // update_schedule_on_collection trigger from FIFO-advancing extra EMIs.
+    final paidEmis = await _client
+        .from('emi_schedule')
+        .select('id, emi_number')
+        .eq('loan_id', loanId)
+        .eq('is_paid', true)
+        .order('emi_number', ascending: true);
+
+    // Build a map: emi_number -> schedule row id
+    final Map<int, String> paidEmiMap = {};
+    for (final row in paidEmis as List) {
+      final emiNum = row['emi_number'] as int;
+      final id = row['id'] as String;
+      paidEmiMap[emiNum] = id;
+    }
+
+    final records = <Map<String, dynamic>>[];
+    for (int i = 0; i < installmentsPaid; i++) {
+      DateTime dueDate;
+      switch (collectionType) {
+        case 'weekly':
+          dueDate = startDate.add(Duration(days: i * 7));
+          break;
+        case 'monthly':
+          dueDate = DateTime(startDate.year, startDate.month + i, startDate.day);
+          break;
+        case 'yearly':
+          dueDate = DateTime(startDate.year + i, startDate.month, startDate.day);
+          break;
+        default: // daily
+          dueDate = startDate.add(Duration(days: i));
+      }
+
+      // Link to the paid EMI schedule row so the collection trigger doesn't
+      // FIFO-pay additional EMIs. The emi_number is 1-indexed.
+      final scheduleId = paidEmiMap[i + 1];
+
+      records.add({
+        'loan_id': loanId,
+        'org_id': _orgId,
+        'member_id': memberId,
+        'member_name': memberName,
+        'amount_expected': installmentAmount,
+        'amount_collected': installmentAmount,
+        'is_partial': false,
+        'payment_mode': 'cash',
+        'collection_date': dueDate.toIso8601String().split('T').first,
+        'collected_at': DateTime.now().toUtc().toIso8601String(),
+        'sync_status': 'synced',
+        if (scheduleId != null) 'selected_schedule_id': scheduleId,
+      });
+    }
+
+    if (records.isNotEmpty) {
+      await _client.from('collections').insert(records);
+    }
+
+    return records.length;
   }
 
   Future<void> updateLoanStatus(String id, String status) async {
@@ -431,13 +638,13 @@ class LoansRepository {
       // 1. Delete transactions
       await _client.from('transactions').delete().eq('loan_id', loanId);
 
-      // 2. Delete EMI schedules (covers all schedule records via streaming)
-      await _client.from('emi_schedule').delete().eq('loan_id', loanId);
-
-      // 3. Delete collections (not just nullify)
+      // 2. Delete collections first (references emi_schedule via selected_schedule_id)
       await _client.from('collections').delete().eq('loan_id', loanId);
 
-      // 5. Delete the loan itself
+      // 3. Delete EMI schedules
+      await _client.from('emi_schedule').delete().eq('loan_id', loanId);
+
+      // 4. Delete the loan itself
       await _client.from('loans').delete().eq('id', loanId);
 
       // 7. Verify deletion

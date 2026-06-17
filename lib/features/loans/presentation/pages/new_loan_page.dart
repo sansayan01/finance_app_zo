@@ -28,6 +28,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
   final TextEditingController _principalController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _tenureController = TextEditingController();
+  final TextEditingController _paidEmisController = TextEditingController();
 
   bool _isMigratedLoan = false;
 
@@ -51,6 +52,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
     _principalController.dispose();
     _rateController.dispose();
     _tenureController.dispose();
+    _paidEmisController.dispose();
     super.dispose();
   }
 
@@ -305,41 +307,126 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
               activeThumbColor: primary,
               onChanged: (val) {
                 setState(() => _isMigratedLoan = val);
+                final notifier = ref.read(newLoanProvider.notifier);
+                if (val) {
+                  notifier.enableMigration(
+                    paidEmis: int.tryParse(_paidEmisController.text) ?? 0,
+                    lastPaymentDate: null,
+                    outstandingBalance: 0,
+                    openingBalance: 0,
+                  );
+                } else {
+                  notifier.disableMigration();
+                }
               },
             ),
           ).animate().fadeIn(duration: 400.ms),
 
           if (_isMigratedLoan) ...[
             const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: primary.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline_rounded, color: primary),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+
+            // ── Paid Installments ──
+            _buildLabel('PAID INSTALLMENTS', theme),
+            const SizedBox(height: 10),
+            _buildTextField(
+              controller: _paidEmisController,
+              onChanged: (val) {
+                final parsed = int.tryParse(val) ?? 0;
+                ref.read(newLoanProvider.notifier).updatePaidEmis(parsed);
+              },
+              theme: theme,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 16),
+
+            // ── Migration Summary Card ──
+            if (state.isMigrated) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      primary.withValues(alpha: 0.12),
+                      primary.withValues(alpha: 0.04)
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: primary.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text('Migration Mode Active',
-                            style: TextStyle(
+                        Icon(Icons.history_rounded,
+                            size: 18, color: primary),
+                        const SizedBox(width: 8),
+                        Text('Migration Summary',
+                            style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w700, color: primary)),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Enter the current OUTSTANDING principal balance and the REMAINING tenure. The system will resume tracking from the next installment date.',
-                          style: theme.textTheme.bodySmall,
-                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(),
+                    const SizedBox(height: 16),
+                    _buildMigrationRow(
+                        'Paid Installments',
+                        '${state.installmentsPaidCount}',
+                        theme,
+                        primary),
+                    const SizedBox(height: 8),
+                    _buildMigrationRow(
+                        'Remaining Installments',
+                        '${state.remainingInstallments}',
+                        theme,
+                        primary),
+                    const SizedBox(height: 8),
+                    _buildMigrationRow(
+                        'Next Due Date',
+                        state.nextDueDateCalc != null
+                            ? DateFormat('dd MMM yyyy')
+                                .format(state.nextDueDateCalc!)
+                            : '—',
+                        theme,
+                        primary),
+                    if (state.overdueInstallments > 0) ...[
+                      const Divider(height: 20, indent: 0),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded,
+                                size: 16,
+                                color: theme.colorScheme.error),
+                            const SizedBox(width: 8),
+                            Text('Overdue',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.colorScheme.error,
+                                    letterSpacing: 0.5)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildMigrationRow(
+                        'Overdue Installments',
+                        '${state.overdueInstallments}',
+                        theme,
+                        theme.colorScheme.error,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildMigrationRow(
+                        'Overdue Amount',
+                        currencyFormat.format(state.overdueAmount),
+                        theme,
+                        theme.colorScheme.error,
+                      ),
+                    ],
+                  ],
+                ),
+              ).animate().fadeIn(),
+            ],
           ],
           const SizedBox(height: 28),
 
@@ -660,20 +747,6 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
 
           _buildDivider(theme),
 
-          // ── Disbursement Date ──
-          _buildLabel('DISBURSEMENT DATE', theme),
-          const SizedBox(height: 10),
-          _buildDatePicker(
-            date: state.disbursementDate,
-            onPicked: (date) => ref
-                .read(newLoanProvider.notifier)
-                .updateDisbursementDate(date),
-            theme: theme,
-            isDark: isDark,
-          ),
-
-          const SizedBox(height: 20),
-
           // ── Interest Logic & Date ──
           _buildTwoColumn(
             isNarrow: isNarrow,
@@ -711,6 +784,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
                       .updateFirstInstallmentDate(date),
                   theme: theme,
                   isDark: isDark,
+                  allowPast: true,
                 ),
               ],
             ),
@@ -920,6 +994,23 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
     );
   }
 
+  Widget _buildMigrationRow(
+      String label, String value, ThemeData theme, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500, fontSize: 12)),
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: color)),
+      ],
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required Function(String) onChanged,
@@ -1007,14 +1098,17 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
     required Function(DateTime) onPicked,
     required ThemeData theme,
     required bool isDark,
+    bool allowPast = false,
   }) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () async {
         final picked = await showDatePicker(
           context: context,
-          initialDate: date ?? DateTime.now().add(const Duration(days: 30)),
-          firstDate: DateTime.now(),
+          initialDate: date ?? DateTime.now(),
+          firstDate: allowPast
+              ? DateTime.now().subtract(const Duration(days: 365 * 10))
+              : DateTime.now(),
           lastDate: DateTime.now().add(const Duration(days: 365)),
         );
         if (picked != null) onPicked(picked);

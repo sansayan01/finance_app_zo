@@ -48,6 +48,12 @@ class NewLoanState {
   final DateTime? disbursementDate;
   final bool isLoading;
 
+  // Migration fields
+  final int paidEmis;
+  final DateTime? lastPaymentDate;
+  final double openingBalance;
+  final double outstandingBalance;
+
   NewLoanState({
     this.borrowerId,
     this.principalAmount = 50000,
@@ -63,6 +69,10 @@ class NewLoanState {
     this.firstInstallmentDate,
     this.disbursementDate,
     this.isLoading = false,
+    this.paidEmis = 0,
+    this.lastPaymentDate,
+    this.openingBalance = 0,
+    this.outstandingBalance = 0,
   });
 
   NewLoanState copyWith({
@@ -80,6 +90,10 @@ class NewLoanState {
     DateTime? firstInstallmentDate,
     DateTime? disbursementDate,
     bool? isLoading,
+    int? paidEmis,
+    DateTime? lastPaymentDate,
+    double? openingBalance,
+    double? outstandingBalance,
   }) {
     return NewLoanState(
       borrowerId: borrowerId ?? this.borrowerId,
@@ -96,6 +110,10 @@ class NewLoanState {
       firstInstallmentDate: firstInstallmentDate ?? this.firstInstallmentDate,
       disbursementDate: disbursementDate ?? this.disbursementDate,
       isLoading: isLoading ?? this.isLoading,
+      paidEmis: paidEmis ?? this.paidEmis,
+      lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
+      openingBalance: openingBalance ?? this.openingBalance,
+      outstandingBalance: outstandingBalance ?? this.outstandingBalance,
     );
   }
 
@@ -126,6 +144,66 @@ class NewLoanState {
   }
 
   double get tenureInYears => tenureInDays / 365;
+
+  /// Number of installments already paid (migration)
+  int get installmentsPaidCount => paidEmis;
+
+  /// Number of installments remaining after migration
+  int get remainingInstallments => numberOfInstallments - paidEmis;
+
+  /// Next due date: computed from firstInstallmentDate + paidEmis periods
+  DateTime? get nextDueDateCalc {
+    if (firstInstallmentDate == null) return null;
+    final start = firstInstallmentDate!;
+    switch (collectionType) {
+      case CollectionType.daily:
+        return start.add(Duration(days: paidEmis));
+      case CollectionType.weekly:
+        return start.add(Duration(days: paidEmis * 7));
+      case CollectionType.yearly:
+        return DateTime(start.year + paidEmis, start.month, start.day);
+      case CollectionType.monthly:
+        int targetMonth = start.month + paidEmis;
+        int targetYear = start.year + ((targetMonth - 1) ~/ 12);
+        targetMonth = ((targetMonth - 1) % 12) + 1;
+        int targetDay = start.day;
+        int daysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
+        if (targetDay > daysInMonth) targetDay = daysInMonth;
+        return DateTime(targetYear, targetMonth, targetDay);
+    }
+  }
+
+  /// Total expected installments from start to today (for overdue calc)
+  int _expectedInstallmentsByDate(DateTime date) {
+    if (firstInstallmentDate == null) return 0;
+    final daysSinceStart = date.difference(firstInstallmentDate!).inDays;
+    switch (collectionType) {
+      case CollectionType.daily:
+        return daysSinceStart + 1;
+      case CollectionType.weekly:
+        return (daysSinceStart ~/ 7) + 1;
+      case CollectionType.yearly:
+        return (daysSinceStart ~/ 365) + 1;
+      case CollectionType.monthly:
+        int months = (date.year - firstInstallmentDate!.year) * 12 +
+            (date.month - firstInstallmentDate!.month);
+        if (date.day >= firstInstallmentDate!.day) months++;
+        return months;
+    }
+  }
+
+  /// Number of overdue installments (migration-aware)
+  int get overdueInstallments {
+    final expectedByNow = _expectedInstallmentsByDate(DateTime.now());
+    final overdue = expectedByNow - paidEmis;
+    return overdue > 0 ? overdue : 0;
+  }
+
+  /// Overdue amount
+  double get overdueAmount => overdueInstallments * estimatedInstallment;
+
+  /// Whether this is a migrated loan
+  bool get isMigrated => paidEmis > 0;
 
   int get numberOfInstallments {
     if (tenureInDays <= 0) return 0;
@@ -365,60 +443,201 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
   void updateDisbursementDate(DateTime date) =>
       state = state.copyWith(disbursementDate: date);
 
+  // Migration field updates
+  void updatePaidEmis(int count) =>
+      state = state.copyWith(paidEmis: count);
+  void updateLastPaymentDate(DateTime date) =>
+      state = state.copyWith(lastPaymentDate: date);
+  void updateOutstandingBalance(double amount) =>
+      state = state.copyWith(outstandingBalance: amount);
+  void updateOpeningBalance(double amount) =>
+      state = state.copyWith(openingBalance: amount);
+
+  void enableMigration({
+    required int paidEmis,
+    DateTime? lastPaymentDate,
+    required double outstandingBalance,
+    required double openingBalance,
+  }) {
+    state = state.copyWith(
+      paidEmis: paidEmis,
+      lastPaymentDate: lastPaymentDate,
+      outstandingBalance: outstandingBalance,
+      openingBalance: openingBalance,
+    );
+  }
+
+  void disableMigration() {
+    state = state.copyWith(
+      paidEmis: 0,
+      lastPaymentDate: null,
+      outstandingBalance: 0,
+      openingBalance: 0,
+    );
+  }
+
+  DateTime _computeLastPaymentDate() {
+    final start = state.firstInstallmentDate;
+    if (start == null || state.paidEmis <= 0) return DateTime.now();
+    int daysPerPeriod;
+    switch (state.collectionType) {
+      case CollectionType.daily:
+        daysPerPeriod = 1;
+        break;
+      case CollectionType.weekly:
+        daysPerPeriod = 7;
+        break;
+      case CollectionType.monthly:
+        daysPerPeriod = 30;
+        break;
+      case CollectionType.yearly:
+        daysPerPeriod = 365;
+        break;
+    }
+    return start.add(Duration(days: daysPerPeriod * (state.paidEmis - 1)));
+  }
+
   Future<void> createLoan() async {
     if (state.borrowerId == null) throw Exception('Please select a borrower');
 
     state = state.copyWith(isLoading: true);
     try {
-      final loanId = await _repository.createLoan(
-        borrowerId: state.borrowerId!,
-        principal: state.principalAmount,
-        interestRate: state.interestMode == InterestMode.rate
-            ? state.interestRate
-            : _calculateEquivalentAPR(),
-        tenureMonths: state.tenureValue,
-        frequency: state.collectionType.name,
-        collectionType: state.collectionType.name,
-        interestLogic: state.interestLogic.name,
-        firstInstallmentDate: state.firstInstallmentDate ??
-            DateTime.now().add(const Duration(days: 30)),
-        disbursementDate: state.disbursementDate ?? DateTime.now(),
-        estimatedInstallment: state.estimatedInstallment,
-        totalExposure: state.totalExposure,
-        interestMode: state.interestMode.name,
-        interestRateBasis: state.interestMode == InterestMode.rate
-            ? state.interestRateBasis.name
-            : null,
-        interestAmount: state.interestMode == InterestMode.amount
-            ? state.interestAmount
-            : 0,
-        interestBasis: state.interestMode == InterestMode.amount
-            ? state.interestBasis.name
-            : null,
-        tenureValue: state.tenureValue,
-        tenureUnit: state.tenureUnit.name,
-      );
+      final bool isMigrated = state.isMigrated;
 
-      // Generate EMI schedule for the newly created loan
-      try {
-        final emiRepo = _ref.read(emiRepositoryProvider);
-        await emiRepo.generateSchedule(
-          loanId,
+      final String loanId;
+      if (isMigrated) {
+        // ── Migration Path ──
+        final double emi = state.estimatedInstallment;
+        // Store the ORIGINAL first installment date (not next due) so the
+        // EMI schedule and collection records align on the same base date.
+        final DateTime loanStartDate =
+            state.firstInstallmentDate ?? DateTime.now();
+
+        loanId = await _repository.createMigrationLoan(
+          borrowerId: state.borrowerId!,
           principal: state.principalAmount,
           interestRate: state.interestMode == InterestMode.rate
               ? state.interestRate
               : _calculateEquivalentAPR(),
           tenureMonths: state.tenureValue,
-          interestType: state.interestLogic.name,
-          startDate: state.firstInstallmentDate ?? DateTime.now(),
-          emiAmount: state.estimatedInstallment,
-          memberId: state.borrowerId,
           frequency: state.collectionType.name,
+          collectionType: state.collectionType.name,
+          interestLogic: state.interestLogic.name,
+          firstInstallmentDate: loanStartDate,
+          disbursementDate: state.disbursementDate,
+          estimatedInstallment: emi,
+          totalExposure: state.totalExposure,
+          paidEmis: state.paidEmis,
+          lastPaymentDate: state.lastPaymentDate ?? _computeLastPaymentDate(),
+          outstandingBalance: state.outstandingBalance > 0
+              ? state.outstandingBalance
+              : (state.totalExposure -
+                      state.paidEmis * state.estimatedInstallment)
+                  .clamp(0, state.totalExposure),
+          openingBalance: state.paidEmis * state.estimatedInstallment,
+          interestMode: state.interestMode.name,
+          interestRateBasis: state.interestMode == InterestMode.rate
+              ? state.interestRateBasis.name
+              : null,
+          interestAmount: state.interestMode == InterestMode.amount
+              ? state.interestAmount
+              : 0,
+          interestBasis: state.interestMode == InterestMode.amount
+              ? state.interestBasis.name
+              : null,
           tenureValue: state.tenureValue,
           tenureUnit: state.tenureUnit.name,
         );
-      } catch (e) {
-        debugPrint('Warning: EMI schedule generation failed: $e');
+
+        // Generate full EMI schedule marking first N as paid
+        try {
+          final emiRepo = _ref.read(emiRepositoryProvider);
+          await emiRepo.generateSchedule(
+            loanId,
+            principal: state.principalAmount,
+            interestRate: state.interestMode == InterestMode.rate
+                ? state.interestRate
+                : _calculateEquivalentAPR(),
+            tenureMonths: state.tenureValue,
+            interestType: state.interestLogic.name,
+            startDate: loanStartDate,
+            emiAmount: state.estimatedInstallment,
+            memberId: state.borrowerId,
+            frequency: state.collectionType.name,
+            tenureValue: state.tenureValue,
+            tenureUnit: state.tenureUnit.name,
+            paidEmis: state.paidEmis,
+            lastPaymentDate: state.lastPaymentDate ?? _computeLastPaymentDate(),
+          );
+        } catch (e) {
+          debugPrint('Warning: EMI schedule generation failed: $e');
+        }
+
+        // Create synthetic collection records for paid installments
+        try {
+          await _repository.createMigrationLoanCollectionRecords(
+            loanId: loanId,
+            memberId: state.borrowerId!,
+            installmentAmount: state.estimatedInstallment,
+            installmentsPaid: state.paidEmis,
+            startDate: state.firstInstallmentDate ?? DateTime.now(),
+            collectionType: state.collectionType.name,
+          );
+        } catch (e) {
+          debugPrint('Warning: Migration collection records failed: $e');
+        }
+      } else {
+        // ── Normal Path ──
+        loanId = await _repository.createLoan(
+          borrowerId: state.borrowerId!,
+          principal: state.principalAmount,
+          interestRate: state.interestMode == InterestMode.rate
+              ? state.interestRate
+              : _calculateEquivalentAPR(),
+          tenureMonths: state.tenureValue,
+          frequency: state.collectionType.name,
+          collectionType: state.collectionType.name,
+          interestLogic: state.interestLogic.name,
+          firstInstallmentDate: state.firstInstallmentDate ??
+              DateTime.now().add(const Duration(days: 30)),
+          disbursementDate: state.disbursementDate ?? DateTime.now(),
+          estimatedInstallment: state.estimatedInstallment,
+          totalExposure: state.totalExposure,
+          interestMode: state.interestMode.name,
+          interestRateBasis: state.interestMode == InterestMode.rate
+              ? state.interestRateBasis.name
+              : null,
+          interestAmount: state.interestMode == InterestMode.amount
+              ? state.interestAmount
+              : 0,
+          interestBasis: state.interestMode == InterestMode.amount
+              ? state.interestBasis.name
+              : null,
+          tenureValue: state.tenureValue,
+          tenureUnit: state.tenureUnit.name,
+        );
+
+        // Generate EMI schedule
+        try {
+          final emiRepo = _ref.read(emiRepositoryProvider);
+          await emiRepo.generateSchedule(
+            loanId,
+            principal: state.principalAmount,
+            interestRate: state.interestMode == InterestMode.rate
+                ? state.interestRate
+                : _calculateEquivalentAPR(),
+            tenureMonths: state.tenureValue,
+            interestType: state.interestLogic.name,
+            startDate: state.firstInstallmentDate ?? DateTime.now(),
+            emiAmount: state.estimatedInstallment,
+            memberId: state.borrowerId,
+            frequency: state.collectionType.name,
+            tenureValue: state.tenureValue,
+            tenureUnit: state.tenureUnit.name,
+          );
+        } catch (e) {
+          debugPrint('Warning: EMI schedule generation failed: $e');
+        }
       }
 
       _ref.invalidate(loansProvider);

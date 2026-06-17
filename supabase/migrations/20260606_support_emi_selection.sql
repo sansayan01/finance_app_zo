@@ -47,36 +47,36 @@ BEGIN
         -- ------------------------------------------------
         IF NEW.selected_schedule_id IS NOT NULL THEN
             -- Fetch the target EMI and verify it belongs to
-            -- this loan, is unpaid, and hasn't been paid yet.
-            SELECT id, emi_amount
+            -- this loan.
+            SELECT id, emi_amount, is_paid
             INTO v_selected_emi
             FROM public.emi_schedule
             WHERE id = NEW.selected_schedule_id
-              AND loan_id = NEW.loan_id
-              AND is_paid = false
-              AND paid_on IS NULL;
+              AND loan_id = NEW.loan_id;
 
             IF FOUND THEN
-                IF v_remaining_amount >= v_selected_emi.emi_amount THEN
-                    -- Full payment of the selected EMI
-                    UPDATE public.emi_schedule
-                    SET
-                        is_paid = true,
-                        status = 'paid',
-                        paid_on = (NEW.collection_date + NEW.collection_time)::timestamptz,
-                        payment_mode = COALESCE(NEW.payment_mode, payment_mode)
-                    WHERE id = v_selected_emi.id;
+                -- If the EMI is already paid (e.g. migration record),
+                -- skip outstanding reduction to avoid double-counting.
+                IF v_selected_emi.is_paid IS DISTINCT FROM true THEN
+                    IF v_remaining_amount >= v_selected_emi.emi_amount THEN
+                        -- Full payment of the selected EMI
+                        UPDATE public.emi_schedule
+                        SET
+                            is_paid = true,
+                            status = 'paid',
+                            paid_on = (NEW.collection_date + NEW.collection_time)::timestamptz,
+                            payment_mode = COALESCE(NEW.payment_mode, payment_mode)
+                        WHERE id = v_selected_emi.id;
 
-                    v_remaining_amount := v_remaining_amount - v_selected_emi.emi_amount;
+                        v_remaining_amount := v_remaining_amount - v_selected_emi.emi_amount;
+                    ELSE
+                        -- Partial — don't mark as paid
+                        v_remaining_amount := 0;
+                    END IF;
                 ELSE
-                    -- Partial — don't mark as paid
-                    v_remaining_amount := 0;
+                    -- EMI already paid — skip to avoid double-counting
+                    RETURN NEW;
                 END IF;
-            ELSE
-                -- The selected EMI was not found, already paid, or
-                -- doesn't belong to this loan — fall through to
-                -- outstanding balance update only.
-                NULL;
             END IF;
 
         -- ------------------------------------------------

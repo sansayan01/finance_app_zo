@@ -257,11 +257,13 @@ class EMIRepository {
     String? frequency,
     int? tenureValue,
     String? tenureUnit,
+    int paidEmis = 0,
+    DateTime? lastPaymentDate,
   }) async {
     try {
       // Try RPC first, but only for standard monthly tenure
       // RPC ignores tenureValue/tenureUnit so it's wrong for days/weeks/years
-      final bool useRpc = (tenureUnit == null || tenureUnit == 'months');
+      final bool useRpc = (tenureUnit == null || tenureUnit == 'months') && paidEmis <= 0;
       bool rpcWorked = false;
       if (useRpc) {
         try {
@@ -382,6 +384,27 @@ class EMIRepository {
               dueDate = DateTime(startDate.year, startDate.month + (i - 1), startDate.day);
           }
 
+          final isPaid = i <= paidEmis;
+
+          DateTime? paidOn;
+          if (isPaid && lastPaymentDate != null) {
+            // Compute synthetic paid date based on offset from last payment
+            final offset = paidEmis - i;
+            switch (freq) {
+              case 'daily':
+                paidOn = lastPaymentDate.subtract(Duration(days: offset));
+                break;
+              case 'weekly':
+                paidOn = lastPaymentDate.subtract(Duration(days: offset * 7));
+                break;
+              case 'yearly':
+                paidOn = DateTime(lastPaymentDate.year - offset, lastPaymentDate.month, lastPaymentDate.day);
+                break;
+              default:
+                paidOn = DateTime(lastPaymentDate.year, lastPaymentDate.month - offset, lastPaymentDate.day);
+            }
+          }
+
           schedule.add({
             'loan_id': loanId,
             'org_id': _orgId,
@@ -395,7 +418,11 @@ class EMIRepository {
             'principal': principalPaid,
             'interest': interest,
             'balance_after': balance,
-            'status': 'pending',
+            'status': isPaid ? 'paid' : 'pending',
+            'is_paid': isPaid,
+            if (isPaid) 'paid_date': paidOn?.toIso8601String().split('T').first,
+            if (isPaid) 'paid_on': DateTime.now().toUtc().toIso8601String(),
+            if (isPaid) 'payment_mode': 'cash',
           });
         }
 

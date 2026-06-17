@@ -20,6 +20,9 @@ class LoanModel {
   final InterestType interestType;
   final DateTime? disbursementDate;
   final DateTime? firstEmiDate;
+  final int paidEmis;
+  final int totalEmis;
+  final DateTime? lastPaymentDate;
   final LoanStatus status;
   final String? purpose;
   final String? remarks;
@@ -56,6 +59,9 @@ class LoanModel {
     required this.interestType,
     this.disbursementDate,
     this.firstEmiDate,
+    this.paidEmis = 0,
+    this.totalEmis = 0,
+    this.lastPaymentDate,
     required this.status,
     this.purpose,
     this.remarks,
@@ -144,6 +150,11 @@ class LoanModel {
               ? DateTime.parse((json['first_emi_date'] ??
                   json['first_installment_date']) as String)
               : null,
+      paidEmis: (json['paid_emis'] as num?)?.toInt() ?? 0,
+      totalEmis: (json['total_emis'] as num?)?.toInt() ?? 0,
+      lastPaymentDate: json['last_payment_date'] != null
+          ? DateTime.parse(json['last_payment_date'] as String)
+          : null,
       status: LoanStatus.values.firstWhere(
         (e) =>
             e.name == json['status'] ||
@@ -195,6 +206,9 @@ class LoanModel {
       'interest_type': interestType.name,
       'disbursement_date': disbursementDate?.toIso8601String(),
       'first_emi_date': firstEmiDate?.toIso8601String(),
+      'paid_emis': paidEmis,
+      'total_emis': totalEmis,
+      'last_payment_date': lastPaymentDate?.toIso8601String().split('T').first,
       'status': status.name,
       'purpose': purpose,
       'remarks': remarks,

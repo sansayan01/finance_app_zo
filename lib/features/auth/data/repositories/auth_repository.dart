@@ -267,7 +267,33 @@ class AuthRepository {
     await _client.auth.resetPasswordForEmail(email);
   }
 
+  Future<bool> refreshSession() async {
+    try {
+      final response = await _client.auth.refreshSession();
+      return response.session != null;
+    } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('invalid refresh token') ||
+          errStr.contains('session not found') ||
+          errStr.contains('expired') ||
+          errStr.contains('401')) {
+        await _client.auth.signOut();
+      }
+      return false;
+    }
+  }
+
   Future<UserModel?> getCurrentUser() async {
+    // Proactively refresh the session so the JWT isn't expired
+    // when PostgREST calls are made. If refresh fails the user
+    // gets signed out and redirected to login.
+    try {
+      await _client.auth.refreshSession();
+    } catch (_) {
+      await _client.auth.signOut();
+      return null;
+    }
+
     final user = _client.auth.currentUser;
     if (user == null) return null;
 

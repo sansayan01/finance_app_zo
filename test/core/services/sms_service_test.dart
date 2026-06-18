@@ -16,7 +16,42 @@ void main() {
     );
     expect(msg, contains('500'));
     expect(msg, contains('L-1'));
-    expect(msg, contains('MFIFIN'));
+    // Member + collector names + org name are uppercased as visual emphasis.
+    expect(msg, contains('SURESH'));
+    expect(msg, contains('RAVI'));
+    expect(msg, contains('ACME'));
+  });
+
+  test('buildLoanClosedSms renders card format', () {
+    final msg = svc.buildLoanClosedSms(
+      memberName: 'Priya',
+      orgName: 'Acme',
+      loanNumber: 'L-2',
+      totalPaid: '₹12000',
+      closedDate: DateTime(2026, 6, 2),
+    );
+    expect(msg, contains('PRIYA'));
+    expect(msg, contains('L-2'));
+    expect(msg, contains('Loan Closed'));
+    expect(msg, contains('ACME'));
+  });
+
+  test('buildPartialPaymentSms mentions next due date', () {
+    final msg = svc.buildPartialPaymentSms(
+      memberName: 'Anil',
+      collectorName: 'Ravi',
+      orgName: 'Acme',
+      loanNumber: 'L-3',
+      amount: '₹1000',
+      outstandingBalance: '₹3000',
+      fullAmount: '₹3000',
+      date: DateTime(2026, 6, 2),
+      nextDueDate: DateTime(2026, 6, 16),
+    );
+    expect(msg, contains('ANIL'));
+    expect(msg, contains('RAVI'));
+    expect(msg, contains('ACME'));
+    expect(msg, contains('Pay full'));
   });
 
   test('buildSavingsSms uses plan name when provided', () {

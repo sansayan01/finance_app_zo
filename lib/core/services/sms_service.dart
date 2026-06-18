@@ -180,7 +180,7 @@ class SmsService {
   ///
   /// Uses [SmsTemplates.emiPaymentReceived] template.
   String buildCollectionSms({
-    required String amount,
+    required String amount, // caller passes prefixed amount (e.g. '₹500')
     required String memberName,
     required String collectorName,
     required String orgName,
@@ -188,15 +188,69 @@ class SmsService {
     required String outstandingBalance,
     required DateTime date,
   }) {
-    final dateStr = DateFormat('dd MMM yyyy').format(date);
     return SmsTemplateHelper.fill(SmsTemplates.emiPaymentReceived, {
+      'name': memberName.toUpperCase(),
       'amount': amount,
       'loan_id': loanNumber,
-      'emi': '',
-      'date': dateStr,
       'balance': outstandingBalance,
-      'txn_id': '',
+      'collector': collectorName.toUpperCase(),
+      'date': _formatReceiptDate(date),
+      'org_name': orgName.toUpperCase(),
     });
+  }
+
+  /// Customer-facing loan closure SMS (visual card format).
+  String buildLoanClosedSms({
+    required String memberName,
+    required String orgName,
+    required String loanNumber,
+    required String totalPaid,
+    required DateTime closedDate,
+  }) {
+    return SmsTemplateHelper.fill(SmsTemplates.loanClosedReceipt, {
+      'name': memberName.toUpperCase(),
+      'loan_id': loanNumber,
+      'total': totalPaid,
+      'date': _formatReceiptDate(closedDate),
+      'org_name': orgName.toUpperCase(),
+    });
+  }
+
+  /// Partial payment acknowledgment SMS (visual card format).
+  String buildPartialPaymentSms({
+    required String memberName,
+    required String collectorName,
+    required String orgName,
+    required String loanNumber,
+    required String amount,
+    required String outstandingBalance,
+    required String fullAmount,
+    required DateTime date,
+    required DateTime nextDueDate,
+  }) {
+    return SmsTemplateHelper.fill(SmsTemplates.partialPaymentReceipt, {
+      'name': memberName.toUpperCase(),
+      'amount': amount,
+      'loan_id': loanNumber,
+      'balance': outstandingBalance,
+      'collector': collectorName.toUpperCase(),
+      'date': _formatReceiptDate(date),
+      'total': fullAmount,
+      'next_due_date': _formatReceiptDate(nextDueDate),
+      'org_name': orgName.toUpperCase(),
+    });
+  }
+
+  /// `14 Jun 2026, 05:27 PM` — reads naturally as a timestamp.
+  static String _formatReceiptDate(DateTime d) {
+    const months = [
+      'Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec',
+    ];
+    int hour12 = ((d.hour + 11) % 12) + 1;
+    final ampm = d.hour < 12 ? 'AM' : 'PM';
+    return '${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}, '
+        '${hour12.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} $ampm';
   }
 
   /// Build the SMS message for a savings deposit receipt.

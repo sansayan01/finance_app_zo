@@ -46,26 +46,49 @@ class SmsTemplates {
       'Pay ₹{total} by {deadline} to avoid further action. - MFIFIN';
 
   // ──────────────────────────────────────────────────
-  //  Payment Receipts
+  //  Payment Receipts — visual card format (≈4 segments).
+  //  Footer uses {org_name} so orgs are white-labelled automatically.
   // ──────────────────────────────────────────────────
 
   /// Standard EMI payment receipt.
   static const emiPaymentReceived =
-      'MFIFIN: ₹{amount} received for loan {loan_id}. '
-      'EMI #{emi} paid on {date}. Balance: ₹{balance}. '
-      'Txn: {txn_id}. - MFIFIN';
+      'Hi {name}\n'
+      'Payment Received\n'
+      '─────────────\n'
+      'Amount: {amount}\n'
+      'Loan: {loan_id}\n'
+      'Outstanding: {balance}\n'
+      'Collected by: {collector}\n'
+      'Date: {date}\n'
+      '─────────────\n'
+      'Thank you for your payment!\n'
+      '{org_name}';
 
   /// Full loan closure congratulations.
   static const loanClosedReceipt =
-      'MFIFIN: Congrats {name}! Loan {loan_id} is fully closed. '
-      'Total paid: ₹{total}. Thank you for banking with us. '
-      'Next EMI date: {next_date}. - MicroFlow Finance';
+      'Hi {name}\n'
+      'Loan Closed \u2705\n'
+      '─────────────\n'
+      'Loan: {loan_id}\n'
+      'Final Amount Paid: {total}\n'
+      'Closed on: {date}\n'
+      'Thank you for banking with us.\n'
+      '─────────────\n'
+      '{org_name}';
 
   /// Partial payment acknowledgment.
   static const partialPaymentReceipt =
-      'MFIFIN: ₹{amount} received (partial) for loan {loan_id}. '
-      'Remaining due: ₹{balance}. Txn: {txn_id}. '
-      'Pay full ₹{total} by {date} to avoid penalty. - MFIFIN';
+      'Hi {name}\n'
+      'Partial Payment Received\n'
+      '─────────────\n'
+      'Amount: {amount}\n'
+      'Loan: {loan_id}\n'
+      'Outstanding: {balance}\n'
+      'Collected by: {collector}\n'
+      'Date: {date}\n'
+      '─────────────\n'
+      'Pay full {total} by {next_due_date} to avoid penalty.\n'
+      '{org_name}';
 
   // ──────────────────────────────────────────────────
   //  Loan Disbursal

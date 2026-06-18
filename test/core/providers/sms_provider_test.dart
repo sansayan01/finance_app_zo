@@ -53,6 +53,7 @@ void main() {
 
     when(() => fakeSmsService.buildCollectionSms(
           amount: any(named: 'amount'),
+          memberName: any(named: 'memberName'),
           collectorName: any(named: 'collectorName'),
           orgName: any(named: 'orgName'),
           loanNumber: any(named: 'loanNumber'),

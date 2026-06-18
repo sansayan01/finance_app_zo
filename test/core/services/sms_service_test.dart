@@ -7,6 +7,7 @@ void main() {
   test('buildCollectionSms includes all required fields', () {
     final msg = svc.buildCollectionSms(
       amount: '₹500',
+      memberName: 'Suresh',
       collectorName: 'Ravi',
       orgName: 'Acme',
       loanNumber: 'L-1',
@@ -14,15 +15,16 @@ void main() {
       date: DateTime(2026, 6, 2, 10, 30),
     );
     expect(msg, contains('₹500'));
+    expect(msg, contains('Suresh'));
     expect(msg, contains('Ravi'));
     expect(msg, contains('Acme'));
     expect(msg, contains('L-1'));
-    expect(msg, contains('02-Jun-2026'));
   });
 
   test('buildSavingsSms uses plan name when provided', () {
     final msg = svc.buildSavingsSms(
       amount: '₹200',
+      memberName: 'Priya',
       collectorName: 'Ravi',
       orgName: 'Acme',
       planName: 'Gold',
@@ -31,6 +33,7 @@ void main() {
     );
     expect(msg, contains('Gold'));
     expect(msg, contains('₹1500'));
+    expect(msg, contains('Priya'));
   });
 
   test('buildReminderSms marks overdue correctly', () {

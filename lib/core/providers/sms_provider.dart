@@ -138,6 +138,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     final resolvedOrgName = await _resolveOrgName(orgName);
     final message = _smsService.buildCollectionSms(
       amount: '₹${amount.toStringAsFixed(0)}',
+      memberName: memberName,
       collectorName: collectorName,
       orgName: resolvedOrgName,
       loanNumber: loanNumber ?? 'N/A',
@@ -271,6 +272,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     final resolvedOrgName = await _resolveOrgName(orgName);
     final message = _smsService.buildSavingsSms(
       amount: '₹${amount.toStringAsFixed(0)}',
+      memberName: memberName,
       collectorName: collectorName,
       orgName: resolvedOrgName,
       planName: planName,

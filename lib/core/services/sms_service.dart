@@ -183,6 +183,7 @@ class SmsService {
   /// ━━━━━━━━━━━━━━━━━━━
   String buildCollectionSms({
     required String amount,
+    required String memberName,
     required String collectorName,
     required String orgName,
     required String loanNumber,
@@ -194,6 +195,7 @@ class SmsService {
     return '$orgName\n'
         'Payment Received\n'
         '─────────────\n'
+        'Dear $memberName,\n'
         'Amount: $amount\n'
         'Loan: $loanNumber\n'
         'Outstanding: $outstandingBalance\n'
@@ -206,6 +208,7 @@ class SmsService {
   /// Build the SMS message for a savings deposit receipt.
   String buildSavingsSms({
     required String amount,
+    required String memberName,
     required String collectorName,
     required String orgName,
     required String? planName,
@@ -218,6 +221,7 @@ class SmsService {
     return '$orgName\n'
         'Deposit Received\n'
         '─────────────\n'
+        'Dear $memberName,\n'
         'Amount: $amount\n'
         'Plan: $plan\n'
         'Balance: ₹${newBalance.toStringAsFixed(0)}\n'

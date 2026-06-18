@@ -67,14 +67,15 @@ class UserDetailsPage extends ConsumerWidget {
                               children: [
                                 _buildIdentityHeader(
                                     context, ref, user, theme, isDark),
+                                const SizedBox(height: 20),
+                                _buildSmsToggle(
+                                    context, ref, user, theme, isDark),
                                 if (_isAdminViewer(ref)) ...[
                                   const SizedBox(height: 28),
                                   _buildAdminSection(
                                       context, ref, user, loans, savings,
                                       theme: theme, isDark: isDark),
                                 ],
-                                const SizedBox(height: 20),
-                                _buildSmsToggle(context, ref, user, theme, isDark),
                                 if (loans.isNotEmpty) ...[
                                   const SizedBox(height: 28),
                                   _buildTrustScoreGauge(user, theme, isDark),
@@ -2848,6 +2849,119 @@ class UserDetailsPage extends ConsumerWidget {
               show: true, toY: 15, color: color.withValues(alpha: 0.05)),
         ),
       ],
+    );
+  }
+
+  Widget _buildSmsToggle(
+    BuildContext context,
+    WidgetRef ref,
+    ProfileModel user,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: Supabase.instance.client
+          .from('members')
+          .select('id, sms_enabled')
+          .eq('profile_id', user.id)
+          .maybeSingle(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const SizedBox.shrink();
+        }
+        final member = snapshot.data!;
+        final memberId = member['id'] as String;
+        bool smsEnabled = member['sms_enabled'] as bool? ?? true;
+
+        return StatefulBuilder(
+          builder: (context, setToggleState) {
+            return GlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: (smsEnabled ? AppColors.success : Colors.grey)
+                          .withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      smsEnabled
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_off_rounded,
+                      color: smsEnabled ? AppColors.success : Colors.grey,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'SMS Notifications',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          smsEnabled
+                              ? 'Enabled — customer receives SMS alerts'
+                              : 'Disabled — no SMS sent',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: smsEnabled,
+                    activeTrackColor: AppColors.success,
+                    onChanged: (value) async {
+                      try {
+                        await Supabase.instance.client
+                            .from('members')
+                            .update({'sms_enabled': value})
+                            .eq('id', memberId);
+                        setToggleState(() => smsEnabled = value);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(value
+                                  ? 'SMS notifications enabled'
+                                  : 'SMS notifications disabled'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to update: $e'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
+          },
+        );
+      },
     );
   }
 

@@ -1119,49 +1119,39 @@ class _BranchTodayPaymentsPageState
               ),
               const SizedBox(height: 20),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (payment.memberPhone != null)
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _makePhoneCall(payment.memberPhone!);
-                        },
-                        icon:
-                            const Icon(Icons.call_rounded, size: 18),
-                        label: const Text('Call'),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(0, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
+                    _DetailActionButton(
+                      icon: Icons.call_rounded,
+                      color: AppColors.success,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _makePhoneCall(payment.memberPhone!);
+                      },
                     ),
                   if (payment.memberPhone != null &&
                       !payment.isCollected)
-                    const SizedBox(width: 10),
-                  if (!payment.isCollected)
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _sendReminder(payment);
-                        },
-                        icon: const Icon(
-                            Icons.notifications_active_rounded,
-                            size: 18),
-                        label: const Text('Remind'),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(0, 48),
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
+                    const SizedBox(width: 14),
+                  if (!payment.isCollected) ...[
+                    _DetailActionButton(
+                      icon: Icons.notifications_active_rounded,
+                      color: AppColors.warning,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _sendReminder(payment);
+                      },
                     ),
+                    const SizedBox(width: 14),
+                    _DetailActionButton(
+                      icon: Icons.payment_rounded,
+                      color: AppColors.primary,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _showQuickCollect(payment);
+                      },
+                    ),
+                  ],
                 ],
               ),
             ],
@@ -1173,6 +1163,38 @@ class _BranchTodayPaymentsPageState
 }
 
 // ─── Stat Card ───
+class _DetailActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DetailActionButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+    );
+  }
+}
+
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;

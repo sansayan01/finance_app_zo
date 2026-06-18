@@ -163,7 +163,8 @@
       "Bash(adb logcat:*)",
       "Bash(\"C:\\\\Users\\\\msrib\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" uninstall:*)",
       "Bash(claude mcp:*)",
-      "Bash(where claude:*)"
+      "Bash(where claude:*)",
+      "Bash(xxd)"
     ]
   },
   "enableAllProjectMcpServers": true,

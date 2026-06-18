@@ -676,6 +676,7 @@ class _StaffTodayPaymentsPageState
           final pending = data.pendingPayments;
           final collected = data.collectedPayments;
           final overdue = data.overduePayments;
+          final groupedOverdue = data.groupedOverduePayments;
 
           return CustomScrollView(
             controller: _scrollController,
@@ -747,9 +748,7 @@ class _StaffTodayPaymentsPageState
                     _buildPaymentList(pending, isDark, 'No pending payments',
                         'Everything is up to date!', Icons.schedule_rounded,
                         AppColors.warning, branchId),
-                    _buildPaymentList(overdue, isDark, 'No overdue payments',
-                        'No one is behind schedule',
-                        Icons.warning_amber_rounded, AppColors.error, branchId),
+                    _buildGroupedOverdueList(groupedOverdue, isDark, branchId),
                     _buildPaymentList(collected, isDark, 'No collections yet',
                         'Payments you collect will appear here',
                         Icons.check_circle_outline_rounded,
@@ -1318,6 +1317,99 @@ class _StaffTodayPaymentsPageState
     );
   }
 
+  // Grouped Overdue List — one card per loan
+  Widget _buildGroupedOverdueList(
+      List<GroupedOverduePayment> groups, bool isDark, String branchId) {
+    if (groups.isEmpty) {
+      return _AnimatedEmptyState(
+        title: 'No overdue payments',
+        subtitle: 'No one is behind schedule',
+        icon: Icons.warning_amber_rounded,
+        color: AppColors.error,
+        isDark: isDark,
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        HapticFeedback.lightImpact();
+        ref.invalidate(branchTodayPaymentsProvider(branchId));
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        itemCount: groups.length,
+        itemBuilder: (context, index) {
+          final group = groups[index];
+          final card = _GroupedOverdueCard(
+            group: group,
+            isDark: isDark,
+            onCall: group.memberPhone != null
+                ? () => _makePhoneCall(group.memberPhone!)
+                : null,
+            onRemind: () {
+              // Send reminder for the first payment
+              if (group.payments.isNotEmpty) {
+                _sendReminder(group.payments.first);
+              }
+            },
+            onTap: () {
+              // Show details for the first payment
+              if (group.payments.isNotEmpty) {
+                _showPaymentDetails(group.payments.first);
+              }
+            },
+            onCollect: () {
+              // Collect using the first payment's loan info
+              if (group.payments.isNotEmpty) {
+                _showQuickCollect(group.payments.first);
+              }
+            },
+          );
+
+          final animatedCard = card
+              .animate(delay: Duration(milliseconds: index * 35))
+              .fadeIn(duration: 350.ms, curve: Curves.easeOut)
+              .slideY(
+                begin: 0.08,
+                end: 0,
+                duration: 350.ms,
+                curve: Curves.easeOutCubic,
+              );
+
+          return Dismissible(
+            key: ValueKey('grouped_${group.memberId}'),
+            direction: DismissDirection.horizontal,
+            confirmDismiss: (_) async => false,
+            background: _buildSwipeBackground(
+              isDark,
+              group.memberPhone != null
+                  ? Icons.call_rounded
+                  : Icons.notifications_active_rounded,
+              group.memberPhone != null ? 'Call' : 'Remind',
+              group.memberPhone != null
+                  ? AppColors.success
+                  : AppColors.warning,
+              Alignment.centerLeft,
+            ),
+            secondaryBackground: _buildSwipeBackground(
+              isDark,
+              Icons.payment_rounded,
+              'Collect',
+              AppColors.primary,
+              Alignment.centerRight,
+            ),
+            onUpdate: (details) {
+              if (details.progress > 0.3 && details.progress < 0.35) {
+                HapticFeedback.selectionClick();
+              }
+            },
+            child: animatedCard,
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildSwipeBackground(
       bool isDark, IconData icon, String label, Color color, Alignment align) {
     return Container(
@@ -1483,48 +1575,41 @@ class _StaffTodayPaymentsPageState
 
                 // Action buttons
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (payment.memberPhone != null)
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            Navigator.pop(ctx);
-                            _makePhoneCall(payment.memberPhone!);
-                          },
-                          icon: const Icon(Icons.call_rounded, size: 18),
-                          label: const Text('Call'),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
+                      _DetailActionButton(
+                        icon: Icons.call_rounded,
+                        color: AppColors.success,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.pop(ctx);
+                          _makePhoneCall(payment.memberPhone!);
+                        },
                       ),
                     if (payment.memberPhone != null && !payment.isCollected)
-                      const SizedBox(width: 10),
-                    if (!payment.isCollected)
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            Navigator.pop(ctx);
-                            _sendReminder(payment);
-                          },
-                          icon: const Icon(Icons.notifications_active_rounded,
-                              size: 18),
-                          label: const Text('Remind'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(0, 48),
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
+                      const SizedBox(width: 14),
+                    if (!payment.isCollected) ...[
+                      _DetailActionButton(
+                        icon: Icons.notifications_active_rounded,
+                        color: AppColors.warning,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.pop(ctx);
+                          _sendReminder(payment);
+                        },
                       ),
+                      const SizedBox(width: 14),
+                      _DetailActionButton(
+                        icon: Icons.payment_rounded,
+                        color: AppColors.primary,
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          Navigator.pop(ctx);
+                          _showQuickCollect(payment);
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -1985,6 +2070,38 @@ class _PaymentCard extends StatelessWidget {
   }
 }
 
+class _DetailActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DetailActionButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+    );
+  }
+}
+
 class _CompactAction extends StatelessWidget {
   final IconData icon;
   final Color color;
@@ -2007,6 +2124,303 @@ class _CompactAction extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, size: 16, color: color),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GROUPED OVERDUE CARD — shows multiple overdue EMIs in one card
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _GroupedOverdueCard extends StatelessWidget {
+  final GroupedOverduePayment group;
+  final bool isDark;
+  final VoidCallback? onCall;
+  final VoidCallback onRemind;
+  final VoidCallback onTap;
+  final VoidCallback onCollect;
+
+  const _GroupedOverdueCard({
+    required this.group,
+    required this.isDark,
+    this.onCall,
+    required this.onRemind,
+    required this.onTap,
+    required this.onCollect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final dateFormat = DateFormat('dd MMM yyyy');
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.cardDark : AppColors.cardLight,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppColors.error.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.error.withValues(alpha: isDark ? 0.12 : 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top row: icon + member info + total amount
+              Row(
+                children: [
+                  // Left icon — gradient background
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          group.typeColor.withValues(alpha: 0.18),
+                          group.typeColor.withValues(alpha: 0.06),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      group.typeIcon,
+                      color: group.typeColor,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Middle content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                group.memberName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  letterSpacing: -0.3,
+                                  color: isDark
+                                      ? AppColors.textPrimaryDark
+                                      : AppColors.textPrimaryLight,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.error.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Overdue',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${group.payments.length > 1 ? "${group.payments.length} overdue EMIs" : group.typeLabel} \u00b7 ${group.loanLabel}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.textTertiaryDark
+                                : AppColors.textTertiaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Right: total amount
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        currencyFormat.format(group.totalAmount),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          letterSpacing: -0.4,
+                          color: AppColors.error,
+                        ),
+                      ),
+                      if (group.totalPenalty > 0) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '+${currencyFormat.format(group.totalPenalty)} penalty',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 2),
+                      Text(
+                        'Due: ${dateFormat.format(group.earliestDueDate)}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: isDark
+                              ? AppColors.textTertiaryDark
+                              : AppColors.textTertiaryLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // Overdue badge + EMI chips
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.access_time_rounded,
+                            size: 12, color: AppColors.error),
+                        const SizedBox(width: 4),
+                        Text(
+                          group.overdueLabel,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // EMI count chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.receipt_long,
+                            size: 12, color: AppColors.warning),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${group.overdueCount} EMI${group.overdueCount > 1 ? 's' : ''}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.warning,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  if (onCall != null)
+                    _CompactAction(
+                      icon: Icons.call_rounded,
+                      color: AppColors.success,
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        onCall!();
+                      },
+                    ),
+                  if (onCall != null) const SizedBox(width: 6),
+                  _CompactAction(
+                    icon: Icons.notifications_active_rounded,
+                    color: AppColors.warning,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      onRemind();
+                    },
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      onCollect();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: AppColors.successGradient,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.success
+                                .withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.payment_rounded,
+                              size: 14, color: Colors.white),
+                          SizedBox(width: 4),
+                          Text(
+                            'Collect',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

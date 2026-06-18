@@ -197,6 +197,83 @@ class TodayPaymentSummary {
   }
 }
 
+class GroupedOverduePayment {
+  final String memberId;
+  final String memberName;
+  final String? memberPhone;
+  final String? branchId;
+  final String? agentId;
+  final List<TodayPayment> payments;
+
+  const GroupedOverduePayment({
+    required this.memberId,
+    required this.memberName,
+    this.memberPhone,
+    this.branchId,
+    this.agentId,
+    required this.payments,
+  });
+
+  int get overdueCount => payments.length;
+
+  double get totalAmount =>
+      payments.fold(0.0, (sum, p) => sum + p.amountExpected);
+
+  double get totalPenalty =>
+      payments.fold(0.0, (sum, p) => sum + p.penaltyAmount);
+
+  DateTime get earliestDueDate =>
+      payments.map((p) => p.dueDate).reduce((a, b) => a.isBefore(b) ? a : b);
+
+  int get maxDaysOverdue =>
+      payments.map((p) => p.daysOverdue).reduce((a, b) => a > b ? a : b);
+
+  String get overdueLabel {
+    final days = maxDaysOverdue;
+    if (days == 0) return 'Due today';
+    if (days == 1) return '1 day overdue';
+    return '$days days overdue';
+  }
+
+  String get typeLabel => payments.first.typeLabel;
+  IconData get typeIcon => payments.first.typeIcon;
+  Color get typeColor => payments.first.typeColor;
+
+  /// Unique loan numbers across all payments in this group
+  List<String> get loanNumbers =>
+      payments.map((p) => p.loanNumber).whereType<String>().toSet().toList()
+        ..sort();
+
+  String get loanLabel {
+    final nums = loanNumbers;
+    if (nums.isEmpty) return '';
+    if (nums.length == 1) return nums.first;
+    return '${nums.length} loans';
+  }
+
+  static List<GroupedOverduePayment> group(List<TodayPayment> overdues) {
+    final map = <String, List<TodayPayment>>{};
+    for (final p in overdues) {
+      final key = p.memberId ?? p.id;
+      map.putIfAbsent(key, () => []).add(p);
+    }
+    final groups = map.entries.map((e) {
+      final payments = e.value;
+      final first = payments.first;
+      return GroupedOverduePayment(
+        memberId: first.memberId ?? first.id,
+        memberName: first.memberName,
+        memberPhone: first.memberPhone,
+        branchId: first.branchId,
+        agentId: first.agentId,
+        payments: payments,
+      );
+    }).toList();
+    groups.sort((a, b) => a.earliestDueDate.compareTo(b.earliestDueDate));
+    return groups;
+  }
+}
+
 class BranchSummary {
   final String branchId;
   final String branchName;

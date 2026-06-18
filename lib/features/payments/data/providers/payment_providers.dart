@@ -652,6 +652,9 @@ class TodayPaymentData {
   List<TodayPayment> get overduePayments =>
       payments.where((p) => p.isOverdue).toList();
 
+  List<GroupedOverduePayment> get groupedOverduePayments =>
+      GroupedOverduePayment.group(overduePayments);
+
   List<BranchSummary> get branchSummaries {
     final Map<String, BranchSummary> map = {};
     for (final p in allPayments) {

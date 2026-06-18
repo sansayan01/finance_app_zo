@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/data/models/user_model.dart';
@@ -72,6 +73,8 @@ class UserDetailsPage extends ConsumerWidget {
                                       context, ref, user, loans, savings,
                                       theme: theme, isDark: isDark),
                                 ],
+                                const SizedBox(height: 20),
+                                _buildSmsToggle(context, ref, user, theme, isDark),
                                 if (loans.isNotEmpty) ...[
                                   const SizedBox(height: 28),
                                   _buildTrustScoreGauge(user, theme, isDark),

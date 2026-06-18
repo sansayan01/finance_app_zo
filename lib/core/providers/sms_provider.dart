@@ -64,6 +64,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     required String collectorName,
     required String sentBy,
     String? orgName,
+    bool smsEnabled = true,
     bool forceDispatch = false,
   }) async {
     if (phone == null || phone.isEmpty) {
@@ -78,6 +79,11 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
         errorMessage: 'No phone number',
         sentBy: sentBy,
       );
+      return null;
+    }
+    // Skip if member has opted out of SMS notifications
+    if (!smsEnabled) {
+      debugPrint('CollectionSmsSender: SMS skipped — member ${memberId ?? 'unknown'} has disabled SMS notifications');
       return null;
     }
     final enabled = await _isSmsEnabled('sms_on_collection');
@@ -199,6 +205,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     required String collectorName,
     required String sentBy,
     String? orgName,
+    bool smsEnabled = true,
     bool forceDispatch = false,
   }) async {
     if (phone == null || phone.isEmpty) {
@@ -213,6 +220,11 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
         errorMessage: 'No phone number',
         sentBy: sentBy,
       );
+      return null;
+    }
+    // Skip if member has opted out of SMS notifications
+    if (!smsEnabled) {
+      debugPrint('CollectionSmsSender: SMS skipped — member ${memberId ?? 'unknown'} has disabled SMS notifications');
       return null;
     }
     final enabled = await _isSmsEnabled('sms_on_savings');

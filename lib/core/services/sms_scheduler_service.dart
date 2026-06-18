@@ -139,7 +139,7 @@ class SmsSchedulerService {
             'id, due_date, emi_amount, emi, is_paid, is_overdue, '
             'loans!inner(id, org_id, customer_id, loan_number, '
             'emi_amount, outstanding_amount, status, '
-            'members!loans_customer_id_fkey(id, full_name, name, phone))',
+            'members!loans_customer_id_fkey(id, full_name, name, phone, sms_enabled))',
           )
           .eq('loans.org_id', orgId)
           .lte('due_date', todayStr)
@@ -182,6 +182,10 @@ class SmsSchedulerService {
           final member = (loan['members'] as Map?)?.cast<String, dynamic>();
           final phone = _memberPhone(member);
           if (phone == null || phone.isEmpty) continue;
+
+          // Skip members who have opted out of SMS
+          final smsEnabled = member?['sms_enabled'] as bool? ?? true;
+          if (!smsEnabled) continue;
 
           final memberName = _memberName(member);
           final loanNumber = (loan['loan_number'] as String?) ?? 'N/A';

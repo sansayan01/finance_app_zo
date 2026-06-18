@@ -174,17 +174,21 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
       final branding = _ref.read(brandingProvider).valueOrNull;
       final collectorName = staffProfile?.fullName ?? 'Staff';
 
-      // Fallback: fetch phone from members table if not in collection model
+      // Always fetch sms_enabled for this member
       String? phone = collection.memberPhone;
-      if ((phone == null || phone.isEmpty) && collection.memberId != null) {
+      bool smsEnabled = true;
+      if (collection.memberId != null) {
         try {
           final client = _ref.read(supabaseClientProvider);
           final memberInfo = await client
               .from('members')
-              .select('phone')
+              .select('phone, sms_enabled')
               .eq('id', collection.memberId!)
               .maybeSingle();
-          phone = memberInfo?['phone']?.toString();
+          if (phone == null || phone.isEmpty) {
+            phone = memberInfo?['phone']?.toString();
+          }
+          smsEnabled = memberInfo?['sms_enabled'] as bool? ?? true;
         } catch (_) {}
       }
 
@@ -198,6 +202,7 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
         collectorName: collectorName,
         sentBy: collection.staffId,
         orgName: branding?.displayName,
+        smsEnabled: smsEnabled,
       );
     } catch (e) {
       debugPrint('SMS dispatch error: $e');

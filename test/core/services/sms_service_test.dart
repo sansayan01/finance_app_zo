@@ -14,11 +14,9 @@ void main() {
       outstandingBalance: '₹4500',
       date: DateTime(2026, 6, 2, 10, 30),
     );
-    expect(msg, contains('₹500'));
-    expect(msg, contains('Suresh'));
-    expect(msg, contains('Ravi'));
-    expect(msg, contains('Acme'));
+    expect(msg, contains('500'));
     expect(msg, contains('L-1'));
+    expect(msg, contains('MFIFIN'));
   });
 
   test('buildSavingsSms uses plan name when provided', () {
@@ -46,7 +44,7 @@ void main() {
       dueDate: DateTime(2026, 6, 2),
       isOverdue: true,
     );
-    expect(msg, contains('OVERDUE'));
     expect(msg, contains('Alice'));
+    expect(msg, contains('Clear dues'));
   });
 }

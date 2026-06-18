@@ -12,6 +12,7 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/glass_button.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../../providers/supabase_provider.dart';
 import '../../data/providers/branch_scoped_providers.dart';
 
 /// Premium branch-scoped member detail page.
@@ -211,6 +212,14 @@ class BranchMemberDetailPage extends ConsumerWidget {
                 child: _buildContactActions(theme, isDark, phone),
               ),
             ),
+
+          // SMS Notification Toggle
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: _buildSmsToggle(context, ref, theme, isDark, memberId, member),
+            ),
+          ),
 
           // Active Loans Section
           if (loansRaw.isNotEmpty)
@@ -453,6 +462,92 @@ class BranchMemberDetailPage extends ConsumerWidget {
         ),
       ],
     ).animate().fadeIn(duration: 400.ms, delay: 100.ms);
+  }
+
+  Widget _buildSmsToggle(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    bool isDark,
+    String memberId,
+    Map<String, dynamic>? member,
+  ) {
+    final smsEnabled = member?['sms_enabled'] as bool? ?? true;
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: (smsEnabled ? AppColors.success : Colors.grey).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              smsEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+              color: smsEnabled ? AppColors.success : Colors.grey,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'SMS Notifications',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  smsEnabled ? 'Enabled — customer receives SMS alerts' : 'Disabled — no SMS sent',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: smsEnabled,
+            activeColor: AppColors.success,
+            onChanged: (value) async {
+              try {
+                final client = ref.read(supabaseClientProvider);
+                await client
+                    .from('members')
+                    .update({'sms_enabled': value})
+                    .eq('id', memberId);
+                ref.invalidate(branchMemberDetailProvider(memberId));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(value ? 'SMS notifications enabled' : 'SMS notifications disabled'),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to update: $e'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
   }
 
   // Section Header

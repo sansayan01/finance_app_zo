@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../constants/sms_templates.dart';
+
 class SmsSubscription {
   final int subscriptionId;
   final int simSlotIndex;
@@ -176,11 +178,7 @@ class SmsService {
 
   /// Build the SMS message for a collection (loan repayment) receipt.
   ///
-  /// Professional, white-labeled receipt format:
-  /// ━━━━━━━━━━━━━━━━━━━
-  /// [OrgName]
-  /// PAYMENT RECEIVED ✓
-  /// ━━━━━━━━━━━━━━━━━━━
+  /// Uses [SmsTemplates.emiPaymentReceived] template.
   String buildCollectionSms({
     required String amount,
     required String memberName,
@@ -191,21 +189,20 @@ class SmsService {
     required DateTime date,
   }) {
     final dateStr = DateFormat('dd MMM yyyy').format(date);
-    final timeStr = DateFormat('hh:mm a').format(date);
-    return '$orgName\n'
-        'Payment Received\n'
-        '─────────────\n'
-        'Dear $memberName,\n'
-        'Amount: $amount\n'
-        'Loan: $loanNumber\n'
-        'Outstanding: $outstandingBalance\n'
-        'Collected by: $collectorName\n'
-        'Date: $dateStr, $timeStr\n'
-        '─────────────\n'
-        'Thank you for your payment!';
+    return SmsTemplateHelper.fill(SmsTemplates.emiPaymentReceived, {
+      'amount': amount,
+      'loan_id': loanNumber,
+      'emi': '',
+      'date': dateStr,
+      'balance': outstandingBalance,
+      'txn_id': '',
+    });
   }
 
   /// Build the SMS message for a savings deposit receipt.
+  ///
+  /// Kept inline as a savings-specific template (not in SmsTemplates).
+  /// Reformatted to match the MFIFIN branded style.
   String buildSavingsSms({
     required String amount,
     required String memberName,
@@ -216,22 +213,17 @@ class SmsService {
     required DateTime date,
   }) {
     final dateStr = DateFormat('dd MMM yyyy').format(date);
-    final timeStr = DateFormat('hh:mm a').format(date);
     final plan = planName != null && planName.isNotEmpty ? planName : 'Savings';
-    return '$orgName\n'
-        'Deposit Received\n'
-        '─────────────\n'
-        'Dear $memberName,\n'
-        'Amount: $amount\n'
-        'Plan: $plan\n'
-        'Balance: ₹${newBalance.toStringAsFixed(0)}\n'
-        'Collected by: $collectorName\n'
-        'Date: $dateStr, $timeStr\n'
-        '─────────────\n'
-        'Thank you for saving with us!';
+    return 'MFIFIN: ₹$amount deposited to $plan by $memberName on $dateStr. '
+        'Balance: ₹${newBalance.toStringAsFixed(0)}. '
+        'Collected by $collectorName. Thank you! - $orgName';
   }
 
   /// Build a reminder SMS for a due or overdue EMI.
+  ///
+  /// Uses [SmsTemplates.emiReminderDueToday] for on-time reminders,
+  /// [SmsTemplates.emiReminderOverdue] or
+  /// [SmsTemplates.emiReminderOverdueWithBalance] for overdue reminders.
   String buildReminderSms({
     required String memberName,
     required String orgName,
@@ -242,25 +234,19 @@ class SmsService {
     bool isOverdue = false,
   }) {
     final dateStr = DateFormat('dd MMM yyyy').format(dueDate);
-    if (isOverdue) {
-      return '$orgName\n'
-          'OVERDUE PAYMENT\n'
-          '─────────────\n'
-          'Hi $memberName,\n'
-          'EMI of ₹${dueAmount.toStringAsFixed(0)} was due on $dateStr.\n'
-          'Loan: $loanNumber\n'
-          '${outstandingBalance != null ? 'Outstanding: ₹${outstandingBalance.toStringAsFixed(0)}\n' : ''}'
-          '─────────────\n'
-          'Please clear dues to avoid late fees.';
-    }
-    return '$orgName\n'
-        'EMI Reminder\n'
-        '─────────────\n'
-        'Hi $memberName,\n'
-        'Your EMI of ₹${dueAmount.toStringAsFixed(0)} is due on $dateStr.\n'
-        'Loan: $loanNumber\n'
-        '${outstandingBalance != null ? 'Outstanding: ₹${outstandingBalance.toStringAsFixed(0)}\n' : ''}'
-        '─────────────\n'
-        'Pay on time to avoid late charges.';
+    final template = isOverdue
+        ? (outstandingBalance != null
+            ? SmsTemplates.emiReminderOverdueWithBalance
+            : SmsTemplates.emiReminderOverdue)
+        : SmsTemplates.emiReminderDueToday;
+    return SmsTemplateHelper.fill(template, {
+      'name': memberName,
+      'amount': dueAmount.toStringAsFixed(0),
+      'loan_id': loanNumber,
+      'date': dateStr,
+      'balance': outstandingBalance != null
+          ? outstandingBalance.toStringAsFixed(0)
+          : '',
+    });
   }
 }

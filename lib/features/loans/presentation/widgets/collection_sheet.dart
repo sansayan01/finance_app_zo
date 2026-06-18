@@ -417,24 +417,27 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       try {
         debugPrint('CollectionSheet: initiating SMS dispatch...');
         String? phone = widget.loan!.customerPhone;
-        
-        // Fallback: fetch phone from members table if missing in loan model
-        if (phone == null || phone.isEmpty) {
-          debugPrint('CollectionSheet: phone missing in loan model, fetching from members table...');
+        bool smsEnabled = true;
+
+        // Always fetch sms_enabled from members table
+        try {
           final memberInfo = await client
               .from('members')
-              .select('phone')
+              .select('phone, sms_enabled')
               .eq('id', widget.loan!.customerId)
               .maybeSingle();
-          phone = memberInfo?['phone']?.toString();
-        }
+          if (phone == null || phone.isEmpty) {
+            phone = memberInfo?['phone']?.toString();
+          }
+          smsEnabled = memberInfo?['sms_enabled'] as bool? ?? true;
+        } catch (_) {}
 
         final branding = ref.read(brandingProvider).valueOrNull;
         if (phone != null && phone.isNotEmpty) {
           debugPrint('CollectionSheet: enqueuing SMS to $phone (memberId: ${widget.loan!.customerId})');
           await ref.read(collectionSmsSenderProvider.notifier).enqueueCollection(
                 phone: phone,
-                memberId: widget.loan!.customerId, // Use UUID here
+                memberId: widget.loan!.customerId,
                 memberName: memberName,
                 loanNumber: widget.loan!.loanNumber,
                 amount: amount,
@@ -442,6 +445,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                 collectorName: profile?['full_name'] ?? 'Staff',
                 sentBy: staffId,
                 orgName: branding?.displayName,
+                smsEnabled: smsEnabled,
               );
         } else {
           debugPrint('CollectionSheet: skipping SMS, phone number still null or empty');
@@ -572,10 +576,11 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     try {
       final memberInfo = await client
           .from('members')
-          .select('phone')
+          .select('phone, sms_enabled')
           .eq('id', plan.memberId)
           .maybeSingle();
       final phone = memberInfo?['phone']?.toString();
+      final smsEnabled = memberInfo?['sms_enabled'] as bool? ?? true;
 
       final branding = ref.read(brandingProvider).valueOrNull;
       await ref.read(collectionSmsSenderProvider.notifier).enqueueSavings(
@@ -588,6 +593,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             collectorName: profile.fullName,
             sentBy: profile.id,
             orgName: branding?.displayName,
+            smsEnabled: smsEnabled,
           );
     } catch (e) {
       debugPrint('SMS savings dispatch failed: $e');

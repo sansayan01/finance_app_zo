@@ -15,6 +15,7 @@ class MemberModel {
   final double? latitude;
   final double? longitude;
   final String? shopPhotoUrl;
+  final bool smsEnabled;
 
   MemberModel({
     required this.id,
@@ -31,6 +32,7 @@ class MemberModel {
     this.latitude,
     this.longitude,
     this.shopPhotoUrl,
+    this.smsEnabled = true,
   });
 
   factory MemberModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class MemberModel {
       longitude: (json['gps_lng'] as num?)?.toDouble() ??
           (json['longitude'] as num?)?.toDouble(),
       shopPhotoUrl: json['shop_photo_url'] as String?,
+      smsEnabled: json['sms_enabled'] as bool? ?? true,
     );
   }
 
@@ -75,6 +78,7 @@ class MemberModel {
       'gps_lat': latitude,
       'gps_lng': longitude,
       'shop_photo_url': shopPhotoUrl,
+      'sms_enabled': smsEnabled,
     };
   }
 }

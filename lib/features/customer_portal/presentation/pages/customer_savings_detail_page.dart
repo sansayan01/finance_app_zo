@@ -1306,7 +1306,7 @@ class _CustomerSavingsDetailPageState
           ),
           const SizedBox(height: AppSpacing.md),
           _DetailRow(
-            label: 'Monthly Deposit',
+            label: '${savings.frequencyLabel} Deposit',
             value: _formatCurrency(savings.monthlyDeposit),
           ),
           _DetailRow(

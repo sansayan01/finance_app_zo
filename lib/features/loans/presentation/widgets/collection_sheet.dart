@@ -527,7 +527,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       'amount': amount,
       'type': 'savingsDeposit',
       'payment_mode': _selectedMode,
-      'description': '${_selectedSavingsDates.length} installments deposited via $_selectedMode',
+      'description': '${_selectedSavingsDates.length} ${_selectedSavingsDates.length == 1 ? 'installment' : 'installments'} deposited via $_selectedMode',
       'org_id': profile.orgId,
       'created_at': _getCreatedAt(),
     }).select('id').single();

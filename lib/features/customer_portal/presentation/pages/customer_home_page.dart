@@ -414,7 +414,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                   savingsGrowth: savingsGrowth,
                   loanPaid: activeLoansList.fold(0.0, (sum, l) => sum + (l.amount - l.outstandingBalance)),
                   loanOutstanding: totalOutstanding,
-                  loanInterest: activeLoansList.fold(0.0, (sum, l) => sum + (l.amount * (l.interestRate / 100))),
+                  loanInterest: activeLoansList.fold(0.0, (sum, l) => sum + l.totalInterest),
                 ),
               ),
             ),

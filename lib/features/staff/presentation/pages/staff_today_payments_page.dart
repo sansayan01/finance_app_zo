@@ -682,25 +682,24 @@ class _StaffTodayPaymentsPageState
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // ── Animated Hero Header ──
+              // Scrollable compact bento hero header
               SliverToBoxAdapter(
-                child: _buildSummaryHero(summary, isDark),
+                child: _HeroHeader(
+                  summary: summary,
+                  isDark: isDark,
+                ),
               ),
 
-              // ── Animated Quick Stats ──
-              SliverToBoxAdapter(
-                child: _buildQuickStats(summary, isDark, branchId),
-              ),
-
-              // ── Active Filters ──
+              // Active Filters
               if (filters.agentId != null)
                 SliverToBoxAdapter(
-                    child: _buildActiveFilters(filters, isDark)),
+                  child: _buildActiveFilters(filters, isDark),
+                ),
 
-              // ── Section Title ──
+              // Section Title
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -734,10 +733,15 @@ class _StaffTodayPaymentsPageState
                 ),
               ),
 
-              // ── Animated Segmented Tab Bar ──
+              // ── Tab Bar ──
               SliverToBoxAdapter(
-                child: _buildSegmentedTabs(
-                    pending.length, overdue.length, collected.length, isDark),
+                child: _PremiumTabBar(
+                  controller: _tabController,
+                  pendingCount: pending.length,
+                  overdueCount: overdue.length,
+                  collectedCount: collected.length,
+                  isDark: isDark,
+                ),
               ),
 
               // ── Tab Content ──
@@ -748,7 +752,8 @@ class _StaffTodayPaymentsPageState
                     _buildPaymentList(pending, isDark, 'No pending payments',
                         'Everything is up to date!', Icons.schedule_rounded,
                         AppColors.warning, branchId),
-                    _buildGroupedOverdueList(groupedOverdue, isDark, branchId),
+                    _buildGroupedOverdueList(
+                        groupedOverdue, isDark, branchId),
                     _buildPaymentList(collected, isDark, 'No collections yet',
                         'Payments you collect will appear here',
                         Icons.check_circle_outline_rounded,
@@ -773,413 +778,11 @@ class _StaffTodayPaymentsPageState
     );
   }
 
-  // Summary Hero Card — animated orbs + glassmorphic premium version
-  Widget _buildSummaryHero(TodayPaymentSummary summary, bool isDark) {
-    final currencyFormat =
-        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
-    final progress = summary.countDue > 0
-        ? (summary.countCollected / summary.countDue).clamp(0.0, 1.0)
-        : 0.0;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, kToolbarHeight + 16, 16, 0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark
-                    ? const [
-                        Color(0xFF1E1B4B),
-                        Color(0xFF312E81),
-                        Color(0xFF4338CA),
-                        Color(0xFF6D28D9),
-                      ]
-                    : const [
-                        Color(0xFF312E81),
-                        Color(0xFF4338CA),
-                        Color(0xFF6366F1),
-                        Color(0xFF7C3AED),
-                      ],
-                stops: const [0.0, 0.25, 0.6, 1.0],
-              ),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.15),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4338CA).withValues(alpha: 0.4),
-                  blurRadius: 40,
-                  spreadRadius: -8,
-                  offset: const Offset(0, 20),
-                ),
-                BoxShadow(
-                  color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
-                  blurRadius: 60,
-                  spreadRadius: 8,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // ── Floating Glow Orbs ──
-                Positioned(
-                  top: -40,
-                  right: -20,
-                  child: _GlowOrb(
-                      size: 180,
-                      color: Colors.white,
-                      alpha: 0.06,
-                      delay: 0),
-                ),
-                Positioned(
-                  bottom: -50,
-                  left: 20,
-                  child: _GlowOrb(
-                      size: 140,
-                      color: Colors.white,
-                      alpha: 0.04,
-                      delay: 400),
-                ),
-                Positioned(
-                  top: 20,
-                  right: 80,
-                  child: _GlowOrb(
-                      size: 100,
-                      color: Colors.cyanAccent,
-                      alpha: 0.03,
-                      delay: 800),
-                ),
 
-                // ── Main Content ──
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top row: Label + Circular progress
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Label pill
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color:
-                                  Colors.white.withValues(alpha: 0.08),
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.account_balance_wallet_rounded,
-                                  color: Colors.white,
-                                  size: 13,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'TOTAL DUE TODAY',
-                                style: TextStyle(
-                                  color: Colors.white
-                                      .withValues(alpha: 0.9),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.6,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Circular progress
-                        _CircularProgressRing(
-                          progress: progress,
-                          centerText: '${summary.completionPercent}%',
-                          subtext: 'done',
-                          size: 88,
-                          strokeWidth: 8,
-                          trackColor:
-                              Colors.white.withValues(alpha: 0.2),
-                          progressColor: Colors.white,
-                        ),
-                      ],
-                    ),
 
-                    const SizedBox(height: 20),
 
-                    // Amount
-                    Text(
-                      currencyFormat.format(summary.totalDue),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -2.5,
-                        height: 0.9,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'across ${summary.countDue} payments',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
 
-                    const SizedBox(height: 24),
-
-                    // Progress bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: SizedBox(
-                        height: 10,
-                        child: Stack(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color:
-                                    Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: progress.clamp(0.0, 1.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Colors.white,
-                                      Color(0xFFC7D2FE)
-                                    ],
-                                  ),
-                                  borderRadius:
-                                      BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.4),
-                                      blurRadius: 12,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Footer row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                                Icons.check_circle_outline_rounded,
-                                color: Colors.white
-                                    .withValues(alpha: 0.7),
-                                size: 17),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${summary.countCollected} of ${summary.countDue} collected',
-                              style: TextStyle(
-                                color: Colors.white
-                                    .withValues(alpha: 0.8),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color:
-                                Colors.white.withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.trending_up_rounded,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.9),
-                                  size: 15),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${summary.completionPercent}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    )
-        .animate()
-        .fadeIn(duration: 500.ms, curve: Curves.easeOut)
-        .slideY(
-            begin: -0.08,
-            end: 0,
-            duration: 600.ms,
-            curve: Curves.easeOutCubic);
-  }
-
-  // Quick Stats Row — tappable to switch tabs with stagger animation
-  Widget _buildQuickStats(
-      TodayPaymentSummary summary, bool isDark, String branchId) {
-    final currencyFormat =
-        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatCard(
-              icon: Icons.check_circle_rounded,
-              label: 'Collected',
-              value: currencyFormat.format(summary.totalCollected),
-              count: '${summary.countCollected}',
-              color: AppColors.success,
-              isDark: isDark,
-              index: 2,
-              tabController: _tabController,
-              delayMs: 0,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _StatCard(
-              icon: Icons.schedule_rounded,
-              label: 'Pending',
-              value: currencyFormat.format(summary.totalPending),
-              count: '${summary.countPending}',
-              color: AppColors.warning,
-              isDark: isDark,
-              index: 0,
-              tabController: _tabController,
-              delayMs: 60,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _StatCard(
-              icon: Icons.warning_amber_rounded,
-              label: 'Overdue',
-              value: currencyFormat.format(summary.totalOverdue),
-              count: '${summary.countOverdue}',
-              color: AppColors.error,
-              isDark: isDark,
-              index: 1,
-              tabController: _tabController,
-              delayMs: 120,
-            ),
-          ),
-        ],
-      ),
-    ).animate().slideY(
-        duration: 600.ms,
-        begin: 0.3,
-        end: 0,
-        delay: 200.ms,
-        curve: Curves.easeOutCubic);
-  }
-
-  // Premium Animated Segmented Tab Bar with custom indicator
-  Widget _buildSegmentedTabs(
-      int pendingCount, int overdueCount, int collectedCount, bool isDark) {
-    final tabs = [
-      _TabInfo('Pending', pendingCount, Icons.schedule_rounded, AppColors.warning),
-      _TabInfo('Overdue', overdueCount, Icons.warning_amber_rounded, AppColors.error),
-      _TabInfo('Collected', collectedCount, Icons.check_circle_rounded, AppColors.success),
-    ];
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        labelColor: Colors.white,
-        unselectedLabelColor: isDark
-            ? AppColors.textTertiaryDark
-            : AppColors.textTertiaryLight,
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicator: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: AppColors.premiumGradient,
-          ),
-          borderRadius: BorderRadius.circular(13),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.35),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        dividerColor: Colors.transparent,
-        labelStyle:
-            const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
-        unselectedLabelStyle:
-            const TextStyle(fontWeight: FontWeight.w500, fontSize: 12.5),
-        tabs: tabs.map((t) {
-          return Tab(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(t.icon, size: 14),
-                const SizedBox(width: 6),
-                Text('${t.label} (${t.count})'),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    ).animate().fadeIn(delay: 300.ms, duration: 500.ms);
-  }
 
   // Active Filters
   Widget _buildActiveFilters(BranchPaymentFilterState filters, bool isDark) {
@@ -1621,130 +1224,7 @@ class _StaffTodayPaymentsPageState
   }
 }
 
-// Tappable Stat Card with active-state styling and stagger animation
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final String count;
-  final Color color;
-  final bool isDark;
-  final int index;
-  final TabController tabController;
-  final int delayMs;
 
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.count,
-    required this.color,
-    required this.isDark,
-    required this.index,
-    required this.tabController,
-    required this.delayMs,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: tabController,
-      builder: (context, _) {
-        final isActive = tabController.index == index;
-        return GestureDetector(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            tabController.animateTo(index);
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? color.withValues(alpha: 0.12)
-                  : (isDark ? AppColors.cardDark : AppColors.cardLight),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isActive
-                    ? color.withValues(alpha: 0.4)
-                    : (isDark
-                        ? AppColors.separatorDark
-                        : AppColors.separatorLight),
-                width: isActive ? 1.5 : 1,
-              ),
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.18),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      )
-                    ]
-                  : null,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(icon, size: 14, color: color),
-                    ),
-                    const Spacer(),
-                    Text(
-                      count,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.textTertiaryDark
-                        : AppColors.textTertiaryLight,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimaryLight,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    )
-        .animate(delay: Duration(milliseconds: 100 + delayMs))
-        .fadeIn(duration: 350.ms, curve: Curves.easeOut)
-        .slideY(
-            begin: 0.15,
-            end: 0,
-            duration: 350.ms,
-            curve: Curves.easeOutCubic);
-  }
-}
 
 // Detail Row
 class _DetailRow extends StatelessWidget {
@@ -1787,7 +1267,7 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-// Payment Card — premium glassmorphic style
+// Payment Card — premium compact style
 class _PaymentCard extends StatelessWidget {
   final TodayPayment payment;
   final bool isDark;
@@ -1807,173 +1287,147 @@ class _PaymentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat =
-        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
     final timeFormat = DateFormat('dd MMM, hh:mm a');
     final dateFormat = DateFormat('dd MMM yyyy');
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 6),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.cardDark : AppColors.cardLight,
-          borderRadius: BorderRadius.circular(18),
+          color: isDark ? AppColors.cardDark : Colors.white,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isDark
-                ? AppColors.separatorDark.withValues(alpha: 0.6)
-                : AppColors.separatorLight,
-            width: 1,
+            color: payment.statusColor.withValues(alpha: isDark ? 0.15 : 0.08),
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
-              blurRadius: 16,
+              color: (isDark ? Colors.black : Colors.grey.shade100)
+                  .withValues(alpha: isDark ? 0.25 : 0.45),
+              blurRadius: 14,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Top Row (Avatar + Name & Info + Amount & Status) ──
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left icon — gradient background
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          payment.typeColor.withValues(alpha: 0.18),
-                          payment.typeColor.withValues(alpha: 0.06),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      payment.typeIcon,
-                      color: payment.typeColor,
-                      size: 22,
-                    ),
+                  _PaymentAvatar(
+                    type: payment.type,
+                    icon: payment.typeIcon,
+                    color: payment.typeColor,
+                    isCollected: payment.isCollected,
                   ),
-                  const SizedBox(width: 12),
-
-                  // Middle content
+                  const SizedBox(width: 10),
+                  // Middle Column: Member Name & Subtitles
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                payment.memberName,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  letterSpacing: -0.3,
-                                  color: isDark
-                                      ? AppColors.textPrimaryDark
-                                      : AppColors.textPrimaryLight,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: payment.statusColor
-                                    .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                payment.statusLabel,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: payment.statusColor,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          payment.memberName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            letterSpacing: -0.2,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           '${payment.typeLabel}'
                           '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
                           '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
                           '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? AppColors.textTertiaryDark
-                                : AppColors.textTertiaryLight,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(
+                              payment.isCollected
+                                  ? Icons.check_circle_outline_rounded
+                                  : Icons.schedule_rounded,
+                              size: 10.5,
+                              color: payment.isCollected
+                                  ? AppColors.success
+                                  : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                payment.isCollected && payment.collectedAt != null
+                                    ? 'Collected ${timeFormat.format(payment.collectedAt!)}'
+                                    : 'Due ${dateFormat.format(payment.dueDate)}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: payment.isCollected
+                                      ? AppColors.success
+                                      : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(width: 8),
-
-                  // Right: amount
+                  const SizedBox(width: 10),
+                  // Right Column: Amount & Status
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
                         currencyFormat.format(payment.amountExpected),
                         style: TextStyle(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                           fontSize: 15,
                           letterSpacing: -0.4,
-                          color: payment.statusColor,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                         ),
                       ),
                       if (payment.penaltyAmount > 0) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Text(
                           '+${currencyFormat.format(payment.penaltyAmount)} penalty',
                           style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.error,
                           ),
                         ),
                       ],
-                      const SizedBox(height: 2),
-                      Text(
-                        payment.isCollected && payment.collectedAt != null
-                            ? 'Collected at ${timeFormat.format(payment.collectedAt!)}'
-                            : 'Due: ${dateFormat.format(payment.dueDate)}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: payment.isCollected
-                              ? AppColors.success
-                              : (isDark
-                                  ? AppColors.textTertiaryDark
-                                  : AppColors.textTertiaryLight),
-                        ),
-                      ),
+                      const SizedBox(height: 4),
+                      _StatusPill(status: payment.status, type: payment.type),
                     ],
                   ),
                 ],
               ),
 
-              // Overdue + action buttons
+              // ── Bottom Action Row (Only for non-collected or overdue) ──
               if (payment.isOverdue || !payment.isCollected) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     if (payment.isOverdue)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                         decoration: BoxDecoration(
                           color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -1981,14 +1435,13 @@ class _PaymentCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.access_time_rounded,
-                                size: 12, color: AppColors.error),
-                            const SizedBox(width: 4),
+                            const Icon(Icons.access_time_rounded, size: 10, color: AppColors.error),
+                            const SizedBox(width: 3),
                             Text(
                               payment.overdueLabel,
                               style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
                                 color: AppColors.error,
                               ),
                             ),
@@ -1998,42 +1451,29 @@ class _PaymentCard extends StatelessWidget {
                     const Spacer(),
                     if (!payment.isCollected) ...[
                       if (onCall != null)
-                        _CompactAction(
+                        _ActionCircle(
                           icon: Icons.call_rounded,
                           color: AppColors.success,
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            onCall!();
-                          },
+                          onTap: () { HapticFeedback.lightImpact(); onCall!(); },
                         ),
                       if (onCall != null) const SizedBox(width: 6),
-                      _CompactAction(
+                      _ActionCircle(
                         icon: Icons.notifications_active_rounded,
                         color: AppColors.warning,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          onRemind();
-                        },
+                        onTap: () { HapticFeedback.lightImpact(); onRemind(); },
                       ),
                       if (onCollect != null) ...[
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: () {
-                            HapticFeedback.mediumImpact();
-                            onCollect!();
-                          },
+                          onTap: () { HapticFeedback.mediumImpact(); onCollect!(); },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: AppColors.successGradient,
-                              ),
+                              gradient: const LinearGradient(colors: AppColors.successGradient),
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.success
-                                      .withValues(alpha: 0.3),
+                                  color: AppColors.success.withValues(alpha: 0.25),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
@@ -2042,16 +1482,11 @@ class _PaymentCard extends StatelessWidget {
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.payment_rounded,
-                                    size: 14, color: Colors.white),
+                                Icon(Icons.payment_rounded, size: 11, color: Colors.white),
                                 SizedBox(width: 4),
                                 Text(
                                   'Collect',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
+                                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.white),
                                 ),
                               ],
                             ),
@@ -2102,16 +1537,12 @@ class _DetailActionButton extends StatelessWidget {
   }
 }
 
-class _CompactAction extends StatelessWidget {
+class _ActionCircle extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
-  const _CompactAction({
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
+  const _ActionCircle({required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -2152,163 +1583,136 @@ class _GroupedOverdueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat =
-        NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
     final dateFormat = DateFormat('dd MMM yyyy');
+    final name = group.memberName;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 6),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.cardDark : AppColors.cardLight,
-          borderRadius: BorderRadius.circular(18),
+          color: isDark ? AppColors.cardDark : Colors.white,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: AppColors.error.withValues(alpha: 0.3),
-            width: 1.5,
+            color: AppColors.error.withValues(alpha: isDark ? 0.18 : 0.08),
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.error.withValues(alpha: isDark ? 0.12 : 0.06),
-              blurRadius: 16,
+              color: (isDark ? Colors.black : Colors.grey.shade100)
+                  .withValues(alpha: isDark ? 0.25 : 0.45),
+              blurRadius: 14,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top row: icon + member info + total amount
+              // ── Top Row (Avatar + Name & Info + Amount & Status) ──
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left icon — gradient background
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          group.typeColor.withValues(alpha: 0.18),
-                          group.typeColor.withValues(alpha: 0.06),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      group.typeIcon,
-                      color: group.typeColor,
-                      size: 22,
-                    ),
+                  _PaymentAvatar(
+                    type: group.payments.isNotEmpty ? group.payments.first.type : PaymentType.emi,
+                    icon: group.payments.isNotEmpty ? group.payments.first.typeIcon : Icons.warning_amber_rounded,
+                    color: AppColors.error,
+                    isCollected: false,
                   ),
-                  const SizedBox(width: 12),
-
-                  // Middle content
+                  const SizedBox(width: 10),
+                  // Middle Column: Member Name & Subtitles
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            letterSpacing: -0.2,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          group.payments.length > 1
+                              ? '${group.payments.length} overdue EMIs \u00b7 ${group.loanLabel}'
+                              : '${group.payments.isNotEmpty ? group.payments.first.typeLabel : "EMI"} \u00b7 ${group.loanLabel}',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
                         Row(
                           children: [
+                            const Icon(
+                              Icons.schedule_rounded,
+                              size: 10.5,
+                              color: AppColors.error,
+                            ),
+                            const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                group.memberName,
+                                'Due ${dateFormat.format(group.earliestDueDate)}',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  letterSpacing: -0.3,
-                                  color: isDark
-                                      ? AppColors.textPrimaryDark
-                                      : AppColors.textPrimaryLight,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'Overdue',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.error,
-                                ),
-                              ),
-                            ),
                           ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${group.payments.length > 1 ? "${group.payments.length} overdue EMIs" : group.typeLabel} \u00b7 ${group.loanLabel}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? AppColors.textTertiaryDark
-                                : AppColors.textTertiaryLight,
-                          ),
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(width: 8),
-
-                  // Right: total amount
+                  const SizedBox(width: 10),
+                  // Right Column: Amount & Status Pill
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
                         currencyFormat.format(group.totalAmount),
                         style: const TextStyle(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                           fontSize: 15,
                           letterSpacing: -0.4,
                           color: AppColors.error,
                         ),
                       ),
                       if (group.totalPenalty > 0) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Text(
                           '+${currencyFormat.format(group.totalPenalty)} penalty',
                           style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.error,
                           ),
                         ),
                       ],
-                      const SizedBox(height: 2),
-                      Text(
-                        'Due: ${dateFormat.format(group.earliestDueDate)}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: isDark
-                              ? AppColors.textTertiaryDark
-                              : AppColors.textTertiaryLight,
-                        ),
-                      ),
+                      const SizedBox(height: 4),
+                      _StatusPill(status: PaymentStatus.overdue, type: group.payments.isNotEmpty ? group.payments.first.type : PaymentType.emi),
                     ],
                   ),
                 ],
               ),
 
-              const SizedBox(height: 10),
-
-              // Overdue badge + EMI chips
+              // ── Bottom Action Row ──
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -2316,25 +1720,23 @@ class _GroupedOverdueCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.access_time_rounded,
-                            size: 12, color: AppColors.error),
-                        const SizedBox(width: 4),
+                        const Icon(Icons.access_time_rounded, size: 10, color: AppColors.error),
+                        const SizedBox(width: 3),
                         Text(
                           group.overdueLabel,
                           style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.error,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   // EMI count chip
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                     decoration: BoxDecoration(
                       color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -2342,14 +1744,13 @@ class _GroupedOverdueCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.receipt_long,
-                            size: 12, color: AppColors.warning),
-                        const SizedBox(width: 4),
+                        const Icon(Icons.receipt_long, size: 10, color: AppColors.warning),
+                        const SizedBox(width: 3),
                         Text(
                           '${group.overdueCount} EMI${group.overdueCount > 1 ? 's' : ''}',
                           style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.warning,
                           ),
                         ),
@@ -2357,42 +1758,30 @@ class _GroupedOverdueCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  if (onCall != null)
-                    _CompactAction(
+                  if (onCall != null) ...[
+                    _ActionCircle(
                       icon: Icons.call_rounded,
                       color: AppColors.success,
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        onCall!();
-                      },
+                      onTap: () { HapticFeedback.lightImpact(); onCall!(); },
                     ),
-                  if (onCall != null) const SizedBox(width: 6),
-                  _CompactAction(
+                    const SizedBox(width: 6),
+                  ],
+                  _ActionCircle(
                     icon: Icons.notifications_active_rounded,
                     color: AppColors.warning,
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      onRemind();
-                    },
+                    onTap: () { HapticFeedback.lightImpact(); onRemind(); },
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      onCollect();
-                    },
+                    onTap: () { HapticFeedback.mediumImpact(); onCollect(); },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: AppColors.successGradient,
-                        ),
+                        gradient: const LinearGradient(colors: AppColors.successGradient),
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.success
-                                .withValues(alpha: 0.3),
+                            color: AppColors.success.withValues(alpha: 0.25),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -2401,16 +1790,11 @@ class _GroupedOverdueCard extends StatelessWidget {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.payment_rounded,
-                              size: 14, color: Colors.white),
+                          Icon(Icons.payment_rounded, size: 11, color: Colors.white),
                           SizedBox(width: 4),
                           Text(
                             'Collect',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.white),
                           ),
                         ],
                       ),
@@ -2431,80 +1815,243 @@ class _GroupedOverdueCard extends StatelessWidget {
 // PREMIUM HELPER WIDGETS
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _TabInfo {
-  final String label;
-  final int count;
-  final IconData icon;
-  final Color color;
-  _TabInfo(this.label, this.count, this.icon, this.color);
+class _HeroHeader extends StatelessWidget {
+  final TodayPaymentSummary summary;
+  final bool isDark;
+
+  const _HeroHeader({
+    required this.summary,
+    required this.isDark,
+  });
+
+  String _formatAmount(double amount) {
+    if (amount >= 100000) {
+      return '\u20b9${(amount / 1000).toStringAsFixed(0)}k';
+    } else if (amount >= 1000) {
+      return '\u20b9${(amount / 1000).toStringAsFixed(1)}k';
+    } else {
+      return '\u20b9${amount.toInt()}';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    final double progress = summary.countDue > 0
+        ? summary.countCollected / summary.countDue
+        : 0;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(20, kToolbarHeight + 12, 20, 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? const [
+                        Color(0xFF1E1B4B),
+                        Color(0xFF312E81),
+                      ]
+                    : const [
+                        Color(0xFF312E81),
+                        Color(0xFF4338CA),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.1),
+                width: 0.8,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Top Row: Total Due + Progress text & Linear progress
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'TOTAL DUE TODAY',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          '${(progress * 100).toInt()}% Done',
+                          style: const TextStyle(
+                            color: Color(0xFF34D399),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 60,
+                          height: 4,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: progress.clamp(0.0, 1.0),
+                              backgroundColor: Colors.white.withValues(alpha: 0.12),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34D399)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Main Row: Amount + Mini Bento Metrics
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Amount
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          currencyFormat.format(summary.totalDue),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.0,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${summary.countDue})',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Bento Stats Row
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _MiniStatBadge(
+                          label: 'Done',
+                          count: summary.countCollected,
+                          amountString: _formatAmount(summary.totalCollected),
+                          color: const Color(0xFF34D399),
+                        ),
+                        const SizedBox(width: 6),
+                        _MiniStatBadge(
+                          label: 'Pending',
+                          count: summary.countPending,
+                          amountString: _formatAmount(summary.totalPending),
+                          color: const Color(0xFFFBBF24),
+                        ),
+                        const SizedBox(width: 6),
+                        _MiniStatBadge(
+                          label: 'Overdue',
+                          count: summary.countOverdue,
+                          amountString: _formatAmount(summary.totalOverdue),
+                          color: const Color(0xFFF87171),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-// Circular progress ring with animated arc and center label
-class _CircularProgressRing extends StatelessWidget {
-  final double progress;
-  final String centerText;
-  final String subtext;
-  final double size;
-  final double strokeWidth;
-  final Color trackColor;
-  final Color progressColor;
+class _MiniStatBadge extends StatelessWidget {
+  final String label;
+  final int count;
+  final String amountString;
+  final Color color;
 
-  const _CircularProgressRing({
-    required this.progress,
-    required this.centerText,
-    required this.subtext,
-    this.size = 80,
-    this.strokeWidth = 7,
-    required this.trackColor,
-    required this.progressColor,
+  const _MiniStatBadge({
+    required this.label,
+    required this.count,
+    required this.amountString,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.04),
+          width: 0.8,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: progress),
-            duration: const Duration(milliseconds: 1200),
-            curve: Curves.easeOutCubic,
-            builder: (context, p, _) {
-              return SizedBox(
-                width: size,
-                height: size,
-                child: CustomPaint(
-                  painter: _RingPainter(
-                    progress: p,
-                    strokeWidth: strokeWidth,
-                    trackColor: trackColor,
-                    progressColor: progressColor,
-                  ),
-                ),
-              );
-            },
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
+          Row(
             children: [
-              Text(
-                centerText,
-                style: TextStyle(
-                  color: progressColor,
-                  fontSize: size * 0.22,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(width: 5),
               Text(
-                subtext,
+                label.toUpperCase(),
                 style: TextStyle(
-                  color: progressColor.withValues(alpha: 0.7),
-                  fontSize: size * 0.11,
-                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                amountString,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                '($count)',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -2515,53 +2062,150 @@ class _CircularProgressRing extends StatelessWidget {
   }
 }
 
-class _RingPainter extends CustomPainter {
-  final double progress;
-  final double strokeWidth;
-  final Color trackColor;
-  final Color progressColor;
+class _PremiumTabBar extends StatelessWidget {
+  final TabController controller;
+  final int pendingCount;
+  final int overdueCount;
+  final int collectedCount;
+  final bool isDark;
 
-  _RingPainter({
-    required this.progress,
-    required this.strokeWidth,
-    required this.trackColor,
-    required this.progressColor,
+  const _PremiumTabBar({
+    required this.controller,
+    required this.pendingCount,
+    required this.overdueCount,
+    required this.collectedCount,
+    required this.isDark,
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    final trackPaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(center, radius, trackPaint);
-
-    if (progress > 0) {
-      final progressPaint = Paint()
-        ..color = progressColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(
-        rect,
-        -3.14159 / 2, // start at top
-        progress * 2 * 3.14159,
-        false,
-        progressPaint,
-      );
-    }
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.black : Colors.grey.shade100)
+                .withValues(alpha: isDark ? 0.2 : 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TabBar(
+        controller: controller,
+        dividerColor: Colors.transparent,
+        indicatorColor: Colors.transparent,
+        labelColor: Colors.white,
+        unselectedLabelColor: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelPadding: EdgeInsets.zero,
+        tabs: [
+          _TabPill(
+            label: 'Pending',
+            count: pendingCount,
+            index: 0,
+            controller: controller,
+            activeColor: AppColors.primary,
+          ),
+          _TabPill(
+            label: 'Overdue',
+            count: overdueCount,
+            index: 1,
+            controller: controller,
+            activeColor: AppColors.error,
+          ),
+          _TabPill(
+            label: 'Collected',
+            count: collectedCount,
+            index: 2,
+            controller: controller,
+            activeColor: AppColors.success,
+          ),
+        ],
+      ),
+    );
   }
+}
+
+class _TabPill extends AnimatedWidget {
+  final String label;
+  final int count;
+  final int index;
+  final TabController controller;
+  final Color activeColor;
+
+  const _TabPill({
+    required this.label,
+    required this.count,
+    required this.index,
+    required this.controller,
+    required this.activeColor,
+  }) : super(listenable: controller);
 
   @override
-  bool shouldRepaint(_RingPainter old) =>
-      old.progress != progress ||
-      old.progressColor != progressColor ||
-      old.trackColor != trackColor;
+  Widget build(BuildContext context) {
+    final bool isSelected = controller.index == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      height: 38,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: isSelected ? activeColor : Colors.transparent,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: activeColor.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : null,
+      ),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : (isDark
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : Colors.grey.shade100),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: isSelected
+                      ? Colors.white
+                      : (isDark ? AppColors.primary : Colors.grey.shade700),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // Shimmer loading state
@@ -2723,68 +2367,7 @@ class _AnimatedEmptyState extends StatelessWidget {
 // ANIMATED GLOW ORB — floating decorative element
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _GlowOrb extends StatefulWidget {
-  final double size;
-  final Color color;
-  final double alpha;
-  final int delay;
 
-  const _GlowOrb({
-    required this.size,
-    required this.color,
-    required this.alpha,
-    required this.delay,
-  });
-
-  @override
-  State<_GlowOrb> createState() => _GlowOrbState();
-}
-
-class _GlowOrbState extends State<_GlowOrb> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3000),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final scale = 1.0 + (_controller.value * 0.12);
-        final opacity = widget.alpha + (_controller.value * 0.02);
-        return Transform.scale(
-          scale: scale,
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  widget.color.withValues(alpha: opacity),
-                  widget.color.withValues(alpha: 0),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ANIMATED EXPORT FAB — with glow pulse
@@ -2983,31 +2566,12 @@ class _StatusPill extends StatelessWidget {
 
   const _StatusPill({required this.status, required this.type});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        statusLabel,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: statusColor,
-        ),
-      ),
-    );
-  }
-
   Color get statusColor {
     switch (status) {
       case PaymentStatus.overdue:
         return AppColors.error;
       case PaymentStatus.pending:
-        return AppColors.warning;
+        return type == PaymentType.emi ? AppColors.warning : AppColors.mint;
       case PaymentStatus.collected:
         return AppColors.success;
     }
@@ -3022,6 +2586,89 @@ class _StatusPill extends StatelessWidget {
       case PaymentStatus.collected:
         return 'Collected';
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = statusColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: 0.15),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            statusLabel,
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: color,
+              letterSpacing: 0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentAvatar extends StatelessWidget {
+  final PaymentType type;
+  final IconData icon;
+  final Color color;
+  final bool isCollected;
+
+  const _PaymentAvatar({
+    required this.type,
+    required this.icon,
+    required this.color,
+    required this.isCollected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: isCollected ? 0.08 : 0.18),
+            color.withValues(alpha: isCollected ? 0.02 : 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: color.withValues(alpha: isCollected ? 0.05 : 0.12),
+          width: 1,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
+          size: 18,
+        ),
+      ),
+    );
   }
 }
 

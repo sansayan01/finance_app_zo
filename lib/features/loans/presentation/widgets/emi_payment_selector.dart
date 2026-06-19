@@ -111,7 +111,9 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
       _emiEvents[DateTime(day.year, day.month, day.day)] ?? [];
 
   bool _isSelectable(EMIScheduleModel emi) =>
-      emi.status != EMIStatus.paid && emi.status != EMIStatus.waived;
+      emi.status != EMIStatus.paid &&
+      emi.status != EMIStatus.waived &&
+      emi.status != EMIStatus.frozen;
 
   /// Sorted unpaid EMIs for allocation
   List<EMIScheduleModel> get _unpaidEMIs => widget.emis
@@ -621,6 +623,8 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
 
   Widget _buildStatusSummary(
       int unpaid, int overdue, int dueToday, int paid) {
+    final frozenCount =
+        widget.emis.where((e) => e.status == EMIStatus.frozen).length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -664,6 +668,19 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
               color: _textSecondary(),
             ),
           ),
+          if (frozenCount > 0) ...[
+            const SizedBox(width: 12),
+            const Icon(Icons.ac_unit_rounded, size: 14, color: Colors.cyan),
+            const SizedBox(width: 4),
+            Text(
+              '$frozenCount frozen',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.cyan,
+              ),
+            ),
+          ],
           const Spacer(),
           Text(
             '$paid paid',
@@ -1103,6 +1120,30 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
                                 defaultBuilder: (context, day, focusedDay) {
                                   final events = _eventsForDay(day);
                                   if (events.isEmpty) return null;
+                                  final hasFrozen =
+                                      events.any((e) => e.status == EMIStatus.frozen);
+                                  if (hasFrozen) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.grey.withValues(alpha: 0.25),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${day.day}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: _textTertiary(),
+                                          decoration: TextDecoration.lineThrough,
+                                          decorationColor: Colors.grey,
+                                        ),
+                                      ),
+                                    );
+                                  }
                                   final hasOverdue = events
                                       .any((e) => e.isOverdue && _isSelectable(e));
                                   if (!hasOverdue) return null;

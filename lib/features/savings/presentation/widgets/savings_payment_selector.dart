@@ -98,6 +98,7 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
 
   /// Whether a given installment is overdue (due date before today and unpaid).
   bool _isOverdue(SavingsInstallment installment) {
+    if (installment.isFrozen) return false;
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
     final dueOnly = DateTime(
@@ -107,6 +108,7 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
 
   /// Whether a given installment is due today and unpaid.
   bool _isDueToday(SavingsInstallment installment) {
+    if (installment.isFrozen) return false;
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
     final dueOnly = DateTime(
@@ -127,7 +129,8 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
   List<SavingsInstallment> _eventsForDay(DateTime day) =>
       _installmentEvents[DateTime(day.year, day.month, day.day)] ?? [];
 
-  bool _isSelectable(SavingsInstallment installment) => !installment.isPaid;
+  bool _isSelectable(SavingsInstallment installment) =>
+      !installment.isPaid && !installment.isFrozen;
 
   /// Sorted unpaid installments for allocation (oldest first).
   List<SavingsInstallment> get _unpaidInstallments => widget.installments
@@ -922,6 +925,8 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
 
   Widget _buildStatusSummary(
       int unpaid, int overdue, int dueToday, int paid) {
+    final frozenCount =
+        widget.installments.where((e) => e.isFrozen).length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -965,6 +970,19 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
               color: _textSecondary(),
             ),
           ),
+          if (frozenCount > 0) ...[
+            const SizedBox(width: 12),
+            const Icon(Icons.ac_unit_rounded, size: 14, color: Colors.cyan),
+            const SizedBox(width: 4),
+            Text(
+              '$frozenCount frozen',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.cyan,
+              ),
+            ),
+          ],
           const Spacer(),
           Text(
             '$paid paid',
@@ -1377,6 +1395,30 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
                                 defaultBuilder: (context, day, focusedDay) {
                                   final events = _eventsForDay(day);
                                   if (events.isEmpty) return null;
+                                  final hasFrozen = events
+                                      .any((e) => e.isFrozen);
+                                  if (hasFrozen) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: Colors.grey.withValues(alpha: 0.25),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${day.day}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: _textTertiary(),
+                                          decoration: TextDecoration.lineThrough,
+                                          decorationColor: Colors.grey,
+                                        ),
+                                      ),
+                                    );
+                                  }
                                   final hasOverdue =
                                       events.any((e) => _isOverdue(e) && _isSelectable(e));
                                   if (!hasOverdue) return null;
@@ -1482,6 +1524,7 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
                                   _buildLegendDot(AppColors.orange, 'Due Today'),
                                   _buildLegendDot(_primaryColor(), 'Upcoming'),
                                   _buildLegendDot(_successColor(), 'Paid'),
+                                  _buildLegendDot(Colors.cyan, 'Frozen'),
                                 ],
                               ),
                             ),
@@ -1591,14 +1634,17 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
   }
 
   Widget _buildPopupDayMarker(List<SavingsInstallment> installments) {
+    final hasFrozen = installments.any((e) => e.isFrozen);
     final hasOverdue =
         installments.any((e) => _isOverdue(e) && _isSelectable(e));
     final hasDueToday =
         installments.any((e) => _isDueToday(e) && _isSelectable(e));
-    final allPaid = installments.every((e) => !_isSelectable(e));
+    final allPaid = installments.every((e) => !_isSelectable(e) && !e.isFrozen);
 
     Color dotColor;
-    if (hasOverdue) {
+    if (hasFrozen) {
+      dotColor = Colors.cyan;
+    } else if (hasOverdue) {
       dotColor = _errorColor();
     } else if (hasDueToday) {
       dotColor = AppColors.orange;

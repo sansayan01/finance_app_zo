@@ -33,6 +33,10 @@ class LoanModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Date freeze
+  final bool freezeEnabled;
+  final int frozenCount;
+
   // Joined Data
   final String? customerName;
   final String? customerPhone;
@@ -75,6 +79,8 @@ class LoanModel {
     this.customerPhone,
     this.staffName,
     this.staffPhone,
+    this.freezeEnabled = false,
+    this.frozenCount = 0,
   });
 
   String get formattedTenure {
@@ -178,6 +184,8 @@ class LoanModel {
       customerPhone: profilesJson?['phone'] as String?,
       staffName: staffJson?['full_name'] as String?,
       staffPhone: staffJson?['phone'] as String?,
+      freezeEnabled: json['freeze_enabled'] as bool? ?? false,
+      frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -204,6 +212,8 @@ class LoanModel {
       'total_repayable': totalRepayable,
       'outstanding_amount': outstandingBalance,
       'interest_type': interestType.name,
+      'freeze_enabled': freezeEnabled,
+      'frozen_count': frozenCount,
       'disbursement_date': disbursementDate?.toIso8601String(),
       'first_emi_date': firstEmiDate?.toIso8601String(),
       'paid_emis': paidEmis,

@@ -162,6 +162,7 @@ class LoansRepository {
     int? tenureValue,
     String? tenureUnit,
     DateTime? disbursementDate,
+    bool freezeEnabled = false,
   }) async {
     final now = DateTime.now();
     final effectiveDisbursementDate = disbursementDate ?? now;
@@ -231,6 +232,7 @@ class LoansRepository {
       if (interestBasis != null) 'interest_basis': interestBasis,
       if (tenureValue != null) 'tenure_value': tenureValue,
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
+      'freeze_enabled': freezeEnabled,
     }).select('id').single();
 
     final loanId = result['id'] as String;
@@ -266,6 +268,7 @@ class LoansRepository {
     required DateTime lastPaymentDate,
     required double outstandingBalance,
     double openingBalance = 0,
+    bool freezeEnabled = false,
     String? interestMode,
     String? interestRateBasis,
     double? interestAmount,
@@ -344,6 +347,7 @@ class LoansRepository {
       if (interestBasis != null) 'interest_basis': interestBasis,
       if (tenureValue != null) 'tenure_value': tenureValue,
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
+      'freeze_enabled': freezeEnabled,
     }).select('id').single();
 
     final loanId = result['id'] as String;
@@ -487,6 +491,7 @@ class LoansRepository {
     String? remarks,
     String? purpose,
     DateTime? disbursementDate,
+    bool? freezeEnabled,
   }) async {
     final data = <String, dynamic>{};
     if (borrowerId != null) {
@@ -541,6 +546,7 @@ class LoansRepository {
     if (disbursementDate != null) {
       data['disbursement_date'] = disbursementDate.toIso8601String();
     }
+    if (freezeEnabled != null) data['freeze_enabled'] = freezeEnabled;
     data['updated_at'] = DateTime.now().toIso8601String();
 
     final result = await _client.from('loans').update(data).eq('id', id).select();

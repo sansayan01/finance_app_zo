@@ -14,6 +14,7 @@ extension EMIScheduleModelX on EMIScheduleModel {
   bool get isOverdue {
     if (status == EMIStatus.paid) return false;
     if (status == EMIStatus.waived) return false;
+    if (status == EMIStatus.frozen) return false;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return dueDate.isBefore(today);
@@ -22,6 +23,7 @@ extension EMIScheduleModelX on EMIScheduleModel {
   /// `true` when the EMI is due today (date matches today, not yet paid).
   bool get isDueToday {
     if (status == EMIStatus.paid) return false;
+    if (status == EMIStatus.frozen) return false;
     final now = DateTime.now();
     return dueDate.year == now.year &&
         dueDate.month == now.month &&
@@ -29,22 +31,30 @@ extension EMIScheduleModelX on EMIScheduleModel {
   }
 
   /// `true` when the EMI is still in the future.
-  bool get isUpcoming => !isOverdue && !isDueToday && status != EMIStatus.paid;
+  bool get isUpcoming =>
+      !isOverdue && !isDueToday && status != EMIStatus.paid && status != EMIStatus.frozen;
+
+  bool get isFrozen => status == EMIStatus.frozen;
 
   /// Effective status — the *displayed* status, computed from the date when
   /// the stored status is stale. Paid and waived are always honoured.
   EMIStatus get effectiveStatus {
     if (status == EMIStatus.paid) return EMIStatus.paid;
     if (status == EMIStatus.waived) return EMIStatus.waived;
+    if (status == EMIStatus.frozen) return EMIStatus.frozen;
     if (isOverdue) return EMIStatus.overdue;
     if (isDueToday) return status; // 'pending' or 'pendingPayment'
     return status;
   }
 
   /// Number of whole days past the due date. Negative if not yet due.
-  /// Returns 0 for paid/waived EMIs.
+  /// Returns 0 for paid/waived/frozen EMIs.
   int get daysOverdue {
-    if (status == EMIStatus.paid || status == EMIStatus.waived) return 0;
+    if (status == EMIStatus.paid ||
+        status == EMIStatus.waived ||
+        status == EMIStatus.frozen) {
+      return 0;
+    }
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return today.difference(dueDate).inDays;

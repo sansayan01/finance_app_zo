@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart' show AppFormatters;
 import '../models/savings_model.dart';
+import '../models/savings_installment_model.dart';
 
 class SavingsRepository {
   final SupabaseClient _client;
@@ -21,6 +22,7 @@ class SavingsRepository {
     String? tenureUnit,
     double openingBalance = 0,
     double totalReturnAmount = 0,
+    bool freezeEnabled = false,
   }) async {
     // Use provided start date or default to today
     final now = startDate ?? DateTime.now();
@@ -73,6 +75,7 @@ class SavingsRepository {
       'opening_balance': openingBalance,
       'current_amount': openingBalance,
       'total_return_amount': totalReturnAmount,
+      'freeze_enabled': freezeEnabled,
     };
 
     if (tenureUnit != null) {
@@ -291,6 +294,7 @@ class SavingsRepository {
     required int installmentsPaid,
     required DateTime lastPaymentDate,
     double openingBalance = 0,
+    bool freezeEnabled = false,
   }) async {
     // --- Calculations ---
     final int totalInstallments = _calculateTotalInstallments(
@@ -362,6 +366,7 @@ class SavingsRepository {
       'total_return_amount': totalReturnAmount,
       'installments_paid': installmentsPaid,
       'last_payment_date': lastPaymentDate.toIso8601String().split('T')[0],
+      'freeze_enabled': freezeEnabled,
     };
 
     if (collectionDayOfWeek != null) {
@@ -834,5 +839,110 @@ class SavingsRepository {
     }
 
     await recalculateBalance(savingsPlanId);
+  }
+
+  // ─── Date Freeze: detect skipped savings installments ───
+
+  /// Detects installments that were skipped between the first and last paid
+  /// installment, marks them as frozen, and extends the plan tenure.
+  /// Returns the number of newly frozen installments.
+  Future<int> detectAndFreezeSkippedInstallments(String planId) async {
+    try {
+      final plan = await _client
+          .from('savings_plans')
+          .select('*')
+          .eq('id', planId)
+          .maybeSingle();
+      if (plan == null) return 0;
+
+      final planModel = SavingsModel.fromJson(plan);
+
+      // Fetch paid dates
+      final paidDates = await _client
+          .from('savings_collections')
+          .select('collection_date')
+          .eq('savings_plan_id', planId);
+
+      final paidSet = <DateTime>{};
+      for (final row in paidDates as List) {
+        final d = DateTime.parse(row['collection_date'] as String);
+        paidSet.add(DateTime(d.year, d.month, d.day));
+      }
+
+      // Generate schedule and find frozen installments
+      final existingFrozen = planModel.frozenDates.toSet();
+      final schedule =
+          SavingsScheduleGenerator.generate(plan: planModel, paidDates: paidSet);
+
+      int maxPaidNumber = 0;
+      int minPaidNumber = 999999;
+      for (final inst in schedule) {
+        if (inst.isPaid) {
+          if (inst.number > maxPaidNumber) maxPaidNumber = inst.number;
+          if (inst.number < minPaidNumber) minPaidNumber = inst.number;
+        }
+      }
+      if (maxPaidNumber == 0) return 0;
+
+      // Freeze installments strictly between min and max paid that aren't paid or already frozen
+      final newFrozenDates = <String>{...existingFrozen};
+      int count = 0;
+      for (final inst in schedule) {
+        if (inst.number > minPaidNumber &&
+            inst.number < maxPaidNumber &&
+            !inst.isPaid) {
+          final dateKey =
+              '${inst.dueDate.year}-${inst.dueDate.month.toString().padLeft(2, '0')}-${inst.dueDate.day.toString().padLeft(2, '0')}';
+          if (!newFrozenDates.contains(dateKey)) {
+            newFrozenDates.add(dateKey);
+            count++;
+          }
+        }
+      }
+
+      if (count > 0) {
+        // Update plan with frozen dates and extend tenure
+        final currentTotal = planModel.totalInstallments;
+        final newTotal = currentTotal + count;
+
+        // Extend maturity date
+        final collectionType = planModel.collectionType;
+        DateTime maturity = planModel.maturityDate;
+        for (int i = 0; i < count; i++) {
+          switch (collectionType) {
+            case 'weekly':
+              maturity = maturity.add(const Duration(days: 7));
+              break;
+            case 'daily':
+              maturity = maturity.add(const Duration(days: 1));
+              break;
+            default: // monthly
+              int m = maturity.month + 1;
+              int y = maturity.year + ((m - 1) ~/ 12);
+              m = ((m - 1) % 12) + 1;
+              int d = maturity.day;
+              int dim = DateTime(y, m + 1, 0).day;
+              if (d > dim) d = dim;
+              maturity = DateTime(y, m, d);
+          }
+        }
+
+        await _client.from('savings_plans').update({
+          'frozen_count': planModel.frozenCount + count,
+          'frozen_dates': newFrozenDates.toList(),
+          'total_installments': newTotal,
+          'maturity_date': maturity.toIso8601String().split('T')[0],
+        }).eq('id', planId);
+      }
+
+      return count;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Manually freeze all currently-skipped installments for a savings plan.
+  Future<int> manualFreezeSkippedInstallments(String planId) async {
+    return detectAndFreezeSkippedInstallments(planId);
   }
 }

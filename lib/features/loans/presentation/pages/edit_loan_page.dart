@@ -293,6 +293,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
 
     setState(() => _isSaving = true);
     try {
+      final currentFreezeEnabled = ref.read(loanDetailProvider(widget.loanId)).value?.freezeEnabled ?? false;
       await ref.read(loansRepositoryProvider).updateLoan(
             widget.loanId,
             borrowerId: state.borrowerId!,
@@ -325,6 +326,7 @@ class _EditLoanPageState extends ConsumerState<EditLoanPage> {
             purpose: _purposeController.text.isEmpty
                 ? null
                 : _purposeController.text,
+            freezeEnabled: currentFreezeEnabled,
           );
 
       if (!mounted) return;

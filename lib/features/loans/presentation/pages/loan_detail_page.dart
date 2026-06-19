@@ -23,6 +23,7 @@ import '../providers/loan_providers.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show overdueLoansProvider, dashboardLoansProvider, activeLoansProvider, loanSummaryProvider;
 import '../../data/models/loan_model.dart';
+import '../../data/repositories/emi_repository.dart';
 import '../../data/models/emi_schedule_model.dart';
 import '../../data/services/loan_statement_pdf_service.dart';
 import '../../data/services/loan_statement_excel_service.dart';
@@ -125,6 +126,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         EMIStatus.overdue => 'OVERDUE',
         EMIStatus.waived => 'WAIVED',
         EMIStatus.pendingPayment => 'PEND',
+        EMIStatus.frozen => 'FROZEN',
       };
 
   @override
@@ -193,6 +195,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           _buildDigitalPass(loan, theme),
                           const SizedBox(height: 32),
                           _buildPrimaryActionRow(loan, scheduleAsync, theme),
+                          const SizedBox(height: 20),
+                          _buildFreezeToggle(loan, theme),
                           const SizedBox(height: 40),
                         ],
                       ),
@@ -347,6 +351,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   if (val == 'delete') {
                     _handleDelete();
                   }
+                  if (val == 'freeze') {
+                    _handleManualFreeze();
+                  }
                 },
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
@@ -395,6 +402,20 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               size: 18, color: AppColors.accent),
                           SizedBox(width: 12),
                           Text('Restructure Loan'),
+                        ],
+                      ),
+                    ),
+                  if (loan.status != LoanStatus.closed &&
+                      loan.freezeEnabled &&
+                      widget.showEditButton)
+                    const PopupMenuItem(
+                      value: 'freeze',
+                      child: Row(
+                        children: [
+                          Icon(Icons.ac_unit_rounded,
+                              size: 18, color: Colors.cyan),
+                          SizedBox(width: 12),
+                          Text('Freeze Skipped EMIs'),
                         ],
                       ),
                     ),
@@ -463,6 +484,88 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildFreezeToggle(LoanModel loan, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: loan.freezeEnabled
+                ? Colors.cyan.withValues(alpha: 0.4)
+                : theme.dividerColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: loan.freezeEnabled
+                    ? Colors.cyan.withValues(alpha: 0.15)
+                    : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.ac_unit_rounded,
+                size: 18,
+                color: loan.freezeEnabled
+                    ? Colors.cyan
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Date Freeze',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    loan.freezeEnabled
+                        ? 'Skipped EMIs auto-freeze'
+                        : 'Off — EMIs won\'t freeze',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch.adaptive(
+              value: loan.freezeEnabled,
+              activeThumbColor: Colors.cyan,
+              onChanged: (val) => _toggleFreeze(loan, val),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleFreeze(LoanModel loan, bool enabled) async {
+    HapticFeedback.lightImpact();
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.orgId == null) return;
+    final client = ref.read(supabaseClientProvider);
+    await client.from('loans').update({
+      'freeze_enabled': enabled,
+    }).eq('id', loan.id);
+    ref.invalidate(loanDetailProvider(widget.loanId));
   }
 
   Widget _buildHugeBalance(LoanModel loan, ThemeData theme) {
@@ -4034,6 +4137,44 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       if (!mounted) return;
       messenger
           .showSnackBar(SnackBar(content: Text('Failed to reactivate: $e')));
+    }
+  }
+
+  Future<void> _handleManualFreeze() async {
+    HapticFeedback.lightImpact();
+    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
+    if (loan == null) return;
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.orgId == null) return;
+
+    final emiRepo = EMIRepository(
+      ref.read(supabaseClientProvider),
+      user.orgId!,
+    );
+    final skippedCount = await emiRepo.detectAndFreezeSkippedEMIs(widget.loanId);
+
+    if (!mounted) return;
+    if (skippedCount > 0) {
+      ref.invalidate(emiScheduleProvider(widget.loanId));
+      ref.invalidate(loanDetailProvider(widget.loanId));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$skippedCount skipped EMI(s) frozen, tenure extended'),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No skipped EMIs to freeze'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
     }
   }
 

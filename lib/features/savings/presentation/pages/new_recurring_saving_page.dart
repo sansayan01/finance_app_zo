@@ -686,6 +686,32 @@ class _NewRecurringSavingPageState
             _buildDivider(theme),
             _buildMigrationSummary(state, theme, isDark, primary),
           ],
+
+          const SizedBox(height: 20),
+
+          // ── Date Freeze Toggle ──
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.fillDark : AppColors.fillLight,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: SwitchListTile(
+              title: Text('Enable Date Freeze',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w700)),
+              subtitle: Text(
+                  'Skipped installments will be frozen and tenure auto-extended.',
+                  style: theme.textTheme.bodySmall),
+              value: state.freezeEnabled,
+              activeThumbColor: Colors.cyan,
+              secondary: const Icon(Icons.ac_unit_rounded, color: Colors.cyan),
+              onChanged: (val) {
+                ref
+                    .read(newRecurringSavingProvider.notifier)
+                    .updateFreezeEnabled(val);
+              },
+            ),
+          ).animate().fadeIn(duration: 400.ms),
         ],
       ),
     ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04, end: 0);

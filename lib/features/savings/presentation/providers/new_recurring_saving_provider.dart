@@ -19,6 +19,7 @@ class NewRecurringSavingState {
   final DateTime maturityDate;
   final double prematurePenalty;
   final bool isLoading;
+  final bool freezeEnabled;
   final int installmentsPaid;
   final double alreadyPaidAmount;
 
@@ -34,6 +35,7 @@ class NewRecurringSavingState {
     DateTime? maturityDate,
     this.prematurePenalty = 2,
     this.isLoading = false,
+    this.freezeEnabled = false,
     this.installmentsPaid = 0,
     this.alreadyPaidAmount = 0,
   })  : startDate = startDate ?? DateTime.now(),
@@ -87,6 +89,7 @@ class NewRecurringSavingState {
     DateTime? maturityDate,
     double? prematurePenalty,
     bool? isLoading,
+    bool? freezeEnabled,
     int? installmentsPaid,
     double? alreadyPaidAmount,
   }) {
@@ -116,6 +119,7 @@ class NewRecurringSavingState {
       maturityDate: newMaturityDate,
       prematurePenalty: prematurePenalty ?? this.prematurePenalty,
       isLoading: isLoading ?? this.isLoading,
+      freezeEnabled: freezeEnabled ?? this.freezeEnabled,
       installmentsPaid: installmentsPaid ?? this.installmentsPaid,
       alreadyPaidAmount: alreadyPaidAmount ?? this.alreadyPaidAmount,
     );
@@ -242,6 +246,8 @@ class NewRecurringSavingNotifier
       state = state.copyWith(maturityDate: date);
   void updatePrematurePenalty(double penalty) =>
       state = state.copyWith(prematurePenalty: penalty);
+  void updateFreezeEnabled(bool enabled) =>
+      state = state.copyWith(freezeEnabled: enabled);
 
   /// Update alreadyPaidAmount and auto-calculate installmentsPaid.
   void updateAlreadyPaidAmount(double amount) {
@@ -282,6 +288,7 @@ class NewRecurringSavingNotifier
           penalty: state.prematurePenalty,
           installmentsPaid: paidDays,
           lastPaymentDate: lastPayment,
+          freezeEnabled: state.freezeEnabled,
         );
 
         // Create synthetic collection records for already-paid installments
@@ -310,6 +317,7 @@ class NewRecurringSavingNotifier
           tenureUnit: state.tenureUnit.name,
           openingBalance: state.initialBalance,
           totalReturnAmount: state.alreadyPaidAmount,
+          freezeEnabled: state.freezeEnabled,
         );
       }
 

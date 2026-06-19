@@ -25,6 +25,11 @@ class SavingsModel {
   final int installmentsPaid;
   final DateTime? lastPaymentDate;
 
+  // Date freeze
+  final bool freezeEnabled;
+  final int frozenCount;
+  final List<String> frozenDates;
+
   /// Computed: total return minus total capital invested (opening + installments * amount).
   double get interestAmount => totalReturnAmount > 0
       ? totalReturnAmount - (openingBalance + (monthlyDeposit * totalInstallments))
@@ -56,6 +61,9 @@ class SavingsModel {
     this.totalReturnAmount = 0,
     this.installmentsPaid = 0,
     this.lastPaymentDate,
+    this.freezeEnabled = false,
+    this.frozenCount = 0,
+    this.frozenDates = const [],
   });
 
   factory SavingsModel.fromJson(Map<String, dynamic> json) {
@@ -93,6 +101,12 @@ class SavingsModel {
       lastPaymentDate: json['last_payment_date'] != null
           ? DateTime.tryParse(json['last_payment_date'] as String)
           : null,
+      freezeEnabled: json['freeze_enabled'] as bool? ?? false,
+      frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
+      frozenDates: (json['frozen_dates'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
   }
 
@@ -121,6 +135,9 @@ class SavingsModel {
       'total_return_amount': totalReturnAmount,
       'installments_paid': installmentsPaid,
       if (lastPaymentDate != null) 'last_payment_date': lastPaymentDate!.toIso8601String().split('T')[0],
+      'freeze_enabled': freezeEnabled,
+      'frozen_count': frozenCount,
+      'frozen_dates': frozenDates,
     };
   }
 
@@ -150,6 +167,9 @@ class SavingsModel {
     double? totalReturnAmount,
     int? installmentsPaid,
     DateTime? lastPaymentDate,
+    bool? freezeEnabled,
+    int? frozenCount,
+    List<String>? frozenDates,
   }) {
     return SavingsModel(
       id: id ?? this.id,
@@ -177,6 +197,9 @@ class SavingsModel {
       totalReturnAmount: totalReturnAmount ?? this.totalReturnAmount,
       installmentsPaid: installmentsPaid ?? this.installmentsPaid,
       lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
+      freezeEnabled: freezeEnabled ?? this.freezeEnabled,
+      frozenCount: frozenCount ?? this.frozenCount,
+      frozenDates: frozenDates ?? this.frozenDates,
     );
   }
 }

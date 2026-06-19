@@ -48,6 +48,9 @@ class NewLoanState {
   final DateTime? disbursementDate;
   final bool isLoading;
 
+  // Date freeze
+  final bool freezeEnabled;
+
   // Migration fields
   final int paidEmis;
   final DateTime? lastPaymentDate;
@@ -69,6 +72,7 @@ class NewLoanState {
     this.firstInstallmentDate,
     this.disbursementDate,
     this.isLoading = false,
+    this.freezeEnabled = false,
     this.paidEmis = 0,
     this.lastPaymentDate,
     this.openingBalance = 0,
@@ -90,6 +94,7 @@ class NewLoanState {
     DateTime? firstInstallmentDate,
     DateTime? disbursementDate,
     bool? isLoading,
+    bool? freezeEnabled,
     int? paidEmis,
     DateTime? lastPaymentDate,
     double? openingBalance,
@@ -110,6 +115,7 @@ class NewLoanState {
       firstInstallmentDate: firstInstallmentDate ?? this.firstInstallmentDate,
       disbursementDate: disbursementDate ?? this.disbursementDate,
       isLoading: isLoading ?? this.isLoading,
+      freezeEnabled: freezeEnabled ?? this.freezeEnabled,
       paidEmis: paidEmis ?? this.paidEmis,
       lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
       openingBalance: openingBalance ?? this.openingBalance,
@@ -440,6 +446,8 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
       state = state.copyWith(interestLogic: logic);
   void updateFirstInstallmentDate(DateTime date) =>
       state = state.copyWith(firstInstallmentDate: date);
+  void updateFreezeEnabled(bool enabled) =>
+      state = state.copyWith(freezeEnabled: enabled);
   void updateDisbursementDate(DateTime date) =>
       state = state.copyWith(disbursementDate: date);
 
@@ -547,6 +555,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
               : null,
           tenureValue: state.tenureValue,
           tenureUnit: state.tenureUnit.name,
+          freezeEnabled: state.freezeEnabled,
         );
 
         // Generate full EMI schedule marking first N as paid
@@ -615,6 +624,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
               : null,
           tenureValue: state.tenureValue,
           tenureUnit: state.tenureUnit.name,
+          freezeEnabled: state.freezeEnabled,
         );
 
         // Generate EMI schedule

@@ -47,7 +47,6 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
   int _tenureValue = 12;
   int _installmentsPaid = 0;
   bool _isSaving = false;
-
   @override
   void dispose() {
     _installmentController.dispose();
@@ -360,6 +359,7 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
                           'premature_penalty': _prematurePenalty,
                           'total_installments': _calculatedTotalInstallments,
                           'current_amount': _currentBalance,
+                          'freeze_enabled': saving.freezeEnabled,
                         });
 
                         if (!mounted) return;

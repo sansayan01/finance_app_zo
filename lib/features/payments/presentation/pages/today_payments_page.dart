@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1243,73 +1243,54 @@ class _HeroHeader extends StatelessWidget {
   }
 }
 
-// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+// ──────────────────────────────────────────────────
 //  CIRCULAR PROGRESS RING
-// â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+// ──────────────────────────────────────────────────
 
 // REMOVED: _CircularProgressRing — stats moved inside hero header
-// ignore: unused_element
-class _CircularProgressRing extends StatelessWidget {
-  final double progress;
-  final int count;
-  final int total;
-  const _CircularProgressRing({required this.progress, required this.count, required this.total});
+class _StaggeredFadeIn extends StatefulWidget {
+  final int index;
+  final Widget child;
+  const _StaggeredFadeIn({required this.index, required this.child});
+
+  @override
+  State<_StaggeredFadeIn> createState() => _StaggeredFadeInState();
+}
+
+class _StaggeredFadeInState extends State<_StaggeredFadeIn>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: Duration(milliseconds: 300 + widget.index * 30),
+      vsync: this,
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _ctrl.forward();
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 80,
-      height: 80,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: 80, height: 80,
-            child: CircularProgressIndicator(
-              value: 1.0,
-              strokeWidth: 7,
-              color: Colors.white.withValues(alpha: 0.1),
-              strokeCap: StrokeCap.round,
-            ),
-          ),
-          SizedBox(
-            width: 80, height: 80,
-            child: CircularProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              strokeWidth: 7,
-              backgroundColor: Colors.transparent,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              strokeCap: StrokeCap.round,
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$count',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  height: 1.0,
-                ),
-              ),
-              Text(
-                'done',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
     );
   }
 }
+
+
 
 // â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 //  GLOW ORB
@@ -1798,14 +1779,17 @@ class _PaymentList extends StatelessWidget {
         itemCount: payments.length,
         itemBuilder: (context, index) {
           final p = payments[index];
-          return _PaymentCard(
-            payment: p,
-            isDark: isDark,
+          return _StaggeredFadeIn(
             index: index,
-            onCall: onCall(p),
-            onRemind: onRemind(p),
-            onTap: onTap(p),
-            onCollect: onCollect(p),
+            child: _PaymentCard(
+              payment: p,
+              isDark: isDark,
+              index: index,
+              onCall: onCall(p),
+              onRemind: onRemind(p),
+              onTap: onTap(p),
+              onCollect: onCollect(p),
+            ),
           );
         },
       ),
@@ -2179,14 +2163,17 @@ class _GroupedOverdueList extends StatelessWidget {
         itemCount: groups.length,
         itemBuilder: (context, index) {
           final g = groups[index];
-          return _GroupedOverdueCard(
-            group: g,
-            isDark: isDark,
+          return _StaggeredFadeIn(
             index: index,
-            onCall: onCall(g),
-            onRemind: onRemind(g),
-            onTap: onTap(g),
-            onCollect: onCollect(g),
+            child: _GroupedOverdueCard(
+              group: g,
+              isDark: isDark,
+              index: index,
+              onCall: onCall(g),
+              onRemind: onRemind(g),
+              onTap: onTap(g),
+              onCollect: onCollect(g),
+            ),
           );
         },
       ),

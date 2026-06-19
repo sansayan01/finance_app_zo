@@ -6,12 +6,14 @@ class SavingsInstallment {
   final DateTime dueDate; // When this installment is due
   final bool isPaid; // Whether a savings_collection exists for this date
   final double amount; // Installment amount (monthlyDeposit)
+  final bool isFrozen; // Whether this installment has been frozen
 
   const SavingsInstallment({
     required this.number,
     required this.dueDate,
     required this.isPaid,
     required this.amount,
+    this.isFrozen = false,
   });
 }
 
@@ -34,6 +36,7 @@ class SavingsScheduleGenerator {
   static List<SavingsInstallment> generate({
     required SavingsModel plan,
     required Set<DateTime> paidDates,
+    Set<String>? frozenDateKeys,
   }) {
     final schedule = <SavingsInstallment>[];
     final start = plan.startDate ?? plan.createdAt;
@@ -42,22 +45,27 @@ class SavingsScheduleGenerator {
     final collectionType = plan.collectionType;
     final amount = plan.monthlyDeposit;
     final total = plan.totalInstallments;
+    final frozen = frozenDateKeys ?? plan.frozenDates.toSet();
 
     DateTime currentDate = startOnly;
     int installmentNumber = 1;
 
     // Generate up to totalInstallments or maturity date, whichever comes first
     while (installmentNumber <= total && !currentDate.isAfter(maturity)) {
+      final dateKey =
+          '${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}';
       final isPaid = paidDates.any((d) =>
           d.year == currentDate.year &&
           d.month == currentDate.month &&
           d.day == currentDate.day);
+      final isFrozen = frozen.contains(dateKey);
 
       schedule.add(SavingsInstallment(
         number: installmentNumber,
         dueDate: currentDate,
         isPaid: isPaid,
         amount: amount,
+        isFrozen: isFrozen,
       ));
 
       // Advance to next due date

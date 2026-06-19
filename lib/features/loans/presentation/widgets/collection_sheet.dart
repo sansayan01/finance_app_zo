@@ -18,6 +18,8 @@ import '../../../savings/data/providers/savings_providers.dart' show allSavingsP
 import '../../../staff/data/providers/staff_providers.dart' show staffProfileProvider;
 import '../../data/models/emi_schedule_model.dart';
 import '../../data/models/loan_model.dart';
+import '../../data/repositories/emi_repository.dart';
+import '../../../savings/data/repositories/savings_repository.dart';
 import '../providers/loan_providers.dart';
 import 'emi_payment_selector.dart';
 import '../../../savings/presentation/widgets/savings_payment_selector.dart';
@@ -455,7 +457,26 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       }
     }
 
-    // 4. Activity log
+    // 4. Date freeze — detect and freeze skipped EMIs if enabled
+    if (widget.loan!.freezeEnabled) {
+      try {
+        final orgId = user.orgId!;
+        final emiRepo = EMIRepository(client, orgId);
+        final frozenCount = await emiRepo.detectAndFreezeSkippedEMIs(widget.loan!.id);
+        if (frozenCount > 0 && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$frozenCount skipped EMI(s) frozen, tenure extended'),
+              backgroundColor: Colors.orange.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      } catch (_) {}
+    }
+
+    // 5. Activity log
     try {
       await client.from('activity_logs').insert({
         'org_id': user.orgId!,
@@ -476,7 +497,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       });
     } catch (_) {}
 
-    // 5. Invalidate providers
+    // 6. Invalidate providers
     ref.invalidate(emiScheduleProvider(widget.loan!.id));
     ref.invalidate(loanDetailProvider(widget.loan!.id));
     ref.invalidate(paymentHistoryProvider(widget.loan!.id));
@@ -599,7 +620,30 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       debugPrint('SMS savings dispatch failed: $e');
     }
 
-    // 4. Activity log
+    // 4. Date freeze — detect and freeze skipped installments if enabled
+    if (plan.freezeEnabled) {
+      try {
+        final orgId = profile.orgId;
+        if (orgId == null) return;
+        final savingsRepo = SavingsRepository(client, orgId);
+        final frozenCount =
+            await savingsRepo.detectAndFreezeSkippedInstallments(plan.id);
+        if (frozenCount > 0 && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  '$frozenCount skipped installment(s) frozen, tenure extended'),
+              backgroundColor: Colors.orange.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      } catch (_) {}
+    }
+
+    // 5. Activity log
     try {
       await client.from('activity_logs').insert({
         'org_id': profile.orgId,
@@ -619,7 +663,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       });
     } catch (_) {}
 
-    // 5. Invalidate savings providers
+    // 6. Invalidate savings providers
     try {
       ref.invalidate(allSavingsProvider);
       ref.invalidate(dashboardTransactionsProvider);

@@ -28,6 +28,7 @@ enum EMIStatus {
   overdue,
   waived,     // was 'defaulted' — DB CHECK requires 'waived'
   pendingPayment,
+  frozen,     // skipped EMI — unpayable, tenure extended
 }
 
 enum SavingsFrequency {

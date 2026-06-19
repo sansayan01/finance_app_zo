@@ -25,6 +25,7 @@ import '../../../../providers/supabase_provider.dart';
 import '../../data/models/savings_model.dart';
 import '../../data/models/savings_installment_model.dart';
 import '../../data/providers/savings_providers.dart';
+import '../../data/repositories/savings_repository.dart';
 import '../../data/services/savings_statement_models.dart';
 import '../../data/services/savings_statement_pdf_service.dart';
 import '../../data/services/savings_statement_excel_service.dart';
@@ -125,6 +126,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                         _buildVaultCard(saving, theme),
                         const SizedBox(height: 32),
                         _buildPrimaryActionRow(saving, theme),
+                        const SizedBox(height: 20),
+                        _buildFreezeToggle(saving, theme),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -461,6 +464,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                     case 'resume':
                       _setStatus(saving, 'active');
                       break;
+                    case 'freeze':
+                      _handleManualFreeze(saving);
+                      break;
                     case 'share':
                       _shareVaultSummary(saving);
                       break;
@@ -503,6 +509,20 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                         ],
                       ),
                     ),
+                    if (saving.freezeEnabled &&
+                        saving.status != 'closed' &&
+                        widget.showEditButton)
+                      const PopupMenuItem(
+                        value: 'freeze',
+                        child: Row(
+                          children: [
+                            Icon(Icons.ac_unit_rounded,
+                                size: 18, color: Colors.cyan),
+                            SizedBox(width: 8),
+                            Text('Freeze Skipped Dates'),
+                          ],
+                        ),
+                      ),
                     if (widget.showEditButton)
                       const PopupMenuItem(
                           value: 'delete',
@@ -601,6 +621,42 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _handleManualFreeze(SavingsModel saving) async {
+    HapticFeedback.lightImpact();
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.orgId == null) return;
+
+    final client = ref.read(supabaseClientProvider);
+    final savingsRepo = SavingsRepository(client, user.orgId!);
+    final skippedCount =
+        await savingsRepo.detectAndFreezeSkippedInstallments(saving.id);
+
+    if (!mounted) return;
+    if (skippedCount > 0) {
+      ref.invalidate(savingDetailProvider(saving.id));
+      ref.invalidate(allSavingsProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '$skippedCount skipped installment(s) frozen, tenure extended'),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No skipped installments to freeze'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
     }
   }
@@ -1142,6 +1198,89 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         ),
       ),
     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildFreezeToggle(SavingsModel saving, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: saving.freezeEnabled
+                ? Colors.cyan.withValues(alpha: 0.4)
+                : theme.dividerColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: saving.freezeEnabled
+                    ? Colors.cyan.withValues(alpha: 0.15)
+                    : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.ac_unit_rounded,
+                size: 18,
+                color: saving.freezeEnabled
+                    ? Colors.cyan
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Date Freeze',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    saving.freezeEnabled
+                        ? 'Skipped installments auto-freeze'
+                        : 'Off — installments won\'t freeze',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch.adaptive(
+              value: saving.freezeEnabled,
+              activeThumbColor: Colors.cyan,
+              onChanged: (val) => _toggleFreeze(saving, val),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleFreeze(SavingsModel saving, bool enabled) async {
+    HapticFeedback.lightImpact();
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.orgId == null) return;
+    final client = ref.read(supabaseClientProvider);
+    await client.from('savings_plans').update({
+      'freeze_enabled': enabled,
+    }).eq('id', saving.id);
+    ref.invalidate(savingDetailProvider(widget.savingId));
+    ref.invalidate(allSavingsProvider);
   }
 
   Widget _buildPrimaryActionRow(SavingsModel saving, ThemeData theme) {

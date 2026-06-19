@@ -580,4 +580,182 @@ class EMIRepository {
       return [];
     }
   }
+
+  // ─── Date Freeze: detect skipped EMIs and freeze them ───
+
+  /// Detects EMIs that were skipped between the first and last paid EMI,
+  /// marks them as 'frozen', and extends the loan tenure by appending new EMIs.
+  /// Returns the number of newly frozen EMIs.
+  Future<int> detectAndFreezeSkippedEMIs(String loanId) async {
+    try {
+      final emis = await getByLoanId(loanId);
+      if (emis.isEmpty) return 0;
+
+      final paidNumbers = emis
+          .where((e) => e.status == EMIStatus.paid)
+          .map((e) => e.emiNumber)
+          .toList();
+      if (paidNumbers.isEmpty) return 0;
+
+      final minPaid = paidNumbers.reduce((a, b) => a < b ? a : b);
+      final maxPaid = paidNumbers.reduce((a, b) => a > b ? a : b);
+
+      // Only freeze EMIs strictly between min and max paid
+      final toFreeze = emis.where((e) =>
+          e.emiNumber > minPaid &&
+          e.emiNumber < maxPaid &&
+          e.status != EMIStatus.paid &&
+          e.status != EMIStatus.frozen &&
+          e.status != EMIStatus.waived);
+
+      int count = 0;
+      for (final emi in toFreeze) {
+        await _client
+            .from('emi_schedule')
+            .update({'status': 'frozen'}).eq('id', emi.id);
+        count++;
+      }
+
+      if (count > 0) {
+        // Update loan's frozen_count
+        await _client.from('loans').update({
+          'frozen_count': count,
+        }).eq('id', loanId);
+
+        // Extend tenure by appending new EMIs
+        await _extendLoanTenure(loanId, count);
+      }
+
+      return count;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /// Appends [extraCount] new EMIs at the end of the schedule and updates
+  /// the loan's tenure_months and total_emis.
+  Future<void> _extendLoanTenure(String loanId, int extraCount) async {
+    try {
+      final loanResponse = await _client
+          .from('loans')
+          .select(
+              'amount, interest_rate, tenure_months, emi_amount, frequency, '
+              'first_emi_date, first_installment_date, disbursement_date, '
+              'tenure_value, tenure_unit, interest_type, customer_id, member_id')
+          .eq('id', loanId)
+          .maybeSingle();
+      if (loanResponse == null) return;
+
+      final emis = await getByLoanId(loanId);
+      if (emis.isEmpty) return;
+
+      final lastEmi = emis.last;
+      final freq = loanResponse['frequency'] as String? ?? 'monthly';
+      final emiAmount = (loanResponse['emi_amount'] as num?)?.toDouble() ?? 0.0;
+      final interestType = loanResponse['interest_type'] as String? ?? 'flat';
+      final principal = (loanResponse['amount'] as num?)?.toDouble() ?? 0.0;
+      final annualRate =
+          ((loanResponse['interest_rate'] as num?)?.toDouble() ?? 0) / 100;
+      final tenureMonths =
+          (loanResponse['tenure_months'] as num?)?.toInt() ?? 12;
+      final memberId = loanResponse['customer_id']?.toString() ??
+          loanResponse['member_id']?.toString();
+
+      // Calculate new EMI number and starting date
+      int nextEmiNumber = lastEmi.emiNumber + 1;
+      DateTime nextDueDate;
+
+      switch (freq) {
+        case 'daily':
+          nextDueDate = lastEmi.dueDate.add(const Duration(days: 1));
+          break;
+        case 'weekly':
+          nextDueDate = lastEmi.dueDate.add(const Duration(days: 7));
+          break;
+        case 'yearly':
+          nextDueDate = DateTime(lastEmi.dueDate.year + 1, lastEmi.dueDate.month,
+              lastEmi.dueDate.day);
+          break;
+        default: // monthly
+          int targetMonth = lastEmi.dueDate.month + 1;
+          int targetYear =
+              lastEmi.dueDate.year + ((targetMonth - 1) ~/ 12);
+          targetMonth = ((targetMonth - 1) % 12) + 1;
+          int targetDay = lastEmi.dueDate.day;
+          int daysInTarget = DateTime(targetYear, targetMonth + 1, 0).day;
+          if (targetDay > daysInTarget) targetDay = daysInTarget;
+          nextDueDate = DateTime(targetYear, targetMonth, targetDay);
+      }
+
+      double balance = lastEmi.balanceAfter;
+      final List<Map<String, dynamic>> newSchedule = [];
+
+      for (int i = 0; i < extraCount; i++) {
+        final installmentNum = nextEmiNumber + i;
+        final interest = interestType == 'reducing' || interestType == 'reducingBalance'
+            ? balance * (annualRate / 12)
+            : (principal * annualRate * (tenureMonths / 12)) /
+                (emis.length + extraCount);
+        final principalPaid = emiAmount - interest;
+        balance -= principalPaid;
+        if (balance < 0) balance = 0;
+
+        DateTime dueDate;
+        switch (freq) {
+          case 'daily':
+            dueDate = nextDueDate.add(Duration(days: i));
+            break;
+          case 'weekly':
+            dueDate = nextDueDate.add(Duration(days: i * 7));
+            break;
+          case 'yearly':
+            dueDate = DateTime(
+                nextDueDate.year + i, nextDueDate.month, nextDueDate.day);
+            break;
+          default:
+            int m = nextDueDate.month + i;
+            int y = nextDueDate.year + ((m - 1) ~/ 12);
+            m = ((m - 1) % 12) + 1;
+            int d = nextDueDate.day;
+            int dim = DateTime(y, m + 1, 0).day;
+            if (d > dim) d = dim;
+            dueDate = DateTime(y, m, d);
+        }
+
+        newSchedule.add({
+          'loan_id': loanId,
+          'org_id': _orgId,
+          'member_id': memberId,
+          'emi_number': installmentNum,
+          'installment_number': installmentNum,
+          'period': installmentNum,
+          'due_date': dueDate.toIso8601String().split('T').first,
+          'emi_amount': emiAmount,
+          'emi': emiAmount,
+          'principal': principalPaid,
+          'interest': interest,
+          'balance_after': balance,
+          'status': 'pending',
+          'is_paid': false,
+        });
+      }
+
+      if (newSchedule.isNotEmpty) {
+        await _client.from('emi_schedule').insert(newSchedule);
+      }
+
+      // Update loan tenure
+      final currentTenure =
+          (loanResponse['tenure_months'] as num?)?.toInt() ?? 12;
+      await _client.from('loans').update({
+        'tenure_months': currentTenure + extraCount,
+      }).eq('id', loanId);
+    } catch (_) {}
+  }
+
+  /// Manually freeze all currently-skipped EMIs for a loan.
+  /// Returns the number of newly frozen EMIs.
+  Future<int> manualFreezeSkippedEMIs(String loanId) async {
+    return detectAndFreezeSkippedEMIs(loanId);
+  }
 }

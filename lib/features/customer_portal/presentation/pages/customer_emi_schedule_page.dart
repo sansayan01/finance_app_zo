@@ -10,6 +10,7 @@ import '../../../../core/widgets/sparkline_chart.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
 import '../widgets/customer_empty_state.dart';
+import '../../../../payments/presentation/widgets/upi_payment_sheet.dart';
 
 class CustomerEmiSchedulePage extends ConsumerStatefulWidget {
   final String loanId;
@@ -193,6 +194,7 @@ class _CustomerEmiSchedulePageState
                 gradient: headerGradient,
                 loanTotal: loanTotal,
                 emiCount: sorted.length,
+                totalPending: totalPending,
               ),
             ),
           );
@@ -281,6 +283,7 @@ class _CustomerEmiSchedulePageState
     required Gradient gradient,
     required double loanTotal,
     required int emiCount,
+    double totalPending = 0,
   }) {
     final topPad = MediaQuery.of(context).padding.top + 8;
     return Container(
@@ -321,6 +324,10 @@ class _CustomerEmiSchedulePageState
                   icon: Icons.receipt_long_rounded,
                   label: 'Loan #${_shortId(widget.loanId)}',
                 ),
+                if (totalPending > 0) ...[
+                  const SizedBox(width: 8),
+                  _upiPayButton(totalPending),
+                ],
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -423,6 +430,49 @@ class _CustomerEmiSchedulePageState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _upiPayButton(double amount) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => UpiPaymentSheet.show(
+          context,
+          amount: amount,
+          loanId: widget.loanId,
+          emiScheduleId: null,
+          loanNumber: _shortId(widget.loanId),
+          emiNumber: null,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.payments_rounded, color: Colors.white, size: 14),
+              const SizedBox(width: 6),
+              Text(
+                'Pay via UPI',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

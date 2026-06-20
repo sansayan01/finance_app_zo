@@ -1506,7 +1506,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             itemBuilder: (context, index) {
               final installment = schedule[index];
               final isCurrent = index == currentIndex;
-              return _buildSavingsTimelineCard(installment, theme,
+              return _buildSavingsTimelineCard(installment, saving, theme,
                   isCurrent: isCurrent);
             },
           ),
@@ -1518,14 +1518,15 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Widget _buildSavingsTimelineCard(SavingsInstallment installment,
-      ThemeData theme, {bool isCurrent = false}) {
+      SavingsModel saving, ThemeData theme, {bool isCurrent = false}) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final isPaid = installment.isPaid;
     final isOverdue = !isPaid && installment.dueDate.isBefore(today);
+    final isFrozen = installment.isFrozen;
     final color = isPaid
         ? AppColors.success
-        : (isOverdue ? AppColors.error : theme.colorScheme.primary);
+        : (isOverdue ? AppColors.error : (isFrozen ? Colors.cyan : theme.colorScheme.primary));
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -1566,7 +1567,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                         color: color)),
               ),
               const Spacer(),
-              if (isCurrent)
+              if (isCurrent) ...[
                 Container(
                   width: 8,
                   height: 8,
@@ -1575,6 +1576,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                     shape: BoxShape.circle,
                   ),
                 ),
+              ],
             ],
           ),
           const Spacer(),
@@ -1588,6 +1590,60 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
           Text(AppFormatters.formatDate(installment.dueDate),
               style:
                   const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+          if (!isPaid && saving.freezeEnabled && !isFrozen)
+            ...[
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => _freezeSingleInstallment(installment, saving),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.cyan.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.ac_unit_rounded, size: 12, color: Colors.cyan),
+                      SizedBox(width: 4),
+                      Text('Freeze',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.cyan)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          if (isFrozen)
+            ...[
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => _unfreezeSingleInstallment(installment, saving),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.unfold_more, size: 12, color: Colors.orange),
+                      SizedBox(width: 4),
+                      Text('Unfreeze',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.orange)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
         ],
       ),
     );
@@ -1989,6 +2045,136 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
           backgroundColor: AppColors.success,
         ),
       );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _freezeSingleInstallment(
+      SavingsInstallment installment, SavingsModel saving) async {
+    final dateKey = DateFormat('yyyy-MM-dd').format(installment.dueDate);
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Freeze Installment?'),
+        content: Text(
+            'Are you sure you want to freeze the installment due on ${AppFormatters.formatDate(installment.dueDate)}? This will extend the savings plan duration by 1 period.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.cyan,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Freeze'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final success = await ref
+          .read(savingsRepositoryProvider)
+          .freezeSingleInstallment(saving.id, dateKey);
+
+      if (success) {
+        if (!mounted) return;
+        ref.invalidate(savingDetailProvider(saving.id));
+        ref.invalidate(savingsScheduleProvider(saving.id));
+        ref.invalidate(allSavingsProvider);
+        ref.invalidate(savingsSummaryProvider);
+
+        HapticFeedback.mediumImpact();
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Installment frozen successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Failed to freeze installment'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _unfreezeSingleInstallment(
+      SavingsInstallment installment, SavingsModel saving) async {
+    final dateKey = DateFormat('yyyy-MM-dd').format(installment.dueDate);
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Unfreeze Installment?'),
+        content: Text(
+            'Are you sure you want to unfreeze the installment due on ${AppFormatters.formatDate(installment.dueDate)}? This will shorten the savings plan duration by 1 period.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Unfreeze'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final success = await ref
+          .read(savingsRepositoryProvider)
+          .unfreezeSingleInstallment(saving.id, dateKey);
+
+      if (success) {
+        if (!mounted) return;
+        ref.invalidate(savingDetailProvider(saving.id));
+        ref.invalidate(savingsScheduleProvider(saving.id));
+        ref.invalidate(allSavingsProvider);
+        ref.invalidate(savingsSummaryProvider);
+
+        HapticFeedback.mediumImpact();
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Installment unfrozen successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Failed to unfreeze installment'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),

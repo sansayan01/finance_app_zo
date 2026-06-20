@@ -1048,6 +1048,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                   ..addAll(selected.map((e) => e.id));
               });
             },
+            onFreezeSkipped: () => _handleFreezeSkipped(),
           ),
         ],
       ),
@@ -1120,10 +1121,111 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                     ..addAll(selected.map((s) => _dateKey(s.dueDate)));
                 });
               },
+              onFreezeSkipped: () => _handleFreezeSavingsSkipped(),
             ),
         ],
       ),
     );
+  }
+
+  // ─── Freeze Skipped Actions ───
+
+  Future<void> _handleFreezeSkipped() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.orgId == null) return;
+    final emiRepo = EMIRepository(ref.read(supabaseClientProvider), user.orgId!);
+    final frozenCount = await emiRepo.detectAndFreezeSkippedEMIs(widget.loan!.id);
+
+    if (frozenCount > 0) {
+      // Refresh EMIs from DB
+      final freshEmis = await EMIRepository(
+        ref.read(supabaseClientProvider), user.orgId!,
+      ).getByLoanId(widget.loan!.id);
+      setState(() {
+        _allEMIs = freshEmis;
+      });
+      ref.invalidate(emiScheduleProvider(widget.loan!.id));
+      ref.invalidate(loanDetailProvider(widget.loan!.id));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$frozenCount skipped EMI(s) frozen, tenure extended'),
+            backgroundColor: Colors.orange.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('No skipped EMIs to freeze'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleFreezeSavingsSkipped() async {
+    final profile = await ref.read(staffProfileProvider.future);
+    if (profile == null) return;
+    final orgId = profile.orgId;
+    if (orgId == null) return;
+
+    final savingsRepo = SavingsRepository(ref.read(supabaseClientProvider), orgId);
+    final frozenCount = await savingsRepo.detectAndFreezeSkippedInstallments(widget.savingsPlan!.id);
+
+    if (frozenCount > 0) {
+      // Refresh schedule from DB
+      final planResponse = await ref
+          .read(supabaseClientProvider)
+          .from('savings_plans')
+          .select('*')
+          .eq('id', widget.savingsPlan!.id)
+          .maybeSingle();
+
+      if (planResponse != null) {
+        final freshPlan = SavingsModel.fromJson(planResponse);
+        final paidDates = await SavingsScheduleGenerator.fetchPaidDates(
+          client: ref.read(supabaseClientProvider),
+          planId: widget.savingsPlan!.id,
+        );
+        final freshSchedule = SavingsScheduleGenerator.generate(
+          plan: freshPlan,
+          paidDates: paidDates,
+        );
+        setState(() {
+          _savingsSchedule = freshSchedule;
+        });
+      }
+
+      ref.invalidate(allSavingsProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$frozenCount skipped installment(s) frozen, tenure extended'),
+            backgroundColor: Colors.orange.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('No skipped installments to freeze'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
 }

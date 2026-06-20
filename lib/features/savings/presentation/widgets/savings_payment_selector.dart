@@ -20,6 +20,7 @@ class SavingsPaymentSelector extends StatefulWidget {
   final double installmentAmount;
   final int totalInstallments;
   final ValueChanged<List<SavingsInstallment>>? onSelectionChanged;
+  final VoidCallback? onFreezeSkipped;
   final List<String> initialSelectedDateKeys;
 
   const SavingsPaymentSelector({
@@ -28,6 +29,7 @@ class SavingsPaymentSelector extends StatefulWidget {
     required this.installmentAmount,
     required this.totalInstallments,
     this.onSelectionChanged,
+    this.onFreezeSkipped,
     this.initialSelectedDateKeys = const [],
   });
 
@@ -142,6 +144,22 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
       .where((e) => _selectedIds.contains(_dateKey(e.dueDate)))
       .toList(growable: false);
 
+  /// Checks if there are unpaid installments between min and max paid that can be frozen.
+  bool _hasFreezableSkipped() {
+    final paidNumbers = widget.installments
+        .where((e) => e.isPaid)
+        .map((e) => e.number)
+        .toList();
+    if (paidNumbers.length < 2) return false;
+    final minPaid = paidNumbers.reduce((a, b) => a < b ? a : b);
+    final maxPaid = paidNumbers.reduce((a, b) => a > b ? a : b);
+    return widget.installments.any((e) =>
+        e.number > minPaid &&
+        e.number < maxPaid &&
+        !e.isPaid &&
+        !e.isFrozen);
+  }
+
   // -- Quick Pay allocation (oldest-first) ------------------------------
 
   void _applyQuickPay(int count) {
@@ -196,6 +214,12 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
         // -- Status summary --
         _buildStatusSummary(
             unpaidInstallments.length, overdueCount, dueTodayCount, paidCount),
+
+        // -- Freeze skipped button --
+        if (widget.onFreezeSkipped != null && _hasFreezableSkipped()) ...[
+          const SizedBox(height: 10),
+          _buildFreezeSkippedButton(),
+        ],
 
         const SizedBox(height: 14),
 
@@ -281,6 +305,35 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFreezeSkippedButton() {
+    return GestureDetector(
+      onTap: widget.onFreezeSkipped,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.cyan.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.ac_unit_rounded, size: 16, color: Colors.cyan),
+            SizedBox(width: 8),
+            Text(
+              'Freeze Skipped Dates',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.cyan,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -771,4 +771,80 @@ class EMIRepository {
   Future<int> manualFreezeSkippedEMIs(String loanId) async {
     return detectAndFreezeSkippedEMIs(loanId);
   }
+
+  /// Freeze a single specific EMI by its ID.
+  /// Marks it as 'frozen' and updates frozen_count.
+  Future<bool> freezeSingleEMI(String emiId, String loanId) async {
+    try {
+      debugPrint('freezeSingleEMI: emiId=$emiId, loanId=$loanId');
+
+      // Freeze this EMI
+      await _client
+          .from('emi_schedule')
+          .update({'status': 'frozen'}).eq('id', emiId);
+
+      debugPrint('freezeSingleEMI: EMI status updated');
+
+      // Accumulate frozen_count
+      final loanRecord = await _client
+          .from('loans')
+          .select('frozen_count')
+          .eq('id', loanId)
+          .maybeSingle();
+      final existingFrozenCount =
+          (loanRecord?['frozen_count'] as num?)?.toInt() ?? 0;
+
+      debugPrint('freezeSingleEMI: existingFrozenCount=$existingFrozenCount');
+
+      await _client.from('loans').update({
+        'frozen_count': existingFrozenCount + 1,
+      }).eq('id', loanId);
+
+      debugPrint('freezeSingleEMI: frozen_count updated');
+
+      // Extend tenure (non-blocking — freeze already succeeded)
+      try {
+        await _extendLoanTenure(loanId, 1);
+      } catch (e) {
+        debugPrint('freezeSingleEMI: tenure extension failed (non-fatal): $e');
+      }
+
+      debugPrint('freezeSingleEMI: done');
+      return true;
+    } catch (e) {
+      debugPrint('freezeSingleEMI error: $e');
+      return false;
+    }
+  }
+
+  /// Unfreeze a single specific EMI by its ID.
+  /// Reverts status to 'pending' and decrements frozen_count.
+  Future<bool> unfreezeSingleEMI(String emiId, String loanId) async {
+    try {
+      debugPrint('unfreezeSingleEMI: emiId=$emiId, loanId=$loanId');
+
+      // Unfreeze this EMI
+      await _client
+          .from('emi_schedule')
+          .update({'status': 'pending'}).eq('id', emiId);
+
+      // Decrement frozen_count
+      final loanRecord = await _client
+          .from('loans')
+          .select('frozen_count')
+          .eq('id', loanId)
+          .maybeSingle();
+      final currentCount =
+          (loanRecord?['frozen_count'] as num?)?.toInt() ?? 0;
+
+      await _client.from('loans').update({
+        'frozen_count': (currentCount - 1).clamp(0, 999999),
+      }).eq('id', loanId);
+
+      return true;
+    } catch (e) {
+      debugPrint('unfreezeSingleEMI error: $e');
+      return false;
+    }
+  }
 }

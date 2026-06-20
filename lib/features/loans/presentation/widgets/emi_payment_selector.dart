@@ -20,6 +20,7 @@ class EmiPaymentSelector extends StatefulWidget {
   final List<EMIScheduleModel> emis;
   final double emiAmount;
   final ValueChanged<List<EMIScheduleModel>>? onSelectionChanged;
+  final VoidCallback? onFreezeSkipped;
   final List<String> initialSelectedIds;
 
   const EmiPaymentSelector({
@@ -27,6 +28,7 @@ class EmiPaymentSelector extends StatefulWidget {
     required this.emis,
     required this.emiAmount,
     this.onSelectionChanged,
+    this.onFreezeSkipped,
     this.initialSelectedIds = const [],
   });
 
@@ -125,6 +127,23 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
       .where((e) => _selectedIds.contains(e.id))
       .toList(growable: false);
 
+  /// Checks if there are unpaid EMIs between min and max paid that can be frozen.
+  bool _hasFreezableSkipped() {
+    final paidNumbers = widget.emis
+        .where((e) => e.status == EMIStatus.paid)
+        .map((e) => e.emiNumber)
+        .toList();
+    if (paidNumbers.length < 2) return false;
+    final minPaid = paidNumbers.reduce((a, b) => a < b ? a : b);
+    final maxPaid = paidNumbers.reduce((a, b) => a > b ? a : b);
+    return widget.emis.any((e) =>
+        e.emiNumber > minPaid &&
+        e.emiNumber < maxPaid &&
+        e.status != EMIStatus.paid &&
+        e.status != EMIStatus.frozen &&
+        e.status != EMIStatus.waived);
+  }
+
   // -- Quick Pay allocation (oldest-first) ------------------------------
 
   void _applyQuickPay(int count) {
@@ -178,6 +197,12 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
         // ── Status summary ──
         _buildStatusSummary(
             unpaidEMIs.length, overdueCount, dueTodayCount, paidCount),
+
+        // ── Freeze skipped button ──
+        if (widget.onFreezeSkipped != null && _hasFreezableSkipped()) ...[
+          const SizedBox(height: 10),
+          _buildFreezeSkippedButton(),
+        ],
 
         const SizedBox(height: 14),
 
@@ -690,6 +715,35 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFreezeSkippedButton() {
+    return GestureDetector(
+      onTap: widget.onFreezeSkipped,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.cyan.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.ac_unit_rounded, size: 16, color: Colors.cyan),
+            SizedBox(width: 8),
+            Text(
+              'Freeze Skipped EMIs',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.cyan,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

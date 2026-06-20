@@ -948,4 +948,116 @@ class SavingsRepository {
   Future<int> manualFreezeSkippedInstallments(String planId) async {
     return detectAndFreezeSkippedInstallments(planId);
   }
+
+  /// Freeze a single specific savings installment by its date key (e.g. '2026-03-15').
+  /// Adds it to frozen_dates, increments frozen_count, extends tenure.
+  Future<bool> freezeSingleInstallment(String planId, String dateKey) async {
+    try {
+      final plan = await _client
+          .from('savings_plans')
+          .select('*')
+          .eq('id', planId)
+          .maybeSingle();
+      if (plan == null) return false;
+
+      final planModel = SavingsModel.fromJson(plan);
+      final existingFrozen = planModel.frozenDates.toSet();
+
+      // Already frozen? Skip.
+      if (existingFrozen.contains(dateKey)) return false;
+
+      final newFrozenDates = <String>{...existingFrozen, dateKey};
+
+      // Extend tenure by 1
+      final collectionType = planModel.collectionType;
+      DateTime maturity = planModel.maturityDate;
+      switch (collectionType) {
+        case 'weekly':
+          maturity = maturity.add(const Duration(days: 7));
+          break;
+        case 'daily':
+          maturity = maturity.add(const Duration(days: 1));
+          break;
+        default: // monthly
+          int m = maturity.month + 1;
+          int y = maturity.year + ((m - 1) ~/ 12);
+          m = ((m - 1) % 12) + 1;
+          int d = maturity.day;
+          int dim = DateTime(y, m + 1, 0).day;
+          if (d > dim) d = dim;
+          maturity = DateTime(y, m, d);
+      }
+
+      await _client.from('savings_plans').update({
+        'frozen_count': planModel.frozenCount + 1,
+        'frozen_dates': newFrozenDates.toList(),
+        'total_installments': planModel.totalInstallments + 1,
+        'maturity_date': maturity.toIso8601String().split('T')[0],
+      }).eq('id', planId);
+
+      return true;
+    } catch (e) {
+      debugPrint('freezeSingleInstallment error: $e');
+      return false;
+    }
+  }
+
+  /// Unfreeze a single specific savings installment by its date key.
+  /// Removes it from frozen_dates, decrements frozen_count, and adjusts tenure.
+  Future<bool> unfreezeSingleInstallment(String planId, String dateKey) async {
+    try {
+      debugPrint('unfreezeSingleInstallment: planId=$planId, dateKey=$dateKey');
+
+      final plan = await _client
+          .from('savings_plans')
+          .select('*')
+          .eq('id', planId)
+          .maybeSingle();
+      if (plan == null) return false;
+
+      final planModel = SavingsModel.fromJson(plan);
+      final existingFrozen = planModel.frozenDates.toSet();
+
+      // Not frozen? Skip.
+      if (!existingFrozen.contains(dateKey)) return false;
+
+      final newFrozenDates = <String>{...existingFrozen}..remove(dateKey);
+
+      // Decrement frozen_count
+      final currentCount = planModel.frozenCount;
+
+      // Reduce maturity date by 1 period
+      final collectionType = planModel.collectionType;
+      DateTime maturity = planModel.maturityDate;
+      switch (collectionType) {
+        case 'weekly':
+          maturity = maturity.subtract(const Duration(days: 7));
+          break;
+        case 'daily':
+          maturity = maturity.subtract(const Duration(days: 1));
+          break;
+        default: // monthly
+          int m = maturity.month - 1;
+          int y = maturity.year + ((m - 1) ~/ 12);
+          m = ((m - 1) % 12) + 1;
+          int d = maturity.day;
+          int dim = DateTime(y, m + 1, 0).day;
+          if (d > dim) d = dim;
+          maturity = DateTime(y, m, d);
+      }
+
+      await _client.from('savings_plans').update({
+        'frozen_count': (currentCount - 1).clamp(0, 999999),
+        'frozen_dates': newFrozenDates.toList(),
+        'total_installments': planModel.totalInstallments - 1,
+        'maturity_date': maturity.toIso8601String().split('T')[0],
+      }).eq('id', planId);
+
+      debugPrint('unfreezeSingleInstallment: done');
+      return true;
+    } catch (e) {
+      debugPrint('unfreezeSingleInstallment error: $e');
+      return false;
+    }
+  }
 }

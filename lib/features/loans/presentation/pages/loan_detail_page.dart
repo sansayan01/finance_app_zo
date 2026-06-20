@@ -922,7 +922,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 itemBuilder: (context, index) {
                   final emi = schedule[index];
                   final isCurrent = index == currentEmiIndex;
-                  return _buildTimelineCard(emi, theme, isCurrent: isCurrent,
+                  return _buildTimelineCard(emi, theme,
+                      loan: loan, isCurrent: isCurrent,
                       onTap: () {
                     _showEMIDetailSheet(emi, loan, theme);
                   });
@@ -942,7 +943,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   // The EMI filter functionality is handled by _buildEMIFilterChip / _selectedEmiFilter.
 
   Widget _buildTimelineCard(EMIScheduleModel emi, ThemeData theme,
-      {bool isCurrent = false, VoidCallback? onTap}) {
+      {LoanModel? loan, bool isCurrent = false, VoidCallback? onTap}) {
     final isPaid = emi.status == EMIStatus.paid;
     final isOverdue = emi.isOverdue;
     final color = isPaid
@@ -991,7 +992,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           color: color)),
                 ),
                 const Spacer(),
-                if (isCurrent)
+                if (isCurrent) ...[
                   Container(
                     width: 8,
                     height: 8,
@@ -1000,6 +1001,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       shape: BoxShape.circle,
                     ),
                   ),
+                ],
               ],
             ),
             const Spacer(),
@@ -1013,8 +1015,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             Text(AppFormatters.formatDate(emi.dueDate),
                 style:
                     const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-            if (isOverdue) ...[
+            if (isOverdue || (loan != null && loan.freezeEnabled && _isFreezable(emi)) || emi.status == EMIStatus.frozen)
               const SizedBox(height: 8),
+            if (isOverdue)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1035,7 +1038,54 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   ],
                 ),
               ),
-            ],
+            if (!isOverdue && loan != null && loan.freezeEnabled && _isFreezable(emi))
+              GestureDetector(
+                onTap: () => _freezeSingleEMI(emi, loan),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.cyan.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.ac_unit_rounded, size: 12, color: Colors.cyan),
+                      SizedBox(width: 4),
+                      Text('Freeze',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.cyan)),
+                    ],
+                  ),
+                ),
+              ),
+            if (emi.status == EMIStatus.frozen)
+              GestureDetector(
+                onTap: () => _unfreezeSingleEMI(emi, loan!),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.unfold_more, size: 12, color: Colors.orange),
+                      SizedBox(width: 4),
+                      Text('Unfreeze',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.orange)),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -4133,6 +4183,115 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
       if (!mounted) return;
       messenger
           .showSnackBar(SnackBar(content: Text('Failed to reactivate: $e')));
+    }
+  }
+
+  bool _isFreezable(EMIScheduleModel emi) {
+    return emi.status != EMIStatus.paid &&
+        emi.status != EMIStatus.frozen &&
+        emi.status != EMIStatus.waived;
+  }
+
+  Future<void> _unfreezeSingleEMI(EMIScheduleModel emi, LoanModel loan) async {
+    HapticFeedback.lightImpact();
+    final client = ref.read(supabaseClientProvider);
+
+    try {
+      await client
+          .from('emi_schedule')
+          .update({'status': 'pending'}).eq('id', emi.id);
+
+      // Decrement frozen_count
+      final loanRecord = await client
+          .from('loans')
+          .select('frozen_count')
+          .eq('id', loan.id)
+          .maybeSingle();
+      final currentCount = (loanRecord?['frozen_count'] as num?)?.toInt() ?? 0;
+
+      await client.from('loans').update({
+        'frozen_count': (currentCount - 1).clamp(0, 999999),
+      }).eq('id', loan.id);
+
+      if (!mounted) return;
+      ref.invalidate(emiScheduleProvider(widget.loanId));
+      ref.invalidate(loanDetailProvider(widget.loanId));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('EMI #${emi.emiNumber} unfrozen'),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } catch (e) {
+      debugPrint('_unfreezeSingleEMI ERROR: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unfreeze failed: $e'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
+
+  Future<void> _freezeSingleEMI(EMIScheduleModel emi, LoanModel loan) async {
+    HapticFeedback.lightImpact();
+    final client = ref.read(supabaseClientProvider);
+
+    try {
+      debugPrint('_freezeSingleEMI: emiId=${emi.id}, loanId=${loan.id}, status=${emi.status.name}');
+
+      // Step 1: Update the EMI status
+      await client
+          .from('emi_schedule')
+          .update({'status': 'frozen'})
+          .eq('id', emi.id);
+
+      debugPrint('_freezeSingleEMI: EMI updated successfully');
+
+      // Step 2: Get current frozen_count
+      final loanRecord = await client
+          .from('loans')
+          .select('frozen_count')
+          .eq('id', loan.id)
+          .maybeSingle();
+      final currentCount = (loanRecord?['frozen_count'] as num?)?.toInt() ?? 0;
+
+      debugPrint('_freezeSingleEMI: current frozen_count=$currentCount');
+
+      // Step 3: Update frozen_count
+      await client.from('loans').update({
+        'frozen_count': currentCount + 1,
+      }).eq('id', loan.id);
+
+      debugPrint('_freezeSingleEMI: done');
+
+      if (!mounted) return;
+      ref.invalidate(emiScheduleProvider(widget.loanId));
+      ref.invalidate(loanDetailProvider(widget.loanId));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('EMI #${emi.emiNumber} frozen successfully'),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } catch (e) {
+      debugPrint('_freezeSingleEMI ERROR: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Freeze failed: $e'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
     }
   }
 

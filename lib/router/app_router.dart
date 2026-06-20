@@ -10,7 +10,7 @@ import '../features/chatbot/presentation/widgets/floating_chatbot.dart';
 import '../features/branches/presentation/pages/branch_management_page.dart';
 
 // Payments
-
+import '../features/payments/presentation/pages/upi_confirmations_page.dart';
 
 // Super Admin (Admin pages still in use)
 import '../features/admin/presentation/pages/admin_org_detail_page.dart';
@@ -882,6 +882,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/staff/targets',
             builder: (context, state) => const StaffTargetsPage(),
+          ),
+          GoRoute(
+            path: '/staff/upi-confirmations',
+            builder: (context, state) => const UpiConfirmationsPage(),
           ),
           // ── Loans & Savings (view only) ──
           GoRoute(

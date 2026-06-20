@@ -10,6 +10,8 @@ import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/powered_by_badge.dart';
+import '../../../payments/data/providers/upi_providers.dart';
+import '../../../payments/data/services/upi_service.dart';
 import '../../data/providers/brand_provider.dart';
 import '../widgets/icon_preset_picker.dart';
 
@@ -63,6 +65,11 @@ class _OrganizationSettingsPageState
   String _timezone = 'Asia/Kolkata';
   int _fyStartMonth = 4;
 
+  // ─── UPI Payment Config ───
+  final _upiVpaCtrl = TextEditingController();
+  final _upiMerchantCtrl = TextEditingController();
+  bool _savingUpi = false;
+
   bool _initialized = false;
   bool _saving = false;
 
@@ -93,6 +100,8 @@ class _OrganizationSettingsPageState
     _pincodeCtrl.dispose();
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
+    _upiVpaCtrl.dispose();
+    _upiMerchantCtrl.dispose();
     super.dispose();
   }
 
@@ -120,6 +129,12 @@ class _OrganizationSettingsPageState
     _timezone = (profile['timezone'] as String?) ?? 'Asia/Kolkata';
     final fy = profile['fiscal_year_start_month'];
     _fyStartMonth = fy is int ? fy : (fy is num ? fy.toInt() : 4);
+
+    // Hydrate existing UPI payment config (if any).
+    final payment =
+        (settings['payment'] as Map?)?.cast<String, dynamic>() ?? {};
+    _upiVpaCtrl.text = (payment['upi_vpa'] as String?) ?? '';
+    _upiMerchantCtrl.text = (payment['merchant_name'] as String?) ?? '';
 
     _initialized = true;
   }
@@ -276,6 +291,9 @@ class _OrganizationSettingsPageState
                   const SizedBox(height: 14),
                   // ─── SECTION 6: FINANCIAL & LOCALE ─────────────────
                   _buildLocaleSection(theme),
+                  const SizedBox(height: 14),
+                  // ─── SECTION 7: PAYMENT (UPI) ───────────────────────
+                  _buildUpiSection(theme),
                   const SizedBox(height: 28),
                   // ─── SAVE BUTTON ───────────────────────────────────
                   _buildSaveButton(),
@@ -546,6 +564,148 @@ class _OrganizationSettingsPageState
         ),
       ),
     ).animate(delay: 300.ms).fadeIn();
+  }
+
+  // ─── UPI Payment Configuration Section ─────────────────────────────
+
+  Future<void> _saveUpi() async {
+    final vpa = _upiVpaCtrl.text.trim();
+    final merchant = _upiMerchantCtrl.text.trim();
+
+    if (vpa.isEmpty && merchant.isEmpty) {
+      // Nothing to save — treat as skip.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter VPA and merchant name to configure UPI.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (vpa.isNotEmpty && !UpiService.isValidVpa(vpa)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid VPA. It must contain an "@" symbol.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _savingUpi = true);
+    try {
+      await ref.read(upiServiceProvider).saveOrgVpa(
+            vpa: vpa,
+            merchantName: merchant,
+          );
+      ref.invalidate(_orgSettingsProvider);
+      ref.invalidate(currentOrgProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(children: [
+            Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            SizedBox(width: 12),
+            Expanded(child: Text('UPI payment configuration saved')),
+          ]),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save UPI config: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _savingUpi = false);
+    }
+  }
+
+  Widget _buildUpiSection(ThemeData theme) {
+    return _Section(
+      title: 'Payment Configuration',
+      icon: Icons.account_balance_wallet_outlined,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(
+            'Configure the merchant Virtual Payment Address (VPA) used for UPI collection receipts.',
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+        ),
+        TextFormField(
+          controller: _upiVpaCtrl,
+          keyboardType: TextInputType.emailAddress,
+          textCapitalization: TextCapitalization.none,
+          validator: (v) {
+            final value = (v ?? '').trim();
+            if (value.isEmpty) return null; // optional
+            return UpiService.isValidVpa(value)
+                ? null
+                : 'Invalid VPA (must contain "@")';
+          },
+          decoration: const InputDecoration(
+            labelText: 'UPI VPA',
+            hintText: 'yourorg@bankupi',
+            prefixIcon: Icon(Icons.alternate_email_rounded),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: TextFormField(
+            controller: _upiMerchantCtrl,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              labelText: 'Merchant Name',
+              hintText: 'Displayed on the customer UPI app',
+              prefixIcon: Icon(Icons.storefront_outlined),
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton.icon(
+            onPressed: _savingUpi ? null : _saveUpi,
+            icon: _savingUpi
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.5, color: Colors.white),
+                  )
+                : const Icon(Icons.save_outlined, size: 18),
+            label: Text(
+              _savingUpi ? 'Saving UPI config…' : 'Save UPI Configuration',
+              style:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ).animate(delay: 280.ms).fadeIn().slideY(begin: 0.04, end: 0);
   }
 }
 

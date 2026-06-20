@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart' show AppFormatters;
@@ -618,9 +619,17 @@ class EMIRepository {
       }
 
       if (count > 0) {
-        // Update loan's frozen_count
+        // Fetch existing frozen_count to accumulate (not overwrite)
+        final loanRecord = await _client
+            .from('loans')
+            .select('frozen_count')
+            .eq('id', loanId)
+            .maybeSingle();
+        final existingFrozenCount =
+            (loanRecord?['frozen_count'] as num?)?.toInt() ?? 0;
+
         await _client.from('loans').update({
-          'frozen_count': count,
+          'frozen_count': existingFrozenCount + count,
         }).eq('id', loanId);
 
         // Extend tenure by appending new EMIs
@@ -629,6 +638,7 @@ class EMIRepository {
 
       return count;
     } catch (e) {
+      debugPrint('detectAndFreezeSkippedEMIs error: $e');
       return 0;
     }
   }
@@ -751,7 +761,9 @@ class EMIRepository {
       await _client.from('loans').update({
         'tenure_months': currentTenure + extraCount,
       }).eq('id', loanId);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('_extendLoanTenure error: $e');
+    }
   }
 
   /// Manually freeze all currently-skipped EMIs for a loan.

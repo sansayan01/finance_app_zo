@@ -32,12 +32,15 @@
       "Bash(xargs ls -la)",
       "Bash(xargs grep -l \"dashboard\")",
       "Bash(xargs grep -l \"customerPortal\\\\|customer_portal\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__list_tables",
+      "Bash(python3 -c \"import sys; data=sys.stdin.read\\(\\); [print\\(line.strip\\(\\)\\) for line in data.split\\('\\\\n'\\) if line.strip\\(\\)]\")"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase",
     "github"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

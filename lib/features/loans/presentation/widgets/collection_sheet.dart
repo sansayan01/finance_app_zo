@@ -473,7 +473,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             ),
           );
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Loan date freeze detection failed: $e');
+      }
     }
 
     // 5. Activity log
@@ -640,7 +642,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             ),
           );
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Savings date freeze detection failed: $e');
+      }
     }
 
     // 5. Activity log

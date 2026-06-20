@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart' show AppFormatters;
@@ -890,7 +891,8 @@ class SavingsRepository {
       for (final inst in schedule) {
         if (inst.number > minPaidNumber &&
             inst.number < maxPaidNumber &&
-            !inst.isPaid) {
+            !inst.isPaid &&
+            !inst.isFrozen) {
           final dateKey =
               '${inst.dueDate.year}-${inst.dueDate.month.toString().padLeft(2, '0')}-${inst.dueDate.day.toString().padLeft(2, '0')}';
           if (!newFrozenDates.contains(dateKey)) {
@@ -937,6 +939,7 @@ class SavingsRepository {
 
       return count;
     } catch (e) {
+      debugPrint('detectAndFreezeSkippedInstallments error: $e');
       return 0;
     }
   }

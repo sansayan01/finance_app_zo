@@ -467,7 +467,8 @@ class EMIRepository {
         final staff = item['profiles'] as Map<String, dynamic>?;
         collections.add({
           'id': item['id']?.toString() ?? '',
-          'transaction_id': item['id']?.toString() ?? '',
+          'transaction_id': '',
+          'collection_id': item['id']?.toString() ?? '',
           'loan_id': item['loan_id']?.toString() ?? '',
           'amount': ((item['amount_collected'] ?? item['amount_expected']) as num?)?.toDouble() ?? 0.0,
           'payment_mode': item['payment_mode']?.toString() ?? 'cash',

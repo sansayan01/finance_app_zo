@@ -751,10 +751,8 @@ class LoansRepository {
             'status': isOverdue ? 'overdue' : 'pending',
             'paid_on': null,
             'payment_mode': null,
-            'amount_collected': 0,
-            'collected_by': null,
+            'amount_paid': 0,
             'transaction_id': null,
-            'collection_date': null,
           }).eq('id', emiId);
         }
       }

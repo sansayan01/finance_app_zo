@@ -155,12 +155,13 @@ class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsP
 
           _buildRoadmapCard(
             theme: theme,
-            title: 'UPI Organization Hook',
-            subtitle: 'Direct bank transfer settings',
-            description: 'Store direct merchant Virtual Payment Addresses (VPA) and automated bank codes. Connect direct QR generators inside collection receipts.',
-            priority: 'P2',
+            title: 'UPI Direct Payments',
+            subtitle: 'Active — Customer self-service UPI payments',
+            description: 'Customers can pay loan EMIs and savings installments via UPI deep link. QR code + app launch. Staff confirms payments from portal.',
+            priority: '✓',
             icon: Icons.qr_code_2_rounded,
-            color: Colors.indigo,
+            color: Colors.green,
+            isActive: true,
           ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.05, end: 0),
           const SizedBox(height: 16),
 
@@ -201,6 +202,7 @@ class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsP
     required String priority,
     required IconData icon,
     required Color color,
+    bool isActive = false,
   }) {
     return GlassCard(
       padding: const EdgeInsets.all(20),
@@ -257,13 +259,20 @@ class _IntegrationsSettingsPageState extends ConsumerState<IntegrationsSettingsP
                   style: const TextStyle(fontSize: 13, height: 1.45),
                 ),
                 const SizedBox(height: 12),
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.construction_rounded, size: 14, color: Colors.amber),
-                    SizedBox(width: 6),
+                    Icon(
+                      isActive ? Icons.check_circle_rounded : Icons.construction_rounded,
+                      size: 14,
+                      color: isActive ? Colors.green : Colors.amber,
+                    ),
+                    const SizedBox(width: 6),
                     Text(
-                      'Development pipeline schedule.',
-                      style: TextStyle(fontSize: 12, color: Colors.amber),
+                      isActive ? 'Active — Production ready' : 'Development pipeline schedule.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isActive ? Colors.green : Colors.amber,
+                      ),
                     ),
                   ],
                 ),

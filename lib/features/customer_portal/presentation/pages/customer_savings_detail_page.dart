@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../payments/presentation/widgets/upi_payment_sheet.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/layout.dart';
 import '../../../../core/providers/org_provider.dart';
@@ -1266,6 +1267,33 @@ class _CustomerSavingsDetailPageState
               end: Alignment.bottomRight,
             ),
             onTap: () => _showStatementSheet(context, isDark, savings),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _ActionButton(
+            icon: Icons.payments_rounded,
+            label: 'Pay via UPI',
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF00BFA5),
+                const Color(0xFF26A69A),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            onTap: () {
+              final memberId = ref.read(currentCustomerIdSyncProvider);
+              UpiPaymentSheet.show(
+                context,
+                amount: savings.monthlyDeposit > 0
+                    ? savings.monthlyDeposit
+                    : savings.targetAmount - savings.currentAmount,
+                savingsPlanId: widget.savingsId,
+                savingsPlanName: savings.displayName,
+                memberId: memberId,
+              );
+            },
           ),
         ),
       ],

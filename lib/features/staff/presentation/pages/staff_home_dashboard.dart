@@ -581,6 +581,18 @@ class _StaffHomeDashboardState extends ConsumerState<StaffHomeDashboard> {
                     isDark: isDark)),
           ],
         ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+                child: _buildActionCard(
+                    icon: Icons.qr_code_scanner_rounded,
+                    label: 'UPI Verify',
+                    color: const Color(0xFF00BFA5),
+                    onTap: () => context.push('/staff/upi-confirmations'),
+                    isDark: isDark)),
+          ],
+        ),
       ],
     );
   }

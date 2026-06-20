@@ -24,6 +24,8 @@ import '../../../loans/data/services/loan_statement_csv_service.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
+import '../../data/providers/customer_member_provider.dart';
+import '../../../../payments/presentation/widgets/upi_payment_sheet.dart';
 import '../widgets/customer_loan_breakdown_chart.dart';
 import '../widgets/customer_emi_tile.dart';
 import '../widgets/customer_empty_state.dart';
@@ -145,10 +147,22 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
             ),
           ),
 
-          // Breakdown chart
+          // UPI Payment Button
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
               index: 2,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+                child: _buildUpiButton(context, isDark, loan),
+              ),
+            ),
+          ),
+
+          // Breakdown chart
+          SliverToBoxAdapter(
+            child: _buildAnimatedSection(
+              index: 3,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
@@ -164,7 +178,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Schedule preview
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 3,
+              index: 4,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
@@ -180,7 +194,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Payment history snapshot
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 4,
+              index: 5,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
@@ -196,7 +210,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Details card
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 5,
+              index: 6,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
@@ -208,7 +222,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Secondary CTA: full schedule
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 6,
+              index: 7,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
@@ -220,7 +234,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Statement download
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 7,
+              index: 8,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
@@ -743,6 +757,67 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
               isDark: isDark,
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUpiButton(BuildContext context, bool isDark, CustomerLoanModel loan) {
+    final theme = Theme.of(context);
+    final memberId = ref.read(currentCustomerIdSyncProvider);
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          UpiPaymentSheet.show(
+            context,
+            amount: loan.emiAmount,
+            loanId: widget.loanId,
+            memberId: memberId,
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.payments_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Pay via UPI',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

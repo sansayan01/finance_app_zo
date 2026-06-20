@@ -64,6 +64,12 @@ enum PaymentMode {
   card,
 }
 
+enum UpiPaymentStatus {
+  pending,
+  confirmed,
+  rejected,
+}
+
 enum CustomerStatus {
   active,
   inactive,

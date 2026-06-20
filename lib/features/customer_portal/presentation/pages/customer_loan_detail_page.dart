@@ -25,7 +25,7 @@ import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
 import '../../data/providers/customer_member_provider.dart';
-import '../../../../payments/presentation/widgets/upi_payment_sheet.dart';
+import '../../../payments/presentation/widgets/upi_payment_sheet.dart';
 import '../widgets/customer_loan_breakdown_chart.dart';
 import '../widgets/customer_emi_tile.dart';
 import '../widgets/customer_empty_state.dart';

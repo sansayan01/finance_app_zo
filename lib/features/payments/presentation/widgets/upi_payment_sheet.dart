@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/services/upi_service.dart';
-import '../../data/repositories/upi_payment_repository.dart';
 import '../../data/providers/upi_providers.dart';
 import '../../../loans/data/services/qr_png.dart';
 
@@ -72,7 +71,6 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
   Uint8List? _qrBytes;
   String? _upiUri;
   String? _vpa;
-  String? _merchantName;
 
   @override
   void initState() {
@@ -102,7 +100,6 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
     if (mounted) {
       setState(() {
         _vpa = vpa;
-        _merchantName = merchantName;
         _upiUri = uri;
         _qrBytes = qr;
       });

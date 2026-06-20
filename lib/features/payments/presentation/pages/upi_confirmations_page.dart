@@ -57,7 +57,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                         Icon(Icons.payment, size: 64, color: Colors.grey[300]),
                         const SizedBox(height: 16),
                         Text(
-                          'No ${_filter ?? ''} UPI payments',
+                          'No $_filter UPI payments',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[500],
@@ -91,7 +91,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => setState(() => _filter = value ?? 'pending'),
-      selectedColor: AppColors.primary.withOpacity(0.2),
+      selectedColor: AppColors.primary.withValues(alpha: 0.2),
       checkmarkColor: AppColors.primary,
     );
   }
@@ -112,7 +112,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   child: Icon(Icons.person, color: AppColors.primary, size: 20),
                 ),
                 const SizedBox(width: 12),

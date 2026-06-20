@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
-import '../../customer_portal/data/providers/customer_member_provider.dart';
+import '../../../customer_portal/data/providers/customer_member_provider.dart';
 import '../repositories/upi_payment_repository.dart';
 import '../services/upi_service.dart';
 

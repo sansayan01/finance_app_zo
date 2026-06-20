@@ -170,6 +170,12 @@ class SavingsRepository {
         lastPaymentDate: json['last_payment_date'] != null
             ? DateTime.tryParse(json['last_payment_date'].toString())
             : null,
+        freezeEnabled: json['freeze_enabled'] as bool? ?? false,
+        frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
+        frozenDates: (json['frozen_dates'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [],
       );
     }).toList();
   }
@@ -953,20 +959,30 @@ class SavingsRepository {
   /// Adds it to frozen_dates, increments frozen_count, extends tenure.
   Future<bool> freezeSingleInstallment(String planId, String dateKey) async {
     try {
+      debugPrint('freezeSingleInstallment: planId=$planId, dateKey=$dateKey');
+
       final plan = await _client
           .from('savings_plans')
           .select('*')
           .eq('id', planId)
           .maybeSingle();
-      if (plan == null) return false;
+      if (plan == null) {
+        debugPrint('freezeSingleInstallment: plan not found');
+        return false;
+      }
 
       final planModel = SavingsModel.fromJson(plan);
+      debugPrint('freezeSingleInstallment: existing frozen=${planModel.frozenDates}');
       final existingFrozen = planModel.frozenDates.toSet();
 
       // Already frozen? Skip.
-      if (existingFrozen.contains(dateKey)) return false;
+      if (existingFrozen.contains(dateKey)) {
+        debugPrint('freezeSingleInstallment: already frozen');
+        return false;
+      }
 
       final newFrozenDates = <String>{...existingFrozen, dateKey};
+      debugPrint('freezeSingleInstallment: newFrozenDates=$newFrozenDates');
 
       // Extend tenure by 1
       final collectionType = planModel.collectionType;
@@ -988,6 +1004,7 @@ class SavingsRepository {
           maturity = DateTime(y, m, d);
       }
 
+      debugPrint('freezeSingleInstallment: updating plan...');
       await _client.from('savings_plans').update({
         'frozen_count': planModel.frozenCount + 1,
         'frozen_dates': newFrozenDates.toList(),
@@ -995,6 +1012,7 @@ class SavingsRepository {
         'maturity_date': maturity.toIso8601String().split('T')[0],
       }).eq('id', planId);
 
+      debugPrint('freezeSingleInstallment: success');
       return true;
     } catch (e) {
       debugPrint('freezeSingleInstallment error: $e');

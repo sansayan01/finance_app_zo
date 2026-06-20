@@ -1017,7 +1017,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
             if (isOverdue || (loan != null && loan.freezeEnabled && _isFreezable(emi)) || emi.status == EMIStatus.frozen)
               const SizedBox(height: 8),
-            if (isOverdue)
+            if (isOverdue && !(loan != null && loan.freezeEnabled && _isFreezable(emi)))
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1038,7 +1038,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   ],
                 ),
               ),
-            if (!isOverdue && loan != null && loan.freezeEnabled && _isFreezable(emi))
+            if (loan != null && loan.freezeEnabled && _isFreezable(emi))
               GestureDetector(
                 onTap: () => _freezeSingleEMI(emi, loan),
                 child: Container(
@@ -4194,6 +4194,33 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Future<void> _unfreezeSingleEMI(EMIScheduleModel emi, LoanModel loan) async {
     HapticFeedback.lightImpact();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Unfreeze EMI?'),
+        content: Text(
+            'Are you sure you want to unfreeze EMI #${emi.emiNumber} due on ${AppFormatters.formatDate(emi.dueDate)}? This will restore this EMI and shorten the loan tenure by 1 period.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Unfreeze'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     final client = ref.read(supabaseClientProvider);
 
     try {
@@ -4240,6 +4267,33 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Future<void> _freezeSingleEMI(EMIScheduleModel emi, LoanModel loan) async {
     HapticFeedback.lightImpact();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Freeze EMI?'),
+        content: Text(
+            'Are you sure you want to freeze EMI #${emi.emiNumber} due on ${AppFormatters.formatDate(emi.dueDate)}? This will skip this EMI and extend the loan tenure by 1 period.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.cyan,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Freeze'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     final client = ref.read(supabaseClientProvider);
 
     try {

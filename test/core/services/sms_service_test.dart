@@ -61,12 +61,15 @@ void main() {
       collectorName: 'Ravi',
       orgName: 'Acme',
       planName: 'Gold',
-      newBalance: 1500,
+      newBalance: '₹1500',
       date: DateTime(2026, 6, 2),
     );
     expect(msg, contains('Gold'));
     expect(msg, contains('₹1500'));
-    expect(msg, contains('Priya'));
+    expect(msg, contains('PRIYA'));
+    expect(msg, contains('RAVI'));
+    expect(msg, contains('ACME'));
+    expect(msg, contains('Savings Deposit Received'));
   });
 
   test('buildReminderSms marks overdue correctly', () {

@@ -91,6 +91,24 @@ class SmsTemplates {
       '{org_name}';
 
   // ──────────────────────────────────────────────────
+  //  Savings Receipts
+  // ──────────────────────────────────────────────────
+
+  /// Savings deposit receipt.
+  static const savingsDepositReceipt =
+      'Hi {name}\n'
+      'Savings Deposit Received\n'
+      '─────────────\n'
+      'Amount: ₹{amount}\n'
+      'Plan: {plan}\n'
+      'Balance: ₹{balance}\n'
+      'Collected by: {collector}\n'
+      'Date: {date}\n'
+      '─────────────\n'
+      'Thank you for saving with us!\n'
+      '{org_name}';
+
+  // ──────────────────────────────────────────────────
   //  Loan Disbursal
   // ──────────────────────────────────────────────────
 

@@ -253,24 +253,25 @@ class SmsService {
         '${hour12.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} $ampm';
   }
 
-  /// Build the SMS message for a savings deposit receipt.
-  ///
-  /// Kept inline as a savings-specific template (not in SmsTemplates).
-  /// Reformatted to match the MFIFIN branded style.
+  /// Customer-facing savings deposit receipt SMS (visual card format).
   String buildSavingsSms({
-    required String amount,
+    required String amount, // caller passes prefixed amount (e.g. '₹500')
     required String memberName,
     required String collectorName,
     required String orgName,
     required String? planName,
-    required double newBalance,
+    required String newBalance, // caller passes prefixed balance (e.g. '₹12,500')
     required DateTime date,
   }) {
-    final dateStr = DateFormat('dd MMM yyyy').format(date);
-    final plan = planName != null && planName.isNotEmpty ? planName : 'Savings';
-    return 'MFIFIN: ₹$amount deposited to $plan by $memberName on $dateStr. '
-        'Balance: ₹${newBalance.toStringAsFixed(0)}. '
-        'Collected by $collectorName. Thank you! - $orgName';
+    return SmsTemplateHelper.fill(SmsTemplates.savingsDepositReceipt, {
+      'name': memberName.toUpperCase(),
+      'amount': amount,
+      'plan': (planName != null && planName.isNotEmpty) ? planName : 'Savings',
+      'balance': newBalance,
+      'collector': collectorName.toUpperCase(),
+      'date': _formatReceiptDate(date),
+      'org_name': orgName.toUpperCase(),
+    });
   }
 
   /// Build a reminder SMS for a due or overdue EMI.

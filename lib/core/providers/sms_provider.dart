@@ -288,7 +288,7 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
       collectorName: collectorName,
       orgName: resolvedOrgName,
       planName: planName,
-      newBalance: newBalance,
+      newBalance: '₹${newBalance.toStringAsFixed(0)}',
       date: DateTime.now(),
     );
 

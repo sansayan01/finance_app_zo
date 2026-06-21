@@ -115,6 +115,57 @@ class CustomerHomeRepository {
         } catch (_) {}
       }
 
+      // Fetch confirmed collection records (loans + savings) for this member
+      // When UPI payments are confirmed, they land in collections / savings_collections
+      // and need to appear on the customer's home page too.
+      final List<Map<String, dynamic>> confirmedCollections = [];
+      try {
+        final colResponse = await _client
+            .from('collections')
+            .select()
+            .eq('member_id', memberId)
+            .eq('org_id', _orgId)
+            .order('collection_time', ascending: false)
+            .limit(5);
+        for (final json in colResponse) {
+          final item = Map<String, dynamic>.from(json);
+          confirmedCollections.add({
+            'id': item['id']?.toString() ?? '',
+            'amount': ((item['amount_collected'] ?? item['amount_expected']) as num?)?.toDouble() ?? 0.0,
+            'type': 'collection',
+            'description': item['remarks']?.toString() ?? 'EMI collection',
+            'payment_mode': item['payment_mode']?.toString() ?? 'cash',
+            'transaction_date': item['collection_time']?.toString() ?? item['collection_date']?.toString() ?? '',
+            'sync_status': item['sync_status']?.toString() ?? 'synced',
+          });
+        }
+      } catch (_) {}
+      try {
+        final scResponse = await _client
+            .from('savings_collections')
+            .select()
+            .eq('member_id', memberId)
+            .eq('org_id', _orgId)
+            .order('collection_date', ascending: false)
+            .limit(5);
+        for (final json in scResponse) {
+          final item = Map<String, dynamic>.from(json);
+          confirmedCollections.add({
+            'id': item['id']?.toString() ?? '',
+            'amount': ((item['amount_collected'] ?? item['amount_expected']) as num?)?.toDouble() ?? 0.0,
+            'type': 'collection',
+            'description': 'Savings deposit',
+            'payment_mode': item['payment_mode']?.toString() ?? 'upi',
+            'transaction_date': item['collection_date']?.toString() ?? item['collected_at']?.toString() ?? '',
+            'sync_status': item['sync_status']?.toString() ?? 'synced',
+          });
+        }
+      } catch (_) {}
+
+      final allCollectionModels = confirmedCollections
+          .map((e) => CustomerTransactionModel.fromJson(e))
+          .toList();
+
       // Merge pending/rejected UPI requests into recent transactions
       final upiTransactions = <CustomerTransactionModel>[];
       for (final json in upiData) {
@@ -131,7 +182,7 @@ class CustomerHomeRepository {
           'sync_status': item['status']?.toString() ?? 'pending',
         }));
       }
-      final mergedTransactions = [...transactions, ...upiTransactions]
+      final mergedTransactions = [...transactions, ...allCollectionModels, ...upiTransactions]
         ..sort((a, b) => (b.transactionDate ?? DateTime(1970))
             .compareTo(a.transactionDate ?? DateTime(1970)));
 
@@ -183,6 +234,35 @@ class CustomerHomeRepository {
           'reference_number': item['reference_number']?.toString(),
         });
       }
+
+      // 1b. Fetch savings collections (confirmed UPI savings payments land here)
+      final List<Map<String, dynamic>> savingsCollections = [];
+      try {
+        final savingsColResponse = await _client
+            .from('savings_collections')
+            .select()
+            .eq('member_id', memberId)
+            .eq('org_id', _orgId)
+            .order('collection_date', ascending: false)
+            .limit(limit);
+
+        for (final json in savingsColResponse) {
+          final item = Map<String, dynamic>.from(json);
+          savingsCollections.add({
+            'id': item['id']?.toString() ?? '',
+            'amount': ((item['amount_collected'] ?? item['amount_expected']) as num?)?.toDouble() ?? 0.0,
+            'type': 'collection',
+            'description': item['collected_by_name'] != null
+                ? 'Savings deposit — ${item['collected_by_name']}'
+                : 'Savings deposit',
+            'payment_mode': item['payment_mode']?.toString() ?? 'upi',
+            'transaction_date': item['collection_date']?.toString() ?? item['collected_at']?.toString() ?? '',
+            'sync_status': item['sync_status']?.toString() ?? 'synced',
+            'member_name': item['member_name']?.toString(),
+            'reference_number': item['id']?.toString() ?? '',
+          });
+        }
+      } catch (_) {}
 
       // 2. Fetch transactions
       final transactionsResponse = await _client
@@ -245,7 +325,11 @@ class CustomerHomeRepository {
       // 4. Merge and deduplicate
       final List<Map<String, dynamic>> merged = [];
       merged.addAll(collections);
+      merged.addAll(savingsCollections);
       merged.addAll(upiRequests);
+
+      // All collection-like records for dedup checking
+      final allCollections = [...collections, ...savingsCollections];
 
       for (final tx in transactions) {
         final txTimeStr = tx['transaction_date']?.toString() ?? '';
@@ -255,14 +339,14 @@ class CustomerHomeRepository {
 
         bool isDuplicate = false;
         if (txTime != null) {
-          for (final col in collections) {
+          for (final col in allCollections) {
             final colTimeStr = col['transaction_date']?.toString() ?? '';
             final colTime = DateTime.tryParse(colTimeStr);
             final colAmount = col['amount'] as double;
             final colMode = col['payment_mode']?.toString();
 
-            if (colTime != null && 
-                (txAmount - colAmount).abs() < 0.01 && 
+            if (colTime != null &&
+                (txAmount - colAmount).abs() < 0.01 &&
                 txMode == colMode) {
               final diff = txTime.difference(colTime).inMinutes.abs();
               if (diff <= 5) {

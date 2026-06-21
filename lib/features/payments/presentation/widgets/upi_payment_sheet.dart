@@ -142,6 +142,26 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
     return 'Payment';
   }
 
+  Widget _buildGuidanceRow(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Colors.blue[400], size: 16),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF666666),
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _openUpiApp() async {
     if (_upiUri == null) return;
     final uri = Uri.parse(_upiUri!);
@@ -373,27 +393,70 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
                   ),
                 )
               else
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green[200]!),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green),
-                      SizedBox(width: 8),
-                      Text(
-                        'Payment submitted for verification',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.w600,
-                        ),
+                Column(
+                  children: [
+                    // Success message
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green[200]!),
                       ),
-                    ],
-                  ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text(
+                            'Payment submitted for verification',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // What happens next guidance
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.blue[100]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'What happens next?',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.blue,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildGuidanceRow(
+                            Icons.access_time,
+                            'A staff member will verify your payment',
+                          ),
+                          const SizedBox(height: 8),
+                          _buildGuidanceRow(
+                            Icons.check_circle_outline,
+                            'Once confirmed, it will appear in your transaction history',
+                          ),
+                          const SizedBox(height: 8),
+                          _buildGuidanceRow(
+                            Icons.help_outline,
+                            'You can check status in your transaction page',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               const SizedBox(height: 16),
             ],

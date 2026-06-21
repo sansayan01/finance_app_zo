@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -31,10 +32,15 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
 
   /// Maps customerId (auth.uid) → member full name
   Map<String, String> _memberNames = {};
+  /// Maps customerId (auth.uid) → profileId (for navigation)
+  Map<String, String> _profileIds = {};
+  /// Maps loanId → loan number
+  final Map<String, String> _loanNumbers = {};
+  /// Maps savingsPlanId → plan name
+  final Map<String, String> _savingsPlanNames = {};
 
-  /// Resolves customer_id (auth.uid) → member full_name
-  /// Chain: auth.uid() → profiles.user_id → profiles.id → members.profile_id → members.full_name
-  Future<void> _resolveMemberNames(List<UpiPaymentRequest> requests) async {
+  /// Resolves customer_id (auth.uid) → member full_name + profileId
+  Future<void> _resolveMemberInfo(List<UpiPaymentRequest> requests) async {
     final client = Supabase.instance.client;
     final customerIds = requests
         .map((r) => r.customerId)
@@ -44,6 +50,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     if (customerIds.isEmpty) return;
 
     final names = <String, String>{};
+    final profileIdResults = <String, String>{};
     try {
       // Step A: auth.uid() → profiles.id
       final profiles = await client
@@ -75,18 +82,84 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
               .firstOrNull;
           if (userId != null) {
             names[userId] = name;
+            profileIdResults[userId] = pid;
           }
         }
       }
     } catch (_) {}
 
     if (mounted) {
-      setState(() => _memberNames = {..._memberNames, ...names});
+      setState(() {
+        _memberNames = {..._memberNames, ...names};
+        _profileIds = {..._profileIds, ...profileIdResults};
+      });
     }
+  }
+
+  /// Resolves loan IDs and savings plan IDs to human-readable labels
+  Future<void> _resolvePlanLabels(List<UpiPaymentRequest> requests) async {
+    final client = Supabase.instance.client;
+
+    // Resolve loan numbers
+    final loanIds = requests
+        .map((r) => r.loanId)
+        .where((id) => id != null && id.isNotEmpty && !_loanNumbers.containsKey(id))
+        .toSet()
+        .toList();
+    if (loanIds.isNotEmpty) {
+      try {
+        final loans = await client
+            .from('loans')
+            .select('id, loan_number')
+            .inFilter('id', loanIds);
+        for (final l in (loans as List)) {
+          final id = l['id']?.toString() ?? '';
+          final num = l['loan_number']?.toString();
+          if (id.isNotEmpty && num != null && num.isNotEmpty) {
+            _loanNumbers[id] = 'Loan #$num';
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Resolve savings plan names
+    final savingsIds = requests
+        .map((r) => r.savingsPlanId)
+        .where((id) => id != null && id.isNotEmpty && !_savingsPlanNames.containsKey(id))
+        .toSet()
+        .toList();
+    if (savingsIds.isNotEmpty) {
+      try {
+        final plans = await client
+            .from('savings_plans')
+            .select('id, plan_name')
+            .inFilter('id', savingsIds);
+        for (final p in (plans as List)) {
+          final id = p['id']?.toString() ?? '';
+          final name = p['plan_name']?.toString();
+          if (id.isNotEmpty && name != null && name.isNotEmpty) {
+            _savingsPlanNames[id] = name;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (mounted) setState(() {});
   }
 
   String _getMemberName(String customerId) {
     return _memberNames[customerId] ?? 'Customer';
+  }
+
+  String? _getProfileId(String customerId) {
+    return _profileIds[customerId];
+  }
+
+  String _getPlanLabel(UpiPaymentRequest req) {
+    if (req.isLoanPayment) {
+      return _loanNumbers[req.loanId] ?? 'Loan';
+    }
+    return _savingsPlanNames[req.savingsPlanId] ?? 'Savings';
   }
 
   /// Human-readable label for the current filter
@@ -162,13 +235,14 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                     return _PremiumEmptyState(filterLabel: _filterLabel);
                   }
 
-                  // Resolve member names for display (fire-and-forget)
+                  // Resolve member info + plan labels (fire-and-forget)
                   final unresolved = requests
                       .where((r) => !_memberNames.containsKey(r.customerId))
                       .toList();
                   if (unresolved.isNotEmpty) {
-                    _resolveMemberNames(unresolved);
+                    _resolveMemberInfo(unresolved);
                   }
+                  _resolvePlanLabels(requests);
 
                   final batches = _groupIntoBatches(requests);
 
@@ -307,8 +381,10 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
         ? 'Mixed'
         : (first.isLoanPayment ? 'Loan EMI' : 'Savings Inst.');
 
-    // Resolve member name — all requests in a batch share the same customer
+    // Resolve member name + profile ID
     final memberName = _getMemberName(first.customerId);
+    final profileId = _getProfileId(first.customerId);
+    final planLabel = _getPlanLabel(first);
 
     final isPending = _filter == 'pending';
 
@@ -350,19 +426,44 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      memberName,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
+                    // Tappable member name
+                    GestureDetector(
+                      onTap: profileId != null
+                          ? () => context.push('/staff/user-hub/$profileId')
+                          : null,
+                      child: Text(
+                        memberName,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                          color: profileId != null
+                              ? AppColors.primary
+                              : theme.colorScheme.onSurface,
+                          decoration: profileId != null
+                              ? TextDecoration.underline
+                              : null,
+                          decorationColor: AppColors.primary.withValues(alpha: 0.4),
+                          decorationThickness: 1.5,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
+                    // Plan label + batch info
                     Text(
-                      '${batch.length} $typeLabel${batch.length > 1 ? 's' : ''} · ₹${total.toStringAsFixed(2)} · ${_formatTimeAgo(first.createdAt)}',
+                      '$planLabel · ${batch.length} installment${batch.length > 1 ? 's' : ''} · ₹${total.toStringAsFixed(2)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface
                             .withValues(alpha: 0.45),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    // Time ago
+                    Text(
+                      _formatTimeAgo(first.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.35),
+                        fontSize: 11,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -374,6 +475,12 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                 _StatusPill(status: first.status),
             ],
           ),
+
+          // Audit info for confirmed/rejected
+          if (!isPending) ...[
+            const SizedBox(height: 10),
+            _AuditInfoRow(req: first),
+          ],
 
           const SizedBox(height: 12),
 
@@ -396,6 +503,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
               isPending: isPending,
               isMixed: isMixed,
               isSelected: _selectedIds.contains(req.id),
+              planLabel: _getPlanLabel(req),
               onToggle: () {
                 HapticFeedback.selectionClick();
                 setState(() {
@@ -973,11 +1081,114 @@ class _StatusPill extends StatelessWidget {
 }
 
 /// Individual request row within a batch.
+/// Audit info row for confirmed/rejected payments.
+class _AuditInfoRow extends StatelessWidget {
+  final UpiPaymentRequest req;
+
+  const _AuditInfoRow({required this.req});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isRejected = req.status == 'rejected';
+
+    final infoColor = isRejected ? AppColors.error : AppColors.success;
+    final infoBg = isRejected
+        ? AppColors.error.withValues(alpha: isDark ? 0.08 : 0.05)
+        : AppColors.success.withValues(alpha: isDark ? 0.08 : 0.05);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: infoBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: infoColor.withValues(alpha: 0.15),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row 1: Status + time
+          Row(
+            children: [
+              Icon(
+                isRejected
+                    ? Icons.cancel_outlined
+                    : Icons.check_circle_outline_rounded,
+                color: infoColor,
+                size: 14,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  isRejected ? 'Rejected' : 'Confirmed',
+                  style: TextStyle(
+                    color: infoColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+              if (req.confirmedAt != null)
+                Text(
+                  _formatTime(req.confirmedAt!),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    fontSize: 11,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+            ],
+          ),
+          // Row 2: Confirmed by name
+          if (!isRejected && req.confirmedBy != null && req.confirmedBy!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Approved by ${req.confirmedBy}',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                fontSize: 11,
+                letterSpacing: -0.1,
+              ),
+            ),
+          ],
+          // Row 2: Rejection reason
+          if (isRejected && req.rejectionReason != null && req.rejectionReason!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              req.rejectionReason!,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                fontSize: 12,
+                letterSpacing: -0.1,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return DateFormat('MMM d, h:mm a').format(dt);
+  }
+}
+
+/// Individual request row within a batch.
 class _RequestRow extends StatelessWidget {
   final UpiPaymentRequest req;
   final bool isPending;
   final bool isMixed;
   final bool isSelected;
+  final String planLabel;
   final VoidCallback onToggle;
   final VoidCallback? onReject;
 
@@ -986,6 +1197,7 @@ class _RequestRow extends StatelessWidget {
     required this.isPending,
     required this.isMixed,
     required this.isSelected,
+    required this.planLabel,
     required this.onToggle,
     this.onReject,
   });
@@ -997,85 +1209,119 @@ class _RequestRow extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isPending)
-            _PremiumCheckbox(
-              value: isSelected,
-              onChanged: (_) => onToggle(),
-            ),
-          if (isPending) const SizedBox(width: 10),
-
-          // Status dot
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: req.status == 'confirmed'
-                  ? AppColors.success
-                  : req.status == 'rejected'
-                      ? AppColors.error
-                      : AppColors.warning,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // Amount
-          Expanded(
-            child: Text(
-              '₹${req.amount.toStringAsFixed(2)}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.3,
-                fontSize: 14,
-              ),
-            ),
-          ),
-
-          // Type badge in mixed batches
-          if (isMixed)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(
-                color: req.isLoanPayment
-                    ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08)
-                    : AppColors.success.withValues(alpha: isDark ? 0.15 : 0.08),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                req.isLoanPayment ? 'EMI' : 'Savings',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
-                  color: req.isLoanPayment
-                      ? AppColors.primary
-                      : AppColors.success,
+          Row(
+            children: [
+              if (isPending)
+                _PremiumCheckbox(
+                  value: isSelected,
+                  onChanged: (_) => onToggle(),
                 ),
-              ),
-            ),
+              if (isPending) const SizedBox(width: 10),
 
-          // Reject button
-          if (req.status == 'pending')
-            GestureDetector(
-              onTap: onReject,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              // Status dot
+              Container(
+                width: 7,
+                height: 7,
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: isDark ? 0.1 : 0.06),
-                  borderRadius: BorderRadius.circular(8),
+                  color: req.status == 'confirmed'
+                      ? AppColors.success
+                      : req.status == 'rejected'
+                          ? AppColors.error
+                          : AppColors.warning,
+                  shape: BoxShape.circle,
                 ),
-                child: Text(
-                  'Reject',
-                  style: TextStyle(
-                    color: AppColors.error,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.1,
+              ),
+              const SizedBox(width: 10),
+
+              // Plan label + amount
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      planLabel,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.2,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '₹${req.amount.toStringAsFixed(2)}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Type badge in mixed batches
+              if (isMixed)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: BoxDecoration(
+                    color: req.isLoanPayment
+                        ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08)
+                        : AppColors.success.withValues(alpha: isDark ? 0.15 : 0.08),
+                    borderRadius: BorderRadius.circular(6),
                   ),
+                  child: Text(
+                    req.isLoanPayment ? 'EMI' : 'Savings',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                      color: req.isLoanPayment
+                          ? AppColors.primary
+                          : AppColors.success,
+                    ),
+                  ),
+                ),
+
+              // Reject button
+              if (req.status == 'pending')
+                GestureDetector(
+                  onTap: onReject,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: isDark ? 0.1 : 0.06),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Reject',
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          // Rejection reason shown inline for rejected items
+          if (req.status == 'rejected' &&
+              req.rejectionReason != null &&
+              req.rejectionReason!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 17),
+              child: Text(
+                req.rejectionReason!,
+                style: TextStyle(
+                  color: AppColors.error.withValues(alpha: 0.7),
+                  fontSize: 11,
+                  letterSpacing: -0.1,
                 ),
               ),
             ),

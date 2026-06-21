@@ -211,17 +211,20 @@ class UpiPaymentRepository {
       }
     }
 
-    // 3. Look up the confirmer's role and name from profiles
+    // 3. Look up the confirmer's profile (id, name, role) from profiles
+    //    profiles.id ≠ auth.users.id — staff_id FK references profiles.id
+    String confirmerProfileId = confirmedBy; // fallback to auth.uid if lookup fails
     String confirmerName = 'UPI Confirmed';
     String confirmerRole = 'executiveAdmin';
     try {
       final profileData = await _client
           .from('profiles')
-          .select('full_name, role')
+          .select('id, full_name, role')
           .eq('user_id', confirmedBy)
           .limit(1)
           .maybeSingle();
       if (profileData != null) {
+        confirmerProfileId = profileData['id']?.toString() ?? confirmedBy;
         confirmerName = profileData['full_name']?.toString() ?? confirmerName;
         confirmerRole = profileData['role']?.toString() ?? confirmerRole;
       }
@@ -251,7 +254,7 @@ class UpiPaymentRepository {
           'org_id': _orgId,
           'loan_id': req.loanId,
           'member_id': req.memberId,
-          'staff_id': confirmedBy,
+          'staff_id': confirmerProfileId,
           'member_name': resolvedName,
           'amount_expected': req.amount,
           'amount_collected': req.amount,
@@ -276,7 +279,7 @@ class UpiPaymentRepository {
           'payment_mode': 'upi',
           'collection_date': collectionDate,
           'collected_at': req.createdAt.toIso8601String(),
-          'staff_id': confirmedBy,
+          'staff_id': confirmerProfileId,
           'collected_by_name': confirmerName,
           'collected_by_role': confirmerRole,
           'collected_by_user_id': confirmedBy,

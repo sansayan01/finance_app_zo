@@ -148,7 +148,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
     if (!launched && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No UPI app found. Please install Google Pay, PhonePe, or Paytm.'),
+          content: Text('No UPI app found. You can scan the QR code or tap "I\'ve Paid" after paying via any UPI app.'),
           backgroundColor: Colors.orange,
         ),
       );

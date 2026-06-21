@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/upi_providers.dart';
 import '../../data/models/upi_payment_request_model.dart';
@@ -318,11 +319,12 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
   Future<void> _confirmSelected() async {
     if (_selectedIds.isEmpty) return;
 
+    final staffId = Supabase.instance.client.auth.currentUser?.id ?? '';
     final repository = ref.read(upiRepositoryProvider);
     try {
       await repository.confirmBatch(
         requestIds: _selectedIds.toList(),
-        confirmedBy: '',
+        confirmedBy: staffId,
       );
       ref.invalidate(allUpiRequestsProvider);
       setState(() => _selectedIds.clear());
@@ -344,11 +346,12 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
   }
 
   Future<void> _confirmBatch(List<UpiPaymentRequest> batch) async {
+    final staffId = Supabase.instance.client.auth.currentUser?.id ?? '';
     final repository = ref.read(upiRepositoryProvider);
     try {
       await repository.confirmBatch(
         requestIds: batch.map((r) => r.id).toList(),
-        confirmedBy: '',
+        confirmedBy: staffId,
       );
       ref.invalidate(allUpiRequestsProvider);
       if (mounted) {

@@ -394,6 +394,8 @@ class AdminOrgDashboardPage extends ConsumerWidget {
     final actions = [
       _QuickAction(Icons.payments_rounded, 'Collect Payment', AppColors.cyan,
           () => context.push('/staff/collections')),
+      _QuickAction(Icons.qr_code_scanner_rounded, 'UPI Verify', const Color(0xFF00BFA5),
+          () => context.push('/staff/upi-confirmations')),
       _QuickAction(Icons.person_add_rounded, 'Add Staff', AppColors.primary,
           () => context.go('/users/new')),
       _QuickAction(Icons.person_add_rounded, 'New Member', AppColors.success,

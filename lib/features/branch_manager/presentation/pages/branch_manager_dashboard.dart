@@ -451,6 +451,15 @@ class _BranchManagerDashboardState
                 const SizedBox(width: 12),
                 Expanded(
                   child: _QuickActionBtn(
+                    icon: Icons.qr_code_scanner_rounded,
+                    label: 'UPI Verify',
+                    color: const Color(0xFF00BFA5),
+                    onTap: () => context.push('/staff/upi-confirmations'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
                     icon: Icons.assessment_rounded,
                     label: 'Reports',
                     color: const Color(0xFF7C3AED),

@@ -247,9 +247,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
 
         // Branch manager trying to access wrong pages → redirect to branch
+        // Exception: manager can access /staff/upi-confirmations for UPI verification
         if (role == UserRole.manager &&
             (isAdminPath || isStaffPath || isCustomerPath)) {
-          return '/branch';
+          final isAllowedRoute =
+              state.matchedLocation.startsWith('/staff/upi-confirmations');
+          if (!isAllowedRoute) {
+            return '/branch';
+          }
         }
 
         // Customer trying to access wrong pages → redirect to customer
@@ -259,12 +264,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
 
         // Admin role trying to access staff pages → redirect to admin
-        // Exception: executiveAdmin can access /staff/collection for payment recording
+        // Exceptions: executiveAdmin can access /staff/collection and /staff/upi-confirmations
         if (role == UserRole.executiveAdmin &&
             (isStaffPath || isBranchPath || isCustomerPath)) {
-          final isCollectionRoute =
-              state.matchedLocation.startsWith('/staff/collection');
-          if (!isCollectionRoute) {
+          final isAllowedRoute =
+              state.matchedLocation.startsWith('/staff/collection') ||
+              state.matchedLocation.startsWith('/staff/upi-confirmations');
+          if (!isAllowedRoute) {
             return '/';
           }
         }

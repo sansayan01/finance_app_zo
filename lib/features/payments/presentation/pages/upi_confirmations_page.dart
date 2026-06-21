@@ -29,6 +29,66 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
   final Set<String> _selectedIds = {};
   bool _isProcessing = false;
 
+  /// Maps customerId (auth.uid) → member full name
+  Map<String, String> _memberNames = {};
+
+  /// Resolves customer_id (auth.uid) → member full_name
+  /// Chain: auth.uid() → profiles.user_id → profiles.id → members.profile_id → members.full_name
+  Future<void> _resolveMemberNames(List<UpiPaymentRequest> requests) async {
+    final client = Supabase.instance.client;
+    final customerIds = requests
+        .map((r) => r.customerId)
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    if (customerIds.isEmpty) return;
+
+    final names = <String, String>{};
+    try {
+      // Step A: auth.uid() → profiles.id
+      final profiles = await client
+          .from('profiles')
+          .select('id, user_id')
+          .inFilter('user_id', customerIds);
+      final profileIdMap = <String, String>{}; // user_id → profile_id
+      for (final p in (profiles as List)) {
+        final uid = p['user_id']?.toString() ?? '';
+        final pid = p['id']?.toString() ?? '';
+        if (uid.isNotEmpty && pid.isNotEmpty) {
+          profileIdMap[uid] = pid;
+        }
+      }
+
+      // Step B: profiles.id → members.full_name
+      final profileIds = profileIdMap.values.toSet().toList();
+      if (profileIds.isNotEmpty) {
+        final members = await client
+            .from('members')
+            .select('id, profile_id, full_name')
+            .inFilter('profile_id', profileIds);
+        for (final m in (members as List)) {
+          final pid = m['profile_id']?.toString() ?? '';
+          final name = m['full_name']?.toString() ?? 'Customer';
+          final userId = profileIdMap.entries
+              .where((e) => e.value == pid)
+              .map((e) => e.key)
+              .firstOrNull;
+          if (userId != null) {
+            names[userId] = name;
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() => _memberNames = {..._memberNames, ...names});
+    }
+  }
+
+  String _getMemberName(String customerId) {
+    return _memberNames[customerId] ?? 'Customer';
+  }
+
   /// Human-readable label for the current filter
   String get _filterLabel {
     switch (_filter) {
@@ -100,6 +160,14 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                 data: (requests) {
                   if (requests.isEmpty) {
                     return _PremiumEmptyState(filterLabel: _filterLabel);
+                  }
+
+                  // Resolve member names for display (fire-and-forget)
+                  final unresolved = requests
+                      .where((r) => !_memberNames.containsKey(r.customerId))
+                      .toList();
+                  if (unresolved.isNotEmpty) {
+                    _resolveMemberNames(unresolved);
                   }
 
                   final batches = _groupIntoBatches(requests);
@@ -239,6 +307,9 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
         ? 'Mixed'
         : (first.isLoanPayment ? 'Loan EMI' : 'Savings Inst.');
 
+    // Resolve member name — all requests in a batch share the same customer
+    final memberName = _getMemberName(first.customerId);
+
     final isPending = _filter == 'pending';
 
     return GlassCard(
@@ -280,7 +351,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${batch.length} $typeLabel installment${batch.length > 1 ? 's' : ''}',
+                      memberName,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.3,
@@ -288,7 +359,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '₹${total.toStringAsFixed(2)} total · ${_formatTimeAgo(first.createdAt)}',
+                      '${batch.length} $typeLabel${batch.length > 1 ? 's' : ''} · ₹${total.toStringAsFixed(2)} · ${_formatTimeAgo(first.createdAt)}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface
                             .withValues(alpha: 0.45),

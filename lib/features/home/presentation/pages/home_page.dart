@@ -559,6 +559,15 @@ class _QuickActions extends StatelessWidget {
               children: [
                 Expanded(
                   child: _QuickActionBtn(
+                    icon: Icons.qr_code_scanner_rounded,
+                    label: 'UPI Verify',
+                    color: const Color(0xFF00BFA5),
+                    onTap: () => context.push('/staff/upi-confirmations'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _QuickActionBtn(
                     icon: Icons.business_rounded,
                     label: 'Branches',
                     color: AppColors.pink,

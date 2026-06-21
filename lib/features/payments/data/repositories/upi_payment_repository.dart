@@ -194,20 +194,86 @@ class UpiPaymentRepository {
 
     if (requests.isEmpty) return;
 
-    // 2. Look up member names for all unique member_ids
-    final memberIds = requests
-        .map((r) => r.memberId)
-        .where((id) => id != null && id.isNotEmpty)
-        .toSet()
-        .toList();
+    // 2. Resolve member_id from customer_id where member_id is null.
+    //    customer_id = auth.uid(), member_id = members.id
+    //    Chain: auth.uid() -> profiles.user_id -> profiles.id -> members.profile_id -> members.id
+    final memberResolveCache = <String, String?>{}; // customer_id -> member_id
+
+    // Collect unique customer_ids that need resolution
+    final customerIdsToResolve = <String>{};
+    for (final req in requests) {
+      if (req.memberId != null && req.memberId!.isNotEmpty) continue;
+      final customerId = req.customerId;
+      if (customerId.isEmpty) continue;
+      customerIdsToResolve.add(customerId);
+    }
+
+    if (customerIdsToResolve.isNotEmpty) {
+      // Step A: auth.uid() -> profiles.id
+      final profileIdMap = <String, String>{}; // user_id -> profile_id
+      try {
+        final profiles = await _client
+            .from('profiles')
+            .select('id, user_id')
+            .inFilter('user_id', customerIdsToResolve.toList());
+        for (final p in (profiles as List)) {
+          final uid = p['user_id']?.toString() ?? '';
+          final pid = p['id']?.toString() ?? '';
+          if (uid.isNotEmpty && pid.isNotEmpty) {
+            profileIdMap[uid] = pid;
+          }
+        }
+      } catch (_) {}
+
+      // Step B: profiles.id -> members.id
+      final profileIds = profileIdMap.values.toSet().toList();
+      if (profileIds.isNotEmpty) {
+        try {
+          final members = await _client
+              .from('members')
+              .select('id, profile_id')
+              .inFilter('profile_id', profileIds);
+          for (final m in (members as List)) {
+            final mid = m['id']?.toString() ?? '';
+            final pid = m['profile_id']?.toString() ?? '';
+            if (mid.isNotEmpty && pid.isNotEmpty) {
+              // Find the user_id (customer_id) that maps to this profile
+              final userId = profileIdMap.entries
+                  .where((e) => e.value == pid)
+                  .map((e) => e.key)
+                  .firstOrNull;
+              if (userId != null) {
+                memberResolveCache[userId] = mid;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // Fill nulls for any customer_ids we couldn't resolve
+      for (final cid in customerIdsToResolve) {
+        memberResolveCache.putIfAbsent(cid, () => null);
+      }
+    }
+
+    // Also look up member names for all resolved member_ids
+    final allMemberIds = <String>{};
+    for (final req in requests) {
+      final memberId = req.memberId ??
+          memberResolveCache[req.customerId];
+      if (memberId != null && memberId.isNotEmpty) {
+        allMemberIds.add(memberId);
+      }
+    }
     final memberNames = <String, String>{};
-    if (memberIds.isNotEmpty) {
+    if (allMemberIds.isNotEmpty) {
       final memberData = await _client
           .from('members')
           .select('id, full_name')
-          .inFilter('id', memberIds);
+          .inFilter('id', allMemberIds.toList());
       for (final m in (memberData as List)) {
-        memberNames[m['id']?.toString() ?? ''] = m['full_name']?.toString() ?? 'UPI Customer';
+        memberNames[m['id']?.toString() ?? ''] =
+            m['full_name']?.toString() ?? 'UPI Customer';
       }
     }
 
@@ -244,16 +310,34 @@ class UpiPaymentRepository {
           .eq('id', req.id);
     }
 
-    // 5. Create collection records using customer's payment time
+    // 5. Create collection + transaction records using customer's payment time
     for (final req in requests) {
       final collectionDate = req.createdAt.toIso8601String().substring(0, 10);
-      final resolvedName = memberNames[req.memberId] ?? 'UPI Customer';
+
+      // Resolve member_id: prefer stored value, fall back to lookup from customer_id
+      final resolvedMemberId = req.memberId ??
+          memberResolveCache[req.customerId];
+      final resolvedName = memberNames[resolvedMemberId] ?? 'UPI Customer';
 
       if (req.isLoanPayment) {
+        // 5a. Create transaction (so exec admin / transactions page can see it)
+        await _client.from('transactions').insert({
+          'member_id': resolvedMemberId,
+          'member_name': resolvedName,
+          'loan_id': req.loanId,
+          'amount': req.amount,
+          'type': 'emiPayment',
+          'payment_mode': 'upi',
+          'description': 'Loan EMI paid via UPI',
+          'org_id': _orgId,
+          'created_at': req.createdAt.toIso8601String(),
+        });
+
+        // 5b. Create collection record
         await _client.from('collections').insert({
           'org_id': _orgId,
           'loan_id': req.loanId,
-          'member_id': req.memberId,
+          'member_id': resolvedMemberId,
           'staff_id': confirmerProfileId,
           'member_name': resolvedName,
           'amount_expected': req.amount,
@@ -267,11 +351,41 @@ class UpiPaymentRepository {
           'sync_status': 'synced',
           'remarks': 'UPI payment confirmed — ID: ${req.id}',
         });
+
+        // 5c. Mark the EMI schedule row as paid
+        if (req.emiScheduleId != null && req.emiScheduleId!.isNotEmpty) {
+          try {
+            await _client
+                .from('emi_schedule')
+                .update({
+                  'is_paid': true,
+                  'paid_date': collectionDate,
+                  'paid_on': req.createdAt.toIso8601String(),
+                  'amount_paid': req.amount,
+                  'status': 'paid',
+                })
+                .eq('id', req.emiScheduleId!);
+          } catch (_) {}
+        }
       } else if (req.isSavingsPayment) {
+        // 5d. Create transaction (so exec admin / transactions page can see it)
+        await _client.from('transactions').insert({
+          'member_id': resolvedMemberId,
+          'member_name': resolvedName,
+          'savings_id': req.savingsPlanId,
+          'amount': req.amount,
+          'type': 'savingsDeposit',
+          'payment_mode': 'upi',
+          'description': 'Savings deposit via UPI',
+          'org_id': _orgId,
+          'created_at': req.createdAt.toIso8601String(),
+        });
+
+        // 5e. Create savings collection record
         await _client.from('savings_collections').insert({
           'org_id': _orgId,
           'savings_plan_id': req.savingsPlanId,
-          'member_id': req.memberId,
+          'member_id': resolvedMemberId,
           'member_name': resolvedName,
           'amount_expected': req.amount,
           'amount_collected': req.amount,

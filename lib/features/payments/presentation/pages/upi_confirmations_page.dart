@@ -1,8 +1,16 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/glass_button.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/premium_app_bar.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../data/providers/upi_providers.dart';
 import '../../data/models/upi_payment_request_model.dart';
 import '../widgets/upi_confirm_dialog.dart';
@@ -11,7 +19,8 @@ class UpiConfirmationsPage extends ConsumerStatefulWidget {
   const UpiConfirmationsPage({super.key});
 
   @override
-  ConsumerState<UpiConfirmationsPage> createState() => _UpiConfirmationsPageState();
+  ConsumerState<UpiConfirmationsPage> createState() =>
+      _UpiConfirmationsPageState();
 }
 
 class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
@@ -36,98 +45,149 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final requestsAsync = ref.watch(allUpiRequestsProvider(_filter));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('UPI Payment Confirmations'),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1115)
+          : const Color(0xFFF8F9FB),
+      appBar: PremiumAppBar(
+        title: 'UPI Confirmations',
         actions: [
-          if (_filter == 'pending' && _selectedIds.isNotEmpty)
-            TextButton.icon(
-              onPressed: _isProcessing ? null : _confirmSelected,
-              icon: _isProcessing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.check_circle, color: Colors.white),
-              label: Text(
-                _isProcessing ? 'Confirming...' : 'Confirm (${_selectedIds.length})',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
+          _HeaderIconBtn(
+            icon: Icons.refresh_rounded,
+            onTap: () {
+              HapticFeedback.lightImpact();
               ref.invalidate(allUpiRequestsProvider);
               setState(() => _selectedIds.clear());
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Wrap(
-              spacing: 8,
-              children: [
-                _buildFilterChip('pending', 'Pending'),
-                _buildFilterChip('confirmed', 'Confirmed'),
-                _buildFilterChip('rejected', 'Rejected'),
-                _buildFilterChip('', 'All'),
-              ],
+      body: AuroraBackground(
+        child: Column(
+          children: [
+            // Filter chips
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+              child: _PremiumFilterRow(
+                filter: _filter,
+                onFilterChanged: (f) {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _filter = f;
+                    _selectedIds.clear();
+                  });
+                },
+              ),
             ),
-          ),
-          Expanded(
-            child: requestsAsync.when(
-              data: (requests) {
-                if (requests.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.payment, size: 64, color: Colors.grey[300]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No $_filterLabel found',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
+
+            // Bulk actions bar
+            if (_filter == 'pending' && _selectedIds.isNotEmpty)
+              _BulkActionsBar(
+                count: _selectedIds.length,
+                onConfirm: _confirmSelected,
+                onCancel: () => setState(() => _selectedIds.clear()),
+                isProcessing: _isProcessing,
+              ),
+
+            // Content
+            Expanded(
+              child: requestsAsync.when(
+                data: (requests) {
+                  if (requests.isEmpty) {
+                    return _PremiumEmptyState(filterLabel: _filterLabel);
+                  }
+
+                  final batches = _groupIntoBatches(requests);
+
+                  return RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: () async {
+                      HapticFeedback.lightImpact();
+                      ref.invalidate(allUpiRequestsProvider);
+                      setState(() => _selectedIds.clear());
+                    },
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+                      itemCount: batches.length,
+                      itemBuilder: (context, index) =>
+                          _buildBatchCard(batches[index], index),
                     ),
                   );
-                }
-
-                final batches = _groupIntoBatches(requests);
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(allUpiRequestsProvider);
-                    setState(() => _selectedIds.clear());
-                  },
-                  child: ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    itemCount: batches.length,
-                    itemBuilder: (context, index) => _buildBatchCard(batches[index]),
+                },
+                loading: () => _buildShimmerLoading(),
+                error: (e, _) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.error_outline_rounded,
+                            color: AppColors.error, size: 28),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Something went wrong',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$e',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  /// Groups requests by customer_id + loan_id/savings_plan_id + created_at within 5 min.
-  List<List<UpiPaymentRequest>> _groupIntoBatches(List<UpiPaymentRequest> requests) {
+  // ─── Premium Shimmer Loading ───
+
+  Widget _buildShimmerLoading() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+      child: Column(
+        children: List.generate(3, (i) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ShimmerCard(
+            height: 120 + (i % 2) * 20,
+            borderRadius: 24,
+          ),
+        ).animate().fadeIn(
+              delay: (100 * i).ms,
+              duration: 400.ms,
+            ).slideY(begin: 0.06, end: 0)),
+      ),
+    );
+  }
+
+  // ─── Batch Grouping ───
+
+  List<List<UpiPaymentRequest>> _groupIntoBatches(
+      List<UpiPaymentRequest> requests) {
     if (requests.isEmpty) return [];
 
     final sorted = List<UpiPaymentRequest>.from(requests)
@@ -141,9 +201,14 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
       final curr = sorted[i];
 
       final sameCustomer = curr.customerId == prev.customerId;
-      final sameLoan = curr.loanId != null && curr.loanId == prev.loanId;
-      final sameSavings = curr.savingsPlanId != null && curr.savingsPlanId == prev.savingsPlanId;
-      final withinFiveMin = curr.createdAt.difference(prev.createdAt).abs() <= const Duration(minutes: 5);
+      final sameLoan =
+          curr.loanId != null && curr.loanId == prev.loanId;
+      final sameSavings = curr.savingsPlanId != null &&
+          curr.savingsPlanId == prev.savingsPlanId;
+      final withinFiveMin = curr.createdAt
+              .difference(prev.createdAt)
+              .abs() <=
+          const Duration(minutes: 5);
 
       if (sameCustomer && (sameLoan || sameSavings) && withinFiveMin) {
         currentBatch.add(curr);
@@ -157,184 +222,161 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     return batches;
   }
 
-  Widget _buildBatchCard(List<UpiPaymentRequest> batch) {
+  // ─── Batch Card ───
+
+  Widget _buildBatchCard(List<UpiPaymentRequest> batch, int index) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final first = batch.first;
     final total = batch.fold<double>(0, (sum, r) => sum + r.amount);
-    final typeLabel = first.isLoanPayment ? 'Loan EMI' : 'Savings Inst.';
-    final allSelected = batch.every((r) => _selectedIds.contains(r.id));
+    final allSelected =
+        batch.every((r) => _selectedIds.contains(r.id));
 
-    return Card(
+    final hasLoan = batch.any((r) => r.isLoanPayment);
+    final hasSavings = batch.any((r) => r.isSavingsPayment);
+    final isMixed = hasLoan && hasSavings;
+    final typeLabel = isMixed
+        ? 'Mixed'
+        : (first.isLoanPayment ? 'Loan EMI' : 'Savings Inst.');
+
+    final isPending = _filter == 'pending';
+
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Batch header with select-all
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Batch header
+          Row(
+            children: [
+              if (isPending)
+                _PremiumCheckbox(
+                  value: allSelected,
+                  onChanged: (val) {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      if (val == true) {
+                        for (final r in batch) {
+                          _selectedIds.add(r.id);
+                        }
+                      } else {
+                        for (final r in batch) {
+                          _selectedIds.remove(r.id);
+                        }
+                      }
+                    });
+                  },
+                ),
+              if (isPending) const SizedBox(width: 12),
+
+              // Gradient icon container
+              _BatchAvatar(typeLabel: typeLabel, isMixed: isMixed),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${batch.length} $typeLabel installment${batch.length > 1 ? 's' : ''}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '₹${total.toStringAsFixed(2)} total · ${_formatTimeAgo(first.createdAt)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.45),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (!isPending)
+                _StatusPill(status: first.status),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Divider
+          Container(
+            height: 0.5,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.06),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Individual requests
+          for (final req in batch)
+            _RequestRow(
+              req: req,
+              isPending: isPending,
+              isMixed: isMixed,
+              isSelected: _selectedIds.contains(req.id),
+              onToggle: () {
+                HapticFeedback.selectionClick();
+                setState(() {
+                  if (_selectedIds.contains(req.id)) {
+                    _selectedIds.remove(req.id);
+                  } else {
+                    _selectedIds.add(req.id);
+                  }
+                });
+              },
+              onReject: _isProcessing ? null : () => _rejectPayment(req),
+            ),
+
+          // Batch actions (when nothing is selected individually)
+          if (isPending && _selectedIds.isEmpty) ...[
+            const SizedBox(height: 12),
             Row(
               children: [
-                if (_filter == 'pending')
-                  Checkbox(
-                    value: allSelected,
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          for (final r in batch) {
-                            _selectedIds.add(r.id);
-                          }
-                        } else {
-                          for (final r in batch) {
-                            _selectedIds.remove(r.id);
-                          }
-                        }
-                      });
-                    },
-                    activeColor: AppColors.primary,
-                  ),
-                CircleAvatar(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  child: Icon(
-                    first.isLoanPayment ? Icons.account_balance : Icons.savings,
-                    color: AppColors.primary,
-                    size: 20,
+                Expanded(
+                  child: GlassButton(
+                    label: 'Reject All',
+                    isPrimary: false,
+                    isDestructive: false,
+                    icon: Icons.close_rounded,
+                    color: AppColors.error,
+                    onTap: _isProcessing ? null : () => _rejectBatch(batch),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${batch.length} $typeLabel installment${batch.length > 1 ? 's' : ''}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                      Text(
-                        '₹${total.toStringAsFixed(2)} total · ${_formatTimeAgo(first.createdAt)}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                      ),
-                    ],
+                  child: GlassButton(
+                    label: 'Confirm All',
+                    isPrimary: true,
+                    isLoading: _isProcessing,
+                    icon: Icons.check_rounded,
+                    onTap: _isProcessing
+                        ? null
+                        : () => _confirmBatchWithDialog(batch),
                   ),
                 ),
-                if (_filter != 'pending')
-                  Icon(
-                    first.status == 'confirmed' ? Icons.check_circle : Icons.cancel,
-                    color: first.status == 'confirmed' ? Colors.green : Colors.red,
-                    size: 20,
-                  ),
               ],
             ),
-
-            const Divider(),
-
-            // Individual requests within the batch
-            for (final req in batch)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    if (_filter == 'pending')
-                      Checkbox(
-                        value: _selectedIds.contains(req.id),
-                        onChanged: (val) {
-                          setState(() {
-                            if (val == true) {
-                              _selectedIds.add(req.id);
-                            } else {
-                              _selectedIds.remove(req.id);
-                            }
-                          });
-                        },
-                        activeColor: AppColors.primary,
-                      ),
-                    Icon(
-                      req.status == 'confirmed'
-                          ? Icons.check_circle
-                          : req.status == 'rejected'
-                              ? Icons.cancel
-                              : Icons.pending,
-                      size: 16,
-                      color: req.status == 'confirmed'
-                          ? Colors.green
-                          : req.status == 'rejected'
-                              ? Colors.red
-                              : Colors.orange,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '₹${req.amount.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ),
-                    if (req.status == 'pending')
-                      TextButton(
-                        onPressed: _isProcessing ? null : () => _rejectPayment(req),
-                        child: const Text('Reject', style: TextStyle(color: Colors.red, fontSize: 12)),
-                      ),
-                  ],
-                ),
-              ),
-
-            // Confirm/Reject buttons for individual batches (when nothing is selected)
-            if (_filter == 'pending' && _selectedIds.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _isProcessing ? null : () => _rejectBatch(batch),
-                        icon: const Icon(Icons.close, size: 16),
-                        label: const Text('Reject All'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isProcessing ? null : () => _confirmBatchWithDialog(batch),
-                        icon: _isProcessing
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.check, size: 16),
-                        label: Text(_isProcessing ? 'Confirming...' : 'Confirm All'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
-        ),
+        ],
       ),
-    );
+    )
+        .animate()
+        .fadeIn(delay: (80 * index).ms, duration: 400.ms)
+        .slideY(begin: 0.06, end: 0);
   }
 
-  Widget _buildFilterChip(String value, String label) {
-    final isSelected = _filter == value;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) {
-        setState(() {
-          _filter = value;
-          _selectedIds.clear();
-        });
-      },
-      selectedColor: AppColors.primary.withValues(alpha: 0.2),
-      checkmarkColor: AppColors.primary,
-    );
-  }
+  // ─── Time Formatting ───
 
   String _formatTimeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -344,40 +386,33 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     return DateFormat('MMM d, h:mm a').format(dt);
   }
 
-  // ── Confirmation dialog ──
+  // ─── Confirmation Dialog ───
 
   Future<bool> _showConfirmDialog(int count, double totalAmount) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirm Payment'),
-        content: Text(
-          'Confirm $count payment${count > 1 ? 's' : ''} totaling ₹${totalAmount.toStringAsFixed(2)}?\n\n'
-          'This will create collection records in the system.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.green),
-            child: const Text('Confirm'),
-          ),
-        ],
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      builder: (ctx) => _PremiumConfirmDialog(
+        count: count,
+        totalAmount: totalAmount,
       ),
     );
     return result ?? false;
   }
 
-  // ── Batch confirm/reject ──
+  // ─── Batch Confirm/Reject ───
 
   Future<void> _confirmSelected() async {
     if (_selectedIds.isEmpty || _isProcessing) return;
 
-    // Show confirmation dialog
-    final confirmed = await _showConfirmDialog(_selectedIds.length, 0);
+    final allRequests =
+        ref.read(allUpiRequestsProvider(_filter)).valueOrNull ?? [];
+    final selectedTotal = allRequests
+        .where((r) => _selectedIds.contains(r.id))
+        .fold<double>(0, (sum, r) => sum + r.amount);
+
+    final confirmed =
+        await _showConfirmDialog(_selectedIds.length, selectedTotal);
     if (!confirmed) return;
 
     setState(() => _isProcessing = true);
@@ -392,17 +427,18 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
       ref.invalidate(allUpiRequestsProvider);
       setState(() => _selectedIds.clear());
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payments confirmed and collections created'),
-            backgroundColor: Colors.green,
-          ),
+        _showPremiumSnackBar(
+          message: 'Payments confirmed and collections created',
+          icon: Icons.check_circle_rounded,
+          color: AppColors.success,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        _showPremiumSnackBar(
+          message: 'Error: $e',
+          icon: Icons.error_rounded,
+          color: AppColors.error,
         );
       }
     } finally {
@@ -410,8 +446,10 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     }
   }
 
-  Future<void> _confirmBatchWithDialog(List<UpiPaymentRequest> batch) async {
-    final total = batch.fold<double>(0, (sum, r) => sum + r.amount);
+  Future<void> _confirmBatchWithDialog(
+      List<UpiPaymentRequest> batch) async {
+    final total =
+        batch.fold<double>(0, (sum, r) => sum + r.amount);
     final confirmed = await _showConfirmDialog(batch.length, total);
     if (!confirmed) return;
     await _confirmBatch(batch);
@@ -431,17 +469,18 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
       );
       ref.invalidate(allUpiRequestsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${batch.length} payments confirmed'),
-            backgroundColor: Colors.green,
-          ),
+        _showPremiumSnackBar(
+          message: '${batch.length} payments confirmed',
+          icon: Icons.check_circle_rounded,
+          color: AppColors.success,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        _showPremiumSnackBar(
+          message: 'Error: $e',
+          icon: Icons.error_rounded,
+          color: AppColors.error,
         );
       }
     } finally {
@@ -452,9 +491,11 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
   Future<void> _rejectPayment(UpiPaymentRequest req) async {
     if (_isProcessing) return;
 
-    final reason = await showDialog<String>(
+    final reason = await showModalBottomSheet<String>(
       context: context,
-      builder: (_) => const UpiConfirmDialog(title: 'Reject Payment'),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => UpiConfirmDialog(title: 'Reject Payment'),
     );
     if (reason == null || reason.trim().isEmpty) return;
 
@@ -462,20 +503,22 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
 
     final repository = ref.read(upiRepositoryProvider);
     try {
-      await repository.rejectPayment(requestId: req.id, rejectionReason: reason);
+      await repository.rejectPayment(
+          requestId: req.id, rejectionReason: reason);
       ref.invalidate(allUpiRequestsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payment rejected'),
-            backgroundColor: Colors.orange,
-          ),
+        _showPremiumSnackBar(
+          message: 'Payment rejected',
+          icon: Icons.info_rounded,
+          color: AppColors.warning,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        _showPremiumSnackBar(
+          message: 'Error: $e',
+          icon: Icons.error_rounded,
+          color: AppColors.error,
         );
       }
     } finally {
@@ -486,9 +529,11 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
   Future<void> _rejectBatch(List<UpiPaymentRequest> batch) async {
     if (_isProcessing) return;
 
-    final reason = await showDialog<String>(
+    final reason = await showModalBottomSheet<String>(
       context: context,
-      builder: (_) => const UpiConfirmDialog(title: 'Reject All Payments'),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => UpiConfirmDialog(title: 'Reject All Payments'),
     );
     if (reason == null || reason.trim().isEmpty) return;
 
@@ -497,25 +542,819 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     final repository = ref.read(upiRepositoryProvider);
     try {
       for (final req in batch) {
-        await repository.rejectPayment(requestId: req.id, rejectionReason: reason);
+        await repository.rejectPayment(
+            requestId: req.id, rejectionReason: reason);
       }
       ref.invalidate(allUpiRequestsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${batch.length} payments rejected'),
-            backgroundColor: Colors.orange,
-          ),
+        _showPremiumSnackBar(
+          message: '${batch.length} payments rejected',
+          icon: Icons.info_rounded,
+          color: AppColors.warning,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        _showPremiumSnackBar(
+          message: 'Error: $e',
+          icon: Icons.error_rounded,
+          color: AppColors.error,
         );
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  void _showPremiumSnackBar({
+    required String message,
+    required IconData icon,
+    required Color color,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF1E2230).withValues(alpha: 0.98)
+                : Colors.white.withValues(alpha: 0.98),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
+              width: 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRIVATE SUB-WIDGETS
+// ═══════════════════════════════════════════════════════════════
+
+/// Header icon button matching home_page.dart pattern.
+class _HeaderIconBtn extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _HeaderIconBtn({required this.icon, required this.onTap});
+
+  @override
+  State<_HeaderIconBtn> createState() => _HeaderIconBtnState();
+}
+
+class _HeaderIconBtnState extends State<_HeaderIconBtn> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+            ),
+          ),
+          child: Icon(
+            widget.icon,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium filter chip row.
+class _PremiumFilterRow extends StatelessWidget {
+  final String filter;
+  final ValueChanged<String> onFilterChanged;
+
+  const _PremiumFilterRow({
+    required this.filter,
+    required this.onFilterChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          _buildChip(context, 'pending', 'Pending', isDark),
+          const SizedBox(width: 8),
+          _buildChip(context, 'confirmed', 'Confirmed', isDark),
+          const SizedBox(width: 8),
+          _buildChip(context, 'rejected', 'Rejected', isDark),
+          const SizedBox(width: 8),
+          _buildChip(context, '', 'All', isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(
+      BuildContext context, String value, String label, bool isDark) {
+    final isSelected = filter == value;
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: () => onFilterChanged(value),
+      child: AnimatedScale(
+        scale: isSelected ? 1.0 : 0.97,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.12)
+                : isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.3)
+                  : isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.06),
+              width: isSelected ? 1 : 0.5,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected
+                  ? AppColors.primary
+                  : theme.colorScheme.onSurface
+                      .withValues(alpha: 0.5),
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium animated checkbox.
+class _PremiumCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool?>? onChanged;
+
+  const _PremiumCheckbox({required this.value, this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () => onChanged?.call(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: value
+              ? AppColors.primary
+              : isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(
+            color: value
+                ? AppColors.primary
+                : isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : Colors.black.withValues(alpha: 0.12),
+            width: 1.5,
+          ),
+        ),
+        child: AnimatedScale(
+          scale: value ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutBack,
+          child: const Icon(
+            Icons.check_rounded,
+            color: Colors.white,
+            size: 16,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gradient-tinted batch avatar.
+class _BatchAvatar extends StatelessWidget {
+  final String typeLabel;
+  final bool isMixed;
+
+  const _BatchAvatar({required this.typeLabel, required this.isMixed});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+            AppColors.primary.withValues(alpha: isDark ? 0.08 : 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(
+        isMixed
+            ? Icons.payments_rounded
+            : (typeLabel == 'Loan EMI'
+                ? Icons.account_balance_rounded
+                : Icons.savings_rounded),
+        color: AppColors.primary,
+        size: 20,
+      ),
+    );
+  }
+}
+
+/// Status pill using StatusBadge pattern.
+class _StatusPill extends StatelessWidget {
+  final String status;
+
+  const _StatusPill({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final (Color bg, Color fg) = switch (status) {
+      'confirmed' => (
+          isDark
+              ? const Color(0xFF34C759).withValues(alpha: 0.18)
+              : const Color(0xFF34C759).withValues(alpha: 0.12),
+          const Color(0xFF34C759),
+        ),
+      'rejected' => (
+          isDark
+              ? const Color(0xFFFF3B30).withValues(alpha: 0.18)
+              : const Color(0xFFFF3B30).withValues(alpha: 0.12),
+          const Color(0xFFFF3B30),
+        ),
+      _ => (
+          isDark
+              ? const Color(0xFFFF9F0A).withValues(alpha: 0.18)
+              : const Color(0xFFFF9F0A).withValues(alpha: 0.12),
+          const Color(0xFFFF9F0A),
+        ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(
+          color: fg,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// Individual request row within a batch.
+class _RequestRow extends StatelessWidget {
+  final UpiPaymentRequest req;
+  final bool isPending;
+  final bool isMixed;
+  final bool isSelected;
+  final VoidCallback onToggle;
+  final VoidCallback? onReject;
+
+  const _RequestRow({
+    required this.req,
+    required this.isPending,
+    required this.isMixed,
+    required this.isSelected,
+    required this.onToggle,
+    this.onReject,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          if (isPending)
+            _PremiumCheckbox(
+              value: isSelected,
+              onChanged: (_) => onToggle(),
+            ),
+          if (isPending) const SizedBox(width: 10),
+
+          // Status dot
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: req.status == 'confirmed'
+                  ? AppColors.success
+                  : req.status == 'rejected'
+                      ? AppColors.error
+                      : AppColors.warning,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Amount
+          Expanded(
+            child: Text(
+              '₹${req.amount.toStringAsFixed(2)}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.3,
+                fontSize: 14,
+              ),
+            ),
+          ),
+
+          // Type badge in mixed batches
+          if (isMixed)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              margin: const EdgeInsets.only(right: 10),
+              decoration: BoxDecoration(
+                color: req.isLoanPayment
+                    ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08)
+                    : AppColors.success.withValues(alpha: isDark ? 0.15 : 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                req.isLoanPayment ? 'EMI' : 'Savings',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                  color: req.isLoanPayment
+                      ? AppColors.primary
+                      : AppColors.success,
+                ),
+              ),
+            ),
+
+          // Reject button
+          if (req.status == 'pending')
+            GestureDetector(
+              onTap: onReject,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: isDark ? 0.1 : 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Reject',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bulk actions bar when items are selected.
+class _BulkActionsBar extends StatelessWidget {
+  final int count;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+  final bool isProcessing;
+
+  const _BulkActionsBar({
+    required this.count,
+    required this.onConfirm,
+    required this.onCancel,
+    required this.isProcessing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: isDark ? 0.12 : 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_rounded,
+              color: AppColors.primary, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '$count item${count > 1 ? 's' : ''} selected',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onCancel,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Clear',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: isProcessing ? null : onConfirm,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: isProcessing
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      'Confirm',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 250.ms)
+        .slideY(begin: -0.15, end: 0);
+  }
+}
+
+/// Premium animated empty state.
+class _PremiumEmptyState extends StatelessWidget {
+  final String filterLabel;
+
+  const _PremiumEmptyState({required this.filterLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
+                    AppColors.primary.withValues(alpha: isDark ? 0.05 : 0.03),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Icon(
+                Icons.payments_rounded,
+                size: 36,
+                color: AppColors.primary.withValues(alpha: 0.6),
+              ),
+            )
+                .animate()
+                .fadeIn(duration: 500.ms)
+                .scale(
+                  begin: const Offset(0.8, 0.8),
+                  end: const Offset(1, 1),
+                  duration: 500.ms,
+                  curve: Curves.easeOutBack,
+                ),
+            const SizedBox(height: 20),
+            Text(
+              'No $filterLabel found',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            )
+                .animate()
+                .fadeIn(delay: 150.ms, duration: 400.ms)
+                .slideY(begin: 0.1, end: 0),
+            const SizedBox(height: 8),
+            Text(
+              'Payments will appear here once submitted',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                letterSpacing: -0.2,
+              ),
+              textAlign: TextAlign.center,
+            )
+                .animate()
+                .fadeIn(delay: 250.ms, duration: 400.ms)
+                .slideY(begin: 0.1, end: 0),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium animated confirmation dialog.
+class _PremiumConfirmDialog extends StatelessWidget {
+  final int count;
+  final double totalAmount;
+
+  const _PremiumConfirmDialog({
+    required this.count,
+    required this.totalAmount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF1E2230).withValues(alpha: 0.97)
+                : Colors.white.withValues(alpha: 0.97),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
+              width: 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
+                blurRadius: 40,
+                offset: const Offset(0, 8),
+                spreadRadius: -8,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gradient icon
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.success.withValues(alpha: 0.15),
+                      AppColors.success.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: AppColors.success,
+                  size: 28,
+                ),
+              )
+                  .animate()
+                  .scale(
+                    begin: const Offset(0.5, 0.5),
+                    end: const Offset(1, 1),
+                    duration: 400.ms,
+                    curve: Curves.easeOutBack,
+                  )
+                  .fadeIn(duration: 300.ms),
+
+              const SizedBox(height: 20),
+
+              Text(
+                'Confirm Payment',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    height: 1.5,
+                    letterSpacing: -0.2,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Confirm $count payment${count > 1 ? 's' : ''}',
+                    ),
+                    const TextSpan(text: ' totaling '),
+                    TextSpan(
+                      text: '₹${totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const TextSpan(text: '?\n\n'),
+                    TextSpan(
+                      text:
+                          'This will create collection records in the system.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(delay: 100.ms, duration: 350.ms),
+
+              const SizedBox(height: 28),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Cancel',
+                      isPrimary: false,
+                      onTap: () => Navigator.of(context).pop(false),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Confirm',
+                      isPrimary: true,
+                      color: AppColors.success,
+                      icon: Icons.check_rounded,
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        Navigator.of(context).pop(true);
+                      },
+                    ),
+                  ),
+                ],
+              ).animate().fadeIn(delay: 200.ms, duration: 350.ms),
+            ],
+          ),
+        )
+            .animate()
+            .fadeIn(duration: 300.ms)
+            .scale(
+              begin: const Offset(0.92, 0.92),
+              end: const Offset(1, 1),
+              duration: 350.ms,
+              curve: Curves.easeOutBack,
+            ),
+      ),
+    );
   }
 }

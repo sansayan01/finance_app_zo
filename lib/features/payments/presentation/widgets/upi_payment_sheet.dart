@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/services/upi_service.dart';
 import '../../data/providers/upi_providers.dart';
 import '../../../loans/data/services/qr_png.dart';
-import '../../../customer_portal/data/providers/customer_member_provider.dart';
 
 class UpiPaymentSheet extends ConsumerStatefulWidget {
   final double amount;
@@ -162,11 +162,10 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
     try {
       final repository = ref.read(upiRepositoryProvider);
 
-      // Resolve the real customer ID from the provider.
-      // In staff mode the caller passes memberId directly; in customer mode
-      // we read it from the current session.
+      // The RLS INSERT policy requires customer_id = auth.uid().
+      // In customer portal the logged-in user IS the customer.
       final customerId = widget.memberId ??
-          ref.read(currentCustomerIdSyncProvider) ??
+          Supabase.instance.client.auth.currentUser?.id ??
           '';
 
       if (customerId.isEmpty) {

@@ -35,6 +35,37 @@ class UpiPaymentRepository {
     return UpiPaymentRequest.fromJson(data);
   }
 
+  /// Notifies all staff in the org about a new UPI payment request.
+  /// Call once per payment action (not per installment).
+  Future<void> notifyStaffUpiPayment({
+    required double totalAmount,
+    required String typeLabel,
+  }) async {
+    try {
+      final staffData = await _client
+          .from('staff_profiles')
+          .select('id')
+          .eq('org_id', _orgId);
+
+      if ((staffData as List).isEmpty) return;
+
+      for (final staff in staffData) {
+        await _client.from('staff_notifications').insert({
+          'staff_id': staff['id'],
+          'title': 'New UPI Payment',
+          'message':
+              '₹${totalAmount.toStringAsFixed(2)} $typeLabel payment submitted via UPI. Tap to verify.',
+          'type': 'upi',
+          'priority': 'high',
+          'action_type': 'open_upi_confirmations',
+          'action_data': {},
+        });
+      }
+    } catch (_) {
+      // Non-critical — don't fail the payment if notification fails
+    }
+  }
+
   /// Checks if a pending payment already exists for this installment.
   Future<bool> checkExistingPending({
     String? emiScheduleId,

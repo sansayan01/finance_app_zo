@@ -186,6 +186,11 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
             upiVpa: _vpa!,
           );
         }
+        // Notify staff once for the entire batch (fire-and-forget)
+        repository.notifyStaffUpiPayment(
+          totalAmount: widget.amount,
+          typeLabel: 'Loan EMI',
+        );
       } else if (hasBatchSavings) {
         for (var i = 0; i < widget.savingsDateKeys!.length; i++) {
           await repository.createRequest(
@@ -196,6 +201,11 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
             upiVpa: _vpa!,
           );
         }
+        // Notify staff once for the entire batch (fire-and-forget)
+        repository.notifyStaffUpiPayment(
+          totalAmount: widget.amount,
+          typeLabel: 'Savings',
+        );
       } else {
         await repository.createRequest(
           customerId: customerId,
@@ -205,6 +215,12 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
           emiScheduleId: widget.emiScheduleId,
           amount: widget.amount,
           upiVpa: _vpa!,
+        );
+        // Notify staff (fire-and-forget)
+        final typeLabel = widget.loanId != null ? 'Loan EMI' : 'Savings';
+        repository.notifyStaffUpiPayment(
+          totalAmount: widget.amount,
+          typeLabel: typeLabel,
         );
       }
 

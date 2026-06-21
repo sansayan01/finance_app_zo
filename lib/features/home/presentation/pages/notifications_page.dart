@@ -141,6 +141,8 @@ class NotificationsPage extends ConsumerWidget {
         return Icons.notifications_active_rounded;
       case 'reminder':
         return Icons.notifications_rounded;
+      case 'upi':
+        return Icons.qr_code_scanner_rounded;
       default:
         return Icons.circle_outlined;
     }
@@ -158,6 +160,8 @@ class NotificationsPage extends ConsumerWidget {
         return AppColors.warning;
       case 'reminder':
         return AppColors.primary;
+      case 'upi':
+        return const Color(0xFF00BFA5);
       default:
         return AppColors.primary;
     }

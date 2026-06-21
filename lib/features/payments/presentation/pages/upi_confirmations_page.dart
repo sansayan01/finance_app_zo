@@ -82,9 +82,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                   );
                 }
 
-                final typedRequests = requests
-                    .map((e) => UpiPaymentRequest.fromJson(e as Map<String, dynamic>))
-                    .toList();
+                final typedRequests = requests;
                 final batches = _groupIntoBatches(typedRequests);
 
                 return ListView.builder(

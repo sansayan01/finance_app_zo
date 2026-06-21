@@ -11,9 +11,11 @@ void main() {
         transactionNote: 'Loan #123 - EMI #5',
       );
       expect(uri, contains('upi://pay?'));
-      expect(uri, contains('pa=merchant%40upi'));
+      // VPA @ should be literal (not %40) for UPI app compatibility
+      expect(uri, contains('pa=merchant@upi'));
       expect(uri, contains('am=2500.00'));
-      expect(uri, contains('pn=My%20Finance%20Org'));
+      // Merchant name should be plain text
+      expect(uri, contains('pn=My Finance Org'));
       expect(uri, contains('cu=INR'));
     });
 
@@ -27,14 +29,17 @@ void main() {
       expect(uri, contains('am=100.00'));
     });
 
-    test('encodes special characters in transaction note', () {
+    test('encodes only query-reserved characters (& = +)', () {
       final uri = UpiService.buildUpiUri(
         vpa: 'test@upi',
         amount: 500,
-        merchantName: 'Org',
+        merchantName: 'Org & Co',
         transactionNote: 'Loan#123-EMI#5',
       );
-      expect(uri, contains('tn=Loan%23123-EMI%235'));
+      // # and spaces are kept as-is for UPI compatibility
+      expect(uri, contains('tn=Loan#123-EMI#5'));
+      // & in merchant name must be encoded
+      expect(uri, contains('pn=Org %26 Co'));
     });
 
     test('validates VPA format contains @', () {

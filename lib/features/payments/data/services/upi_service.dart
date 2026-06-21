@@ -7,23 +7,33 @@ class UpiService {
   UpiService(this._client, this._orgId);
 
   /// Builds a UPI intent URI for the given payment details.
+  ///
+  /// Uses minimal encoding per the NPCI UPI QR code specification.
+  /// UPI apps expect literal `@` in VPAs and plain merchant names —
+  /// full URL encoding (e.g. `%40` for `@`) breaks QR scanning.
   static String buildUpiUri({
     required String vpa,
     required double amount,
     required String merchantName,
     required String transactionNote,
   }) {
-    final params = {
-      'pa': vpa,
-      'am': amount.toStringAsFixed(2),
-      'pn': merchantName,
-      'tn': transactionNote,
-      'cu': 'INR',
-    };
-    final queryString = params.entries
-        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-        .join('&');
-    return 'upi://pay?$queryString';
+    String encode(String s) {
+      // Only encode characters that are reserved in query strings.
+      // Keep @ (VPA), #, spaces, and other text as-is for UPI app compatibility.
+      return s
+          .replaceAll('&', '%26')
+          .replaceAll('=', '%3D')
+          .replaceAll('+', '%2B');
+    }
+
+    final params = [
+      'pa=${encode(vpa)}',
+      'am=${amount.toStringAsFixed(2)}',
+      'pn=${encode(merchantName)}',
+      'tn=${encode(transactionNote)}',
+      'cu=INR',
+    ];
+    return 'upi://pay?${params.join('&')}';
   }
 
   /// Basic VPA validation — must contain @

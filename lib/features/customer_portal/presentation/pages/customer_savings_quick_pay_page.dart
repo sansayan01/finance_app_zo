@@ -1,9 +1,11 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/customer_savings_model.dart';
 import '../../data/providers/customer_savings_providers.dart';
@@ -40,11 +42,40 @@ class _CustomerSavingsQuickPayPageState
   late TabController _tabController;
   int _installmentCount = 1;
   final Set<String> _selectedDateKeys = {};
+  bool _suppressTabListener = false;
+
+  // ── Dark theme helpers (same pattern as staff selectors) ──
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color _cardColor() => _isDark ? AppColors.cardDark : Colors.white;
+  Color _textPrimary() => _isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+  Color _textSecondary() => _isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+  Color _textTertiary() => _isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
+  Color _borderColor() => _isDark ? AppColors.separatorDark : AppColors.separatorLight;
+  Color _fillColor() => _isDark ? AppColors.fillDark : AppColors.fillLight;
+  Color _primaryColor() => _isDark ? AppColors.primaryDark : AppColors.primary;
+  Color _errorColor() => _isDark ? AppColors.errorDark : AppColors.error;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_suppressTabListener) return;
+      setState(() {});
+      if (_tabController.index == 1) {
+        _suppressTabListener = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showCalendarPopup(context).then((_) {
+            if (mounted) {
+              _tabController.animateTo(0);
+              Future.delayed(const Duration(milliseconds: 400), () {
+                if (mounted) _suppressTabListener = false;
+              });
+            }
+          });
+        });
+      }
+    });
   }
 
   @override
@@ -65,7 +96,6 @@ class _CustomerSavingsQuickPayPageState
 
     if (maturity == null || amount <= 0 || total <= 0) return installments;
 
-    // Calculate start date = maturity minus total period
     DateTime startDate;
     switch (collectionType) {
       case 'daily':
@@ -101,7 +131,6 @@ class _CustomerSavingsQuickPayPageState
         dateKey: dateKey,
       ));
 
-      // Advance to next date
       switch (collectionType) {
         case 'weekly':
           currentDate = currentDate.add(const Duration(days: 7));
@@ -127,6 +156,18 @@ class _CustomerSavingsQuickPayPageState
   List<_SavingsInst> _unpaid(List<_SavingsInst> all) =>
       all.where((i) => !i.isPaid).toList();
 
+  Map<DateTime, List<_SavingsInst>> _buildEventMap(List<_SavingsInst> unpaid) {
+    final map = <DateTime, List<_SavingsInst>>{};
+    for (final inst in unpaid) {
+      final dateOnly = DateTime(inst.dueDate.year, inst.dueDate.month, inst.dueDate.day);
+      map.putIfAbsent(dateOnly, () => []).add(inst);
+    }
+    return map;
+  }
+
+  List<_SavingsInst> _eventsForDay(DateTime day, Map<DateTime, List<_SavingsInst>> map) =>
+      map[DateTime(day.year, day.month, day.day)] ?? [];
+
   void _applyQuickPay(List<_SavingsInst> unpaid, int count) {
     final take = math.min(count, unpaid.length);
     final selected = unpaid.take(take).toList();
@@ -151,32 +192,32 @@ class _CustomerSavingsQuickPayPageState
         ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey,
+          indicatorColor: _primaryColor(),
+          labelColor: _primaryColor(),
+          unselectedLabelColor: _textTertiary(),
           tabs: const [
             Tab(icon: Icon(Icons.bolt_rounded, size: 18), text: 'Quick Pay'),
-            Tab(icon: Icon(Icons.checklist_rounded, size: 18), text: 'Choose Dates'),
+            Tab(icon: Icon(Icons.calendar_month_rounded, size: 18), text: 'Choose Dates'),
           ],
         ),
       ),
       body: planAsync.when(
         data: (plan) {
           if (plan == null) {
-            return const Center(child: Text('Savings plan not found'));
+            return Center(child: Text('Savings plan not found', style: TextStyle(color: _textPrimary())));
           }
 
           final all = _generateInstallments(plan);
           final unpaid = _unpaid(all);
 
           if (unpaid.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
-                  SizedBox(height: 16),
-                  Text('All installments are paid!', style: TextStyle(fontSize: 16)),
+                  Icon(Icons.check_circle_outline, size: 64, color: _isDark ? AppColors.successDark : Colors.green),
+                  const SizedBox(height: 16),
+                  Text('All installments are paid!', style: TextStyle(fontSize: 16, color: _textPrimary())),
                 ],
               ),
             );
@@ -197,7 +238,7 @@ class _CustomerSavingsQuickPayPageState
                   controller: _tabController,
                   children: [
                     _buildQuickPayTab(unpaid),
-                    _buildChooseDatesTab(unpaid),
+                    _buildChooseDatesPlaceholder(unpaid),
                   ],
                 ),
               ),
@@ -217,7 +258,7 @@ class _CustomerSavingsQuickPayPageState
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+          colors: [_primaryColor(), _primaryColor().withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -231,11 +272,7 @@ class _CustomerSavingsQuickPayPageState
               children: [
                 Text(
                   '₹${plan.monthlyDeposit.toStringAsFixed(0)} / installment',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   '$unpaidCount of $totalCount installments remaining · ${plan.displayName}',
@@ -258,9 +295,9 @@ class _CustomerSavingsQuickPayPageState
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.06),
+                color: _primaryColor().withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+                border: Border.all(color: _primaryColor().withValues(alpha: 0.12)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -280,7 +317,7 @@ class _CustomerSavingsQuickPayPageState
                     style: TextStyle(
                       fontSize: 44,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
+                      color: _primaryColor(),
                       height: 1,
                     ),
                   ),
@@ -301,7 +338,7 @@ class _CustomerSavingsQuickPayPageState
           const SizedBox(height: 8),
           Text(
             'Installment${_installmentCount > 1 ? 's' : ''}',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _textTertiary()),
           ),
           const SizedBox(height: 20),
           _buildBreakdown(unpaid),
@@ -310,46 +347,53 @@ class _CustomerSavingsQuickPayPageState
     );
   }
 
-  Widget _buildChooseDatesTab(List<_SavingsInst> unpaid) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: unpaid.length,
-      itemBuilder: (context, index) {
-        final inst = unpaid[index];
-        final isSelected = _selectedDateKeys.contains(inst.dateKey);
+  Widget _buildChooseDatesPlaceholder(List<_SavingsInst> unpaid) {
+    final selectedCount = _selectedDateKeys.length;
+    final amount = unpaid.isNotEmpty ? unpaid.first.amount : 0.0;
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-            leading: Checkbox(
-              value: isSelected,
-              onChanged: (val) {
-                setState(() {
-                  if (val == true) {
-                    _selectedDateKeys.add(inst.dateKey);
-                  } else {
-                    _selectedDateKeys.remove(inst.dateKey);
-                  }
-                });
-              },
-              activeColor: AppColors.primary,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: _primaryColor().withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.calendar_month_rounded, size: 36, color: _primaryColor()),
             ),
-            title: Text(
-              'Installment #${inst.number}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+            const SizedBox(height: 16),
+            Text(
+              selectedCount > 0
+                  ? '$selectedCount dates selected · ₹${(selectedCount * amount).toStringAsFixed(0)}'
+                  : 'Tap to choose specific dates',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _textPrimary()),
+              textAlign: TextAlign.center,
             ),
-            subtitle: Text(
-              DateFormat('dd MMM yyyy').format(inst.dueDate),
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            const SizedBox(height: 8),
+            Text(
+              'Pick installments from the calendar',
+              style: TextStyle(fontSize: 13, color: _textTertiary()),
             ),
-            trailing: Text(
-              '₹${inst.amount.toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => _showCalendarPopup(context),
+              icon: const Icon(Icons.calendar_month_rounded, size: 20),
+              label: const Text('Open Calendar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryColor(),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
@@ -357,26 +401,23 @@ class _CustomerSavingsQuickPayPageState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Payment Breakdown',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+        Text('Payment Breakdown',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _textTertiary(), letterSpacing: 0.5)),
         const SizedBox(height: 8),
         Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.05),
+            color: _primaryColor().withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
-            border: Border(left: BorderSide(color: AppColors.primary, width: 3)),
+            border: Border(left: BorderSide(color: _primaryColor(), width: 3)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.savings, size: 14, color: AppColors.primary),
+              Icon(Icons.savings, size: 14, color: _primaryColor()),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  'Selected installments',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
+                child: Text('Selected installments', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               ),
               Text(
                 '$_installmentCount × ₹${(unpaid.isNotEmpty ? unpaid.first.amount : 0).toStringAsFixed(0)}',
@@ -393,17 +434,418 @@ class _CustomerSavingsQuickPayPageState
     final enabled = onTap != null;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: enabled ? AppColors.primary : Colors.grey[200],
-          borderRadius: BorderRadius.circular(18),
+      child: AnimatedScale(
+        scale: enabled ? 1.0 : 0.9,
+        duration: const Duration(milliseconds: 150),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: enabled
+                ? LinearGradient(colors: [_primaryColor(), _primaryColor().withValues(alpha: 0.8)])
+                : null,
+            color: enabled ? null : _fillColor(),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: enabled
+                ? [BoxShadow(color: _primaryColor().withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))]
+                : null,
+          ),
+          child: Icon(icon, size: 28, color: enabled ? Colors.white : _textTertiary()),
         ),
-        child: Icon(icon, size: 28, color: enabled ? Colors.white : Colors.grey),
       ),
     );
   }
+
+  // ── Calendar Popup ──
+
+  Future<void> _showCalendarPopup(BuildContext context) async {
+    final planAsync = ref.read(customerSavingsDetailProvider(widget.savingsPlanId));
+    final plan = planAsync.value;
+    if (plan == null) return;
+
+    final all = _generateInstallments(plan);
+    final unpaid = _unpaid(all);
+    final instEvents = _buildEventMap(unpaid);
+
+    final tempSelected = Set<String>.from(_selectedDateKeys);
+
+    DateTime focusedDay = DateTime.now();
+    if (tempSelected.isNotEmpty) {
+      final firstKey = tempSelected.first;
+      final parts = firstKey.split('-');
+      focusedDay = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+    }
+
+    final cardBg = _isDark ? AppColors.cardDark : Colors.white;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
+      barrierColor: _isDark ? Colors.black54 : Colors.black87,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setPopupState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.88,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: _isDark ? 0.3 : 0.12), blurRadius: 32, spreadRadius: -8, offset: const Offset(0, -8)),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cardBg.withValues(alpha: _isDark ? 0.98 : 0.92),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                      border: Border.all(color: _borderColor().withValues(alpha: 0.3), width: 1),
+                    ),
+                    child: SafeArea(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Accent bar
+                            Container(
+                              height: 4,
+                              margin: const EdgeInsets.only(top: 12),
+                              width: 64,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(2),
+                                gradient: LinearGradient(colors: [_primaryColor(), _isDark ? AppColors.accentDark : AppColors.accent]),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            // Header
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 28),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(colors: [_primaryColor(), _isDark ? AppColors.accentDark : AppColors.accent]),
+                                      borderRadius: BorderRadius.circular(13),
+                                    ),
+                                    child: const Icon(Icons.calendar_month_rounded, size: 22, color: Colors.white),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Select Payment Dates',
+                                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: _textPrimary())),
+                                        if (tempSelected.isNotEmpty)
+                                          Container(
+                                            margin: const EdgeInsets.only(top: 4),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(colors: [_primaryColor(), _primaryColor().withValues(alpha: 0.7)]),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              '${tempSelected.length} installment${tempSelected.length > 1 ? 's' : ''} selected',
+                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (tempSelected.isNotEmpty)
+                                    GestureDetector(
+                                      onTap: () => setPopupState(() => tempSelected.clear()),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: _errorColor().withValues(alpha: 0.08),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: _errorColor().withValues(alpha: 0.2)),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.close_rounded, size: 13, color: _errorColor()),
+                                            const SizedBox(width: 4),
+                                            Text('Clear', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _errorColor())),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Selected date chips
+                            if (tempSelected.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 28),
+                                child: SizedBox(
+                                  height: 42,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: tempSelected.length,
+                                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                    itemBuilder: (_, i) {
+                                      final key = tempSelected.elementAt(i);
+                                      final parts = key.split('-');
+                                      final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+                                      final dateStr = DateFormat('dd MMM').format(date);
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(colors: [_primaryColor(), _isDark ? AppColors.accentDark : AppColors.accent]),
+                                          borderRadius: BorderRadius.circular(14),
+                                          boxShadow: [BoxShadow(color: _primaryColor().withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(dateStr, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white)),
+                                            const SizedBox(width: 6),
+                                            GestureDetector(
+                                              onTap: () => setPopupState(() => tempSelected.remove(key)),
+                                              child: Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.22)),
+                                                child: const Icon(Icons.close_rounded, size: 12, color: Colors.white),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            if (tempSelected.isNotEmpty) const SizedBox(height: 14),
+                            // Calendar
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: TableCalendar(
+                                firstDay: DateTime(2020),
+                                lastDay: DateTime(2030),
+                                focusedDay: focusedDay,
+                                calendarFormat: CalendarFormat.month,
+                                rowHeight: 46,
+                                daysOfWeekHeight: 40,
+                                startingDayOfWeek: StartingDayOfWeek.monday,
+                                rangeSelectionMode: RangeSelectionMode.disabled,
+                                daysOfWeekStyle: DaysOfWeekStyle(
+                                  weekdayStyle: TextStyle(color: _textTertiary(), fontSize: 12, fontWeight: FontWeight.w600),
+                                  weekendStyle: TextStyle(color: _textTertiary(), fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                                // tableBorder not available in this TableCalendar version
+                                enabledDayPredicate: (day) {
+                                  final events = _eventsForDay(day, instEvents);
+                                  return events.isNotEmpty && !events.every((i) => i.isPaid);
+                                },
+                                selectedDayPredicate: (day) {
+                                  final key = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+                                  return tempSelected.contains(key);
+                                },
+                                onDaySelected: (selectedDay, newFocusedDay) {
+                                  final key = '${selectedDay.year}-${selectedDay.month.toString().padLeft(2, '0')}-${selectedDay.day.toString().padLeft(2, '0')}';
+                                  setPopupState(() {
+                                    focusedDay = newFocusedDay;
+                                    if (tempSelected.contains(key)) {
+                                      tempSelected.remove(key);
+                                    } else {
+                                      tempSelected.add(key);
+                                    }
+                                  });
+                                },
+                                onPageChanged: (newFocusedDay) => focusedDay = newFocusedDay,
+                                eventLoader: (day) => _eventsForDay(day, instEvents),
+                                calendarStyle: CalendarStyle(
+                                  outsideDaysVisible: false,
+                                  cellMargin: const EdgeInsets.all(4),
+                                  todayDecoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: _primaryColor().withValues(alpha: 0.6), width: 2),
+                                  ),
+                                  todayTextStyle: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: _primaryColor()),
+                                  selectedDecoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(colors: [_primaryColor(), _isDark ? AppColors.accentDark : AppColors.accent]),
+                                  ),
+                                  selectedTextStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
+                                  defaultTextStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _textPrimary()),
+                                  disabledTextStyle: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    decoration: TextDecoration.lineThrough,
+                                    color: _isDark ? AppColors.textTertiaryDark : Colors.grey.withValues(alpha: 0.5),
+                                  ),
+                                  markerDecoration: const BoxDecoration(),
+                                  markersMaxCount: 0,
+                                ),
+                                calendarBuilders: CalendarBuilders(
+                                  markerBuilder: (context, day, events) {
+                                    if (events.isEmpty) return const SizedBox.shrink();
+                                    final dotColor = _primaryColor();
+                                    return Positioned(
+                                      bottom: 1,
+                                      child: Container(
+                                        width: 18,
+                                        height: 14,
+                                        decoration: BoxDecoration(
+                                          color: dotColor.withValues(alpha: _isDark ? 0.25 : 0.15),
+                                          borderRadius: BorderRadius.circular(7),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '${events.length}',
+                                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: dotColor),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                headerStyle: HeaderStyle(
+                                  titleCentered: true,
+                                  headerPadding: const EdgeInsets.symmetric(vertical: 14),
+                                  titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: _textPrimary()),
+                                  leftChevronIcon: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(color: _fillColor(), borderRadius: BorderRadius.circular(10)),
+                                    child: Icon(Icons.chevron_left_rounded, size: 20, color: _textSecondary()),
+                                  ),
+                                  rightChevronIcon: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(color: _fillColor(), borderRadius: BorderRadius.circular(10)),
+                                    child: Icon(Icons.chevron_right_rounded, size: 20, color: _textSecondary()),
+                                  ),
+                                  formatButtonVisible: false,
+                                ),
+                              ),
+                            ),
+                            // Legend
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _fillColor(),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: _borderColor().withValues(alpha: 0.3)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildLegendDot(_primaryColor(), 'Upcoming'),
+                                    _buildLegendDot(_isDark ? AppColors.successDark : Colors.green, 'Paid'),
+                                    _buildLegendDot(_textTertiary(), 'Unavailable'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Done Button
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(28, 24, 28, 48),
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    final newKeys = <String>{};
+                                    for (final key in tempSelected) {
+                                      final parts = key.split('-');
+                                      final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+                                      final events = _eventsForDay(date, instEvents);
+                                      for (final inst in events) {
+                                        if (!inst.isPaid) {
+                                          newKeys.add(inst.dateKey);
+                                        }
+                                      }
+                                    }
+                                    setState(() {
+                                      _selectedDateKeys..clear()..addAll(newKeys);
+                                      _installmentCount = newKeys.length;
+                                    });
+                                    Navigator.pop(ctx);
+                                    HapticFeedback.selectionClick();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 0,
+                                  ),
+                                  child: Ink(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(colors: [_primaryColor(), _isDark ? AppColors.accentDark : AppColors.accent]),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Container(
+                                      height: 58,
+                                      alignment: Alignment.center,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.check_circle_rounded, size: 22, color: Colors.white),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            tempSelected.isEmpty
+                                                ? 'Done'
+                                                : 'Done (${tempSelected.length} date${tempSelected.length > 1 ? 's' : ''})',
+                                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLegendDot(Color color, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: color)),
+          const SizedBox(width: 5),
+          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _textSecondary())),
+        ],
+      ),
+    );
+  }
+
+  // ── Bottom Bar ──
 
   Widget _buildBottomBar(CustomerSavingsModel plan) {
     final totalSelected = _selectedDateKeys.length * plan.monthlyDeposit;
@@ -413,10 +855,8 @@ class _CustomerSavingsQuickPayPageState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2)),
-        ],
+        color: _cardColor(),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: _isDark ? 0.2 : 0.05), blurRadius: 10, offset: const Offset(0, -2))],
       ),
       child: SafeArea(
         top: false,
@@ -425,11 +865,7 @@ class _CustomerSavingsQuickPayPageState
           children: [
             Text(
               'Selected: $count · ₹${totalSelected.toStringAsFixed(0)}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isEnabled ? AppColors.primary : Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isEnabled ? _primaryColor() : _textTertiary()),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -440,7 +876,7 @@ class _CustomerSavingsQuickPayPageState
                 icon: const Icon(Icons.qr_code_scanner),
                 label: Text('Pay ₹${totalSelected.toStringAsFixed(0)} via UPI'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: _primaryColor(),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

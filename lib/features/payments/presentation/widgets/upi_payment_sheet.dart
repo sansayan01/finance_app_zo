@@ -17,6 +17,11 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
   final String? savingsPlanName;
   final int? installmentNumber;
   final String? memberId;
+  final List<String>? emiScheduleIds;
+  final List<double>? emiAmounts;
+  final List<String>? savingsDateKeys;
+  final List<double>? savingsAmounts;
+  final String? transactionNoteOverride;
 
   const UpiPaymentSheet({
     super.key,
@@ -29,6 +34,11 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
     this.savingsPlanName,
     this.installmentNumber,
     this.memberId,
+    this.emiScheduleIds,
+    this.emiAmounts,
+    this.savingsDateKeys,
+    this.savingsAmounts,
+    this.transactionNoteOverride,
   });
 
   static Future<void> show(
@@ -42,6 +52,11 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
     String? savingsPlanName,
     int? installmentNumber,
     String? memberId,
+    List<String>? emiScheduleIds,
+    List<double>? emiAmounts,
+    List<String>? savingsDateKeys,
+    List<double>? savingsAmounts,
+    String? transactionNoteOverride,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -58,6 +73,11 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
         savingsPlanName: savingsPlanName,
         installmentNumber: installmentNumber,
         memberId: memberId,
+        emiScheduleIds: emiScheduleIds,
+        emiAmounts: emiAmounts,
+        savingsDateKeys: savingsDateKeys,
+        savingsAmounts: savingsAmounts,
+        transactionNoteOverride: transactionNoteOverride,
       ),
     );
   }
@@ -108,6 +128,9 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
   }
 
   String _buildTransactionNote() {
+    if (widget.transactionNoteOverride != null) {
+      return widget.transactionNoteOverride!;
+    }
     if (widget.loanId != null && widget.emiNumber != null) {
       return 'Loan ${widget.loanNumber ?? ''} EMI #${widget.emiNumber}';
     }
@@ -137,15 +160,42 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
 
     try {
       final repository = ref.read(upiRepositoryProvider);
-      await repository.createRequest(
-        customerId: '',
-        memberId: widget.memberId,
-        loanId: widget.loanId,
-        savingsPlanId: widget.savingsPlanId,
-        emiScheduleId: widget.emiScheduleId,
-        amount: widget.amount,
-        upiVpa: _vpa!,
-      );
+
+      final hasBatchEmis = widget.emiScheduleIds != null && widget.emiScheduleIds!.isNotEmpty;
+      final hasBatchSavings = widget.savingsDateKeys != null && widget.savingsDateKeys!.isNotEmpty;
+
+      if (hasBatchEmis) {
+        for (var i = 0; i < widget.emiScheduleIds!.length; i++) {
+          await repository.createRequest(
+            customerId: '',
+            memberId: widget.memberId,
+            loanId: widget.loanId,
+            emiScheduleId: widget.emiScheduleIds![i],
+            amount: widget.emiAmounts![i],
+            upiVpa: _vpa!,
+          );
+        }
+      } else if (hasBatchSavings) {
+        for (var i = 0; i < widget.savingsDateKeys!.length; i++) {
+          await repository.createRequest(
+            customerId: '',
+            memberId: widget.memberId,
+            savingsPlanId: widget.savingsPlanId,
+            amount: widget.savingsAmounts![i],
+            upiVpa: _vpa!,
+          );
+        }
+      } else {
+        await repository.createRequest(
+          customerId: '',
+          memberId: widget.memberId,
+          loanId: widget.loanId,
+          savingsPlanId: widget.savingsPlanId,
+          emiScheduleId: widget.emiScheduleId,
+          amount: widget.amount,
+          upiVpa: _vpa!,
+        );
+      }
 
       if (mounted) {
         setState(() => _hasPaid = true);

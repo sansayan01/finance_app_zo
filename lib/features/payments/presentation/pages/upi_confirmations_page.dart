@@ -15,6 +15,7 @@ class UpiConfirmationsPage extends ConsumerStatefulWidget {
 
 class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
   String _filter = 'pending';
+  final Set<String> _selectedIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +25,21 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
       appBar: AppBar(
         title: const Text('UPI Payment Confirmations'),
         actions: [
+          if (_filter == 'pending' && _selectedIds.isNotEmpty)
+            TextButton.icon(
+              onPressed: _confirmSelected,
+              icon: const Icon(Icons.check_circle, color: Colors.white),
+              label: Text(
+                'Confirm (${_selectedIds.length})',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(allUpiRequestsProvider),
+            onPressed: () {
+              ref.invalidate(allUpiRequestsProvider);
+              setState(() => _selectedIds.clear());
+            },
           ),
         ],
       ),
@@ -67,13 +80,16 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                     ),
                   );
                 }
+
+                final typedRequests = requests
+                    .map((e) => UpiPaymentRequest.fromJson(e as Map<String, dynamic>))
+                    .toList();
+                final batches = _groupIntoBatches(typedRequests);
+
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: requests.length,
-                  itemBuilder: (context, index) {
-                    final req = UpiPaymentRequest.fromJson(requests[index] as Map<String, dynamic>);
-                    return _buildRequestCard(req);
-                  },
+                  itemCount: batches.length,
+                  itemBuilder: (context, index) => _buildBatchCard(batches[index]),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -85,21 +101,42 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     );
   }
 
-  Widget _buildFilterChip(String? value, String label) {
-    final isSelected = _filter == value;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => setState(() => _filter = value ?? 'pending'),
-      selectedColor: AppColors.primary.withValues(alpha: 0.2),
-      checkmarkColor: AppColors.primary,
-    );
+  /// Groups requests by customer_id + loan_id/savings_plan_id + created_at within 5 min.
+  List<List<UpiPaymentRequest>> _groupIntoBatches(List<UpiPaymentRequest> requests) {
+    if (requests.isEmpty) return [];
+
+    final sorted = List<UpiPaymentRequest>.from(requests)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    final batches = <List<UpiPaymentRequest>>[];
+    var currentBatch = <UpiPaymentRequest>[sorted.first];
+
+    for (var i = 1; i < sorted.length; i++) {
+      final prev = sorted[i - 1];
+      final curr = sorted[i];
+
+      final sameCustomer = curr.customerId == prev.customerId;
+      final sameLoan = curr.loanId != null && curr.loanId == prev.loanId;
+      final sameSavings = curr.savingsPlanId != null && curr.savingsPlanId == prev.savingsPlanId;
+      final withinFiveMin = curr.createdAt.difference(prev.createdAt).abs() <= const Duration(minutes: 5);
+
+      if (sameCustomer && (sameLoan || sameSavings) && withinFiveMin) {
+        currentBatch.add(curr);
+      } else {
+        batches.add(currentBatch);
+        currentBatch = [curr];
+      }
+    }
+    batches.add(currentBatch);
+
+    return batches;
   }
 
-  Widget _buildRequestCard(UpiPaymentRequest req) {
-    final typeLabel = req.isLoanPayment ? 'Loan EMI' : 'Savings Inst.';
-    final amountLabel = '₹${req.amount.toStringAsFixed(2)}';
-    final timeAgo = _formatTimeAgo(req.createdAt);
+  Widget _buildBatchCard(List<UpiPaymentRequest> batch) {
+    final first = batch.first;
+    final total = batch.fold<double>(0, (sum, r) => sum + r.amount);
+    final typeLabel = first.isLoanPayment ? 'Loan EMI' : 'Savings Inst.';
+    final allSelected = batch.every((r) => _selectedIds.contains(r.id));
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -109,11 +146,34 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Batch header with select-all
             Row(
               children: [
+                if (_filter == 'pending')
+                  Checkbox(
+                    value: allSelected,
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          for (final r in batch) {
+                            _selectedIds.add(r.id);
+                          }
+                        } else {
+                          for (final r in batch) {
+                            _selectedIds.remove(r.id);
+                          }
+                        }
+                      });
+                    },
+                    activeColor: AppColors.primary,
+                  ),
                 CircleAvatar(
                   backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  child: Icon(Icons.person, color: AppColors.primary, size: 20),
+                  child: Icon(
+                    first.isLoanPayment ? Icons.account_balance : Icons.savings,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -121,64 +181,87 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        req.customerId.substring(0, 8),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        '${batch.length} $typeLabel installment${batch.length > 1 ? 's' : ''}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                       Text(
-                        '$typeLabel • $amountLabel',
+                        '₹${total.toStringAsFixed(2)} total · ${_formatTimeAgo(first.createdAt)}',
                         style: TextStyle(color: Colors.grey[600], fontSize: 13),
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  timeAgo,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                ),
+                if (_filter != 'pending')
+                  Icon(
+                    first.status == 'confirmed' ? Icons.check_circle : Icons.cancel,
+                    color: first.status == 'confirmed' ? Colors.green : Colors.red,
+                    size: 20,
+                  ),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              'VPA: ${req.upiVpa}',
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
-            ),
-            if (req.status == 'confirmed')
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
+
+            const Divider(),
+
+            // Individual requests within the batch
+            for (final req in batch)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 16),
-                    SizedBox(width: 4),
-                    Text('Confirmed', style: TextStyle(color: Colors.green)),
+                    if (_filter == 'pending')
+                      Checkbox(
+                        value: _selectedIds.contains(req.id),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _selectedIds.add(req.id);
+                            } else {
+                              _selectedIds.remove(req.id);
+                            }
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                    Icon(
+                      req.status == 'confirmed'
+                          ? Icons.check_circle
+                          : req.status == 'rejected'
+                              ? Icons.cancel
+                              : Icons.pending,
+                      size: 16,
+                      color: req.status == 'confirmed'
+                          ? Colors.green
+                          : req.status == 'rejected'
+                              ? Colors.red
+                              : Colors.orange,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '₹${req.amount.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    if (req.status == 'pending')
+                      TextButton(
+                        onPressed: () => _rejectPayment(req),
+                        child: const Text('Reject', style: TextStyle(color: Colors.red, fontSize: 12)),
+                      ),
                   ],
                 ),
               ),
-            if (req.status == 'rejected')
+
+            // Confirm button for individual batches (when nothing is selected)
+            if (_filter == 'pending' && _selectedIds.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Row(
                   children: [
-                    const Icon(Icons.cancel, color: Colors.red, size: 16),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        'Rejected: ${req.rejectionReason ?? ''}',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (req.status == 'pending')
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Row(
-                  children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _rejectPayment(req),
+                        onPressed: () => _rejectBatch(batch),
                         icon: const Icon(Icons.close, size: 16),
-                        label: const Text('Reject'),
+                        label: const Text('Reject All'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
                           side: const BorderSide(color: Colors.red),
@@ -188,9 +271,9 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _confirmPayment(req),
+                        onPressed: () => _confirmBatch(batch),
                         icon: const Icon(Icons.check, size: 16),
-                        label: const Text('Confirm'),
+                        label: const Text('Confirm All'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
@@ -206,6 +289,22 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     );
   }
 
+  Widget _buildFilterChip(String? value, String label) {
+    final isSelected = _filter == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) {
+        setState(() {
+          _filter = value ?? 'pending';
+          _selectedIds.clear();
+        });
+      },
+      selectedColor: AppColors.primary.withValues(alpha: 0.2),
+      checkmarkColor: AppColors.primary,
+    );
+  }
+
   String _formatTimeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
     if (diff.inMinutes < 1) return 'Just now';
@@ -214,15 +313,48 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     return DateFormat('MMM d, h:mm a').format(dt);
   }
 
-  Future<void> _confirmPayment(UpiPaymentRequest req) async {
+  // ── Batch confirm/reject ──
+
+  Future<void> _confirmSelected() async {
+    if (_selectedIds.isEmpty) return;
+
     final repository = ref.read(upiRepositoryProvider);
     try {
-      await repository.confirmPayment(requestId: req.id, confirmedBy: '');
+      await repository.confirmBatch(
+        requestIds: _selectedIds.toList(),
+        confirmedBy: '',
+      );
       ref.invalidate(allUpiRequestsProvider);
+      setState(() => _selectedIds.clear());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Payment confirmed'),
+            content: Text('Payments confirmed and collections created'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmBatch(List<UpiPaymentRequest> batch) async {
+    final repository = ref.read(upiRepositoryProvider);
+    try {
+      await repository.confirmBatch(
+        requestIds: batch.map((r) => r.id).toList(),
+        confirmedBy: '',
+      );
+      ref.invalidate(allUpiRequestsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${batch.length} payments confirmed'),
             backgroundColor: Colors.green,
           ),
         );
@@ -251,6 +383,36 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Payment rejected'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _rejectBatch(List<UpiPaymentRequest> batch) async {
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (_) => const UpiConfirmDialog(title: 'Reject All Payments'),
+    );
+    if (reason == null || reason.trim().isEmpty) return;
+
+    final repository = ref.read(upiRepositoryProvider);
+    try {
+      for (final req in batch) {
+        await repository.rejectPayment(requestId: req.id, rejectionReason: reason);
+      }
+      ref.invalidate(allUpiRequestsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${batch.length} payments rejected'),
             backgroundColor: Colors.orange,
           ),
         );

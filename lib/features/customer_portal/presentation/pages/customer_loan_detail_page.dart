@@ -24,8 +24,6 @@ import '../../../loans/data/services/loan_statement_csv_service.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
-import '../../data/providers/customer_member_provider.dart';
-import '../../../payments/presentation/widgets/upi_payment_sheet.dart';
 import '../widgets/customer_loan_breakdown_chart.dart';
 import '../widgets/customer_emi_tile.dart';
 import '../widgets/customer_empty_state.dart';
@@ -763,19 +761,13 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
 
   Widget _buildUpiButton(BuildContext context, bool isDark, CustomerLoanModel loan) {
     final theme = Theme.of(context);
-    final memberId = ref.read(currentCustomerIdSyncProvider);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: () {
           HapticFeedback.lightImpact();
-          UpiPaymentSheet.show(
-            context,
-            amount: loan.emiAmount,
-            loanId: widget.loanId,
-            memberId: memberId,
-          );
+          context.push('/customer/loans/${widget.loanId}/quick-pay');
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(

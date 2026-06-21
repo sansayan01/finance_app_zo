@@ -10,7 +10,6 @@ import '../../../../core/widgets/sparkline_chart.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
 import '../widgets/customer_empty_state.dart';
-import '../../../payments/presentation/widgets/upi_payment_sheet.dart';
 
 class CustomerEmiSchedulePage extends ConsumerStatefulWidget {
   final String loanId;
@@ -438,14 +437,7 @@ class _CustomerEmiSchedulePageState
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => UpiPaymentSheet.show(
-          context,
-          amount: amount,
-          loanId: widget.loanId,
-          emiScheduleId: null,
-          loanNumber: _shortId(widget.loanId),
-          emiNumber: null,
-        ),
+        onTap: () => context.push('/customer/loans/${widget.loanId}/quick-pay'),
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),

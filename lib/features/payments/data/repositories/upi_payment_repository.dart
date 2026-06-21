@@ -140,4 +140,81 @@ class UpiPaymentRepository {
         .single();
     return UpiPaymentRequest.fromJson(data);
   }
+
+  /// Confirms a batch of UPI requests and creates collection records.
+  /// Uses each request's created_at as the collection_date (customer's payment time).
+  Future<void> confirmBatch({
+    required List<String> requestIds,
+    required String confirmedBy,
+  }) async {
+    if (requestIds.isEmpty) return;
+
+    // 1. Fetch all requests being confirmed
+    final requestData = await _client
+        .from('upi_payment_requests')
+        .select()
+        .inFilter('id', requestIds)
+        .eq('status', 'pending');
+
+    final requests = (requestData as List)
+        .map((e) => UpiPaymentRequest.fromJson(e))
+        .toList();
+
+    if (requests.isEmpty) return;
+
+    // 2. Update all request statuses to confirmed
+    for (final req in requests) {
+      await _client
+          .from('upi_payment_requests')
+          .update({
+            'status': 'confirmed',
+            'confirmed_by': confirmedBy,
+            'confirmed_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', req.id);
+    }
+
+    // 3. Create collection records using customer's payment time
+    for (final req in requests) {
+      final collectionDate = req.createdAt.toIso8601String().substring(0, 10);
+
+      if (req.isLoanPayment) {
+        await _client.from('collections').insert({
+          'org_id': _orgId,
+          'loan_id': req.loanId,
+          'member_id': req.memberId,
+          'staff_id': confirmedBy,
+          'member_name': 'UPI Customer',
+          'amount_expected': req.amount,
+          'amount_collected': req.amount,
+          'is_partial': false,
+          'payment_mode': 'upi',
+          'collection_date': collectionDate,
+          'collection_time': '${req.createdAt.hour.toString().padLeft(2, '0')}:${req.createdAt.minute.toString().padLeft(2, '0')}:${req.createdAt.second.toString().padLeft(2, '0')}',
+          'gps_lat': 0.0,
+          'gps_lng': 0.0,
+          'sync_status': 'synced',
+          'remarks': 'UPI payment confirmed — ID: ${req.id}',
+        });
+      } else if (req.isSavingsPayment) {
+        await _client.from('savings_collections').insert({
+          'org_id': _orgId,
+          'savings_plan_id': req.savingsPlanId,
+          'member_id': req.memberId,
+          'member_name': 'UPI Customer',
+          'amount_expected': req.amount,
+          'amount_collected': req.amount,
+          'is_partial': false,
+          'payment_mode': 'upi',
+          'collection_date': collectionDate,
+          'collected_at': req.createdAt.toIso8601String(),
+          'staff_id': confirmedBy,
+          'collected_by_name': 'UPI Confirmed',
+          'collected_by_role': 'executiveAdmin',
+          'collected_by_user_id': confirmedBy,
+          'sync_status': 'synced',
+        });
+      }
+    }
+  }
 }

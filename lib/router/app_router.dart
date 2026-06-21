@@ -129,6 +129,8 @@ import '../features/customer_portal/presentation/pages/customer_loan_detail_page
 import '../features/customer_portal/presentation/pages/customer_emi_schedule_page.dart';
 import '../features/customer_portal/presentation/pages/customer_savings_page.dart';
 import '../features/customer_portal/presentation/pages/customer_savings_detail_page.dart';
+import '../features/customer_portal/presentation/pages/customer_loan_quick_pay_page.dart';
+import '../features/customer_portal/presentation/pages/customer_savings_quick_pay_page.dart';
 import '../features/customer_portal/presentation/pages/customer_transactions_page.dart';
 import '../features/customer_portal/presentation/pages/customer_notifications_page.dart';
 import '../features/customer_portal/presentation/pages/customer_support_page.dart';
@@ -739,6 +741,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
+            path: '/customer/loans/:id/quick-pay',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CustomerLoanQuickPayPage(loanId: id);
+            },
+          ),
+          GoRoute(
             path: '/customer/savings',
             builder: (context, state) => const CustomerSavingsPage(),
           ),
@@ -747,6 +756,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               return CustomerSavingsDetailPage(savingsId: id);
+            },
+          ),
+          GoRoute(
+            path: '/customer/savings/:id/quick-pay',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CustomerSavingsQuickPayPage(savingsPlanId: id);
             },
           ),
           GoRoute(

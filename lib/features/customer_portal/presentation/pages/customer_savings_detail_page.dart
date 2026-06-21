@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../payments/presentation/widgets/upi_payment_sheet.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/layout.dart';
 import '../../../../core/providers/org_provider.dart';
@@ -1283,16 +1282,7 @@ class _CustomerSavingsDetailPageState
               end: Alignment.bottomRight,
             ),
             onTap: () {
-              final memberId = ref.read(currentCustomerIdSyncProvider);
-              UpiPaymentSheet.show(
-                context,
-                amount: savings.monthlyDeposit > 0
-                    ? savings.monthlyDeposit
-                    : savings.targetAmount - savings.currentAmount,
-                savingsPlanId: widget.savingsId,
-                savingsPlanName: savings.displayName,
-                memberId: memberId,
-              );
+              context.push('/customer/savings/${widget.savingsId}/quick-pay');
             },
           ),
         ),

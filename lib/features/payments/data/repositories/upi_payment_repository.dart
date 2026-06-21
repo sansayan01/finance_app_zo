@@ -79,7 +79,7 @@ class UpiPaymentRepository {
         .from('upi_payment_requests')
         .select()
         .eq('org_id', _orgId);
-    if (status != null) {
+    if (status != null && status.isNotEmpty) {
       query = query.eq('status', status);
     }
     final data = await query.order('created_at', ascending: false).limit(100);
@@ -162,7 +162,42 @@ class UpiPaymentRepository {
 
     if (requests.isEmpty) return;
 
-    // 2. Update all request statuses to confirmed
+    // 2. Look up member names for all unique member_ids
+    final memberIds = requests
+        .map((r) => r.memberId)
+        .where((id) => id != null && id.isNotEmpty)
+        .toSet()
+        .toList();
+    final memberNames = <String, String>{};
+    if (memberIds.isNotEmpty) {
+      final memberData = await _client
+          .from('members')
+          .select('id, full_name')
+          .inFilter('id', memberIds);
+      for (final m in (memberData as List)) {
+        memberNames[m['id']?.toString() ?? ''] = m['full_name']?.toString() ?? 'UPI Customer';
+      }
+    }
+
+    // 3. Look up the confirmer's role and name from profiles
+    String confirmerName = 'UPI Confirmed';
+    String confirmerRole = 'executiveAdmin';
+    try {
+      final profileData = await _client
+          .from('profiles')
+          .select('full_name, role')
+          .eq('user_id', confirmedBy)
+          .limit(1)
+          .maybeSingle();
+      if (profileData != null) {
+        confirmerName = profileData['full_name']?.toString() ?? confirmerName;
+        confirmerRole = profileData['role']?.toString() ?? confirmerRole;
+      }
+    } catch (_) {
+      // Fall back to defaults if profile lookup fails
+    }
+
+    // 4. Update all request statuses to confirmed
     for (final req in requests) {
       await _client
           .from('upi_payment_requests')
@@ -174,9 +209,10 @@ class UpiPaymentRepository {
           .eq('id', req.id);
     }
 
-    // 3. Create collection records using customer's payment time
+    // 5. Create collection records using customer's payment time
     for (final req in requests) {
       final collectionDate = req.createdAt.toIso8601String().substring(0, 10);
+      final resolvedName = memberNames[req.memberId] ?? 'UPI Customer';
 
       if (req.isLoanPayment) {
         await _client.from('collections').insert({
@@ -184,7 +220,7 @@ class UpiPaymentRepository {
           'loan_id': req.loanId,
           'member_id': req.memberId,
           'staff_id': confirmedBy,
-          'member_name': 'UPI Customer',
+          'member_name': resolvedName,
           'amount_expected': req.amount,
           'amount_collected': req.amount,
           'is_partial': false,
@@ -201,7 +237,7 @@ class UpiPaymentRepository {
           'org_id': _orgId,
           'savings_plan_id': req.savingsPlanId,
           'member_id': req.memberId,
-          'member_name': 'UPI Customer',
+          'member_name': resolvedName,
           'amount_expected': req.amount,
           'amount_collected': req.amount,
           'is_partial': false,
@@ -209,8 +245,8 @@ class UpiPaymentRepository {
           'collection_date': collectionDate,
           'collected_at': req.createdAt.toIso8601String(),
           'staff_id': confirmedBy,
-          'collected_by_name': 'UPI Confirmed',
-          'collected_by_role': 'executiveAdmin',
+          'collected_by_name': confirmerName,
+          'collected_by_role': confirmerRole,
           'collected_by_user_id': confirmedBy,
           'sync_status': 'synced',
         });

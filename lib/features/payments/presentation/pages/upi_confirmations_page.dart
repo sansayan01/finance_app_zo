@@ -15,8 +15,24 @@ class UpiConfirmationsPage extends ConsumerStatefulWidget {
 }
 
 class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
+  /// Empty string = "All" filter (no status filter applied)
   String _filter = 'pending';
   final Set<String> _selectedIds = {};
+  bool _isProcessing = false;
+
+  /// Human-readable label for the current filter
+  String get _filterLabel {
+    switch (_filter) {
+      case 'pending':
+        return 'pending';
+      case 'confirmed':
+        return 'confirmed';
+      case 'rejected':
+        return 'rejected';
+      default:
+        return 'UPI payments';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +44,16 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
         actions: [
           if (_filter == 'pending' && _selectedIds.isNotEmpty)
             TextButton.icon(
-              onPressed: _confirmSelected,
-              icon: const Icon(Icons.check_circle, color: Colors.white),
+              onPressed: _isProcessing ? null : _confirmSelected,
+              icon: _isProcessing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.check_circle, color: Colors.white),
               label: Text(
-                'Confirm (${_selectedIds.length})',
+                _isProcessing ? 'Confirming...' : 'Confirm (${_selectedIds.length})',
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -47,16 +69,14 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Wrap(
+              spacing: 8,
               children: [
                 _buildFilterChip('pending', 'Pending'),
-                const SizedBox(width: 8),
                 _buildFilterChip('confirmed', 'Confirmed'),
-                const SizedBox(width: 8),
                 _buildFilterChip('rejected', 'Rejected'),
-                const SizedBox(width: 8),
-                _buildFilterChip(null, 'All'),
+                _buildFilterChip('', 'All'),
               ],
             ),
           ),
@@ -71,7 +91,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                         Icon(Icons.payment, size: 64, color: Colors.grey[300]),
                         const SizedBox(height: 16),
                         Text(
-                          'No $_filter UPI payments',
+                          'No $_filterLabel found',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[500],
@@ -82,13 +102,19 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                   );
                 }
 
-                final typedRequests = requests;
-                final batches = _groupIntoBatches(typedRequests);
+                final batches = _groupIntoBatches(requests);
 
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: batches.length,
-                  itemBuilder: (context, index) => _buildBatchCard(batches[index]),
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(allUpiRequestsProvider);
+                    setState(() => _selectedIds.clear());
+                  },
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: batches.length,
+                    itemBuilder: (context, index) => _buildBatchCard(batches[index]),
+                  ),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -243,14 +269,14 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                     ),
                     if (req.status == 'pending')
                       TextButton(
-                        onPressed: () => _rejectPayment(req),
+                        onPressed: _isProcessing ? null : () => _rejectPayment(req),
                         child: const Text('Reject', style: TextStyle(color: Colors.red, fontSize: 12)),
                       ),
                   ],
                 ),
               ),
 
-            // Confirm button for individual batches (when nothing is selected)
+            // Confirm/Reject buttons for individual batches (when nothing is selected)
             if (_filter == 'pending' && _selectedIds.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -258,7 +284,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _rejectBatch(batch),
+                        onPressed: _isProcessing ? null : () => _rejectBatch(batch),
                         icon: const Icon(Icons.close, size: 16),
                         label: const Text('Reject All'),
                         style: OutlinedButton.styleFrom(
@@ -270,9 +296,15 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _confirmBatch(batch),
-                        icon: const Icon(Icons.check, size: 16),
-                        label: const Text('Confirm All'),
+                        onPressed: _isProcessing ? null : () => _confirmBatchWithDialog(batch),
+                        icon: _isProcessing
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.check, size: 16),
+                        label: Text(_isProcessing ? 'Confirming...' : 'Confirm All'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
@@ -288,14 +320,14 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     );
   }
 
-  Widget _buildFilterChip(String? value, String label) {
+  Widget _buildFilterChip(String value, String label) {
     final isSelected = _filter == value;
     return FilterChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (_) {
         setState(() {
-          _filter = value ?? 'pending';
+          _filter = value;
           _selectedIds.clear();
         });
       },
@@ -312,10 +344,43 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
     return DateFormat('MMM d, h:mm a').format(dt);
   }
 
+  // ── Confirmation dialog ──
+
+  Future<bool> _showConfirmDialog(int count, double totalAmount) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Payment'),
+        content: Text(
+          'Confirm $count payment${count > 1 ? 's' : ''} totaling ₹${totalAmount.toStringAsFixed(2)}?\n\n'
+          'This will create collection records in the system.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.green),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   // ── Batch confirm/reject ──
 
   Future<void> _confirmSelected() async {
-    if (_selectedIds.isEmpty) return;
+    if (_selectedIds.isEmpty || _isProcessing) return;
+
+    // Show confirmation dialog
+    final confirmed = await _showConfirmDialog(_selectedIds.length, 0);
+    if (!confirmed) return;
+
+    setState(() => _isProcessing = true);
 
     final staffId = Supabase.instance.client.auth.currentUser?.id ?? '';
     final repository = ref.read(upiRepositoryProvider);
@@ -340,10 +405,23 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
+  Future<void> _confirmBatchWithDialog(List<UpiPaymentRequest> batch) async {
+    final total = batch.fold<double>(0, (sum, r) => sum + r.amount);
+    final confirmed = await _showConfirmDialog(batch.length, total);
+    if (!confirmed) return;
+    await _confirmBatch(batch);
+  }
+
   Future<void> _confirmBatch(List<UpiPaymentRequest> batch) async {
+    if (_isProcessing) return;
+
+    setState(() => _isProcessing = true);
+
     final staffId = Supabase.instance.client.auth.currentUser?.id ?? '';
     final repository = ref.read(upiRepositoryProvider);
     try {
@@ -366,15 +444,21 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   Future<void> _rejectPayment(UpiPaymentRequest req) async {
+    if (_isProcessing) return;
+
     final reason = await showDialog<String>(
       context: context,
       builder: (_) => const UpiConfirmDialog(title: 'Reject Payment'),
     );
     if (reason == null || reason.trim().isEmpty) return;
+
+    setState(() => _isProcessing = true);
 
     final repository = ref.read(upiRepositoryProvider);
     try {
@@ -394,15 +478,21 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   Future<void> _rejectBatch(List<UpiPaymentRequest> batch) async {
+    if (_isProcessing) return;
+
     final reason = await showDialog<String>(
       context: context,
       builder: (_) => const UpiConfirmDialog(title: 'Reject All Payments'),
     );
     if (reason == null || reason.trim().isEmpty) return;
+
+    setState(() => _isProcessing = true);
 
     final repository = ref.read(upiRepositoryProvider);
     try {
@@ -424,6 +514,8 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage> {
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 }

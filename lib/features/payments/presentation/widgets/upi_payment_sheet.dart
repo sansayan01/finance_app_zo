@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../data/services/upi_service.dart';
 import '../../data/providers/upi_providers.dart';
 import '../../../loans/data/services/qr_png.dart';
+import '../../../customer_portal/data/providers/customer_home_providers.dart';
 
 class UpiPaymentSheet extends ConsumerStatefulWidget {
   final double amount;
@@ -226,6 +227,10 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
 
       if (mounted) {
         setState(() => _hasPaid = true);
+        // Refresh customer transaction list so pending payment appears
+        ref.invalidate(customerRecentTransactionsProvider);
+        ref.invalidate(customerAllTransactionsProvider);
+        ref.invalidate(customerDashboardProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Payment submitted for verification'),

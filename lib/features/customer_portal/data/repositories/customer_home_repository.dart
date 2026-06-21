@@ -42,6 +42,18 @@ class CustomerHomeRepository {
       final transactionsData = results[2] as List;
       final memberData = results[3] as Map<String, dynamic>?;
 
+      // Fetch UPI payment requests separately — graceful failure if RLS blocks it
+      List upiData = [];
+      try {
+        upiData = await _client
+            .from('upi_payment_requests')
+            .select()
+            .eq('customer_id', memberId)
+            .eq('org_id', _orgId)
+            .order('created_at', ascending: false)
+            .limit(5);
+      } catch (_) {}
+
       final loans = loansData
           .map((e) => CustomerLoanModel.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -103,6 +115,26 @@ class CustomerHomeRepository {
         } catch (_) {}
       }
 
+      // Merge pending/rejected UPI requests into recent transactions
+      final upiTransactions = <CustomerTransactionModel>[];
+      for (final json in upiData) {
+        final item = Map<String, dynamic>.from(json);
+        if (item['status'] == 'confirmed') continue;
+        final isLoan = item['loan_id'] != null;
+        upiTransactions.add(CustomerTransactionModel.fromJson({
+          'id': item['id']?.toString() ?? '',
+          'amount': (item['amount'] as num?)?.toDouble() ?? 0.0,
+          'type': item['status'] == 'rejected' ? 'upiRejected' : 'upiPending',
+          'description': isLoan ? 'Loan EMI via UPI' : 'Savings deposit via UPI',
+          'payment_mode': 'upi',
+          'transaction_date': item['created_at']?.toString() ?? '',
+          'sync_status': item['status']?.toString() ?? 'pending',
+        }));
+      }
+      final mergedTransactions = [...transactions, ...upiTransactions]
+        ..sort((a, b) => (b.transactionDate ?? DateTime(1970))
+            .compareTo(a.transactionDate ?? DateTime(1970)));
+
       return {
         'memberName': memberData?['full_name'] as String? ?? 'Member',
         'memberPhone': memberData?['phone'] as String?,
@@ -114,7 +146,7 @@ class CustomerHomeRepository {
         'totalOutstanding': totalOutstanding,
         'totalSavings': totalSavings,
         'nextEmi': nextEmi,
-        'recentTransactions': transactions,
+        'recentTransactions': mergedTransactions.take(5).toList(),
         'allLoans': loans,
         'allSavings': savings,
       };
@@ -177,9 +209,43 @@ class CustomerHomeRepository {
         });
       }
 
-      // 3. Merge and deduplicate
+      // 3. Fetch pending/rejected UPI payment requests (graceful failure)
+      final List<Map<String, dynamic>> upiRequests = [];
+      try {
+        final upiResponse = await _client
+            .from('upi_payment_requests')
+            .select()
+            .eq('customer_id', memberId)
+            .eq('org_id', _orgId)
+            .order('created_at', ascending: false)
+            .limit(limit);
+
+        for (final json in upiResponse) {
+          final item = Map<String, dynamic>.from(json);
+          // Skip confirmed ones — they already appear as collections
+          if (item['status'] == 'confirmed') continue;
+
+          final isLoan = item['loan_id'] != null;
+          upiRequests.add({
+            'id': item['id']?.toString() ?? '',
+            'amount': (item['amount'] as num?)?.toDouble() ?? 0.0,
+            'type': item['status'] == 'rejected' ? 'upiRejected' : 'upiPending',
+            'description': isLoan
+                ? 'Loan EMI via UPI'
+                : 'Savings deposit via UPI',
+            'payment_mode': 'upi',
+            'transaction_date': item['created_at']?.toString() ?? '',
+            'sync_status': item['status']?.toString() ?? 'pending',
+            'member_name': null,
+            'reference_number': item['id']?.toString() ?? '',
+          });
+        }
+      } catch (_) {}
+
+      // 4. Merge and deduplicate
       final List<Map<String, dynamic>> merged = [];
       merged.addAll(collections);
+      merged.addAll(upiRequests);
 
       for (final tx in transactions) {
         final txTimeStr = tx['transaction_date']?.toString() ?? '';
@@ -212,14 +278,14 @@ class CustomerHomeRepository {
         }
       }
 
-      // 4. Sort by date descending
+      // 5. Sort by date descending
       merged.sort((a, b) {
         final dateA = DateTime.tryParse(a['transaction_date']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         final dateB = DateTime.tryParse(b['transaction_date']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         return dateB.compareTo(dateA);
       });
 
-      // 5. Limit and map
+      // 6. Limit and map
       return merged.take(limit).map((e) => CustomerTransactionModel.fromJson(e)).toList();
     } catch (e) {
       return [];

@@ -49,5 +49,10 @@ class CustomerTransactionModel {
       type == 'emiPayment' ||
       type == 'savingsWithdrawal' ||
       type == 'withdrawal' ||
-      type == 'penalty';
+      type == 'penalty' ||
+      type == 'upiPending' ||
+      type == 'upiRejected';
+
+  bool get isPending => type == 'upiPending' || type == 'upiRejected';
+  bool get isRejected => type == 'upiRejected';
 }

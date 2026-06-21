@@ -15,7 +15,13 @@ class CustomerTransactionTile extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isCredit = transaction.isCredit;
-    final accentColor = isCredit ? AppColors.success : AppColors.orange;
+    final accentColor = transaction.isPending
+        ? AppColors.warning
+        : transaction.isRejected
+            ? AppColors.error
+            : isCredit
+                ? AppColors.success
+                : AppColors.orange;
 
     return Column(
       children: [
@@ -160,6 +166,8 @@ class CustomerTransactionTile extends StatelessWidget {
       'deposit' => Icons.add_circle_rounded,
       'withdrawal' => Icons.remove_circle_rounded,
       'penalty' => Icons.warning_rounded,
+      'upiPending' => Icons.qr_code_scanner_rounded,
+      'upiRejected' => Icons.qr_code_scanner_rounded,
       _ => Icons.receipt_rounded,
     };
   }
@@ -174,6 +182,8 @@ class CustomerTransactionTile extends StatelessWidget {
       'withdrawal' => 'Withdrawal',
       'penalty' => 'Penalty',
       'collection' => 'Collection',
+      'upiPending' => 'UPI Payment',
+      'upiRejected' => 'UPI Payment',
       _ => transaction.type[0].toUpperCase() + transaction.type.substring(1),
     };
   }

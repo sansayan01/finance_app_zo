@@ -47,6 +47,7 @@ class _CustomerTransactionsPageState
     _FilterChipData('withdrawal', 'Withdrawals', Icons.account_balance_rounded),
     _FilterChipData('credit', 'Credits', Icons.arrow_downward_rounded),
     _FilterChipData('debit', 'Debits', Icons.arrow_upward_rounded),
+    _FilterChipData('pending', 'Pending', Icons.hourglass_top_rounded),
   ];
 
   @override
@@ -534,7 +535,11 @@ class _CustomerTransactionsPageState
           t.type == 'emiPayment' ||
           t.type == 'savingsWithdrawal' ||
           t.type == 'withdrawal' ||
-          t.type == 'penalty'),
+          t.type == 'penalty' ||
+          t.type == 'upiPending' ||
+          t.type == 'upiRejected'),
+      'pending' => result.where((t) =>
+          t.type == 'upiPending' || t.type == 'upiRejected'),
       _ => result,
     };
     if (_query.isNotEmpty) {

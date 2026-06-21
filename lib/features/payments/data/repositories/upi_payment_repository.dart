@@ -51,6 +51,7 @@ class UpiPaymentRepository {
 
       for (final staff in staffData) {
         await _client.from('staff_notifications').insert({
+          'org_id': _orgId,
           'staff_id': staff['id'],
           'title': 'New UPI Payment',
           'message':

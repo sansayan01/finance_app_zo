@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../data/services/upi_service.dart';
 import '../../data/providers/upi_providers.dart';
 import '../../../loans/data/services/qr_png.dart';
+import '../../../customer_portal/data/providers/customer_member_provider.dart';
 
 class UpiPaymentSheet extends ConsumerStatefulWidget {
   final double amount;
@@ -161,13 +162,24 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
     try {
       final repository = ref.read(upiRepositoryProvider);
 
+      // Resolve the real customer ID from the provider.
+      // In staff mode the caller passes memberId directly; in customer mode
+      // we read it from the current session.
+      final customerId = widget.memberId ??
+          ref.read(currentCustomerIdSyncProvider) ??
+          '';
+
+      if (customerId.isEmpty) {
+        throw Exception('Unable to identify customer. Please re-login and try again.');
+      }
+
       final hasBatchEmis = widget.emiScheduleIds != null && widget.emiScheduleIds!.isNotEmpty;
       final hasBatchSavings = widget.savingsDateKeys != null && widget.savingsDateKeys!.isNotEmpty;
 
       if (hasBatchEmis) {
         for (var i = 0; i < widget.emiScheduleIds!.length; i++) {
           await repository.createRequest(
-            customerId: '',
+            customerId: customerId,
             memberId: widget.memberId,
             loanId: widget.loanId,
             emiScheduleId: widget.emiScheduleIds![i],
@@ -178,7 +190,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
       } else if (hasBatchSavings) {
         for (var i = 0; i < widget.savingsDateKeys!.length; i++) {
           await repository.createRequest(
-            customerId: '',
+            customerId: customerId,
             memberId: widget.memberId,
             savingsPlanId: widget.savingsPlanId,
             amount: widget.savingsAmounts![i],
@@ -187,7 +199,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
         }
       } else {
         await repository.createRequest(
-          customerId: '',
+          customerId: customerId,
           memberId: widget.memberId,
           loanId: widget.loanId,
           savingsPlanId: widget.savingsPlanId,

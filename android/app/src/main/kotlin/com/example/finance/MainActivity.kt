@@ -115,6 +115,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         val pm = packageManager
 
+        // Disable every brand alias first.
         for ((_, aliasName) in iconAliases) {
             val component = ComponentName(packageName, "$packageName$aliasName")
             pm.setComponentEnabledSetting(
@@ -124,6 +125,7 @@ class MainActivity : FlutterFragmentActivity() {
             )
         }
 
+        // Enable the chosen alias.
         val targetAlias = iconAliases[presetId]!!
         val targetComponent = ComponentName(packageName, "$packageName$targetAlias")
         pm.setComponentEnabledSetting(
@@ -131,6 +133,28 @@ class MainActivity : FlutterFragmentActivity() {
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
             PackageManager.DONT_KILL_APP
         )
+
+        // The real .MainActivity also has a launcher icon at install time only when its
+        // <intent-filter> declares LAUNCHER. Older installs (built before the manifest fix)
+        // still show two icons because the real activity was never disabled. Toggle it here
+        // defensively so the user always sees exactly one launcher entry, regardless of which
+        // APK version they're upgrading from.
+        val realComponent = ComponentName(packageName, "$packageName.MainActivity")
+        val newState = if (presetId == "default") {
+            PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
+        } else {
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        }
+        try {
+            pm.setComponentEnabledSetting(
+                realComponent,
+                newState,
+                PackageManager.DONT_KILL_APP
+            )
+        } catch (_: IllegalArgumentException) {
+            // Component not registered as a separate launcher entry on this build.
+            // Safe to ignore — the alias toggle alone is sufficient for modern APKs.
+        }
 
         return true
     }

@@ -114,7 +114,7 @@ class UpiPaymentRepository {
     if (status != null && status.isNotEmpty) {
       query = query.eq('status', status);
     }
-    final data = await query.order('created_at', ascending: false).limit(100);
+    final data = await query.order('created_at', ascending: false).limit(500);
     return (data as List)
         .map((e) => UpiPaymentRequest.fromJson(e))
         .toList();
@@ -175,11 +175,12 @@ class UpiPaymentRepository {
 
   /// Confirms a batch of UPI requests and creates collection records.
   /// Uses each request's created_at as the collection_date (customer's payment time).
-  Future<void> confirmBatch({
+  /// Returns the number of requests actually confirmed.
+  Future<int> confirmBatch({
     required List<String> requestIds,
     required String confirmedBy,
   }) async {
-    if (requestIds.isEmpty) return;
+    if (requestIds.isEmpty) return 0;
 
     // 1. Fetch all requests being confirmed
     final requestData = await _client
@@ -192,7 +193,7 @@ class UpiPaymentRepository {
         .map((e) => UpiPaymentRequest.fromJson(e))
         .toList();
 
-    if (requests.isEmpty) return;
+    if (requests.isEmpty) return 0;
 
     // 2. Resolve member_id from customer_id where member_id is null.
     //    customer_id = auth.uid(), member_id = members.id
@@ -401,5 +402,6 @@ class UpiPaymentRepository {
         });
       }
     }
+    return requests.length;
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../settings/data/repositories/activity_log_repository.dart';
@@ -19,7 +20,7 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, members:customer_id(full_name, phone, shop_photo_url, profile_photo_url), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone, profile_photo_url), staff:staff_id(full_name)')
           .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -27,7 +28,9 @@ class LoansRepository {
       return (response as List)
           .map((json) => LoanModel.fromJson(json))
           .toList();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('⚠️ getAllLoans error: $e');
+      debugPrint('   stack: $st');
       return [];
     }
   }
@@ -37,7 +40,7 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, members:customer_id(full_name, phone, shop_photo_url, profile_photo_url), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone, profile_photo_url), staff:staff_id(full_name)')
           .eq('org_id', _orgId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
@@ -46,7 +49,9 @@ class LoansRepository {
       return (response as List)
           .map((json) => LoanModel.fromJson(json))
           .toList();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('⚠️ getActiveLoans error: $e');
+      debugPrint('   stack: $st');
       return [];
     }
   }
@@ -82,7 +87,7 @@ class LoansRepository {
           activeLoans++;
           totalOutstanding += outstanding;
           totalDisbursed += amount;
-        } else if (status == 'default') {
+        } else if (_toSnake(LoanStatus.defaultStatus.name) == status) {
           defaultLoans++;
           overdueAmount += outstanding;
           totalOutstanding += outstanding;
@@ -114,7 +119,9 @@ class LoansRepository {
         overdueAmount: overdueAmount,
         parPercentage: totalLoans == 0 ? 0 : (defaultLoans / totalLoans) * 100,
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('⚠️ getLoanSummary error: $e');
+      debugPrint('   stack: $st');
       return LoanSummary(
         totalLoans: 0,
         activeLoans: 0,
@@ -133,13 +140,15 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, members:customer_id(full_name, phone, shop_photo_url, profile_photo_url), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone, profile_photo_url), staff:staff_id(full_name)')
           .eq('id', id)
           .maybeSingle();
 
       if (response == null) return null;
       return LoanModel.fromJson(response);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('⚠️ getLoanById error: $e');
+      debugPrint('   stack: $st');
       return null;
     }
   }

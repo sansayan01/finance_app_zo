@@ -261,7 +261,7 @@ class ProfileModel {
       branchName:
           json['branch'] is Map ? json['branch']['name']?.toString() : null,
       email: json['email']?.toString(),
-      avatarUrl: json['shop_photo_url']?.toString(),
+      avatarUrl: (json['profile_photo_url'] ?? json['shop_photo_url'])?.toString(),
       memberCode: json['member_id']?.toString(),
       staffCode: json['staff_code']?.toString(),
       status: AccountStatus.active,

@@ -40,6 +40,7 @@ class LoanModel {
   // Joined Data
   final String? customerName;
   final String? customerPhone;
+  final String? customerPhotoUrl;
   final String? staffName;
   final String? staffPhone;
 
@@ -77,6 +78,7 @@ class LoanModel {
     required this.updatedAt,
     this.customerName,
     this.customerPhone,
+    this.customerPhotoUrl,
     this.staffName,
     this.staffPhone,
     this.freezeEnabled = false,
@@ -182,6 +184,8 @@ class LoanModel {
           : DateTime.now(),
       customerName: profilesJson?['full_name'] as String?,
       customerPhone: profilesJson?['phone'] as String?,
+      customerPhotoUrl: (profilesJson?['profile_photo_url'] ??
+          profilesJson?['shop_photo_url']) as String?,
       staffName: staffJson?['full_name'] as String?,
       staffPhone: staffJson?['phone'] as String?,
       freezeEnabled: json['freeze_enabled'] as bool? ?? false,

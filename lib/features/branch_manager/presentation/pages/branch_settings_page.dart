@@ -82,7 +82,7 @@ class BranchSettingsPage extends ConsumerWidget {
                     title: 'Profile Settings',
                     subtitle: 'Name, phone, email, and security',
                     color: AppColors.primary,
-                    onTap: () => context.push('/branch/profile'),
+                    onTap: () => context.push('/branch/settings/profile'),
                   ).animate().fadeIn(delay: 50.ms).slideY(begin: 0.05, end: 0),
                   const SizedBox(height: 12),
 

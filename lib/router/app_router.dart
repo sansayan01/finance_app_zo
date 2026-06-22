@@ -701,6 +701,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'sms',
                 builder: (context, state) => const SmsSettingsPage(),
               ),
+              GoRoute(
+                path: 'profile',
+                builder: (context, state) => const ProfilePage(),
+              ),
             ],
           ),
           GoRoute(
@@ -841,15 +845,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/staff/user-hub',
             builder: (context, state) => const StaffUserHubPage(),
-            routes: [
-              GoRoute(
-                path: ':id',
-                builder: (context, state) {
-                  final id = state.pathParameters['id']!;
-                  return UserDetailsPage(userId: id);
-                },
-              ),
-            ],
+          ),
+          GoRoute(
+            path: '/staff/user-hub/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return UserDetailsPage(userId: id);
+            },
           ),
           GoRoute(
             path: '/staff/timeline',
@@ -866,6 +868,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'sms',
                 builder: (context, state) => const SmsSettingsPage(),
+              ),
+              GoRoute(
+                path: 'profile',
+                builder: (context, state) => const ProfilePage(),
               ),
             ],
           ),

@@ -57,7 +57,7 @@ class MemberModel {
           (json['latitude'] as num?)?.toDouble(),
       longitude: (json['gps_lng'] as num?)?.toDouble() ??
           (json['longitude'] as num?)?.toDouble(),
-      shopPhotoUrl: json['shop_photo_url'] as String?,
+      shopPhotoUrl: (json['profile_photo_url'] ?? json['shop_photo_url']) as String?,
       smsEnabled: json['sms_enabled'] as bool? ?? true,
     );
   }

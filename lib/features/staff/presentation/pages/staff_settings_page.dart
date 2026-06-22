@@ -108,7 +108,7 @@ class _StaffSettingsPageState extends ConsumerState<StaffSettingsPage> {
                     'Update your name, phone and email',
                     Icons.badge_outlined,
                     AppColors.primary, () {
-                  context.push('/settings/profile');
+                  context.push('/staff/settings/profile');
                 }),
                 _buildActionTile(
                     theme,

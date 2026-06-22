@@ -1,4 +1,5 @@
 import '../../../../core/widgets/shimmer_card.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -161,10 +162,10 @@ class _LoansPageState extends ConsumerState<LoansPage>
               physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics()),
               slivers: [
-                // Premium Dynamic Header
+                // Premium Dynamic Header (Compact)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -179,21 +180,21 @@ class _LoansPageState extends ConsumerState<LoansPage>
                                   Text(
                                     'Portfolio Intelligence',
                                     style:
-                                        theme.textTheme.headlineLarge?.copyWith(
+                                        theme.textTheme.headlineMedium?.copyWith(
                                       fontWeight: FontWeight.w900,
-                                      letterSpacing: -1.2,
-                                      fontSize: 32,
+                                      letterSpacing: -1.0,
+                                      fontSize: 26,
                                     ),
                                   )
                                       .animate()
                                       .fadeIn(duration: 400.ms)
                                       .slideX(begin: -0.05),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Live Risk Analytics & Capital Deployment',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                    style: theme.textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color: theme.textTheme.bodyMedium?.color
+                                      color: theme.textTheme.bodySmall?.color
                                           ?.withValues(alpha: 0.6),
                                     ),
                                   )
@@ -208,8 +209,8 @@ class _LoansPageState extends ConsumerState<LoansPage>
                               GlassButton(
                                 label: 'DEPLOY',
                                 width: 110,
-                                height: 48,
-                                fontSize: 14,
+                                height: 44,
+                                fontSize: 13,
                                 icon: Icons.add_circle_outline_rounded,
                                 onTap: () => context.push('/loans/new'),
                               )
@@ -223,7 +224,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
                   ),
                 ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
                 // Redesigned Feature-Rich Analytics Dashboard
                 SliverToBoxAdapter(
@@ -233,7 +234,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
                             summary, primary, isDark, theme),
                         loading: () => const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 24),
-                          child: ShimmerCard(height: 160),
+                          child: ShimmerCard(height: 76),
                         ),
                         error: (_, __) => const SizedBox.shrink(),
                       )
@@ -241,7 +242,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
                       .fadeIn(delay: 300.ms),
                 ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                 // Sticky Search & Filter Hub
                 SliverPersistentHeader(
@@ -261,20 +262,20 @@ class _LoansPageState extends ConsumerState<LoansPage>
                             children: [
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 24),
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 child: Row(
                                   children: [
                                     Expanded(
                                         child: _buildSmartSearchBar(
                                             isDark, theme)),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 10),
                                     _buildSortMenu(isDark, theme),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 10),
                               _buildPillFilters(isDark, theme, primary),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 10),
                             ],
                           ),
                         ),
@@ -296,12 +297,12 @@ class _LoansPageState extends ConsumerState<LoansPage>
                     }
 
                     return SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 80),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (ctx, i) {
                             final card = Padding(
-                              padding: const EdgeInsets.only(bottom: 24),
+                              padding: const EdgeInsets.only(bottom: 12),
                               child: _PremiumLoanCard(
                                 loan: filtered[i],
                                 onTap: widget.onLoanTap != null
@@ -360,7 +361,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
   Widget _buildAnalyticsDashboard(
       LoanSummary summary, Color primary, bool isDark, ThemeData theme) {
     return SizedBox(
-      height: 160, // Increased height to prevent pixel overflow
+      height: 66,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -373,7 +374,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
             color: primary,
             isDark: isDark,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           _AnalyticsCard(
             label: 'TOTAL OUTSTANDING',
             value: AppFormatters.formatCurrency(summary.totalOutstanding),
@@ -381,7 +382,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
             color: AppColors.warning,
             isDark: isDark,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           _AnalyticsCard(
             label: 'PORTFOLIO AT RISK',
             value: '${summary.parPercentage.toStringAsFixed(1)}%',
@@ -399,25 +400,26 @@ class _LoansPageState extends ConsumerState<LoansPage>
 
   Widget _buildSmartSearchBar(bool isDark, ThemeData theme) {
     return Container(
-      height: 54,
+      height: 38,
       decoration: BoxDecoration(
         color: isDark ? AppColors.fillDark : AppColors.fillLight,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: _searchController,
         onChanged: (v) => setState(() => _searchQuery = v),
+        style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Search borrower name, ID...',
           hintStyle: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.textTheme.bodySmall?.color),
+              ?.copyWith(color: theme.textTheme.bodySmall?.color, fontSize: 13),
           prefixIcon: Icon(Icons.search_rounded,
               color: theme.colorScheme.primary.withValues(alpha: 0.7),
-              size: 22),
+              size: 18),
           border: InputBorder.none,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
       ),
     );
@@ -443,18 +445,18 @@ class _LoansPageState extends ConsumerState<LoansPage>
         _buildPopupItem(
             'progress', 'Nearest to Close', Icons.track_changes_rounded, theme),
       ],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: isDark ? AppColors.elevatedDark : Colors.white,
       child: Container(
-        height: 54,
-        width: 54,
+        height: 38,
+        width: 38,
         decoration: BoxDecoration(
           color: isDark ? AppColors.fillDark : AppColors.fillLight,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
         ),
         child: Icon(Icons.tune_rounded,
-            color: theme.colorScheme.primary, size: 24),
+            color: theme.colorScheme.primary, size: 20),
       ),
     );
   }
@@ -477,29 +479,29 @@ class _LoansPageState extends ConsumerState<LoansPage>
 
   Widget _buildPillFilters(bool isDark, ThemeData theme, Color primary) {
     return SizedBox(
-      height: 40,
+      height: 28,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: _filters.length,
         itemBuilder: (context, index) {
           final filter = _filters[index];
           final isSelected = _filterStatus == filter['status'];
           return Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 8),
             child: InkWell(
               onTap: () => setState(
                   () => _filterStatus = filter['status'] as LoanStatus?),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               child: AnimatedContainer(
                 duration: 200.ms,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? primary
                       : (isDark ? AppColors.fillDark : AppColors.fillLight),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
                         ? primary
@@ -509,8 +511,8 @@ class _LoansPageState extends ConsumerState<LoansPage>
                       ? [
                           BoxShadow(
                               color: primary.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2))
+                              blurRadius: 6,
+                              offset: const Offset(0, 1.5))
                         ]
                       : [],
                 ),
@@ -518,16 +520,16 @@ class _LoansPageState extends ConsumerState<LoansPage>
                   children: [
                     Icon(
                       filter['icon'] as IconData,
-                      size: 16,
+                      size: 12,
                       color: isSelected
                           ? Colors.white
                           : theme.textTheme.bodyMedium?.color,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     Text(
                       filter['label'] as String,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 11,
                         fontWeight:
                             isSelected ? FontWeight.w800 : FontWeight.w600,
                         color: isSelected
@@ -598,80 +600,77 @@ class _AnalyticsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 210, // Wider to avoid text overflow
+      width: 180,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: isDark
             ? Colors.white.withValues(alpha: 0.03)
             : Colors.black.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 1.2),
       ),
-      child: Stack(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Positioned(
-            right: -20,
-            bottom: -20,
-            child: Icon(icon, size: 100, color: color.withValues(alpha: 0.05)),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: color),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20),
+          const SizedBox(width: 8),
+          Expanded(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, size: 18, color: color),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 8,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
+                    letterSpacing: 0.8,
                     color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 34,
-                      fontFamily: 'JetBrains Mono',
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.5,
-                      color: isDark ? Colors.white : Colors.black,
+                const SizedBox(height: 1),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontFamily: 'JetBrains Mono',
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.4,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(subtitle!,
-                      style: TextStyle(
-                          fontSize: 12,
+                    if (subtitle != null) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          fontSize: 8,
                           fontWeight: FontWeight.w700,
-                          color: color)),
-                ]
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),
@@ -697,15 +696,55 @@ class _PremiumLoanCard extends StatelessWidget {
     if (await canLaunchUrl(url)) await launchUrl(url);
   }
 
+  String? _resolvePhotoUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+    final trimmed = rawUrl.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    // Convert relative storage path to public Supabase storage URL
+    final String bucket;
+    final String path;
+    if (trimmed.startsWith('avatars/')) {
+      bucket = 'avatars';
+      path = trimmed.substring('avatars/'.length);
+    } else {
+      bucket = 'avatars';
+      path = trimmed;
+    }
+    return 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/$bucket/$path';
+  }
+
+  Widget _buildLetterAvatar(Color primary) {
+    final name = loan.customerName ?? '';
+    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primary.withValues(alpha: 0.25),
+            primary.withValues(alpha: 0.05)
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          initial,
+          style: TextStyle(
+              color: primary,
+              fontSize: 15,
+              fontWeight: FontWeight.w900),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final isDark = theme.brightness == Brightness.dark;
-
-    final progress = loan.totalRepayable > 0
-        ? (1 - (loan.outstandingBalance / loan.totalRepayable)).clamp(0.0, 1.0)
-        : 0.0;
 
     final statusType = loan.status == LoanStatus.active
         ? StatusType.standard
@@ -715,8 +754,10 @@ class _PremiumLoanCard extends StatelessWidget {
                 ? StatusType.pending
                 : StatusType.completed;
 
+    final resolvedPhotoUrl = _resolvePhotoUrl(loan.customerPhotoUrl);
+
     return GlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       onTap: () {
         HapticFeedback.selectionClick();
         if (onTap != null) {
@@ -727,49 +768,55 @@ class _PremiumLoanCard extends StatelessWidget {
       },
       child: Column(
         children: [
-          // Header: Avatar, Name, ID, Badge
+          // Header: Avatar, Name, ID, Balance, Badge
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Hero(
                 tag: 'loan_avatar_${loan.id}',
                 child: Container(
-                  width: 50,
-                  height: 50,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        primary.withValues(alpha: 0.2),
-                        primary.withValues(alpha: 0.05)
-                      ],
-                    ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: primary.withValues(alpha: 0.2), width: 2),
+                        color: primary.withValues(alpha: 0.25), width: 1.5),
                   ),
-                  child: Center(
-                    child: Text(
-                      (loan.customerName ?? '?')[0].toUpperCase(),
-                      style: TextStyle(
-                          color: primary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900),
-                    ),
+                  child: ClipOval(
+                    child: resolvedPhotoUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: resolvedPhotoUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: primary.withValues(alpha: 0.05),
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) =>
+                                _buildLetterAvatar(primary),
+                          )
+                        : _buildLetterAvatar(primary),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       loan.customerName ?? 'Unknown Borrower',
                       style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
                           letterSpacing: -0.3),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -778,14 +825,14 @@ class _PremiumLoanCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(Icons.tag_rounded,
-                            size: 12,
+                            size: 11,
                             color: theme.textTheme.bodySmall?.color
-                                ?.withValues(alpha: 0.7)),
-                        const SizedBox(width: 4),
+                                ?.withValues(alpha: 0.6)),
+                        const SizedBox(width: 3),
                         Text(
                           loan.loanNumber,
                           style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 12,
+                              fontSize: 10,
                               fontFamily: 'JetBrains Mono',
                               fontWeight: FontWeight.w600),
                         ),
@@ -794,127 +841,58 @@ class _PremiumLoanCard extends StatelessWidget {
                   ],
                 ),
               ),
-              StatusBadge(
-                  label: loan.status.name.toUpperCase(),
-                  type: statusType,
-                  glow: loan.status == LoanStatus.active),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    AppFormatters.formatCurrency(loan.outstandingBalance),
+                    style: TextStyle(
+                      fontFamily: 'JetBrains Mono',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      letterSpacing: -0.4,
+                      color: primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  StatusBadge(
+                    label: loan.status.name.toUpperCase(),
+                    type: statusType,
+                    glow: loan.status == LoanStatus.active,
+                  ),
+                ],
+              ),
             ],
           ),
 
-          const SizedBox(height: 20),
-
-          // Enhanced Progress Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.fillDark : AppColors.fillLight,
-              borderRadius: BorderRadius.circular(16),
-              border:
-                  Border.all(color: theme.dividerColor.withValues(alpha: 0.05)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.data_usage_rounded,
-                            size: 14, color: primary),
-                        const SizedBox(width: 6),
-                        Text('RECOVERY PROGRESS',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.0)),
-                      ],
-                    ),
-                    Text('${(progress * 100).toStringAsFixed(1)}%',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            color: primary)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Stack(
-                  children: [
-                    Container(
-                      height: 8,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: theme.dividerColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    AnimatedContainer(
-                      duration: 1000.ms,
-                      curve: Curves.easeOutExpo,
-                      height: 8,
-                      width: (MediaQuery.of(context).size.width - 124) *
-                          progress.clamp(0, 1),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                              color: primary.withValues(alpha: 0.4),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Data Points
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _DataPoint(
-                  label: 'PRINCIPAL',
-                  value: AppFormatters.formatCurrency(loan.amount)),
-              _DataPoint(
-                  label: 'RATE',
-                  value: '${loan.interestRate}%',
-                  icon: Icons.percent_rounded),
-              _DataPoint(
-                  label: 'BALANCE',
-                  value: AppFormatters.formatCurrency(loan.outstandingBalance),
-                  highlight: true),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.06)),
+          const SizedBox(height: 8),
 
           // Footer: Next EMI & Actions
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                      color: primary.withValues(alpha: 0.15), width: 0.8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.event_rounded, size: 14, color: primary),
-                    const SizedBox(width: 6),
+                    Icon(Icons.event_repeat_rounded, size: 12, color: primary),
+                    const SizedBox(width: 4),
                     Text(
-                      'Next: ${AppFormatters.formatDate(loan.firstEmiDate ?? loan.createdAt.add(const Duration(days: 30)))}',
+                      'Next Due: ${AppFormatters.formatDate(loan.firstEmiDate ?? loan.createdAt.add(const Duration(days: 30)))}',
                       style: TextStyle(
                           color: primary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 11),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                          letterSpacing: -0.1),
                     ),
                   ],
                 ),
@@ -926,7 +904,7 @@ class _PremiumLoanCard extends StatelessWidget {
                   color: primary,
                   onTap: () => _makeCall(loan.customerPhone!),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 _ActionButton(
                   icon: Icons.chat_bubble_rounded,
                   color: AppColors.success,
@@ -937,56 +915,6 @@ class _PremiumLoanCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _DataPoint extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool highlight;
-  final IconData? icon;
-
-  const _DataPoint(
-      {required this.label,
-      required this.value,
-      this.highlight = false,
-      this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon,
-                  size: 10,
-                  color:
-                      theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
-              const SizedBox(width: 4),
-            ],
-            Text(label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: theme.textTheme.bodySmall?.color
-                        ?.withValues(alpha: 0.6))),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-              fontFamily: 'JetBrains Mono',
-              fontWeight: FontWeight.w900,
-              fontSize: 16,
-              letterSpacing: -0.5,
-              color: highlight ? primary : theme.textTheme.bodyLarge?.color,
-            )),
-      ],
     );
   }
 }
@@ -1002,15 +930,23 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: color.withValues(alpha: isDark ? 0.15 : 0.1),
-      borderRadius: BorderRadius.circular(10),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Icon(icon, size: 18, color: color),
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 0.8),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Center(
+            child: Icon(icon, size: 14, color: color),
+          ),
         ),
       ),
     );
@@ -1022,9 +958,9 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
   _SliverHeaderDelegate({required this.child});
 
   @override
-  double get minExtent => 146;
+  double get minExtent => 86;
   @override
-  double get maxExtent => 146;
+  double get maxExtent => 86;
 
   @override
   Widget build(

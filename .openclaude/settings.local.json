@@ -165,7 +165,10 @@
       "Bash(claude mcp:*)",
       "Bash(where claude:*)",
       "Bash(xxd)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git reset:*)",
+      "Bash(git remote:*)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   },
   "enableAllProjectMcpServers": true,

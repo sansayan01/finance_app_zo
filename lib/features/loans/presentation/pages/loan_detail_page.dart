@@ -5477,10 +5477,17 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
 
     // EMI payments and overdue
     if (schedule != null) {
-      final paidEmis = schedule
-          .where((e) => e.status == EMIStatus.paid && e.paidOn != null)
-          .toList();
-      for (final emi in paidEmis) {
+      // Deduplicate: if multiple records for same EMI number, keep latest paidOn
+      final seenEmis = <int, EMIScheduleModel>{};
+      for (final emi in schedule) {
+        if (emi.status == EMIStatus.paid && emi.paidOn != null) {
+          final existing = seenEmis[emi.emiNumber];
+          if (existing == null || emi.paidOn!.isAfter(existing.paidOn!)) {
+            seenEmis[emi.emiNumber] = emi;
+          }
+        }
+      }
+      for (final emi in seenEmis.values) {
         activities.add(_ActivityItem(
           icon: Icons.payment_rounded,
           color: AppColors.info,
@@ -5492,8 +5499,14 @@ class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
         ));
       }
 
-        final overdueEmis = schedule.where((e) => e.isOverdue).toList();
-      for (final emi in overdueEmis) {
+      // Deduplicate overdue too
+      final seenOverdue = <int, EMIScheduleModel>{};
+      for (final emi in schedule) {
+        if (emi.isOverdue) {
+          seenOverdue.putIfAbsent(emi.emiNumber, () => emi);
+        }
+      }
+      for (final emi in seenOverdue.values) {
         activities.add(_ActivityItem(
           icon: Icons.warning_amber_rounded,
           color: AppColors.error,

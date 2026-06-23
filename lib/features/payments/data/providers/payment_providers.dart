@@ -183,72 +183,86 @@ final todayPaymentsProvider =
 
   final List<TodayPayment> payments = [];
 
+  // Helper to extract maps from nested lists/maps returned by Supabase joins
+  Map<String, dynamic>? getNestedMap(dynamic value) {
+    if (value == null) return null;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    if (value is List && value.isNotEmpty) {
+      final first = value.first;
+      if (first is Map) return Map<String, dynamic>.from(first);
+    }
+    return null;
+  }
+
   try {
-    // 1. Fetch EMI dues for the selected date (due on that day + overdue)
+    // 1. Build queries to run in parallel
+    
+    // Query A: EMI base for selected date (joined with loans and members)
+    const emiSelect = 'id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id, '
+        'loans!emi_schedule_loan_id_fkey(id, loan_number, branch_id, customer_id, agent_id, members!fk_loans_customer(id, full_name, phone))';
+        
     final emiBase = client
         .from('emi_schedule')
-        .select('id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
+        .select(emiSelect)
         .eq('due_date', dateStr);
-    final emiDues = await (isSuperAdmin ? emiBase : emiBase.eq('org_id', orgId!))
+    final emiQuery = (isSuperAdmin ? emiBase : emiBase.eq('org_id', orgId!))
         .order('due_date', ascending: true);
 
-    // Also fetch overdue EMIs (due before selected date, still unpaid)
-    List<dynamic> overdueEmis = [];
-    try {
-      final overdueBase = client
-          .from('emi_schedule')
-          .select('id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
-          .lt('due_date', dateStr)
-          .eq('is_paid', false);
-      overdueEmis = await (isSuperAdmin ? overdueBase : overdueBase.eq('org_id', orgId!))
-          .order('due_date', ascending: true);
-    } catch (e) {
-      debugPrint('Error fetching overdue EMIs: $e');
-    }
+    // Query B: Overdue EMIs (joined with loans and members)
+    final overdueBase = client
+        .from('emi_schedule')
+        .select(emiSelect)
+        .lt('due_date', dateStr)
+        .eq('is_paid', false);
+    final overdueQuery = (isSuperAdmin ? overdueBase : overdueBase.eq('org_id', orgId!))
+        .order('due_date', ascending: true);
 
-    // Combine both lists
+    // Query C: Collections for selected date
+    final collectionsBase = client
+        .from('collections')
+        .select('id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, member_id, staff_id, remarks')
+        .eq('collection_date', dateStr);
+    final collectionsQuery = (isSuperAdmin ? collectionsBase : collectionsBase.eq('org_id', orgId!))
+        .order('collection_time', ascending: false);
+
+    // Query D: Savings plans (joined with members)
+    var plansQuery = client
+        .from('savings_plans')
+        .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id, '
+            'members(id, full_name, phone, branch_id, agent_id)')
+        .eq('status', 'active');
+    if (!isSuperAdmin) plansQuery = plansQuery.eq('org_id', orgId!);
+
+    // Query E: Savings collections for selected date
+    var savingsColQuery = client
+        .from('savings_collections')
+        .select('id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
+        .eq('collection_date', dateStr);
+    if (!isSuperAdmin) savingsColQuery = savingsColQuery.eq('org_id', orgId!);
+
+    // 2. Await all Supabase requests concurrently
+    final results = await Future.wait([
+      emiQuery,
+      overdueQuery,
+      collectionsQuery,
+      plansQuery,
+      savingsColQuery,
+    ]);
+
+    final List<dynamic> emiDues = results[0] as List<dynamic>;
+    final List<dynamic> overdueEmis = results[1] as List<dynamic>;
+    final List<dynamic> collections = results[2] as List<dynamic>;
+    final List<dynamic> allActivePlans = results[3] as List<dynamic>;
+    final List<dynamic> collectionsToday = results[4] as List<dynamic>;
+
+    // 3. Process EMIs (today + overdue)
     final allEmiDues = [...emiDues, ...overdueEmis];
-
-    // Collect unique loan IDs
-    final loanIds = allEmiDues.map((e) => e['loan_id']).where((id) => id != null).toSet().toList();
-
-    // Fetch loan details
-    Map<String, Map<String, dynamic>> loansMap = {};
-    if (loanIds.isNotEmpty) {
-      final loans = await client
-          .from('loans')
-          .select('id, loan_number, branch_id, customer_id, agent_id')
-          .inFilter('id', loanIds);
-      for (final loan in loans) {
-        loansMap[loan['id']] = loan;
-      }
-    }
-
-    // Collect unique customer IDs for member details
-    final customerIds = loansMap.values
-        .map((l) => l['customer_id'])
-        .where((id) => id != null)
-        .toSet()
-        .toList();
-
-    // Fetch member details
-    Map<String, Map<String, dynamic>> membersMap = {};
-    if (customerIds.isNotEmpty) {
-      final members = await client
-          .from('members')
-          .select('id, full_name, phone')
-          .inFilter('id', customerIds);
-      for (final member in members) {
-        membersMap[member['id']] = member;
-      }
-    }
-
+    
     for (final emi in allEmiDues) {
-      final loanId = emi['loan_id'];
-      if (loanId == null || loansMap[loanId] == null) continue;
-
-      final loan = loansMap[loanId]!;
-      final member = membersMap[loan['customer_id']];
+      final loan = getNestedMap(emi['loans!emi_schedule_loan_id_fkey']) ?? getNestedMap(emi['loans']);
+      if (loan == null) continue;
+      
+      final member = getNestedMap(loan['members!fk_loans_customer']) ?? getNestedMap(loan['members']);
 
       // Apply branch filter
       if (filters.branchId != null && loan['branch_id'] != filters.branchId) {
@@ -295,23 +309,11 @@ final todayPaymentsProvider =
             : null,
       ));
     }
-  } catch (e, stack) {
-    debugPrint('Error fetching EMI dues: $e');
-    debugPrint(stack.toString());
-  }
 
-  // Map to track collection IDs by loan_number for EMI revert support
-  final Map<String, String> collectionIdByLoanNumber = {};
+    // Map to track collection IDs by loan_number for EMI revert support
+    final Map<String, String> collectionIdByLoanNumber = {};
 
-  try {
-    // 2. Fetch collections for the selected date
-    final collectionsBase = client
-        .from('collections')
-        .select('id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, member_id, staff_id, remarks')
-        .eq('collection_date', dateStr);
-    final collections = await (isSuperAdmin ? collectionsBase : collectionsBase.eq('org_id', orgId!))
-        .order('collection_time', ascending: false);
-
+    // 4. Process EMI/Savings collections from "collections" table
     for (final col in collections) {
       // Apply agent filter
       if (filters.agentId != null && col['staff_id'] != filters.agentId) {
@@ -357,77 +359,55 @@ final todayPaymentsProvider =
         ));
       }
     }
-  } catch (e, stack) {
-    debugPrint('Error fetching collections: $e');
-    debugPrint(stack.toString());
-  }
 
-  // Backfill collectionId for collected EMIs that were deduplicated
-  // (their id is emi_schedule.id, but delete needs collections.id)
-  for (int i = 0; i < payments.length; i++) {
-    final p = payments[i];
-    if (p.isCollected && p.collectionId == null && p.loanNumber != null) {
-      final cid = collectionIdByLoanNumber[p.loanNumber!];
-      if (cid != null) {
-        payments[i] = TodayPayment(
-          id: p.id,
-          type: p.type,
-          status: p.status,
-          memberName: p.memberName,
-          memberPhone: p.memberPhone,
-          memberId: p.memberId,
-          branchId: p.branchId,
-          branchName: p.branchName,
-          agentId: p.agentId,
-          agentName: p.agentName,
-          amountExpected: p.amountExpected,
-          amountCollected: p.amountCollected,
-          penaltyAmount: p.penaltyAmount,
-          dueDate: p.dueDate,
-          loanNumber: p.loanNumber,
-          loanId: p.loanId,
-          emiNumber: p.emiNumber,
-          planName: p.planName,
-          paymentMode: p.paymentMode,
-          collectedAt: p.collectedAt,
-          remarks: p.remarks,
-          collectionId: cid,
-        );
+    // Backfill collectionId for collected EMIs that were deduplicated
+    for (int i = 0; i < payments.length; i++) {
+      final p = payments[i];
+      if (p.isCollected && p.collectionId == null && p.loanNumber != null) {
+        final cid = collectionIdByLoanNumber[p.loanNumber!];
+        if (cid != null) {
+          payments[i] = TodayPayment(
+            id: p.id,
+            type: p.type,
+            status: p.status,
+            memberName: p.memberName,
+            memberPhone: p.memberPhone,
+            memberId: p.memberId,
+            branchId: p.branchId,
+            branchName: p.branchName,
+            agentId: p.agentId,
+            agentName: p.agentName,
+            amountExpected: p.amountExpected,
+            amountCollected: p.amountCollected,
+            penaltyAmount: p.penaltyAmount,
+            dueDate: p.dueDate,
+            loanNumber: p.loanNumber,
+            loanId: p.loanId,
+            emiNumber: p.emiNumber,
+            planName: p.planName,
+            paymentMode: p.paymentMode,
+            collectedAt: p.collectedAt,
+            remarks: p.remarks,
+            collectionId: cid,
+          );
+        }
       }
     }
-  }
 
-  // 3. Fetch savings plans due on the selected date
-  try {
+    // 5. Process savings plans
     final selectedDate = filters.selectedDate;
     final dayOfWeek = selectedDate.weekday - 1; // 0=Mon, 6=Sun
     final dayOfMonth = selectedDate.day;
 
-    // First fetch savings plans
-    var plansQuery = client
-        .from('savings_plans')
-        .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id')
-        .eq('status', 'active');
-    if (!isSuperAdmin) plansQuery = plansQuery.eq('org_id', orgId!);
-    final allActivePlans = await plansQuery;
-
-    // Fetch all savings collections for the selected date
-    var savingsColQuery = client
-        .from('savings_collections')
-        .select('id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
-        .eq('collection_date', dateStr);
-    if (!isSuperAdmin) savingsColQuery = savingsColQuery.eq('org_id', orgId!);
-    final collectionsToday = await savingsColQuery;
-
     final collectionsMap = {
-      for (final col in collectionsToday as List)
+      for (final col in collectionsToday)
         if (col['savings_plan_id'] != null)
           col['savings_plan_id'] as String: col
     };
     final collectedPlanIds = collectionsMap.keys.toSet();
 
     // Filter plans that are due on the selected date OR were already collected today
-    final savingsDues = (allActivePlans as List).where((plan) {
+    final savingsDues = allActivePlans.where((plan) {
       final planId = plan['id'] as String;
       if (collectedPlanIds.contains(planId)) return true;
 
@@ -441,8 +421,6 @@ final todayPaymentsProvider =
       if (nextDue != null) {
         final nextDueDate = DateTime.tryParse(nextDue);
         if (nextDueDate != null) {
-          // Compare date-only to avoid timezone skew (DB dates are UTC midnight,
-          // selectedDate is local midnight which can differ by hours)
           final nextDateOnly = DateTime(nextDueDate.year, nextDueDate.month, nextDueDate.day);
           final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
           if (!nextDateOnly.isAfter(selectedDateOnly)) {
@@ -463,29 +441,10 @@ final todayPaymentsProvider =
       }
     }).toList();
 
-    // Fetch member details in bulk for each plan
-    final memberIds = savingsDues
-        .map((p) => p['member_id'])
-        .where((id) => id != null)
-        .toSet()
-        .toList();
-
-    final Map<String, Map<String, dynamic>> savingsMembersMap = {};
-    if (memberIds.isNotEmpty) {
-      final members = await client
-          .from('members')
-          .select('id, full_name, phone, branch_id, agent_id')
-          .inFilter('id', memberIds);
-      for (final member in members) {
-        savingsMembersMap[member['id']] = member;
-      }
-    }
-
     for (final plan in savingsDues) {
       final memberId = plan['member_id'];
-      if (memberId == null || savingsMembersMap[memberId] == null) continue;
-
-      final member = savingsMembersMap[memberId]!;
+      final member = getNestedMap(plan['members']);
+      if (memberId == null || member == null) continue;
 
       // Apply branch filter
       if (filters.branchId != null && member['branch_id'] != filters.branchId) {
@@ -547,7 +506,6 @@ final todayPaymentsProvider =
 
       // For daily collections that are overdue and not yet collected,
       // add a SEPARATE pending entry for today's collection.
-      // This way the user sees both the overdue entry AND today's pending entry.
       final collectionType = plan['collection_type'] ?? 'daily';
       if (!isCollected &&
           isOverdue &&
@@ -575,7 +533,7 @@ final todayPaymentsProvider =
       }
     }
   } catch (e, stack) {
-    debugPrint('Error fetching savings dues: $e');
+    debugPrint('Error fetching payments: $e');
     debugPrint(stack.toString());
   }
 

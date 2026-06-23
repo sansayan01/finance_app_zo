@@ -37,11 +37,9 @@ class SavingsPaymentSelector extends StatefulWidget {
   State<SavingsPaymentSelector> createState() => _SavingsPaymentSelectorState();
 }
 
-class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
-    with TickerProviderStateMixin {
+class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
   late final Set<String> _selectedIds;
   late Map<DateTime, List<SavingsInstallment>> _installmentEvents;
-  late final TabController _tabController;
 
   // Quick Pay state
   int _installmentCount = 1;
@@ -51,8 +49,6 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
     super.initState();
     _selectedIds = Set<String>.from(widget.initialSelectedDateKeys);
     _installmentEvents = _buildEventMap();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() {}));
 
     // Auto-select first unpaid installment by default if nothing pre-selected
     if (_selectedIds.isEmpty) {
@@ -69,7 +65,6 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -223,16 +218,13 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
 
         const SizedBox(height: 14),
 
-        // -- Tab Bar --
+        // -- Tab Bar: Quick Pay header + Calendar icon --
         _buildTabBar(),
 
         const SizedBox(height: 14),
 
-        // -- Tab Content --
-        if (_tabController.index == 0)
-          _buildQuickPayTab(overdueCount, dueTodayCount, unpaidInstallments.length)
-        else
-          _buildCustomTab(),
+        // -- Quick Pay Content --
+        _buildQuickPayTab(overdueCount, dueTodayCount, unpaidInstallments.length),
 
         const SizedBox(height: 14),
 
@@ -342,6 +334,7 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
   Widget _buildTabBar() {
     return Container(
       height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -352,37 +345,30 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _borderColor().withValues(alpha: 0.4)),
       ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [_primaryColor(), _primaryColor().withValues(alpha: 0.8)],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: _primaryColor().withValues(alpha: 0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+      child: Row(
+        children: [
+          Icon(Icons.bolt_rounded, size: 18, color: _primaryColor()),
+          const SizedBox(width: 8),
+          Text(
+            'Quick Pay',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _textPrimary(),
             ),
-          ],
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerHeight: 0,
-        labelColor: Colors.white,
-        unselectedLabelColor: _textSecondary(),
-        labelStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: _textSecondary(),
-        ),
-        tabs: const [
-          Tab(icon: Icon(Icons.bolt_rounded, size: 18), text: 'Quick Pay'),
-          Tab(icon: Icon(Icons.calendar_month_rounded, size: 18), text: 'Choose Dates'),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => _showCalendarPopup(context),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _primaryColor().withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.calendar_month_rounded, size: 18, color: _primaryColor()),
+            ),
+          ),
         ],
       ),
     );
@@ -729,120 +715,6 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector>
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
                 color: _textPrimary(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // -- Custom Tab (Calendar) --------------------------------------------
-
-  Widget _buildCustomTab() {
-    return GestureDetector(
-      onTap: () => _showCalendarPopup(context),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: _isDark
-                ? [
-                    _primaryColor().withValues(alpha: 0.08),
-                    _primaryColor().withValues(alpha: 0.03),
-                  ]
-                : [
-                    _primaryColor().withValues(alpha: 0.06),
-                    _primaryColor().withValues(alpha: 0.02),
-                  ],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _primaryColor().withValues(alpha: 0.15)),
-          boxShadow: [
-            BoxShadow(
-              color: _primaryColor().withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Calendar icon
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 1.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              builder: (context, value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: child,
-                );
-              },
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      _primaryColor(),
-                      _primaryColor().withValues(alpha: 0.7),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _primaryColor().withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.calendar_month_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Choose Specific Dates',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: _textPrimary(),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Pick exact installment dates from the calendar',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _textTertiary(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: _fillColor(),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: _textSecondary(),
               ),
             ),
           ],

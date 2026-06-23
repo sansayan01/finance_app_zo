@@ -16,6 +16,7 @@ import '../../../savings/data/models/savings_model.dart';
 import '../../../loans/data/models/loan_model.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../data/providers/branch_payment_providers.dart';
+import '../../../payments/data/services/auto_collection_service.dart';
 
 class BranchTodayPaymentsPage extends ConsumerStatefulWidget {
   const BranchTodayPaymentsPage({super.key});
@@ -395,7 +396,7 @@ class _BranchTodayPaymentsPageState
     try {
       final response = await client
           .from('savings_plans')
-          .select()
+          .select('*, members:member_id(full_name, phone)')
           .eq('id', planId)
           .maybeSingle();
       if (response != null && mounted) {
@@ -422,7 +423,7 @@ class _BranchTodayPaymentsPageState
       final client = ref.read(supabaseClientProvider);
       final response = await client
           .from('loans')
-          .select()
+          .select('*, members:customer_id(full_name, phone)')
           .eq('id', payment.loanId!)
           .maybeSingle();
       if (response != null && mounted) {
@@ -452,6 +453,86 @@ class _BranchTodayPaymentsPageState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to collect — missing payment data')),
       );
+    }
+  }
+
+  Future<void> _performAutoCollection(TodayPayment payment) async {
+    final client = ref.read(supabaseClientProvider);
+    final user = ref.read(currentUserProvider);
+    final branchId = user?.branchId;
+    if (user == null || user.orgId == null || branchId == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+            ),
+            const SizedBox(width: 12),
+            Text('Processing collection for ${payment.memberName}...'),
+          ],
+        ),
+        duration: const Duration(days: 1),
+      ),
+    );
+
+    try {
+      final profile = await client
+          .from('profiles')
+          .select('id, full_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      final staffId = profile?['id'] as String?;
+      if (staffId == null) throw Exception('Staff profile not found');
+      final staffName = profile?['full_name']?.toString() ?? 'Branch Manager';
+
+      if (payment.type == PaymentType.savings) {
+        final userRole = user.role?.name ?? 'manager';
+        await AutoCollectionService.autoCollectSavings(
+          client: client,
+          orgId: user.orgId!,
+          staffId: staffId,
+          staffName: staffName,
+          staffRole: userRole,
+          payment: payment,
+        );
+      } else {
+        await AutoCollectionService.autoCollectEmi(
+          client: client,
+          orgId: user.orgId!,
+          staffId: staffId,
+          payment: payment,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auto-collected \u20b9${payment.amountExpected.toStringAsFixed(0)} cash for ${payment.memberName}'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auto-collect failed: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      ref.invalidate(branchTodayPaymentsProvider(branchId));
     }
   }
 
@@ -726,12 +807,12 @@ class _BranchTodayPaymentsPageState
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildPaymentList(pending, isDark,
+                    _buildPaymentList(pending, overdue, isDark,
                         'No pending payments', Icons.schedule_rounded),
-                    _buildPaymentList(overdue, isDark,
+                    _buildPaymentList(overdue, overdue, isDark,
                         'No overdue payments',
                         Icons.warning_amber_rounded),
-                    _buildPaymentList(collected, isDark,
+                    _buildPaymentList(collected, overdue, isDark,
                         'No collections yet',
                         Icons.check_circle_outline_rounded),
                   ],
@@ -806,7 +887,7 @@ class _BranchTodayPaymentsPageState
     );
   }
 
-  Widget _buildPaymentList(List<TodayPayment> payments, bool isDark,
+  Widget _buildPaymentList(List<TodayPayment> payments, List<TodayPayment> overduePayments, bool isDark,
       String emptyMessage, IconData emptyIcon) {
     if (payments.isEmpty) {
       return Center(
@@ -852,18 +933,70 @@ class _BranchTodayPaymentsPageState
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         itemCount: payments.length,
         itemBuilder: (context, index) {
-          return _PaymentCard(
-            payment: payments[index],
+          final p = payments[index];
+          final onCallFn = p.memberPhone != null
+              ? () => _makePhoneCall(p.memberPhone!)
+              : null;
+          void onRemindFn() => _sendReminder(p);
+          final onCollectFn = !p.isCollected
+              ? () {
+                  final hasOverdues = p.isOverdue || overduePayments.any((o) => o.memberId == p.memberId && p.memberId != null);
+                  if (hasOverdues) {
+                    _showQuickCollect(p);
+                  } else {
+                    _performAutoCollection(p);
+                  }
+                }
+              : null;
+
+          final card = _PaymentCard(
+            payment: p,
             isDark: isDark,
-            onCall: payments[index].memberPhone != null
-                ? () =>
-                    _makePhoneCall(payments[index].memberPhone!)
+            onCall: onCallFn,
+            onRemind: onRemindFn,
+            onTap: () => _showPaymentDetails(p),
+            onCollect: onCollectFn,
+          );
+
+          if (p.isCollected) {
+            return card;
+          }
+
+          return Dismissible(
+            key: ValueKey('pay_${p.id}'),
+            direction: DismissDirection.horizontal,
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.startToEnd) {
+                if (onCollectFn != null) {
+                  HapticFeedback.mediumImpact();
+                  onCollectFn();
+                }
+              } else if (direction == DismissDirection.endToStart) {
+                if (onCallFn != null) {
+                  HapticFeedback.lightImpact();
+                  onCallFn();
+                } else {
+                  HapticFeedback.lightImpact();
+                  onRemindFn();
+                }
+              }
+              return false;
+            },
+            background: onCollectFn != null
+                ? const _SwipeBackground(
+                    icon: Icons.payment_rounded,
+                    label: 'Collect',
+                    color: AppColors.success,
+                    align: Alignment.centerLeft,
+                  )
                 : null,
-            onRemind: () => _sendReminder(payments[index]),
-            onTap: () => _showPaymentDetails(payments[index]),
-            onCollect: !payments[index].isCollected
-                ? () => _showQuickCollect(payments[index])
-                : null,
+            secondaryBackground: _SwipeBackground(
+              icon: onCallFn != null ? Icons.call_rounded : Icons.notifications_active_rounded,
+              label: onCallFn != null ? 'Call' : 'Remind',
+              color: onCallFn != null ? AppColors.success : AppColors.warning,
+              align: Alignment.centerRight,
+            ),
+            child: card,
           );
         },
       ),
@@ -1117,6 +1250,53 @@ class _DetailRow extends StatelessWidget {
 }
 
 // ─── Payment Card ───
+class _SwipeBackground extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Alignment align;
+
+  const _SwipeBackground({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.align,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      alignment: align,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.0),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: align == Alignment.centerRight
+            ? [
+                Text(label,
+                    style: TextStyle(
+                        color: color, fontWeight: FontWeight.w800, fontSize: 13)),
+                const SizedBox(width: 6),
+                Icon(icon, color: color, size: 18),
+              ]
+            : [
+                Icon(icon, color: color, size: 18),
+                const SizedBox(width: 6),
+                Text(label,
+                    style: TextStyle(
+                        color: color, fontWeight: FontWeight.w800, fontSize: 13)),
+              ],
+      ),
+    );
+  }
+}
+
+// ─── Payment Card ───
 class _PaymentCard extends StatelessWidget {
   final TodayPayment payment;
   final bool isDark;
@@ -1162,190 +1342,182 @@ class _PaymentCard extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Top Row (Avatar + Name & Info + Amount & Status) ──
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PaymentAvatar(
-                    type: payment.type,
-                    icon: payment.typeIcon,
-                    color: payment.typeColor,
-                    isCollected: payment.isCollected,
-                  ),
-                  const SizedBox(width: 10),
-                  // Middle Column: Member Name & Subtitles
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              _PaymentAvatar(
+                type: payment.type,
+                label: payment.memberName,
+                color: payment.typeColor,
+                isCollected: payment.isCollected,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          payment.memberName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            letterSpacing: -0.2,
-                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${payment.typeLabel}'
-                          '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
-                          '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
-                          '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(
-                              payment.isCollected
-                                  ? Icons.check_circle_outline_rounded
-                                  : Icons.schedule_rounded,
-                              size: 10.5,
-                              color: payment.isCollected
-                                  ? AppColors.success
-                                  : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
+                        Expanded(
+                          child: Text(
+                            payment.memberName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              letterSpacing: -0.2,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                payment.isCollected && payment.collectedAt != null
-                                    ? 'Collected ${timeFormat.format(payment.collectedAt!)}'
-                                    : 'Due ${dateFormat.format(payment.dueDate)}',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: payment.isCollected
-                                      ? AppColors.success
-                                      : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              currencyFormat.format(payment.amountExpected),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14.5,
+                                letterSpacing: -0.4,
+                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                               ),
                             ),
+                            if (payment.penaltyAmount > 0) ...[
+                              const SizedBox(width: 3),
+                              Text(
+                                '+${currencyFormat.format(payment.penaltyAmount)}',
+                                style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  // Right Column: Amount & Status
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        currencyFormat.format(payment.amountExpected),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                          letterSpacing: -0.4,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
-                      ),
-                      if (payment.penaltyAmount > 0) ...[
-                        const SizedBox(height: 1),
-                        Text(
-                          '+${currencyFormat.format(payment.penaltyAmount)} penalty',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 4),
-                      _StatusPill(status: payment.status, type: payment.type),
-                    ],
-                  ),
-                ],
-              ),
-
-              // ── Bottom Action Row (Only for non-collected or overdue) ──
-              if (payment.isOverdue || !payment.isCollected) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (payment.isOverdue)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.access_time_rounded, size: 10, color: AppColors.error),
-                            const SizedBox(width: 3),
-                            Text(
-                              payment.overdueLabel,
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.error,
+                    const SizedBox(height: 3),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${payment.typeLabel}'
+                                '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
+                                '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
+                                '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const Spacer(),
-                    if (!payment.isCollected) ...[
-                      if (onCall != null)
-                        _ActionCircle(
-                          icon: Icons.call_rounded,
-                          color: AppColors.success,
-                          onTap: () { HapticFeedback.lightImpact(); onCall!(); },
-                        ),
-                      if (onCall != null) const SizedBox(width: 6),
-                      _ActionCircle(
-                        icon: Icons.notifications_active_rounded,
-                        color: AppColors.warning,
-                        onTap: () { HapticFeedback.lightImpact(); onRemind(); },
-                      ),
-                      if (onCollect != null) ...[
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () { HapticFeedback.mediumImpact(); onCollect!(); },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: AppColors.successGradient),
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.success.withValues(alpha: 0.25),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.payment_rounded, size: 11, color: Colors.white),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Collect',
-                                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.white),
-                                ),
-                              ],
-                            ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    payment.isCollected
+                                        ? Icons.check_circle_outline_rounded
+                                        : Icons.schedule_rounded,
+                                    size: 10,
+                                    color: payment.isOverdue
+                                        ? AppColors.error
+                                        : (payment.isCollected
+                                            ? AppColors.success
+                                            : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Expanded(
+                                    child: Text(
+                                      payment.isCollected && payment.collectedAt != null
+                                          ? 'Collected ${timeFormat.format(payment.collectedAt!)}'
+                                          : 'Due ${dateFormat.format(payment.dueDate)}',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: payment.isOverdue
+                                            ? AppColors.error
+                                            : (payment.isCollected
+                                                ? AppColors.success
+                                                : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        if (!payment.isCollected)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (onCall != null)
+                                _ActionCircle(
+                                  icon: Icons.call_rounded,
+                                  color: AppColors.success,
+                                  onTap: () { HapticFeedback.lightImpact(); onCall!(); },
+                                ),
+                              if (onCall != null) const SizedBox(width: 5),
+                              _ActionCircle(
+                                icon: Icons.notifications_active_rounded,
+                                color: AppColors.warning,
+                                onTap: () { HapticFeedback.lightImpact(); onRemind(); },
+                              ),
+                              if (onCollect != null) ...[
+                                const SizedBox(width: 6),
+                                GestureDetector(
+                                  onTap: () { HapticFeedback.mediumImpact(); onCollect!(); },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(colors: AppColors.successGradient),
+                                      borderRadius: BorderRadius.circular(6),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.success.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1.5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.payment_rounded, size: 10, color: Colors.white),
+                                        SizedBox(width: 3),
+                                        Text(
+                                          'Collect',
+                                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          )
+                        else
+                          _StatusPill(status: payment.status, type: payment.type),
                       ],
-                    ],
+                    ),
                   ],
                 ),
-              ],
+              ),
             ],
           ),
         ),
@@ -1356,19 +1528,20 @@ class _PaymentCard extends StatelessWidget {
 
 class _PaymentAvatar extends StatelessWidget {
   final PaymentType type;
-  final IconData icon;
+  final String label;
   final Color color;
   final bool isCollected;
 
   const _PaymentAvatar({
     required this.type,
-    required this.icon,
+    required this.label,
     required this.color,
     required this.isCollected,
   });
 
   @override
   Widget build(BuildContext context) {
+    final initial = label.isNotEmpty ? label[0].toUpperCase() : '?';
     return Container(
       width: 36,
       height: 36,
@@ -1388,10 +1561,13 @@ class _PaymentAvatar extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Icon(
-          icon,
-          color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
-          size: 18,
+        child: Text(
+          initial,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
+          ),
         ),
       ),
     );
@@ -1401,34 +1577,36 @@ class _PaymentAvatar extends StatelessWidget {
 class _StatusPill extends StatelessWidget {
   final PaymentStatus status;
   final PaymentType type;
-
   const _StatusPill({required this.status, required this.type});
 
-  Color get statusColor {
+  Color get _color {
     switch (status) {
+      case PaymentStatus.collected:
+        return AppColors.success;
       case PaymentStatus.overdue:
         return AppColors.error;
       case PaymentStatus.pending:
         return type == PaymentType.emi ? AppColors.warning : AppColors.mint;
-      case PaymentStatus.collected:
-        return AppColors.success;
     }
   }
 
-  String get statusLabel {
+  String get _label {
     switch (status) {
+      case PaymentStatus.collected:
+        return 'Done';
       case PaymentStatus.overdue:
         return 'Overdue';
       case PaymentStatus.pending:
         return 'Pending';
-      case PaymentStatus.collected:
-        return 'Collected';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = statusColor;
+    if (status == PaymentStatus.pending || status == PaymentStatus.overdue) {
+      return const SizedBox.shrink();
+    }
+    final color = _color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
       decoration: BoxDecoration(
@@ -1452,7 +1630,7 @@ class _StatusPill extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            statusLabel,
+            _label,
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w800,

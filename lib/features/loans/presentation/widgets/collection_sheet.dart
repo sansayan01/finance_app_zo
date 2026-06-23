@@ -745,18 +745,28 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                           ),
                           child: Text(
                             widget.mode == CollectionMode.savings
-                                ? '${widget.savingsPlan!.memberName} \u00b7 ${widget.savingsPlan!.planName}'
-                                : '${widget.loan!.customerName} \u00b7 ${widget.loan!.loanNumber}',
+                                ? '${widget.savingsPlan!.memberName.isNotEmpty ? widget.savingsPlan!.memberName : 'Unknown'} \u00b7 ${widget.savingsPlan!.planName}'
+                                : '${(widget.loan!.customerName ?? '').isNotEmpty ? widget.loan!.customerName! : 'Unknown'} \u00b7 ${widget.loan!.loanNumber}',
                             style: TextStyle(
                                 color:
                                     Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12),
                           ),
                         ),
+                        const SizedBox(height: 2),
+                        // Outstanding / Collected line
+                        Text(
+                          widget.mode == CollectionMode.savings
+                              ? 'Collected: ${widget.savingsPlan!.currentAmount.toStringAsFixed(0)} \u00b7 Installment: ${widget.savingsPlan!.monthlyDeposit.toStringAsFixed(0)}'
+                              : 'Outstanding: \u20b9${widget.loan!.outstandingBalance.toStringAsFixed(0)} \u00b7 EMI: \u20b9${widget.loan!.emiAmount.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 11),
+                        ),
                       ],
                     ),
                   ),
-                  // EMI / Savings amount badge
+                  // Outstanding / Collected badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
@@ -766,8 +776,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                     ),
                     child: Text(
                       widget.mode == CollectionMode.savings
-                          ? 'Savings \u20b9${widget.savingsPlan!.monthlyDeposit.toStringAsFixed(0)}'
-                          : 'EMI \u20b9${widget.loan!.emiAmount.toStringAsFixed(0)}',
+                          ? '₹${widget.savingsPlan!.monthlyDeposit.toStringAsFixed(0)}'
+                          : '₹${widget.loan!.emiAmount.toStringAsFixed(0)}',
                       style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,

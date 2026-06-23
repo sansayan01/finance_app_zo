@@ -10,9 +10,11 @@ import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../payments/data/models/today_payment_model.dart';
 import '../../../payments/data/providers/payment_providers.dart' show TodayPaymentData;
 import '../../../payments/data/utils/payment_export.dart';
+import '../../../payments/data/services/auto_collection_service.dart';
 import '../../../branch_manager/data/providers/branch_payment_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
 import '../../../savings/data/models/savings_model.dart';
@@ -365,7 +367,7 @@ class _StaffTodayPaymentsPageState
     try {
       final response = await client
           .from('savings_plans')
-          .select()
+          .select('*, members:member_id(full_name, phone)')
           .eq('id', planId)
           .maybeSingle();
       if (response != null && mounted) {
@@ -392,7 +394,7 @@ class _StaffTodayPaymentsPageState
       final client = ref.read(supabaseClientProvider);
       final response = await client
           .from('loans')
-          .select()
+          .select('*, members:customer_id(full_name, phone)')
           .eq('id', payment.loanId!)
           .maybeSingle();
       if (response != null && mounted) {
@@ -422,6 +424,85 @@ class _StaffTodayPaymentsPageState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to collect — missing payment data')),
       );
+    }
+  }
+
+  Future<void> _performAutoCollection(TodayPayment payment, String branchId) async {
+    final client = ref.read(supabaseClientProvider);
+    final user = ref.read(currentUserProvider);
+    if (user == null || user.orgId == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+            ),
+            const SizedBox(width: 12),
+            Text('Processing collection for ${payment.memberName}...'),
+          ],
+        ),
+        duration: const Duration(days: 1),
+      ),
+    );
+
+    try {
+      final profile = await client
+          .from('profiles')
+          .select('id, full_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      final staffId = profile?['id'] as String?;
+      if (staffId == null) throw Exception('Staff profile not found');
+      final staffName = profile?['full_name']?.toString() ?? 'Staff';
+
+      if (payment.type == PaymentType.savings) {
+        final userRole = user.role?.name ?? 'collectionAgent';
+        await AutoCollectionService.autoCollectSavings(
+          client: client,
+          orgId: user.orgId!,
+          staffId: staffId,
+          staffName: staffName,
+          staffRole: userRole,
+          payment: payment,
+        );
+      } else {
+        await AutoCollectionService.autoCollectEmi(
+          client: client,
+          orgId: user.orgId!,
+          staffId: staffId,
+          payment: payment,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auto-collected \u20b9${payment.amountExpected.toStringAsFixed(0)} cash for ${payment.memberName}'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auto-collect failed: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      ref.invalidate(branchTodayPaymentsProvider(branchId));
     }
   }
 
@@ -749,12 +830,12 @@ class _StaffTodayPaymentsPageState
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildPaymentList(pending, isDark, 'No pending payments',
+                    _buildPaymentList(pending, overdue, isDark, 'No pending payments',
                         'Everything is up to date!', Icons.schedule_rounded,
                         AppColors.warning, branchId),
                     _buildGroupedOverdueList(
                         groupedOverdue, isDark, branchId),
-                    _buildPaymentList(collected, isDark, 'No collections yet',
+                    _buildPaymentList(collected, overdue, isDark, 'No collections yet',
                         'Payments you collect will appear here',
                         Icons.check_circle_outline_rounded,
                         AppColors.success, branchId),
@@ -836,7 +917,7 @@ class _StaffTodayPaymentsPageState
 
   // Payment List — with staggered animations and swipe actions
   Widget _buildPaymentList(
-      List<TodayPayment> payments, bool isDark, String emptyTitle,
+      List<TodayPayment> payments, List<TodayPayment> overduePayments, bool isDark, String emptyTitle,
       String emptySubtitle, IconData emptyIcon, Color emptyColor,
       String branchId) {
     if (payments.isEmpty) {
@@ -859,17 +940,28 @@ class _StaffTodayPaymentsPageState
         itemCount: payments.length,
         itemBuilder: (context, index) {
           final payment = payments[index];
+          final onCallFn = payment.memberPhone != null
+              ? () => _makePhoneCall(payment.memberPhone!)
+              : null;
+          void onRemindFn() => _sendReminder(payment);
+          final onCollectFn = !payment.isCollected
+              ? () {
+                  final hasOverdues = payment.isOverdue || overduePayments.any((o) => o.memberId == payment.memberId && payment.memberId != null);
+                  if (hasOverdues) {
+                    _showQuickCollect(payment);
+                  } else {
+                    _performAutoCollection(payment, branchId);
+                  }
+                }
+              : null;
+
           final card = _PaymentCard(
             payment: payment,
             isDark: isDark,
-            onCall: payment.memberPhone != null
-                ? () => _makePhoneCall(payment.memberPhone!)
-                : null,
-            onRemind: () => _sendReminder(payment),
+            onCall: onCallFn,
+            onRemind: onRemindFn,
             onTap: () => _showPaymentDetails(payment),
-            onCollect: !payment.isCollected
-                ? () => _showQuickCollect(payment)
-                : null,
+            onCollect: onCollectFn,
           );
 
           // Stagger animation
@@ -888,23 +980,41 @@ class _StaffTodayPaymentsPageState
           return Dismissible(
             key: ValueKey('pay_${payment.id}'),
             direction: DismissDirection.horizontal,
-            confirmDismiss: (_) async => false, // never auto-dismiss
-            background: _buildSwipeBackground(
-              isDark,
-              payment.memberPhone != null
-                  ? Icons.call_rounded
-                  : Icons.notifications_active_rounded,
-              payment.memberPhone != null ? 'Call' : 'Remind',
-              payment.memberPhone != null
-                  ? AppColors.success
-                  : AppColors.warning,
-              Alignment.centerLeft,
-            ),
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.startToEnd) {
+                if (onCollectFn != null) {
+                  HapticFeedback.mediumImpact();
+                  onCollectFn();
+                }
+              } else if (direction == DismissDirection.endToStart) {
+                if (onCallFn != null) {
+                  HapticFeedback.lightImpact();
+                  onCallFn();
+                } else {
+                  HapticFeedback.lightImpact();
+                  onRemindFn();
+                }
+              }
+              return false;
+            },
+            background: onCollectFn != null
+                ? _buildSwipeBackground(
+                    isDark,
+                    Icons.payment_rounded,
+                    'Collect',
+                    AppColors.primary,
+                    Alignment.centerLeft,
+                  )
+                : null,
             secondaryBackground: _buildSwipeBackground(
               isDark,
-              Icons.payment_rounded,
-              'Collect',
-              AppColors.primary,
+              onCallFn != null
+                  ? Icons.call_rounded
+                  : Icons.notifications_active_rounded,
+              onCallFn != null ? 'Call' : 'Remind',
+              onCallFn != null
+                  ? AppColors.success
+                  : AppColors.warning,
               Alignment.centerRight,
             ),
             onUpdate: (details) {
@@ -982,8 +1092,33 @@ class _StaffTodayPaymentsPageState
           return Dismissible(
             key: ValueKey('grouped_${group.memberId}'),
             direction: DismissDirection.horizontal,
-            confirmDismiss: (_) async => false,
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.startToEnd) {
+                HapticFeedback.mediumImpact();
+                if (group.payments.isNotEmpty) {
+                  _showQuickCollect(group.payments.first);
+                }
+              } else if (direction == DismissDirection.endToStart) {
+                if (group.memberPhone != null) {
+                  HapticFeedback.lightImpact();
+                  _makePhoneCall(group.memberPhone!);
+                } else {
+                  HapticFeedback.lightImpact();
+                  if (group.payments.isNotEmpty) {
+                    _sendReminder(group.payments.first);
+                  }
+                }
+              }
+              return false;
+            },
             background: _buildSwipeBackground(
+              isDark,
+              Icons.payment_rounded,
+              'Collect',
+              AppColors.primary,
+              Alignment.centerLeft,
+            ),
+            secondaryBackground: _buildSwipeBackground(
               isDark,
               group.memberPhone != null
                   ? Icons.call_rounded
@@ -992,13 +1127,6 @@ class _StaffTodayPaymentsPageState
               group.memberPhone != null
                   ? AppColors.success
                   : AppColors.warning,
-              Alignment.centerLeft,
-            ),
-            secondaryBackground: _buildSwipeBackground(
-              isDark,
-              Icons.payment_rounded,
-              'Collect',
-              AppColors.primary,
               Alignment.centerRight,
             ),
             onUpdate: (details) {
@@ -1313,190 +1441,182 @@ class _PaymentCard extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Top Row (Avatar + Name & Info + Amount & Status) ──
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PaymentAvatar(
-                    type: payment.type,
-                    icon: payment.typeIcon,
-                    color: payment.typeColor,
-                    isCollected: payment.isCollected,
-                  ),
-                  const SizedBox(width: 10),
-                  // Middle Column: Member Name & Subtitles
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              _PaymentAvatar(
+                type: payment.type,
+                icon: payment.typeIcon,
+                color: payment.typeColor,
+                isCollected: payment.isCollected,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          payment.memberName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            letterSpacing: -0.2,
-                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${payment.typeLabel}'
-                          '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
-                          '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
-                          '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(
-                              payment.isCollected
-                                  ? Icons.check_circle_outline_rounded
-                                  : Icons.schedule_rounded,
-                              size: 10.5,
-                              color: payment.isCollected
-                                  ? AppColors.success
-                                  : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
+                        Expanded(
+                          child: Text(
+                            payment.memberName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              letterSpacing: -0.2,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                payment.isCollected && payment.collectedAt != null
-                                    ? 'Collected ${timeFormat.format(payment.collectedAt!)}'
-                                    : 'Due ${dateFormat.format(payment.dueDate)}',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: payment.isCollected
-                                      ? AppColors.success
-                                      : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight),
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              currencyFormat.format(payment.amountExpected),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14.5,
+                                letterSpacing: -0.4,
+                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                               ),
                             ),
+                            if (payment.penaltyAmount > 0) ...[
+                              const SizedBox(width: 3),
+                              Text(
+                                '+${currencyFormat.format(payment.penaltyAmount)}',
+                                style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  // Right Column: Amount & Status
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        currencyFormat.format(payment.amountExpected),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                          letterSpacing: -0.4,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
-                      ),
-                      if (payment.penaltyAmount > 0) ...[
-                        const SizedBox(height: 1),
-                        Text(
-                          '+${currencyFormat.format(payment.penaltyAmount)} penalty',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 4),
-                      _StatusPill(status: payment.status, type: payment.type),
-                    ],
-                  ),
-                ],
-              ),
-
-              // ── Bottom Action Row (Only for non-collected or overdue) ──
-              if (payment.isOverdue || !payment.isCollected) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (payment.isOverdue)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.access_time_rounded, size: 10, color: AppColors.error),
-                            const SizedBox(width: 3),
-                            Text(
-                              payment.overdueLabel,
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.error,
+                    const SizedBox(height: 3),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${payment.typeLabel}'
+                                '${payment.loanNumber != null ? ' \u00b7 ${payment.loanNumber}' : ''}'
+                                '${payment.emiNumber != null ? ' #${payment.emiNumber}' : ''}'
+                                '${payment.planName != null ? ' \u00b7 ${payment.planName}' : ''}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const Spacer(),
-                    if (!payment.isCollected) ...[
-                      if (onCall != null)
-                        _ActionCircle(
-                          icon: Icons.call_rounded,
-                          color: AppColors.success,
-                          onTap: () { HapticFeedback.lightImpact(); onCall!(); },
-                        ),
-                      if (onCall != null) const SizedBox(width: 6),
-                      _ActionCircle(
-                        icon: Icons.notifications_active_rounded,
-                        color: AppColors.warning,
-                        onTap: () { HapticFeedback.lightImpact(); onRemind(); },
-                      ),
-                      if (onCollect != null) ...[
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () { HapticFeedback.mediumImpact(); onCollect!(); },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: AppColors.successGradient),
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.success.withValues(alpha: 0.25),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.payment_rounded, size: 11, color: Colors.white),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Collect',
-                                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.white),
-                                ),
-                              ],
-                            ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    payment.isCollected
+                                        ? Icons.check_circle_outline_rounded
+                                        : Icons.schedule_rounded,
+                                    size: 10,
+                                    color: payment.isOverdue
+                                        ? AppColors.error
+                                        : (payment.isCollected
+                                            ? AppColors.success
+                                            : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Expanded(
+                                    child: Text(
+                                      payment.isCollected && payment.collectedAt != null
+                                          ? 'Collected ${timeFormat.format(payment.collectedAt!)}'
+                                          : 'Due ${dateFormat.format(payment.dueDate)}',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: payment.isOverdue
+                                            ? AppColors.error
+                                            : (payment.isCollected
+                                                ? AppColors.success
+                                                : (isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight)),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        if (!payment.isCollected)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (onCall != null)
+                                _ActionCircle(
+                                  icon: Icons.call_rounded,
+                                  color: AppColors.success,
+                                  onTap: () { HapticFeedback.lightImpact(); onCall!(); },
+                                ),
+                              if (onCall != null) const SizedBox(width: 5),
+                              _ActionCircle(
+                                icon: Icons.notifications_active_rounded,
+                                color: AppColors.warning,
+                                onTap: () { HapticFeedback.lightImpact(); onRemind(); },
+                              ),
+                              if (onCollect != null) ...[
+                                const SizedBox(width: 6),
+                                GestureDetector(
+                                  onTap: () { HapticFeedback.mediumImpact(); onCollect!(); },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(colors: AppColors.successGradient),
+                                      borderRadius: BorderRadius.circular(6),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.success.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1.5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.payment_rounded, size: 10, color: Colors.white),
+                                        SizedBox(width: 3),
+                                        Text(
+                                          'Collect',
+                                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          )
+                        else
+                          _StatusPill(status: payment.status, type: payment.type),
                       ],
-                    ],
+                    ),
                   ],
                 ),
-              ],
+              ),
             ],
           ),
         ),
@@ -1609,198 +1729,163 @@ class _GroupedOverdueCard extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Top Row (Avatar + Name & Info + Amount & Status) ──
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PaymentAvatar(
-                    type: group.payments.isNotEmpty ? group.payments.first.type : PaymentType.emi,
-                    icon: group.payments.isNotEmpty ? group.payments.first.typeIcon : Icons.warning_amber_rounded,
-                    color: AppColors.error,
-                    isCollected: false,
-                  ),
-                  const SizedBox(width: 10),
-                  // Middle Column: Member Name & Subtitles
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              _PaymentAvatar(
+                type: group.payments.isNotEmpty ? group.payments.first.type : PaymentType.emi,
+                icon: group.payments.isNotEmpty ? group.payments.first.typeIcon : Icons.warning_amber_rounded,
+                color: AppColors.error,
+                isCollected: false,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            letterSpacing: -0.2,
-                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          group.payments.length > 1
-                              ? '${group.payments.length} overdue EMIs \u00b7 ${group.loanLabel}'
-                              : '${group.payments.isNotEmpty ? group.payments.first.typeLabel : "EMI"} \u00b7 ${group.loanLabel}',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.schedule_rounded,
-                              size: 10.5,
-                              color: AppColors.error,
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              letterSpacing: -0.2,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                             ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                'Due ${dateFormat.format(group.earliestDueDate)}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              currencyFormat.format(group.totalAmount),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14.5,
+                                letterSpacing: -0.4,
+                                color: AppColors.error,
+                              ),
+                            ),
+                            if (group.totalPenalty > 0) ...[
+                              const SizedBox(width: 3),
+                              Text(
+                                '+${currencyFormat.format(group.totalPenalty)}',
+                                style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                group.payments.length > 1
+                                    ? '${group.payments.length} overdue EMIs \u00b7 ${group.loanLabel}'
+                                    : '${group.payments.isNotEmpty ? group.payments.first.typeLabel : "EMI"} \u00b7 ${group.loanLabel}',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
                                 ),
                                 overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.schedule_rounded,
+                                    size: 10,
+                                    color: AppColors.error,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Expanded(
+                                    child: Text(
+                                      'Due: ${dateFormat.format(group.earliestDueDate)}',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (onCall != null)
+                              _ActionCircle(
+                                icon: Icons.call_rounded,
+                                color: AppColors.success,
+                                onTap: () { HapticFeedback.lightImpact(); onCall!(); },
+                              ),
+                            if (onCall != null) const SizedBox(width: 5),
+                            _ActionCircle(
+                              icon: Icons.notifications_active_rounded,
+                              color: AppColors.warning,
+                              onTap: () { HapticFeedback.lightImpact(); onRemind(); },
+                            ),
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () { HapticFeedback.mediumImpact(); onCollect(); },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(colors: AppColors.successGradient),
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.success.withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1.5),
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.payment_rounded, size: 10, color: Colors.white),
+                                    SizedBox(width: 3),
+                                    Text(
+                                      'Collect',
+                                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Colors.white),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  // Right Column: Amount & Status Pill
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        currencyFormat.format(group.totalAmount),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                          letterSpacing: -0.4,
-                          color: AppColors.error,
-                        ),
-                      ),
-                      if (group.totalPenalty > 0) ...[
-                        const SizedBox(height: 1),
-                        Text(
-                          '+${currencyFormat.format(group.totalPenalty)} penalty',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 4),
-                      _StatusPill(status: PaymentStatus.overdue, type: group.payments.isNotEmpty ? group.payments.first.type : PaymentType.emi),
-                    ],
-                  ),
-                ],
-              ),
-
-              // ── Bottom Action Row ──
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.access_time_rounded, size: 10, color: AppColors.error),
-                        const SizedBox(width: 3),
-                        Text(
-                          group.overdueLabel,
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  // EMI count chip
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.receipt_long, size: 10, color: AppColors.warning),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${group.overdueCount} EMI${group.overdueCount > 1 ? 's' : ''}',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.warning,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  if (onCall != null) ...[
-                    _ActionCircle(
-                      icon: Icons.call_rounded,
-                      color: AppColors.success,
-                      onTap: () { HapticFeedback.lightImpact(); onCall!(); },
-                    ),
-                    const SizedBox(width: 6),
                   ],
-                  _ActionCircle(
-                    icon: Icons.notifications_active_rounded,
-                    color: AppColors.warning,
-                    onTap: () { HapticFeedback.lightImpact(); onRemind(); },
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () { HapticFeedback.mediumImpact(); onCollect(); },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: AppColors.successGradient),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.success.withValues(alpha: 0.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.payment_rounded, size: 11, color: Colors.white),
-                          SizedBox(width: 4),
-                          Text(
-                            'Collect',
-                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -2590,6 +2675,9 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (status == PaymentStatus.pending || status == PaymentStatus.overdue) {
+      return const SizedBox.shrink();
+    }
     final color = statusColor;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),

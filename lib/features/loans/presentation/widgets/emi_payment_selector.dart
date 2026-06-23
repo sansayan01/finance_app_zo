@@ -36,11 +36,9 @@ class EmiPaymentSelector extends StatefulWidget {
   State<EmiPaymentSelector> createState() => _EmiPaymentSelectorState();
 }
 
-class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
-    with TickerProviderStateMixin {
+class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
   late final Set<String> _selectedIds;
   late Map<DateTime, List<EMIScheduleModel>> _emiEvents;
-  late final TabController _tabController;
 
   // Quick Pay state
   int _installmentCount = 1;
@@ -50,20 +48,6 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
     super.initState();
     _selectedIds = Set<String>.from(widget.initialSelectedIds);
     _emiEvents = _buildEventMap();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});
-      // Open calendar when "Choose Dates" tab is selected
-      if (_tabController.index == 1) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showCalendarPopup(context).then((_) {
-            if (mounted) {
-              _tabController.animateTo(0);
-            }
-          });
-        });
-      }
-    });
 
     // Auto-select first unpaid EMI by default if nothing pre-selected
     if (_selectedIds.isEmpty) {
@@ -80,7 +64,6 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -206,14 +189,13 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
 
         const SizedBox(height: 14),
 
-        // ── Tab Bar ──
+        // ── Tab Bar: Quick Pay header + Calendar icon ──
         _buildTabBar(),
 
         const SizedBox(height: 14),
 
-        // ── Tab Content ──
-        if (_tabController.index == 0)
-          _buildQuickPayTab(overdueCount, dueTodayCount, unpaidEMIs.length),
+        // ── Quick Pay Content ──
+        _buildQuickPayTab(overdueCount, dueTodayCount, unpaidEMIs.length),
       ],
     );
   }
@@ -250,6 +232,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
   Widget _buildTabBar() {
     return Container(
       height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -260,37 +243,30 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector>
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _borderColor().withValues(alpha: 0.4)),
       ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [_primaryColor(), _primaryColor().withValues(alpha: 0.8)],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: _primaryColor().withValues(alpha: 0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+      child: Row(
+        children: [
+          Icon(Icons.bolt_rounded, size: 18, color: _primaryColor()),
+          const SizedBox(width: 8),
+          Text(
+            'Quick Pay',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _textPrimary(),
             ),
-          ],
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerHeight: 0,
-        labelColor: Colors.white,
-        unselectedLabelColor: _textSecondary(),
-        labelStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: _textSecondary(),
-        ),
-        tabs: const [
-          Tab(icon: Icon(Icons.bolt_rounded, size: 18), text: 'Quick Pay'),
-          Tab(icon: Icon(Icons.calendar_month_rounded, size: 18), text: 'Choose Dates'),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: () => _showCalendarPopup(context),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _primaryColor().withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.calendar_month_rounded, size: 18, color: _primaryColor()),
+            ),
+          ),
         ],
       ),
     );

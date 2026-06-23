@@ -70,7 +70,9 @@ class SavingsModel {
     return SavingsModel(
       id: json['id'] as String,
       memberId: json['member_id'] as String,
-      memberName: json['member_name'] as String? ?? '',
+      memberName: json['member_name'] as String? ??
+          (json['members'] as Map<String, dynamic>?)?['full_name'] as String? ??
+          '',
       planName: json['plan_name'] as String? ?? '',
       targetAmount: (json['target_amount'] as num).toDouble(),
       currentAmount: (json['current_amount'] as num).toDouble(),

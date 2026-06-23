@@ -118,9 +118,9 @@ class UpiPaymentRequest {
     );
   }
 
-  bool get isPending => status == 'pending';
-  bool get isConfirmed => status == 'confirmed';
-  bool get isRejected => status == 'rejected';
+  bool get isPending => status.trim().toLowerCase() == 'pending';
+  bool get isConfirmed => status.trim().toLowerCase() == 'confirmed';
+  bool get isRejected => status.trim().toLowerCase() == 'rejected';
   bool get isLoanPayment => loanId != null;
   bool get isSavingsPayment => savingsPlanId != null;
 

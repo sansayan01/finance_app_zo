@@ -39,6 +39,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
   final Map<String, String> _loanNumbers = {};
   final Map<String, String> _savingsPlanNames = {};
   final Map<String, DateTime> _emiDates = {};
+  final Map<String, Map<String, dynamic>> _savingsPlanDetails = {};
 
   late AnimationController _filterAnimController;
 
@@ -138,20 +139,26 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
 
     final savingsIds = requests
         .map((r) => r.savingsPlanId)
-        .where((id) => id != null && id.isNotEmpty && !_savingsPlanNames.containsKey(id))
+        .where((id) => id != null && id.isNotEmpty && (!_savingsPlanNames.containsKey(id) || !_savingsPlanDetails.containsKey(id)))
         .toSet()
         .toList();
     if (savingsIds.isNotEmpty) {
       try {
         final plans = await client
             .from('savings_plans')
-            .select('id, plan_name')
+            .select('id, plan_name, next_due_date, collection_type')
             .inFilter('id', savingsIds);
         for (final p in (plans as List)) {
           final id = p['id']?.toString() ?? '';
           final name = p['plan_name']?.toString();
-          if (id.isNotEmpty && name != null && name.isNotEmpty) {
-            _savingsPlanNames[id] = name;
+          if (id.isNotEmpty) {
+            if (name != null && name.isNotEmpty) {
+              _savingsPlanNames[id] = name;
+            }
+            _savingsPlanDetails[id] = {
+              'next_due_date': p['next_due_date']?.toString(),
+              'collection_type': p['collection_type']?.toString() ?? 'monthly',
+            };
           }
         }
       } catch (_) {}
@@ -221,7 +228,10 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
 
     // Tab filter (client-side)
     if (_filter.isNotEmpty) {
-      result = result.where((r) => r.status == _filter).toList();
+      result = result
+          .where((r) =>
+              r.status.trim().toLowerCase() == _filter.trim().toLowerCase())
+          .toList();
     }
 
     // Search filter
@@ -425,6 +435,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
                                     memberNames: _memberNames,
                                     profileIds: _profileIds,
                                     emiDates: _emiDates,
+                                    savingsPlanDetails: _savingsPlanDetails,
                                     isProcessing: _isProcessing,
                                     onToggleAll: (ids) {
                                       HapticFeedback.selectionClick();
@@ -484,9 +495,15 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
 
   Map<String, int> _computeCounts(List<UpiPaymentRequest> all) {
     return {
-      'pending': all.where((r) => r.status == 'pending').length,
-      'confirmed': all.where((r) => r.status == 'confirmed').length,
-      'rejected': all.where((r) => r.status == 'rejected').length,
+      'pending': all
+          .where((r) => r.status.trim().toLowerCase() == 'pending')
+          .length,
+      'confirmed': all
+          .where((r) => r.status.trim().toLowerCase() == 'confirmed')
+          .length,
+      'rejected': all
+          .where((r) => r.status.trim().toLowerCase() == 'rejected')
+          .length,
       'all': all.length,
     };
   }
@@ -1321,6 +1338,7 @@ class _PremiumBatchCard extends StatelessWidget {
   final Map<String, String> memberNames;
   final Map<String, String> profileIds;
   final Map<String, DateTime> emiDates;
+  final Map<String, Map<String, dynamic>> savingsPlanDetails;
   final bool isProcessing;
   final ValueChanged<List<String>> onToggleAll;
   final ValueChanged<String> onToggleSingle;
@@ -1337,6 +1355,7 @@ class _PremiumBatchCard extends StatelessWidget {
     required this.memberNames,
     required this.profileIds,
     required this.emiDates,
+    required this.savingsPlanDetails,
     required this.isProcessing,
     required this.onToggleAll,
     required this.onToggleSingle,
@@ -1635,7 +1654,23 @@ class _PremiumBatchCard extends StatelessWidget {
       final d = emiDates['emi:$emiId']!;
       return _formatDueDate(d);
     }
-    // 3. Fallback: show number when nothing resolved.
+    // 3. Legacy savings rows: dynamically estimate the due date using the batch index
+    if (req.isSavingsPayment && req.savingsPlanId != null) {
+      final details = savingsPlanDetails[req.savingsPlanId];
+      if (details != null && details['next_due_date'] != null) {
+        final nextDue = DateTime.tryParse(details['next_due_date']!);
+        if (nextDue != null) {
+          final freq = details['collection_type'] ?? 'monthly';
+          // Since the batch is sorted by createdAt DESC, the newest request is at index 0,
+          // and the oldest is at batch.length - 1. We assume the oldest matches next_due_date,
+          // and subsequent requests advance the date.
+          final offset = (batch.length - 1) - itemIndex;
+          final estimatedDate = _advanceDate(nextDue, offset, freq);
+          return _formatDueDate(estimatedDate);
+        }
+      }
+    }
+    // 4. Fallback: show number when nothing resolved.
     return req.isLoanPayment
         ? 'EMI #${itemIndex + 1}'
         : 'Installment #${itemIndex + 1}';
@@ -1647,6 +1682,29 @@ class _PremiumBatchCard extends StatelessWidget {
       return 'Due today';
     }
     return 'Due ${DateFormat('dd MMM').format(d)}';
+  }
+
+  DateTime _advanceDate(DateTime base, int offset, String frequency) {
+    if (offset <= 0) return base;
+    switch (frequency) {
+      case 'daily':
+        return base.add(Duration(days: offset));
+      case 'weekly':
+        return base.add(Duration(days: offset * 7));
+      case 'yearly':
+        return DateTime(base.year + offset, base.month, base.day);
+      case 'monthly':
+      default:
+        int newMonth = base.month + offset;
+        int newYear = base.year + (newMonth - 1) ~/ 12;
+        newMonth = (newMonth - 1) % 12 + 1;
+        int newDay = base.day;
+        int daysInNewMonth = DateTime(newYear, newMonth + 1, 0).day;
+        if (newDay > daysInNewMonth) {
+          newDay = daysInNewMonth;
+        }
+        return DateTime(newYear, newMonth, newDay);
+    }
   }
 
   Widget _buildInstallmentRow(

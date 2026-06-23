@@ -245,12 +245,12 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               _buildSectionHeader('EMI Breakdown', theme),
                               const SizedBox(height: 16),
                               ClipRect(
-                                child: _buildEMISummaryHero(scheduleAsync, theme),
+                                child: _buildEMISummaryHero(scheduleAsync, loan, theme),
                               ),
                               const SizedBox(height: 24),
                               ClipRect(
                                 child: _buildPrincipalInterestBreakdown(
-                                    scheduleAsync, theme),
+                                    scheduleAsync, loan, theme),
                               ),
                               const SizedBox(height: 24),
                               _buildEMIList(scheduleAsync, theme, loan),
@@ -1643,7 +1643,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   // ─── EMI Summary Hero ───────────────────────────────────────────
   Widget _buildEMISummaryHero(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
+      AsyncValue<List<EMIScheduleModel>> scheduleAsync,
+      LoanModel loan,
+      ThemeData theme) {
     return scheduleAsync.when(
       data: (schedule) {
         if (schedule.isEmpty) {
@@ -1673,8 +1675,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final totalPaid = schedule
             .where((e) => e.status == EMIStatus.paid)
             .fold<double>(0, (s, e) => s + e.emiAmount);
-        final totalAmount =
-            schedule.fold<double>(0, (s, e) => s + e.emiAmount);
+        // Use loan-level total instead of summing schedule emiAmounts
+        final totalAmount = loan.totalRepayable;
         final progress = totalAmount > 0 ? totalPaid / totalAmount : 0.0;
         final isDark = theme.brightness == Brightness.dark;
 
@@ -1820,15 +1822,17 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   // ─── Principal vs Interest Breakdown ────────────────────────────
   Widget _buildPrincipalInterestBreakdown(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
+      AsyncValue<List<EMIScheduleModel>> scheduleAsync,
+      LoanModel loan,
+      ThemeData theme) {
     return scheduleAsync.when(
       data: (schedule) {
         if (schedule.isEmpty) return const SizedBox.shrink();
 
-        final totalPrincipal =
-            schedule.fold<double>(0, (s, e) => s + e.principal);
-        final totalInterest =
-            schedule.fold<double>(0, (s, e) => s + e.interest);
+        // Use loan-level values (authoritative) instead of summing
+        // potentially corrupted per-EMI schedule values.
+        final totalPrincipal = loan.amount;
+        final totalInterest = loan.totalInterest;
         final total = totalPrincipal + totalInterest;
         final principalPct = total > 0 ? totalPrincipal / total : 0.5;
 

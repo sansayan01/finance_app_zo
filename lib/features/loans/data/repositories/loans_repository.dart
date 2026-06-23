@@ -87,7 +87,7 @@ class LoansRepository {
           activeLoans++;
           totalOutstanding += outstanding;
           totalDisbursed += amount;
-        } else if (_toSnake(LoanStatus.defaultStatus.name) == status) {
+        } else if (status == 'defaulted') {
           defaultLoans++;
           overdueAmount += outstanding;
           totalOutstanding += outstanding;

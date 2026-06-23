@@ -632,13 +632,18 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
     final client = ref.read(supabaseClientProvider);
     final savingsRepo = SavingsRepository(client, user.orgId!);
-    final skippedCount =
-        await savingsRepo.detectAndFreezeSkippedInstallments(saving.id);
+    final skippedCount = await savingsRepo.detectAndFreezeSkippedInstallments(
+      saving.id,
+      force: true,
+    );
 
     if (!mounted) return;
     if (skippedCount > 0) {
       ref.invalidate(savingDetailProvider(saving.id));
+      ref.invalidate(savingsScheduleProvider(saving.id));
       ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(memberSavingsProvider(saving.memberId));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

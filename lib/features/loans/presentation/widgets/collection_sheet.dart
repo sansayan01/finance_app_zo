@@ -14,7 +14,8 @@ import '../../../../core/providers/branding_provider.dart';
 import '../../../../core/providers/sms_provider.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../savings/data/models/savings_installment_model.dart';
-import '../../../savings/data/providers/savings_providers.dart' show allSavingsProvider;
+import '../../../savings/data/providers/savings_providers.dart'
+    show allSavingsProvider, savingDetailProvider, savingsScheduleProvider, savingsSummaryProvider, memberSavingsProvider;
 import '../../../staff/data/providers/staff_providers.dart' show staffProfileProvider;
 import '../../data/models/emi_schedule_model.dart';
 import '../../data/models/loan_model.dart';
@@ -630,11 +631,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       debugPrint('SMS savings dispatch failed: $e');
     }
 
-    // 4. Date freeze — detect and freeze skipped installments if enabled
-    if (plan.freezeEnabled) {
-      try {
-        final orgId = profile.orgId;
-        if (orgId == null) return;
+    // 4. Date freeze — detect and freeze skipped installments if enabled in DB
+    try {
+      final orgId = profile.orgId;
+      if (orgId != null) {
         final savingsRepo = SavingsRepository(client, orgId);
         final frozenCount =
             await savingsRepo.detectAndFreezeSkippedInstallments(plan.id);
@@ -650,9 +650,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             ),
           );
         }
-      } catch (e) {
-        debugPrint('Savings date freeze detection failed: $e');
       }
+    } catch (e) {
+      debugPrint('Savings date freeze detection failed: $e');
     }
 
     // 5. Activity log
@@ -677,7 +677,11 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
     // 6. Invalidate savings providers
     try {
+      ref.invalidate(savingDetailProvider(plan.id));
+      ref.invalidate(savingsScheduleProvider(plan.id));
       ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(memberSavingsProvider(plan.memberId));
       ref.invalidate(dashboardTransactionsProvider);
     } catch (_) {}
   }
@@ -1185,7 +1189,10 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     if (orgId == null) return;
 
     final savingsRepo = SavingsRepository(ref.read(supabaseClientProvider), orgId);
-    final frozenCount = await savingsRepo.detectAndFreezeSkippedInstallments(widget.savingsPlan!.id);
+    final frozenCount = await savingsRepo.detectAndFreezeSkippedInstallments(
+      widget.savingsPlan!.id,
+      force: true,
+    );
 
     if (frozenCount > 0) {
       // Refresh schedule from DB
@@ -1211,7 +1218,11 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         });
       }
 
+      ref.invalidate(savingDetailProvider(widget.savingsPlan!.id));
+      ref.invalidate(savingsScheduleProvider(widget.savingsPlan!.id));
       ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(memberSavingsProvider(widget.savingsPlan!.memberId));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

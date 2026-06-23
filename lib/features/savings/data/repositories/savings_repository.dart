@@ -853,7 +853,7 @@ class SavingsRepository {
   /// Detects installments that were skipped between the first and last paid
   /// installment, marks them as frozen, and extends the plan tenure.
   /// Returns the number of newly frozen installments.
-  Future<int> detectAndFreezeSkippedInstallments(String planId) async {
+  Future<int> detectAndFreezeSkippedInstallments(String planId, {bool force = false}) async {
     try {
       final plan = await _client
           .from('savings_plans')
@@ -863,6 +863,7 @@ class SavingsRepository {
       if (plan == null) return 0;
 
       final planModel = SavingsModel.fromJson(plan);
+      if (!planModel.freezeEnabled && !force) return 0;
 
       // Fetch paid dates
       final paidDates = await _client
@@ -952,7 +953,7 @@ class SavingsRepository {
 
   /// Manually freeze all currently-skipped installments for a savings plan.
   Future<int> manualFreezeSkippedInstallments(String planId) async {
-    return detectAndFreezeSkippedInstallments(planId);
+    return detectAndFreezeSkippedInstallments(planId, force: true);
   }
 
   /// Freeze a single specific savings installment by its date key (e.g. '2026-03-15').

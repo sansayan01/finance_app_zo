@@ -1,6 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:io';
-import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -188,57 +188,54 @@ class _UsersPageState extends ConsumerState<UsersPage>
             SafeArea(
               child: Column(
                 children: [
-                _buildAppBar(theme, isDark),
-                if (!_selectionMode) _buildHero(theme),
-                if (!_selectionMode) const SizedBox(height: 18),
-                if (!_selectionMode) const _StatsRail(),
-                if (!_selectionMode) const SizedBox(height: 18),
-                _SmartSearchBar(
-                  controller: _searchCtrl,
-                  hint: _searchHint(_currentTab),
-                  hasActiveFilters: _hasActiveFilters(_currentTab),
-                  onChanged: (v) {
-                    ref
-                        .read(userHubQueryProvider(_currentTab).notifier)
-                        .setSearch(v);
-                    ref
-                        .read(userHubPageProvider(_currentTab).notifier)
-                        .loadFirstPage();
-                  },
-                  onClear: () {
-                    _searchCtrl.clear();
-                    ref
-                        .read(userHubQueryProvider(_currentTab).notifier)
-                        .setSearch('');
-                    ref
-                        .read(userHubPageProvider(_currentTab).notifier)
-                        .loadFirstPage();
-                  },
-                  onTune: _openFilterSheet,
-                ),
-                _ActiveFiltersStrip(tab: _currentTab),
-                const SizedBox(height: 14),
-                _SegmentedTabs(controller: _tabController),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    physics: _selectionMode
-                        ? const NeverScrollableScrollPhysics()
-                        : const BouncingScrollPhysics(),
-                    children: [
-                      _TeamTabView(scroll: _teamScroll),
-                      _CustomersTabView(scroll: _customersScroll),
-                      const _InvitesTabView(),
-                      _SuspendedTabView(scroll: _suspendedScroll),
-                    ],
+                  _buildAppBar(theme, isDark),
+                  if (!_selectionMode) const SizedBox(height: 12),
+                  _SmartSearchBar(
+                    controller: _searchCtrl,
+                    hint: _searchHint(_currentTab),
+                    hasActiveFilters: _hasActiveFilters(_currentTab),
+                    onChanged: (v) {
+                      ref
+                          .read(userHubQueryProvider(_currentTab).notifier)
+                          .setSearch(v);
+                      ref
+                          .read(userHubPageProvider(_currentTab).notifier)
+                          .loadFirstPage();
+                    },
+                    onClear: () {
+                      _searchCtrl.clear();
+                      ref
+                          .read(userHubQueryProvider(_currentTab).notifier)
+                          .setSearch('');
+                      ref
+                          .read(userHubPageProvider(_currentTab).notifier)
+                          .loadFirstPage();
+                    },
+                    onTune: _openFilterSheet,
                   ),
-                ),
-              ],
+                  _ActiveFiltersStrip(tab: _currentTab),
+                  const SizedBox(height: 10),
+                  _SegmentedTabs(controller: _tabController),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      physics: _selectionMode
+                          ? const NeverScrollableScrollPhysics()
+                          : const BouncingScrollPhysics(),
+                      children: [
+                        _TeamTabView(scroll: _teamScroll),
+                        _CustomersTabView(scroll: _customersScroll),
+                        const _InvitesTabView(),
+                        _SuspendedTabView(scroll: _suspendedScroll),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (_selectionMode) _buildBulkDock(theme, primary),
-        ],
+            if (_selectionMode) _buildBulkDock(theme, primary),
+          ],
         ),
       ),
     );
@@ -250,112 +247,143 @@ class _UsersPageState extends ConsumerState<UsersPage>
 
   Widget _buildAppBar(ThemeData theme, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 6, 12, 0),
-      child: Row(
-        children: [
-          if (_selectionMode)
-            IconButton(
-              icon: const Icon(Icons.close_rounded),
-              tooltip: 'Cancel selection',
-              onPressed: () => setState(() {
-                _selectionMode = false;
-                _selected.clear();
-              }),
-            )
-          else
-            const SizedBox(width: 8),
-          Expanded(
-            child: _selectionMode
-                ? Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${_selected.length}',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w900,
-                          ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 2),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+              spreadRadius: -6,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          Colors.white.withValues(alpha: 0.06),
+                          Colors.white.withValues(alpha: 0.02),
+                        ]
+                      : [
+                          Colors.white.withValues(alpha: 0.85),
+                          Colors.white.withValues(alpha: 0.55),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.05),
+                  width: 1.0,
+                ),
+              ),
+              child: Row(
+                children: [
+                  if (_selectionMode) ...[
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      tooltip: 'Cancel selection',
+                      onPressed: () => setState(() {
+                        _selectionMode = false;
+                        _selected.clear();
+                      }),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                          width: 1,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text('selected',
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800)),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          ),
-          if (!_selectionMode)
-            _GlassIconButton(
-              icon: Icons.tune_rounded,
-              tooltip: 'Filter & sort',
-              highlight: _hasActiveFilters(_currentTab),
-              onTap: _openFilterSheet,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHero(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'COMMAND CENTER',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.2,
-                    fontSize: 10,
-                    color: theme.colorScheme.primary,
-                  ),
-                ).animate().fadeIn(duration: 350.ms).slideX(begin: -0.1, end: 0),
-                const SizedBox(height: 4),
-                ShaderMask(
-                  shaderCallback: (rect) => LinearGradient(
-                    colors: [
-                      theme.colorScheme.onSurface,
-                      theme.colorScheme.primary,
-                    ],
-                  ).createShader(rect),
-                  child: Text(
-                    'User Hub',
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.4,
-                      fontSize: 32,
-                      color: Colors.white,
+                      child: Text(
+                        '${_selected.length}',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
-                  ),
-                ).animate().fadeIn(delay: 80.ms).slideX(begin: -0.05, end: 0),
-                const SizedBox(height: 4),
-                Text(
-                  'Your entire workforce, in one place',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12.5,
-                    color: theme.textTheme.bodySmall?.color
-                        ?.withValues(alpha: 0.7),
-                  ),
-                ).animate().fadeIn(delay: 160.ms),
-              ],
+                    const SizedBox(width: 10),
+                    Text('selected',
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+                    const Spacer(),
+                  ] else ...[
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              ShaderMask(
+                                shaderCallback: (rect) => LinearGradient(
+                                  colors: isDark
+                                      ? [
+                                          const Color(0xFF818CF8),
+                                          const Color(0xFFA855F7),
+                                        ]
+                                      : [
+                                          const Color(0xFF4F46E5),
+                                          const Color(0xFF7C3AED),
+                                        ],
+                                ).createShader(rect),
+                                child: Text(
+                                  'User Hub',
+                                  style: theme.textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -1.0,
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ).animate().fadeIn(duration: 350.ms).slideX(begin: -0.05, end: 0),
+                              const SizedBox(width: 10),
+                              const _TotalUsersChip(),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Your entire workforce, in one place',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.5)
+                                  : theme.textTheme.bodySmall?.color
+                                      ?.withValues(alpha: 0.65),
+                            ),
+                          ).animate().fadeIn(delay: 100.ms),
+                        ],
+                      ),
+                    ),
+                    _GlassIconButton(
+                      icon: Icons.tune_rounded,
+                      tooltip: 'Filter & sort',
+                      highlight: _hasActiveFilters(_currentTab),
+                      onTap: _openFilterSheet,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
-          const _TotalUsersChip(),
-        ],
+        ),
       ),
     );
   }
@@ -804,6 +832,39 @@ class _UsersPageState extends ConsumerState<UsersPage>
 // HERO PIECES
 // =============================================================================
 
+class _LiveIndicator extends StatelessWidget {
+  const _LiveIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 6,
+      height: 6,
+      decoration: const BoxDecoration(
+        color: AppColors.success,
+        shape: BoxShape.circle,
+      ),
+    ).animate(onPlay: (controller) => controller.repeat()).custom(
+          duration: 1.5.seconds,
+          builder: (context, value, child) {
+            return Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.success.withValues(alpha: 1 - value),
+                    blurRadius: value * 8,
+                    spreadRadius: value * 4,
+                  ),
+                ],
+              ),
+              child: child,
+            );
+          },
+        );
+  }
+}
+
 class _TotalUsersChip extends ConsumerWidget {
   const _TotalUsersChip();
 
@@ -812,49 +873,55 @@ class _TotalUsersChip extends ConsumerWidget {
     final theme = Theme.of(context);
     final stats = ref.watch(userStatsProvider);
     final total = stats.maybeWhen(data: (s) => s['total'] ?? 0, orElse: () => 0);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary.withValues(alpha: 0.16),
-            theme.colorScheme.secondary.withValues(alpha: 0.10),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(14),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : theme.colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.18),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : theme.colorScheme.primary.withValues(alpha: 0.15),
+          width: 1,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.groups_2_rounded,
-              size: 16, color: theme.colorScheme.primary),
+          const _LiveIndicator(),
           const SizedBox(width: 6),
           _CountUp(
             target: total,
-            duration: const Duration(milliseconds: 800),
+            duration: const Duration(milliseconds: 1000),
             builder: (v) => Text(
               v.toString(),
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w900,
-                color: theme.colorScheme.primary,
+                color: isDark ? Colors.white : theme.colorScheme.primary,
+                fontSize: 11.5,
+                letterSpacing: -0.2,
               ),
             ),
           ),
           const SizedBox(width: 4),
           Text(
-            'total',
+            'ACTIVE',
             style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.primary.withValues(alpha: 0.75),
-              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              color: isDark 
+                  ? Colors.white.withValues(alpha: 0.6) 
+                  : theme.colorScheme.primary.withValues(alpha: 0.7),
+              fontSize: 8,
+              letterSpacing: 0.6,
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 220.ms).scale(
+    ).animate().fadeIn(delay: 150.ms).scale(
         begin: const Offset(0.85, 0.85),
         end: const Offset(1, 1),
         curve: Curves.easeOutBack);
@@ -862,289 +929,95 @@ class _TotalUsersChip extends ConsumerWidget {
 }
 
 // =============================================================================
-// STATS RAIL
+// PHONE CHIP + ACTIONS
 // =============================================================================
 
-class _StatsRail extends ConsumerWidget {
-  const _StatsRail();
+class _PhoneChip extends StatelessWidget {
+  final String phone;
+  const _PhoneChip({required this.phone});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
-    final stats = ref.watch(userStatsProvider);
-
-    return SizedBox(
-      height: 110,
-      child: stats.when(
-        data: (s) {
-          final tiles = <_StatTileData>[
-            _StatTileData(
-              label: 'Total',
-              value: s['total'] ?? 0,
-              icon: Icons.people_alt_rounded,
-              color: primary,
-              gradient: AppColors.premiumGradient,
-              onTap: null,
-            ),
-            _StatTileData(
-              label: 'Admins',
-              value: s['admins'] ?? 0,
-              icon: Icons.shield_rounded,
-              color: isDark ? AppColors.accentDark : AppColors.accent,
-              onTap: null,
-            ),
-            _StatTileData(
-              label: 'Managers',
-              value: s['managers'] ?? 0,
-              icon: Icons.manage_accounts_rounded,
-              color: theme.colorScheme.secondary,
-              onTap: null,
-            ),
-            _StatTileData(
-              label: 'Staff',
-              value: s['staff'] ?? 0,
-              icon: Icons.support_agent_rounded,
-              color: isDark ? AppColors.warningDark : AppColors.orange,
-              onTap: null,
-            ),
-            _StatTileData(
-              label: 'Customers',
-              value: s['members'] ?? 0,
-              icon: Icons.groups_rounded,
-              color: isDark ? AppColors.successDark : AppColors.success,
-              onTap: null,
-            ),
-            _StatTileData(
-              label: 'Suspended',
-              value: s['suspended'] ?? 0,
-              icon: Icons.block_rounded,
-              color: AppColors.error,
-              onTap: null,
-            ),
-          ];
-          return ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            physics: const BouncingScrollPhysics(),
-            itemBuilder: (ctx, i) => _StatTile(data: tiles[i], index: i),
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemCount: tiles.length,
-          );
-        },
-        loading: () => ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          itemBuilder: (_, __) => const _StatTileSkeleton(),
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemCount: 4,
-        ),
-        error: (_, __) => const SizedBox.shrink(),
-      ),
-    );
-  }
-}
-
-class _StatTileData {
-  final String label;
-  final int value;
-  final IconData icon;
-  final Color color;
-  final List<Color>? gradient;
-  final VoidCallback? onTap;
-  _StatTileData({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    this.gradient,
-    this.onTap,
-  });
-}
-
-class _StatTile extends StatelessWidget {
-  final _StatTileData data;
-  final int index;
-  const _StatTile({required this.data, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     return Container(
-      width: 138,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: data.gradient != null
-              ? [
-                  data.gradient![0].withValues(alpha: isDark ? 0.18 : 0.10),
-                  data.gradient![1].withValues(alpha: isDark ? 0.10 : 0.06),
-                ]
-              : [
-                  data.color.withValues(alpha: isDark ? 0.15 : 0.10),
-                  data.color.withValues(alpha: isDark ? 0.06 : 0.04),
-                ],
+        color: primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: primary.withValues(alpha: 0.12),
+          width: 0.8,
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: data.color.withValues(alpha: 0.18)),
-        boxShadow: [
-          BoxShadow(
-            color: data.color.withValues(alpha: isDark ? 0.10 : 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-            spreadRadius: -6,
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: data.color.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(data.icon, color: data.color, size: 16),
-              ),
-              const Spacer(),
-              _CountUp(
-                target: data.value,
-                duration: Duration(milliseconds: 700 + index * 80),
-                builder: (v) => Text(
-                  v.toString(),
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: data.color,
-                    letterSpacing: -1,
-                    fontSize: 22,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
+          Icon(Icons.phone_rounded, size: 9, color: primary),
+          const SizedBox(width: 3),
           Text(
-            data.label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.4,
-              color:
-                  theme.textTheme.bodySmall?.color?.withValues(alpha: 0.85),
+            phone,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
             ),
           ),
-          const Spacer(),
-          SizedBox(
-            height: 18,
-            child: _MiniSparkline(
-              color: data.color,
-              seed: data.label.codeUnitAt(0) + data.value,
-            ),
+          const SizedBox(width: 5),
+          _TinyPhoneAction(
+            icon: Icons.call_rounded,
+            tooltip: 'Call',
+            onTap: () => _launch('tel:$phone'),
+          ),
+          const SizedBox(width: 3),
+          _TinyPhoneAction(
+            icon: Icons.chat_bubble_rounded,
+            tooltip: 'WhatsApp',
+            onTap: () => _launch('https://wa.me/$phone'),
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(delay: (60 * index).ms, duration: 350.ms)
-        .slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic);
+    );
+  }
+
+  Future<void> _launch(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 }
 
-class _StatTileSkeleton extends StatelessWidget {
-  const _StatTileSkeleton();
+class _TinyPhoneAction extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _TinyPhoneAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final base = theme.colorScheme.surfaceContainerHighest
-        .withValues(alpha: 0.4);
-    return Container(
-      width: 138,
-      decoration: BoxDecoration(
-        color: base,
-        borderRadius: BorderRadius.circular(20),
+    final color = theme.colorScheme.primary;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () {
+          HapticService.light();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+          child: Icon(icon, size: 10, color: color),
+        ),
       ),
     );
   }
 }
 
-class _MiniSparkline extends StatelessWidget {
-  final Color color;
-  final int seed;
-  const _MiniSparkline({required this.color, required this.seed});
-
-  @override
-  Widget build(BuildContext context) {
-    final rng = math.Random(seed);
-    final pts = List.generate(12, (_) => 0.3 + rng.nextDouble() * 0.7);
-    return CustomPaint(
-      painter: _SparklinePainter(points: pts, color: color),
-      size: Size.infinite,
-    );
-  }
-}
-
-class _SparklinePainter extends CustomPainter {
-  final List<double> points;
-  final Color color;
-  _SparklinePainter({required this.points, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-    final dx = size.width / (points.length - 1);
-    final path = Path();
-    final fill = Path();
-    for (int i = 0; i < points.length; i++) {
-      final x = i * dx;
-      final y = size.height - points[i] * size.height;
-      if (i == 0) {
-        path.moveTo(x, y);
-        fill.moveTo(x, size.height);
-        fill.lineTo(x, y);
-      } else {
-        final prevX = (i - 1) * dx;
-        final prevY = size.height - points[i - 1] * size.height;
-        final cpx = (prevX + x) / 2;
-        path.cubicTo(cpx, prevY, cpx, y, x, y);
-        fill.cubicTo(cpx, prevY, cpx, y, x, y);
-      }
-    }
-    fill
-      ..lineTo(size.width, size.height)
-      ..close();
-
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          color.withValues(alpha: 0.30),
-          color.withValues(alpha: 0.0),
-        ],
-      ).createShader(Offset.zero & size);
-    canvas.drawPath(fill, fillPaint);
-
-    final strokePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round
-      ..color = color.withValues(alpha: 0.95);
-    canvas.drawPath(path, strokePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparklinePainter oldDelegate) =>
-      oldDelegate.points != points || oldDelegate.color != color;
-}
 
 // =============================================================================
 // SEARCH BAR + ACTIVE FILTERS
@@ -1175,13 +1048,13 @@ class _SmartSearchBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
-        height: 52,
+        height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
           color: isDark
               ? Colors.white.withValues(alpha: 0.04)
               : Colors.white.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.06)
@@ -1189,10 +1062,10 @@ class _SmartSearchBar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.04),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-              spreadRadius: -8,
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+              spreadRadius: -6,
             ),
           ],
         ),
@@ -1200,32 +1073,31 @@ class _SmartSearchBar extends StatelessWidget {
           children: [
             const SizedBox(width: 8),
             Icon(Icons.search_rounded,
-                size: 20,
-                color: theme.textTheme.bodySmall?.color
-                    ?.withValues(alpha: 0.7)),
+                size: 18,
+                color: primary.withValues(alpha: 0.8)),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
                 controller: controller,
                 onChanged: onChanged,
                 style: theme.textTheme.bodyMedium
-                    ?.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+                    ?.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 13.5,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w500,
                     color: theme.textTheme.bodySmall?.color
                         ?.withValues(alpha: 0.6),
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),
             if (controller.text.isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.cancel_rounded, size: 18),
+                icon: const Icon(Icons.cancel_rounded, size: 16),
                 color:
                     theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                 onPressed: onClear,
@@ -1254,10 +1126,10 @@ class _TuneChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        width: 38,
-        height: 38,
+        width: 32,
+        height: 32,
         decoration: BoxDecoration(
           gradient: isActive
               ? LinearGradient(
@@ -1268,24 +1140,24 @@ class _TuneChip extends StatelessWidget {
                 )
               : null,
           color: isActive ? null : primary.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Stack(
           children: [
             Center(
               child: Icon(
                 Icons.tune_rounded,
-                size: 18,
+                size: 16,
                 color: isActive ? Colors.white : primary,
               ),
             ),
             if (isActive)
               Positioned(
-                top: 6,
-                right: 6,
+                top: 4,
+                right: 4,
                 child: Container(
-                  width: 6,
-                  height: 6,
+                  width: 5,
+                  height: 5,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -1462,22 +1334,22 @@ class _SegmentedTabs extends ConsumerWidget {
         };
 
     const tabs = [
-      ('Team', Icons.shield_outlined, UserHubTab.team),
-      ('Customers', Icons.people_outline_rounded, UserHubTab.customers),
-      ('Invites', Icons.mail_outline_rounded, UserHubTab.invites),
-      ('Suspended', Icons.block_outlined, UserHubTab.suspended),
+      ('Team', Icons.shield_outlined, Icons.shield_rounded, UserHubTab.team),
+      ('Customers', Icons.people_outline_rounded, Icons.people_rounded, UserHubTab.customers),
+      ('Invites', Icons.mail_outline_rounded, Icons.mail_rounded, UserHubTab.invites),
+      ('Suspended', Icons.block_outlined, Icons.block_rounded, UserHubTab.suspended),
     ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
-        height: 46,
-        padding: const EdgeInsets.all(4),
+        height: 38,
+        padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
           color: isDark
               ? Colors.white.withValues(alpha: 0.04)
               : Colors.black.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.04)
@@ -1507,16 +1379,16 @@ class _SegmentedTabs extends ConsumerWidget {
                           gradient: LinearGradient(
                             colors: [
                               primary,
-                              primary.withValues(alpha: 0.85),
+                              theme.colorScheme.secondary,
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: primary.withValues(alpha: 0.30),
-                              blurRadius: 12,
+                              color: primary.withValues(alpha: 0.25),
+                              blurRadius: 10,
                               offset: const Offset(0, 4),
-                              spreadRadius: -2,
+                              spreadRadius: -1,
                             ),
                           ],
                         ),
@@ -1528,9 +1400,9 @@ class _SegmentedTabs extends ConsumerWidget {
                           Expanded(
                             child: _SegmentTab(
                               label: tabs[i].$1,
-                              icon: tabs[i].$2,
+                              icon: controller.index == i ? tabs[i].$3 : tabs[i].$2,
                               selected: controller.index == i,
-                              count: counts(tabs[i].$3),
+                              count: counts(tabs[i].$4),
                               onTap: () {
                                 HapticService.selection();
                                 controller.animateTo(i);
@@ -1570,50 +1442,39 @@ class _SegmentTab extends StatelessWidget {
     final color = selected
         ? Colors.white
         : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.65);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.2,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (count != null && count! > 0) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Colors.white.withValues(alpha: 0.25)
-                      : theme.colorScheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  count! > 99 ? '99+' : count.toString(),
-                  style: TextStyle(
-                    color: selected ? Colors.white : theme.colorScheme.primary,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w900,
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: color),
+              if (count != null && count! > 0) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? Colors.white.withValues(alpha: 0.25)
+                        : theme.colorScheme.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    count! > 99 ? '99+' : count.toString(),
+                    style: TextStyle(
+                      color: selected ? Colors.white : theme.colorScheme.primary,
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1724,9 +1585,22 @@ class _InvitesTabView extends ConsumerWidget {
             itemCount: filtered.length,
             itemBuilder: (ctx, i) {
               final inv = filtered[i];
+              final delay = Duration(milliseconds: (i < 6 ? i : 6) * 60);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: _InviteRow(invitation: inv),
+                child: _InviteRow(invitation: inv)
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: delay)
+                    .slideY(
+                        begin: 0.12,
+                        end: 0,
+                        duration: 400.ms,
+                        curve: Curves.easeOutCubic)
+                    .scaleXY(
+                        begin: 0.95,
+                        end: 1.0,
+                        duration: 400.ms,
+                        curve: Curves.easeOutCubic),
               );
             },
           ),
@@ -1809,9 +1683,22 @@ class _PaginatedList extends StatelessWidget {
               ),
             );
           }
+          final delay = Duration(milliseconds: (i < 6 ? i : 6) * 60);
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: buildItem(state.items[i]),
+            child: buildItem(state.items[i])
+                .animate()
+                .fadeIn(duration: 400.ms, delay: delay)
+                .slideY(
+                    begin: 0.12,
+                    end: 0,
+                    duration: 400.ms,
+                    curve: Curves.easeOutCubic)
+                .scaleXY(
+                    begin: 0.95,
+                    end: 1.0,
+                    duration: 400.ms,
+                    curve: Curves.easeOutCubic),
           );
         },
       ),
@@ -1866,10 +1753,18 @@ class _UserRow extends ConsumerWidget {
     final selectionMode = scope.selectionMode;
     final primary = theme.colorScheme.primary;
     final roleColor = _roleColor(profile.role);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardBgColor = isDark
+        ? theme.colorScheme.surface.withValues(alpha: 0.55)
+        : theme.colorScheme.surface.withValues(alpha: 0.80);
+    final cardBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.04);
 
     return GlassCard(
-      padding: const EdgeInsets.all(14),
-      borderColor: isSelected ? primary : null,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      backgroundColor: cardBgColor,
+      borderColor: isSelected ? primary : cardBorderColor,
       onTap: () {
         HapticService.selection();
         if (selectionMode) {
@@ -1884,90 +1779,98 @@ class _UserRow extends ConsumerWidget {
           scope.toggle(profile.id, execAdminOnly: true);
         },
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Avatar(profile: profile, color: roleColor),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              profile.fullName ?? 'Unknown',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.2,
-                                fontSize: 15,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (showStatus) _StatusChip(status: profile.status),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          _RoleChip(role: profile.role, color: roleColor),
-                          if ((profile.branchName ?? '').isNotEmpty)
-                            _BranchChip(name: profile.branchName!),
-                          if ((profile.phone ?? '').isNotEmpty)
-                            _MutedChipText(
-                              icon: Icons.phone_rounded,
-                              text: profile.phone!,
-                            ),
-                          if ((profile.memberCode ?? '').isNotEmpty)
-                            _MutedChipText(
-                              icon: Icons.badge_rounded,
-                              text: profile.memberCode!,
-                            ),
-                        ],
-                      ),
-                    ],
+            // Floating role color accent indicator capsule
+            Container(
+              width: 3.5,
+              height: 32,
+              decoration: BoxDecoration(
+                color: roleColor,
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: [
+                  BoxShadow(
+                    color: roleColor.withValues(alpha: 0.35),
+                    blurRadius: 4,
+                    spreadRadius: 0.5,
                   ),
-                ),
-                const SizedBox(width: 4),
-                if (selectionMode)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? primary
-                            : theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.4),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? primary
-                              : theme.dividerColor.withValues(alpha: 0.4),
-                          width: 1.5,
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            _Avatar(profile: profile, color: roleColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          profile.fullName ?? 'Unknown',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                            fontSize: 14.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      child: isSelected
-                          ? const Icon(Icons.check_rounded,
-                              color: Colors.white, size: 16)
-                          : null,
-                    ),
-                  )
-                else
-                  _RowActions(profile: profile),
-              ],
+                      const SizedBox(width: 6),
+                      if (showStatus) _StatusChip(status: profile.status),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Wrap(
+                    spacing: 5,
+                    runSpacing: 5,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      _RoleChip(role: profile.role, color: roleColor),
+                      if ((profile.branchName ?? '').isNotEmpty)
+                        _BranchChip(name: profile.branchName!),
+                      if ((profile.phone ?? '').isNotEmpty)
+                        _PhoneChip(phone: profile.phone!),
+                      if ((profile.memberCode ?? '').isNotEmpty)
+                        _MutedChipText(
+                          icon: Icons.badge_rounded,
+                          text: profile.memberCode!,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
+            if (selectionMode)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? primary
+                      : theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected
+                        ? primary
+                        : theme.dividerColor.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 14)
+                    : null,
+              )
+            else
+              _RowActions(profile: profile),
           ],
         ),
       ),
@@ -1987,13 +1890,13 @@ class _MutedChipText extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon,
-            size: 10.5,
+            size: 10,
             color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
-        const SizedBox(width: 3),
+        const SizedBox(width: 2.5),
         Text(
           text,
           style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 11,
+            fontSize: 10.5,
             fontWeight: FontWeight.w600,
             color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
           ),
@@ -2009,27 +1912,16 @@ class _RowActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if ((profile.phone ?? '').isNotEmpty)
-          _IconBtn(
-            icon: Icons.call_rounded,
-            tooltip: 'Call',
-            onTap: () => _launch('tel:${profile.phone!}'),
-          ),
-        if ((profile.phone ?? '').isNotEmpty)
-          _IconBtn(
-            icon: Icons.chat_bubble_rounded,
-            tooltip: 'WhatsApp',
-            onTap: () => _launch('https://wa.me/${profile.phone!}'),
-          ),
-        PopupMenuButton<String>(
-          tooltip: 'More',
-          icon: const Icon(Icons.more_vert_rounded, size: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+    return PopupMenuButton<String>(
+      tooltip: 'More',
+      icon: Icon(
+        Icons.more_vert_rounded,
+        size: 18,
+        color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
           itemBuilder: (ctx) => [
             const PopupMenuItem(
                 value: 'view',
@@ -2079,9 +1971,7 @@ class _RowActions extends ConsumerWidget {
                       title: Text('Force logout'))),
           ],
           onSelected: (v) => _handleAction(context, ref, v),
-        ),
-      ],
-    );
+        );
   }
 
   Future<void> _handleAction(
@@ -2236,11 +2126,6 @@ class _RowActions extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ));
   }
-
-  Future<void> _launch(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) await launchUrl(uri);
-  }
 }
 
 // =============================================================================
@@ -2260,12 +2145,12 @@ class _InviteRow extends ConsumerWidget {
             ? AppColors.success
             : AppColors.error;
     return GlassCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -2273,20 +2158,20 @@ class _InviteRow extends ConsumerWidget {
                   color.withValues(alpha: 0.10),
                 ],
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
-            child: Icon(Icons.mail_outline_rounded, color: color, size: 22),
+            child: Icon(Icons.mail_outline_rounded, color: color, size: 18),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(invitation.email,
                     style: theme.textTheme.bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.w800, fontSize: 14)),
-                const SizedBox(height: 4),
+                        ?.copyWith(fontWeight: FontWeight.w800, fontSize: 13)),
+                const SizedBox(height: 2),
                 Row(
                   children: [
                     Container(
@@ -2299,7 +2184,7 @@ class _InviteRow extends ConsumerWidget {
                       child: Text(
                         invitation.roleDisplay,
                         style: TextStyle(
-                          fontSize: 9.5,
+                          fontSize: 8.5,
                           fontWeight: FontWeight.w900,
                           color: color,
                           letterSpacing: 0.4,
@@ -2311,7 +2196,7 @@ class _InviteRow extends ConsumerWidget {
                       child: Text(
                         _inviteSubtitle(invitation),
                         style: theme.textTheme.bodySmall
-                            ?.copyWith(fontSize: 11.5),
+                            ?.copyWith(fontSize: 10.5),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -2322,7 +2207,7 @@ class _InviteRow extends ConsumerWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
@@ -2330,7 +2215,7 @@ class _InviteRow extends ConsumerWidget {
             child: Text(
               invitation.status.toUpperCase(),
               style: TextStyle(
-                fontSize: 9.5,
+                fontSize: 8.5,
                 fontWeight: FontWeight.w900,
                 color: color,
                 letterSpacing: 0.6,
@@ -2339,7 +2224,7 @@ class _InviteRow extends ConsumerWidget {
           ),
           if (invitation.isPending)
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded, size: 20),
+              icon: const Icon(Icons.more_vert_rounded, size: 18),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -2859,44 +2744,7 @@ class _GlassIconButton extends StatelessWidget {
   }
 }
 
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  const _IconBtn(
-      {required this.icon, required this.tooltip, required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(left: 2),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticService.selection();
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(10),
-          child: Tooltip(
-            message: tooltip,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 16, color: primary),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _Avatar extends StatelessWidget {
   final ProfileModel profile;
@@ -2912,17 +2760,26 @@ class _Avatar extends StatelessWidget {
     return Hero(
       tag: 'user_avatar_${profile.id}',
       child: Container(
-        width: 52,
-        height: 52,
-        padding: const EdgeInsets.all(2),
+        width: 42,
+        height: 42,
+        padding: const EdgeInsets.all(1.5),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              color.withValues(alpha: 0.85),
-              color.withValues(alpha: 0.35),
+              color,
+              color.withValues(alpha: 0.25),
             ],
           ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.18),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
         ),
         child: Stack(
           children: [
@@ -2937,7 +2794,7 @@ class _Avatar extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           color.withValues(alpha: 0.95),
-                          color.withValues(alpha: 0.55),
+                          color.withValues(alpha: 0.60),
                         ],
                       ),
                 image: (profile.avatarUrl != null &&
@@ -2948,8 +2805,8 @@ class _Avatar extends StatelessWidget {
                       )
                     : null,
                 border: Border.all(
-                  color: theme.scaffoldBackgroundColor,
-                  width: 2,
+                  color: theme.colorScheme.surface,
+                  width: 1.5,
                 ),
               ),
               child: (profile.avatarUrl != null &&
@@ -2964,23 +2821,24 @@ class _Avatar extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 18,
+                          fontSize: 15,
+                          letterSpacing: -0.5,
                         ),
-                ),
-              ),
+                      ),
+                    ),
             ),
             if (isSuspended)
               Positioned(
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  width: 14,
-                  height: 14,
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: AppColors.error,
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: theme.scaffoldBackgroundColor, width: 2),
+                        color: theme.colorScheme.surface, width: 1.5),
                   ),
                 ),
               )
@@ -2989,13 +2847,13 @@ class _Avatar extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  width: 12,
-                  height: 12,
+                  width: 9,
+                  height: 9,
                   decoration: BoxDecoration(
                     color: AppColors.success,
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: theme.scaffoldBackgroundColor, width: 2),
+                        color: theme.colorScheme.surface, width: 1.5),
                   ),
                 ),
               ),
@@ -3015,23 +2873,27 @@ class _RoleChip extends StatelessWidget {
   Widget build(BuildContext context) {
     if (role == null) return const SizedBox.shrink();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: 0.18),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(_roleIcon(role!), size: 10, color: color),
-          const SizedBox(width: 4),
+          Icon(_roleIcon(role!), size: 9, color: color),
+          const SizedBox(width: 3),
           Text(
             _roleLabel(role!).toUpperCase(),
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: FontWeight.w900,
               color: color,
-              letterSpacing: 0.6,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -3048,23 +2910,27 @@ class _BranchChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.secondary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: 0.15),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.location_city_rounded, size: 10, color: color),
-          const SizedBox(width: 3),
+          Icon(Icons.location_city_rounded, size: 9, color: color),
+          const SizedBox(width: 2.5),
           Text(
             name,
             style: TextStyle(
-              fontSize: 9.5,
+              fontSize: 8,
               fontWeight: FontWeight.w800,
               color: color,
-              letterSpacing: 0.4,
+              letterSpacing: 0.3,
             ),
           ),
         ],
@@ -3087,36 +2953,34 @@ class _StatusChip extends StatelessWidget {
       AccountStatus.suspended => AppColors.error,
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: 0.18),
-            color.withValues(alpha: 0.08),
-          ],
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: 0.20),
+          width: 0.8,
         ),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 5,
-            height: 5,
+            width: 4,
+            height: 4,
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           Text(
             status.label.toUpperCase(),
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: FontWeight.w900,
               color: color,
-              letterSpacing: 0.5,
+              letterSpacing: 0.4,
             ),
           ),
         ],
@@ -3300,12 +3164,25 @@ class _AuroraBackdrop extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  primary.withValues(alpha: 0.10),
+                  primary.withValues(alpha: 0.12),
                   primary.withValues(alpha: 0.0),
                 ],
               ),
             ),
-          ),
+          )
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.15, 1.15),
+                duration: 8.seconds,
+                curve: Curves.easeInOut,
+              )
+              .move(
+                begin: const Offset(0, 0),
+                end: const Offset(-20, 20),
+                duration: 8.seconds,
+                curve: Curves.easeInOut,
+              ),
         ),
         Positioned(
           bottom: -120,
@@ -3317,12 +3194,25 @@ class _AuroraBackdrop extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  secondary.withValues(alpha: 0.08),
+                  secondary.withValues(alpha: 0.10),
                   secondary.withValues(alpha: 0.0),
                 ],
               ),
             ),
-          ),
+          )
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.2, 1.2),
+                duration: 10.seconds,
+                curve: Curves.easeInOut,
+              )
+              .move(
+                begin: const Offset(0, 0),
+                end: const Offset(30, -30),
+                duration: 10.seconds,
+                curve: Curves.easeInOut,
+              ),
         ),
         Positioned(
           top: 220,
@@ -3334,12 +3224,25 @@ class _AuroraBackdrop extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AppColors.success.withValues(alpha: 0.05),
+                  AppColors.success.withValues(alpha: 0.06),
                   AppColors.success.withValues(alpha: 0.0),
                 ],
               ),
             ),
-          ),
+          )
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.1, 1.1),
+                duration: 7.seconds,
+                curve: Curves.easeInOut,
+              )
+              .move(
+                begin: const Offset(0, 0),
+                end: const Offset(15, 15),
+                duration: 7.seconds,
+                curve: Curves.easeInOut,
+              ),
         ),
       ],
     );

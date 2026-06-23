@@ -439,7 +439,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
 
     return Scaffold(
       backgroundColor: bg,
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
         backgroundColor: _isScrolled
             ? (isDark

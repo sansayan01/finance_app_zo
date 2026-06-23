@@ -941,6 +941,13 @@ class _CustomerLoanQuickPayPageState
     final emiIds = selectedEmis.map((e) => e.id).toList();
     final emiAmounts = selectedEmis.map((e) => e.emiAmount).toList();
     final emiNumbers = selectedEmis.map((e) => e.emiNumber).toList();
+    // Pass each EMI's due date so the staff confirmations page can show
+    // the actual installment date the customer was paying for instead of
+    // an EMI number.
+    final installmentDates = selectedEmis
+        .map((e) => e.dueDate)
+        .whereType<DateTime>()
+        .toList();
 
     final note = 'EMI #${emiNumbers.join(", ")} · ₹${totalAmount.toStringAsFixed(0)}';
 
@@ -951,6 +958,7 @@ class _CustomerLoanQuickPayPageState
       loanId: widget.loanId,
       emiScheduleIds: emiIds,
       emiAmounts: emiAmounts,
+      installmentDates: installmentDates,
       transactionNoteOverride: note,
     );
   }

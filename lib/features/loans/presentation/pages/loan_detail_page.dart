@@ -675,7 +675,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   Widget _buildDigitalPass(LoanModel loan, ThemeData theme) {
-    final progress = loan.totalRepayable > 0 ? ((loan.amount - loan.outstandingBalance) / loan.totalRepayable).clamp(0.0, 1.0) : 0.0;
+    final progress = loan.totalRepayable > 0 ? ((loan.totalRepayable - loan.outstandingBalance) / loan.totalRepayable).clamp(0.0, 1.0) : 0.0;
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
@@ -768,7 +768,83 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CARDHOLDER',
+                            style: TextStyle(
+                              fontFamily: 'JetBrains Mono',
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          ShaderMask(
+                            shaderCallback: (bounds) => LinearGradient(
+                              colors: isDark
+                                  ? const [
+                                      Color(0xFFE5C07B), // Champagne Gold
+                                      Color(0xFFF3E7C4), // Platinum
+                                      Color(0xFFD1A153), // Deep Gold
+                                    ]
+                                  : const [
+                                      Color(0xFF8A640F), // Bronze Gold
+                                      Color(0xFFB38F24), // Bright Gold
+                                      Color(0xFF6E4E05), // Dark Gold
+                                    ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds),
+                            child: Text(
+                              (loan.customerName ?? 'MEMBER').toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'JetBrains Mono',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFFE5C07B).withValues(alpha: 0.3)
+                                : const Color(0xFF8A640F).withValues(alpha: 0.3),
+                            width: 0.8,
+                          ),
+                          color: isDark
+                              ? const Color(0xFFE5C07B).withValues(alpha: 0.05)
+                              : const Color(0xFF8A640F).withValues(alpha: 0.05),
+                        ),
+                        child: Text(
+                          'PREMIUM',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                            color: isDark
+                                ? const Color(0xFFE5C07B)
+                                : const Color(0xFF8A640F),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(

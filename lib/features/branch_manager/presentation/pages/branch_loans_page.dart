@@ -400,8 +400,8 @@ class _BranchLoansPageState extends ConsumerState<BranchLoansPage> {
   ) {
     final customerName = loan.customerName ?? 'Unknown';
     final customerPhone = loan.customerPhone ?? '';
-    final progress = loan.amount > 0
-        ? (1 - (loan.outstandingBalance / loan.amount)).clamp(0.0, 1.0)
+    final progress = loan.totalRepayable > 0
+        ? (1 - (loan.outstandingBalance / loan.totalRepayable)).clamp(0.0, 1.0)
         : 0.0;
 
     StatusType statusType;

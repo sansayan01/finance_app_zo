@@ -38,6 +38,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
   Map<String, String> _profileIds = {};
   final Map<String, String> _loanNumbers = {};
   final Map<String, String> _savingsPlanNames = {};
+  final Map<String, DateTime> _emiDates = {};
 
   late AnimationController _filterAnimController;
 
@@ -158,6 +159,50 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
 
     // Only rebuild if we actually resolved new data
     if (mounted && (loanIds.isNotEmpty || savingsIds.isNotEmpty)) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _resolveEmiDates(List<UpiPaymentRequest> requests) async {
+    final client = Supabase.instance.client;
+    var didUpdate = false;
+
+    // Loan EMIs: legacy rows may lack installment_date, so still look up
+    // due_date from emi_schedule. New rows carry installment_date on the
+    // request itself and skip this entirely.
+    final emiIds = requests
+        .where((r) =>
+            r.emiScheduleId != null &&
+            r.isLoanPayment &&
+            r.installmentDate == null)
+        .map((r) => r.emiScheduleId!)
+        .where((id) => id.isNotEmpty && !_emiDates.containsKey('emi:$id'))
+        .toSet()
+        .toList();
+    if (emiIds.isNotEmpty) {
+      try {
+        final rows = await client
+            .from('emi_schedule')
+            .select('id, due_date')
+            .inFilter('id', emiIds);
+        for (final r in (rows as List)) {
+          final id = r['id']?.toString() ?? '';
+          final due = r['due_date']?.toString();
+          if (id.isNotEmpty && due != null) {
+            final parsed = DateTime.tryParse(due);
+            if (parsed != null) {
+              _emiDates['emi:$id'] = parsed;
+              didUpdate = true;
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Savings installments no longer need date resolution here — each new
+    // request carries its own installment_date captured at submit time.
+
+    if (mounted && didUpdate) {
       setState(() {});
     }
   }
@@ -335,6 +380,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
                     _resolveMemberInfo(unresolved);
                   }
                   _resolvePlanLabels(allRequests);
+                  _resolveEmiDates(allRequests);
 
                   final filtered = _applyFilters(allRequests);
                   final batches = _groupIntoBatches(filtered);
@@ -378,6 +424,7 @@ class _UpiConfirmationsPageState extends ConsumerState<UpiConfirmationsPage>
                                     selectedIds: _selectedIds,
                                     memberNames: _memberNames,
                                     profileIds: _profileIds,
+                                    emiDates: _emiDates,
                                     isProcessing: _isProcessing,
                                     onToggleAll: (ids) {
                                       HapticFeedback.selectionClick();
@@ -1273,6 +1320,7 @@ class _PremiumBatchCard extends StatelessWidget {
   final Set<String> selectedIds;
   final Map<String, String> memberNames;
   final Map<String, String> profileIds;
+  final Map<String, DateTime> emiDates;
   final bool isProcessing;
   final ValueChanged<List<String>> onToggleAll;
   final ValueChanged<String> onToggleSingle;
@@ -1288,6 +1336,7 @@ class _PremiumBatchCard extends StatelessWidget {
     required this.selectedIds,
     required this.memberNames,
     required this.profileIds,
+    required this.emiDates,
     required this.isProcessing,
     required this.onToggleAll,
     required this.onToggleSingle,
@@ -1432,7 +1481,7 @@ class _PremiumBatchCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         isMultiInstallment
-                            ? '$batch.length $typeLabel installments · ₹${total.toStringAsFixed(2)} · ${_formatTimeAgo(first.createdAt)}'
+                            ? '${batch.length} $typeLabel installments · ₹${total.toStringAsFixed(2)} · ${_formatTimeAgo(first.createdAt)}'
                             : '$typeLabel · ₹${total.toStringAsFixed(2)} · ${_formatTimeAgo(first.createdAt)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 11,
@@ -1572,6 +1621,34 @@ class _PremiumBatchCard extends StatelessWidget {
         .slideX(begin: 0.04, end: 0);
   }
 
+  String _getInstallmentLabel(UpiPaymentRequest req, int itemIndex) {
+    // 1. Prefer the per-row installment_date captured at submit time.
+    //    This is the actual date the customer selected / that was due
+    //    for this specific request — the only source that's always right.
+    if (req.installmentDate != null) {
+      return _formatDueDate(req.installmentDate!);
+    }
+    // 2. Legacy loan rows: look up due_date from emi_schedule via the
+    //    already-resolved emiDates cache.
+    final emiId = req.emiScheduleId;
+    if (emiId != null && emiDates.containsKey('emi:$emiId')) {
+      final d = emiDates['emi:$emiId']!;
+      return _formatDueDate(d);
+    }
+    // 3. Fallback: show number when nothing resolved.
+    return req.isLoanPayment
+        ? 'EMI #${itemIndex + 1}'
+        : 'Installment #${itemIndex + 1}';
+  }
+
+  String _formatDueDate(DateTime d) {
+    final now = DateTime.now();
+    if (d.year == now.year && d.month == now.month && d.day == now.day) {
+      return 'Due today';
+    }
+    return 'Due ${DateFormat('dd MMM').format(d)}';
+  }
+
   Widget _buildInstallmentRow(
     BuildContext context,
     UpiPaymentRequest req,
@@ -1613,12 +1690,10 @@ class _PremiumBatchCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
 
-          // Installment label
+          // Installment label — show date if available, else fallback to number
           Expanded(
             child: Text(
-              req.isLoanPayment
-                  ? 'EMI #${req.emiScheduleId != null ? (itemIndex + 1) : '?'}'
-                  : 'Installment #${itemIndex + 1}',
+              _getInstallmentLabel(req, itemIndex),
               style: theme.textTheme.bodySmall?.copyWith(
                 fontSize: 12,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -1694,11 +1769,11 @@ class _PremiumBatchCard extends StatelessWidget {
   }
 
   String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().toUtc().difference(dt.toUtc());
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return DateFormat('MMM d, h:mm a').format(dt);
+    // created_at from Supabase comes back as a timezone-aware ISO string,
+    // so DateTime.tryParse produces a UTC DateTime. Convert to local before
+    // formatting or the time will display in UTC instead of the device's
+    // local timezone.
+    return DateFormat('dd MMM, h:mm a').format(dt.toLocal());
   }
 }
 

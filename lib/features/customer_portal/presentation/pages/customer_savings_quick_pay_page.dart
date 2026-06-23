@@ -902,6 +902,10 @@ class _CustomerSavingsQuickPayPageState
       savingsPlanId: widget.savingsPlanId,
       savingsDateKeys: dateKeys,
       savingsAmounts: amounts,
+      installmentDates: dateKeys
+          .map((k) => DateTime.tryParse(k))
+          .whereType<DateTime>()
+          .toList(),
       transactionNoteOverride: note,
     );
   }

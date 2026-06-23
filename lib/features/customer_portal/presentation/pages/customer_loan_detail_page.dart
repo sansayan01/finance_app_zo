@@ -95,9 +95,9 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
   Widget _buildBody(BuildContext context, CustomerLoanModel loan) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final paidAmount = (loan.amount - loan.outstandingBalance).clamp(
+    final paidAmount = (loan.totalRepayable - loan.outstandingBalance).clamp(
       0.0,
-      loan.amount,
+      loan.totalRepayable,
     );
     final mq = MediaQuery.of(context);
     final statusBarHeight = mq.padding.top;

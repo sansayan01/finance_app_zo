@@ -518,7 +518,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
     final plan = widget.savingsPlan!;
     final now = DateTime.now();
-    final today = now.toIso8601String().split('T').first;
     final amount = _totalAmount;
 
     // 1. Create transaction
@@ -535,27 +534,36 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     }).select('id').single();
     final transactionId = txResult['id'] as String;
 
-    // 2. Record collection
-    await client.from('savings_collections').insert({
-      'org_id': profile.orgId,
-      'savings_plan_id': plan.id,
-      'member_id': plan.memberId,
-      'member_name': plan.memberName,
-      'amount_expected': amount,
-      'amount_collected': amount,
-      'is_partial': false,
-      'payment_mode': _selectedMode,
-      'collection_date': _isBackdated && _customCollectionDate != null
-          ? DateFormat('yyyy-MM-dd').format(_customCollectionDate!)
-          : today,
-      'collected_at': DateTime.now().toUtc().toIso8601String(),
-      'staff_id': profile.id,
-      'collected_by_name': profile.fullName,
-      'collected_by_role': profile.role.dbValue,
-      'collected_by_user_id': profile.id,
-      'sync_status': 'synced',
-      'transaction_id': transactionId,
-    });
+    // 2. Record collection — one record per selected installment date so
+    //    SavingsScheduleGenerator.fetchPaidDates() can match each
+    //    collection_date against the corresponding installment dueDate.
+    final collectedAt = DateTime.now().toUtc().toIso8601String();
+    final selectedDates = _selectedSavingsDates
+        .map((key) => DateTime.parse(key))
+        .toList()
+      ..sort();
+    for (final date in selectedDates) {
+      final dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      await client.from('savings_collections').insert({
+        'org_id': profile.orgId,
+        'savings_plan_id': plan.id,
+        'member_id': plan.memberId,
+        'member_name': plan.memberName,
+        'amount_expected': plan.monthlyDeposit,
+        'amount_collected': plan.monthlyDeposit,
+        'is_partial': false,
+        'payment_mode': _selectedMode,
+        'collection_date': dateKey,
+        'collected_at': collectedAt,
+        'staff_id': profile.id,
+        'collected_by_name': profile.fullName,
+        'collected_by_role': profile.role.dbValue,
+        'collected_by_user_id': profile.id,
+        'sync_status': 'synced',
+        'transaction_id': transactionId,
+      });
+    }
 
     // 3. Update plan balance and advance next_due_date
     // Use the LATEST selected date as the reference point (not DateTime.now())

@@ -2,6 +2,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -80,65 +81,78 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
 
   Widget _buildAppBar(BuildContext context, ThemeData theme, bool isDark) {
     return SliverAppBar(
-      expandedHeight: 140,
       floating: true,
       pinned: true,
       backgroundColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(),
-        titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        centerTitle: false,
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'VAULT OVERVIEW',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            Text(
-              'Savings Hub',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-
-        Padding(
-          padding: const EdgeInsets.only(right: 16, top: 12),
+      centerTitle: false,
+      titleSpacing: 20,
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            child: widget.showCreateButton
-                ? IconButton(
-                    onPressed: () => context.push('/savings/new'),
-                    icon: const Icon(Icons.add_rounded, size: 28),
-                    color: Colors.white,
-                    tooltip: 'New Savings Plan',
-                  )
-                : const SizedBox.shrink(),
+            color: (isDark 
+                ? const Color(0xFF0A0A0C) 
+                : const Color(0xFFF2F2F7)).withOpacity(0.7),
           ),
         ),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'VAULT OVERVIEW',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+              color: theme.colorScheme.primary.withOpacity(0.8),
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            'Savings Hub',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        if (widget.showCreateButton)
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Center(
+              child: GestureDetector(
+                onTap: () => context.push('/savings/new'),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.add_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -157,180 +171,193 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                 savings.length);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           child: Column(
             children: [
+              // Main hero card — gradient strip with amount
               Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(16),
                   gradient: AppColors.primaryGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    )
+                      color: AppColors.primary.withOpacity(0.25),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: -60,
-                        right: -40,
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Shield icon
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.15)),
+                      ),
+                      child: const Icon(Icons.shield_rounded,
+                          color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    // Amount
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'TOTAL SAVED',
+                            style: TextStyle(
+                              fontSize: 9,
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
                           ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -80,
-                        left: -40,
-                        child: Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.12),
+                          const SizedBox(height: 1),
+                          Text(
+                            AppFormatters.formatCurrency(totalSaved),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      Positioned.fill(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                          child: const SizedBox(),
-                        ),
+                    ),
+                    // Progress ring
+                    SizedBox(
+                      width: 42,
+                      height: 42,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 42,
+                            height: 42,
+                            child: CircularProgressIndicator(
+                              value: progress,
+                              strokeWidth: 3,
+                              backgroundColor:
+                                  Colors.white.withOpacity(0.15),
+                              valueColor:
+                                  const AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                              strokeCap: StrokeCap.round,
+                            ),
+                          ),
+                          Text(
+                            '${(progress * 100).toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(28),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('CUMULATIVE WEALTH',
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                                letterSpacing: 2,
-                                                fontWeight: FontWeight.w900,
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.7))),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      AppFormatters.formatCurrency(totalSaved),
-                                      style: theme.textTheme.displaySmall
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: -1,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.2)),
-                                  ),
-                                  child: const Icon(Icons.shield_rounded,
-                                      color: Colors.white, size: 28),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 32),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildGlobalMetric(
-                                    'GOAL',
-                                    AppFormatters.formatCompactCurrency(
-                                        totalTarget),
-                                    theme,
-                                    color: Colors.white,
-                                    labelColor:
-                                        Colors.white.withValues(alpha: 0.7)),
-                                _buildGlobalMetric('AVG YIELD',
-                                    '${avgRate.toStringAsFixed(1)}%', theme,
-                                    color: Colors.white,
-                                    labelColor:
-                                        Colors.white.withValues(alpha: 0.7)),
-                                _buildGlobalMetric(
-                                    'PLANS', savings.length.toString(), theme,
-                                    color: Colors.white,
-                                    labelColor:
-                                        Colors.white.withValues(alpha: 0.7)),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                    '${(progress * 100).toStringAsFixed(1)}% ACHIEVED',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white)),
-                                const SizedBox(height: 8),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: progress,
-                                    minHeight: 8,
-                                    backgroundColor:
-                                        Colors.white.withValues(alpha: 0.2),
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
-                                            Colors.white),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 8),
+              // Bento metric pills row
+              Row(
+                children: [
+                  _buildBentoPill(
+                      '${savings.length}', 'PLANS', Icons.savings_outlined,
+                      theme),
+                  const SizedBox(width: 8),
+                  _buildBentoPill(
+                      '${avgRate.toStringAsFixed(1)}%', 'AVG YIELD',
+                      Icons.trending_up_rounded, theme),
+                  const SizedBox(width: 8),
+                  _buildBentoPill(
+                      AppFormatters.formatCompactCurrency(totalTarget),
+                      'GOAL',
+                      Icons.flag_outlined, theme),
+                ],
               ),
             ],
           ),
         );
       },
       loading: () => const Padding(
-          padding: EdgeInsets.all(24), child: ShimmerCard(height: 220)),
+          padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: ShimmerCard(height: 100)),
       error: (_, __) => const SizedBox(),
     );
   }
 
-  Widget _buildGlobalMetric(String label, String value, ThemeData theme,
-      {Color? color, Color? labelColor}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: labelColor ??
-                    theme.colorScheme.onSurface.withValues(alpha: 0.4))),
-        const SizedBox(height: 4),
-        Text(value,
-            style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900, color: color, fontSize: 16)),
-      ],
+  Widget _buildBentoPill(
+      String value, String label, IconData icon, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.015),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 13,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      letterSpacing: -0.3,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.3,
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -340,55 +367,53 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
       delegate: _FilterDelegate(
         child: ClipRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
-              color: theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              color: (isDark 
+                  ? const Color(0xFF0A0A0C) 
+                  : const Color(0xFFF2F2F7)).withOpacity(0.7),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.white.withValues(alpha: 0.03)
-                            : Colors.white.withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(16),
+                            ? Colors.white.withOpacity(0.04)
+                            : Colors.white.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                             color: isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.black.withValues(alpha: 0.03)),
-                        boxShadow: [
-                          if (!isDark)
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            )
-                        ],
+                                ? Colors.white.withOpacity(0.06)
+                                : Colors.black.withOpacity(0.04),
+                            width: 0.5),
                       ),
                       child: Row(
                         children: [
                           Icon(Icons.search_rounded,
-                              size: 20,
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.4)),
-                          const SizedBox(width: 12),
+                              size: 16,
+                              color: theme.colorScheme.onSurface.withOpacity(0.4)),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
                               onChanged: (value) =>
                                   setState(() => _searchQuery = value),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface,
+                              ),
                               decoration: InputDecoration(
                                 hintText: 'Search by member name...',
-                                hintStyle: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.3)),
+                                hintStyle: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurface.withOpacity(0.3)),
                                 border: InputBorder.none,
                                 isDense: true,
                                 contentPadding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                    const EdgeInsets.symmetric(vertical: 8),
                               ),
                             ),
                           ),
@@ -396,16 +421,16 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
                         _buildFilterPill('All Vaults', 0, theme),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 6),
                         _buildFilterPill('Active Plans', 1, theme),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 6),
                         _buildFilterPill('Matured', 2, theme),
                       ],
                     ),
@@ -429,43 +454,37 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
         setState(() => _activeFilter = index);
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           gradient: isSelected ? AppColors.primaryGradient : null,
           color: !isSelected
               ? (isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.black.withValues(alpha: 0.03))
+                  ? Colors.white.withOpacity(0.04)
+                  : Colors.black.withOpacity(0.03))
               : null,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
               color: isSelected
                   ? Colors.transparent
-                  : theme.dividerColor.withValues(alpha: 0.1)),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4))
-                ]
-              : [],
+                  : theme.dividerColor.withOpacity(0.05),
+              width: 0.5),
         ),
         child: Text(
           label,
           style: TextStyle(
             color: isSelected
                 ? Colors.white
-                : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                : theme.colorScheme.onSurface.withOpacity(0.6),
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            fontSize: 13,
-            letterSpacing: 0.3,
+            fontSize: 11,
+            letterSpacing: 0.1,
           ),
         ),
       ),
     );
   }
+
 
   Widget _buildSavingsList(AsyncValue<List<SavingsModel>> savingsAsync,
       ThemeData theme, bool isDark) {
@@ -485,13 +504,13 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final saving = filtered[index];
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: GestureDetector(
                     onTap: () {
                       HapticFeedback.selectionClick();
@@ -501,9 +520,9 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                         context.push('/savings/${saving.id}');
                       }
                     },
-                    child: _PremiumSavingCard(saving: saving),
+                    child: _CompactSavingCard(saving: saving),
                   ),
-                );
+                ).animate().fadeIn(delay: (50 * index).ms).slideY(begin: 0.05);
               },
               childCount: filtered.length,
             ),
@@ -511,12 +530,12 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
         );
       },
       loading: () => SliverPadding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) => const Padding(
-                padding: EdgeInsets.only(bottom: 16),
-                child: ShimmerCard(height: 160)),
+                padding: EdgeInsets.only(bottom: 8),
+                child: ShimmerCard(height: 56)),
             childCount: 3,
           ),
         ),
@@ -532,221 +551,182 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: theme.colorScheme.primary.withValues(alpha: 0.05),
+              color: theme.colorScheme.primary.withOpacity(0.05),
               border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                width: 2,
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                width: 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  blurRadius: 32,
-                  spreadRadius: 8,
-                )
-              ],
             ),
             child: Icon(Icons.savings_outlined,
-                size: 80, color: theme.colorScheme.primary),
+                size: 64, color: theme.colorScheme.primary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Text('No Savings Found',
-              style: theme.textTheme.titleLarge
+              style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text('Your financial future starts with a single deposit.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.5))),
         ],
       ),
     );
   }
-
 }
 
-class _PremiumSavingCard extends StatelessWidget {
+class _CompactSavingCard extends StatelessWidget {
   final SavingsModel saving;
-  const _PremiumSavingCard({required this.saving});
+  const _CompactSavingCard({required this.saving});
+
+  Widget _buildStatusBadge(String status, ThemeData theme) {
+    final isMatured = status == 'completed';
+    final isDark = theme.brightness == Brightness.dark;
+    final color = isMatured 
+        ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669)) 
+        : theme.colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        isMatured ? 'MATURED' : 'ACTIVE',
+        style: TextStyle(
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+          color: color,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
     final progress = (saving.targetAmount > 0)
         ? (saving.currentAmount / saving.targetAmount).clamp(0.0, 1.0)
         : 0.0;
 
+    final initial = saving.memberName.trim().isNotEmpty
+        ? saving.memberName.trim()[0].toUpperCase()
+        : '?';
+
     return GlassCard(
-      padding: const EdgeInsets.all(20),
-      elevated: true,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: const Icon(Icons.account_balance_wallet_rounded,
-                    color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(saving.memberName,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-                    Text(
-                      'VAULT ID: ${saving.id.length >= 8 ? saving.id.substring(0, 8).toUpperCase() : saving.id.toUpperCase()}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          fontSize: 9,
-                          letterSpacing: 1,
-                          fontWeight: FontWeight.w800,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.4)),
-                    ),
-                  ],
-                ),
-              ),
-              _buildMaturityBadge(saving, theme),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildMiniMetric('ACCUMULATED',
-                  AppFormatters.formatCurrency(saving.currentAmount), theme),
-              _buildMiniMetric(
-                  saving.collectionType.toUpperCase(),
-                  AppFormatters.formatCompactCurrency(saving.monthlyDeposit),
-                  theme,
-                  color: theme.colorScheme.primary),
-              _buildMiniMetric('YIELD', '${saving.interestRate}%', theme,
-                  color: AppColors.success),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: EdgeInsets.zero,
+      borderRadius: 14,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text('PROGRESS',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.3))),
-                  Text('${(progress * 100).toInt()}%',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.success)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                  ),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: progress,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(3),
-                        gradient: const LinearGradient(
-                            colors: AppColors.successGradient),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          primary.withOpacity(0.15),
+                          primary.withOpacity(0.05),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: primary.withOpacity(0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: TextStyle(
+                          color: primary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          saving.memberName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            letterSpacing: -0.2,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${saving.collectionType.toUpperCase()} • Due ${AppFormatters.formatDate(saving.maturityDate)}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface.withOpacity(0.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        AppFormatters.formatCurrency(saving.currentAmount),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          letterSpacing: -0.3,
+                          color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      _buildStatusBadge(saving.status, theme),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 2.5,
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: theme.colorScheme.onSurface.withOpacity(0.04),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(Icons.event_available_rounded,
-                  size: 14,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
-              const SizedBox(width: 6),
-              Text(
-                'Maturity: ${AppFormatters.formatDate(saving.maturityDate)}',
-                style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-              ),
-              const Spacer(),
-              Icon(Icons.arrow_forward_ios_rounded,
-                  size: 12,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMiniMetric(String label, String value, ThemeData theme,
-      {Color? color}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
-        Text(value,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w800, color: color)),
-      ],
-    );
-  }
-
-
-
-  Widget _buildMaturityBadge(SavingsModel saving, ThemeData theme) {
-    final isMatured = saving.status == 'completed';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        gradient: isMatured
-            ? const LinearGradient(colors: AppColors.successGradient)
-            : AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: (isMatured ? AppColors.success : AppColors.primary)
-                .withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          )
-        ],
-      ),
-      child: Text(
-        isMatured ? 'MATURED' : 'ACTIVE',
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-          letterSpacing: 0.5,
+            ),
+          ],
         ),
       ),
     );
@@ -763,13 +743,10 @@ class _FilterDelegate extends SliverPersistentHeaderDelegate {
       SizedBox.expand(child: child);
 
   @override
-  double get maxExtent => 140;
+  double get maxExtent => 88;
   @override
-  double get minExtent => 140;
+  double get minExtent => 88;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       true;
 }
-
-
-

@@ -67,6 +67,9 @@ void main() {
           requestId: any(named: 'requestId'),
         )).thenAnswer((_) async => false);
 
+    when(() => fakeSmsService.getSubscriptionId())
+        .thenAnswer((_) async => null);
+
     container = ProviderContainer(overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       supabaseClientProvider.overrideWith((ref) => fakeClient),

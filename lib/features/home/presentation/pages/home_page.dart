@@ -1397,7 +1397,7 @@ class _LoanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final progress = 1 - (loan.outstandingBalance / loan.amount);
+    final progress = loan.totalRepayable > 0 ? (1 - (loan.outstandingBalance / loan.totalRepayable)) : 0.0;
     final statusType = loan.status == LoanStatus.active
         ? StatusType.standard
         : loan.status == LoanStatus.defaultStatus

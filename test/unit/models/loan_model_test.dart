@@ -43,7 +43,7 @@ void main() {
         'total_interest': 16400,
         'total_repayable': 116400,
         'outstanding_balance': 116400,
-        'interest_type': 'reducing',
+        'interest_type': 'reducingBalance',
         'status': 'active',
         'purpose': 'Business',
         'created_at': '2024-01-01T10:00:00Z',

@@ -61,8 +61,8 @@ class CustomerLoanModel {
   }
 
   double get paidPercentage {
-    if (amount <= 0) return 0;
-    return ((amount - outstandingBalance) / amount * 100).clamp(0, 100);
+    if (totalRepayable <= 0) return 0;
+    return ((totalRepayable - outstandingBalance) / totalRepayable * 100).clamp(0, 100);
   }
 
   bool get isOverdue => status == 'defaulted';

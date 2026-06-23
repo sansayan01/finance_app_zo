@@ -16,6 +16,11 @@ class UpiPaymentRequest {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// The installment due date this payment is covering (loan EMI or
+  /// savings installment). Null on legacy rows — callers should fall
+  /// back to `emiScheduleId` lookup in that case.
+  final DateTime? installmentDate;
+
   const UpiPaymentRequest({
     required this.id,
     required this.orgId,
@@ -33,9 +38,18 @@ class UpiPaymentRequest {
     this.rejectionReason,
     required this.createdAt,
     required this.updatedAt,
+    this.installmentDate,
   });
 
   factory UpiPaymentRequest.fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString();
+      // Postgres DATE serialises as 'YYYY-MM-DD'; try tryParse which
+      // handles both bare dates and full ISO timestamps.
+      return DateTime.tryParse(s);
+    }
+
     return UpiPaymentRequest(
       id: json['id']?.toString() ?? '',
       orgId: json['org_id']?.toString() ?? '',
@@ -55,6 +69,7 @@ class UpiPaymentRequest {
       rejectionReason: json['rejection_reason']?.toString(),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ?? DateTime.now(),
+      installmentDate: parseDate(json['installment_date']),
     );
   }
 
@@ -66,6 +81,8 @@ class UpiPaymentRequest {
       if (loanId != null) 'loan_id': loanId,
       if (savingsPlanId != null) 'savings_plan_id': savingsPlanId,
       if (emiScheduleId != null) 'emi_schedule_id': emiScheduleId,
+      if (installmentDate != null)
+        'installment_date': _formatDateOnly(installmentDate!),
       'amount': amount,
       'upi_vpa': upiVpa,
       if (transactionRef != null) 'transaction_ref': transactionRef,
@@ -88,6 +105,7 @@ class UpiPaymentRequest {
       loanId: loanId,
       savingsPlanId: savingsPlanId,
       emiScheduleId: emiScheduleId,
+      installmentDate: installmentDate,
       amount: amount,
       upiVpa: upiVpa,
       transactionRef: transactionRef ?? this.transactionRef,
@@ -105,4 +123,13 @@ class UpiPaymentRequest {
   bool get isRejected => status == 'rejected';
   bool get isLoanPayment => loanId != null;
   bool get isSavingsPayment => savingsPlanId != null;
+
+  /// Postgres DATE column accepts YYYY-MM-DD. Strip any time component.
+  static String _formatDateOnly(DateTime d) {
+    final local = d.toLocal();
+    final y = local.year.toString().padLeft(4, '0');
+    final m = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$y-$m-$day';
+  }
 }

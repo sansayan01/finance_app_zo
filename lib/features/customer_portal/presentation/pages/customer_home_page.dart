@@ -412,7 +412,7 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
                 CustomerDashboardCharts(
                   paymentTrend: paymentTrend,
                   savingsGrowth: savingsGrowth,
-                  loanPaid: activeLoansList.fold(0.0, (sum, l) => sum + (l.amount - l.outstandingBalance)),
+                  loanPaid: activeLoansList.fold(0.0, (sum, l) => sum + (l.totalRepayable - l.outstandingBalance)),
                   loanOutstanding: totalOutstanding,
                   loanInterest: activeLoansList.fold(0.0, (sum, l) => sum + l.totalInterest),
                 ),
@@ -1369,8 +1369,8 @@ class _CustomerHomePageState extends ConsumerState<CustomerHomePage>
   ) {
     final theme = Theme.of(context);
     final totalOutstanding = activeLoans.fold(0.0, (sum, l) => sum + l.outstandingBalance);
-    final totalPaid = activeLoans.fold(0.0, (sum, l) => sum + (l.amount - l.outstandingBalance));
-    final totalAmount = activeLoans.fold(0.0, (sum, l) => sum + l.amount);
+    final totalPaid = activeLoans.fold(0.0, (sum, l) => sum + (l.totalRepayable - l.outstandingBalance));
+    final totalAmount = activeLoans.fold(0.0, (sum, l) => sum + l.totalRepayable);
     final overallProgress = totalAmount > 0 ? (totalPaid / totalAmount).clamp(0.0, 1.0) : 0.0;
 
     return Padding(

@@ -23,6 +23,12 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
   final List<double>? emiAmounts;
   final List<String>? savingsDateKeys;
   final List<double>? savingsAmounts;
+  /// Optional per-installment due date matching each entry in
+  /// [emiScheduleIds] / [savingsDateKeys] (length must match the
+  /// corresponding ids list). Saved on each UPI payment request so
+  /// the staff confirmations page can show the actual date the
+  /// customer was paying for.
+  final List<DateTime>? installmentDates;
   final String? transactionNoteOverride;
 
   const UpiPaymentSheet({
@@ -40,6 +46,7 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
     this.emiAmounts,
     this.savingsDateKeys,
     this.savingsAmounts,
+    this.installmentDates,
     this.transactionNoteOverride,
   });
 
@@ -58,6 +65,7 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
     List<double>? emiAmounts,
     List<String>? savingsDateKeys,
     List<double>? savingsAmounts,
+    List<DateTime>? installmentDates,
     String? transactionNoteOverride,
   }) {
     return showModalBottomSheet(
@@ -79,6 +87,7 @@ class UpiPaymentSheet extends ConsumerStatefulWidget {
         emiAmounts: emiAmounts,
         savingsDateKeys: savingsDateKeys,
         savingsAmounts: savingsAmounts,
+        installmentDates: installmentDates,
         transactionNoteOverride: transactionNoteOverride,
       ),
     );
@@ -217,6 +226,19 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
       final hasBatchEmis = widget.emiScheduleIds != null && widget.emiScheduleIds!.isNotEmpty;
       final hasBatchSavings = widget.savingsDateKeys != null && widget.savingsDateKeys!.isNotEmpty;
 
+      // Per-installment due date — either provided directly by the caller
+      // (loan quick pay) or derived from the savings dateKey list
+      // (savings quick pay: 'YYYY-MM-DD').
+      DateTime? dateFor(int i) {
+        if (widget.installmentDates != null && i < widget.installmentDates!.length) {
+          return widget.installmentDates![i];
+        }
+        if (hasBatchSavings && i < widget.savingsDateKeys!.length) {
+          return DateTime.tryParse(widget.savingsDateKeys![i]);
+        }
+        return null;
+      }
+
       if (hasBatchEmis) {
         for (var i = 0; i < widget.emiScheduleIds!.length; i++) {
           await repository.createRequest(
@@ -226,6 +248,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
             emiScheduleId: widget.emiScheduleIds![i],
             amount: widget.emiAmounts![i],
             upiVpa: _vpa!,
+            installmentDate: dateFor(i),
           );
         }
         // Notify staff once for the entire batch (fire-and-forget)
@@ -241,6 +264,7 @@ class _UpiPaymentSheetState extends ConsumerState<UpiPaymentSheet> {
             savingsPlanId: widget.savingsPlanId,
             amount: widget.savingsAmounts![i],
             upiVpa: _vpa!,
+            installmentDate: dateFor(i),
           );
         }
         // Notify staff once for the entire batch (fire-and-forget)

@@ -1303,9 +1303,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     _buildDetailRow('Due Date',
                         AppFormatters.formatDate(emi.dueDate), theme),
                     _buildDetailRow('Principal',
-                        AppFormatters.formatCurrency(emi.principal), theme),
+                        AppFormatters.formatCurrency(loan.amount / loan.totalEmis.clamp(1, 9999)),
+                        theme),
                     _buildDetailRow('Interest',
-                        AppFormatters.formatCurrency(emi.interest), theme),
+                        AppFormatters.formatCurrency(loan.totalInterest / loan.totalEmis.clamp(1, 9999)),
+                        theme),
                     if (emi.penaltyAmount > 0)
                       _buildDetailRow(
                           'Penalty',
@@ -1313,7 +1315,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                           theme,
                           valueColor: AppColors.error),
                     _buildDetailRow('Balance After',
-                        AppFormatters.formatCurrency(emi.balanceAfter), theme),
+                        AppFormatters.formatCurrency(
+                            (loan.totalRepayable - emi.emiNumber * loan.emiAmount).clamp(0.0, loan.totalRepayable)),
+                        theme),
                     if (emi.paidOn != null)
                       _buildDetailRow('Paid On',
                           AppFormatters.formatDate(emi.paidOn!), theme),

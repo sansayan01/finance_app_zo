@@ -13,7 +13,6 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage> {
-  String _displayName = 'MicroFlow Pro';
   String _iconPreset = 'default';
   String? _logoUrl;
   bool _ready = false;
@@ -63,21 +62,16 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
       if (org == null || !mounted) return;
 
-      final name = (org['display_name'] as String?) ??
-          (org['name'] as String?) ??
-          'MicroFlow Pro';
       final preset = (org['icon_preset'] as String?) ?? 'default';
       final logo = org['logo_url'] as String?;
 
       setState(() {
-        _displayName = name;
         _iconPreset = preset;
         _logoUrl = logo;
       });
 
       // Cache for next launch
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('splash_display_name', name);
       await prefs.setString('splash_icon_preset', preset);
       await prefs.setString('splash_logo_url', logo ?? '');
     } catch (e) {
@@ -89,10 +83,8 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   Future<void> _loadCachedBranding() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final name = prefs.getString('splash_display_name');
       final preset = prefs.getString('splash_icon_preset');
       final logo = prefs.getString('splash_logo_url');
-      if (name != null) _displayName = name;
       if (preset != null) _iconPreset = preset;
       if (logo != null && logo.isNotEmpty) _logoUrl = logo;
     } catch (_) {}
@@ -106,31 +98,30 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
     return Scaffold(
       backgroundColor:
-          isDark ? const Color(0xFF0F1219) : const Color(0xFF1A5CFF),
-      body: AnimatedOpacity(
-        opacity: _ready ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 400),
-        child: Center(
+          isDark ? const Color(0xFF0F1219) : Colors.white,
+      body: Center(
+        child: AnimatedOpacity(
+          opacity: _ready ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 400),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Icon
+              // App Icon - Logo only
               Container(
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(100),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 20,
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
+                child: ClipOval(
                   child: hasLogo
                       ? CachedNetworkImage(
                           imageUrl: _logoUrl!,
@@ -143,31 +134,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                       : _buildPresetIcon(assetPath),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // App Name
-              Text(
-                _displayName,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-
-              // Tagline
-              Text(
-                'Smart Financial Management',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 40),
 
               // Loading indicator
               SizedBox(
@@ -176,7 +143,9 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.white.withValues(alpha: 0.8),
+                    isDark
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : const Color(0xFF1A5CFF),
                   ),
                 ),
               ),

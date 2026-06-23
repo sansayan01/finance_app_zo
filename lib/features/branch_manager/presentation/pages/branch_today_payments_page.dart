@@ -1323,7 +1323,7 @@ class _PaymentCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: isDark ? AppColors.cardDark : Colors.white,
           borderRadius: BorderRadius.circular(14),
@@ -1809,14 +1809,14 @@ class _HeroHeader extends StatelessWidget {
                           amountString: _formatAmount(summary.totalCollected),
                           color: const Color(0xFF34D399),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 10),
                         _MiniStatBadge(
                           label: 'Pending',
                           count: summary.countPending,
                           amountString: _formatAmount(summary.totalPending),
                           color: const Color(0xFFFBBF24),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 10),
                         _MiniStatBadge(
                           label: 'Overdue',
                           count: summary.countOverdue,
@@ -1852,7 +1852,7 @@ class _MiniStatBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),

@@ -757,8 +757,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                         // Outstanding / Collected line
                         Text(
                           widget.mode == CollectionMode.savings
-                              ? 'Collected: ${widget.savingsPlan!.currentAmount.toStringAsFixed(0)} \u00b7 Installment: ${widget.savingsPlan!.monthlyDeposit.toStringAsFixed(0)}'
-                              : 'Outstanding: \u20b9${widget.loan!.outstandingBalance.toStringAsFixed(0)} \u00b7 EMI: \u20b9${widget.loan!.emiAmount.toStringAsFixed(0)}',
+                              ? 'Collected: ₹${widget.savingsPlan!.currentAmount.toStringAsFixed(0)}'
+                              : 'Outstanding: ₹${widget.loan!.outstandingBalance.toStringAsFixed(0)}',
                           style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 11),

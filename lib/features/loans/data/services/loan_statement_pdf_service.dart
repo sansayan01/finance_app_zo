@@ -269,16 +269,18 @@ class LoanStatementPdfService {
 
 
 
-    // ── Summary metrics ──
+    // ── Summary metrics (derive from schedule, not stale DB columns) ──
     final totalPaid =
         sortedPayments.fold<double>(0, (s, p) => s + p.amount);
+    final totalScheduleEmis = schedule.length;
+    final paidEmis = schedule.where((e) => e.status == EMIStatus.paid).length;
     final nextEmi =
-        schedule.where((e) => e.status != EMIStatus.paid).toList()
+        schedule.where((e) => e.status != EMIStatus.paid && e.status != EMIStatus.frozen).toList()
           ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
     final nextDue = nextEmi.isNotEmpty ? nextEmi.first.dueDate : null;
-    final paidEmis = schedule.where((e) => e.status == EMIStatus.paid).length;
-    final progress = loan.totalEmis > 0
-        ? (paidEmis / loan.totalEmis * 100)
+    final nextEmiAmount = nextEmi.isNotEmpty ? nextEmi.first.emiAmount : 0.0;
+    final progress = totalScheduleEmis > 0
+        ? (paidEmis / totalScheduleEmis * 100)
         : 0.0;
 
     // ── Penalty check ──
@@ -293,7 +295,7 @@ class LoanStatementPdfService {
       loanNumber: loan.loanNumber,
       amount: loan.amount,
       outstandingBalance: loan.outstandingBalance,
-      totalEmis: loan.totalEmis,
+      totalEmis: totalScheduleEmis,
       paidEmis: paidEmis,
       generatedAt: generatedAt,
     );
@@ -314,14 +316,18 @@ class LoanStatementPdfService {
 
     // ── Health score ──
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dueSchedule = schedule.where((e) => !e.dueDate.isAfter(today)).toList();
+    // Normalize to UTC date-only for safe comparison with DB dates
+    final todayUtc = DateTime.utc(now.year, now.month, now.day);
+    final dueSchedule = schedule.where((e) {
+      final d = DateTime.utc(e.dueDate.year, e.dueDate.month, e.dueDate.day);
+      return !d.isAfter(todayUtc);
+    }).toList();
     // Count truly on-time payments: paid ON or BEFORE the due date.
     final onTimeCount = dueSchedule.where((e) {
       if (e.status != EMIStatus.paid) return false;
       if (e.paidOn == null) return true; // paid but no date recorded — assume on-time
-      final paidDay = DateTime(e.paidOn!.year, e.paidOn!.month, e.paidOn!.day);
-      final dueDay = DateTime(e.dueDate.year, e.dueDate.month, e.dueDate.day);
+      final paidDay = DateTime.utc(e.paidOn!.year, e.paidOn!.month, e.paidOn!.day);
+      final dueDay = DateTime.utc(e.dueDate.year, e.dueDate.month, e.dueDate.day);
       return !paidDay.isAfter(dueDay);
     }).length;
     final overdueEmis = schedule
@@ -329,12 +335,12 @@ class LoanStatementPdfService {
             e.status != EMIStatus.paid &&
             e.status != EMIStatus.waived &&
             e.status != EMIStatus.frozen &&
-            e.dueDate.isBefore(today))
+            DateTime.utc(e.dueDate.year, e.dueDate.month, e.dueDate.day).isBefore(todayUtc))
         .toList();
     final maxDaysOverdue = overdueEmis.isEmpty
         ? 0
         : overdueEmis
-            .map((e) => today.difference(e.dueDate).inDays)
+            .map((e) => todayUtc.difference(DateTime.utc(e.dueDate.year, e.dueDate.month, e.dueDate.day)).inDays)
             .reduce(math.max);
     final healthGrade = StatementFormatters.healthGrade(
       onTimeCount: onTimeCount,
@@ -410,7 +416,9 @@ class LoanStatementPdfService {
             loan: loan,
             totalPaid: totalPaid,
             paidEmis: paidEmis,
+            totalScheduleEmis: totalScheduleEmis,
             nextDue: nextDue,
+            nextEmiAmount: nextEmiAmount,
             progress: progress,
             overdueCount: overdueEmis.length,
           ),
@@ -431,7 +439,7 @@ class LoanStatementPdfService {
           if (overdueEmis.isNotEmpty) ...[
             _buildSectionLabel('OVERDUE AGING ANALYSIS'),
             pw.SizedBox(height: 6),
-            _buildOverdueAging(overdueEmis, today),
+            _buildOverdueAging(overdueEmis, todayUtc),
             pw.SizedBox(height: 16),
           ],
 
@@ -929,7 +937,9 @@ class LoanStatementPdfService {
     required LoanModel loan,
     required double totalPaid,
     required int paidEmis,
+    required int totalScheduleEmis,
     required DateTime? nextDue,
+    required double nextEmiAmount,
     required double progress,
     required int overdueCount,
   }) {
@@ -1007,7 +1017,7 @@ class LoanStatementPdfService {
               _metricItem('Total Disbursed', _moneyInt(loan.amount), StatementColors.navy900),
               _metricItem('Total Repaid', _moneyInt(totalPaid), StatementColors.green700),
               _metricItem('Outstanding', _moneyInt(loan.outstandingBalance), loan.outstandingBalance > 0 ? StatementColors.red700 : StatementColors.green700),
-              _metricItem('Next Due Installment', nextDue != null ? '${_moneyInt(loan.emiAmount)} on ${_date(nextDue)}' : 'Completed', StatementColors.orange700),
+              _metricItem('Next Due Installment', nextDue != null ? '${_moneyInt(nextEmiAmount)} on ${_date(nextDue)}' : 'Completed', StatementColors.orange700),
             ],
           ),
         ],
@@ -1055,42 +1065,51 @@ class LoanStatementPdfService {
     // 1. Gather all events from inception
     final allEvents = <_LedgerEvent>[];
 
-    // Disbursement
+    // Disbursement — record the actual principal disbursed
     if (loan.disbursementDate != null) {
       allEvents.add(_LedgerEvent(
         date: loan.disbursementDate!,
         description: 'Loan Disbursed',
         type: _LedgerEventType.disbursement,
-        amount: loan.totalRepayable,
-      )..outstanding = loan.totalRepayable);
+        amount: loan.amount,
+      )..outstanding = loan.amount);
     }
 
-    // Payments — merge same-date+time payments, then compute outstanding
+    // Payments — merge same-second payments (identical second = same
+    // collection-sheet batch), then compute outstanding by walking
+    // backward from the canonical loan.outstandingBalance so the
+    // ledger's last row always matches the Financial Status Summary.
     final sortedAllPayments = List<LoanStatementPayment>.from(payments)
       ..sort((a, b) => a.date.compareTo(b.date));
 
     final mergedPayments = _mergePaymentsByDateTime(sortedAllPayments);
 
-    // Compute outstanding backwards from current outstanding
-    double currentOutstanding = loan.outstandingBalance;
-    final outstandingList = <double>[];
+    // Backward walk: start from the known correct outstanding balance,
+    // add each payment back to recover the balance before it was paid.
+    final outstandingBack = <double>[];
+    double cursor = loan.outstandingBalance;
     for (int i = mergedPayments.length - 1; i >= 0; i--) {
-      outstandingList.add(currentOutstanding);
-      currentOutstanding += mergedPayments[i].amount;
+      outstandingBack.add(cursor);
+      cursor += mergedPayments[i].amount;
     }
-    // Reverse so index 0 matches the first (oldest) payment
-    final reversedList = outstandingList.reversed.toList();
+    // Reverse so index 0 = oldest payment
+    final outstandingList = outstandingBack.reversed.toList();
 
-  for (int i = 0; i < mergedPayments.length; i++) {
-    final p = mergedPayments[i];
-    String desc = p.description;
-    final event = _LedgerEvent(
+    for (int i = 0; i < mergedPayments.length; i++) {
+      final p = mergedPayments[i];
+      final event = _LedgerEvent(
         date: p.date,
-        description: desc,
+        description: p.description,
         type: _LedgerEventType.payment,
         amount: p.amount,
+        collectedByName: p.collectedByName,
       );
-      event.outstanding = reversedList[i];
+      event.outstanding = outstandingList[i];
+      if (i == mergedPayments.length - 1) {
+        // Last payment row: force to exactly the DB outstanding balance
+        // (corrects any paisa-level drift from manual entry amounts).
+        event.outstanding = loan.outstandingBalance;
+      }
       allEvents.add(event);
     }
 
@@ -1177,6 +1196,7 @@ class LoanStatementPdfService {
         e.type == _LedgerEventType.openingBalance ? '' : '${idx++}',
         dateStr,
         e.description,
+        e.collectedByName ?? '',
         amtStr,
         _money(e.outstanding.isNaN ? 0.0 : e.outstanding.clamp(0.0, outUpper)),
       ];
@@ -1187,6 +1207,7 @@ class LoanStatementPdfService {
         '#',
         'Date & Time',
         'Description',
+        'Collected By',
         'Amount',
         'Outstanding',
       ],
@@ -1211,8 +1232,9 @@ class LoanStatementPdfService {
         0: pw.Alignment.center,
         1: pw.Alignment.centerLeft,
         2: pw.Alignment.centerLeft,
-        3: pw.Alignment.centerRight,
+        3: pw.Alignment.centerLeft,
         4: pw.Alignment.centerRight,
+        5: pw.Alignment.centerRight,
       },
       cellPadding:
           const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
@@ -1259,7 +1281,8 @@ class LoanStatementPdfService {
     double amt030 = 0, amt3160 = 0, amt6190 = 0, amt90 = 0;
 
     for (final e in overdueEmis) {
-      final days = today.difference(e.dueDate).inDays;
+      final dueUtc = DateTime.utc(e.dueDate.year, e.dueDate.month, e.dueDate.day);
+      final days = today.difference(dueUtc).inDays;
       if (days <= 30) {
         count030++;
         amt030 += e.emiAmount;
@@ -2029,7 +2052,8 @@ class LoanStatementPdfService {
       a.month == b.month &&
       a.day == b.day &&
       a.hour == b.hour &&
-      a.minute == b.minute;
+      a.minute == b.minute &&
+      a.second == b.second;
 
   /// Merges payments that fall within the same minute into a single
   /// [_MergedPayment].
@@ -2067,18 +2091,16 @@ class LoanStatementPdfService {
           date: anchor.date,
           amount: sum,
           description: '$count installments paid ($modeStr)',
+          collectedByName: anchor.collectedByName,
           count: count,
         ));
       } else {
         String desc = 'Payment via ${_paymentModeLabel(anchor.mode)}';
-        if (anchor.collectedByName != null &&
-            anchor.collectedByName!.isNotEmpty) {
-          desc += ' (Collected by ${anchor.collectedByName})';
-        }
         merged.add(_MergedPayment(
           date: anchor.date,
           amount: sum,
           description: desc,
+          collectedByName: anchor.collectedByName,
           count: 1,
         ));
       }
@@ -2101,6 +2123,7 @@ class _LedgerEvent {
   final String description;
   final _LedgerEventType type;
   final double amount;
+  final String? collectedByName;
   double outstanding = 0.0;
 
   _LedgerEvent({
@@ -2108,6 +2131,7 @@ class _LedgerEvent {
     required this.description,
     required this.type,
     required this.amount,
+    this.collectedByName,
   });
 }
 
@@ -2117,12 +2141,14 @@ class _MergedPayment {
   final DateTime date;
   final double amount;
   final String description;
+  final String? collectedByName;
   final int count;
 
   const _MergedPayment({
     required this.date,
     required this.amount,
     required this.description,
+    this.collectedByName,
     required this.count,
   });
 }

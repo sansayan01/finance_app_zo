@@ -60,13 +60,18 @@ class PremiumCalendarSheet extends StatefulWidget {
 class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
   late DateTime _selectedDate;
   late DateTime _focusedDay;
-  late bool _isDark;
+  bool _isDark = false;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate;
     _focusedDay = widget.initialDate;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _isDark = Theme.of(context).brightness == Brightness.dark;
   }
 

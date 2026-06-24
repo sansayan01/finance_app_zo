@@ -65,7 +65,9 @@
       "Bash(claude --version)",
       "Bash(awk '/CREATE TABLE IF NOT EXISTS public.loans/,/^\\\\\\);/' /home/sansayan/projects/finance_app/supabase_schema.sql)",
       "Bash(supabase --version)",
-      "Bash(curl -s 'https://tccwdpsnuudzfyxfoohk.supabase.co/rest/v1/loans?select=*&limit=5' -H 'apikey: __CMDSUB_OUTPUT__' -H 'Authorization: Bearer __CMDSUB_OUTPUT__')"
+      "Bash(curl -s 'https://tccwdpsnuudzfyxfoohk.supabase.co/rest/v1/loans?select=*&limit=5' -H 'apikey: __CMDSUB_OUTPUT__' -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Bash(Get-ChildItem -Path D:/Projects/finance_app_zo/ -Depth 1 -Directory)",
+      "Bash(Select-Object FullName)"
     ]
   },
   "enableAllProjectMcpServers": true,

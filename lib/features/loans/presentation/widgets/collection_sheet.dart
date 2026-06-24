@@ -753,16 +753,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                                 fontSize: 12),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        // Outstanding / Collected line
-                        Text(
-                          widget.mode == CollectionMode.savings
-                              ? 'Collected: ₹${widget.savingsPlan!.currentAmount.toStringAsFixed(0)}'
-                              : 'Outstanding: ₹${widget.loan!.outstandingBalance.toStringAsFixed(0)}',
-                          style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 11),
-                        ),
                       ],
                     ),
                   ),
@@ -797,6 +787,60 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
+
+              // ─── Outstanding / Collected Premium Stat Card ───
+              Container(
+                width: double.infinity,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.12),
+                      AppColors.accent.withValues(alpha: 0.08),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        widget.mode == CollectionMode.savings
+                            ? 'Collected'
+                            : 'Outstanding',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        currencyFormat.format(
+                          widget.mode == CollectionMode.savings
+                              ? widget.savingsPlan!.currentAmount
+                              : widget.loan!.outstandingBalance,
+                        ),
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
 
               // Schedule selector (scrollable) -- mode-dependent
               Expanded(
@@ -1079,8 +1123,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
   /// Build the savings mode body: installment calendar.
   Widget _buildSavingsBody(NumberFormat currencyFormat) {
-    final selectedCount = _selectedSavingsDates.length;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(
@@ -1105,20 +1147,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
               ],
             ),
           ),
-          // Selection summary
-          if (selectedCount > 0)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                '$selectedCount installment${selectedCount > 1 ? 's' : ''} selected',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.success,
-                ),
-              ),
-            ),
-
           // Savings payment selector (Quick Pay + Calendar)
           if (_savingsSchedule.isEmpty)
             Center(

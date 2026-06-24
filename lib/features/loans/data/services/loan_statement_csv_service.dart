@@ -21,7 +21,6 @@ class LoanStatementCsvService {
     required List<LoanStatementPayment> payments,
     required DateTime periodStart,
     required DateTime periodEnd,
-    required StatementVariant variant,
   }) {
     final buf = StringBuffer();
 

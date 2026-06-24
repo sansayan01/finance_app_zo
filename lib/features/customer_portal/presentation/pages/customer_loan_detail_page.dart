@@ -1244,7 +1244,6 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                         org: org,
                                         periodStart: periodStart,
                                         periodEnd: periodEnd,
-                                        variant: StatementVariant.customerStatement,
                                       );
                                       fileExt = 'xlsx';
                                     } else if (selectedFormat == 'csv') {
@@ -1254,7 +1253,6 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                         payments: payments,
                                         periodStart: periodStart,
                                         periodEnd: periodEnd,
-                                        variant: StatementVariant.customerStatement,
                                       );
                                       fileExt = 'csv';
                                     } else {

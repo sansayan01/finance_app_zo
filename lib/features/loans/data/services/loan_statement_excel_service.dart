@@ -16,7 +16,6 @@ class LoanStatementExcelService {
     required LoanStatementOrgInfo org,
     required DateTime periodStart,
     required DateTime periodEnd,
-    required StatementVariant variant,
     String? statementRef,
   }) {
     final excel = Excel.createExcel();
@@ -37,7 +36,7 @@ class LoanStatementExcelService {
       summary.appendRow([TextCellValue(contact)]);
     }
     summary.appendRow([]);
-    summary.appendRow([TextCellValue(_variantTitle(variant))]);
+    summary.appendRow([TextCellValue('LOAN REPAYMENT STATEMENT')]);
     summary.appendRow([
       TextCellValue('Period:'),
       TextCellValue(
@@ -125,22 +124,7 @@ class LoanStatementExcelService {
       totalDebit += loan.amount;
     }
 
-    final activityOnly = variant != StatementVariant.fullSchedule;
-
     for (final emi in schedule) {
-      final inPeriod = !emi.dueDate.isBefore(periodStart) &&
-          !emi.dueDate.isAfter(periodEnd);
-      if (!activityOnly && inPeriod) {
-        ledger.appendRow([
-          TextCellValue(_dateFmt.format(emi.dueDate)),
-          IntCellValue(emi.emiNumber),
-          TextCellValue('EMI #${emi.emiNumber} due (P: ${emi.principal}, I: ${emi.interest})'),
-          TextCellValue(''),
-          TextCellValue(''),
-          DoubleCellValue(balance),
-        ]);
-      }
-
       final paidOn = emi.paidOn;
       if (paidOn != null &&
           !paidOn.isBefore(periodStart) &&
@@ -216,18 +200,5 @@ class LoanStatementExcelService {
 
     final bytes = excel.save();
     return Uint8List.fromList(bytes ?? <int>[]);
-  }
-
-  static String _variantTitle(StatementVariant v) {
-    switch (v) {
-      case StatementVariant.fullSchedule:
-        return 'LOAN STATEMENT — FULL SCHEDULE';
-      case StatementVariant.activityOnly:
-        return 'LOAN STATEMENT — ACTIVITY ONLY';
-      case StatementVariant.taxStatement:
-        return 'LOAN STATEMENT — TAX SUMMARY';
-      case StatementVariant.customerStatement:
-        return 'LOAN REPAYMENT STATEMENT';
-    }
   }
 }

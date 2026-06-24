@@ -31,6 +31,7 @@ import '../../data/services/loan_statement_csv_service.dart';
 import '../../data/services/loan_statement_archive_service.dart';
 import '../widgets/collection_sheet.dart';
 import '../widgets/statement_options_sheet.dart';
+import '../widgets/statement_generation_overlay.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 
@@ -3525,24 +3526,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     if (options == null || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
 
-    // Show a loading dialog while generating the statement
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 20),
-            Text('Generating statement…'),
-          ],
-        ),
-      ),
-    );
+    // ── Premium loading overlay ──
+    StatementGenerationOverlay.show(context);
 
     try {
+      // Step 1: Fetch data
       final schedule = await ref.read(emiScheduleProvider(widget.loanId).future);
       final payments = await ref.read(paymentHistoryProvider(widget.loanId).future);
       final orgRaw = await ref.read(currentOrgProvider.future);
@@ -3586,6 +3576,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
       }).toList();
 
+      // Step 2: Generate
       final now = DateTime.now();
       final ref0 =
           'STMT-${loan.loanNumber}-${now.millisecondsSinceEpoch.toRadixString(36).toUpperCase()}';
@@ -3596,28 +3587,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
       switch (options.format) {
         case StatementFormat.pdf:
-          if (options.variant == StatementVariant.customerStatement) {
-            bytes = await LoanStatementPdfService.buildCustomerStatement(
-              loan: loan,
-              schedule: schedule,
-              payments: mappedPayments,
-              org: org,
-              generatedByName: ref.read(currentUserProvider)?.fullName,
-            );
-          } else {
-            bytes = await LoanStatementPdfService.build(
-              loan: loan,
-              schedule: schedule,
-              payments: mappedPayments,
-              org: org,
-              periodStart: options.periodStart,
-              periodEnd: options.periodEnd,
-              variant: options.variant,
-              generatedByName: ref.read(currentUserProvider)?.fullName,
-              statementRef: ref0,
-              qrPngBytes: null,
-            );
-          }
+          bytes = await LoanStatementPdfService.buildCustomerStatement(
+            loan: loan,
+            schedule: schedule,
+            payments: mappedPayments,
+            org: org,
+            generatedByName: ref.read(currentUserProvider)?.fullName,
+          );
           ext = 'pdf';
           mime = 'application/pdf';
           break;
@@ -3629,7 +3605,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             org: org,
             periodStart: options.periodStart,
             periodEnd: options.periodEnd,
-            variant: options.variant,
             statementRef: ref0,
           );
           ext = 'xlsx';
@@ -3642,142 +3617,236 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             payments: mappedPayments,
             periodStart: options.periodStart,
             periodEnd: options.periodEnd,
-            variant: options.variant,
           );
           ext = 'csv';
           mime = 'text/csv';
           break;
       }
 
-      // Save/download the file
-      final fileName = 'loan_statement_${loan.loanNumber}_${now.millisecondsSinceEpoch}.$ext';
+      // Step 3: Save
+      final fileName =
+          'loan_statement_${loan.loanNumber}_${now.millisecondsSinceEpoch}.$ext';
 
+      File? localFile;
       if (kIsWeb) {
-        // Web: trigger browser download
         downloadFileForWeb(bytes, fileName, mime);
+      } else {
+        final dir = await getApplicationDocumentsDirectory();
+        localFile = File('${dir.path}/$fileName');
+        await localFile.writeAsBytes(bytes);
+      }
 
-        // Archive (best-effort)
-        try {
-          final me = ref.read(currentUserProvider);
-          final supa = ref.read(supabaseClientProvider);
-          String? profileId;
-          if (me != null) {
-            final p = await supa
-                .from('profiles')
-                .select('id')
-                .eq('user_id', me.id)
-                .maybeSingle();
-            profileId = p?['id'] as String?;
-          }
-          await ref
-              .read(loanStatementArchiveServiceProvider)
-              .archive(
-                loanId: loan.id,
-                bytes: bytes,
-                statementRef: ref0,
-                periodStart: options.periodStart,
-                periodEnd: options.periodEnd,
-                variant: options.variant.name,
-                format: options.format.name,
-                fileExtension: ext,
-                mimeType: mime,
-                generatedByUserId: profileId,
-                generatedByName: me?.fullName,
-              );
-          ref.invalidate(pastLoanStatementsProvider(loan.id));
-        } catch (e) {
-          debugPrint('Statement archive failed: $e');
-        }
+      // Archive (best-effort, fire-and-forget)
+      _archiveStatement(
+        loanId: loan.id,
+        bytes: bytes,
+        statementRef: ref0,
+        options: options,
+        ext: ext,
+        mime: mime,
+      );
 
-        if (!mounted) return;
-        Navigator.of(context).pop();
+      // Dismiss loading overlay, then wait one frame for UI to settle
+      StatementGenerationOverlay.dismiss();
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      if (!mounted) return;
+      if (kIsWeb) {
         messenger.showSnackBar(SnackBar(
           content: Text('Statement downloaded: $fileName'),
           backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ));
       } else {
-        // Mobile/Desktop: save to documents directory
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-
-        // Archive (best-effort)
-        try {
-          final me = ref.read(currentUserProvider);
-          final supa = ref.read(supabaseClientProvider);
-          String? profileId;
-          if (me != null) {
-            final p = await supa
-                .from('profiles')
-                .select('id')
-                .eq('user_id', me.id)
-                .maybeSingle();
-            profileId = p?['id'] as String?;
-          }
-          await ref
-              .read(loanStatementArchiveServiceProvider)
-              .archive(
-                loanId: loan.id,
-                bytes: bytes,
-                statementRef: ref0,
-                periodStart: options.periodStart,
-                periodEnd: options.periodEnd,
-                variant: options.variant.name,
-                format: options.format.name,
-                fileExtension: ext,
-                mimeType: mime,
-                generatedByUserId: profileId,
-                generatedByName: me?.fullName,
-              );
-          ref.invalidate(pastLoanStatementsProvider(loan.id));
-        } catch (e) {
-          debugPrint('Statement archive failed: $e');
-        }
-
-        if (!mounted) return;
-        Navigator.of(context).pop();
-
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (ctx) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.open_in_new_rounded),
-                  title: Text('Open ${ext.toUpperCase()}'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    OpenFilex.open(file.path);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.ios_share_rounded, semanticLabel: 'Share'),
-                  title: const Text('Share'),
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await SharePlus.instance.share(ShareParams(
-                      files: [XFile(file.path, mimeType: mime)],
-                      text: 'Loan Statement - ${loan.loanNumber}',
-                    ));
-                  },
-                ),
-              ],
-            ),
-          ),
+        // Show premium action sheet
+        _showStatementReadySheet(
+          loanNumber: loan.loanNumber,
+          file: localFile!,
+          ext: ext,
+          mime: mime,
         );
       }
     } catch (e, st) {
       debugPrint('Statement generation failed: $e\n$st');
+      StatementGenerationOverlay.dismiss();
+      await Future.delayed(const Duration(milliseconds: 200));
+
       if (!mounted) return;
-      Navigator.of(context).pop();
       messenger.showSnackBar(SnackBar(
         content: const Text('Failed to generate statement. Please try again.'),
-        backgroundColor: Theme.of(context).colorScheme.error,
+        backgroundColor: theme.colorScheme.error,
         duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ));
     }
+  }
+
+  /// Fire-and-forget archive — errors are silently logged.
+  Future<void> _archiveStatement({
+    required String loanId,
+    required Uint8List bytes,
+    required String statementRef,
+    required StatementOptions options,
+    required String ext,
+    required String mime,
+  }) async {
+    try {
+      final me = ref.read(currentUserProvider);
+      final supa = ref.read(supabaseClientProvider);
+      String? profileId;
+      if (me != null) {
+        final p = await supa
+            .from('profiles')
+            .select('id')
+            .eq('user_id', me.id)
+            .maybeSingle();
+        profileId = p?['id'] as String?;
+      }
+      await ref.read(loanStatementArchiveServiceProvider).archive(
+            loanId: loanId,
+            bytes: bytes,
+            statementRef: statementRef,
+            periodStart: options.periodStart,
+            periodEnd: options.periodEnd,
+            variant: options.variant.name,
+            format: options.format.name,
+            fileExtension: ext,
+            mimeType: mime,
+            generatedByUserId: profileId,
+            generatedByName: me?.fullName,
+          );
+      ref.invalidate(pastLoanStatementsProvider(loanId));
+    } catch (e) {
+      debugPrint('Statement archive failed: $e');
+    }
+  }
+
+  /// Premium action sheet after statement is saved on mobile.
+  void _showStatementReadySheet({
+    required String loanNumber,
+    required File file,
+    required String ext,
+    required String mime,
+  }) {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          12,
+          24,
+          MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Success icon
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.success,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Text(
+                'Statement Ready',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'loan_statement_$loanNumber.$ext',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+
+              // Open button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    OpenFilex.open(file.path);
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: Text(
+                    'Open ${ext.toUpperCase()}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Share button
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(ShareParams(
+                      files: [XFile(file.path, mimeType: mime)],
+                      text: 'Loan Statement - $loanNumber',
+                    ));
+                  },
+                  icon: const Icon(Icons.ios_share_rounded, size: 18),
+                  label: const Text(
+                    'Share',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _showPastStatements() async {

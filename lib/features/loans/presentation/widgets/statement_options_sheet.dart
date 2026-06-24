@@ -31,7 +31,6 @@ class StatementOptionsSheet extends StatefulWidget {
 
 class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
   _RangePreset _preset = _RangePreset.thisFY;
-  StatementVariant _variant = StatementVariant.fullSchedule;
   StatementFormat _format = StatementFormat.pdf;
   late DateTime _customStart;
   late DateTime _customEnd;
@@ -73,19 +72,6 @@ class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
         return 'This FY';
       case _RangePreset.custom:
         return 'Custom';
-    }
-  }
-
-  String _variantLabel(StatementVariant v) {
-    switch (v) {
-      case StatementVariant.fullSchedule:
-        return 'Full Schedule';
-      case StatementVariant.activityOnly:
-        return 'Activity Only';
-      case StatementVariant.taxStatement:
-        return 'Tax Statement';
-      case StatementVariant.customerStatement:
-        return 'Customer Statement';
     }
   }
 
@@ -197,27 +183,6 @@ class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
                 )),
             const SizedBox(height: 20),
 
-            // ── Variant ──
-            _SectionLabel(label: 'STATEMENT TYPE'),
-            RadioGroup<StatementVariant>(
-              groupValue: _variant,
-              onChanged: (val) => setState(() => _variant = val!),
-              child: Column(
-                children: StatementVariant.values.map((v) {
-                  return RadioListTile<StatementVariant>(
-                    value: v,
-                    title: Text(_variantLabel(v),
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: Text(_variantSubtitle(v),
-                        style: theme.textTheme.bodySmall),
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 16),
-
             // ── Format ──
             _SectionLabel(label: 'FORMAT'),
             SegmentedButton<StatementFormat>(
@@ -245,7 +210,7 @@ class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
                     StatementOptions(
                       periodStart: start,
                       periodEnd: end,
-                      variant: _variant,
+                      variant: StatementVariant.customerStatement,
                       format: _format,
                     ),
                   );
@@ -259,19 +224,6 @@ class _StatementOptionsSheetState extends State<StatementOptionsSheet> {
         ),
       ),
     );
-  }
-
-  String _variantSubtitle(StatementVariant v) {
-    switch (v) {
-      case StatementVariant.fullSchedule:
-        return 'All EMIs (scheduled + paid) with full ledger.';
-      case StatementVariant.activityOnly:
-        return 'Only actual transactions — paid, late, and disbursements.';
-      case StatementVariant.taxStatement:
-        return 'Interest and principal paid in the period for tax filing.';
-      case StatementVariant.customerStatement:
-        return 'Simple statement for the customer — payments made, balance remaining, next due.';
-    }
   }
 
   IconData _formatIcon(StatementFormat f) {

@@ -18,6 +18,7 @@ import '../widgets/receipt_generator.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/smokey_background.dart';
+import '../../../../core/widgets/premium_calendar_sheet.dart';
 import '../widgets/premium_helpers.dart';
 import '../../../loans/presentation/providers/loan_providers.dart' show emiScheduleProvider;
 import '../../../loans/data/models/emi_schedule_model.dart';
@@ -949,31 +950,11 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
                   icon: Icons.edit_calendar_rounded,
                   onTap: () async {
                     HapticFeedback.selectionClick();
-                    final DateTime? picked = await showDatePicker(
+                    final DateTime? picked = await PremiumCalendarSheet.show(
                       context: context,
                       initialDate: _customCollectionDate ?? DateTime.now().subtract(const Duration(days: 1)),
                       firstDate: DateTime.now().subtract(const Duration(days: 365)),
                       lastDate: DateTime.now(),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: isDark
-                                ? const ColorScheme.dark(
-                                    primary: AppColors.primary,
-                                    onPrimary: Colors.white,
-                                    surface: Color(0xFF1E1E2E),
-                                    onSurface: Colors.white,
-                                  )
-                                : ColorScheme.light(
-                                    primary: AppColors.primary,
-                                    onPrimary: Colors.white,
-                                    surface: Colors.white,
-                                    onSurface: Colors.black87,
-                                  ),
-                          ),
-                          child: child!,
-                        );
-                      },
                     );
                     if (picked != null) {
                       final now = DateTime.now();

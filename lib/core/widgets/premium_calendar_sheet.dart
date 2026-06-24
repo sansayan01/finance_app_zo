@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -218,9 +218,11 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
                   const SizedBox(height: 24),
 
                   // Quick Date Shortcuts
-                  Padding(
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 28),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         _QuickDateChip(label: 'Today', icon: Icons.today_rounded, selected: _sameDay(_selectedDate, DateTime.now()), isDark: _isDark, onTap: () => _selectDate(DateTime.now())),
                         const SizedBox(width: 10),

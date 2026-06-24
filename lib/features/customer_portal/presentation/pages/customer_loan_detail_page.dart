@@ -1263,6 +1263,8 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                         schedule: adminSchedule,
                                         payments: payments,
                                         org: org,
+                                        periodStart: periodStart,
+                                        periodEnd: periodEnd,
                                       );
                                       fileExt = 'pdf';
                                     }

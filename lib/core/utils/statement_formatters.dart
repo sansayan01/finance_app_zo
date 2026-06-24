@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 
 /// Shared formatters for PDF/CSV/Excel statement generation.
@@ -12,6 +14,7 @@ class StatementFormatters {
 
   static final _dateFmt = DateFormat('dd MMM yyyy');
   static final _isoDateFmt = DateFormat('yyyy-MM-dd');
+  static final _timestampFmt = DateFormat('dd MMM yyyy, hh:mm a');
 
   // ── Currency ──────────────────────────────────────────────────────────
 
@@ -66,6 +69,25 @@ class StatementFormatters {
     return '${negative ? '-' : ''}$grouped';
   }
 
+  /// Compact money format: "1.2L", "45K", "890"
+  static String shortMoney(num v) {
+    final n = v.abs();
+    final prefix = v < 0 ? '-' : '';
+    if (n >= 10000000) {
+      return '${prefix}Rs. ${(n / 10000000).toStringAsFixed(1)}Cr';
+    } else if (n >= 100000) {
+      return '${prefix}Rs. ${(n / 100000).toStringAsFixed(1)}L';
+    } else if (n >= 1000) {
+      return '${prefix}Rs. ${(n / 1000).toStringAsFixed(1)}K';
+    }
+    return '${prefix}Rs. ${n.toStringAsFixed(0)}';
+  }
+
+  // ── Percentages ───────────────────────────────────────────────────────
+
+  /// Formats as "12.5%" with one decimal place.
+  static String percentage(num v) => '${v.toStringAsFixed(1)}%';
+
   // ── Dates ─────────────────────────────────────────────────────────────
 
   /// "dd MMM yyyy" — e.g. "04 Jun 2026"
@@ -73,6 +95,90 @@ class StatementFormatters {
 
   /// "yyyy-MM-dd" — ISO format, ideal for CSV headers / machine parsing.
   static String isoDate(DateTime d) => _isoDateFmt.format(d);
+
+  /// "dd MMM yyyy, hh:mm AM/PM" — e.g. "04 Jun 2026, 02:30 PM"
+  static String timestamp(DateTime d) => _timestampFmt.format(d);
+
+  // ── Labels ────────────────────────────────────────────────────────────
+
+  /// Human-readable days label: "1 day", "3 days", "0 days"
+  static String daysLabel(int d) => '$d day${d == 1 ? '' : 's'}';
+
+  // ── Health Grade ──────────────────────────────────────────────────────
+
+  /// Computes an account health grade (A–E) from payment metrics.
+  ///
+  /// - [onTimeCount]: number of EMIs paid on or before due date
+  /// - [totalDue]: total EMIs that have reached their due date
+  /// - [currentOverdueCount]: number of currently overdue EMIs
+  /// - [maxDaysOverdue]: maximum days any EMI is currently overdue
+  static String healthGrade({
+    required int onTimeCount,
+    required int totalDue,
+    required int currentOverdueCount,
+    required int maxDaysOverdue,
+  }) {
+    if (totalDue == 0) return 'A'; // No EMIs due yet — excellent standing
+
+    final onTimeRatio = totalDue > 0 ? onTimeCount / totalDue : 1.0;
+
+    // Grade A: ≥95% on-time, no current overdue
+    if (onTimeRatio >= 0.95 && currentOverdueCount == 0) return 'A';
+
+    // Grade B: ≥85% on-time, ≤1 overdue, <30 days
+    if (onTimeRatio >= 0.85 && currentOverdueCount <= 1 && maxDaysOverdue < 30) {
+      return 'B';
+    }
+
+    // Grade C: ≥70% on-time, <60 days overdue
+    if (onTimeRatio >= 0.70 && maxDaysOverdue < 60) return 'C';
+
+    // Grade D: ≥50% on-time, <90 days overdue
+    if (onTimeRatio >= 0.50 && maxDaysOverdue < 90) return 'D';
+
+    // Grade E: everything else
+    return 'E';
+  }
+
+  /// Human-readable label for a health grade.
+  static String healthGradeLabel(String grade) {
+    switch (grade) {
+      case 'A': return 'Excellent';
+      case 'B': return 'Good';
+      case 'C': return 'Fair';
+      case 'D': return 'Needs Attention';
+      case 'E': return 'Critical';
+      default:  return 'Unknown';
+    }
+  }
+
+  // ── Security ──────────────────────────────────────────────────────────
+
+  /// Generates a SHA-256 hash of key loan data for tamper detection.
+  ///
+  /// The hash is deterministic — same inputs always produce the same hash.
+  /// Printed on the statement so the document can be verified against the
+  /// source system.
+  static String securityHash({
+    required String loanNumber,
+    required double amount,
+    required double outstandingBalance,
+    required int totalEmis,
+    required int paidEmis,
+    required DateTime generatedAt,
+  }) {
+    final payload = [
+      'LN:$loanNumber',
+      'AMT:${amount.toStringAsFixed(2)}',
+      'OS:${outstandingBalance.toStringAsFixed(2)}',
+      'TE:$totalEmis',
+      'PE:$paidEmis',
+      'GEN:${generatedAt.toUtc().toIso8601String()}',
+    ].join('|');
+
+    final digest = sha256.convert(utf8.encode(payload));
+    return digest.toString().toUpperCase();
+  }
 
   // ── Image validation ──────────────────────────────────────────────────
 

@@ -24,6 +24,7 @@ import '../../../savings/data/repositories/savings_repository.dart';
 import '../providers/loan_providers.dart';
 import 'emi_payment_selector.dart';
 import '../../../savings/presentation/widgets/savings_payment_selector.dart';
+import '../../../../core/widgets/premium_calendar_sheet.dart';
 
 /// Collection mode -- determines which collection type to process
 enum CollectionMode { loan, savings }
@@ -1005,7 +1006,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     return GestureDetector(
       onTap: () async {
         final now = DateTime.now();
-        final picked = await showDatePicker(
+        final picked = await PremiumCalendarSheet.show(
           context: context,
           initialDate: _customCollectionDate ?? now,
           firstDate: now.subtract(const Duration(days: 365)),

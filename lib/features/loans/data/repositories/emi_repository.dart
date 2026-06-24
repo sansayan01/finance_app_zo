@@ -466,6 +466,14 @@ class EMIRepository {
       for (final json in collectionsResponse) {
         final item = Map<String, dynamic>.from(json);
         final staff = item['profiles'] as Map<String, dynamic>?;
+        
+        final dateVal = item['collection_date']?.toString();
+        final timeVal = item['collection_time']?.toString();
+        String createdAtVal = '';
+        if (dateVal != null) {
+          createdAtVal = timeVal != null ? '${dateVal}T$timeVal' : dateVal;
+        }
+
         collections.add({
           'id': item['id']?.toString() ?? '',
           'transaction_id': '',
@@ -475,7 +483,9 @@ class EMIRepository {
           'payment_mode': item['payment_mode']?.toString() ?? 'cash',
           'reference_number': item['reference_number']?.toString(),
           'notes': item['remarks']?.toString(),
-          'created_at': item['collection_time']?.toString() ?? item['collection_date']?.toString() ?? '',
+          'created_at': createdAtVal,
+          'collection_date': dateVal,
+          'collection_time': timeVal,
           'collected_by_name': staff?['full_name']?.toString(),
           'collected_by_role': staff?['role']?.toString(),
           'source': 'collection',
@@ -511,6 +521,8 @@ class EMIRepository {
       final List<Map<String, dynamic>> merged = [];
       merged.addAll(collections);
 
+      final matchedCollectionIds = <String>{};
+
       for (final tx in transactions) {
         final txTimeStr = tx['created_at']?.toString() ?? '';
         final txTime = DateTime.tryParse(txTimeStr);
@@ -520,12 +532,13 @@ class EMIRepository {
         bool isDuplicate = false;
         if (txTime != null) {
           for (final col in collections) {
+            final colId = col['id'].toString();
+            if (matchedCollectionIds.contains(colId)) continue;
+
             final colAmount = col['amount'] as double;
             final colMode = col['payment_mode']?.toString();
 
-            // Same amount and same payment mode = likely duplicate
             if ((txAmount - colAmount).abs() < 0.01 && txMode == colMode) {
-              // Check if same day (parse collection date from created_at or use collection_date)
               final colTimeStr = col['created_at']?.toString() ?? '';
               final colTime = DateTime.tryParse(colTimeStr);
 
@@ -533,11 +546,12 @@ class EMIRepository {
                 final diff = txTime.difference(colTime).inMinutes.abs();
                 if (diff <= 1440) { // Same day (24 hours)
                   isDuplicate = true;
+                  matchedCollectionIds.add(colId);
                   break;
                 }
               } else {
-                // If we can't parse the collection time, match by amount alone
                 isDuplicate = true;
+                matchedCollectionIds.add(colId);
                 break;
               }
             }

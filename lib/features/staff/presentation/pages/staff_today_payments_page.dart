@@ -20,6 +20,7 @@ import '../../data/providers/staff_branch_providers.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../loans/data/models/loan_model.dart';
 import '../../../loans/presentation/widgets/collection_sheet.dart';
+import '../../../../core/widgets/premium_calendar_sheet.dart';
 
 class StaffTodayPaymentsPage extends ConsumerStatefulWidget {
   const StaffTodayPaymentsPage({super.key});
@@ -81,7 +82,7 @@ class _StaffTodayPaymentsPageState
 
   Future<void> _pickDate() async {
     final filters = ref.read(branchPaymentFilterProvider);
-    final picked = await showDatePicker(
+    final picked = await PremiumCalendarSheet.show(
       context: context,
       initialDate: filters.selectedDate,
       firstDate: DateTime(2020),

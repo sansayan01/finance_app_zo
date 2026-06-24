@@ -14,6 +14,7 @@ import '../../../payments/data/utils/payment_export.dart';
 import '../../../loans/presentation/widgets/collection_sheet.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../loans/data/models/loan_model.dart';
+import '../../../../core/widgets/premium_calendar_sheet.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../data/providers/branch_payment_providers.dart';
 import '../../../payments/data/services/auto_collection_service.dart';
@@ -69,7 +70,7 @@ class _BranchTodayPaymentsPageState
 
   Future<void> _pickDate() async {
     final filters = ref.read(branchPaymentFilterProvider);
-    final picked = await showDatePicker(
+    final picked = await PremiumCalendarSheet.show(
       context: context,
       initialDate: filters.selectedDate,
       firstDate: DateTime(2020),

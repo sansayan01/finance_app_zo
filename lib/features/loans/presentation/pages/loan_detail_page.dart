@@ -29,6 +29,7 @@ import '../../data/services/loan_statement_pdf_service.dart';
 import '../../data/services/loan_statement_excel_service.dart';
 import '../../data/services/loan_statement_csv_service.dart';
 import '../../data/services/loan_statement_archive_service.dart';
+import '../../data/services/qr_png.dart';
 import '../widgets/collection_sheet.dart';
 import '../widgets/statement_options_sheet.dart';
 import '../widgets/statement_generation_overlay.dart';
@@ -3587,12 +3588,20 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
       switch (options.format) {
         case StatementFormat.pdf:
+          final qrBytes = await QrPng.generate(
+            'loan:${loan.loanNumber}',
+            size: 200,
+          );
           bytes = await LoanStatementPdfService.buildCustomerStatement(
             loan: loan,
             schedule: schedule,
             payments: mappedPayments,
             org: org,
             generatedByName: ref.read(currentUserProvider)?.fullName,
+            periodStart: options.periodStart,
+            periodEnd: options.periodEnd,
+            statementRef: ref0,
+            qrPngBytes: qrBytes,
           );
           ext = 'pdf';
           mime = 'application/pdf';

@@ -67,7 +67,11 @@
       "Bash(supabase --version)",
       "Bash(curl -s 'https://tccwdpsnuudzfyxfoohk.supabase.co/rest/v1/loans?select=*&limit=5' -H 'apikey: __CMDSUB_OUTPUT__' -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
       "Bash(Get-ChildItem -Path D:/Projects/finance_app_zo/ -Depth 1 -Directory)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "mcp__supabase__apply_migration",
+      "Bash(findstr *)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:api.dart.dev)"
     ]
   },
   "enableAllProjectMcpServers": true,

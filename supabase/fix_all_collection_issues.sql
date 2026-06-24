@@ -43,6 +43,12 @@ ADD COLUMN IF NOT EXISTS sync_status TEXT DEFAULT 'synced';
 ALTER TABLE public.transactions 
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
 
+-- Add transaction_id to collections table if it doesn't exist
+ALTER TABLE public.collections 
+ADD COLUMN IF NOT EXISTS transaction_id UUID REFERENCES public.transactions(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_collections_transaction_id ON public.collections(transaction_id);
+
 -- 3. Add missing columns to loans table
 ALTER TABLE public.loans 
 ADD COLUMN IF NOT EXISTS org_id UUID REFERENCES public.organizations(id) ON DELETE CASCADE;

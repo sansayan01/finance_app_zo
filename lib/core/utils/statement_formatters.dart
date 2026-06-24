@@ -12,6 +12,58 @@ import 'package:intl/intl.dart';
 class StatementFormatters {
   StatementFormatters._();
 
+  /// Replaces lone surrogates (D800–DFFF) and other invalid Unicode code
+  /// points with U+FFFD so the result can be safely UTF-8 encoded by
+  /// `pdf`, `crypto`, or `csv` packages. Without this, a stray surrogate
+  /// or malformed byte causes:
+  ///   `FormatException: Unexpected extension byte (at offset ...)`
+  /// and the entire PDF/CSV build aborts.
+  ///
+  /// Returns `''` for `null` input so callers can pass nullable strings.
+  static String sanitizeForEncoding(String? s) {
+    if (s == null || s.isEmpty) return '';
+
+    // Step 1: Replace surrogates with U+FFFD
+    final buf = StringBuffer();
+    for (final rune in s.runes) {
+      if (rune >= 0xD800 && rune <= 0xDFFF) {
+        buf.writeCharCode(0xFFFD); // replacement character
+      } else {
+        buf.writeCharCode(rune);
+      }
+    }
+
+    final cleaned = buf.toString();
+
+    // Step 2: Verify UTF-8 validity
+    try {
+      utf8.encode(cleaned);
+      return cleaned;
+    } catch (_) {
+      // Step 3: If still invalid, manually encode runes to UTF-8 bytes
+      // using proper variable-length encoding, then decode with replacement
+      final bytes = <int>[];
+      for (final rune in cleaned.runes) {
+        if (rune < 0x80) {
+          bytes.add(rune);
+        } else if (rune < 0x800) {
+          bytes.add(0xC0 | (rune >> 6));
+          bytes.add(0x80 | (rune & 0x3F));
+        } else if (rune < 0x10000) {
+          bytes.add(0xE0 | (rune >> 12));
+          bytes.add(0x80 | ((rune >> 6) & 0x3F));
+          bytes.add(0x80 | (rune & 0x3F));
+        } else {
+          bytes.add(0xF0 | (rune >> 18));
+          bytes.add(0x80 | ((rune >> 12) & 0x3F));
+          bytes.add(0x80 | ((rune >> 6) & 0x3F));
+          bytes.add(0x80 | (rune & 0x3F));
+        }
+      }
+      return utf8.decode(bytes, allowMalformed: true);
+    }
+  }
+
   static final _dateFmt = DateFormat('dd MMM yyyy');
   static final _isoDateFmt = DateFormat('yyyy-MM-dd');
   static final _timestampFmt = DateFormat('dd MMM yyyy, hh:mm a');
@@ -168,7 +220,7 @@ class StatementFormatters {
     required DateTime generatedAt,
   }) {
     final payload = [
-      'LN:$loanNumber',
+      'LN:${sanitizeForEncoding(loanNumber)}',
       'AMT:${amount.toStringAsFixed(2)}',
       'OS:${outstandingBalance.toStringAsFixed(2)}',
       'TE:$totalEmis',

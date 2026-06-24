@@ -318,7 +318,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
     final profile = await client
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, role')
         .eq('user_id', user.id)
         .maybeSingle();
     final staffId = profile?['id'] as String?;
@@ -351,7 +351,26 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     }
     if (memberName.isEmpty) memberName = 'Unknown';
 
-    // 1. Insert ONE collection per selected EMI (each targets exactly one EMI)
+    // 1. Single transaction record for the total
+    final txResult = await client.from('transactions').insert({
+      'loan_id': widget.loan!.id,
+      'member_id': widget.loan!.memberId,
+      'member_name': memberName,
+      'type': TransactionType.emiPayment.name,
+      'amount': amount,
+      'payment_mode': _selectedMode,
+      'description': selectedCount > 1
+            ? '$selectedCount EMIs paid via $_selectedMode'
+            : 'EMI #${_primarySelectedEMI?.emiNumber ?? ''} payment via $_selectedMode',
+      'org_id': user.orgId!,
+      'created_at': _getCreatedAt(),
+      'collected_by_name': profile?['full_name']?.toString(),
+      'collected_by_role': profile?['role']?.toString() ?? 'collectionAgent',
+      'collected_by_user_id': staffId,
+    }).select('id').single();
+    final transactionId = txResult['id'] as String;
+
+    // 2. Insert ONE collection per selected EMI (each targets exactly one EMI)
     for (final emi in _selectedEMIs) {
       await client.from('collections').insert({
         'org_id': user.orgId!,
@@ -372,23 +391,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         'collection_time': timeStr,
         'sync_status': 'synced',
         'selected_schedule_id': emi.id,
+        'transaction_id': transactionId,
       });
     }
-
-    // 2. Single transaction record for the total
-    await client.from('transactions').insert({
-      'loan_id': widget.loan!.id,
-      'member_id': widget.loan!.memberId,
-      'member_name': memberName,
-      'type': TransactionType.emiPayment.name,
-      'amount': amount,
-      'payment_mode': _selectedMode,
-      'description': selectedCount > 1
-            ? '$selectedCount EMIs paid via $_selectedMode'
-            : 'EMI #${_primarySelectedEMI?.emiNumber ?? ''} payment via $_selectedMode',
-      'org_id': user.orgId!,
-      'created_at': _getCreatedAt(),
-    });
 
     // 3. Update loan balance
     final loanResp = await client

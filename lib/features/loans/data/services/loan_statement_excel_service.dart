@@ -101,7 +101,7 @@ class LoanStatementExcelService {
       TextCellValue('Description'),
       TextCellValue('Debit'),
       TextCellValue('Credit'),
-      TextCellValue('Balance'),
+      TextCellValue('Outstanding'),
     ]);
 
     double balance = loan.amount;

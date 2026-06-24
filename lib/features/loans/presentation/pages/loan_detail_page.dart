@@ -3683,16 +3683,32 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(
-        content: const Text('Failed to generate statement. Please try again.'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Failed to generate statement.',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$e',
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
         backgroundColor: theme.colorScheme.error,
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 8),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ));
     }
   }
 
-  /// Fire-and-forget archive — errors are silently logged.
+  /// Fire-and-forget archive — disabled for free tier to prevent database and storage limits.
   Future<void> _archiveStatement({
     required String loanId,
     required Uint8List bytes,
@@ -3701,35 +3717,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     required String ext,
     required String mime,
   }) async {
-    try {
-      final me = ref.read(currentUserProvider);
-      final supa = ref.read(supabaseClientProvider);
-      String? profileId;
-      if (me != null) {
-        final p = await supa
-            .from('profiles')
-            .select('id')
-            .eq('user_id', me.id)
-            .maybeSingle();
-        profileId = p?['id'] as String?;
-      }
-      await ref.read(loanStatementArchiveServiceProvider).archive(
-            loanId: loanId,
-            bytes: bytes,
-            statementRef: statementRef,
-            periodStart: options.periodStart,
-            periodEnd: options.periodEnd,
-            variant: options.variant.name,
-            format: options.format.name,
-            fileExtension: ext,
-            mimeType: mime,
-            generatedByUserId: profileId,
-            generatedByName: me?.fullName,
-          );
-      ref.invalidate(pastLoanStatementsProvider(loanId));
-    } catch (e) {
-      debugPrint('Statement archive failed: $e');
-    }
+    // Archiving to Supabase is disabled on the free tier to conserve storage space and rows.
+    // The generated statement is downloaded or shared locally instead.
   }
 
   /// Premium action sheet after statement is saved on mobile.

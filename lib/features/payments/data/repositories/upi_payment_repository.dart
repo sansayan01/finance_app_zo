@@ -334,7 +334,7 @@ class UpiPaymentRepository {
 
       if (req.isLoanPayment) {
         // 5a. Create transaction (so exec admin / transactions page can see it)
-        await _client.from('transactions').insert({
+        final txResult = await _client.from('transactions').insert({
           'member_id': resolvedMemberId,
           'member_name': resolvedName,
           'loan_id': req.loanId,
@@ -344,7 +344,11 @@ class UpiPaymentRepository {
           'description': 'Loan EMI paid via UPI',
           'org_id': _orgId,
           'created_at': req.createdAt.toIso8601String(),
-        });
+          'collected_by_name': confirmerName,
+          'collected_by_role': confirmerRole,
+          'collected_by_user_id': confirmerProfileId,
+        }).select('id').single();
+        final transactionId = txResult['id'] as String;
 
         // 5b. Create collection record
         await _client.from('collections').insert({
@@ -363,6 +367,7 @@ class UpiPaymentRepository {
           'gps_lng': 0.0,
           'sync_status': 'synced',
           'remarks': 'UPI payment confirmed — ID: ${req.id}',
+          'transaction_id': transactionId,
         });
 
         // 5c. Mark the EMI schedule row as paid

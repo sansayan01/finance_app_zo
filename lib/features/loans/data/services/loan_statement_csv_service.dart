@@ -14,6 +14,7 @@ import 'loan_statement_pdf_service.dart';
 /// interprets correctly. Dates use ISO 8601 (yyyy-MM-dd) for consistency.
 class LoanStatementCsvService {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
+  static final _dateTimeFmt = DateFormat('yyyy-MM-dd HH:mm:ss');
 
   static Uint8List build({
     required LoanModel loan,
@@ -38,7 +39,7 @@ class LoanStatementCsvService {
     // EMI Schedule
     _writeln(buf, 'EMI Schedule');
     _writeln(buf,
-        'EMI#,Due Date,Principal,Interest,Total,Balance,Status,Penalty,Penalty Paid');
+        'EMI#,Due Date,Principal,Interest,Total,Outstanding,Status,Penalty,Penalty Paid');
     for (final emi in schedule) {
       _writeln(buf,
           '${emi.emiNumber},${_dateFmt.format(emi.dueDate)},${_money(emi.principal)},${_money(emi.interest)},${_money(emi.emiAmount)},${_money(emi.balanceAfter)},${emi.status.name},${_money(emi.penaltyAmount)},${emi.penaltyPaid}');
@@ -51,11 +52,11 @@ class LoanStatementCsvService {
         ..sort((a, b) => a.date.compareTo(b.date));
 
       _writeln(buf, 'Payment History');
-      _writeln(buf, 'Date,Amount,Mode,Reference,Notes');
+      _writeln(buf, 'Date & Time,Amount,Mode,Collected By,Collected By Role,Notes');
 
       for (final p in sorted) {
         _writeln(buf,
-            '${_dateFmt.format(p.date)},${_money(p.amount)},${_escape(p.mode)},${_escape(p.referenceNumber ?? '')},${_escape(p.notes ?? '')}');
+            '${_dateTimeFmt.format(p.date)},${_money(p.amount)},${_escape(p.mode)},${_escape(p.collectedByName ?? '')},${_escape(p.collectedByRole ?? '')},${_escape(p.notes ?? '')}');
       }
       _writeln(buf, '');
     }
@@ -77,8 +78,9 @@ class LoanStatementCsvService {
     _writeln(buf, 'Outstanding,${_money(loan.outstandingBalance)}');
 
     // Prepend UTF-8 BOM so Excel on Windows interprets encoding correctly.
+    // Sanitize first so lone surrogates don't crash utf8.encode.
     final bom = [0xEF, 0xBB, 0xBF];
-    final content = utf8.encode(buf.toString());
+    final content = utf8.encode(StatementFormatters.sanitizeForEncoding(buf.toString()));
     return Uint8List.fromList(bom + content);
   }
 

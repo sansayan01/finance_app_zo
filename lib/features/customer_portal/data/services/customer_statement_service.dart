@@ -94,6 +94,8 @@ class CustomerStatementService {
         mode: t['mode'] as String? ?? 'Cash',
         referenceNumber: t['reference'] as String?,
         notes: t['description'] as String?,
+        collectedByName: t['collected_by_name']?.toString(),
+        collectedByRole: t['collected_by_role']?.toString(),
       );
     }).toList();
 

@@ -445,22 +445,43 @@ class EMIRepository {
 
   Future<List<Map<String, dynamic>>> getPaymentHistory(String loanId) async {
     try {
-      // 1. Fetch collections for this loan
-      final collectionsResponse = await _client
-          .from('collections')
-          .select('''
-            id,
-            loan_id,
-            amount_collected,
-            amount_expected,
-            payment_mode,
-            collection_date,
-            collection_time,
-            remarks,
-            reference_number,
-            profiles!fk_collections_staff(full_name, role)
-          ''')
-          .eq('loan_id', loanId);
+      // 1. Fetch collections for this loan (with resilience for missing transaction_id column)
+      dynamic collectionsResponse;
+      try {
+        collectionsResponse = await _client
+            .from('collections')
+            .select('''
+              id,
+              loan_id,
+              amount_collected,
+              amount_expected,
+              payment_mode,
+              collection_date,
+              collection_time,
+              remarks,
+              reference_number,
+              transaction_id,
+              profiles!fk_collections_staff(full_name, role)
+            ''')
+            .eq('loan_id', loanId);
+      } catch (e) {
+        debugPrint('getPaymentHistory collections fetch failed, trying fallback without transaction_id: $e');
+        collectionsResponse = await _client
+            .from('collections')
+            .select('''
+              id,
+              loan_id,
+              amount_collected,
+              amount_expected,
+              payment_mode,
+              collection_date,
+              collection_time,
+              remarks,
+              reference_number,
+              profiles!fk_collections_staff(full_name, role)
+            ''')
+            .eq('loan_id', loanId);
+      }
 
       final List<Map<String, dynamic>> collections = [];
       for (final json in collectionsResponse) {
@@ -476,7 +497,7 @@ class EMIRepository {
 
         collections.add({
           'id': item['id']?.toString() ?? '',
-          'transaction_id': '',
+          'transaction_id': item['transaction_id']?.toString() ?? '',
           'collection_id': item['id']?.toString() ?? '',
           'loan_id': item['loan_id']?.toString() ?? '',
           'amount': ((item['amount_collected'] ?? item['amount_expected']) as num?)?.toDouble() ?? 0.0,
@@ -495,7 +516,7 @@ class EMIRepository {
       // 2. Fetch transactions for this loan
       final transactionsResponse = await _client
           .from('transactions')
-          .select('id, loan_id, amount, payment_mode, reference_number, description, created_at')
+          .select('id, loan_id, amount, payment_mode, reference_number, description, created_at, collected_by_name, collected_by_role')
           .eq('loan_id', loanId)
           .eq('type', TransactionType.emiPayment.name);
 
@@ -511,67 +532,191 @@ class EMIRepository {
           'reference_number': item['reference_number']?.toString(),
           'notes': item['description']?.toString(),
           'created_at': item['created_at']?.toString() ?? '',
+          'collected_by_name': item['collected_by_name']?.toString(),
+          'collected_by_role': item['collected_by_role']?.toString(),
           'source': 'transaction',
         });
       }
 
       // 3. Merge and deduplicate
-      // Strategy: if a transaction has the same amount, payment mode, and same day
-      // as a collection, it's a duplicate (the collection triggers create both records)
+      // We keep all transaction records (representing actual cumulative payment events)
+      // and discard any collection records that are duplicates of these transactions.
       final List<Map<String, dynamic>> merged = [];
-      merged.addAll(collections);
+      merged.addAll(transactions);
 
       final matchedCollectionIds = <String>{};
+      final transactionIds = transactions.map((t) => t['id'].toString()).toSet();
 
+      // First pass: match collections to transactions using explicit transaction_id
+      for (final col in collections) {
+        final colTxId = col['transaction_id']?.toString() ?? '';
+        if (colTxId.isNotEmpty && transactionIds.contains(colTxId)) {
+          matchedCollectionIds.add(col['id'].toString());
+        }
+      }
+
+      // Second pass: fallback matching for legacy or unlinked entries.
+      // Only match collections created within the same minute (60 seconds)
+      // and on the same calendar day — a 24-hour window was too aggressive
+      // and would incorrectly collapse legitimate separate-day payments.
       for (final tx in transactions) {
+        final txId = tx['id'].toString();
+        final hasExplicitMatch = collections.any((c) => c['transaction_id']?.toString() == txId);
+        if (hasExplicitMatch) continue;
+
         final txTimeStr = tx['created_at']?.toString() ?? '';
         final txTime = DateTime.tryParse(txTimeStr);
         final txAmount = tx['amount'] as double;
         final txMode = tx['payment_mode']?.toString();
 
-        bool isDuplicate = false;
         if (txTime != null) {
-          for (final col in collections) {
+          final candidates = collections.where((col) {
             final colId = col['id'].toString();
-            if (matchedCollectionIds.contains(colId)) continue;
+            if (matchedCollectionIds.contains(colId)) return false;
+            if (col['payment_mode']?.toString() != txMode) return false;
 
-            final colAmount = col['amount'] as double;
-            final colMode = col['payment_mode']?.toString();
+            final colTimeStr = col['created_at']?.toString() ?? '';
+            final colTime = DateTime.tryParse(colTimeStr);
+            if (colTime == null) return false;
 
-            if ((txAmount - colAmount).abs() < 0.01 && txMode == colMode) {
-              final colTimeStr = col['created_at']?.toString() ?? '';
-              final colTime = DateTime.tryParse(colTimeStr);
+            // Must be same calendar day AND within 60 seconds
+            final sameDay = txTime.year == colTime.year &&
+                txTime.month == colTime.month &&
+                txTime.day == colTime.day;
+            if (!sameDay) return false;
 
-              if (colTime != null) {
-                final diff = txTime.difference(colTime).inMinutes.abs();
-                if (diff <= 1440) { // Same day (24 hours)
-                  isDuplicate = true;
-                  matchedCollectionIds.add(colId);
-                  break;
-                }
-              } else {
-                isDuplicate = true;
-                matchedCollectionIds.add(colId);
+            final diff = txTime.difference(colTime).inSeconds.abs();
+            return diff <= 60;
+          }).toList();
+
+          double sum = 0;
+          final currentMatch = <String>[];
+          for (final col in candidates) {
+            final colAmt = col['amount'] as double;
+            if (sum + colAmt <= txAmount + 0.01) {
+              sum += colAmt;
+              currentMatch.add(col['id'].toString());
+              if ((sum - txAmount).abs() < 0.01) {
                 break;
               }
             }
           }
-        }
 
-        if (!isDuplicate) {
-          merged.add(tx);
+          if ((sum - txAmount).abs() < 0.01) {
+            matchedCollectionIds.addAll(currentMatch);
+          }
         }
       }
 
-      // 4. Sort by date descending
-      merged.sort((a, b) {
+      // Add unmatched collections (e.g. offline synced collections that have no transaction counterpart yet),
+      // grouping and merging those collected at the same time (e.g. split collections)
+      final List<Map<String, dynamic>> unmatchedCollections = [];
+      for (final col in collections) {
+        if (!matchedCollectionIds.contains(col['id'].toString())) {
+          unmatchedCollections.add(col);
+        }
+      }
+
+      final List<Map<String, dynamic>> mergedCollections = [];
+      for (final col in unmatchedCollections) {
+        final colTimeStr = col['created_at']?.toString() ?? '';
+        final colTime = DateTime.tryParse(colTimeStr);
+        final colMode = col['payment_mode']?.toString();
+        final colStaff = col['collected_by_name']?.toString();
+
+        bool foundMatch = false;
+        for (var i = 0; i < mergedCollections.length; i++) {
+          final existing = mergedCollections[i];
+          final exTimeStr = existing['created_at']?.toString() ?? '';
+          final exTime = DateTime.tryParse(exTimeStr);
+          final exMode = existing['payment_mode']?.toString();
+          final exStaff = existing['collected_by_name']?.toString();
+
+          if (exMode == colMode && exStaff == colStaff && colTime != null && exTime != null) {
+            // Group collections recorded within 60 seconds of each other
+            final diff = colTime.difference(exTime).inSeconds.abs();
+            if (diff <= 60) {
+              existing['amount'] = (existing['amount'] as double) + (col['amount'] as double);
+              
+              final existingNotes = existing['notes']?.toString() ?? '';
+              final colNotes = col['notes']?.toString() ?? '';
+              if (colNotes.isNotEmpty) {
+                if (existingNotes.isEmpty) {
+                  existing['notes'] = colNotes;
+                } else if (!existingNotes.contains(colNotes)) {
+                  existing['notes'] = '$existingNotes, $colNotes';
+                }
+              }
+              foundMatch = true;
+              break;
+            }
+          }
+        }
+
+        if (!foundMatch) {
+          mergedCollections.add(Map<String, dynamic>.from(col));
+        }
+      }
+
+      merged.addAll(mergedCollections);
+
+      // 4. Consolidate any records that occur at the exact same minute, same payment mode, and same collector
+      final List<Map<String, dynamic>> consolidated = [];
+      for (final item in merged) {
+        final timeStr = item['created_at']?.toString() ?? '';
+        final time = DateTime.tryParse(timeStr);
+        final mode = item['payment_mode']?.toString();
+        final staff = item['collected_by_name']?.toString();
+
+        bool found = false;
+        for (var i = 0; i < consolidated.length; i++) {
+          final existing = consolidated[i];
+          final exTimeStr = existing['created_at']?.toString() ?? '';
+          final exTime = DateTime.tryParse(exTimeStr);
+          final exMode = existing['payment_mode']?.toString();
+          final exStaff = existing['collected_by_name']?.toString();
+
+          if (exMode == mode && exStaff == staff && time != null && exTime != null) {
+            // Group collections/transactions recorded within the same minute
+            final isSameMinute = time.year == exTime.year &&
+                time.month == exTime.month &&
+                time.day == exTime.day &&
+                time.hour == exTime.hour &&
+                time.minute == exTime.minute;
+            if (isSameMinute) {
+              existing['amount'] = (existing['amount'] as double) + (item['amount'] as double);
+              
+              final existingNotes = existing['notes']?.toString() ?? '';
+              final itemNotes = item['notes']?.toString() ?? '';
+              if (itemNotes.isNotEmpty) {
+                if (existingNotes.isEmpty) {
+                  existing['notes'] = itemNotes;
+                } else if (!existingNotes.contains(itemNotes)) {
+                  existing['notes'] = '$existingNotes, $itemNotes';
+                }
+              }
+              found = true;
+              break;
+            }
+          }
+        }
+
+        if (!found) {
+          consolidated.add(Map<String, dynamic>.from(item));
+        }
+      }
+
+      // 5. Sort by date descending
+      consolidated.sort((a, b) {
         final dateA = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         final dateB = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         return dateB.compareTo(dateA);
       });
 
-      return merged;
-    } catch (e) {
+      return consolidated;
+    } catch (e, stack) {
+      debugPrint('getPaymentHistory Error for loanId $loanId: $e');
+      debugPrint('getPaymentHistory StackTrace: $stack');
       return [];
     }
   }

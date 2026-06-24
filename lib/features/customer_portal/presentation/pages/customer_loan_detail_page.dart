@@ -21,6 +21,7 @@ import '../../../loans/data/models/loan_model.dart';
 import '../../../loans/data/services/loan_statement_pdf_service.dart';
 import '../../../loans/data/services/loan_statement_excel_service.dart';
 import '../../../loans/data/services/loan_statement_csv_service.dart';
+import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
@@ -1133,16 +1134,22 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                   try {
                                     final supabase =
                                         Supabase.instance.client;
-                                    final orgId = ref.read(
-                                        currentOrgIdOrThrowProvider);
-
-                                    // Fetch org info
-                                    final orgData = await supabase
-                                        .from('organizations')
-                                        .select(
-                                            'name, address, city, state, pincode, phone, email, gst_number')
-                                        .eq('id', orgId)
-                                        .maybeSingle();
+                                    // Customer-portal users frequently have
+                                    // no `org_id` on their profile — don't
+                                    // throw here, just skip org lookup and
+                                    // use a fallback name.
+                                    final orgIdNullable =
+                                        ref.read(currentOrgIdOrNullProvider);
+                                    Map<String, dynamic>? orgData;
+                                    if (orgIdNullable != null &&
+                                        orgIdNullable.isNotEmpty) {
+                                      orgData = await supabase
+                                          .from('organizations')
+                                          .select(
+                                              'name, address, city, state, pincode, phone, email, gst_number')
+                                          .eq('id', orgIdNullable)
+                                          .maybeSingle();
+                                    }
 
                                     final org = LoanStatementOrgInfo(
                                       name: orgData?['name'] ??
@@ -1161,9 +1168,9 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       id: loan.id,
                                       customerId: '',
                                       loanNumber: loan.loanNumber ??
-                                          loan.id
-                                              .substring(0, 8)
-                                              .toUpperCase(),
+                                          (loan.id.length >= 8
+                                              ? loan.id.substring(0, 8).toUpperCase()
+                                              : loan.id.toUpperCase()),
                                       amount: loan.amount,
                                       interestRate: loan.interestRate,
                                       tenureMonths: loan.tenureMonths,
@@ -1216,22 +1223,38 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                             ))
                                         .toList();
 
-                                    // Map paid EMIs → payments
-                                    final paidEmis = emiList
-                                        .where((e) => e.isPaid)
-                                        .toList();
-                                    final payments = paidEmis
-                                        .map((e) =>
-                                            LoanStatementPayment(
-                                              date: e.paidOn ??
-                                                  e.dueDate ??
-                                                  DateTime.now(),
-                                              amount: e.amountPaid > 0
-                                                  ? e.amountPaid
-                                                  : e.emiAmount,
-                                              mode: '',
-                                            ))
-                                        .toList();
+                                    // Fetch actual payment history for accurate timestamps, modes, and collector names
+                                    final rawPayments = await ref.read(
+                                        paymentHistoryProvider(
+                                            widget.loanId).future);
+
+                                    // Per-row try/catch so a single malformed
+                                    // payment row doesn't crash the whole sheet.
+                                    // Mirrors the admin flow's defensive mapping.
+                                    final payments = <LoanStatementPayment>[];
+                                    for (final p in rawPayments) {
+                                      try {
+                                        final dynamic amountRaw = p['amount'];
+                                        double amount = 0.0;
+                                        if (amountRaw is num) {
+                                          amount = amountRaw.toDouble();
+                                        } else if (amountRaw is String) {
+                                          amount =
+                                              double.tryParse(amountRaw) ?? 0.0;
+                                        }
+                                        payments.add(LoanStatementPayment(
+                                          date: DateTime.tryParse(p['created_at']?.toString() ?? '') ?? DateTime.now(),
+                                          amount: amount,
+                                          mode: p['payment_mode']?.toString() ?? 'cash',
+                                          referenceNumber: p['reference_number']?.toString(),
+                                          notes: p['notes']?.toString(),
+                                          collectedByName: p['collected_by_name']?.toString(),
+                                          collectedByRole: p['collected_by_role']?.toString(),
+                                        ));
+                                      } catch (_) {
+                                        // Skip malformed row — keep going.
+                                      }
+                                    }
 
                                     // Generate statement in the selected format
                                     Uint8List fileBytes;
@@ -1284,8 +1307,35 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
-                                            content: Text(
-                                                'Failed to generate statement: $e')),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Failed to generate statement.',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '$e',
+                                                maxLines: 4,
+                                                overflow:
+                                                    TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                    fontSize: 12),
+                                              ),
+                                            ],
+                                          ),
+                                          duration:
+                                              const Duration(seconds: 8),
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                        ),
                                       );
                                     }
                                   }

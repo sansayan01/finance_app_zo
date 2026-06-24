@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -41,14 +42,13 @@ enum StatementVariant { customerStatement }
 //  Font loading (Inter) — graceful fallback to Helvetica
 // ──────────────────────────────────────────────────────────────
 
-pw.Font? _fontRegular;
-pw.Font? _fontSemiBold;
-pw.Font? _fontBold;
-bool _fontsAttempted = false;
+pw.Font _fontRegular = pw.Font.helvetica();
+pw.Font _fontSemiBold = pw.Font.helveticaBold();
+pw.Font _fontBold = pw.Font.helveticaBold();
+bool _fontsLoaded = false;
 
 Future<void> _loadFonts() async {
-  if (_fontsAttempted) return;
-  _fontsAttempted = true;
+  if (_fontsLoaded) return;
   try {
     final regular = await rootBundle.load('assets/fonts/Inter-Regular.ttf');
     final semiBold = await rootBundle.load('assets/fonts/Inter-SemiBold.ttf');
@@ -56,11 +56,12 @@ Future<void> _loadFonts() async {
     _fontRegular = pw.Font.ttf(regular);
     _fontSemiBold = pw.Font.ttf(semiBold);
     _fontBold = pw.Font.ttf(bold);
-  } catch (_) {
-    // Inter fonts not yet bundled — falls back to Helvetica (built-in).
-    _fontRegular = null;
-    _fontSemiBold = null;
-    _fontBold = null;
+    _fontsLoaded = true;
+  } catch (e) {
+    // Fonts not loadable — stay with Helvetica but warn.
+    // Helvetica cannot render non-Latin chars (₹, etc.), so we
+    // do NOT set _fontsLoaded = true, allowing a retry next time.
+    debugPrint('[LoanStatementPdf] Font loading failed: $e');
   }
 }
 
@@ -72,14 +73,24 @@ class LoanStatementPdfService {
   static final _dateFmt = DateFormat('dd MMM yyyy');
 
   // ── Shared formatters ──
-  static String _money(num v) => StatementFormatters.money(v);
+  // Each formatter sanitises non-finite numbers (NaN / ±Infinity) before
+  // touching `truncate()`/`toStringAsFixed()`, which would otherwise throw
+  // `UnsupportedError: NaN or infinity is not allowed` mid-build.
+  static double _safe(num? v, [double fallback = 0.0]) {
+    if (v == null) return fallback;
+    final d = v.toDouble();
+    return (d.isNaN || d.isInfinite) ? fallback : (d < 0 ? -d : d).toDouble();
+  }
+
+  static String _money(num? v) => StatementFormatters.money(_safe(v));
   static String _date(DateTime d) => _dateFmt.format(d);
-  static String _num(num v) => StatementFormatters.number(v);
-  static String _pct(num v) => StatementFormatters.percentage(v);
+  static String _num(num? v) => StatementFormatters.number(_safe(v));
+  static String _pct(num? v) => StatementFormatters.percentage(_safe(v));
   static String _dateTime(DateTime d) => DateFormat('dd MMM yyyy, hh:mm a').format(d);
-  static String _moneyInt(num v) {
-    final negative = v < 0;
-    final n = v.abs();
+  static String _moneyInt(num? v) {
+    final raw = _safe(v);
+    final negative = (v ?? 0) < 0;
+    final n = raw;
     final whole = n.truncate();
     final wholeStr = whole.toString();
 
@@ -117,6 +128,134 @@ class LoanStatementPdfService {
   }) async {
     await _loadFonts();
 
+    try {
+      return await _buildCustomerStatementImpl(
+        loan: loan,
+        schedule: schedule,
+        payments: payments,
+        org: org,
+        generatedByName: generatedByName,
+        qrPngBytes: qrPngBytes,
+        periodStart: periodStart,
+        periodEnd: periodEnd,
+        statementRef: statementRef,
+      );
+    } on FormatException catch (e, st) {
+      // TTF font subsetting can throw FormatException for corrupt font data.
+      // Reset to built-in Helvetica and retry once.
+      debugPrint(
+        "[LoanStatementPdf] FormatException with TTF fonts: $e\n"
+        "Retrying with Helvetica fallback...\n$st",
+      );
+      _fontRegular = pw.Font.helvetica();
+      _fontSemiBold = pw.Font.helveticaBold();
+      _fontBold = pw.Font.helveticaBold();
+      _fontsLoaded = true;
+      try {
+        return await _buildCustomerStatementImpl(
+          loan: loan,
+          schedule: schedule,
+          payments: payments,
+          org: org,
+          generatedByName: generatedByName,
+          qrPngBytes: qrPngBytes,
+          periodStart: periodStart,
+          periodEnd: periodEnd,
+          statementRef: statementRef,
+        );
+      } catch (e2, st2) {
+        debugPrint(
+          "[LoanStatementPdf] Retry also failed: $e2\n$st2",
+        );
+        Error.throwWithStackTrace(StateError('PDF build failed: $e2'), st2);
+      }
+    } catch (e, st) {
+      debugPrint(
+        "[LoanStatementPdf] Failed to build statement for "
+        "loan=${loan.loanNumber}, id=${loan.id}, "
+        "customer=${loan.customerName ?? '(no name)'}: $e\n$st",
+      );
+      Error.throwWithStackTrace(StateError('PDF build failed: $e'), st);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  //  Internal builder — separated so try/catch in the public entry
+  //  can wrap it cleanly without scoping the entire body.
+  // ─────────────────────────────────────────────────────────
+  static Future<Uint8List> _buildCustomerStatementImpl({
+    required LoanModel loan,
+    required List<EMIScheduleModel> schedule,
+    required List<LoanStatementPayment> payments,
+    required LoanStatementOrgInfo org,
+    String? generatedByName,
+    Uint8List? qrPngBytes,
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    String? statementRef,
+  }) async {
+    final s = StatementFormatters.sanitizeForEncoding;
+
+    return _buildBody(
+      loan: loan.copyWith(
+        customerName: s(loan.customerName),
+        loanNumber: s(loan.loanNumber),
+        customerId: s(loan.customerId),
+        customerPhone: s(loan.customerPhone),
+        frequency: s(loan.frequency),
+        tenureUnit: s(loan.tenureUnit),
+        purpose: s(loan.purpose),
+        remarks: s(loan.remarks),
+        staffName: s(loan.staffName),
+        staffPhone: s(loan.staffPhone),
+      ),
+      schedule: schedule,
+      payments: payments
+          .map((p) => LoanStatementPayment(
+                date: p.date,
+                amount: p.amount,
+                mode: s(p.mode),
+                referenceNumber: s(p.referenceNumber),
+                notes: s(p.notes),
+                collectedByName: s(p.collectedByName),
+                collectedByRole: s(p.collectedByRole),
+              ))
+          .toList(),
+      org: StatementOrgInfo(
+        name: s(org.name),
+        tagline: s(org.tagline),
+        address: s(org.address),
+        city: s(org.city),
+        state: s(org.state),
+        pincode: s(org.pincode),
+        phone: s(org.phone),
+        email: s(org.email),
+        website: s(org.website),
+        gstNumber: s(org.gstNumber),
+        registrationNumber: s(org.registrationNumber),
+        grievanceOfficer: s(org.grievanceOfficer),
+        grievancePhone: s(org.grievancePhone),
+        logoBytes: org.logoBytes,
+      ),
+      generatedByName: s(generatedByName),
+      qrPngBytes: qrPngBytes,
+      periodStart: periodStart,
+      periodEnd: periodEnd,
+      statementRef: s(statementRef),
+    );
+  }
+
+  static Future<Uint8List> _buildBody({
+    required LoanModel loan,
+    required List<EMIScheduleModel> schedule,
+    required List<LoanStatementPayment> payments,
+    required LoanStatementOrgInfo org,
+    String? generatedByName,
+    Uint8List? qrPngBytes,
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    String? statementRef,
+  }) async {
     final generatedAt = DateTime.now();
 
     // ── Resolve period ──
@@ -171,6 +310,7 @@ class LoanStatementPdfService {
           statementRef: effectiveRef,
           securityHash: docHash,
         );
+    final qrData = 'VERIFY|$effectiveRef|$hashShort|${loan.loanNumber}';
 
     // ── Health score ──
     final now = DateTime.now();
@@ -236,6 +376,7 @@ class LoanStatementPdfService {
                 statementRef: effectiveRef,
                 periodStart: effectiveStart,
                 periodEnd: effectiveEnd,
+                qrData: qrData,
               )
             : _buildRunningHeader(org, loan, hashShort),
         footer: (ctx) => _buildPremiumFooter(
@@ -331,6 +472,7 @@ class LoanStatementPdfService {
     required String statementRef,
     required DateTime periodStart,
     required DateTime periodEnd,
+    String? qrData,
   }) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -361,7 +503,9 @@ class LoanStatementPdfService {
               child: pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  if (org.logoBytes != null && org.logoBytes!.isNotEmpty)
+                  if (org.logoBytes != null &&
+                      org.logoBytes!.isNotEmpty &&
+                      StatementFormatters.isValidImage(org.logoBytes))
                     pw.Container(
                       width: 52,
                       height: 52,
@@ -501,7 +645,7 @@ class LoanStatementPdfService {
                   pw.SizedBox(height: 6),
                   
                   // Inline QR code
-                  if (qrBytes != null)
+                  if (qrBytes != null && StatementFormatters.isValidImage(qrBytes))
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.end,
                       crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -523,6 +667,36 @@ class LoanStatementPdfService {
                             borderRadius: pw.BorderRadius.circular(3),
                           ),
                           child: pw.Image(pw.MemoryImage(qrBytes)),
+                        ),
+                      ],
+                    )
+                  else if (qrData != null && qrData.isNotEmpty)
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.end,
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      children: [
+                        pw.Text(
+                          'Scan to verify  ',
+                          style: pw.TextStyle(
+                            fontSize: 5.5,
+                            color: StatementColors.grey400,
+                          ),
+                        ),
+                        pw.Container(
+                          width: 32,
+                          height: 32,
+                          padding: const pw.EdgeInsets.all(1.5),
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                                color: StatementColors.grey200, width: 0.5),
+                            borderRadius: pw.BorderRadius.circular(3),
+                          ),
+                          child: pw.BarcodeWidget(
+                            barcode: pw.Barcode.qrCode(),
+                            data: qrData,
+                            drawText: false,
+                            color: StatementColors.navy900,
+                          ),
                         ),
                       ],
                     ),
@@ -891,35 +1065,36 @@ class LoanStatementPdfService {
       )..outstanding = loan.totalRepayable);
     }
 
-    // Payments
-    // We calculate the outstanding balance for each payment by working backwards from the loan's current outstanding balance
+    // Payments — merge same-date+time payments, then compute outstanding
     final sortedAllPayments = List<LoanStatementPayment>.from(payments)
       ..sort((a, b) => a.date.compareTo(b.date));
 
-    double currentOutstanding = loan.outstandingBalance;
-    final outstandingMap = <LoanStatementPayment, double>{};
-    for (int i = sortedAllPayments.length - 1; i >= 0; i--) {
-      final p = sortedAllPayments[i];
-      outstandingMap[p] = currentOutstanding;
-      currentOutstanding += p.amount;
-    }
+    final mergedPayments = _mergePaymentsByDateTime(sortedAllPayments);
 
-    for (final p in payments) {
-      String desc = 'Payment via ${_paymentModeLabel(p.mode)}';
-      if (p.collectedByName != null && p.collectedByName!.isNotEmpty) {
-        desc += ' (Collected by ${p.collectedByName})';
-      }
-      final event = _LedgerEvent(
+    // Compute outstanding backwards from current outstanding
+    double currentOutstanding = loan.outstandingBalance;
+    final outstandingList = <double>[];
+    for (int i = mergedPayments.length - 1; i >= 0; i--) {
+      outstandingList.add(currentOutstanding);
+      currentOutstanding += mergedPayments[i].amount;
+    }
+    // Reverse so index 0 matches the first (oldest) payment
+    final reversedList = outstandingList.reversed.toList();
+
+  for (int i = 0; i < mergedPayments.length; i++) {
+    final p = mergedPayments[i];
+    String desc = p.description;
+    final event = _LedgerEvent(
         date: p.date,
         description: desc,
         type: _LedgerEventType.payment,
         amount: p.amount,
       );
-      event.outstanding = outstandingMap[p] ?? loan.outstandingBalance;
+      event.outstanding = reversedList[i];
       allEvents.add(event);
     }
 
-    // Sort chronologically
+    // Sort chronologically (disbursement before payment at same time)
     allEvents.sort((a, b) {
       final cmp = a.date.compareTo(b.date);
       if (cmp != 0) return cmp;
@@ -948,8 +1123,8 @@ class LoanStatementPdfService {
       orElse: () => _LedgerEvent(date: DateTime(2000), description: '', type: _LedgerEventType.disbursement, amount: 0.0),
     );
 
-    final showOpeningBalance = periodEvents.isEmpty || 
-        (periodEvents.first.type != _LedgerEventType.disbursement && 
+    final showOpeningBalance = periodEvents.isEmpty ||
+        (periodEvents.first.type != _LedgerEventType.disbursement &&
          periodEvents.first.date.isAfter(firstDisbursement.date));
 
     if (showOpeningBalance) {
@@ -979,8 +1154,12 @@ class LoanStatementPdfService {
 
     // 5. Build Table Rows
     int idx = 1;
+    // Safe upper bound for outstanding column — handle invalid/missing totalRepayable.
+    final outUpper = (loan.totalRepayable.isFinite && loan.totalRepayable > 0)
+        ? loan.totalRepayable
+        : double.infinity;
     final rows = periodEvents.map((e) {
-      String dateStr = e.type == _LedgerEventType.openingBalance || 
+      String dateStr = e.type == _LedgerEventType.openingBalance ||
               e.type == _LedgerEventType.disbursement
           ? _date(e.date)
           : _dateTime(e.date);
@@ -999,7 +1178,7 @@ class LoanStatementPdfService {
         dateStr,
         e.description,
         amtStr,
-        _money(e.outstanding.clamp(0.0, loan.totalRepayable)),
+        _money(e.outstanding.isNaN ? 0.0 : e.outstanding.clamp(0.0, outUpper)),
       ];
     }).toList();
 
@@ -1039,9 +1218,9 @@ class LoanStatementPdfService {
           const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
       cellDecoration: (rowIndex, cellIndex, row) {
         if (rowIndex < 0) return const pw.BoxDecoration();
-        
+
         final event = periodEvents[rowIndex.clamp(0, periodEvents.length - 1)];
-        
+
         if (event.type == _LedgerEventType.openingBalance || event.type == _LedgerEventType.disbursement) {
           return pw.BoxDecoration(
             color: StatementColors.navy100,
@@ -1061,7 +1240,6 @@ class LoanStatementPdfService {
             ),
           );
         }
-
 
         return pw.BoxDecoration(
           color: rowIndex.isOdd ? StatementColors.grey50 : StatementColors.white,
@@ -1839,6 +2017,77 @@ class LoanStatementPdfService {
             .join(' ');
     }
   }
+
+  // ── Payment Merging ──
+
+  /// Returns `true` when two DateTimes fall within the same minute AND
+  /// their dates are identical.  This is used to group payments that the
+  /// collection sheet recorded in rapid succession (e.g. 3 EMI inserts
+  /// inside a for-loop within the same minute).
+  static bool _sameMinute(DateTime a, DateTime b) =>
+      a.year == b.year &&
+      a.month == b.month &&
+      a.day == b.day &&
+      a.hour == b.hour &&
+      a.minute == b.minute;
+
+  /// Merges payments that fall within the same minute into a single
+  /// [_MergedPayment].
+  ///
+  /// When a customer pays 3 EMIs at once, the collection sheet records
+  /// 3 separate rows (one per EMI), each with a slightly different
+  /// Supabase `created_at`.  This merge groups them so the ledger shows:
+  ///   "3 installments paid (Cash)   –Rs. 300.00   Rs. 5,200.00"
+  /// instead of three identical-time separate rows.
+  static List<_MergedPayment> _mergePaymentsByDateTime(
+      List<LoanStatementPayment> sorted) {
+    if (sorted.isEmpty) return const [];
+
+    final merged = <_MergedPayment>[];
+    int i = 0;
+
+    while (i < sorted.length) {
+      final anchor = sorted[i];
+      double sum = anchor.amount;
+      int count = 1;
+      final modes = <String>{anchor.mode};
+
+      // Collect all consecutive payments within the same minute
+      while (i + 1 < sorted.length &&
+          _sameMinute(anchor.date, sorted[i + 1].date)) {
+        i++;
+        sum += sorted[i].amount;
+        modes.add(sorted[i].mode);
+        count++;
+      }
+
+      if (count > 1) {
+        final modeStr = modes.map(_paymentModeLabel).join(' / ');
+        merged.add(_MergedPayment(
+          date: anchor.date,
+          amount: sum,
+          description: '$count installments paid ($modeStr)',
+          count: count,
+        ));
+      } else {
+        String desc = 'Payment via ${_paymentModeLabel(anchor.mode)}';
+        if (anchor.collectedByName != null &&
+            anchor.collectedByName!.isNotEmpty) {
+          desc += ' (Collected by ${anchor.collectedByName})';
+        }
+        merged.add(_MergedPayment(
+          date: anchor.date,
+          amount: sum,
+          description: desc,
+          count: 1,
+        ));
+      }
+
+      i++;
+    }
+
+    return merged;
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1859,5 +2108,21 @@ class _LedgerEvent {
     required this.description,
     required this.type,
     required this.amount,
+  });
+}
+
+/// Represents one or more payments merged into a single ledger row
+/// when they share the exact same date+time.
+class _MergedPayment {
+  final DateTime date;
+  final double amount;
+  final String description;
+  final int count;
+
+  const _MergedPayment({
+    required this.date,
+    required this.amount,
+    required this.description,
+    required this.count,
   });
 }

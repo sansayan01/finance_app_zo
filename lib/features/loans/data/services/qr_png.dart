@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -8,6 +8,7 @@ class QrPng {
   ///
   /// Uses branded teal-navy styling for a premium appearance.
   static Future<Uint8List?> generate(String data, {double size = 200}) async {
+    if (kIsWeb) return null;
     try {
       final painter = QrPainter(
         data: data,

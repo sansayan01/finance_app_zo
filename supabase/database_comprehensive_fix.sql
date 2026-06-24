@@ -272,6 +272,7 @@ CREATE TABLE IF NOT EXISTS public.collections (
     loan_id UUID REFERENCES public.loans(id) ON DELETE SET NULL,
     loan_schedule_id UUID REFERENCES public.loan_schedules(id) ON DELETE SET NULL,
     member_id UUID REFERENCES public.members(id) ON DELETE SET NULL,
+    transaction_id UUID REFERENCES public.transactions(id) ON DELETE SET NULL,
     member_name TEXT,
     member_phone TEXT,
     loan_number TEXT,
@@ -304,6 +305,7 @@ CREATE INDEX IF NOT EXISTS idx_collections_staff ON public.collections(staff_id)
 CREATE INDEX IF NOT EXISTS idx_collections_member ON public.collections(member_id);
 CREATE INDEX IF NOT EXISTS idx_collections_date ON public.collections(collection_date);
 CREATE INDEX IF NOT EXISTS idx_collections_loan ON public.collections(loan_id);
+CREATE INDEX IF NOT EXISTS idx_collections_transaction_id ON public.collections(transaction_id);
 
 -- =====================================================
 -- PART 10: STAFF PROFILES TABLE

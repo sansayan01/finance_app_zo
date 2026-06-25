@@ -168,7 +168,13 @@
       "WebSearch",
       "Bash(git reset:*)",
       "Bash(git remote:*)",
-      "Bash(echo \"EXIT:$?\")"
+      "Bash(echo \"EXIT:$?\")",
+      "mcp__github__get_file_contents",
+      "mcp__github__get_issue",
+      "Bash(gh repo:*)",
+      "Bash(graphify install:*)",
+      "Bash(pip show:*)",
+      "Bash(graphify:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

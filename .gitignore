@@ -97,3 +97,6 @@ temp/
 
 # Kilo config
 .kilo/
+
+# Graphify knowledge graph (regenerable)
+graphify-out/

@@ -44,7 +44,10 @@ DECLARE
 BEGIN
   -- Delete transactions first
   DELETE FROM public.transactions WHERE loan_id = p_loan_id AND org_id = p_org_id;
-  
+
+  -- Nullify EMI references in UPI payment requests (FK blocks emi_schedule delete)
+  UPDATE public.upi_payment_requests SET emi_schedule_id = NULL WHERE loan_id = p_loan_id;
+
   -- Delete EMI schedules
   DELETE FROM public.emi_schedule WHERE loan_id = p_loan_id AND org_id = p_org_id;
   

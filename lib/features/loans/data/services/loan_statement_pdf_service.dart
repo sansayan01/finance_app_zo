@@ -1072,29 +1072,20 @@ class LoanStatementPdfService {
         description: 'Loan Disbursed',
         type: _LedgerEventType.disbursement,
         amount: loan.amount,
-      )..outstanding = loan.amount);
+      )..outstanding = loan.totalRepayable);
     }
 
     // Payments — merge same-second payments (identical second = same
     // collection-sheet batch), then compute outstanding by walking
-    // backward from the canonical loan.outstandingBalance so the
-    // ledger's last row always matches the Financial Status Summary.
+    // FORWARD from loan.amount and subtracting each payment.
     final sortedAllPayments = List<LoanStatementPayment>.from(payments)
       ..sort((a, b) => a.date.compareTo(b.date));
 
     final mergedPayments = _mergePaymentsByDateTime(sortedAllPayments);
 
-    // Backward walk: start from the known correct outstanding balance,
-    // add each payment back to recover the balance before it was paid.
-    final outstandingBack = <double>[];
-    double cursor = loan.outstandingBalance;
-    for (int i = mergedPayments.length - 1; i >= 0; i--) {
-      outstandingBack.add(cursor);
-      cursor += mergedPayments[i].amount;
-    }
-    // Reverse so index 0 = oldest payment
-    final outstandingList = outstandingBack.reversed.toList();
-
+    // Forward walk: start from total repayable (principal + interest),
+    // subtract each payment to show customer's perspective.
+    double outstanding = loan.totalRepayable;
     for (int i = 0; i < mergedPayments.length; i++) {
       final p = mergedPayments[i];
       final event = _LedgerEvent(
@@ -1104,13 +1095,17 @@ class LoanStatementPdfService {
         amount: p.amount,
         collectedByName: p.collectedByName,
       );
-      event.outstanding = outstandingList[i];
-      if (i == mergedPayments.length - 1) {
-        // Last payment row: force to exactly the DB outstanding balance
-        // (corrects any paisa-level drift from manual entry amounts).
-        event.outstanding = loan.outstandingBalance;
-      }
+      outstanding -= p.amount;
+      event.outstanding = outstanding < 0 ? 0.0 : outstanding;
       allEvents.add(event);
+    }
+
+    // Force last payment row to DB outstanding balance (corrects paisa drift)
+    if (allEvents.isNotEmpty) {
+      final lastPaymentIdx = allEvents.lastIndexWhere((e) => e.type == _LedgerEventType.payment);
+      if (lastPaymentIdx != -1) {
+        allEvents[lastPaymentIdx].outstanding = loan.outstandingBalance;
+      }
     }
 
     // Sort chronologically (disbursement before payment at same time)
@@ -1167,6 +1162,17 @@ class LoanStatementPdfService {
       )..outstanding = openingBalanceAmt);
     }
 
+    // Add Closing Balance row at end
+    if (periodEvents.isNotEmpty) {
+      final lastEvent = periodEvents.last;
+      periodEvents.add(_LedgerEvent(
+        date: effectiveEnd,
+        description: 'Closing Balance',
+        type: _LedgerEventType.closingBalance,
+        amount: 0.0,
+      )..outstanding = lastEvent.outstanding);
+    }
+
     if (periodEvents.isEmpty) {
       return _emptyBox('No payments recorded for this period.');
     }
@@ -1179,21 +1185,21 @@ class LoanStatementPdfService {
         : double.infinity;
     final rows = periodEvents.map((e) {
       String dateStr = e.type == _LedgerEventType.openingBalance ||
-              e.type == _LedgerEventType.disbursement
+              e.type == _LedgerEventType.disbursement ||
+              e.type == _LedgerEventType.closingBalance
           ? _date(e.date)
           : _dateTime(e.date);
 
       String amtStr;
-      if (e.type == _LedgerEventType.openingBalance) {
+      if (e.type == _LedgerEventType.openingBalance ||
+          e.type == _LedgerEventType.closingBalance) {
         amtStr = '—';
-      } else if (e.type == _LedgerEventType.payment) {
-        amtStr = '-${_money(e.amount)}';
       } else {
         amtStr = _money(e.amount);
       }
 
       return [
-        e.type == _LedgerEventType.openingBalance ? '' : '${idx++}',
+        (e.type == _LedgerEventType.openingBalance || e.type == _LedgerEventType.closingBalance) ? '' : '${idx++}',
         dateStr,
         e.description,
         e.collectedByName ?? '',
@@ -1247,6 +1253,18 @@ class LoanStatementPdfService {
           return pw.BoxDecoration(
             color: StatementColors.navy100,
             border: pw.Border(
+              bottom: pw.BorderSide(
+                  color: StatementColors.grey200, width: 0.5),
+            ),
+          );
+        }
+
+        if (event.type == _LedgerEventType.closingBalance) {
+          return pw.BoxDecoration(
+            color: StatementColors.navy100,
+            border: pw.Border(
+              top: pw.BorderSide(
+                  color: StatementColors.grey400, width: 0.5),
               bottom: pw.BorderSide(
                   color: StatementColors.grey200, width: 0.5),
             ),
@@ -2052,8 +2070,7 @@ class LoanStatementPdfService {
       a.month == b.month &&
       a.day == b.day &&
       a.hour == b.hour &&
-      a.minute == b.minute &&
-      a.second == b.second;
+      a.minute == b.minute;
 
   /// Merges payments that fall within the same minute into a single
   /// [_MergedPayment].
@@ -2116,7 +2133,7 @@ class LoanStatementPdfService {
 //  Account Ledger Events Helper Models
 // ──────────────────────────────────────────────────────────────
 
-enum _LedgerEventType { openingBalance, disbursement, payment }
+enum _LedgerEventType { openingBalance, disbursement, payment, closingBalance }
 
 class _LedgerEvent {
   final DateTime date;

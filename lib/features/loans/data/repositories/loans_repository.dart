@@ -653,13 +653,19 @@ class LoansRepository {
       // 1. Delete transactions
       await _client.from('transactions').delete().eq('loan_id', loanId);
 
-      // 2. Delete collections first (references emi_schedule via selected_schedule_id)
+      // 2. Nullify UPI payment request EMI references (FK blocks emi_schedule delete)
+      await _client.from('upi_payment_requests').update({'emi_schedule_id': null}).eq('loan_id', loanId);
+
+      // 3. Delete collections first (references emi_schedule via selected_schedule_id)
       await _client.from('collections').delete().eq('loan_id', loanId);
 
-      // 3. Delete EMI schedules
+      // 4. Delete EMI schedules
       await _client.from('emi_schedule').delete().eq('loan_id', loanId);
 
-      // 4. Delete the loan itself
+      // 5. Nullify UPI payment request loan references before deleting loan
+      await _client.from('upi_payment_requests').update({'loan_id': null}).eq('loan_id', loanId);
+
+      // 6. Delete the loan itself
       await _client.from('loans').delete().eq('id', loanId);
 
       // 7. Verify deletion

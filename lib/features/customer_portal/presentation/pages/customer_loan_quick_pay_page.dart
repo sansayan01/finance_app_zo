@@ -78,7 +78,7 @@ class _CustomerLoanQuickPayPageState
   }
 
   List<CustomerEmiModel> _unpaidEmis(List<CustomerEmiModel> emis) {
-    return emis.where((e) => !e.isPaid).toList()
+    return emis.where((e) => !e.isPaid && e.status != 'frozen').toList()
       ..sort((a, b) => a.emiNumber.compareTo(b.emiNumber));
   }
 

@@ -52,8 +52,7 @@ class CustomerEmiModel {
   }
 
   bool get isOverdue {
-    if (status == 'overdue') return true;
-    if (isPaid || dueDate == null) return false;
+    if (isPaid || status == 'frozen' || dueDate == null) return false;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return dueDate!.isBefore(today);

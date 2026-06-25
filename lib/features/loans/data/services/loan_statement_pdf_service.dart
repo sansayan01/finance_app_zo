@@ -1016,7 +1016,7 @@ class LoanStatementPdfService {
             children: [
               _metricItem('Total Disbursed', _moneyInt(loan.amount), StatementColors.navy900),
               _metricItem('Total Repaid', _moneyInt(totalPaid), StatementColors.green700),
-              _metricItem('Outstanding', _moneyInt(loan.outstandingBalance), loan.outstandingBalance > 0 ? StatementColors.red700 : StatementColors.green700),
+              _metricItem('Outstanding', _moneyInt(loan.totalRepayable - totalPaid), (loan.totalRepayable - totalPaid) > 0 ? StatementColors.red700 : StatementColors.green700),
               _metricItem('Next Due Installment', nextDue != null ? '${_moneyInt(nextEmiAmount)} on ${_date(nextDue)}' : 'Completed', StatementColors.orange700),
             ],
           ),

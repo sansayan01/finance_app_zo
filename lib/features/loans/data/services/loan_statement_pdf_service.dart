@@ -368,10 +368,10 @@ class LoanStatementPdfService {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4.copyWith(
-          marginLeft: 28,
-          marginRight: 28,
-          marginTop: 28,
-          marginBottom: 36,
+          marginLeft: 20,
+          marginRight: 20,
+          marginTop: 20,
+          marginBottom: 28,
         ),
         theme: theme,
         header: (ctx) => ctx.pageNumber == 1
@@ -396,11 +396,11 @@ class LoanStatementPdfService {
         build: (ctx) => [
           // ── Status badge (if closed/settled) ──
           if (loan.status == LoanStatus.closed) ...[
-            pw.SizedBox(height: 4),
+            pw.SizedBox(height: 2),
             _buildStatusBadge(loan),
           ],
 
-          pw.SizedBox(height: 14),
+          pw.SizedBox(height: 8),
 
           // ── Account Health Score + Info Panels ──
           _buildHealthAndInfoRow(
@@ -409,7 +409,7 @@ class LoanStatementPdfService {
             onTimeCount: onTimeCount,
             totalDue: dueSchedule.length,
           ),
-          pw.SizedBox(height: 14),
+          pw.SizedBox(height: 8),
 
           // ── Visual Dashboard ──
           _buildVisualDashboard(
@@ -422,25 +422,25 @@ class LoanStatementPdfService {
             progress: progress,
             overdueCount: overdueEmis.length,
           ),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: 10),
 
           // ── Unified Account Activity Ledger ──
           _buildSectionLabel('ACCOUNT ACTIVITY LEDGER'),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: 4),
           _buildLedgerTable(
             loan: loan,
             payments: payments,
             effectiveStart: effectiveStart,
             effectiveEnd: effectiveEnd,
           ),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: 10),
 
           // ── Overdue Aging Analysis (conditional) ──
           if (overdueEmis.isNotEmpty) ...[
             _buildSectionLabel('OVERDUE AGING ANALYSIS'),
-            pw.SizedBox(height: 6),
+            pw.SizedBox(height: 4),
             _buildOverdueAging(overdueEmis, todayUtc),
-            pw.SizedBox(height: 16),
+            pw.SizedBox(height: 10),
           ],
 
           // ── Penalty summary (conditional) ──
@@ -450,13 +450,13 @@ class LoanStatementPdfService {
               totalPenalties: totalPenalties,
               totalPenaltyPaid: totalPenaltyPaid,
             ),
-            pw.SizedBox(height: 16),
+            pw.SizedBox(height: 10),
           ],
 
           // ── Regulatory Compliance Block ──
           if (_hasRegulatoryInfo(org)) ...[
             _buildRegulatoryBlock(org),
-            pw.SizedBox(height: 14),
+            pw.SizedBox(height: 8),
           ],
 
           // ── Disclaimer ──
@@ -832,7 +832,7 @@ class LoanStatementPdfService {
     required int totalDue,
   }) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: StatementColors.grey200, width: 0.5),
         borderRadius: pw.BorderRadius.circular(6),
@@ -944,7 +944,7 @@ class LoanStatementPdfService {
     required int overdueCount,
   }) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: StatementColors.grey200, width: 0.5),
         borderRadius: pw.BorderRadius.circular(6),
@@ -1100,14 +1100,6 @@ class LoanStatementPdfService {
       allEvents.add(event);
     }
 
-    // Force last payment row to DB outstanding balance (corrects paisa drift)
-    if (allEvents.isNotEmpty) {
-      final lastPaymentIdx = allEvents.lastIndexWhere((e) => e.type == _LedgerEventType.payment);
-      if (lastPaymentIdx != -1) {
-        allEvents[lastPaymentIdx].outstanding = loan.outstandingBalance;
-      }
-    }
-
     // Sort chronologically (disbursement before payment at same time)
     allEvents.sort((a, b) {
       final cmp = a.date.compareTo(b.date);
@@ -1243,7 +1235,7 @@ class LoanStatementPdfService {
         5: pw.Alignment.centerRight,
       },
       cellPadding:
-          const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3.5),
+          const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2.5),
       cellDecoration: (rowIndex, cellIndex, row) {
         if (rowIndex < 0) return const pw.BoxDecoration();
 
@@ -1984,23 +1976,23 @@ class LoanStatementPdfService {
       children: [
         pw.Container(
           width: 3,
-          height: 12,
+          height: 10,
           decoration: pw.BoxDecoration(
             color: StatementColors.teal600,
             borderRadius: pw.BorderRadius.circular(2),
           ),
         ),
-        pw.SizedBox(width: 8),
+        pw.SizedBox(width: 6),
         pw.Text(
           label,
           style: pw.TextStyle(
-            fontSize: 10,
+            fontSize: 8.5,
             fontWeight: pw.FontWeight.bold,
             color: StatementColors.navy900,
             letterSpacing: 0.8,
           ),
         ),
-        pw.SizedBox(width: 8),
+        pw.SizedBox(width: 6),
         pw.Expanded(
           child: pw.Container(
             height: 0.5,

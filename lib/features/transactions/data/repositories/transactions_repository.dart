@@ -250,69 +250,60 @@ class TransactionsRepository {
 
     if (type == TransactionType.emiPayment.name && loanId != null) {
       // --- Full revert for loan EMI ---
-      // The collection sheet inserts one row per EMI (each with
-      // amount_collected == emiAmount) but the transaction stores the
-      // total amount.  We find matching collections by loan_id
-      // and delete them all, then delete the transaction.
+      // Each collection has a transaction_id linking to its transaction.
+      // For single-EMI payments: 1 transaction → 1 collection.
+      // For multi-EMI payments: 1 transaction (total) → N collections (per-EMI).
+      // We ONLY delete collections that are directly linked to THIS transaction.
 
       List<Map<String, dynamic>> matchingCollections = [];
 
-      // Strategy 1: exact amount + member match (single EMI payment)
-      final exactMatch = await _client
-          .from('collections')
-          .select('id')
-          .eq('loan_id', loanId)
-          .eq('amount_collected', amount)
-          .eq('member_id', memberId ?? '')
-          .order('collection_time', ascending: false)
-          .limit(1)
-          .maybeSingle();
+      // Strategy 1: match by transaction_id (precise — the collection was created with this link)
+      try {
+        final byTxId = await _client
+            .from('collections')
+            .select('id, amount_collected')
+            .eq('loan_id', loanId)
+            .eq('transaction_id', id);
 
-      if (exactMatch != null) {
-        matchingCollections.add(Map<String, dynamic>.from(exactMatch as Map));
-      }
+        if ((byTxId as List).isNotEmpty) {
+          matchingCollections = List<Map<String, dynamic>>.from(byTxId);
+        }
+      } catch (_) {}
 
-      // Strategy 2: find collections matching this payment event.
-      // For multi-EMI payments, one transaction (total amount) maps to
-      // multiple collection rows (per-EMI amounts) created at the same time.
+      // Strategy 2: fallback — find the single collection that was created
+      // at the same time as this transaction (same-day, same amount, most recent)
       if (matchingCollections.isEmpty) {
         try {
-          // Get the transaction's created_at to find the matching collections
           final txData = await _client
               .from('transactions')
-              .select('created_at')
+              .select('created_at, amount')
               .eq('id', id)
               .maybeSingle();
 
-          final txDateStr = txData?['created_at']?.toString() ?? '';
-          DateTime? txDate = DateTime.tryParse(txDateStr);
-          txDate ??= DateTime.tryParse(txDateStr.replaceFirst(' ', 'T'));
+          if (txData != null) {
+            final txDateStr = txData['created_at']?.toString() ?? '';
+            DateTime? txDate = DateTime.tryParse(txDateStr);
+            txDate ??= DateTime.tryParse(txDateStr.replaceFirst(' ', 'T'));
 
-          if (txDate != null) {
-            // Find collections within 1 minute of the transaction (same batch)
-            final txTimeStr = '${txDate.year}-${txDate.month.toString().padLeft(2, '0')}-${txDate.day.toString().padLeft(2, '0')}';
+            if (txDate != null) {
+              final txDateOnly = '${txDate.year}-${txDate.month.toString().padLeft(2, '0')}-${txDate.day.toString().padLeft(2, '0')}';
 
-            final candidates = await _client
-                .from('collections')
-                .select('id, amount_collected, collection_time')
-                .eq('loan_id', loanId)
-                .eq('collection_date', txTimeStr)
-                .order('collection_time', ascending: false);
+              // Find collections on the same day with the same amount — only ONE per exact match
+              final candidates = await _client
+                  .from('collections')
+                  .select('id, amount_collected')
+                  .eq('loan_id', loanId)
+                  .eq('collection_date', txDateOnly)
+                  .eq('amount_collected', amount)
+                  .order('created_at', ascending: false)
+                  .limit(1);
 
-            final list = candidates as List;
-            if (list.isNotEmpty) {
-              double runningSum = 0;
-              for (final col in list) {
-                final colAmount = (col['amount_collected'] as num?)?.toDouble() ?? 0;
-                matchingCollections.add(Map<String, dynamic>.from(col as Map));
-                runningSum += colAmount;
-                if (runningSum >= amount - 0.01) break;
+              if ((candidates as List).isNotEmpty) {
+                matchingCollections = List<Map<String, dynamic>>.from(candidates);
               }
             }
           }
-        } catch (_) {
-          // Fall through — will just delete the transaction
-        }
+        } catch (_) {}
       }
 
       if (matchingCollections.isNotEmpty) {
@@ -365,23 +356,34 @@ class TransactionsRepository {
   }
 
   /// Client-side fallback: revert a loan collection without the RPC.
-  /// Unmarks the most recently paid EMIs and restores the loan outstanding.
+  /// Unmarks the linked EMI and restores the loan outstanding.
   Future<void> _deleteLoanCollectionClientSide({
     required String collectionId,
     required String loanId,
     required double amount,
     String? orgId,
   }) async {
-    // 1. Delete the collection record
+    // 1. Fetch collection to get selected_schedule_id before deleting
+    String? scheduleId;
+    try {
+      final col = await _client
+          .from('collections')
+          .select('selected_schedule_id')
+          .eq('id', collectionId)
+          .maybeSingle();
+      scheduleId = col?['selected_schedule_id']?.toString();
+    } catch (_) {}
+
+    // 2. Delete the collection record
     await _client.from('collections').delete().eq('id', collectionId);
 
-    // 2. Find and delete the matching transaction (best effort)
+    // 3. Find and delete the matching transaction (best effort)
     try {
       final tx = await _client
           .from('transactions')
           .select('id')
           .eq('loan_id', loanId)
-          .eq('amount', amount)
+          .eq('type', 'emiPayment')
           .order('created_at', ascending: false)
           .limit(1)
           .maybeSingle();
@@ -392,39 +394,51 @@ class TransactionsRepository {
       // Non-fatal
     }
 
-    // 3. Unmark the most recently paid EMIs (reverse order)
+    // 4. Unmark the linked EMI (use selected_schedule_id for precision)
     try {
-      double remaining = amount;
-      final paidEmis = await _client
-          .from('emi_schedule')
-          .select('id, emi_amount')
-          .eq('loan_id', loanId)
-          .eq('is_paid', true)
-          .order('paid_on', ascending: false)
-          .order('emi_number', ascending: false);
-
-      for (final emi in paidEmis) {
-        if (remaining <= 0) break;
-        final emiAmount = (emi['emi_amount'] as num?)?.toDouble() ?? 0;
+      if (scheduleId != null) {
         await _client.from('emi_schedule').update({
           'is_paid': false,
-          'status': 'pending',
+          'is_overdue': false,
+          'status': 'upcoming',
           'paid_on': null,
+          'paid_date': null,
           'payment_mode': null,
           'amount_paid': 0,
           'transaction_id': null,
-        }).eq('id', emi['id']);
-        remaining -= emiAmount;
+        }).eq('id', scheduleId);
+      } else {
+        // Fallback: unmark the most recently paid EMI
+        final paidEmi = await _client
+            .from('emi_schedule')
+            .select('id')
+            .eq('loan_id', loanId)
+            .eq('is_paid', true)
+            .order('paid_on', ascending: false)
+            .limit(1)
+            .maybeSingle();
+        if (paidEmi != null) {
+          await _client.from('emi_schedule').update({
+            'is_paid': false,
+            'is_overdue': false,
+            'status': 'upcoming',
+            'paid_on': null,
+            'paid_date': null,
+            'payment_mode': null,
+            'amount_paid': 0,
+            'transaction_id': null,
+          }).eq('id', paidEmi['id']);
+        }
       }
     } catch (_) {
       // Non-fatal
     }
 
-    // 4. Restore the loan outstanding balance
+    // 5. Restore the loan outstanding balance and paid_emis
     try {
       final loan = await _client
           .from('loans')
-          .select('outstanding_amount, outstanding_balance, status')
+          .select('outstanding_amount, outstanding_balance, paid_emis, status')
           .eq('id', loanId)
           .maybeSingle();
       if (loan != null) {
@@ -433,9 +447,11 @@ class TransactionsRepository {
                 (loan['outstanding_balance'] as num?)?.toDouble() ??
                 0.0;
         final restored = currentOutstanding + amount;
+        final currentPaid = (loan['paid_emis'] as num?)?.toInt() ?? 0;
         final updateData = <String, dynamic>{
           'outstanding_amount': restored,
           'outstanding_balance': restored,
+          'paid_emis': currentPaid > 0 ? currentPaid - 1 : 0,
         };
         if (loan['status'] == 'closed') {
           updateData['status'] = 'active';

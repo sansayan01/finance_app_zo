@@ -461,6 +461,9 @@ class EMIRepository {
               remarks,
               reference_number,
               transaction_id,
+              collected_by_name,
+              collected_by_role,
+              created_at,
               profiles!fk_collections_staff(full_name, role)
             ''')
             .eq('loan_id', loanId);
@@ -478,6 +481,9 @@ class EMIRepository {
               collection_time,
               remarks,
               reference_number,
+              collected_by_name,
+              collected_by_role,
+              created_at,
               profiles!fk_collections_staff(full_name, role)
             ''')
             .eq('loan_id', loanId);
@@ -494,6 +500,8 @@ class EMIRepository {
         if (dateVal != null) {
           createdAtVal = timeVal != null ? '${dateVal}T$timeVal' : dateVal;
         }
+        // Use actual DB created_at for consolidation (bulk inserts share same timestamp)
+        final dbCreatedAt = item['created_at']?.toString() ?? createdAtVal;
 
         collections.add({
           'id': item['id']?.toString() ?? '',
@@ -505,10 +513,11 @@ class EMIRepository {
           'reference_number': item['reference_number']?.toString(),
           'notes': item['remarks']?.toString(),
           'created_at': createdAtVal,
+          'db_created_at': dbCreatedAt,
           'collection_date': dateVal,
           'collection_time': timeVal,
-          'collected_by_name': staff?['full_name']?.toString(),
-          'collected_by_role': staff?['role']?.toString(),
+          'collected_by_name': staff?['full_name']?.toString() ?? item['collected_by_name']?.toString() ?? item['entered_by_name']?.toString(),
+          'collected_by_role': staff?['role']?.toString() ?? item['collected_by_role']?.toString(),
           'source': 'collection',
         });
       }
@@ -619,7 +628,7 @@ class EMIRepository {
 
       final List<Map<String, dynamic>> mergedCollections = [];
       for (final col in unmatchedCollections) {
-        final colTimeStr = col['created_at']?.toString() ?? '';
+        final colTimeStr = col['db_created_at']?.toString() ?? col['created_at']?.toString() ?? '';
         final colTime = DateTime.tryParse(colTimeStr);
         final colMode = col['payment_mode']?.toString();
         final colStaff = col['collected_by_name']?.toString();
@@ -627,7 +636,7 @@ class EMIRepository {
         bool foundMatch = false;
         for (var i = 0; i < mergedCollections.length; i++) {
           final existing = mergedCollections[i];
-          final exTimeStr = existing['created_at']?.toString() ?? '';
+          final exTimeStr = existing['db_created_at']?.toString() ?? existing['created_at']?.toString() ?? '';
           final exTime = DateTime.tryParse(exTimeStr);
           final exMode = existing['payment_mode']?.toString();
           final exStaff = existing['collected_by_name']?.toString();
@@ -663,7 +672,7 @@ class EMIRepository {
       // 4. Consolidate any records that occur at the exact same minute, same payment mode, and same collector
       final List<Map<String, dynamic>> consolidated = [];
       for (final item in merged) {
-        final timeStr = item['created_at']?.toString() ?? '';
+        final timeStr = item['db_created_at']?.toString() ?? item['created_at']?.toString() ?? '';
         final time = DateTime.tryParse(timeStr);
         final mode = item['payment_mode']?.toString();
         final staff = item['collected_by_name']?.toString();
@@ -671,7 +680,7 @@ class EMIRepository {
         bool found = false;
         for (var i = 0; i < consolidated.length; i++) {
           final existing = consolidated[i];
-          final exTimeStr = existing['created_at']?.toString() ?? '';
+          final exTimeStr = existing['db_created_at']?.toString() ?? existing['created_at']?.toString() ?? '';
           final exTime = DateTime.tryParse(exTimeStr);
           final exMode = existing['payment_mode']?.toString();
           final exStaff = existing['collected_by_name']?.toString();
@@ -706,7 +715,41 @@ class EMIRepository {
         }
       }
 
-      // 5. Sort by date descending
+      // 5. Consolidate migration/pre-existing transactions into one row
+      final migrationIdxs = <int>[];
+      double migrationTotal = 0;
+      String? migrationDate;
+      String? migrationStaff;
+      for (var i = 0; i < consolidated.length; i++) {
+        final notes = consolidated[i]['notes']?.toString().toLowerCase() ?? '';
+        final source = consolidated[i]['source']?.toString() ?? '';
+        if (source == 'transaction' &&
+            (notes.contains('migrat') || notes.contains('pre-existing') || notes.contains('pre_existing'))) {
+          migrationIdxs.add(i);
+          migrationTotal += (consolidated[i]['amount'] as double?) ?? 0;
+          migrationDate ??= consolidated[i]['created_at']?.toString();
+          migrationStaff ??= consolidated[i]['collected_by_name']?.toString();
+        }
+      }
+
+      if (migrationIdxs.length > 1) {
+        // Remove individual migration entries (highest index first)
+        for (var i = migrationIdxs.length - 1; i >= 0; i--) {
+          consolidated.removeAt(migrationIdxs[i]);
+        }
+        // Add single cumulative migration row
+        consolidated.add({
+          'id': 'migration',
+          'amount': migrationTotal,
+          'payment_mode': 'migrated',
+          'created_at': migrationDate ?? '',
+          'collected_by_name': migrationStaff,
+          'notes': 'Pre-existing payment history (migrated)',
+          'source': 'migration',
+        });
+      }
+
+      // 6. Sort by date descending
       consolidated.sort((a, b) {
         final dateA = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         final dateB = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);

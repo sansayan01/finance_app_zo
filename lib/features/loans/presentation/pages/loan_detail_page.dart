@@ -602,7 +602,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         final now = DateTime.now();
         final unpaidEmis = schedule
             .where((e) =>
-                e.status != EMIStatus.paid && e.status != EMIStatus.waived)
+                e.status != EMIStatus.paid &&
+                e.status != EMIStatus.waived &&
+                e.status != EMIStatus.frozen)
             .toList();
         if (unpaidEmis.isEmpty) {
           return const SizedBox.shrink();

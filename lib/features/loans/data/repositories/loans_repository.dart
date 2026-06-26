@@ -361,25 +361,9 @@ class LoansRepository {
 
     final loanId = result['id'] as String;
 
-    // Create synthetic transaction for pre-existing paid amount
-    if (openingBalance > 0) {
-      final memberData = await _client
-          .from('members')
-          .select('full_name')
-          .eq('id', borrowerId)
-          .maybeSingle();
-
-      await _client.from('transactions').insert({
-        'member_id': borrowerId,
-        'member_name': memberData?['full_name'] as String? ?? '',
-        'loan_id': loanId,
-        'amount': openingBalance,
-        'type': 'emiPayment',
-        'org_id': _orgId,
-        'description': 'Migrated loan — pre-existing payment history',
-        'created_at': lastPaymentDate.toUtc().toIso8601String(),
-      });
-    }
+    // NOTE: Synthetic transaction removed. Collections (created via
+    // createMigrationLoanCollectionRecords) already represent the payment
+    // history. Adding a separate transaction caused duplicate ledger rows.
 
     await _logRepo?.log(
       action: 'Loan Migrated',

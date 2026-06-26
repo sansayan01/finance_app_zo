@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../providers/auth_provider.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -16,11 +20,18 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   String _iconPreset = 'default';
   String? _logoUrl;
   bool _ready = false;
+  bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
     _loadAndNavigate();
+  }
+
+  @override
+  void dispose() {
+    _navigated = true;
+    super.dispose();
   }
 
   Future<void> _loadAndNavigate() async {
@@ -33,7 +44,49 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
     // 3. Wait a moment to show the splash
     await Future.delayed(const Duration(milliseconds: 1200));
-    if (mounted) context.go('/auth');
+    if (!mounted || _navigated) return;
+
+    // 4. Wait for auth state to resolve — prevents flashing the login screen
+    await _waitForAuthResolution();
+    if (!mounted || _navigated) return;
+
+    // 5. Navigate based on resolved auth state
+    final authStatus = ref.read(authProvider).status;
+    _navigated = true;
+
+    if (authStatus == AuthStatus.authenticated) {
+      // Already logged in — router will redirect to the correct portal by role
+      context.go('/');
+    } else {
+      context.go('/auth');
+    }
+  }
+
+  /// Waits for auth state to move past [AuthStatus.initial] / loading.
+  /// Times out after [timeout] to avoid blocking the splash forever.
+  Future<void> _waitForAuthResolution({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    final status = ref.read(authProvider).status;
+    if (status != AuthStatus.initial && status != AuthStatus.loading) return;
+
+    final completer = Completer<void>();
+
+    ref.listen(authProvider, (prev, next) {
+      if (next.status != AuthStatus.initial &&
+          next.status != AuthStatus.loading &&
+          !completer.isCompleted) {
+        completer.complete();
+      }
+    });
+
+    // Timeout fallback — don't block the splash screen forever
+    final timer = Timer(timeout, () {
+      if (!completer.isCompleted) completer.complete();
+    });
+
+    await completer.future;
+    timer.cancel();
   }
 
   /// If user has an existing Supabase session, fetch org branding directly

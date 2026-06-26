@@ -1284,31 +1284,72 @@ class LoanStatementPdfService {
     );
   }
 
-  // ── 8. Overdue Aging Analysis ──
+  // ── 8. Overdue Aging Analysis (Enhanced) ──
   static pw.Widget _buildOverdueAging(
       List<EMIScheduleModel> overdueEmis, DateTime today) {
+    // ── Bucketize ──
     int count030 = 0, count3160 = 0, count6190 = 0, count90 = 0;
     double amt030 = 0, amt3160 = 0, amt6190 = 0, amt90 = 0;
+    double pen030 = 0, pen3160 = 0, pen6190 = 0, pen90 = 0;
+    double totalPenalty = 0;
+    int maxDays = 0;
+    int totalDays = 0;
 
     for (final e in overdueEmis) {
       final dueUtc = DateTime.utc(e.dueDate.year, e.dueDate.month, e.dueDate.day);
       final days = today.difference(dueUtc).inDays;
+      final pen = e.penaltyAmount;
+      totalPenalty += pen;
+      if (days > maxDays) maxDays = days;
+      totalDays += days;
+
       if (days <= 30) {
         count030++;
         amt030 += e.emiAmount;
+        pen030 += pen;
       } else if (days <= 60) {
         count3160++;
         amt3160 += e.emiAmount;
+        pen3160 += pen;
       } else if (days <= 90) {
         count6190++;
         amt6190 += e.emiAmount;
+        pen6190 += pen;
       } else {
         count90++;
         amt90 += e.emiAmount;
+        pen90 += pen;
       }
     }
 
     final totalOverdueAmt = amt030 + amt3160 + amt6190 + amt90;
+    final avgDays = overdueEmis.isNotEmpty ? totalDays ~/ overdueEmis.length : 0;
+    final totalOverdueCount = overdueEmis.length;
+
+    // ── Risk grade ──
+    final String riskLabel;
+    final PdfColor riskBg;
+    if (maxDays <= 30 && totalOverdueCount <= 3) {
+      riskLabel = 'LOW RISK';
+      riskBg = PdfColor.fromHex('#388E3C');
+    } else if (maxDays <= 60) {
+      riskLabel = 'MEDIUM RISK';
+      riskBg = PdfColor.fromHex('#F57C00');
+    } else if (maxDays <= 90) {
+      riskLabel = 'HIGH RISK';
+      riskBg = PdfColor.fromHex('#E64A19');
+    } else {
+      riskLabel = 'CRITICAL';
+      riskBg = PdfColor.fromHex('#B71C1C');
+    }
+
+    // ── Helpers ──
+    PdfColor bucketColor(int days) {
+      if (days <= 30) return PdfColor.fromHex('#F9A825');
+      if (days <= 60) return PdfColor.fromHex('#F57C00');
+      if (days <= 90) return PdfColor.fromHex('#E64A19');
+      return PdfColor.fromHex('#B71C1C');
+    }
 
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
@@ -1321,6 +1362,7 @@ class LoanStatementPdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
+          // ── Header row ──
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
@@ -1332,96 +1374,90 @@ class LoanStatementPdfService {
                   color: StatementColors.red700,
                 ),
               ),
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: pw.BoxDecoration(
+                  color: riskBg,
+                  borderRadius: pw.BorderRadius.circular(3),
+                ),
+                child: pw.Text(
+                  riskLabel,
+                  style: pw.TextStyle(
+                    fontSize: 6, fontWeight: pw.FontWeight.bold, color: StatementColors.white),
+                ),
+              ),
               pw.Text(
                 '${overdueEmis.length} EMI(s) overdue',
                 style: pw.TextStyle(
-                  fontSize: 7.5,
-                  color: StatementColors.grey600,
-                ),
+                  fontSize: 7.5, color: StatementColors.grey600),
               ),
             ],
           ),
-          pw.SizedBox(height: 8),
+          pw.SizedBox(height: 6),
 
-          // Severity bar
+          // ── Severity bar ──
           if (totalOverdueAmt > 0)
             pw.Row(
               children: [
                 if (amt030 > 0)
                   pw.Expanded(
                     flex: (amt030 / totalOverdueAmt * 100).round().clamp(1, 100),
-                    child: pw.Container(
-                      height: 6,
-                      color: StatementColors.orange700,
-                    ),
+                    child: pw.Container(height: 6, color: bucketColor(15)),
                   ),
                 if (amt3160 > 0)
                   pw.Expanded(
                     flex: (amt3160 / totalOverdueAmt * 100).round().clamp(1, 100),
-                    child: pw.Container(
-                      height: 6,
-                      color: StatementColors.orange600,
-                    ),
+                    child: pw.Container(height: 6, color: bucketColor(45)),
                   ),
                 if (amt6190 > 0)
                   pw.Expanded(
                     flex: (amt6190 / totalOverdueAmt * 100).round().clamp(1, 100),
-                    child: pw.Container(
-                      height: 6,
-                      color: StatementColors.red600,
-                    ),
+                    child: pw.Container(height: 6, color: bucketColor(75)),
                   ),
                 if (amt90 > 0)
                   pw.Expanded(
                     flex: (amt90 / totalOverdueAmt * 100).round().clamp(1, 100),
-                    child: pw.Container(
-                      height: 6,
-                      color: StatementColors.red700,
-                    ),
+                    child: pw.Container(height: 6, color: bucketColor(100)),
                   ),
               ],
             ),
           pw.SizedBox(height: 6),
 
-          // Aging table
+          // ── Aging table with penalty column ──
           pw.TableHelper.fromTextArray(
-            headers: ['Aging Bucket', 'EMIs', 'Amount', '% of Overdue'],
+            headers: ['Aging Bucket', 'EMIs', 'Amount', 'Penalty', '% of Overdue'],
             data: [
               [
                 '0 \u2013 30 days',
                 '$count030',
                 _money(amt030),
-                totalOverdueAmt > 0
-                    ? _pct(amt030 / totalOverdueAmt * 100)
-                    : '0%'
+                pen030 > 0 ? _money(pen030) : '\u2014',
+                totalOverdueAmt > 0 ? _pct(amt030 / totalOverdueAmt * 100) : '0%'
               ],
               [
                 '31 \u2013 60 days',
                 '$count3160',
                 _money(amt3160),
-                totalOverdueAmt > 0
-                    ? _pct(amt3160 / totalOverdueAmt * 100)
-                    : '0%'
+                pen3160 > 0 ? _money(pen3160) : '\u2014',
+                totalOverdueAmt > 0 ? _pct(amt3160 / totalOverdueAmt * 100) : '0%'
               ],
               [
                 '61 \u2013 90 days',
                 '$count6190',
                 _money(amt6190),
-                totalOverdueAmt > 0
-                    ? _pct(amt6190 / totalOverdueAmt * 100)
-                    : '0%'
+                pen6190 > 0 ? _money(pen6190) : '\u2014',
+                totalOverdueAmt > 0 ? _pct(amt6190 / totalOverdueAmt * 100) : '0%'
               ],
               [
                 '90+ days',
                 '$count90',
                 _money(amt90),
-                totalOverdueAmt > 0
-                    ? _pct(amt90 / totalOverdueAmt * 100)
-                    : '0%'
+                pen90 > 0 ? _money(pen90) : '\u2014',
+                totalOverdueAmt > 0 ? _pct(amt90 / totalOverdueAmt * 100) : '0%'
               ],
             ],
             headerStyle: pw.TextStyle(
-              fontSize: 7,
+              fontSize: 6.5,
               fontWeight: pw.FontWeight.bold,
               color: StatementColors.white,
             ),
@@ -1432,21 +1468,53 @@ class LoanStatementPdfService {
                 topRight: pw.Radius.circular(3),
               ),
             ),
-            cellStyle:
-                pw.TextStyle(fontSize: 7, color: StatementColors.grey800),
+            cellStyle: pw.TextStyle(fontSize: 6.5, color: StatementColors.grey800),
             cellAlignments: {
               0: pw.Alignment.centerLeft,
               1: pw.Alignment.center,
               2: pw.Alignment.centerRight,
               3: pw.Alignment.centerRight,
+              4: pw.Alignment.centerRight,
             },
             cellPadding:
-                const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+          ),
+          pw.SizedBox(height: 6),
+
+          // ── Summary stats ──
+          pw.Container(
+            padding: const pw.EdgeInsets.all(6),
+            decoration: pw.BoxDecoration(
+              color: StatementColors.white,
+              borderRadius: pw.BorderRadius.circular(3),
+              border: pw.Border.all(
+                  color: StatementColors.red700.withAlpha(0.15), width: 0.3),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                _statMini('Worst Overdue', '$maxDays days'),
+                _statMini('Avg Overdue', '$avgDays days'),
+                _statMini('Penalty Exposure', _money(totalPenalty)),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+
+  static pw.Widget _statMini(String label, String value) => pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.Text(label, style: pw.TextStyle(
+          fontSize: 5.5, color: StatementColors.grey500)),
+      pw.SizedBox(height: 1),
+      pw.Text(value, style: pw.TextStyle(
+          fontSize: 7, fontWeight: pw.FontWeight.bold,
+          color: StatementColors.red700)),
+    ],
+  );
 
   // ── 9. Enhanced Penalty Section ──
   static pw.Widget _buildPenaltySection({

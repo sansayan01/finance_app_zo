@@ -184,6 +184,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthPath = state.matchedLocation.startsWith('/auth');
       final isVerifyPath = state.matchedLocation == '/auth/verify-email';
 
+      // While auth is still resolving, don't force any redirects.
+      // This prevents the login screen from flashing before the session is known.
+      if (authStatus == AuthStatus.initial || authStatus == AuthStatus.loading) {
+        return null;
+      }
+
       if (!isAuthenticated && !isAuthPath && !isEmailVerification) {
         return '/auth';
       }

@@ -733,11 +733,25 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
           (e) => e.id == id,
           orElse: () => widget.emis.first,
         );
+        // Skip frozen EMIs — they shouldn't be pre-selected in the calendar
+        if (emi.status == EMIStatus.frozen) return <DateTime>[];
         return [
           DateTime(emi.dueDate.year, emi.dueDate.month, emi.dueDate.day)
         ];
       }),
     );
+
+    // If nothing selected (e.g. all frozen), auto-select oldest overdue
+    if (tempSelected.isEmpty) {
+      final oldestOverdue = _unpaidEMIs
+          .where((e) => e.isOverdue)
+          .toList()
+        ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+      if (oldestOverdue.isNotEmpty) {
+        final d = oldestOverdue.first.dueDate;
+        tempSelected.add(DateTime(d.year, d.month, d.day));
+      }
+    }
 
     DateTime focusedDay = DateTime.now();
     if (tempSelected.isNotEmpty) {

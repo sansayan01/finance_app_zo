@@ -86,6 +86,24 @@ class LoanStatementPdfService {
   static String _date(DateTime d) => _dateFmt.format(d);
   static String _num(num? v) => StatementFormatters.number(_safe(v));
   static String _pct(num? v) => StatementFormatters.percentage(_safe(v));
+
+  /// Display the interest rate in a human-readable label.
+  /// For amount-mode loans (interest_mode == 'amount'), show the actual
+  /// ₹ amount + basis + type, e.g. "₹10,000 (flat, on principal)".
+  /// For percentage-mode loans, show the percentage + type,
+  /// e.g. "12.5% (flat)".
+  static String _formatInterestLabel(LoanModel loan) {
+    final mode = loan.interestMode ?? 'percentage';
+    final type = loan.interestType.name;
+    final basis = loan.interestBasis ?? '';
+
+    if (mode == 'amount' && loan.interestAmount != null && loan.interestAmount! > 0) {
+      final basisLabel = basis == 'onPrincipal' ? 'on principal' : basis == 'onTotal' ? 'on total' : '';
+      return '${_money(loan.interestAmount!)} ($type${basisLabel.isNotEmpty ? ', $basisLabel' : ''})';
+    }
+
+    return '${_num(loan.interestRate)}% ($type)';
+  }
   static String _dateTime(DateTime d) => DateFormat('dd MMM yyyy, hh:mm a').format(d);
   static String _moneyInt(num? v) {
     final raw = _safe(v);
@@ -876,7 +894,7 @@ class LoanStatementPdfService {
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    _overviewRow('Interest Rate', '${_num(loan.interestRate)}% (${loan.interestType.name})'),
+                    _overviewRow('Interest Rate', _formatInterestLabel(loan)),
                     _overviewRow('Installment Period', loan.formattedTenure),
                     _overviewRow('Repayment Frequency', loan.frequency?.toUpperCase() ?? 'WEEKLY'),
                     _overviewRow('Account Status', loan.status.name.toUpperCase()),

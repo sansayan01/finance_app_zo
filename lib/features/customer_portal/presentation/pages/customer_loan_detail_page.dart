@@ -1183,7 +1183,13 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                           loan.tenureMonths,
                                       outstandingBalance:
                                           loan.outstandingBalance,
-                                      interestType: InterestType.flat,
+                                      interestType: InterestType.values.firstWhere(
+                                        (e) => e.name == loan.interestType,
+                                        orElse: () => InterestType.flat,
+                                      ),
+                                      interestMode: loan.interestMode,
+                                      interestAmount: loan.interestAmount,
+                                      interestBasis: loan.interestBasis,
                                       disbursementDate:
                                           loan.disbursementDate,
                                       firstEmiDate: loan.firstEmiDate,

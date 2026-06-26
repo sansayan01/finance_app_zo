@@ -14,6 +14,10 @@ class CustomerLoanModel {
   final String frequency;
   final double totalInterest;
   final double totalRepayable;
+  final String? interestType;
+  final String? interestMode;
+  final double? interestAmount;
+  final String? interestBasis;
 
   CustomerLoanModel({
     required this.id,
@@ -31,6 +35,10 @@ class CustomerLoanModel {
     this.frequency = 'monthly',
     required this.totalInterest,
     required this.totalRepayable,
+    this.interestType,
+    this.interestMode,
+    this.interestAmount,
+    this.interestBasis,
   });
 
   factory CustomerLoanModel.fromJson(Map<String, dynamic> json) {
@@ -57,6 +65,10 @@ class CustomerLoanModel {
       frequency: json['frequency']?.toString() ?? 'monthly',
       totalInterest: (json['total_interest'] ?? 0.0).toDouble(),
       totalRepayable: (json['total_repayable'] ?? 0.0).toDouble(),
+      interestType: json['interest_type']?.toString(),
+      interestMode: json['interest_mode']?.toString(),
+      interestAmount: (json['interest_amount'] as num?)?.toDouble(),
+      interestBasis: json['interest_basis']?.toString(),
     );
   }
 

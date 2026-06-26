@@ -33,6 +33,11 @@ class LoanModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Interest details
+  final String? interestMode;   // 'flat', 'reducing', 'amount', 'percentage'
+  final double? interestAmount; // actual interest in ₹ (for amount mode)
+  final String? interestBasis;  // 'onPrincipal', 'onTotal'
+
   // Date freeze
   final bool freezeEnabled;
   final int frozenCount;
@@ -81,6 +86,9 @@ class LoanModel {
     this.customerPhotoUrl,
     this.staffName,
     this.staffPhone,
+    this.interestMode,
+    this.interestAmount,
+    this.interestBasis,
     this.freezeEnabled = false,
     this.frozenCount = 0,
   });
@@ -124,6 +132,9 @@ class LoanModel {
     String? customerPhotoUrl,
     String? staffName,
     String? staffPhone,
+    String? interestMode,
+    double? interestAmount,
+    String? interestBasis,
   }) {
     return LoanModel(
       id: id ?? this.id,
@@ -164,6 +175,9 @@ class LoanModel {
       customerPhotoUrl: customerPhotoUrl ?? this.customerPhotoUrl,
       staffName: staffName ?? this.staffName,
       staffPhone: staffPhone ?? this.staffPhone,
+      interestMode: interestMode ?? this.interestMode,
+      interestAmount: interestAmount ?? this.interestAmount,
+      interestBasis: interestBasis ?? this.interestBasis,
     );
   }
 
@@ -270,6 +284,9 @@ class LoanModel {
           profilesJson?['shop_photo_url']) as String?,
       staffName: staffJson?['full_name'] as String?,
       staffPhone: staffJson?['phone'] as String?,
+      interestMode: json['interest_mode'] as String?,
+      interestAmount: (json['interest_amount'] as num?)?.toDouble(),
+      interestBasis: json['interest_basis'] as String?,
       freezeEnabled: json['freeze_enabled'] as bool? ?? false,
       frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
     );

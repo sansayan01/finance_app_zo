@@ -175,7 +175,8 @@
       "Bash(graphify install:*)",
       "Bash(pip show:*)",
       "Bash(graphify:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(grep:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

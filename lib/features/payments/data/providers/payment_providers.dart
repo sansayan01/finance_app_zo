@@ -469,6 +469,14 @@ final todayPaymentsProvider =
       final isOverdue = !isCollected &&
           nextDateOnly != null &&
           nextDateOnly.isBefore(selectedDateOnly);
+      // diff days matches TodayPayment.daysOverdue (DateTime.now().difference(dueDate).inDays).
+      final daysOverdueForAmount = isOverdue
+          ? selectedDateOnly.difference(nextDateOnly).inDays
+          : 0;
+      final deposit = (plan['monthly_deposit'] as num?)?.toDouble() ?? 0;
+      // For overdue rows, sum up missed installments so the card shows the real amount owed
+      final overdueAmount =
+          isOverdue ? deposit * daysOverdueForAmount : deposit;
 
       payments.add(TodayPayment(
         id: plan['id'],
@@ -483,7 +491,7 @@ final todayPaymentsProvider =
         branchName: null,
         agentId: member['agent_id'],
         agentName: null,
-        amountExpected: (plan['monthly_deposit'] as num?)?.toDouble() ?? 0,
+        amountExpected: overdueAmount,
         amountCollected: isCollected
             ? (existingCollection['amount_collected'] as num?)?.toDouble()
             : null,

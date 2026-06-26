@@ -254,7 +254,7 @@ class GroupedOverduePayment {
   static List<GroupedOverduePayment> group(List<TodayPayment> overdues) {
     final map = <String, List<TodayPayment>>{};
     for (final p in overdues) {
-      final key = p.memberId ?? p.id;
+      final key = '${p.memberId ?? p.id}_${p.type.name}';
       map.putIfAbsent(key, () => []).add(p);
     }
     final groups = map.entries.map((e) {

@@ -1146,9 +1146,26 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       orgData = await supabase
                                           .from('organizations')
                                           .select(
-                                              'name, address, city, state, pincode, phone, email, gst_number')
+                                              'name, address, city, state, pincode, phone, email, gst_number, logo_url')
                                           .eq('id', orgIdNullable)
                                           .maybeSingle();
+                                    }
+
+                                    // Fetch logo bytes from Supabase storage
+                                    Uint8List? logoBytes;
+                                    final logoUrl = orgData?['logo_url'] as String?;
+                                    if (logoUrl != null && logoUrl.isNotEmpty) {
+                                      try {
+                                        if (logoUrl.contains('brand-assets')) {
+                                          final uri = Uri.parse(logoUrl);
+                                          final pathSegments = uri.pathSegments;
+                                          final bucketIndex = pathSegments.indexOf('brand-assets');
+                                          if (bucketIndex != -1 && bucketIndex + 1 < pathSegments.length) {
+                                            final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
+                                            logoBytes = await supabase.storage.from('brand-assets').download(filePath);
+                                          }
+                                        }
+                                      } catch (_) {}
                                     }
 
                                     final org = LoanStatementOrgInfo(
@@ -1161,6 +1178,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       phone: orgData?['phone'],
                                       email: orgData?['email'],
                                       gstNumber: orgData?['gst_number'],
+                                      logoBytes: logoBytes,
                                     );
 
                                     // Map CustomerLoanModel → LoanModel

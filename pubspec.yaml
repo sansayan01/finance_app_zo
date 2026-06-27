@@ -1,7 +1,7 @@
 name: microflow_pro
 description: "MicroFlow Pro - Premium Micro-Finance Management Ecosystem"
 publish_to: 'none'
-version: 1.0.1+2002
+version: 1.0.2+2003
 
 environment:
   sdk: ^3.4.0

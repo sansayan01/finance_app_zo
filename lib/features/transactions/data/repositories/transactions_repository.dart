@@ -415,32 +415,41 @@ class TransactionsRepository {
       } catch (_) {}
     }
 
-    // 5. Restore loan outstanding + paid_emis ONLY if an EMI was actually unmarked
+    // 5. Recalculate outstanding from EMI schedule (source of truth)
+    //    instead of blindly adding back amount — avoids drift when
+    //    collections don't align 1:1 with EMIs (migrated accounts, etc.)
     if (emiUnmarked) {
       try {
-        final loan = await _client
-            .from('loans')
-            .select('outstanding_amount, outstanding_balance, paid_emis, status')
-            .eq('id', loanId)
-            .maybeSingle();
-        if (loan != null) {
-          final currentOutstanding =
-              (loan['outstanding_amount'] as num?)?.toDouble() ??
-                  (loan['outstanding_balance'] as num?)?.toDouble() ??
-                  0.0;
-          final restored = currentOutstanding + amount;
-          final currentPaid = (loan['paid_emis'] as num?)?.toInt() ?? 0;
-          final updateData = <String, dynamic>{
-            'outstanding_amount': restored,
-            'outstanding_balance': restored,
-            'paid_emis': currentPaid > 0 ? currentPaid - 1 : 0,
-          };
-          if (loan['status'] == 'closed') {
-            updateData['status'] = 'active';
+        await _client.rpc('recalculate_loan_outstanding', params: {
+          'p_loan_id': loanId,
+        });
+      } catch (_) {
+        // Fallback: manual adjustment if RPC not deployed yet
+        try {
+          final loan = await _client
+              .from('loans')
+              .select('outstanding_amount, outstanding_balance, paid_emis, status')
+              .eq('id', loanId)
+              .maybeSingle();
+          if (loan != null) {
+            final currentOutstanding =
+                (loan['outstanding_amount'] as num?)?.toDouble() ??
+                    (loan['outstanding_balance'] as num?)?.toDouble() ??
+                    0.0;
+            final restored = currentOutstanding + amount;
+            final currentPaid = (loan['paid_emis'] as num?)?.toInt() ?? 0;
+            final updateData = <String, dynamic>{
+              'outstanding_amount': restored,
+              'outstanding_balance': restored,
+              'paid_emis': currentPaid > 0 ? currentPaid - 1 : 0,
+            };
+            if (loan['status'] == 'closed') {
+              updateData['status'] = 'active';
+            }
+            await _client.from('loans').update(updateData).eq('id', loanId);
           }
-          await _client.from('loans').update(updateData).eq('id', loanId);
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
     }
   }
 

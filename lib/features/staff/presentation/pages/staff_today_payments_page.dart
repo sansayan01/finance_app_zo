@@ -17,6 +17,7 @@ import '../../../payments/data/utils/payment_export.dart';
 import '../../../payments/data/services/auto_collection_service.dart';
 import '../../../branch_manager/data/providers/branch_payment_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
+import '../../data/providers/collection_providers.dart';
 import '../../../savings/data/models/savings_model.dart';
 import '../../../loans/data/models/loan_model.dart';
 import '../../../loans/presentation/widgets/collection_sheet.dart';
@@ -1342,6 +1343,18 @@ class _StaffTodayPaymentsPageState
                         },
                       ),
                     ],
+                    if (payment.isCollected && payment.collectionId != null) ...[
+                      const SizedBox(width: 14),
+                      _DetailActionButton(
+                        icon: Icons.delete_outline_rounded,
+                        color: AppColors.error,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.pop(ctx);
+                          _confirmDeleteCollection(payment);
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -1350,6 +1363,79 @@ class _StaffTodayPaymentsPageState
         ),
       ).animate().slideY(begin: 0.1, end: 0, duration: 350.ms, curve: Curves.easeOutCubic),
     );
+  }
+
+  void _confirmDeleteCollection(TodayPayment payment) {
+    final currencyFormat = NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+            SizedBox(width: 10),
+            Text('Delete Collection', style: TextStyle(fontWeight: FontWeight.w800)),
+          ],
+        ),
+        content: Text(
+          'Delete the ₹${currencyFormat.format(payment.amountCollected ?? payment.amountExpected)} collection from ${payment.memberName}?\n\nThis will revert the EMI status and restore the loan outstanding balance.',
+          style: const TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+            label: const Text('Delete'),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _performDeleteCollection(payment);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performDeleteCollection(TodayPayment payment) async {
+    if (payment.collectionId == null) return;
+
+    try {
+      final repository = ref.read(collectionRepositoryProvider);
+      await repository.deleteCollection(payment.collectionId!);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Collection deleted. Loan balance restored by ₹${payment.amountCollected?.toInt() ?? payment.amountExpected.toInt()}.',
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        ref.invalidate(branchTodayPaymentsProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
   }
 }
 

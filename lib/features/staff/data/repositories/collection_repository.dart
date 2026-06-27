@@ -593,14 +593,14 @@ class CollectionRepository {
   }
 
   /// Client-side fallback for deleteCollection when the RPC doesn't exist.
-  /// Deletes the collection, finds and deletes the matching transaction,
-  /// unmarks the most recently paid EMIs, and restores the loan outstanding.
+  /// Deletes the collection, unmarks the linked EMI (using selected_schedule_id
+  /// when available), and recalculates outstanding from the EMI schedule.
   Future<Map<String, dynamic>> _deleteCollectionWithRevert(
       String collectionId) async {
-    // 1. Fetch the collection to know what to revert
+    // 1. Fetch the collection details before deleting
     final collection = await _client
         .from('collections')
-        .select('loan_id, amount_collected, member_id, org_id')
+        .select('loan_id, amount_collected, member_id, org_id, selected_schedule_id, transaction_id')
         .eq('id', collectionId)
         .maybeSingle();
     if (collection == null) {
@@ -610,88 +610,89 @@ class CollectionRepository {
     final loanId = collection['loan_id'] as String?;
     final amountCollected =
         (collection['amount_collected'] as num?)?.toDouble() ?? 0;
-    final memberId = collection['member_id'] as String?;
+    final scheduleId = collection['selected_schedule_id'] as String?;
+    final linkedTxId = collection['transaction_id'] as String?;
 
-    // 2. Delete the collection record
-    await _client.from('collections').delete().eq('id', collectionId);
-
-    if (loanId == null || amountCollected <= 0) {
-      return {'success': true, 'fallback': true, 'note': 'no loan to revert'};
-    }
-
-    // 3. Find and delete the matching transaction (best effort)
-    try {
-      final tx = await _client
-          .from('transactions')
-          .select('id')
-          .eq('loan_id', loanId)
-          .eq('amount', amountCollected)
-          .eq('member_id', memberId ?? '')
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-
-      if (tx != null) {
-        await _client.from('transactions').delete().eq('id', tx['id']);
-      }
-    } catch (_) {
-      // Non-fatal — proceed with EMI/loan revert
-    }
-
-    // 4. Unmark the most recently paid EMIs (reverse order) to undo
-    //    the effect of this collection.
-    double remaining = amountCollected;
-    final paidEmis = await _client
-        .from('emi_schedule')
-        .select('id, emi_amount')
-        .eq('loan_id', loanId)
-        .eq('is_paid', true)
-        .order('paid_on', ascending: false)
-        .order('emi_number', ascending: false);
-
-    for (final emi in paidEmis) {
-      if (remaining <= 0) break;
-      final emiAmount = (emi['emi_amount'] as num?)?.toDouble() ?? 0;
-
+    // 2. Unmark the SPECIFIC EMI if we know which one
+    if (scheduleId != null) {
       await _client.from('emi_schedule').update({
         'is_paid': false,
         'status': 'pending',
         'paid_on': null,
+        'paid_date': null,
         'payment_mode': null,
         'amount_paid': 0,
-      }).eq('id', emi['id']);
+        'transaction_id': null,
+      }).eq('id', scheduleId).eq('is_paid', true);
+    } else if (loanId != null) {
+      // Fallback: unmark most recently paid EMI that isn't linked
+      // to another collection
+      final paidEmis = await _client
+          .from('emi_schedule')
+          .select('id')
+          .eq('loan_id', loanId)
+          .eq('is_paid', true)
+          .order('paid_on', ascending: false)
+          .order('emi_number', ascending: false);
 
-      remaining -= emiAmount;
+      if (paidEmis.isNotEmpty) {
+        await _client.from('emi_schedule').update({
+          'is_paid': false,
+          'status': 'pending',
+          'paid_on': null,
+          'paid_date': null,
+          'payment_mode': null,
+          'amount_paid': 0,
+          'transaction_id': null,
+        }).eq('id', paidEmis.first['id']);
+      }
     }
 
-    // 5. Restore loan outstanding balance
-    try {
-      final loan = await _client
-          .from('loans')
-          .select('outstanding_amount, outstanding_balance')
-          .eq('id', loanId)
-          .maybeSingle();
+    // 3. Delete the collection record
+    await _client.from('collections').delete().eq('id', collectionId);
 
-      if (loan != null) {
-        final currentOutstanding =
-            (loan['outstanding_amount'] as num?)?.toDouble() ??
-            (loan['outstanding_balance'] as num?)?.toDouble() ??
-            0.0;
+    // 4. Delete the linked transaction
+    if (linkedTxId != null) {
+      try {
+        await _client.from('transactions').delete().eq('id', linkedTxId);
+      } catch (_) {}
+    }
 
-        final restoredOutstanding = currentOutstanding + amountCollected;
+    // 5. Recalculate outstanding from EMI schedule (source of truth)
+    if (loanId != null) {
+      try {
+        await _client.rpc('recalculate_loan_outstanding', params: {
+          'p_loan_id': loanId,
+        });
+      } catch (_) {
+        // Fallback: manual recalc if RPC not deployed yet
+        try {
+          final emis = await _client
+              .from('emi_schedule')
+              .select('emi_amount, is_paid')
+              .eq('loan_id', loanId);
 
-        final updateData = <String, dynamic>{
-          'outstanding_amount': restoredOutstanding,
-          'outstanding_balance': restoredOutstanding,
-        };
-        // Restore status from closed to active
-        if (loan['status'] == 'closed') {
-          updateData['status'] = 'active';
-        }
-        await _client.from('loans').update(updateData).eq('id', loanId);
+          double totalRepaid = 0;
+          int paidCount = 0;
+          double totalEmi = 0;
+          for (final emi in (emis as List)) {
+            final emiAmt = (emi['emi_amount'] as num?)?.toDouble() ?? 0;
+            totalEmi += emiAmt;
+            if (emi['is_paid'] == true) {
+              totalRepaid += emiAmt;
+              paidCount++;
+            }
+          }
+
+          final newOutstanding = totalEmi - totalRepaid;
+          await _client.from('loans').update({
+            'outstanding_amount': newOutstanding > 0 ? newOutstanding : 0,
+            'outstanding_balance': newOutstanding > 0 ? newOutstanding : 0,
+            'paid_emis': paidCount,
+            'status': newOutstanding <= 0 ? 'closed' : 'active',
+          }).eq('id', loanId);
+        } catch (_) {}
       }
-    } catch (_) {
-      // Non-fatal — best-effort revert
     }
 
     return {

@@ -24,3 +24,10 @@
 # Keep annotation
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Google Play Core (split-install / deferred components) - referenced by
+# Flutter embedding even when not actually used. Keep signatures so R8
+# does not fail with "Missing class".
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+

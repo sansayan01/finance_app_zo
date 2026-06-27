@@ -76,4 +76,9 @@ flutter {
 dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // Required by Flutter embedding's PlayStoreSplitApplication when the app
+    // is built with R8/minify. The app does not use Play Core deferred
+    // components, but the Flutter Android embedding references it. This stub
+    // dependency supplies those classes so R8 doesn't fail with "Missing class".
+    implementation("com.google.android.play:core:1.10.3")
 }

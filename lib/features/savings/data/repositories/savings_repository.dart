@@ -289,7 +289,14 @@ class SavingsRepository {
   /// plan starts with its correct in-progress state rather than from zero.
   ///
   /// Returns the new plan's ID.
-  Future<String> createMigrationSavingsPlan({
+  /// Returns a record with `planId` and `transactionId` (the synthetic
+  /// deposit transaction that backs all migrated installments).
+  ///
+  /// [lastCollectionDate] is the date of the most recent migrated
+  /// installment — used to populate the transaction's `transaction_date`
+  /// in the ledger, while `created_at` is always set by the DB default
+  /// (now()) so a fresh migration never carries an ancient timestamp.
+  Future<({String planId, String? transactionId})> createMigrationSavingsPlan({
     required String memberId,
     required double installmentAmount,
     required double totalReturnAmount,
@@ -395,8 +402,11 @@ class SavingsRepository {
 
     final planId = response['id'].toString();
 
-    // Create a transaction record for the already-paid balance
-    // so deposit history shows up on the detail page
+    // Create a transaction record for the already-paid balance so deposit
+    // history shows up on the detail page. The DB default sets created_at =
+    // now(), and we put the historical date in transaction_date instead of
+    // back-dating created_at (Phase #2 fix).
+    String? txId;
     if (currentAmount > 0) {
       final memberData = await _client
           .from('members')
@@ -404,7 +414,7 @@ class SavingsRepository {
           .eq('id', memberId)
           .maybeSingle();
 
-      await _client.from('transactions').insert({
+      final inserted = await _client.from('transactions').insert({
         'member_id': memberId,
         'member_name': memberData?['full_name'] as String? ?? '',
         'savings_id': planId,
@@ -412,15 +422,23 @@ class SavingsRepository {
         'type': 'savingsDeposit',
         'org_id': _orgId,
         'description': 'Migrated balance — pre-existing deposit',
-        'created_at': startDate.toUtc().toIso8601String(),
-      });
+        'transaction_date':
+            lastPaymentDate.toIso8601String().split('T').first,
+      }).select('id').single();
+
+      txId = inserted['id'] as String;
     }
 
-    return planId;
+    return (planId: planId, transactionId: txId);
   }
 
   /// Creates synthetic [savings_collections] records for each installment
   /// that was already paid in a migrated plan.
+  ///
+  /// [transactionId] (nullable) is the synthetic deposit transaction created
+  /// by [createMigrationSavingsPlan]. When supplied, every collection row
+  /// is linked to it so delete-and-revert can find + remove them as a pair
+  /// (Phase #1 fix).
   ///
   /// Returns the number of collection records created.
   Future<int> createMigrationCollectionRecords({
@@ -430,6 +448,7 @@ class SavingsRepository {
     required int installmentsPaid,
     required DateTime startDate,
     required String collectionType,
+    String? transactionId,
   }) async {
     if (installmentsPaid <= 0) return 0;
 
@@ -461,6 +480,7 @@ class SavingsRepository {
         'collection_date': collectionDate.toIso8601String().split('T')[0],
         'collected_at': DateTime.now().toUtc().toIso8601String(),
         'sync_status': 'synced',
+        if (transactionId != null) 'transaction_id': transactionId,
       });
     }
 

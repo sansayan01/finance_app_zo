@@ -448,8 +448,50 @@ class LoansRepository {
       });
     }
 
-    if (records.isNotEmpty) {
-      await _client.from('collections').insert(records);
+    if (records.isEmpty) return 0;
+
+    // Insert collections and capture their ids so we can link them to a
+    // backing transaction (Phase #1 fix).
+    final inserted = await _client
+        .from('collections')
+        .insert(records)
+        .select('id, collection_date');
+    final insertedRows = inserted as List;
+
+    // Create ONE synthetic loan-repayment transaction that consolidates the
+    // migrated installments. Without it, the delete-revert workflow could
+    // never find a transaction tied to these collection rows.
+    if (insertedRows.isNotEmpty && installmentAmount > 0) {
+      final totalAmount = installmentAmount * installmentsPaid;
+      // latest installment date for the transaction's transaction_date
+      final lastDueDate = records.last['collection_date'] as String;
+
+      // Type 'emiPayment' (not 'loanRepayment') — the transactions table's
+      // CHECK constraint allows ['loanDisbursement', 'emiPayment',
+      // 'savingsDeposit', 'savingsWithdrawal', 'penalty', 'staffCashDeposit',
+      // 'other', 'collection', 'deposit', 'withdrawal']. 'loanRepayment'
+      // is NOT in that allow-list, so the previous code broke here and
+      // left the inserted collections with a NULL transaction_id (Phase #1
+      // was incomplete on the loan side).
+      final txResult = await _client.from('transactions').insert({
+        'member_id': memberId,
+        'member_name': memberName,
+        'loan_id': loanId,
+        'amount': totalAmount,
+        'type': 'emiPayment',
+        'org_id': _orgId,
+        'payment_mode': 'cash',
+        'description': 'Migrated payment — pre-existing installments',
+        'transaction_date': lastDueDate,
+      }).select('id').single();
+      final txId = txResult['id'] as String;
+
+      final collectionIds =
+          insertedRows.map((r) => r['id'] as String).toList();
+      await _client
+          .from('collections')
+          .update({'transaction_id': txId})
+          .filter('id', 'in', collectionIds);
     }
 
     return records.length;

@@ -108,6 +108,81 @@ class TransactionsRepository {
     }
   }
 
+  /// Fetches all matching transactions for export (no pagination).
+  /// Hard cap at [limit] rows to prevent memory issues.
+  Future<List<TransactionModel>> getTransactionsForExport({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    TransactionType? typeFilter,
+    List<TransactionType>? typeFilters,
+    String? searchQuery,
+    List<PaymentMode>? paymentModes,
+    double? amountMin,
+    double? amountMax,
+    String sortBy = 'date_desc',
+    int limit = 5000,
+  }) async {
+    try {
+      var query = _client
+          .from('transactions')
+          .select()
+          .eq('org_id', _orgId);
+
+      if (typeFilters != null && typeFilters.isNotEmpty) {
+        query = query.inFilter('type', typeFilters.map((t) => t.name).toList());
+      } else if (typeFilter != null) {
+        query = query.eq('type', typeFilter.name);
+      }
+
+      if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+        query = query.ilike('member_name', '%${searchQuery.trim()}%');
+      }
+
+      if (dateFrom != null) {
+        query = query.gte('created_at', dateFrom.toIso8601String());
+      }
+
+      if (dateTo != null) {
+        final endOfDay = DateTime(dateTo.year, dateTo.month, dateTo.day, 23, 59, 59);
+        query = query.lte('created_at', endOfDay.toIso8601String());
+      }
+
+      if (amountMin != null) {
+        query = query.gte('amount', amountMin);
+      }
+
+      if (amountMax != null) {
+        query = query.lte('amount', amountMax);
+      }
+
+      if (paymentModes != null && paymentModes.isNotEmpty) {
+        query = query.inFilter('payment_mode', paymentModes.map((m) => m.name).toList());
+      }
+
+      final isAmountSort = sortBy == 'amount_asc' || sortBy == 'amount_desc';
+      final transform = isAmountSort
+          ? query
+              .order('amount', ascending: sortBy == 'amount_asc')
+              .order('created_at', ascending: false)
+          : query.order('created_at', ascending: sortBy == 'date_asc');
+
+      final response = await transform.limit(limit);
+
+      final list = response as List;
+      if (list.isEmpty) return [];
+
+      final txns = list
+          .map((json) =>
+              TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .toList();
+
+      return _resolveMemberNames(txns);
+    } catch (e) {
+      debugPrint('getTransactionsForExport error: $e');
+      return [];
+    }
+  }
+
   /// Batch-resolve member names for transactions with missing names.
   Future<List<TransactionModel>> _resolveMemberNames(
       List<TransactionModel> txns) async {

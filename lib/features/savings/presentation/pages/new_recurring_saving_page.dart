@@ -371,6 +371,12 @@ class _NewRecurringSavingPageState
                       .read(newRecurringSavingProvider.notifier)
                       .updateInitialBalance(0);
                 }
+                // Phase #3 — propagate the explicit user choice to the
+                // provider so the migration route is taken only when
+                // the checkbox is checked.
+                ref
+                    .read(newRecurringSavingProvider.notifier)
+                    .updateIsMigrated(val);
               },
             ),
           ).animate().fadeIn(duration: 400.ms),

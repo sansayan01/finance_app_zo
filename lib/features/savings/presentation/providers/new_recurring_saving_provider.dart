@@ -20,6 +20,11 @@ class NewRecurringSavingState {
   final double prematurePenalty;
   final bool isLoading;
   final bool freezeEnabled;
+
+  // Phase #3 — explicit migration flag. Until set to true, the
+  // alreadyPaidAmount / installmentsPaid fields are stored but
+  // ignored by createSavingsPlan (normal new-plan path).
+  final bool isMigrated;
   final int installmentsPaid;
   final double alreadyPaidAmount;
 
@@ -36,6 +41,7 @@ class NewRecurringSavingState {
     this.prematurePenalty = 2,
     this.isLoading = false,
     this.freezeEnabled = false,
+    this.isMigrated = false,
     this.installmentsPaid = 0,
     this.alreadyPaidAmount = 0,
   })  : startDate = startDate ?? DateTime.now(),
@@ -90,6 +96,7 @@ class NewRecurringSavingState {
     double? prematurePenalty,
     bool? isLoading,
     bool? freezeEnabled,
+    bool? isMigrated,
     int? installmentsPaid,
     double? alreadyPaidAmount,
   }) {
@@ -120,6 +127,7 @@ class NewRecurringSavingState {
       prematurePenalty: prematurePenalty ?? this.prematurePenalty,
       isLoading: isLoading ?? this.isLoading,
       freezeEnabled: freezeEnabled ?? this.freezeEnabled,
+      isMigrated: isMigrated ?? this.isMigrated,
       installmentsPaid: installmentsPaid ?? this.installmentsPaid,
       alreadyPaidAmount: alreadyPaidAmount ?? this.alreadyPaidAmount,
     );
@@ -249,6 +257,11 @@ class NewRecurringSavingNotifier
   void updateFreezeEnabled(bool enabled) =>
       state = state.copyWith(freezeEnabled: enabled);
 
+  // Phase #3 — explicit migration flag. Routes to the migration code path
+  // in [createSavingsPlan] only when the user has toggled this on.
+  void updateIsMigrated(bool enabled) =>
+      state = state.copyWith(isMigrated: enabled);
+
   /// Update alreadyPaidAmount and auto-calculate installmentsPaid.
   void updateAlreadyPaidAmount(double amount) {
     final computedInstallments = state.installmentAmount > 0
@@ -267,7 +280,11 @@ class NewRecurringSavingNotifier
     try {
       // Route migrated accounts to the dedicated migration method
       // which correctly computes current_amount, next_due_date, maturity_date
-      if (state.alreadyPaidAmount > 0) {
+      // Phase #3 — the migration code path is taken ONLY when the user has
+      // explicitly toggled the "is migrated" checkbox. The previous route
+      // (auto-deriving from alreadyPaidAmount > 0) caught every brand-new
+      // plan that happened to start with any back-fill amount.
+      if (state.isMigrated) {
         // Use installmentsPaidCount (live getter) instead of installmentsPaid (stale field)
         // because installmentsPaid may be 0 if the user entered alreadyPaidAmount
         // before setting the installmentAmount.
@@ -277,7 +294,7 @@ class NewRecurringSavingNotifier
           installmentsPaid: paidDays,
           collectionType: state.collectionType,
         );
-        final planId = await _repository.createMigrationSavingsPlan(
+        final migration = await _repository.createMigrationSavingsPlan(
           memberId: state.memberId!,
           installmentAmount: state.installmentAmount,
           totalReturnAmount: state.maturityAmount,
@@ -290,9 +307,13 @@ class NewRecurringSavingNotifier
           lastPaymentDate: lastPayment,
           freezeEnabled: state.freezeEnabled,
         );
+        final planId = migration.planId;
+        final migrationTxId = migration.transactionId;
 
         // Create synthetic collection records for already-paid installments
-        // so deposit history shows up on the detail page
+        // so deposit history shows up on the detail page. The
+        // migration transaction id is threaded through so every collection
+        // row is linked to the synthetic deposit transaction (Phase #1).
         if (planId.isNotEmpty) {
           await _repository.createMigrationCollectionRecords(
             savingsPlanId: planId,
@@ -301,6 +322,7 @@ class NewRecurringSavingNotifier
             installmentsPaid: paidDays,
             startDate: state.startDate,
             collectionType: state.collectionType.name,
+            transactionId: migrationTxId,
           );
         }
       } else {

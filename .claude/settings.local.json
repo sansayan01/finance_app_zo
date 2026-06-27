@@ -71,7 +71,9 @@
       "mcp__supabase__apply_migration",
       "Bash(findstr *)",
       "WebFetch(domain:pub.dev)",
-      "WebFetch(domain:api.dart.dev)"
+      "WebFetch(domain:api.dart.dev)",
+      "Bash(git add *)",
+      "Bash(git reset *)"
     ]
   },
   "enableAllProjectMcpServers": true,

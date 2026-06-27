@@ -12,9 +12,15 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../savings/data/providers/savings_providers.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/models/transaction_filter.dart';
+import '../../data/services/transaction_export_options.dart';
+import '../../data/services/transaction_pdf_service.dart';
+import '../../data/services/transaction_csv_service.dart';
+import '../../data/services/transaction_excel_service.dart';
 import '../../../loans/presentation/providers/loan_providers.dart';
+import '../../../loans/presentation/widgets/statement_options_sheet.dart';
 import '../../../payments/data/providers/payment_providers.dart';
 import '../widgets/transaction_filter_panel.dart';
+import '../widgets/transaction_export_sheet.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
@@ -262,6 +268,89 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     _resetAndReload();
   }
 
+  Future<void> _showExportSheet() async {
+    final options = await showModalBottomSheet<TransactionExportOptions>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => TransactionExportSheet(
+        hasActiveFilter: _filter.hasActiveFilters,
+        filterStart: _filter.dateFrom,
+        filterEnd: _filter.dateTo,
+        currentFilter: _filter,
+      ),
+    );
+    if (options != null) _onExport(options);
+  }
+
+  Future<void> _onExport(TransactionExportOptions options) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _ExportLoadingDialog(),
+    );
+
+    try {
+      List<TransactionModel> data;
+
+      if (options.period == TransactionPeriod.allFiltered) {
+        data = List.from(_transactions);
+      } else {
+        final repo = ref.read(transactionsRepositoryProvider);
+        data = await repo.getTransactionsForExport(
+          dateFrom: options.resolvedStart,
+          dateTo: options.resolvedEnd,
+          typeFilters: options.typeFilter.isNotEmpty ? options.typeFilter : null,
+          searchQuery: options.searchQuery.isNotEmpty ? options.searchQuery : null,
+          paymentModes: options.paymentModes.isNotEmpty ? options.paymentModes : null,
+          amountMin: options.amountMin,
+          amountMax: options.amountMax,
+          sortBy: options.sortBy,
+        );
+      }
+
+      if (data.isEmpty) {
+        if (mounted) Navigator.pop(context);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No transactions to export')),
+          );
+        }
+        return;
+      }
+
+      switch (options.format) {
+        case StatementFormat.pdf:
+          await TransactionPdfService.share(transactions: data, options: options);
+          break;
+        case StatementFormat.csv:
+          await TransactionCsvService.share(transactions: data, options: options);
+          break;
+        case StatementFormat.excel:
+          await TransactionExcelService.share(transactions: data, options: options);
+          break;
+      }
+
+      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Report shared')),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final todayStats = ref.watch(todayStatsProvider);
@@ -332,6 +421,19 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _showExportSheet,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.file_download_rounded,
+                                color: primary, size: 20),
                           ),
                         ),
                       ],
@@ -495,9 +597,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               ],
             ),
           ),
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -1008,6 +1110,35 @@ class _StatMini extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ExportLoadingDialog extends StatelessWidget {
+  const _ExportLoadingDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Card(
+        margin: const EdgeInsets.all(32),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                'Generating report...',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

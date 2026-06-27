@@ -52,6 +52,13 @@ class NewLoanState {
   final bool freezeEnabled;
 
   // Migration fields
+  ///
+  /// Explicit user-toggled flag that indicates this loan is being migrated
+  /// from a pre-existing system. When true, [createLoan] routes to the
+  /// migration code path which seeds synthetic EMI + collection rows.
+  /// When false, paidEmis/openingBalance/etc. are ignored even if their
+  /// values are non-zero (Phase #3).
+  final bool isMigrated;
   final int paidEmis;
   final DateTime? lastPaymentDate;
   final double openingBalance;
@@ -73,6 +80,7 @@ class NewLoanState {
     this.disbursementDate,
     this.isLoading = false,
     this.freezeEnabled = false,
+    this.isMigrated = false,
     this.paidEmis = 0,
     this.lastPaymentDate,
     this.openingBalance = 0,
@@ -95,6 +103,7 @@ class NewLoanState {
     DateTime? disbursementDate,
     bool? isLoading,
     bool? freezeEnabled,
+    bool? isMigrated,
     int? paidEmis,
     DateTime? lastPaymentDate,
     double? openingBalance,
@@ -116,6 +125,7 @@ class NewLoanState {
       disbursementDate: disbursementDate ?? this.disbursementDate,
       isLoading: isLoading ?? this.isLoading,
       freezeEnabled: freezeEnabled ?? this.freezeEnabled,
+      isMigrated: isMigrated ?? this.isMigrated,
       paidEmis: paidEmis ?? this.paidEmis,
       lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
       openingBalance: openingBalance ?? this.openingBalance,
@@ -207,9 +217,6 @@ class NewLoanState {
 
   /// Overdue amount
   double get overdueAmount => overdueInstallments * estimatedInstallment;
-
-  /// Whether this is a migrated loan
-  bool get isMigrated => paidEmis > 0;
 
   int get numberOfInstallments {
     if (tenureInDays <= 0) return 0;
@@ -451,6 +458,12 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
   void updateDisbursementDate(DateTime date) =>
       state = state.copyWith(disbursementDate: date);
 
+  // Phase #3 — explicit migration flag. The user must toggle this on the
+  // form for [createLoan] to take the migration code path. Until then,
+  // paidEmis/openingBalance are kept but ignored.
+  void updateIsMigrated(bool enabled) =>
+      state = state.copyWith(isMigrated: enabled);
+
   // Migration field updates
   void updatePaidEmis(int count) =>
       state = state.copyWith(paidEmis: count);
@@ -468,6 +481,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
     required double openingBalance,
   }) {
     state = state.copyWith(
+      isMigrated: true, // Phase #3: explicit user flag, no auto-derive
       paidEmis: paidEmis,
       lastPaymentDate: lastPaymentDate,
       outstandingBalance: outstandingBalance,
@@ -477,6 +491,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
 
   void disableMigration() {
     state = state.copyWith(
+      isMigrated: false, // Phase #3: explicit user flag
       paidEmis: 0,
       lastPaymentDate: null,
       outstandingBalance: 0,

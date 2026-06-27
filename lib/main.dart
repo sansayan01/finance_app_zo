@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,10 @@ Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     debugPrint('🚀 App starting...');
+
+    // Load .env file (local dev config)
+    await dotenv.load();
+    debugPrint('✅ .env loaded');
 
     // 1. Set orientations
     await SystemChrome.setPreferredOrientations([

@@ -350,7 +350,7 @@ class UpiPaymentRepository {
         }).select('id').single();
         final transactionId = txResult['id'] as String;
 
-        // 5b. Create collection record
+        // 5b. Create collection record (link selected_schedule_id so delete can find the EMI)
         await _client.from('collections').insert({
           'org_id': _orgId,
           'loan_id': req.loanId,
@@ -368,10 +368,39 @@ class UpiPaymentRepository {
           'sync_status': 'synced',
           'remarks': 'UPI payment confirmed — ID: ${req.id}',
           'transaction_id': transactionId,
+          if (req.emiScheduleId != null && req.emiScheduleId!.isNotEmpty)
+            'selected_schedule_id': req.emiScheduleId,
         });
 
         // 5c. Mark the EMI schedule row as paid
-        if (req.emiScheduleId != null && req.emiScheduleId!.isNotEmpty) {
+        //     If emiScheduleId is missing, auto-link to the next unpaid EMI
+        String? scheduleIdToPay = req.emiScheduleId;
+        if (scheduleIdToPay == null || scheduleIdToPay.isEmpty) {
+          try {
+            final nextEmi = await _client
+                .from('emi_schedule')
+                .select('id')
+                .eq('loan_id', req.loanId!)
+                .eq('is_paid', false)
+                .order('due_date', ascending: true)
+                .limit(1)
+                .maybeSingle();
+            if (nextEmi != null) {
+              scheduleIdToPay = nextEmi['id']?.toString();
+              // Backfill selected_schedule_id on the collection we just created
+              if (scheduleIdToPay != null) {
+                try {
+                  await _client
+                      .from('collections')
+                      .update({'selected_schedule_id': scheduleIdToPay})
+                      .eq('transaction_id', transactionId);
+                } catch (_) {}
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (scheduleIdToPay != null && scheduleIdToPay.isNotEmpty) {
           try {
             await _client
                 .from('emi_schedule')
@@ -382,7 +411,14 @@ class UpiPaymentRepository {
                   'amount_paid': req.amount,
                   'status': 'paid',
                 })
-                .eq('id', req.emiScheduleId!);
+                .eq('id', scheduleIdToPay);
+          } catch (_) {}
+
+          // 5d. Recalculate loan counters (paid_emis + outstanding_amount)
+          try {
+            await _client.rpc('recalculate_loan_outstanding', params: {
+              'p_loan_id': req.loanId,
+            });
           } catch (_) {}
         }
       } else if (req.isSavingsPayment) {

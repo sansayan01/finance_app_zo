@@ -780,6 +780,13 @@ class SavingsRepository {
       updateData['next_due_date'] = newNextDue.toIso8601String().split('T').first;
     }
 
+    // Count remaining collections to keep installments_paid in sync
+    final remainingCols = await _client
+        .from('savings_collections')
+        .select('id')
+        .eq('savings_plan_id', savingId);
+    updateData['installments_paid'] = (remainingCols as List).length;
+
     final result = await _client
         .from('savings_plans')
         .update(updateData).eq('id', savingId).select();

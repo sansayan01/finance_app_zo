@@ -626,7 +626,7 @@ class CollectionRepository {
       }).eq('id', scheduleId).eq('is_paid', true);
     } else if (loanId != null) {
       // Fallback: unmark most recently paid EMI that isn't linked
-      // to another collection
+      // to a DIFFERENT collection via selected_schedule_id
       final paidEmis = await _client
           .from('emi_schedule')
           .select('id')
@@ -636,25 +636,51 @@ class CollectionRepository {
           .order('emi_number', ascending: false);
 
       if (paidEmis.isNotEmpty) {
-        await _client.from('emi_schedule').update({
-          'is_paid': false,
-          'status': 'pending',
-          'paid_on': null,
-          'paid_date': null,
-          'payment_mode': null,
-          'amount_paid': 0,
-          'transaction_id': null,
-        }).eq('id', paidEmis.first['id']);
+        // Check which EMIs are claimed by OTHER collections
+        final otherClaimed = await _client
+            .from('collections')
+            .select('selected_schedule_id')
+            .eq('loan_id', loanId)
+            .neq('id', collectionId)
+            .not('selected_schedule_id', 'is', null);
+
+        final claimedIds = (otherClaimed as List)
+            .map((c) => c['selected_schedule_id']?.toString())
+            .where((id) => id != null)
+            .toSet();
+
+        // Find the first paid EMI not claimed by another collection
+        for (final emi in paidEmis) {
+          if (!claimedIds.contains(emi['id']?.toString())) {
+            await _client.from('emi_schedule').update({
+              'is_paid': false,
+              'status': 'pending',
+              'paid_on': null,
+              'paid_date': null,
+              'payment_mode': null,
+              'amount_paid': 0,
+              'transaction_id': null,
+            }).eq('id', emi['id']);
+            break;
+          }
+        }
       }
     }
 
     // 3. Delete the collection record
     await _client.from('collections').delete().eq('id', collectionId);
 
-    // 4. Delete the linked transaction
+    // 4. Delete the linked transaction ONLY if no other collections reference it
     if (linkedTxId != null) {
       try {
-        await _client.from('transactions').delete().eq('id', linkedTxId);
+        final otherRefs = await _client
+            .from('collections')
+            .select('id')
+            .eq('transaction_id', linkedTxId)
+            .limit(1);
+        if ((otherRefs as List).isEmpty) {
+          await _client.from('transactions').delete().eq('id', linkedTxId);
+        }
       } catch (_) {}
     }
 

@@ -41,6 +41,12 @@ class TransactionsRepository {
     int limit = 20,
     TransactionType? typeFilter,
     String? searchQuery,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    double? amountMin,
+    double? amountMax,
+    List<PaymentMode>? paymentModes,
+    String sortBy = 'date_desc',
   }) async {
     try {
       var query = _client
@@ -56,9 +62,36 @@ class TransactionsRepository {
         query = query.ilike('member_name', '%${searchQuery.trim()}%');
       }
 
-      final response = await query
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+      if (dateFrom != null) {
+        query = query.gte('created_at', dateFrom.toIso8601String());
+      }
+
+      if (dateTo != null) {
+        final endOfDay = DateTime(dateTo.year, dateTo.month, dateTo.day, 23, 59, 59);
+        query = query.lte('created_at', endOfDay.toIso8601String());
+      }
+
+      if (amountMin != null) {
+        query = query.gte('amount', amountMin);
+      }
+
+      if (amountMax != null) {
+        query = query.lte('amount', amountMax);
+      }
+
+      if (paymentModes != null && paymentModes.isNotEmpty) {
+        query = query.inFilter('payment_mode', paymentModes.map((m) => m.name).toList());
+      }
+
+      // Apply sorting and pagination as transforms (they return PostgrestTransformBuilder)
+      final isAmountSort = sortBy == 'amount_asc' || sortBy == 'amount_desc';
+      final transform = isAmountSort
+          ? query
+              .order('amount', ascending: sortBy == 'amount_asc')
+              .order('created_at', ascending: false)
+          : query.order('created_at', ascending: sortBy == 'date_asc');
+
+      final response = await transform.range(offset, offset + limit - 1);
 
       final list = response as List;
       if (list.isEmpty) return [];
@@ -369,38 +402,57 @@ class TransactionsRepository {
     } catch (_) {}
 
     // 2. Unmark the linked EMI FIRST (before deleting collection)
-    bool emiUnmarked = false;
     try {
       if (scheduleId != null) {
-        final result = await _client.from('emi_schedule').update({
+        await _client.from('emi_schedule').update({
           'is_paid': false,
           'status': 'pending',
           'paid_on': null,
           'paid_date': null,
           'payment_mode': null,
+          'amount_paid': 0,
           'transaction_id': null,
-        }).eq('id', scheduleId).eq('is_paid', true).select('id');
-        emiUnmarked = (result as List).isNotEmpty;
+        }).eq('id', scheduleId).eq('is_paid', true);
       } else {
         // Fallback: unmark the most recently paid EMI for this loan
-        final paidEmi = await _client
+        // that is NOT linked to a DIFFERENT collection via selected_schedule_id
+        final paidEmis = await _client
             .from('emi_schedule')
             .select('id')
             .eq('loan_id', loanId)
             .eq('is_paid', true)
             .order('paid_on', ascending: false)
-            .limit(1)
-            .maybeSingle();
-        if (paidEmi != null) {
-          await _client.from('emi_schedule').update({
-            'is_paid': false,
-            'status': 'pending',
-            'paid_on': null,
-            'paid_date': null,
-            'payment_mode': null,
-            'transaction_id': null,
-          }).eq('id', paidEmi['id']);
-          emiUnmarked = true;
+            .order('emi_number', ascending: false);
+
+        if ((paidEmis as List).isNotEmpty) {
+          // Check which EMIs are claimed by other collections
+          final otherClaimed = await _client
+              .from('collections')
+              .select('selected_schedule_id')
+              .eq('loan_id', loanId)
+              .neq('id', collectionId)
+              .not('selected_schedule_id', 'is', null);
+
+          final claimedIds = (otherClaimed as List)
+              .map((c) => c['selected_schedule_id']?.toString())
+              .where((id) => id != null)
+              .toSet();
+
+          // Find the first paid EMI not claimed by another collection
+          for (final emi in paidEmis) {
+            if (!claimedIds.contains(emi['id']?.toString())) {
+              await _client.from('emi_schedule').update({
+                'is_paid': false,
+                'status': 'pending',
+                'paid_on': null,
+                'paid_date': null,
+                'payment_mode': null,
+                'amount_paid': 0,
+                'transaction_id': null,
+              }).eq('id', emi['id']);
+              break;
+            }
+          }
         }
       }
     } catch (_) {}
@@ -408,48 +460,55 @@ class TransactionsRepository {
     // 3. Delete the collection record
     await _client.from('collections').delete().eq('id', collectionId);
 
-    // 4. Delete the linked transaction (only if we know which one)
+    // 4. Delete the linked transaction ONLY if no other collections reference it
     if (linkedTxId != null) {
       try {
-        await _client.from('transactions').delete().eq('id', linkedTxId);
+        final otherRefs = await _client
+            .from('collections')
+            .select('id')
+            .eq('transaction_id', linkedTxId)
+            .limit(1);
+        if ((otherRefs as List).isEmpty) {
+          await _client.from('transactions').delete().eq('id', linkedTxId);
+        }
       } catch (_) {}
     }
 
     // 5. Recalculate outstanding from EMI schedule (source of truth)
     //    instead of blindly adding back amount — avoids drift when
     //    collections don't align 1:1 with EMIs (migrated accounts, etc.)
-    if (emiUnmarked) {
+    try {
+      await _client.rpc('recalculate_loan_outstanding', params: {
+        'p_loan_id': loanId,
+      });
+    } catch (_) {
+      // RPC not available — recalculate manually from EMI schedule
       try {
-        await _client.rpc('recalculate_loan_outstanding', params: {
-          'p_loan_id': loanId,
-        });
-      } catch (_) {
-        // Fallback: manual adjustment if RPC not deployed yet
-        try {
-          final loan = await _client
-              .from('loans')
-              .select('outstanding_amount, outstanding_balance, paid_emis, status')
-              .eq('id', loanId)
-              .maybeSingle();
-          if (loan != null) {
-            final currentOutstanding =
-                (loan['outstanding_amount'] as num?)?.toDouble() ??
-                    (loan['outstanding_balance'] as num?)?.toDouble() ??
-                    0.0;
-            final restored = currentOutstanding + amount;
-            final currentPaid = (loan['paid_emis'] as num?)?.toInt() ?? 0;
-            final updateData = <String, dynamic>{
-              'outstanding_amount': restored,
-              'outstanding_balance': restored,
-              'paid_emis': currentPaid > 0 ? currentPaid - 1 : 0,
-            };
-            if (loan['status'] == 'closed') {
-              updateData['status'] = 'active';
-            }
-            await _client.from('loans').update(updateData).eq('id', loanId);
+        final emis = await _client
+            .from('emi_schedule')
+            .select('emi_amount, is_paid')
+            .eq('loan_id', loanId);
+
+        double totalRepaid = 0;
+        int paidCount = 0;
+        double totalEmi = 0;
+        for (final emi in (emis as List)) {
+          final emiAmt = (emi['emi_amount'] as num?)?.toDouble() ?? 0;
+          totalEmi += emiAmt;
+          if (emi['is_paid'] == true) {
+            totalRepaid += emiAmt;
+            paidCount++;
           }
-        } catch (_) {}
-      }
+        }
+
+        final newOutstanding = totalEmi - totalRepaid;
+        await _client.from('loans').update({
+          'outstanding_amount': newOutstanding > 0 ? newOutstanding : 0,
+          'outstanding_balance': newOutstanding > 0 ? newOutstanding : 0,
+          'paid_emis': paidCount,
+          'status': newOutstanding <= 0 ? 'closed' : 'active',
+        }).eq('id', loanId);
+      } catch (_) {}
     }
   }
 
@@ -529,8 +588,17 @@ class TransactionsRepository {
           }
         }
         if (balance < 0) balance = 0;
+
+        // Also count remaining collections to update installments_paid
+        final remainingCols = await _client
+            .from('savings_collections')
+            .select('id')
+            .eq('savings_plan_id', savingsPlanId);
+        final installmentsPaid = (remainingCols as List).length;
+
         await _client.from('savings_plans').update({
           'current_amount': balance,
+          'installments_paid': installmentsPaid,
         }).eq('id', savingsPlanId);
       } catch (_) {
         // Give up silently — the delete still removed the ledger entry

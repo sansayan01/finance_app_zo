@@ -11,8 +11,10 @@ import '../../../home/data/providers/dashboard_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../savings/data/providers/savings_providers.dart';
 import '../../data/models/transaction_model.dart';
+import '../../data/models/transaction_filter.dart';
 import '../../../loans/presentation/providers/loan_providers.dart';
 import '../../../payments/data/providers/payment_providers.dart';
+import '../widgets/transaction_filter_panel.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
   const TransactionsPage({super.key});
@@ -22,9 +24,7 @@ class TransactionsPage extends ConsumerStatefulWidget {
 }
 
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
-  TransactionType? _filterType;
-  String _searchQuery = '';
-  final _searchController = TextEditingController();
+  TransactionFilter _filter = TransactionFilter.empty;
   final _scrollController = ScrollController();
 
   // Pagination state
@@ -211,7 +211,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -230,8 +229,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final results = await repo.getTransactionsPaginated(
       offset: _transactions.length,
       limit: _pageSize,
-      typeFilter: _filterType,
-      searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
+      typeFilter: _filter.type,
+      searchQuery: _filter.searchQuery.isNotEmpty ? _filter.searchQuery : null,
+      dateFrom: _filter.dateFrom,
+      dateTo: _filter.dateTo,
+      amountMin: _filter.amountMin,
+      amountMax: _filter.amountMax,
+      paymentModes: _filter.paymentModes.isNotEmpty ? _filter.paymentModes : null,
+      sortBy: _filter.sortBy,
     );
 
     if (!mounted) return;
@@ -347,56 +352,18 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-                // Search Bar
+                // Search + Advanced Filter Panel
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.fillDark : AppColors.fillLight,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: theme.dividerColor.withValues(alpha: 0.1)),
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        onSubmitted: (v) {
-                          _searchQuery = v;
-                          _resetAndReload();
-                        },
-                        onChanged: (v) {
-                          // Debounce: only search on submit or after clearing
-                          if (v.isEmpty && _searchQuery.isNotEmpty) {
-                            _searchQuery = '';
-                            _resetAndReload();
-                          }
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search by member name...',
-                          hintStyle: theme.textTheme.bodySmall,
-                          prefixIcon: Icon(Icons.search_rounded,
-                              color: primary.withValues(alpha: 0.6), size: 20),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 18),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    _searchQuery = '';
-                                    _resetAndReload();
-                                  },
-                                )
-                              : null,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                        ),
-                      ),
-                    ),
-                  ).animate().fadeIn(delay: 200.ms),
+                  child: TransactionFilterPanel(
+                    filter: _filter,
+                    onFilterChanged: (newFilter) {
+                      setState(() => _filter = newFilter);
+                      _resetAndReload();
+                    },
+                  ),
                 ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
                 // Filter Chips
                 SliverToBoxAdapter(
@@ -408,14 +375,18 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       itemCount: _filters.length,
                       itemBuilder: (context, index) {
                         final filter = _filters[index];
-                        final isSelected = _filterType == filter['type'];
+                        final isSelected = _filter.type == filter['type'];
                         return Padding(
                           padding: const EdgeInsets.only(right: 10),
                           child: GestureDetector(
                             onTap: () {
                               HapticFeedback.selectionClick();
-                              setState(() =>
-                                  _filterType = filter['type'] as TransactionType?);
+                              setState(() {
+                                _filter = _filter.copyWith(
+                                  type: filter['type'] as TransactionType?,
+                                  clearType: filter['type'] == null,
+                                );
+                              });
                               _resetAndReload();
                             },
                             child: AnimatedContainer(

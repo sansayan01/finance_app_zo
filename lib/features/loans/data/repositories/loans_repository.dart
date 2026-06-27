@@ -6,7 +6,6 @@ import '../../../settings/data/repositories/activity_log_repository.dart';
 import '../../../settings/data/models/activity_log_model.dart';
 import '../models/loan_model.dart';
 import 'emi_repository.dart';
-import '../../../../core/constants/enums.dart';
 
 class LoansRepository {
   final SupabaseClient _client;
@@ -669,91 +668,54 @@ class LoansRepository {
   }
 
   Future<void> recalculateLoanBalance(String loanId) async {
-    // 1. Fetch the loan details (principal, interest, status, total_repayable)
-    final loan = await _client
-        .from('loans')
-        .select('amount, principal, total_repayable, status')
-        .eq('id', loanId)
-        .maybeSingle();
-
-    if (loan == null) return;
-
-    final principal = ((loan['amount'] ?? loan['principal']) as num?)?.toDouble() ?? 0.0;
-    final totalRepayable = (loan['total_repayable'] as num?)?.toDouble() ?? principal;
-
-    // 2. Fetch all transactions of type 'emiPayment' for this loan
-    final transactions = await _client
-        .from('transactions')
-        .select('type, amount')
-        .eq('loan_id', loanId)
-        .eq('type', TransactionType.emiPayment.name);
-
-    double totalPaid = 0.0;
-    for (final tx in transactions as List) {
-      totalPaid += (tx['amount'] as num?)?.toDouble() ?? 0.0;
+    // PRIMARY: Use the server-side RPC which derives outstanding from the
+    // EMI schedule (the single source of truth). This avoids rounding drift
+    // between totalRepayable and sum(emi_amount).
+    try {
+      await _client.rpc('recalculate_loan_outstanding', params: {
+        'p_loan_id': loanId,
+      });
+      return;
+    } catch (_) {
+      // RPC not deployed yet — fall through to client-side recalc
     }
 
-    // 3. Outstanding balance = totalRepayable - totalPaid
-    final outstandingBalance = (totalRepayable - totalPaid).clamp(0.0, totalRepayable);
-
-    // 4. Update the outstanding balance and status of the loan
-    final updateData = <String, dynamic>{
-      'outstanding_amount': outstandingBalance,
-      'outstanding_balance': outstandingBalance,
-    };
-    if (outstandingBalance <= 0) {
-      updateData['status'] = 'closed';
-      updateData['closed_date'] = DateTime.now().toIso8601String().split('T').first;
-    } else {
-      if (loan['status'] == 'closed') {
-        updateData['status'] = 'active';
-        updateData['closed_date'] = null;
-      }
-    }
-
-    await _client.from('loans').update(updateData).eq('id', loanId);
-
-    // 5. Recalculate EMI schedule paid status.
-    // Fetch all EMI schedule entries for this loan, sorted by emi_number
-    final schedule = await _client
+    // CLIENT-SIDE FALLBACK: Derive outstanding from the EMI schedule,
+    // NOT from totalRepayable - sum(transactions), because rounding
+    // differences between the two totals cause corruption.
+    final emis = await _client
         .from('emi_schedule')
-        .select('id, emi_amount, due_date')
+        .select('id, emi_amount, is_paid, due_date, status')
         .eq('loan_id', loanId)
         .order('emi_number', ascending: true);
 
-    double remainingPayment = totalPaid;
-    for (final emi in schedule as List) {
-      final emiAmount = (emi['emi_amount'] as num?)?.toDouble() ?? 0.0;
-      final emiId = emi['id'] as String;
-
-        if (remainingPayment >= emiAmount) {
-          // Mark as fully paid
-          await _client.from('emi_schedule').update({
-            'is_paid': true,
-            'status': 'paid',
-            'paid_on': DateTime.now().toUtc().toIso8601String(),
-          }).eq('id', emiId);
-          remainingPayment -= emiAmount;
-        } else {
-          // Unmark as paid — clear ALL payment fields
-          final dueDateStr = emi['due_date']?.toString();
-          bool isOverdue = false;
-          if (dueDateStr != null) {
-            final dueDate = DateTime.tryParse(dueDateStr);
-            if (dueDate != null) {
-              isOverdue = dueDate.isBefore(DateTime.now());
-            }
-          }
-
-          await _client.from('emi_schedule').update({
-            'is_paid': false,
-            'status': isOverdue ? 'overdue' : 'pending',
-            'paid_on': null,
-            'payment_mode': null,
-            'amount_paid': 0,
-            'transaction_id': null,
-          }).eq('id', emiId);
-        }
+    double totalRepaid = 0;
+    double totalEmi = 0;
+    int paidCount = 0;
+    for (final emi in emis as List) {
+      final emiAmt = (emi['emi_amount'] as num?)?.toDouble() ?? 0;
+      totalEmi += emiAmt;
+      if (emi['is_paid'] == true) {
+        totalRepaid += emiAmt;
+        paidCount++;
       }
+    }
+
+    final newOutstanding = (totalEmi - totalRepaid).clamp(0.0, totalEmi);
+
+    final updateData = <String, dynamic>{
+      'outstanding_amount': newOutstanding,
+      'outstanding_balance': newOutstanding,
+      'paid_emis': paidCount,
+    };
+    if (newOutstanding <= 0) {
+      updateData['status'] = 'closed';
+      updateData['closed_date'] = DateTime.now().toIso8601String().split('T').first;
+    } else {
+      updateData['status'] = 'active';
+      updateData['closed_date'] = null;
+    }
+
+    await _client.from('loans').update(updateData).eq('id', loanId);
   }
 }

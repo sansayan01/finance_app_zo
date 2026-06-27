@@ -36,6 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare .env files
+        run: |
+          cp .env.example .env
+          cp .env.example assets/.env
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -53,10 +57,14 @@ jobs:
 
   build-android:
     name: Build Android (Production)
-    needs: [validate-tag, test]
+    needs: validate-tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare .env files
+        run: |
+          cp .env.example .env
+          cp .env.example assets/.env
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

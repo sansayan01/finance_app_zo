@@ -107,3 +107,10 @@ temp/
 
 # Graphify knowledge graph (regenerable)
 graphify-out/
+
+# Claude Code local settings (machine-local, may capture shell history)
+.openclaude/settings.local.json
+
+# Android build artifacts
+android/build/
+android/app/build/

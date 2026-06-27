@@ -21,7 +21,7 @@ Future<void> main() async {
     debugPrint('🚀 App starting...');
 
     // Load .env file (local dev config)
-    await dotenv.load();
+    await dotenv.load(fileName: 'assets/.env', isOptional: true);
     debugPrint('✅ .env loaded');
 
     // 1. Set orientations

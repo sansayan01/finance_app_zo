@@ -22,4 +22,6 @@ if not exist ".env.%ENV%" (
     exit /b 1
 )
 copy /Y ".env.%ENV%" ".env" >nul
+if not exist "assets" mkdir "assets"
+copy /Y ".env.%ENV%" "assets\.env" >nul
 echo Switched to %ENV% environment

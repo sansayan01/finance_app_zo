@@ -8,6 +8,8 @@ case $ENV in
   local|staging|production)
     if [ -f ".env.$ENV" ]; then
       cp ".env.$ENV" ".env"
+      mkdir -p assets
+      cp ".env.$ENV" "assets/.env"
       echo "Switched to $ENV environment"
       echo "  SUPABASE_URL=$(grep SUPABASE_URL .env | head -1 | cut -d= -f2-)"
     else

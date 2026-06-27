@@ -1,4 +1,4 @@
-package com.example.finance
+package com.microflow.pro
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -18,8 +18,6 @@ class SmsBootReceiver : BroadcastReceiver() {
         private const val KEY_TIME = "reminder_time"
         const val DEFAULT_TIME = "08:00"
 
-        /** Read the user-selected reminder time (HH:mm) previously written
-         *  by the Dart enqueue path. Falls back to [DEFAULT_TIME]. */
         fun readStoredReminderTime(context: Context): String? {
             return try {
                 prefs(context).getString(KEY_TIME, null)
@@ -28,8 +26,6 @@ class SmsBootReceiver : BroadcastReceiver() {
             }
         }
 
-        /** Persist the user-selected reminder time so the boot receiver
-         *  and cold-start `onCreate` can rehydrate it. */
         fun writeStoredReminderTime(context: Context, timeStr: String) {
             try {
                 prefs(context).edit().putString(KEY_TIME, timeStr).apply()

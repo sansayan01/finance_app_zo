@@ -1,0 +1,174 @@
+name: Production Release
+
+on:
+  push:
+    tags: ['v*']
+
+env:
+  FLUTTER_VERSION: '3.27.x'
+
+jobs:
+  validate-tag:
+    name: Validate Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract version from tag
+        id: extract
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Building version: $TAG"
+      - name: Verify version matches pubspec.yaml
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          PUBSPEC_VERSION=$(grep "version:" pubspec.yaml | sed 's/version: //' | cut -d+ -f1)
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "ERROR: Tag version ($TAG_VERSION) does not match pubspec.yaml version ($PUBSPEC_VERSION)"
+            exit 1
+          fi
+
+  test:
+    name: Test
+    needs: validate-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool/
+          key: pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test --reporter=github
+
+  build-android:
+    name: Build Android (Production)
+    needs: [validate-tag, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool/
+          key: pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-
+      - run: flutter pub get
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Decode Key Properties
+        run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
+
+      - name: Build Signed APK
+        run: |
+          flutter build apk --release \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=POSTHOG_API_KEY="$POSTHOG_API_KEY" \
+            --dart-define=POSTHOG_HOST="$POSTHOG_HOST" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
+        env:
+          SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+
+      - name: Build Signed AAB
+        run: |
+          flutter build appbundle --release \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=POSTHOG_API_KEY="$POSTHOG_API_KEY" \
+            --dart-define=POSTHOG_HOST="$POSTHOG_HOST" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="$MAPBOX_ACCESS_TOKEN"
+        env:
+          SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-release
+          path: |
+            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/flutter-apk/app-release.apk
+
+  publish-release:
+    name: Create GitHub Release
+    needs: [validate-tag, build-android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: production-release
+          path: release-assets
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: |
+            release-assets/app-release.apk
+            release-assets/app-release.aab
+
+  upload-to-supabase-storage:
+    name: Upload APK to Supabase Storage
+    needs: [validate-tag, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: production-release
+          path: release-assets
+
+      - name: Upload APK to Supabase Storage
+        run: |
+          curl -X POST "${SUPABASE_URL}/storage/v1/object/app-updates/apk/microflow-latest.apk" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            -H "x-upsert: true" \
+            --data-binary @release-assets/app-release.apk
+
+          # Update system_config with new version
+          curl -X PATCH "${SUPABASE_URL}/rest/v1/system_config?id=eq.1" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "{\"current_version_android\": \"${{ needs.validate-tag.outputs.version }}\", \"update_url_android\": \"${SUPABASE_URL}/storage/v1/object/public/app-updates/apk/microflow-latest.apk\"}"
+        env:
+          SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

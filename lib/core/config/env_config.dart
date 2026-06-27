@@ -1,51 +1,63 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Environment Configuration
 ///
-/// These values can be overridden via --dart-define flags:
-/// flutter run --dart-define=SUPABASE_URL=https://... --dart-define=SUPABASE_ANON_KEY=...
-/// The defaults below are safe - anon keys are public-facing.
+/// Loads values from .env files at runtime. Falls back to hardcoded defaults
+/// if no .env file is found (e.g. in CI builds using --dart-define).
+///
+/// Usage:
+///   flutter run                         → reads from .env
+///   flutter run --dart-define=...       → overrides .env values
+///   flutter build apk --dart-define=... → uses dart-define only
 class EnvConfig {
   // Supabase Configuration
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://tccwdpsnuudzfyxfoohk.supabase.co',
-  );
+  static String get supabaseUrl =>
+      dotenv.env['SUPABASE_URL'] ??
+      const String.fromEnvironment('SUPABASE_URL');
 
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjY3dkcHNudXVkemZ5eGZvb2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDQ1MTgsImV4cCI6MjA5MzkyMDUxOH0.I3B-A6YIrC2XlFlbf1eyTVqmcVJUOOcOUBYstpYE9_Y',
-  );
+  static String get supabaseAnonKey =>
+      dotenv.env['SUPABASE_ANON_KEY'] ??
+      const String.fromEnvironment('SUPABASE_ANON_KEY');
 
   // App Configuration
-  static const String appName = String.fromEnvironment(
-    'APP_NAME',
-    defaultValue: 'MicroFlow Pro',
-  );
+  static String get appName =>
+      dotenv.env['APP_NAME'] ??
+      const String.fromEnvironment('APP_NAME', defaultValue: 'MicroFlow Pro');
 
-  static const String appVersion = String.fromEnvironment(
-    'APP_VERSION',
-    defaultValue: '1.0.0',
-  );
+  static String get appVersion =>
+      dotenv.env['APP_VERSION'] ??
+      const String.fromEnvironment('APP_VERSION', defaultValue: '1.0.0');
 
   // Mapbox Configuration
-  static const String mapboxAccessToken = String.fromEnvironment(
-    'MAPBOX_ACCESS_TOKEN',
-    defaultValue: '',
-  );
+  static String get mapboxAccessToken =>
+      dotenv.env['MAPBOX_ACCESS_TOKEN'] ??
+      const String.fromEnvironment('MAPBOX_ACCESS_TOKEN');
 
   // Telemetry (Sentry & PostHog)
-  static const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
-  static const String posthogApiKey = String.fromEnvironment('POSTHOG_API_KEY');
-  static const String posthogHost = String.fromEnvironment(
-    'POSTHOG_HOST',
-    defaultValue: 'https://app.posthog.com',
-  );
+  static String get sentryDsn =>
+      dotenv.env['SENTRY_DSN'] ??
+      const String.fromEnvironment('SENTRY_DSN');
+
+  static String get posthogApiKey =>
+      dotenv.env['POSTHOG_API_KEY'] ??
+      const String.fromEnvironment('POSTHOG_API_KEY');
+
+  static String get posthogHost =>
+      dotenv.env['POSTHOG_HOST'] ??
+      const String.fromEnvironment('POSTHOG_HOST',
+          defaultValue: 'https://app.posthog.com');
+
+  // Environment Detection
+  static bool get isLocalEnvironment =>
+      supabaseUrl.startsWith('http://') ||
+      supabaseUrl.contains('127.0.0.1') ||
+      supabaseUrl.contains('localhost');
 
   // Validate configuration
   static bool get isValidConfig =>
       supabaseUrl.isNotEmpty &&
       supabaseAnonKey.isNotEmpty &&
-      supabaseUrl.startsWith('https://');
+      (supabaseUrl.startsWith('https://') || isLocalEnvironment);
 
   // Debug info (don't expose secrets in production)
   static String get debugInfo => '''

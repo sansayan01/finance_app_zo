@@ -1,4 +1,4 @@
-package com.example.finance
+package com.microflow.pro
 
 import android.content.ComponentName
 import android.content.pm.PackageManager
@@ -44,9 +44,6 @@ class MainActivity : FlutterFragmentActivity() {
         schedulerChannel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "enqueue_reminder_worker" -> {
-                    // Read the user-selected reminder time ("HH:mm"). If the
-                    // Dart side didn't send it, fall back to whatever was
-                    // persisted by a previous enqueue.
                     val timeArg = call.argument<String>("time")
                     val timeStr = timeArg
                         ?: SmsBootReceiver.readStoredReminderTime(applicationContext)
@@ -69,9 +66,6 @@ class MainActivity : FlutterFragmentActivity() {
                     result.success(true)
                 }
                 "run_reminder_pass" -> {
-                    // The worker is invoking us from a freshly-spun-up Flutter engine.
-                    // For now just acknowledge; the Dart side (SmsSchedulerService.runReminderPass)
-                    // does the actual work.
                     result.success(0)
                 }
                 else -> result.notImplemented()
@@ -134,11 +128,6 @@ class MainActivity : FlutterFragmentActivity() {
             PackageManager.DONT_KILL_APP
         )
 
-        // The real .MainActivity also has a launcher icon at install time only when its
-        // <intent-filter> declares LAUNCHER. Older installs (built before the manifest fix)
-        // still show two icons because the real activity was never disabled. Toggle it here
-        // defensively so the user always sees exactly one launcher entry, regardless of which
-        // APK version they're upgrading from.
         val realComponent = ComponentName(packageName, "$packageName.MainActivity")
         val newState = if (presetId == "default") {
             PackageManager.COMPONENT_ENABLED_STATE_DEFAULT
@@ -153,7 +142,6 @@ class MainActivity : FlutterFragmentActivity() {
             )
         } catch (_: IllegalArgumentException) {
             // Component not registered as a separate launcher entry on this build.
-            // Safe to ignore — the alias toggle alone is sufficient for modern APKs.
         }
 
         return true
@@ -161,10 +149,6 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
-        // Use the user-selected time if a previous enqueue stored it;
-        // otherwise default to 08:00. The periodic work keeps running
-        // (KEEP policy) but the worker re-arms itself at the user time
-        // at the end of every pass — see SmsReminderWorker.doWork.
         val timeStr = SmsBootReceiver.readStoredReminderTime(this) ?: "08:00"
         val data = Data.Builder()
             .putString(SmsReminderWorker.KEY_TIME, timeStr)

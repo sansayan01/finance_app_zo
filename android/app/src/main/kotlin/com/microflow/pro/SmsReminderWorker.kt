@@ -1,4 +1,4 @@
-package com.example.finance
+package com.microflow.pro
 
 import android.content.Context
 import android.util.Log
@@ -33,9 +33,6 @@ class SmsReminderWorker(
         const val UNIQUE_RESCHEDULE_NAME = "sms_reminder_next"
         const val KEY_TIME = "reminder_time"
 
-        /** Compute the millis-from-now delay until the next occurrence of
-         *  the given "HH:mm" time. If the time has already passed today,
-         *  schedules for tomorrow at the same time. */
         fun delayUntilNextOccurrence(timeStr: String, now: LocalDateTime = LocalDateTime.now()): Long {
             val parsed = runCatching { LocalTime.parse(timeStr) }.getOrNull()
                 ?: return TimeUnit.DAYS.toMillis(1)
@@ -60,8 +57,7 @@ class SmsReminderWorker(
         try {
             engine = FlutterEngine(applicationContext)
             val messenger = engine.dartExecutor.binaryMessenger
-            
-            // Register SMS Sender plugin for background dispatch
+
             val smsChannel = MethodChannel(messenger, "com.microflow/sms")
             val smsPlugin = SmsSenderPlugin(applicationContext, smsChannel)
             smsChannel.setMethodCallHandler(smsPlugin)
@@ -71,7 +67,6 @@ class SmsReminderWorker(
             )
 
             val channel = MethodChannel(messenger, "com.microflow/sms_scheduler")
-            // Suspend until the Dart side completes the pass
             suspendCancellableCoroutine<Unit> { cont ->
                 channel.invokeMethod("run_reminder_pass", null, object : MethodChannel.Result {
                     override fun success(result: Any?) { cont.resume(Unit) {} }
@@ -84,9 +79,6 @@ class SmsReminderWorker(
                 })
             }
 
-            // Reschedule ourselves for the next user-selected time. The
-            // periodic work keeps running (KEEP) so this is a safety net
-            // that fires at the exact user-chosen minute.
             try {
                 val delayMillis = delayUntilNextOccurrence(inputTime)
                 val data = Data.Builder()

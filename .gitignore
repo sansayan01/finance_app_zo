@@ -57,6 +57,7 @@ app.*.map.json
 # Environment files - IMPORTANT: Never commit .env files with secrets!
 .env
 .env.local
+.env.staging
 .env.production
 .env.*.local
 
@@ -68,6 +69,12 @@ supabase/.env
 *.pem
 *.key
 .mcp.json
+
+# Android signing (never commit)
+android/key.properties
+android/app/upload-keystore.jks
+*.jks
+*.keystore
 
 # IDE
 .vscode/

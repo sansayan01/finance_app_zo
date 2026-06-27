@@ -1,4 +1,4 @@
-package com.example.finance
+package com.microflow.pro
 
 import android.app.Activity
 import android.app.PendingIntent
@@ -30,7 +30,7 @@ class SmsSenderPlugin(
     companion object {
         private const val SMS_PERMISSION_REQUEST_CODE = 10011
         private const val TAG = "SmsSenderPlugin"
-        private const val SMS_SENT_ACTION = "com.example.finance.SMS_SENT"
+        private const val SMS_SENT_ACTION = "com.microflow.pro.SMS_SENT"
         private const val SLOT_DEFAULT = -1
     }
 
@@ -49,11 +49,11 @@ class SmsSenderPlugin(
     private val smsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != SMS_SENT_ACTION) return
-            
+
             val requestId = intent.getStringExtra("request_id") ?: return
             val partIndex = intent.getIntExtra("part_index", -1)
             val p = pendingById[requestId] ?: return
-            
+
             val code = resultCode
             if (code != Activity.RESULT_OK) {
                 p.failureCount.incrementAndGet()
@@ -150,7 +150,6 @@ class SmsSenderPlugin(
         return sm?.activeSubscriptionInfoList ?: emptyList()
     }
 
-    /** Find the first subscription that has actual cellular service (IN_SERVICE). */
     private fun findWorkingSubscriptionId(): Int {
         val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
             ?: return SLOT_DEFAULT
@@ -220,7 +219,6 @@ class SmsSenderPlugin(
 
             var subId = if (subIdArg != SLOT_DEFAULT) subIdArg else cachedSubscriptionId
 
-            // Auto-select the first SIM with actual service if subId is still default
             if (subId == SLOT_DEFAULT) {
                 val workingSubId = findWorkingSubscriptionId()
                 if (workingSubId != SLOT_DEFAULT) {

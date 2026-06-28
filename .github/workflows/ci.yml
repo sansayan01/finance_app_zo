@@ -83,6 +83,8 @@ jobs:
           key: pub-${{ hashFiles('pubspec.lock') }}
           restore-keys: pub-
       - run: flutter pub get
+      - name: Increase Gradle heap for CI
+        run: sed -i 's/-Xmx[0-9]*G/-Xmx6G/' android/gradle.properties
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:

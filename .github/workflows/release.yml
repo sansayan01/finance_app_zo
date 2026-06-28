@@ -101,6 +101,9 @@ jobs:
           restore-keys: pub-
       - run: flutter pub get
 
+      - name: Increase Gradle heap for CI
+        run: sed -i 's/-Xmx[0-9]*G/-Xmx6G/' android/gradle.properties
+
       - name: Decode Android Keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
       - name: Decode Key Properties

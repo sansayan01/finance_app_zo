@@ -21,8 +21,17 @@ Future<void> main() async {
     debugPrint('🚀 App starting...');
 
     // Load .env file (local dev config)
-    await dotenv.load(fileName: 'assets/.env', isOptional: true);
+    // On web, 'assets/.env' may fail to load via HTTP — try root '.env' as fallback
+    try {
+      await dotenv.load(fileName: 'assets/.env');
+    } catch (_) {
+      try {
+        await dotenv.load();
+      } catch (_) {}
+    }
     debugPrint('✅ .env loaded');
+    debugPrint('🔗 ENV SUPABASE_URL: ${dotenv.env['SUPABASE_URL']}');
+    debugPrint('🔗 ENV SUPABASE_ANON_KEY: ${dotenv.env['SUPABASE_ANON_KEY']?.substring(0, 20)}...');
 
     // 1. Set orientations
     await SystemChrome.setPreferredOrientations([

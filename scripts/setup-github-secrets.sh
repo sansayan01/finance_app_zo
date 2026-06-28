@@ -6,6 +6,10 @@
 REPO="sansayan01/finance_app_zo"
 GH="/c/Program Files/GitHub CLI/gh.exe"
 
+STAGING_URL="https://mirdnsifontxoccjwgak.supabase.co"
+STAGING_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pcmRuc2lmb250eG9jY2p3Z2FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzY5MTQsImV4cCI6MjA5ODE1MjkxNH0.pdRvYPlAAbsPFi4swCe1980l3OVHG4r7Z9tWtt9OX1Y"
+PROD_URL="https://tccwdpsnuudzfyxfoohk.supabase.co"
+
 echo "Setting GitHub Secrets for $REPO..."
 echo ""
 
@@ -26,34 +30,50 @@ echo "Set ANDROID_KEY_PROPERTIES"
 echo "Set ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_STORE_PASSWORD"
 
 # 4. Supabase Production
-echo ""
-echo "Now set your Supabase secrets."
-echo "Run these manually or edit this script with your values:"
-echo ""
+"$GH" secret set PROD_SUPABASE_URL --body "$PROD_URL" -R "$REPO"
+echo "Set PROD_SUPABASE_URL"
+# Set production anon key from your .env.production value
+PROD_ANON_KEY=$(grep "^SUPABASE_ANON_KEY=" .env.production | cut -d= -f2-)
+if [ -n "$PROD_ANON_KEY" ]; then
+  "$GH" secret set PROD_SUPABASE_ANON_KEY --body "$PROD_ANON_KEY" -R "$REPO"
+  echo "Set PROD_SUPABASE_ANON_KEY"
+fi
 
-# Uncomment and fill in these values:
-# "$GH" secret set PROD_SUPABASE_URL --body "https://tccwdpsnuudzfyxfoohk.supabase.co" -R "$REPO"
-# "$GH" secret set PROD_SUPABASE_ANON_KEY --body "your-production-anon-key" -R "$REPO"
-# "$GH" secret set SUPABASE_SERVICE_ROLE_KEY --body "your-service-role-key" -R "$REPO"
+# 5. Supabase Staging
+"$GH" secret set STAGING_SUPABASE_URL --body "$STAGING_URL" -R "$REPO"
+"$GH" secret set STAGING_SUPABASE_ANON_KEY --body "$STAGING_ANON_KEY" -R "$REPO"
+echo "Set STAGING_SUPABASE_URL and STAGING_SUPABASE_ANON_KEY"
 
-# 5. Telemetry
-# "$GH" secret set SENTRY_DSN --body "your-sentry-dsn" -R "$REPO"
-# "$GH" secret set POSTHOG_API_KEY --body "your-posthog-key" -R "$REPO"
-# "$GH" secret set POSTHOG_HOST --body "https://app.posthog.com" -R "$REPO"
+# 5b. Supabase Service Role Key (used for APK upload)
+SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+if [ -n "$SERVICE_ROLE_KEY" ]; then
+  "$GH" secret set SUPABASE_SERVICE_ROLE_KEY --body "$SERVICE_ROLE_KEY" -R "$REPO"
+  echo "Set SUPABASE_SERVICE_ROLE_KEY"
+else
+  echo "WARNING: SUPABASE_SERVICE_ROLE_KEY env var not set — set it manually in GitHub"
+fi
 
-# 6. Mapbox
-# "$GH" secret set MAPBOX_ACCESS_TOKEN --body "your-mapbox-token" -R "$REPO"
+# 7. iOS signing (base64-encoded certificate and provisioning profile)
+# "$GH" secret set IOS_CERTIFICATE_P12_BASE64 --body "base64-of-your-dist-cert.p12" -R "$REPO"
+# "$GH" secret set IOS_CERTIFICATE_PASSWORD --body "cert-password" -R "$REPO"
+# "$GH" secret set IOS_PROVISIONING_PROFILE_BASE64 --body "base64-of-your-profile.mobileprovision" -R "$REPO"
 
 echo ""
 echo "Android signing secrets are set!"
-echo "Please set the remaining secrets manually in GitHub:"
-echo "  Settings > Secrets and variables > Actions > New repository secret"
+echo "Please also add staging and other secrets manually in GitHub:"
+echo " Settings > Secrets and variables > Actions > New repository secret"
 echo ""
 echo "Required secrets:"
-echo "  PROD_SUPABASE_URL       = https://tccwdpsnuudzfyxfoohk.supabase.co"
-echo "  PROD_SUPABASE_ANON_KEY  = (your production anon key)"
-echo "  SUPABASE_SERVICE_ROLE_KEY = (from Supabase Dashboard > Settings > API)"
-echo "  SENTRY_DSN              = (optional, your Sentry DSN)"
-echo "  POSTHOG_API_KEY         = (optional, your PostHog key)"
-echo "  POSTHOG_HOST            = https://app.posthog.com"
-echo "  MAPBOX_ACCESS_TOKEN     = (optional, your Mapbox token)"
+echo " PROD_SUPABASE_URL           = https://tccwdpsnuudzfyxfoohk.supabase.co"
+echo " PROD_SUPABASE_ANON_KEY      = (your production anon key)"
+echo " SUPABASE_SERVICE_ROLE_KEY   = (from Supabase Dashboard > Settings > API)"
+echo " STAGING_SUPABASE_URL        = https://your-staging-project.supabase.co"
+echo " STAGING_SUPABASE_ANON_KEY   = (your staging anon key)"
+echo " STAGING_POSTHOG_API_KEY     = (staging/optional PostHog key)"
+echo " SENTRY_DSN                  = (optional, your Sentry DSN)"
+echo " POSTHOG_API_KEY             = (optional, your PostHog key)"
+echo " POSTHOG_HOST                = https://app.posthog.com"
+echo " MAPBOX_ACCESS_TOKEN         = (optional, your Mapbox token)"
+echo " IOS_CERTIFICATE_P12_BASE64  = (optional, for iOS builds)"
+echo " IOS_CERTIFICATE_PASSWORD    = (optional, for iOS builds)"
+echo " IOS_PROVISIONING_PROFILE_BASE64 = (optional, for iOS builds)"

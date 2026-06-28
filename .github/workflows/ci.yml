@@ -1,17 +1,17 @@
-name: CI
+name: Flutter CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main, development ]
   pull_request:
-    branches: [main]
+    branches: [ main, development ]
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: '3.44.x'
+  FLUTTER_VERSION: '3.24.x'
 
 jobs:
   analyze:
@@ -61,7 +61,7 @@ jobs:
       - run: flutter test --reporter=github
 
   build-check:
-    name: Build Check
+    name: Build Check (Android)
     needs: [analyze, test]
     runs-on: ubuntu-latest
     steps:
@@ -85,6 +85,6 @@ jobs:
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
+          name: debug-apk-${{ github.sha }}
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 3

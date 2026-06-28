@@ -67,26 +67,15 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   Future<void> _waitForAuthResolution({
     Duration timeout = const Duration(seconds: 3),
   }) async {
-    final status = ref.read(authProvider).status;
-    if (status != AuthStatus.initial && status != AuthStatus.loading) return;
-
-    final completer = Completer<void>();
-
-    ref.listen(authProvider, (prev, next) {
-      if (next.status != AuthStatus.initial &&
-          next.status != AuthStatus.loading &&
-          !completer.isCompleted) {
-        completer.complete();
+    final startTime = DateTime.now();
+    while (DateTime.now().difference(startTime) < timeout) {
+      if (!mounted) return;
+      final status = ref.read(authProvider).status;
+      if (status != AuthStatus.initial && status != AuthStatus.loading) {
+        return;
       }
-    });
-
-    // Timeout fallback — don't block the splash screen forever
-    final timer = Timer(timeout, () {
-      if (!completer.isCompleted) completer.complete();
-    });
-
-    await completer.future;
-    timer.cancel();
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
   }
 
   /// If user has an existing Supabase session, fetch org branding directly

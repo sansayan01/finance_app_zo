@@ -1,0 +1,99 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches: [ development ]
+  workflow_dispatch:
+
+concurrency:
+  group: staging-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.24.x'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare staging .env files
+        run: |
+          cp .env.staging .env
+          cp .env.staging assets/.env
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool/
+          key: pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test --reporter=github
+
+  build-android:
+    name: Build Android (Staging)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare staging .env files
+        run: |
+          cp .env.staging .env
+          cp .env.staging assets/.env
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool/
+          key: pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-
+      - run: flutter pub get
+      - name: Build Release APK
+        run: |
+          flutter build apk --release \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.STAGING_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.STAGING_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.STAGING_SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.STAGING_POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.STAGING_POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.STAGING_MAPBOX_ACCESS_TOKEN }}"
+          echo "Build number: ${{ github.run_number }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-apk-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+  notify:
+    name: Slack Notification
+    needs: build-android
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify status
+        uses: rtCamp/action-slack-notify@v2
+        if: ${{ needs.build-android.result == 'success' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          title: Staging Deployed
+          text: |
+            Staging build successful for commit ${{ github.sha }}.
+            Branch: ${{ github.ref_name }}
+            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

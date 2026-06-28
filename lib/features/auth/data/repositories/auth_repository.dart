@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../settings/data/repositories/activity_log_repository.dart';
 import '../../../settings/data/models/activity_log_model.dart';
+import '../../../../core/config/env_config.dart';
 import '../models/user_model.dart';
 
 class AuthRepository {
@@ -50,12 +52,20 @@ class AuthRepository {
         password: password,
       );
     } catch (e) {
+      // Log the actual error for debugging
+      debugPrint('🔑 [AUTH] signInWithPassword failed: ${e.toString()}');
+      debugPrint('🔑 [AUTH] Supabase URL: ${EnvConfig.supabaseUrl}');
+
       // Network/connection errors — rethrow as-is so the provider can show the right message
       final errStr = e.toString().toLowerCase();
       if (errStr.contains('socket') ||
           errStr.contains('network') ||
           errStr.contains('connection') ||
-          errStr.contains('timeout')) {
+          errStr.contains('timeout') ||
+          errStr.contains('cors') ||
+          errStr.contains('blocked') ||
+          errStr.contains('failed to fetch') ||
+          errStr.contains('xmlhttprequest')) {
         rethrow;
       }
       // Sign-in failed — now check if the email exists in profiles
@@ -343,7 +353,9 @@ class AuthRepository {
       } else {
         role = _parseRole(null, user.email, user.userMetadata);
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('⚠️ [AUTH] Error in getCurrentUser: $e');
+      debugPrint('⚠️ [AUTH] Stack trace: $st');
       // Fallback already handled by initial role assignment
     }
 

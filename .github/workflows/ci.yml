@@ -10,8 +10,9 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  FLUTTER_VERSION: '3.44.x'
+  env:
+    FLUTTER_VERSION: '3.44.x'
+    JAVA_TOOL_OPTIONS: '-Xmx4096m'
 
 jobs:
   analyze:

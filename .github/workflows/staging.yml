@@ -18,10 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare staging .env files
+      - name: Generate staging .env
         run: |
-          cp .env.staging .env
-          cp .env.staging assets/.env
+          echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> .env
+          cp .env assets/.env
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -43,10 +44,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare staging .env files
+      - name: Generate staging .env
         run: |
-          cp .env.staging .env
-          cp .env.staging assets/.env
+          echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> .env
+          cp .env assets/.env
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

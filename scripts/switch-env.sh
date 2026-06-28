@@ -1,11 +1,12 @@
 #!/bin/bash
 # Switch between environment configurations
-# Usage: ./scripts/switch-env.sh [local|staging|production]
+# Usage: ./scripts/switch-env.sh [staging|production]
+# NOTE: 'local' option removed — use staging for development.
 
-ENV=${1:-local}
+ENV=${1:-staging}
 
 case $ENV in
-  local|staging|production)
+  staging|production)
     if [ -f ".env.$ENV" ]; then
       cp ".env.$ENV" ".env"
       mkdir -p assets
@@ -18,11 +19,10 @@ case $ENV in
     fi
     ;;
   *)
-    echo "Usage: ./scripts/switch-env.sh [local|staging|production]"
+    echo "Usage: ./scripts/switch-env.sh [staging|production]"
     echo ""
-    echo "  local      - Local Supabase (http://127.0.0.1:54321)"
-    echo "  staging    - Staging cloud Supabase"
-    echo "  production - Production cloud Supabase"
+    echo "  staging    - Staging cloud Supabase (development)"
+    echo "  production - Production cloud Supabase (live)"
     exit 1
     ;;
 esac

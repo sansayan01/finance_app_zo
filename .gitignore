@@ -110,6 +110,11 @@ graphify-out/
 
 # Claude Code local settings (machine-local, may capture shell history)
 .openclaude/settings.local.json
+.claude/settings.local.json
+
+# Supabase local backups (not for version control)
+supabase_backup.zip
+supabase_auth_dump.sql
 
 # Android build artifacts
 android/build/

@@ -92,6 +92,7 @@ jobs:
     if: always()
     steps:
       - name: Notify status
+        continue-on-error: true
         uses: rtCamp/action-slack-notify@v2
         if: ${{ needs.build-android.result == 'success' }}
         env:

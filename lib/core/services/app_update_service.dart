@@ -38,7 +38,10 @@ class AppUpdateService {
     _stateController.add(p);
   }
 
-  Future<void> downloadAndInstall(String url) async {
+  Future<void> downloadAndInstall(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
     if (_current.state == DownloadState.downloading) return;
 
     try {
@@ -73,6 +76,9 @@ class AppUpdateService {
         url,
         filePath,
         cancelToken: _cancelToken,
+        options: headers != null && headers.isNotEmpty
+            ? Options(headers: headers)
+            : null,
         onReceiveProgress: (received, total) {
           if (total <= 0) return;
           final progress = received / total;

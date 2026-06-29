@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/system_config.dart';
+import '../models/github_release.dart';
+import '../services/github_release_service.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 
 /// Streams system_config changes in real-time via Supabase Realtime.
@@ -80,29 +82,109 @@ class UpdateCheckResult {
   final UpdateStatus status;
   final String? updateUrl;
   final String? message;
+  final String? releaseNotes;
 
-  UpdateCheckResult({
+  const UpdateCheckResult({
     required this.status,
     this.updateUrl,
     this.message,
+    this.releaseNotes,
   });
 }
 
-/// Derives the update status from the live system_config stream.
-/// Automatically re-evaluates whenever system_config changes via Realtime.
+/// Fetches the latest GitHub release info.
+/// Cached for the session lifetime; invalidated on app resume.
+final githubReleaseProvider = FutureProvider<GitHubRelease?>((ref) async {
+  final service = ref.watch(githubReleaseServiceProvider);
+  return service.fetchLatestRelease();
+});
+
+/// Derives the update status from BOTH:
+/// - system_config stream (Supabase Realtime) — for min_version_android,
+///   is_under_maintenance, update_message
+/// - GitHub Releases API — for latest version, download URL, release notes
+///
+/// If GitHub is unreachable, falls back to system_config data only.
 final updateCheckProvider = Provider<AsyncValue<UpdateCheckResult>>((ref) {
   final configAsync = ref.watch(systemConfigProvider);
 
   return configAsync.when(
     data: (config) {
-      final result = _checkUpdate(config);
-      return AsyncValue.data(result);
+      // Maintenance check is independent of GitHub
+      if (config.isUnderMaintenance) {
+        return AsyncValue.data(
+          UpdateCheckResult(
+            status: UpdateStatus.maintenance,
+            message: config.maintenanceMessage,
+          ),
+        );
+      }
+
+      if (!_isMobile || _cachedAppVersion == null) {
+        return const AsyncValue.data(
+          UpdateCheckResult(status: UpdateStatus.noUpdate),
+        );
+      }
+
+      // Try to use GitHub release data (the new source of truth)
+      final githubRelease = ref.watch(githubReleaseProvider).valueOrNull;
+
+      if (githubRelease != null && githubRelease.apkDownloadUrl != null) {
+        return AsyncValue.data(
+          _checkUpdateWithGitHub(config, githubRelease),
+        );
+      }
+
+      // Fallback: GitHub unavailable — use system_config data
+      return AsyncValue.data(_checkUpdate(config));
     },
     loading: () => const AsyncValue.loading(),
     error: (e, st) => AsyncValue.error(e, st),
   );
 });
 
+/// Primary update check using GitHub Releases as source of truth.
+UpdateCheckResult _checkUpdateWithGitHub(
+  SystemConfig config,
+  GitHubRelease release,
+) {
+  final currentAppVersion = _cachedAppVersion!;
+  final targetVersion = release.version;
+  final downloadUrl = release.apkDownloadUrl;
+
+  String targetMinVersion;
+  if (Platform.isAndroid) {
+    targetMinVersion = config.minVersionAndroid;
+  } else if (Platform.isIOS) {
+    targetMinVersion = config.minVersionIos;
+  } else {
+    return const UpdateCheckResult(status: UpdateStatus.noUpdate);
+  }
+
+  // Force update if below minimum version
+  if (_isVersionLower(currentAppVersion, targetMinVersion)) {
+    return UpdateCheckResult(
+      status: UpdateStatus.forceUpdate,
+      updateUrl: downloadUrl,
+      message: config.updateMessage,
+      releaseNotes: release.body,
+    );
+  }
+
+  // Soft update if newer version available
+  if (_isVersionLower(currentAppVersion, targetVersion)) {
+    return UpdateCheckResult(
+      status: UpdateStatus.softUpdate,
+      updateUrl: downloadUrl,
+      message: config.updateMessage,
+      releaseNotes: release.body,
+    );
+  }
+
+  return const UpdateCheckResult(status: UpdateStatus.noUpdate);
+}
+
+/// Legacy check using only system_config (used when GitHub is unreachable).
 UpdateCheckResult _checkUpdate(SystemConfig config) {
   if (config.isUnderMaintenance) {
     return UpdateCheckResult(
@@ -111,14 +193,13 @@ UpdateCheckResult _checkUpdate(SystemConfig config) {
     );
   }
 
-  // Skip version check on non-mobile platforms (Windows/Web during dev)
   if (!_isMobile) {
-    return UpdateCheckResult(status: UpdateStatus.noUpdate);
+    return const UpdateCheckResult(status: UpdateStatus.noUpdate);
   }
 
   final currentAppVersion = _cachedAppVersion;
   if (currentAppVersion == null) {
-    return UpdateCheckResult(status: UpdateStatus.noUpdate);
+    return const UpdateCheckResult(status: UpdateStatus.noUpdate);
   }
 
   String targetMinVersion;
@@ -134,7 +215,7 @@ UpdateCheckResult _checkUpdate(SystemConfig config) {
     targetCurrentVersion = config.currentVersionIos;
     updateUrl = config.updateUrlIos;
   } else {
-    return UpdateCheckResult(status: UpdateStatus.noUpdate);
+    return const UpdateCheckResult(status: UpdateStatus.noUpdate);
   }
 
   if (_isVersionLower(currentAppVersion, targetMinVersion)) {
@@ -153,7 +234,7 @@ UpdateCheckResult _checkUpdate(SystemConfig config) {
     );
   }
 
-  return UpdateCheckResult(status: UpdateStatus.noUpdate);
+  return const UpdateCheckResult(status: UpdateStatus.noUpdate);
 }
 
 bool get _isMobile {

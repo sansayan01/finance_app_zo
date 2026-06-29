@@ -63,6 +63,11 @@ class EnvConfig {
       const String.fromEnvironment('POSTHOG_HOST',
           defaultValue: 'https://app.posthog.com');
 
+  // GitHub Configuration (for in-app update checks)
+  static String get githubToken =>
+      dotenv.env['GITHUB_TOKEN'] ??
+      const String.fromEnvironment('GITHUB_TOKEN', defaultValue: '');
+
   // Environment Detection
   static bool get isLocalEnvironment =>
       supabaseUrl.startsWith('http://') ||
@@ -79,6 +84,7 @@ class EnvConfig {
   static String get debugInfo => '''
 App: $appName v$appVersion
 Supabase URL: $supabaseUrl
+GitHub Token: ${githubToken.isNotEmpty ? 'configured' : 'not set'}
 Config Valid: $isValidConfig
 ''';
 }

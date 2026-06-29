@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/system_config_provider.dart';
 import '../services/app_update_service.dart';
+import '../services/github_release_service.dart';
 
 class UpdateWrapper extends ConsumerStatefulWidget {
   final Widget child;
@@ -37,8 +38,13 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
     // Re-check when app comes back to foreground
     if (state == AppLifecycleState.resumed) {
       ref.invalidate(systemConfigProvider);
+      ref.invalidate(githubReleaseProvider);
+      // Also forward token to download in case repo went private
+      _downloadHeaders = ref.read(githubReleaseServiceProvider).downloadHeaders;
     }
   }
+
+  Map<String, String> _downloadHeaders = {};
 
   void _startListening(AppUpdateService service) {
     _progressSub?.cancel();
@@ -50,7 +56,7 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
 
   Future<void> _startDownload(AppUpdateService service, String url) async {
     _startListening(service);
-    await service.downloadAndInstall(url);
+    await service.downloadAndInstall(url, headers: _downloadHeaders);
   }
 
   @override
@@ -185,11 +191,14 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
                                     'Something went wrong.'
                                 : isDownloading
                                     ? 'Downloading the latest version...'
-                                    : result.message ??
+                                    : result.releaseNotes ??
+                                        result.message ??
                                         'A new version is available.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall
                             ?.copyWith(color: Colors.grey[600]),
+                        maxLines: isDownloading || isCompleted ? null : 12,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       if (isDownloading) ...[
                         const SizedBox(height: 16),

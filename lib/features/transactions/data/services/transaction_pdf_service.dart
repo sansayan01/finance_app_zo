@@ -39,6 +39,7 @@ class TransactionPdfService {
   static final _dateFmt = DateFormat('dd MMM yyyy');
   static final _generatedFmt = DateFormat('dd MMM yyyy, hh:mm a');
 
+  static String _s(String? s) => StatementFormatters.sanitizeForEncoding(s);
   static String _money(num v) => StatementFormatters.money(v);
 
   static Future<Uint8List> generate({
@@ -156,7 +157,7 @@ class TransactionPdfService {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
-                  org.name,
+                  _s(org.name),
                   style: pw.TextStyle(
                     font: _fontBold,
                     fontSize: 18,
@@ -165,7 +166,7 @@ class TransactionPdfService {
                 ),
                 if (org.fullAddress.isNotEmpty)
                   pw.Text(
-                    org.fullAddress,
+                    _s(org.fullAddress),
                     style: pw.TextStyle(
                       font: _fontRegular,
                       fontSize: 9,
@@ -174,7 +175,7 @@ class TransactionPdfService {
                   ),
                 if (org.phone != null)
                   pw.Text(
-                    org.phone!,
+                    _s(org.phone!),
                     style: pw.TextStyle(
                       font: _fontRegular,
                       fontSize: 9,
@@ -370,7 +371,7 @@ class TransactionPdfService {
       child: pw.Row(
         children: [
           _dataCell(DateFormat('dd MMM, hh:mm').format(t.createdAt), 2),
-          _dataCell(t.memberName.isNotEmpty ? t.memberName : 'Unknown', 2.5),
+          _dataCell(_s(t.memberName.isNotEmpty ? t.memberName : 'Unknown'), 2.5),
           _dataCell(_typeLabel(t.type), 1.8),
           _dataCell(_paymentModeLabel(t.paymentMode), 1.2),
           pw.Expanded(
@@ -385,7 +386,7 @@ class TransactionPdfService {
               textAlign: pw.TextAlign.right,
             ),
           ),
-          _dataCell(t.collectedByName ?? '—', 1.5),
+          _dataCell(_s(t.collectedByName ?? '—'), 1.5),
         ],
       ),
     );

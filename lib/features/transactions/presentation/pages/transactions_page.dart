@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -320,22 +325,50 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         return;
       }
 
+      late final Uint8List bytes;
+      late final String ext;
+      late final String mime;
+      late final String fileName;
+
+      final periodLabel = _periodLabel(options);
+
       switch (options.format) {
         case StatementFormat.pdf:
-          await TransactionPdfService.share(transactions: data, options: options);
+          bytes = await TransactionPdfService.generate(
+              transactions: data, options: options);
+          ext = 'pdf';
+          mime = 'application/pdf';
           break;
         case StatementFormat.csv:
-          await TransactionCsvService.share(transactions: data, options: options);
+          bytes = TransactionCsvService.build(
+              transactions: data, options: options);
+          ext = 'csv';
+          mime = 'text/csv';
           break;
         case StatementFormat.excel:
-          await TransactionExcelService.share(transactions: data, options: options);
+          bytes = TransactionExcelService.build(
+              transactions: data, options: options);
+          ext = 'xlsx';
+          mime =
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
           break;
       }
 
+      fileName = 'transaction_report_$periodLabel.$ext';
+
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes);
+
       if (mounted) Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 200));
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report shared')),
+        _showExportReadySheet(
+          fileName: fileName,
+          file: file,
+          ext: ext,
+          mime: mime,
         );
       }
     } catch (e) {
@@ -349,6 +382,134 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         );
       }
     }
+  }
+
+  String _periodLabel(TransactionExportOptions options) {
+    final start = options.resolvedStart;
+    final end = options.resolvedEnd;
+    if (start != null && end != null) {
+      return '${start.year}${start.month.toString().padLeft(2, '0')}${start.day.toString().padLeft(2, '0')}_to_${end.year}${end.month.toString().padLeft(2, '0')}${end.day.toString().padLeft(2, '0')}';
+    }
+    return 'all';
+  }
+
+  void _showExportReadySheet({
+    required String fileName,
+    required File file,
+    required String ext,
+    required String mime,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          12,
+          24,
+          MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.success,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Report Ready',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                fileName,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color
+                      ?.withValues(alpha: 0.5),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    OpenFilex.open(file.path);
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: Text(
+                    'Open ${ext.toUpperCase()}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(ShareParams(
+                      files: [XFile(file.path, mimeType: mime)],
+                      text: 'Transaction Report',
+                    ));
+                  },
+                  icon: const Icon(Icons.ios_share_rounded, size: 18),
+                  label: const Text(
+                    'Share',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override

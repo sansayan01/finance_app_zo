@@ -1,14 +1,12 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../../../../core/services/github_release_service.dart';
+import '../../../../core/models/github_release.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/providers/system_config_provider.dart';
-import 'package:microflow_pro/providers/supabase_provider.dart';
 
 class AppUpdatePage extends ConsumerStatefulWidget {
   const AppUpdatePage({super.key});
@@ -18,12 +16,9 @@ class AppUpdatePage extends ConsumerStatefulWidget {
 }
 
 class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
-  final _versionCtrl = TextEditingController();
   final _minVersionCtrl = TextEditingController();
   final _messageCtrl = TextEditingController();
-  PlatformFile? _selectedFile;
-  bool _isUploading = false;
-  double _uploadProgress = 0;
+  bool _isSaving = false;
   String? _error;
   String? _success;
 
@@ -32,7 +27,6 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final config = await ref.read(systemConfigProvider.future);
-      _versionCtrl.text = config.currentVersionAndroid;
       _minVersionCtrl.text = config.minVersionAndroid;
       _messageCtrl.text = config.updateMessage;
     });
@@ -40,109 +34,29 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
 
   @override
   void dispose() {
-    _versionCtrl.dispose();
     _minVersionCtrl.dispose();
     _messageCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['apk'],
-      allowMultiple: false,
-      withData: kIsWeb, // Only load bytes on web
-    );
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        _selectedFile = result.files.first;
-        _error = null;
-      });
-    }
-  }
-
-  /// Read file bytes — handles both web (bytes) and mobile (path)
-  Future<Uint8List?> _getFileBytes() async {
-    if (_selectedFile == null) return null;
-
-    // On web, bytes are available directly
-    if (_selectedFile!.bytes != null) {
-      return _selectedFile!.bytes!;
-    }
-
-    // On mobile, read from path
-    if (_selectedFile!.path != null) {
-      final file = File(_selectedFile!.path!);
-      return await file.readAsBytes();
-    }
-
-    return null;
-  }
-
   Future<void> _publishUpdate() async {
-    if (_versionCtrl.text.trim().isEmpty) {
-      setState(() => _error = 'Enter a version number');
-      return;
-    }
-
     setState(() {
-      _isUploading = true;
-      _uploadProgress = 0;
+      _isSaving = true;
       _error = null;
       _success = null;
     });
 
     try {
       final client = ref.read(supabaseClientProvider);
-      String? downloadUrl;
 
-      if (_selectedFile != null) {
-        final fileBytes = await _getFileBytes();
-        if (fileBytes == null) {
-          setState(() {
-            _error = 'Could not read the selected file.';
-            _isUploading = false;
-          });
-          return;
-        }
-
-        setState(() => _uploadProgress = 0.1);
-
-        const filePath = 'apk/microflow-latest.apk';
-
-        // Upload the APK to Supabase Storage
-        await client.storage.from('app-updates').uploadBinary(
-              filePath,
-              fileBytes,
-              fileOptions: const FileOptions(
-                upsert: true,
-                contentType: 'application/vnd.android.package-archive',
-              ),
-            );
-
-        setState(() => _uploadProgress = 0.8);
-
-        downloadUrl =
-            client.storage.from('app-updates').getPublicUrl(filePath);
-      }
-
-      setState(() => _uploadProgress = 0.9);
-
-      // Update system_config with new version info
       final updates = <String, dynamic>{
-        'current_version_android': _versionCtrl.text.trim(),
-        'min_version_android': _minVersionCtrl.text.trim().isNotEmpty
-            ? _minVersionCtrl.text.trim()
-            : _versionCtrl.text.trim(),
+        'min_version_android': _minVersionCtrl.text.trim(),
         'update_message': _messageCtrl.text.trim().isNotEmpty
             ? _messageCtrl.text.trim()
             : 'A new version is available. Please update to continue.',
+        'is_under_maintenance': false,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
-
-      if (downloadUrl != null) {
-        updates['update_url_android'] = downloadUrl;
-      }
 
       final config = await ref.read(systemConfigProvider.future);
       await client
@@ -150,48 +64,16 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
           .update(updates)
           .eq('id', config.id ?? '');
 
-      // Persist a row into app_updates so the user-facing
-      // AvailableUpdatePage can read release notes and is_critical.
-      // min == new version ⇒ must-update; otherwise soft.
-      if (downloadUrl != null) {
-        try {
-          final nextMin = _minVersionCtrl.text.trim().isNotEmpty
-              ? _minVersionCtrl.text.trim()
-              : _versionCtrl.text.trim();
-          await client.from('app_updates').insert({
-            'version': _versionCtrl.text.trim(),
-            'platform': 'android',
-            'download_url': downloadUrl,
-            'apk_path': 'apk/microflow-latest.apk',
-            'is_critical': nextMin == _versionCtrl.text.trim(),
-            'min_supported_version': nextMin,
-            'release_notes': _messageCtrl.text.trim().isNotEmpty
-                ? _messageCtrl.text.trim()
-                : null,
-            'status': 'active',
-            'published_at':
-                DateTime.now().toUtc().toIso8601String(),
-          });
-        } catch (e) {
-          debugPrint('⚠️ app_updates insert failed: $e');
-        }
-      }
-
-      setState(() => _uploadProgress = 1.0);
-
-      // Invalidate the config stream so realtime picks up immediately
       ref.invalidate(systemConfigProvider);
 
       setState(() {
-        _success =
-            '✅ Version ${_versionCtrl.text.trim()} published successfully!';
-        _selectedFile = null;
+        _success = '✅ Release configuration saved!';
       });
     } catch (e) {
       debugPrint('❌ Publish error: $e');
-      setState(() => _error = 'Failed to publish: $e');
+      setState(() => _error = 'Failed to save: $e');
     } finally {
-      setState(() => _isUploading = false);
+      setState(() => _isSaving = false);
     }
   }
 
@@ -208,7 +90,7 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
-        title: Text('App Updates',
+        title: Text('Release Configuration',
             style: theme.textTheme.titleLarge
                 ?.copyWith(fontWeight: FontWeight.w800)),
         centerTitle: true,
@@ -263,7 +145,7 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                 ),
               ),
 
-            // Version info card
+            // Version constraint card
             GlassCard(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -274,32 +156,23 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                       Icon(Icons.tag_rounded,
                           color: theme.colorScheme.primary, size: 20),
                       const SizedBox(width: 8),
-                      Text('Version Info',
+                      Text('Version Constraints',
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700)),
                     ],
                   ),
                   const SizedBox(height: 20),
                   TextField(
-                    controller: _versionCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'New Version *',
-                      hintText: 'e.g. 1.0.1',
-                      prefixIcon: Icon(Icons.new_releases_outlined, size: 20),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
                     controller: _minVersionCtrl,
                     decoration: const InputDecoration(
                       labelText: 'Minimum Required Version',
-                      hintText: 'Users below this will be forced to update',
+                      hintText: 'e.g. 1.0.8 — users below this are forced to update',
                       prefixIcon: Icon(Icons.security_outlined, size: 20),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'If min version = new version → force update. If min version < new version → soft update (user can skip).',
+                    'Users running a version older than this will be forced to update. Leave empty to allow all versions.',
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: Colors.grey[500], fontSize: 11),
                   ),
@@ -307,8 +180,8 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
                   TextField(
                     controller: _messageCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Release Notes / Update Message',
-                      hintText: 'What\'s new in this version?',
+                      labelText: 'Update Message',
+                      hintText: 'What\'s new? Shown in the update dialog.',
                       prefixIcon: Icon(Icons.notes_rounded, size: 20),
                     ),
                     maxLines: 3,
@@ -318,123 +191,25 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
             const SizedBox(height: 20),
 
-            // APK upload card
-            GlassCard(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.android_rounded,
-                          color: Colors.green[700], size: 20),
-                      const SizedBox(width: 8),
-                      Text('APK File',
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Upload the latest APK. The old file is automatically replaced.',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 20),
-                  InkWell(
-                    onTap: _isUploading ? null : _pickFile,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _selectedFile != null
-                              ? Colors.green
-                              : Colors.grey.withValues(alpha: 0.3),
-                          width: _selectedFile != null ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        color: _selectedFile != null
-                            ? Colors.green.withValues(alpha: 0.05)
-                            : null,
-                      ),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(
-                              _selectedFile != null
-                                  ? Icons.check_circle_outline
-                                  : Icons.cloud_upload_outlined,
-                              size: 36,
-                              color: _selectedFile != null
-                                  ? Colors.green
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _selectedFile != null
-                                  ? _selectedFile!.name
-                                  : 'Tap to select APK file',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    _selectedFile != null ? Colors.green : null,
-                              ),
-                            ),
-                            if (_selectedFile != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  '${(_selectedFile!.size / 1048576).toStringAsFixed(1)} MB',
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.grey),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (_isUploading) ...[
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: _uploadProgress,
-                        minHeight: 6,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${(_uploadProgress * 100).toInt()}% uploading...',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(fontSize: 11, color: Colors.grey),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      onPressed: _isUploading ? null : _publishUpdate,
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      icon: _isUploading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.publish_rounded),
-                      label: Text(_isUploading
-                          ? 'Uploading & Publishing...'
-                          : 'Publish Update'),
-                    ),
-                  ),
-                ],
+            // Publish button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: _isSaving ? null : _publishUpdate,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.save_rounded),
+                label: Text(_isSaving ? 'Saving...' : 'Save Configuration'),
               ),
             ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.05, end: 0),
             const SizedBox(height: 100),
@@ -445,33 +220,69 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
   }
 
   Widget _buildCurrentStatusCard(ThemeData theme) {
-    return ref.watch(systemConfigProvider).when(
-          data: (config) => GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+    final releaseService = ref.read(githubReleaseServiceProvider);
+
+    return FutureBuilder<GitHubRelease?>(
+      future: releaseService.fetchLatestRelease(),
+      builder: (context, snapshot) {
+        final release = snapshot.data;
+
+        return ref.watch(systemConfigProvider).when(
+              data: (config) => GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline_rounded,
-                        color: theme.colorScheme.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Current Published Version',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700)),
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline_rounded,
+                            color: theme.colorScheme.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Text('Release Status',
+                            style: theme.textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (release != null) ...[
+                      _infoRow('Latest GitHub Release', release.version),
+                      _infoRow(
+                        'Published',
+                        release.publishedAt != null
+                            ? _formatDate(release.publishedAt!)
+                            : 'Unknown',
+                      ),
+                      _infoRow(
+                        'APK Available',
+                        release.apkDownloadUrl != null ? '✅' : '❌',
+                      ),
+                    ] else if (snapshot.connectionState ==
+                        ConnectionState.waiting) ...[
+                      _infoRow('Latest GitHub Release', 'Loading...'),
+                    ] else ...[
+                      _infoRow('Latest GitHub Release', 'Unavailable'),
+                    ],
+                    const Divider(height: 20),
+                    _infoRow('Min Required', config.minVersionAndroid.isNotEmpty
+                        ? config.minVersionAndroid
+                        : 'None'),
+                    _infoRow('Maintenance', config.isUnderMaintenance ? '🔴 ON' : '🟢 OFF'),
                   ],
                 ),
-                const SizedBox(height: 12),
-                _infoRow('Android Version', config.currentVersionAndroid),
-                _infoRow('Min Required', config.minVersionAndroid),
-                _infoRow(
-                    'Has APK URL', config.updateUrlAndroid != null ? '✅' : '❌'),
-              ],
-            ),
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error loading config: $e'),
-        );
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('Error loading config: $e'),
+            );
+      },
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   Widget _infoRow(String label, String value) {
@@ -482,9 +293,14 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
         children: [
           Text(label,
               style: const TextStyle(fontSize: 13, color: Colors.grey)),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.end,
+            ),
+          ),
         ],
       ),
     );

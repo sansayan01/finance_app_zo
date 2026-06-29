@@ -157,12 +157,18 @@ jobs:
             --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
             --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
 
+      - name: Prepare flat artifacts
+        run: |
+          mkdir -p build-artifacts
+          cp build/app/outputs/flutter-apk/app-release.apk build-artifacts/
+          cp build/app/outputs/bundle/release/app-release.aab build-artifacts/
+          echo "Artifacts prepared:"
+          ls -la build-artifacts/
+
       - uses: actions/upload-artifact@v4
         with:
           name: production-release-${{ github.ref_name }}
-          path: |
-            build/app/outputs/bundle/release/app-release.aab
-            build/app/outputs/flutter-apk/app-release.apk
+          path: build-artifacts/
           retention-days: 30
 
   build-ios:
@@ -260,9 +266,24 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "Release ${{ github.ref_name }}"
           generate_release_notes: true
+          make_latest: true
           files: |
             release-artifacts/app-release.apk
             release-artifacts/app-release.aab
+      - name: Remove auto-generated source archives
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/$TAG --jq '.id')
+          if [ -n "$RELEASE_ID" ]; then
+            ASSETS=$(gh api repos/${{ github.repository }}/releases/$RELEASE_ID/assets --jq '.[] | select(.name | test("\\.(zip|tar\\.gz)$")) | .id')
+            for ASSET_ID in $ASSETS; do
+              ASSET_NAME=$(gh api repos/${{ github.repository }}/releases/$RELEASE_ID/assets/$ASSET_ID --jq '.name')
+              echo "Removing auto-generated asset: $ASSET_NAME"
+              gh api -X DELETE repos/${{ github.repository }}/releases/$RELEASE_ID/assets/$ASSET_ID
+            done
+          fi
 
   upload-to-supabase:
     name: Upload APK to Supabase Storage

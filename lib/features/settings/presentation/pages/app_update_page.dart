@@ -150,6 +150,33 @@ class _AppUpdatePageState extends ConsumerState<AppUpdatePage> {
           .update(updates)
           .eq('id', config.id ?? '');
 
+      // Persist a row into app_updates so the user-facing
+      // AvailableUpdatePage can read release notes and is_critical.
+      // min == new version ⇒ must-update; otherwise soft.
+      if (downloadUrl != null) {
+        try {
+          final nextMin = _minVersionCtrl.text.trim().isNotEmpty
+              ? _minVersionCtrl.text.trim()
+              : _versionCtrl.text.trim();
+          await client.from('app_updates').insert({
+            'version': _versionCtrl.text.trim(),
+            'platform': 'android',
+            'download_url': downloadUrl,
+            'apk_path': 'apk/microflow-latest.apk',
+            'is_critical': nextMin == _versionCtrl.text.trim(),
+            'min_supported_version': nextMin,
+            'release_notes': _messageCtrl.text.trim().isNotEmpty
+                ? _messageCtrl.text.trim()
+                : null,
+            'status': 'active',
+            'published_at':
+                DateTime.now().toUtc().toIso8601String(),
+          });
+        } catch (e) {
+          debugPrint('⚠️ app_updates insert failed: $e');
+        }
+      }
+
       setState(() => _uploadProgress = 1.0);
 
       // Invalidate the config stream so realtime picks up immediately

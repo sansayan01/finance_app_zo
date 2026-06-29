@@ -38,6 +38,7 @@ import '../features/settings/presentation/pages/organization_settings_page.dart'
 import '../features/settings/presentation/pages/profile_page.dart';
 import '../features/settings/presentation/pages/activity_logs_page.dart';
 import '../features/settings/presentation/pages/app_update_page.dart';
+import '../features/settings/presentation/pages/available_update_page.dart';
 import '../features/settings/presentation/pages/integrations_settings_page.dart';
 import '../features/settings/presentation/pages/security_compliance_page.dart';
 import '../core/widgets/hud_navigation.dart';
@@ -576,6 +577,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'sms',
                 builder: (context, state) => const SmsSettingsPage(),
+              ),
+              GoRoute(
+                path: 'app-update',
+                builder: (context, state) => const AvailableUpdatePage(),
               ),
             ],
           ),

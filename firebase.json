@@ -80,5 +80,14 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "emulators": {
+    "appdistribution": {
+      "enabled": true,
+      "android": {
+        "defaultReleaseTrack": "internal-beta",
+        "releaseNotesPattern": "{VERSION} — {NOTES}"
+      }
+    }
   }
 }

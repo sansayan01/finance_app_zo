@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/providers/setup_provider.dart';
 
 class SetupWizardPage extends ConsumerStatefulWidget {
   const SetupWizardPage({super.key});
@@ -16,6 +17,26 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   final _pageController = PageController();
   int _currentStep = 0;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+    _maybeRedirectIfAlreadyDone();
+  }
+
+  /// If the org is already marked complete in the database, never show
+  /// the wizard — go straight to the admin home. This is the defensive
+  /// layer that closes the "wizard shows again after completion" loop.
+  Future<void> _maybeRedirectIfAlreadyDone() async {
+    // Wait one frame so providers are wired up.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    if (!mounted) return;
+    final isComplete = ref.read(setupCompleteProvider).valueOrNull ?? true;
+    if (isComplete) {
+      context.go('/');
+    }
+  }
 
   // Step 1: Organization Details
   final _orgFormKey = GlobalKey<FormState>();
@@ -47,12 +68,6 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   final _branchPincodeController = TextEditingController();
   final _branchPhoneController = TextEditingController();
   final _branchEmailController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _prefillFromProfile();
-  }
 
   void _prefillFromProfile() {
     final user = ref.read(currentUserProvider);
@@ -143,8 +158,10 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       final userId = user.id;
 
       // Step 1: Update organization details
-      await client.from('organizations').update({
-        'address': _orgAddressController.text.trim(),
+      // Use COALESCE-friendly update so a partial save never blanks existing values.
+      final orgUpdates = <String, dynamic>{
+        if (_orgAddressController.text.trim().isNotEmpty)
+          'address': _orgAddressController.text.trim(),
         'city': _orgCityController.text.trim(),
         'state': _orgStateController.text.trim(),
         'pincode': _orgPincodeController.text.trim(),
@@ -154,7 +171,10 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
             ? null
             : _orgGstController.text.trim(),
         'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', orgId);
+      };
+      if (orgUpdates.isNotEmpty) {
+        await client.from('organizations').update(orgUpdates).eq('id', orgId);
+      }
 
       // Step 2: Update owner profile
       await client.from('profiles').update({
@@ -172,21 +192,28 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('user_id', userId);
 
-      // Step 3: Create first branch
-      await client.from('branches').insert({
-        'org_id': orgId,
-        'name': _branchNameController.text.trim(),
-        'code': _branchCodeController.text.trim().toUpperCase(),
-        'address': _branchAddressController.text.trim(),
-        'city': _branchCityController.text.trim(),
-        'state': _branchStateController.text.trim(),
-        'pincode': _branchPincodeController.text.trim(),
-        'phone': _branchPhoneController.text.trim(),
-        'email': _branchEmailController.text.trim().isEmpty
+      // Step 3: Create first branch — IDEMPOTENT.
+      // We call the upsert_default_branch RPC which uses ON CONFLICT on
+      // (org_id, code). A retry of the wizard can no longer fail with
+      // "duplicate key value violates unique constraint branches_org_id_code_key".
+      await client.rpc('upsert_default_branch', params: {
+        'p_org_id': orgId,
+        'p_name': _branchNameController.text.trim(),
+        'p_code': _branchCodeController.text.trim(),
+        'p_address': _branchAddressController.text.trim(),
+        'p_city': _branchCityController.text.trim(),
+        'p_state': _branchStateController.text.trim(),
+        'p_pincode': _branchPincodeController.text.trim(),
+        'p_phone': _branchPhoneController.text.trim(),
+        'p_email': _branchEmailController.text.trim().isEmpty
             ? null
             : _branchEmailController.text.trim(),
-        'status': 'active',
       });
+
+      // Step 4: Mark the org setup complete atomically.
+      // This is the single source of truth that the router checks before
+      // forcing the user back into the wizard.
+      await client.rpc('complete_org_setup', params: {'p_org_id': orgId});
 
       // Refresh user data
       await ref.read(authProvider.notifier).refreshCurrentUser();

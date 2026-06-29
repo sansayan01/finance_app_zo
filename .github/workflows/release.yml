@@ -14,8 +14,29 @@ env:
   JAVA_TOOL_OPTIONS: '-Xmx4096m'
 
 jobs:
+  merge-to-main:
+    name: Merge Development → Main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Merge development into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin development
+          git merge origin/development --no-edit -m "chore: merge development into main for release"
+          git push origin main
+          echo "✅ Merged development → main successfully"
+
   validate-tag:
     name: Validate Tag
+    needs: merge-to-main
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.extract.outputs.version }}
@@ -23,6 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - name: Extract version from tag
         id: extract
@@ -48,10 +70,12 @@ jobs:
 
   test:
     name: Test
-    needs: validate-tag
+    needs: merge-to-main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Prepare .env files
         run: |
           cp .env.example .env
@@ -80,6 +104,8 @@ jobs:
       build_number: ${{ needs.validate-tag.outputs.build_number }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Prepare .env files
         run: |
           cp .env.example .env
@@ -148,6 +174,8 @@ jobs:
       build_number: ${{ needs.validate-tag.outputs.build_number }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Prepare .env files
         run: |
           cp .env.example .env
@@ -205,6 +233,8 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Check for pending migrations
         run: |
           echo "Verify no pending SQL migration files in supabase/migrations/"
@@ -265,3 +295,27 @@ jobs:
             -H "Prefer: return=minimal" \
             -d "{\"current_version_android\": \"${VERSION}\", \"update_url_android\": \"${SUPABASE_URL}/storage/v1/object/public/app-updates/apk/microflow-latest.apk\"}"
           echo "Supabase upload complete."
+
+  upload-to-firebase:
+    name: Distribute APK via Firebase App Distribution
+    needs: build-android
+    if: needs.build-android.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
+      FIREBASE_TESTER_GROUPS: ${{ secrets.FIREBASE_TESTER_GROUPS || 'qa-internal' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: production-release-${{ github.ref_name }}
+          path: release-artifacts
+          merge-multiple: true
+      - name: Upload APK to Firebase App Distribution
+        if: env.FIREBASE_TOKEN != '' && env.FIREBASE_APP_ID_ANDROID != ''
+        uses: wziegler/firebase-app-distribution@v1.7.0
+        with:
+          appId: ${{ env.FIREBASE_APP_ID_ANDROID }}
+          serviceCredentialsFileContent: ${{ env.FIREBASE_TOKEN }}
+          groups: ${{ env.FIREBASE_TESTER_GROUPS }}
+          file: release-artifacts/app-release.apk

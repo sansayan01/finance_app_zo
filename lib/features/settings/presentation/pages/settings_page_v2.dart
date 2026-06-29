@@ -168,6 +168,16 @@ class SettingsPageV2 extends ConsumerWidget {
 
                   _buildMenuCard(
                     theme: theme,
+                    icon: Icons.system_update_rounded,
+                    title: 'Check for Updates',
+                    subtitle: 'See what\'s new and install the latest APK',
+                    color: Colors.deepPurple,
+                    onTap: () => context.push('/settings/app-update'),
+                  ).animate().fadeIn(delay: 255.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 12),
+
+                  _buildMenuCard(
+                    theme: theme,
                     icon: Icons.logout_rounded,
                     title: 'Sign Out',
                     subtitle: 'Safely terminate active MFI session from this device',

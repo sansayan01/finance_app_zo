@@ -44,6 +44,8 @@ class AppUpdateService {
     try {
       // Request storage permission on older Android versions
       if (Platform.isAndroid) {
+        // permission_handler 11.x exposes this as `requestInstallPackages`
+        // (Permission value 24) which on Android maps to REQUEST_INSTALL_PACKAGES.
         final status = await Permission.requestInstallPackages.request();
         if (!status.isGranted) {
           _update(const DownloadProgress(

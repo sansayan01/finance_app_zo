@@ -11,13 +11,29 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 ///   flutter build apk --dart-define=... → uses dart-define only
 class EnvConfig {
   // Supabase Configuration
-  static String get supabaseUrl =>
-      dotenv.env['SUPABASE_URL'] ??
-      const String.fromEnvironment('SUPABASE_URL');
+  // Priority: --dart-define (CI/CD) > .env file (local dev) > hardcoded production
+  // Hardcoded values ensure the app always connects to production as a safety net.
+  static const _prodUrl = 'https://tccwdpsnuudzfyxfoohk.supabase.co';
+  static const _prodAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
+      'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjY3dkcHNudXVkemZ5eGZvb2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDQ1MTgsImV4cCI6MjA5MzkyMDUxOH0.'
+      'I3B-A6YIrC2XlFlbf1eyTVqmcVJUOOcOUBYstpYE9_Y';
 
-  static String get supabaseAnonKey =>
-      dotenv.env['SUPABASE_ANON_KEY'] ??
-      const String.fromEnvironment('SUPABASE_ANON_KEY');
+  static String get supabaseUrl {
+    const dartDefine = String.fromEnvironment('SUPABASE_URL');
+    if (dartDefine.isNotEmpty) return dartDefine;
+    final envFile = dotenv.env['SUPABASE_URL'];
+    if (envFile != null && envFile.isNotEmpty) return envFile;
+    return _prodUrl;
+  }
+
+  static String get supabaseAnonKey {
+    const dartDefine = String.fromEnvironment('SUPABASE_ANON_KEY');
+    if (dartDefine.isNotEmpty) return dartDefine;
+    final envFile = dotenv.env['SUPABASE_ANON_KEY'];
+    if (envFile != null && envFile.isNotEmpty) return envFile;
+    return _prodAnonKey;
+  }
 
   // App Configuration
   static String get appName =>

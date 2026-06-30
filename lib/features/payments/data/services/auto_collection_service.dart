@@ -67,33 +67,9 @@ class AutoCollectionService {
       'transaction_id': transactionId,
     });
 
-    // 3. Update loan balance
-    final loanResp = await client
-        .from('loans')
-        .select('outstanding_amount, outstanding_balance')
-        .eq('id', payment.loanId!)
-        .maybeSingle();
-
-    if (loanResp != null) {
-      final currentBalance =
-          ((loanResp['outstanding_amount'] ?? loanResp['outstanding_balance'])
-                  as num?)
-              ?.toDouble() ?? 0.0;
-      final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
-
-      final updateData = <String, dynamic>{
-        'outstanding_amount': newBalance,
-        'outstanding_balance': newBalance,
-        'updated_at': now.toIso8601String(),
-      };
-
-      if (newBalance <= 0) {
-        updateData['status'] = 'closed';
-        updateData['closed_date'] = today;
-      }
-
-      await client.from('loans').update(updateData).eq('id', payment.loanId!);
-    }
+    // 3. Loan balance is updated automatically by the SQL trigger
+    //    `update_schedule_on_collection_v2` when collections are inserted.
+    //    No client-side update needed.
   }
 
   /// Auto-collects a Savings payment directly.

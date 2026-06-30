@@ -479,6 +479,7 @@ class _TransactionExportSheetState extends State<TransactionExportSheet> {
       (TransactionType.loanDisbursement, 'Disbursed', Icons.account_balance_rounded),
       (TransactionType.savingsWithdrawal, 'Withdrawal', Icons.money_off_rounded),
       (TransactionType.penalty, 'Penalty', Icons.warning_rounded),
+      (TransactionType.staffCashDeposit, 'Cash Deposit', Icons.account_balance_wallet_rounded),
     ];
 
     return Wrap(
@@ -903,6 +904,13 @@ class _TransactionExportSheetState extends State<TransactionExportSheet> {
   }
 
   void _generate() {
+    if (_period == TransactionPeriod.custom &&
+        (_customStart == null || _customEnd == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a date range')),
+      );
+      return;
+    }
     final options = TransactionExportOptions(
       format: _format,
       period: _period,

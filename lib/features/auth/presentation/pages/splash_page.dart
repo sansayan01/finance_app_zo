@@ -16,46 +16,107 @@ class SplashPage extends ConsumerStatefulWidget {
   ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends ConsumerState<SplashPage> {
+class _SplashPageState extends ConsumerState<SplashPage>
+    with TickerProviderStateMixin {
   String _iconPreset = 'default';
   String? _logoUrl;
-  bool _ready = false;
   bool _navigated = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadAndNavigate();
-  }
+  late AnimationController _slideController;
+  late AnimationController _zoomController;
+  late AnimationController _fadeController;
+
+  // Slide: 0.0 = off-screen top, 1.0 = centered
+  late Animation<double> _slideAnimation;
+  // Zoom: 1.0 = normal, large enough to cover screen
+  late Animation<double> _zoomAnimation;
+  // Fade out
+  late Animation<double> _fadeAnimation;
 
   @override
   void dispose() {
     _navigated = true;
+    _slideController.dispose();
+    _zoomController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadAndNavigate() async {
-    // 1. Load cached branding from SharedPreferences (instant)
+  @override
+  void initState() {
+    super.initState();
+
+    // Phase 1: Slide in from top (600ms)
+    _slideController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _slideAnimation = Tween<double>(begin: -1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+    );
+
+    // Phase 2: Zoom + Fade together (700ms)
+    _zoomController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _zoomAnimation = Tween<double>(begin: 1.0, end: 20.0).animate(
+      CurvedAnimation(parent: _zoomController, curve: Curves.easeInOut),
+    );
+
+    // Fade — faster than zoom so logo dissolves quickly
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
+    );
+
+    _runAnimation();
+  }
+
+  Future<void> _runAnimation() async {
     await _loadCachedBranding();
-    setState(() => _ready = true);
+    if (!mounted) return;
+    setState(() {});
 
-    // 2. Try to load branding from existing auth session (user may already be logged in)
-    await _loadBrandingFromSession();
+    // Load fresh branding + start auth resolution in parallel
+    await Future.wait([
+      _loadBrandingFromSession(),
+      _waitForAuthResolution(),
+    ]);
+    if (!mounted) return;
+    setState(() {});
 
-    // 3. Wait a moment to show the splash
-    await Future.delayed(const Duration(milliseconds: 1200));
+    // Short pause so logo is visible before animation starts
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+
+    // Phase 1: Slide logo in from top
+    await _slideController.forward();
+    if (!mounted) return;
+
+    // Hold at center — logo is the star, give users time to see it
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return;
+
+    // Phase 2: Zoom + Fade together
+    _zoomController.forward();
+    await _fadeController.forward();
+    if (!mounted) return;
+
+    // Navigate immediately — auth is already resolved
+    await _navigate();
+  }
+
+  Future<void> _navigate() async {
     if (!mounted || _navigated) return;
 
-    // 4. Wait for auth state to resolve — prevents flashing the login screen
-    await _waitForAuthResolution();
-    if (!mounted || _navigated) return;
-
-    // 5. Navigate based on resolved auth state
     final authStatus = ref.read(authProvider).status;
     _navigated = true;
 
     if (authStatus == AuthStatus.authenticated) {
-      // Already logged in — router will redirect to the correct portal by role
       context.go('/');
     } else {
       context.go('/auth');
@@ -137,63 +198,60 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final assetPath = 'assets/icons/preset_$_iconPreset.png';
     final hasLogo = _logoUrl != null && _logoUrl!.isNotEmpty;
+    final bgColor = isDark ? const Color(0xFF0F1219) : Colors.white;
+
+    final logo = Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5B4CDB).withValues(alpha: 0.25),
+            blurRadius: 32,
+            spreadRadius: 4,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: hasLogo
+            ? CachedNetworkImage(
+                imageUrl: _logoUrl!,
+                fit: BoxFit.cover,
+                memCacheWidth: 200,
+                memCacheHeight: 200,
+                errorWidget: (_, __, ___) => _buildPresetIcon(assetPath),
+              )
+            : _buildPresetIcon(assetPath),
+      ),
+    );
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1219) : Colors.white,
-      body: Center(
-        child: AnimatedOpacity(
-          opacity: _ready ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 400),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // App Icon - Logo only
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(100),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: hasLogo
-                      ? CachedNetworkImage(
-                          imageUrl: _logoUrl!,
-                          fit: BoxFit.cover,
-                          memCacheWidth: 200,
-                          memCacheHeight: 200,
-                          errorWidget: (_, __, ___) =>
-                              _buildPresetIcon(assetPath),
-                        )
-                      : _buildPresetIcon(assetPath),
-                ),
+      backgroundColor: bgColor,
+      body: AnimatedBuilder(
+        animation: Listenable.merge([
+          _slideController,
+          _zoomController,
+          _fadeController,
+        ]),
+        builder: (context, child) {
+          return Opacity(
+            opacity: _fadeAnimation.value,
+            child: Transform.translate(
+              offset: Offset(
+                0,
+                MediaQuery.of(context).size.height * _slideAnimation.value,
               ),
-              const SizedBox(height: 40),
-
-              // Loading indicator
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    isDark
-                        ? Colors.white.withValues(alpha: 0.8)
-                        : const Color(0xFF1A5CFF),
-                  ),
-                ),
+              child: Transform.scale(
+                scale: _zoomAnimation.value,
+                child: Center(child: child),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
+        child: logo,
       ),
     );
   }

@@ -395,10 +395,12 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       });
     }
 
-    // 3. Update loan balance
+    // 3. Loan balance is updated automatically by the SQL trigger
+    //    `update_schedule_on_collection_v2` when collections are inserted.
+    //    Read the trigger-updated balance for SMS and status check.
     final loanResp = await client
         .from('loans')
-        .select('outstanding_amount, outstanding_balance')
+        .select('outstanding_amount, outstanding_balance, status')
         .eq('id', widget.loan!.id)
         .maybeSingle();
 
@@ -407,20 +409,6 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
           ((loanResp['outstanding_amount'] ?? loanResp['outstanding_balance'])
                   as num?)
               ?.toDouble() ?? 0;
-      final newBalance = (currentBalance - amount).clamp(0.0, currentBalance);
-
-      final updateData = <String, dynamic>{
-        'outstanding_amount': newBalance,
-        'outstanding_balance': newBalance,
-        'updated_at': now.toIso8601String(),
-      };
-
-      if (newBalance <= 0) {
-        updateData['status'] = 'closed';
-        updateData['closed_date'] = today;
-      }
-
-      await client.from('loans').update(updateData).eq('id', widget.loan!.id);
 
       // 3b. Dispatch SMS
       try {
@@ -450,7 +438,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                 memberName: memberName,
                 loanNumber: widget.loan!.loanNumber,
                 amount: amount,
-                outstandingBalance: newBalance,
+                outstandingBalance: currentBalance,
                 collectorName: profile?['full_name'] ?? 'Staff',
                 sentBy: staffId,
                 orgName: branding?.displayName,

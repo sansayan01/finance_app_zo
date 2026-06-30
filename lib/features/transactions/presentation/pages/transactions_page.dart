@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
@@ -292,6 +289,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     if (!mounted) return;
     showDialog(
       context: context,
+      useRootNavigator: true,
       barrierDismissible: false,
       builder: (_) => const _ExportLoadingDialog(),
     );
@@ -300,7 +298,18 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       List<TransactionModel> data;
 
       if (options.period == TransactionPeriod.allFiltered) {
-        data = List.from(_transactions);
+        // Fetch all matching records from DB using current page filters
+        final repo = ref.read(transactionsRepositoryProvider);
+        data = await repo.getTransactionsForExport(
+          dateFrom: _filter.dateFrom,
+          dateTo: _filter.dateTo,
+          typeFilters: _filter.type != null ? [_filter.type!] : null,
+          searchQuery: _filter.searchQuery.isNotEmpty ? _filter.searchQuery : null,
+          paymentModes: _filter.paymentModes.isNotEmpty ? _filter.paymentModes : null,
+          amountMin: _filter.amountMin,
+          amountMax: _filter.amountMax,
+          sortBy: _filter.sortBy,
+        );
       } else {
         final repo = ref.read(transactionsRepositoryProvider);
         data = await repo.getTransactionsForExport(
@@ -316,7 +325,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       }
 
       if (data.isEmpty) {
-        if (mounted) Navigator.pop(context);
+        if (mounted) Navigator.of(context, rootNavigator: true).pop();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No transactions to export')),
@@ -356,23 +365,19 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
       fileName = 'transaction_report_$periodLabel.$ext';
 
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(bytes);
-
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
       await Future.delayed(const Duration(milliseconds: 200));
 
       if (mounted) {
         _showExportReadySheet(
+          bytes: bytes,
           fileName: fileName,
-          file: file,
           ext: ext,
           mime: mime,
         );
       }
     } catch (e) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -394,8 +399,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   void _showExportReadySheet({
+    required Uint8List bytes,
     required String fileName,
-    required File file,
     required String ext,
     required String mime,
   }) {
@@ -471,7 +476,18 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   ),
                   onPressed: () {
                     Navigator.pop(ctx);
-                    OpenFilex.open(file.path);
+                    if (ext == 'pdf') {
+                      Printing.layoutPdf(
+                        onLayout: (format) async => bytes,
+                        name: fileName,
+                      );
+                    } else {
+                      SharePlus.instance.share(ShareParams(
+                        files: [
+                          XFile.fromData(bytes, mimeType: mime, name: fileName),
+                        ],
+                      ));
+                    }
                   },
                   icon: const Icon(Icons.open_in_new_rounded, size: 18),
                   label: Text(
@@ -493,10 +509,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   ),
                   onPressed: () {
                     Navigator.pop(ctx);
-                    SharePlus.instance.share(ShareParams(
-                      files: [XFile(file.path, mimeType: mime)],
-                      text: 'Transaction Report',
-                    ));
+                    if (ext == 'pdf') {
+                      Printing.sharePdf(bytes: bytes, filename: fileName);
+                    } else {
+                      SharePlus.instance.share(ShareParams(
+                        files: [
+                          XFile.fromData(bytes, mimeType: mime, name: fileName),
+                        ],
+                        text: 'Transaction Report',
+                      ));
+                    }
                   },
                   icon: const Icon(Icons.ios_share_rounded, size: 18),
                   label: const Text(

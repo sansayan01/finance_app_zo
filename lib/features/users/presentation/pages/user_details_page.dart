@@ -2317,22 +2317,8 @@ class UserDetailsPage extends ConsumerWidget {
   Widget _buildIdentityHeader(BuildContext context, WidgetRef ref,
       ProfileModel user, ThemeData theme, bool isDark) {
     final primary = theme.colorScheme.primary;
-    final avatarState = ref.watch(avatarUploadNotifierProvider);
     final hasAvatar =
         user.avatarUrl != null && user.avatarUrl!.trim().isNotEmpty;
-
-    ref.listen<AsyncValue<String?>>(avatarUploadNotifierProvider,
-        (prev, next) {
-      next.whenOrNull(
-        error: (e, _) => _toast(context, 'Avatar update failed: $e',
-            error: true),
-        data: (url) {
-          if (url != null && prev is AsyncLoading) {
-            _toast(context, 'Avatar updated.');
-          }
-        },
-      );
-    });
 
     return Container(
       width: double.infinity,
@@ -2365,9 +2351,7 @@ class UserDetailsPage extends ConsumerWidget {
                   onTap: _canEditUser(ref)
                       ? () => _showAvatarOptions(context, ref, user)
                       : null,
-                  child: Hero(
-                    tag: 'user_avatar_${user.id}',
-                    child: Stack(
+                  child: Stack(
                       children: [
                         Container(
                           width: 76,
@@ -2427,21 +2411,12 @@ class UserDetailsPage extends ConsumerWidget {
                                       blurRadius: 6),
                                 ],
                               ),
-                              child: avatarState.isLoading
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(5),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.camera_alt_rounded,
+                              child: const Icon(Icons.camera_alt_rounded,
                                       size: 13, color: Colors.white),
                             ),
                           ),
                       ],
                     ),
-                  ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
@@ -2547,7 +2522,7 @@ class UserDetailsPage extends ConsumerWidget {
                     color: primary,
                     onTap: () {
                       Navigator.pop(ctx);
-                      _uploadAvatar(ref, user, ImageSource.gallery);
+                      _uploadAvatar(context, ref, user, ImageSource.gallery);
                     },
                   ),
                   _buildAvatarOption(
@@ -2556,7 +2531,7 @@ class UserDetailsPage extends ConsumerWidget {
                     color: AppColors.success,
                     onTap: () {
                       Navigator.pop(ctx);
-                      _uploadAvatar(ref, user, ImageSource.camera);
+                      _uploadAvatar(context, ref, user, ImageSource.camera);
                     },
                   ),
                   if (user.avatarUrl != null &&
@@ -2622,13 +2597,23 @@ class UserDetailsPage extends ConsumerWidget {
     );
   }
 
-  void _uploadAvatar(WidgetRef ref, ProfileModel user, ImageSource source) {
+  void _uploadAvatar(BuildContext context, WidgetRef ref, ProfileModel user, ImageSource source) {
     HapticService.selection();
     ref.read(avatarUploadNotifierProvider.notifier).uploadAvatar(
           profileId: user.id,
           userId: user.userId ?? user.id,
           source: source,
-        );
+        ).then((url) {
+      if (context.mounted) {
+        if (url != null) {
+          _toast(context, 'Avatar updated.');
+        }
+      }
+    }).catchError((e) {
+      if (context.mounted) {
+        _toast(context, 'Avatar update failed: $e', error: true);
+      }
+    });
   }
 
   Widget _buildTrustScoreGauge(

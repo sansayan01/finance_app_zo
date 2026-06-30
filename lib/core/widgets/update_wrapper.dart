@@ -24,6 +24,8 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Initialize download headers (needed for private repos on first launch)
+    _downloadHeaders = ref.read(githubReleaseServiceProvider).downloadHeaders;
   }
 
   @override

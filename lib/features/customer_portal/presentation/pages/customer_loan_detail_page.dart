@@ -174,26 +174,10 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
             ),
           ),
 
-          // Schedule preview
-          SliverToBoxAdapter(
-            child: _buildAnimatedSection(
-              index: 4,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-                child: _buildSchedulePreview(
-                  context,
-                  isDark,
-                  emiScheduleAsync,
-                ),
-              ),
-            ),
-          ),
-
           // Payment history snapshot
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 5,
+              index: 4,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
@@ -209,7 +193,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
           // Details card
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 6,
+              index: 5,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
@@ -218,22 +202,10 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
             ),
           ),
 
-          // Secondary CTA: full schedule
-          SliverToBoxAdapter(
-            child: _buildAnimatedSection(
-              index: 7,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
-                child: _buildScheduleButton(context, isDark),
-              ),
-            ),
-          ),
-
           // Statement download
           SliverToBoxAdapter(
             child: _buildAnimatedSection(
-              index: 8,
+              index: 6,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xl),
@@ -473,115 +445,6 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
     );
   }
 
-  Widget _buildSchedulePreview(
-    BuildContext context,
-    bool isDark,
-    AsyncValue<List<CustomerEmiModel>> emisAsync,
-  ) {
-    final theme = Theme.of(context);
-
-    return GlassCard(
-      borderRadius: 20,
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary
-                      .withValues(alpha: isDark ? 0.2 : 0.1),
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.borderRadiusMd),
-                ),
-                child: Icon(
-                  Icons.calendar_month_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Upcoming EMIs',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => context
-                    .push('/customer/loans/${widget.loanId}/schedule'),
-                child: Row(
-                  children: [
-                    Text(
-                      'View all',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Icon(Icons.chevron_right_rounded,
-                        size: 18, color: AppColors.primary),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          emisAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Column(
-                children: [
-                  ShimmerCard(height: 62, borderRadius: 12),
-                  SizedBox(height: 8),
-                  ShimmerCard(height: 62, borderRadius: 12),
-                ],
-              ),
-            ),
-            error: (e, _) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              child: Text(
-                'Couldn\'t load schedule.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.error.withValues(alpha: 0.8),
-                ),
-              ),
-            ),
-            data: (emis) {
-              final upcoming = emis.where((e) => !e.isPaid).take(4).toList();
-              if (upcoming.isEmpty) {
-                return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                  child: Center(
-                    child: Text(
-                      'All EMIs paid — well done!',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                );
-              }
-              return Column(
-                children: upcoming
-                    .map((e) => CustomerEmiTile(emi: e))
-                    .toList(growable: false),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPaymentHistory(
     BuildContext context,
     bool isDark,
@@ -806,61 +669,6 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
               Icon(
                 Icons.arrow_forward_rounded,
                 color: Colors.white,
-                size: 18,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScheduleButton(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: () =>
-            context.push('/customer/loans/${widget.loanId}/schedule'),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: 14),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.035),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.05),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.calendar_month_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'View Full EMI Schedule',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: isDark
-                      ? AppColors.textPrimaryDark
-                      : AppColors.textPrimaryLight,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Icon(
-                Icons.arrow_forward_rounded,
-                color: AppColors.primary,
                 size: 18,
               ),
             ],

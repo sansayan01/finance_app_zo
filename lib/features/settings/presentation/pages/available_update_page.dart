@@ -1,43 +1,57 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:microflow_pro/core/models/app_update.dart';
-import 'package:microflow_pro/core/providers/system_config_provider.dart';
 import 'package:microflow_pro/core/services/app_update_service.dart';
+import 'package:microflow_pro/core/models/github_release.dart';
+import 'package:microflow_pro/core/providers/system_config_provider.dart';
 import 'package:microflow_pro/core/widgets/glass_card.dart';
-import 'package:microflow_pro/features/settings/data/providers/app_update_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class AvailableUpdatePage extends ConsumerStatefulWidget {
   const AvailableUpdatePage({super.key});
 
   @override
-  ConsumerState<AvailableUpdatePage> createState() => _AvailableUpdatePageState();
+  ConsumerState<AvailableUpdatePage> createState() =>
+      _AvailableUpdatePageState();
 }
 
 class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
-  final AppUpdateService _svc = AppUpdateService();
   DownloadProgress _dl = const DownloadProgress();
+  String? _currentVersion;
+  StreamSubscription? _progressSub;
+
+  AppUpdateService get _svc => ref.read(appUpdateServiceProvider);
 
   @override
   void initState() {
     super.initState();
-    _svc.progressStream.listen((p) {
+    _loadCurrentVersion();
+  }
+
+  Future<void> _loadCurrentVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) setState(() => _currentVersion = info.version);
+  }
+
+  void _listenToProgress() {
+    _progressSub?.cancel();
+    _progressSub = _svc.progressStream.listen((p) {
       if (mounted) setState(() => _dl = p);
     });
   }
 
   @override
   void dispose() {
-    _svc.dispose();
+    _progressSub?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final config = ref.watch(systemConfigProvider).valueOrNull;
-    final updateAsync = ref.watch(androidUpdateStatusProvider);
+    final releaseAsync = ref.watch(githubReleaseProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -56,12 +70,11 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
           _header(theme),
           const SizedBox(height: 28),
 
-          // ── Update card from stream ─────────────────────────────────
-          updateAsync.when(
-            data: (result) {
-              final row = result.update;
-              if (row == null) return _noUpdateCard(theme);
-              return _buildCard(theme, row, config);
+          // ── Release info from GitHub ─────────────────────────────────
+          releaseAsync.when(
+            data: (release) {
+              if (release == null) return _noReleaseCard(theme);
+              return _buildReleaseCard(theme, release);
             },
             loading: () => const Center(
               child: Padding(
@@ -76,11 +89,6 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
               ),
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // ── Maintenance toggle ───────────────────────────────────────
-          if (config != null) _buildMaintenanceCard(theme, config),
 
           const SizedBox(height: 100),
         ],
@@ -106,10 +114,18 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
           const SizedBox(height: 2),
           Text('Your trusted micro-finance partner',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          if (_currentVersion != null) ...[
+            const SizedBox(height: 6),
+            Text('Installed: v$_currentVersion',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500)),
+          ],
         ],
       );
 
-  Widget _noUpdateCard(ThemeData theme) => GlassCard(
+  Widget _noReleaseCard(ThemeData theme) => GlassCard(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
@@ -123,35 +139,45 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
             Text('No new updates available right now.',
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: Colors.grey.shade600)),
+            if (_currentVersion != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border:
+                      Border.all(color: Colors.green.withValues(alpha: 0.2)),
+                ),
+                child: Text('Running v$_currentVersion — latest',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
           ],
         ),
       );
 
-  Widget _buildCard(
-      ThemeData theme, AppUpdate row, dynamic config) {
-    final isForce = row.isCritical;
+  Widget _buildReleaseCard(ThemeData theme, GitHubRelease release) {
+    final latestVersion = release.version;
+    final isUpToDate =
+        _currentVersion != null && !isVersionLower(_currentVersion!, latestVersion);
     final isDone = _dl.state == DownloadState.completed;
     final isFail = _dl.state == DownloadState.failed;
     final isBusy = _dl.state == DownloadState.downloading;
     final pct = (_dl.progress * 100).toInt();
 
-    String sizeLabel = '—';
-    if (row.fileSizeMb != null) {
-      final mb = row.fileSizeMb!;
-      sizeLabel =
-          mb >= 1 ? '${mb.toStringAsFixed(1)} MB' : '${(mb * 1024).toStringAsFixed(0)} KB';
-    }
-
-    String agoLabel;
-    try {
-      final diff = DateTime.now().difference(row.publishedAt);
+    String agoLabel = '';
+    if (release.publishedAt != null) {
+      final diff = DateTime.now().difference(release.publishedAt!);
       agoLabel = diff.inDays > 0
           ? '${diff.inDays}d ago'
           : diff.inHours > 0
               ? '${diff.inHours}h ago'
               : 'Just now';
-    } catch (_) {
-      agoLabel = '';
     }
 
     return GlassCard(
@@ -161,11 +187,16 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
         children: [
           Row(
             children: [
-              Icon(Icons.new_releases_rounded,
-                  color: isForce ? Colors.red : Colors.orange, size: 24),
+              Icon(
+                isUpToDate
+                    ? Icons.check_circle_rounded
+                    : Icons.new_releases_rounded,
+                color: isUpToDate ? Colors.green : Colors.orange,
+                size: 24,
+              ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text('v${row.version}',
+                child: Text('v$latestVersion',
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w900)),
               ),
@@ -173,15 +204,15 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isForce
-                      ? Colors.red.withValues(alpha: 0.12)
+                  color: isUpToDate
+                      ? Colors.green.withValues(alpha: 0.12)
                       : Colors.orange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  isForce ? 'Must Update' : 'Recommended',
+                  isUpToDate ? 'Installed' : 'Available',
                   style: TextStyle(
-                    color: isForce ? Colors.red : Colors.orange,
+                    color: isUpToDate ? Colors.green : Colors.orange,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
@@ -189,7 +220,7 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
               ),
             ],
           ),
-          if (row.releaseNotes != null && row.releaseNotes!.isNotEmpty) ...[
+          if (release.body != null && release.body!.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(
               width: double.infinity,
@@ -201,7 +232,7 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
                     color: theme.colorScheme.primary.withValues(alpha: 0.15)),
               ),
               child: Text(
-                row.releaseNotes!,
+                release.body!,
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(height: 1.5, color: Colors.grey.shade700),
               ),
@@ -212,57 +243,66 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
             spacing: 16,
             runSpacing: 6,
             children: [
-              _chip(Icons.schedule_rounded, agoLabel),
-              if (sizeLabel != '—') _chip(Icons.storage_rounded, sizeLabel),
-              _chip(
-                  Icons.link_rounded, row.downloadUrl.isEmpty ? 'N/A' : 'APK Ready'),
+              if (agoLabel.isNotEmpty) _chip(Icons.schedule_rounded, agoLabel),
+              _chip(Icons.storage_rounded,
+                  '${(release.apkSize / 1024 / 1024).toStringAsFixed(0)} MB'),
+              _chip(Icons.link_rounded,
+                  release.apkDownloadUrl != null ? 'APK Ready' : 'N/A'),
             ],
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: isBusy
-                  ? null
-                  : () async {
-                      HapticFeedback.mediumImpact();
-                      if (!mounted) return;
-                      await _svc.downloadAndInstall(row.downloadUrl);
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(_toSnap(_dl.state)),
-                          behavior: SnackBarBehavior.floating,
+          if (!isUpToDate)
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: isBusy
+                    ? null
+                    : () async {
+                        HapticFeedback.mediumImpact();
+                        if (!mounted) return;
+                        _listenToProgress();
+                        if (release.apkDownloadUrl != null) {
+                          await _svc.downloadAndInstall(release.apkDownloadUrl!);
+                        }
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(_toSnap(_dl.state)),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: isBusy
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          value: isBusy ? _dl.progress : null,
+                          color: Colors.white,
                         ),
-                      );
-                    },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                backgroundColor: isForce ? Colors.red : null,
+                      )
+                    : Icon(isDone
+                        ? Icons.install_mobile_rounded
+                        : Icons.download_rounded),
+                label: Text(_btnLabel(isDone, isFail, isBusy, pct)),
               ),
-              icon: isBusy
-                  ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        value: isBusy ? _dl.progress : null,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(isDone
-                      ? Icons.install_mobile_rounded
-                      : Icons.download_rounded),
-              label: Text(_btnLabel(isDone, isFail, isBusy, isForce, pct)),
             ),
-          ),
           if (isFail && _dl.error != null) ...[
             const SizedBox(height: 8),
             Center(
               child: TextButton.icon(
-                onPressed: () => _svc.downloadAndInstall(row.downloadUrl),
+                onPressed: release.apkDownloadUrl != null
+                    ? () {
+                        _listenToProgress();
+                        _svc.downloadAndInstall(release.apkDownloadUrl!);
+                      }
+                    : null,
                 icon: const Icon(Icons.refresh_rounded, size: 16),
                 label: const Text('Retry'),
               ),
@@ -271,52 +311,18 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
                 style: const TextStyle(color: Colors.red, fontSize: 12),
                 textAlign: TextAlign.center),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMaintenanceCard(ThemeData theme, dynamic config) {
-    final isDown = config.isUnderMaintenance as bool;
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.engineering_rounded,
-                  color: Colors.orange.shade700, size: 20),
-              const SizedBox(width: 8),
-              Text('Maintenance Mode',
-                  style:
-                      theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Toggle puts the app into read-only mode for all users.',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 10),
-          SwitchListTile(
-            value: isDown,
-            onChanged: (_) {},
-            title: Text(isDown ? 'Maintenance ON' : 'Maintenance OFF'),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () {
-              // call maintenance service in a moment
-            },
-            icon: Icon(isDown ? Icons.play_arrow_rounded : Icons.pause_rounded),
-            label: Text(isDown ? 'Resume Service' : 'Pause Service'),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 44),
-              backgroundColor: isDown ? Colors.green : Colors.orange,
+          if (isUpToDate) ...[
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                'You\'re running the latest version.',
+                style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -338,14 +344,12 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
         _ => 'Downloading…',
       };
 
-  String _btnLabel(bool done, bool fail, bool busy, bool force, int pct) =>
-      done
-          ? 'Install Now'
-          : fail
-              ? 'Retry'
-              : busy
-                  ? '$pct%'
-                  : force
-                      ? 'Update Now'
-                      : 'Download & Install';
+  String _btnLabel(bool done, bool fail, bool busy, int pct) => done
+      ? 'Install Now'
+      : fail
+          ? 'Retry'
+          : busy
+              ? '$pct%'
+              : 'Download & Install';
+
 }

@@ -212,38 +212,39 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: isSelected
             ? BoxDecoration(
                 gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                    spreadRadius: -2,
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                    spreadRadius: -1,
                   ),
                 ],
               )
             : BoxDecoration(
                 color: _fillColor,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _separator,
                   width: 1,
                 ),
               ),
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 20,
+              size: 15,
               color: isSelected
                   ? Colors.white
                   : _textSecondary,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
@@ -694,7 +695,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.accent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF0F172A), Color(0xFF1E3A5F)],
             ),
           ),
           child: SafeArea(
@@ -843,13 +846,13 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                     : _buildLoanBody(currencyFormat),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
 
               // ─── 5. Payment Mode Chips -- Gradient Selection ───
               const Text('Payment Mode',
                   style: TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 10),
+                      fontWeight: FontWeight.w600, fontSize: 12)),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
@@ -885,7 +888,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // ─── 6. Action Buttons -- Premium Style ───
               Row(

@@ -9,6 +9,7 @@ import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/progress_gauge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,11 +35,8 @@ import '../widgets/collection_sheet.dart';
 import '../widgets/statement_options_sheet.dart';
 import '../widgets/statement_generation_overlay.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../savings/data/providers/savings_providers.dart' show transactionsRepositoryProvider;
 
-
-/// Default foreclosure/prepayment penalty rate (2%).
-/// Change this constant to adjust the rate globally.
-const double kDefaultForeclosureRate = 0.02;
 
 /// Extracts a payment date from a payment record, checking multiple fields.
 /// Used by _LoanDetailPageState.
@@ -116,7 +114,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   final ScrollController _scrollController = ScrollController();
   final ScrollController _timelineController = ScrollController();
   final ValueNotifier<double> _scrollOffset = ValueNotifier(0);
-  String _selectedEmiFilter = 'all';
   bool _hasScrolledTimeline = false;
 
   /// Returns a short, display-friendly label for an [EMIStatus].
@@ -151,10 +148,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Widget build(BuildContext context) {
     final loanAsync = ref.watch(loanDetailProvider(widget.loanId));
     final scheduleAsync = ref.watch(emiScheduleProvider(widget.loanId));
-    final orgAsync = ref.watch(currentOrgProvider);
-    final org = orgAsync.value;
-    final orgSettings = org?['settings'] as Map<String, dynamic>?;
-    final foreclosureRate = (orgSettings?['foreclosure_rate'] as num?)?.toDouble() ?? kDefaultForeclosureRate;
+    final paymentHistoryAsync = ref.watch(paymentHistoryProvider(widget.loanId));
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -254,38 +248,22 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                                 child: _buildPrincipalInterestBreakdown(
                                     scheduleAsync, loan, theme),
                               ),
-                              const SizedBox(height: 24),
-                              _buildEMIList(scheduleAsync, theme, loan),
                               const SizedBox(height: 40),
                               _buildSectionHeader('Financial Health', theme),
                               const SizedBox(height: 16),
                               _buildHealthMetrics(loan, scheduleAsync, theme),
                               const SizedBox(height: 40),
-                              _buildSectionHeader('NPA Classification', theme),
-                              const SizedBox(height: 16),
-                              _buildNPAClassification(scheduleAsync, theme),
-                              const SizedBox(height: 40),
                               _buildSectionHeader('Staff Notes', theme),
                               const SizedBox(height: 16),
                               _buildStaffNotes(loan, theme),
                               const SizedBox(height: 40),
-                              _buildSectionHeader('Penalty & Late Fees', theme),
+                              _buildSectionHeader('Payment History', theme),
                               const SizedBox(height: 16),
-                              _buildPenaltyTracking(scheduleAsync, theme),
-                              const SizedBox(height: 40),
-                              _buildSectionHeader(
-                                  'Prepayment & Foreclosure', theme),
-                              const SizedBox(height: 16),
-                              _buildPrepaymentInfo(loan, theme, foreclosureRate),
+                              _buildPaymentHistory(paymentHistoryAsync, theme, isDark),
                               const SizedBox(height: 40),
                               _buildSectionHeader('Borrower Profile', theme),
                               const SizedBox(height: 16),
                               _buildBorrowerProfile(loan, theme),
-                              const SizedBox(height: 40),
-                              _buildSectionHeader('Activity Timeline', theme),
-                              const SizedBox(height: 16),
-                              _buildActivityTimeline(
-                                  loan, scheduleAsync, theme),
                               const SizedBox(height: 100),
                             ],
                           ),
@@ -2012,536 +1990,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  // ─── EMI Card List ──────────────────────────────────────────────
-  Widget _buildEMIList(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync,
-      ThemeData theme,
-      LoanModel loan) {
-    return scheduleAsync.when(
-      data: (schedule) {
-        if (schedule.isEmpty) return const SizedBox.shrink();
-
-        // Apply filter
-        List<EMIScheduleModel> filtered;
-        switch (_selectedEmiFilter) {
-          case 'paid':
-            filtered =
-                schedule.where((e) => e.status == EMIStatus.paid).toList();
-            break;
-          case 'overdue':
-            filtered = schedule.where((e) => e.isOverdue).toList();
-            break;
-          case 'upcoming':
-            filtered = schedule
-                .where((e) =>
-                    e.status != EMIStatus.paid &&
-                    !e.isOverdue)
-                .toList();
-            break;
-          default:
-            filtered = schedule;
-        }
-
-        final paidCount =
-            schedule.where((e) => e.status == EMIStatus.paid).length;
-        final overdueCount = schedule.where((e) => e.isOverdue).length;
-        final upcomingCount = schedule
-            .where((e) =>
-                e.status != EMIStatus.paid &&
-                !e.isOverdue)
-            .length;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Filter chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  _buildEMIFilterChip(
-                      'All (${schedule.length})', 'all', theme),
-                  const SizedBox(width: 8),
-                  _buildEMIFilterChip(
-                      'Paid ($paidCount)', 'paid', theme,
-                      color: AppColors.success),
-                  const SizedBox(width: 8),
-                  _buildEMIFilterChip(
-                      'Overdue ($overdueCount)', 'overdue', theme,
-                      color: AppColors.error),
-                  const SizedBox(width: 8),
-                  _buildEMIFilterChip(
-                      'Upcoming ($upcomingCount)', 'upcoming', theme,
-                      color: theme.colorScheme.primary),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // EMI cards
-            if (filtered.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text('No EMIs in this category',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.4))),
-                ),
-              )
-            else ...[
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filtered.length > 10 ? 10 : filtered.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final emi = filtered[index];
-                  return _buildEMICard(emi, theme, loan, index);
-                },
-              ),
-              // View All button
-              if (filtered.length > 10) ...[
-                const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: () =>
-                      _showFullEMISchedule(filtered, loan, theme),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 14, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary
-                          .withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: theme.colorScheme.primary
-                            .withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('View All ${filtered.length} EMIs',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w700)),
-                        const SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded,
-                            size: 18, color: theme.colorScheme.primary),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ],
-        );
-      },
-      loading: () => const ShimmerCard(height: 300),
-      error: (_, __) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest
-              .withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Center(
-          child: Text('Failed to load EMI schedule',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.error)),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEMICard(
-      EMIScheduleModel emi, ThemeData theme, LoanModel loan, int index) {
-    final isPaid = emi.status == EMIStatus.paid;
-    final isOverdue = emi.isOverdue;
-    final accentColor = isPaid
-        ? AppColors.success
-        : (isOverdue ? AppColors.error : theme.colorScheme.primary);
-    final isDark = theme.brightness == Brightness.dark;
-    final emiRatio =
-        emi.emiAmount > 0 ? emi.principal / emi.emiAmount : 0.5;
-
-    return GestureDetector(
-      onTap: () => _showEMIDetailSheet(emi, loan, theme),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300 + (index * 40)),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest
-              .withValues(alpha: isDark ? 0.25 : 0.35),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: accentColor.withValues(alpha: 0.12),
-            width: 1,
-          ),
-          boxShadow: isOverdue
-              ? [
-                  BoxShadow(
-                    color: AppColors.error.withValues(alpha: 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            // Left accent bar
-            Container(
-              width: 3,
-              height: 40,
-              decoration: BoxDecoration(
-                color: accentColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Main content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Text('EMI #${emi.emiNumber}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w800)),
-                          if (isOverdue) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text('OVERDUE',
-                                  style: TextStyle(
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.error)),
-                            ),
-                          ],
-                        ],
-                      ),
-                      // Status badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                            isPaid
-                                ? 'PAID'
-                                : isOverdue
-                                    ? 'OD'
-                                    : 'DUE',
-                            style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                                color: accentColor)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // Amount + date row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(AppFormatters.formatCurrency(emi.emiAmount),
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: accentColor)),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(AppFormatters.formatDate(emi.dueDate),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 11,
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.5))),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // Principal/Interest mini bar
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: SizedBox(
-                            height: 4,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: (emiRatio * 100).toInt().clamp(1, 99),
-                                  child: Container(
-                                      color: theme.colorScheme.primary),
-                                ),
-                                Expanded(
-                                  flex:
-                                      ((1 - emiRatio) * 100).toInt().clamp(1, 99),
-                                  child: Container(
-                                      color: Colors.amber.shade400),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        flex: 2,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                  'P: ${AppFormatters.formatCompactCurrency(emi.principal)}',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.w600)),
-                              const SizedBox(width: 6),
-                              Text(
-                                  'I: ${AppFormatters.formatCompactCurrency(emi.interest)}',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                      color: Colors.amber.shade700,
-                                      fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded,
-                size: 20,
-                color:
-                    theme.colorScheme.onSurface.withValues(alpha: 0.3)),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(
-          duration: Duration(milliseconds: 400 + (index * 50)),
-          delay: Duration(milliseconds: index * 60),
-          curve: Curves.easeOutCubic,
-        );
-  }
-
-  Widget _buildEMIFilterChip(String label, String filterKey, ThemeData theme,
-      {Color? color}) {
-    final chipColor = color ?? theme.colorScheme.primary;
-    final isSelected = _selectedEmiFilter == filterKey;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedEmiFilter = filterKey),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? chipColor.withValues(alpha: 0.15)
-              : chipColor.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-              color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
-        ),
-        child: Text(label,
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected
-                    ? chipColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-      ),
-    );
-  }
-
-  void _showFullEMISchedule(
-      List<EMIScheduleModel> schedule, LoanModel loan, ThemeData theme) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.8,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: theme.dividerColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(Icons.table_chart_rounded,
-                            size: 20, color: theme.colorScheme.primary),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Full EMI Schedule',
-                                style: theme.textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w800)),
-                            Text('${schedule.length} installments',
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView.separated(
-                    controller: scrollController,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    itemCount: schedule.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final emi = schedule[index];
-                      return InkWell(
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _showEMIDetailSheet(emi, loan, theme);
-                        },
-                        child: _buildEMIRow(emi, theme),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEMIRow(EMIScheduleModel emi, ThemeData theme) {
-    final isPaid = emi.status == EMIStatus.paid;
-    final isOverdue = emi.isOverdue;
-    final color = isPaid
-        ? AppColors.success
-        : (isOverdue ? AppColors.error : theme.colorScheme.primary);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Expanded(
-              flex: 1,
-              child: Text('${emi.emiNumber}',
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w700))),
-          Expanded(
-              flex: 2,
-              child: Text(
-                  AppFormatters.formatDate(emi.dueDate),
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall)),
-          Expanded(
-              flex: 2,
-              child: Text(AppFormatters.formatCurrency(emi.principal),
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall)),
-          Expanded(
-              flex: 2,
-              child: Text(AppFormatters.formatCurrency(emi.interest),
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall)),
-          Expanded(
-              flex: 2,
-              child: Text(AppFormatters.formatCurrency(emi.emiAmount),
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w700))),
-          Expanded(
-              flex: 2,
-              child: Text(AppFormatters.formatCurrency(emi.balanceAfter),
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary))),
-          Expanded(
-              flex: 1,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                clipBehavior: Clip.hardEdge,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                      _emiStatusLabel(emi.effectiveStatus),
-                      style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: color)),
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-
   Widget _buildInfoRow(String label, String value, ThemeData theme,
       {bool isBold = false}) {
     return Row(
@@ -2900,146 +2348,6 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     );
   }
 
-  Widget _buildNPAClassification(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
-    return scheduleAsync.when(
-      data: (schedule) {
-        final now = DateTime.now();
-        int maxDaysPastDue = 0;
-        int overdueCount = 0;
-
-        for (final emi in schedule) {
-          if (emi.isOverdue) {
-            overdueCount++;
-            final daysPast = now.difference(emi.dueDate).inDays;
-            if (daysPast > maxDaysPastDue) {
-              maxDaysPastDue = daysPast;
-            }
-          }
-        }
-
-        String npaStatus;
-        Color npaColor;
-        IconData npaIcon;
-        String npaDescription;
-
-        if (maxDaysPastDue >= 90) {
-          npaStatus = 'NPA - Non Performing Asset';
-          npaColor = AppColors.error;
-          npaIcon = Icons.error_outline_rounded;
-          npaDescription =
-              'Loan is classified as NPA (90+ days overdue). Immediate action required.';
-        } else if (maxDaysPastDue >= 60) {
-          npaStatus = 'Doubtful Asset';
-          npaColor = Colors.deepOrange;
-          npaIcon = Icons.warning_amber_rounded;
-          npaDescription =
-              'Loan is 60+ days overdue. High risk of becoming NPA.';
-        } else if (maxDaysPastDue >= 30) {
-          npaStatus = 'Special Mention (30 DPD)';
-          npaColor = AppColors.warning;
-          npaIcon = Icons.info_outline_rounded;
-          npaDescription = 'Loan is 30+ days overdue. Monitor closely.';
-        } else if (overdueCount > 0) {
-          npaStatus = 'Standard - Watch List';
-          npaColor = Colors.amber;
-          npaIcon = Icons.visibility_rounded;
-          npaDescription =
-              '$overdueCount overdue EMI(s). Keep under observation.';
-        } else {
-          npaStatus = 'Standard - Performing';
-          npaColor = AppColors.success;
-          npaIcon = Icons.check_circle_outline_rounded;
-          npaDescription = 'Loan is performing well. No overdue EMIs.';
-        }
-
-        return Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: npaColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: npaColor.withValues(alpha: 0.2)),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: npaColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(npaIcon, color: npaColor, size: 28),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Asset Classification',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5))),
-                            Text(npaStatus,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    color: npaColor)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(npaDescription,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.7))),
-                  if (maxDaysPastDue > 0) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: npaColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Maximum Days Past Due',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                  fontWeight: FontWeight.w600)),
-                          Text('$maxDaysPastDue days',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: npaColor)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-      loading: () => const ShimmerCard(height: 200),
-      error: (_, __) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text('Failed to load NPA info',
-            style: TextStyle(color: AppColors.error)),
-      ),
-    );
-  }
-
   Widget _buildHealthRow(
       String label, String value, IconData icon, Color color, ThemeData theme) {
     return Row(
@@ -3067,435 +2375,730 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     return _StaffNotesWidget(loan: loan, theme: theme);
   }
 
-  Widget _buildPenaltyTracking(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
-    return scheduleAsync.when(
-      data: (schedule) {
-        final overdueEmis = schedule.where((e) => e.isOverdue).toList();
-
-        double totalPenalty =
-            schedule.fold<double>(0, (s, e) => s + e.penaltyAmount);
-        double unpaidPenalty = schedule
-            .where((e) => !e.penaltyPaid)
-            .fold<double>(0, (s, e) => s + e.penaltyAmount);
-        double paidPenalty = schedule
-            .where((e) => e.penaltyPaid)
-            .fold<double>(0, (s, e) => s + e.penaltyAmount);
-
-        if (totalPenalty == 0 && overdueEmis.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.success.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.check_circle_rounded,
-                    color: AppColors.success, size: 24),
-                const SizedBox(width: 12),
-                Text('No penalties accrued',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.success, fontWeight: FontWeight.w600)),
-              ],
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: unpaidPenalty > 0
-                    ? AppColors.error.withValues(alpha: 0.08)
-                    : theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                    color: unpaidPenalty > 0
-                        ? AppColors.error.withValues(alpha: 0.2)
-                        : Colors.transparent),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Total Penalty',
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6))),
-                          const SizedBox(height: 4),
-                          Text(AppFormatters.formatCurrency(totalPenalty),
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: unpaidPenalty > 0
-                                      ? AppColors.error
-                                      : AppColors.success)),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text('Unpaid',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.5))),
-                          Text(AppFormatters.formatCurrency(unpaidPenalty),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.error)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  if (paidPenalty > 0) ...[
-                    const Divider(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Paid Penalty',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.6))),
-                        Text(AppFormatters.formatCurrency(paidPenalty),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.success)),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (overdueEmis.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text('Overdue EMIs with Penalty',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-              const SizedBox(height: 12),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: overdueEmis.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final emi = overdueEmis[index];
-                  final daysOverdue =
-                      DateTime.now().difference(emi.dueDate).inDays;
-                  return Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border:
-                          Border.all(color: AppColors.error.withValues(alpha: 0.1)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.warning_rounded,
-                              color: AppColors.error, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('EMI #${emi.emiNumber}',
-                                  style: theme.textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.w700)),
-                              Text('$daysOverdue days overdue',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.error,
-                                      fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                        Text(AppFormatters.formatCurrency(emi.penaltyAmount),
-                            style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.error)),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          ],
-        );
-      },
+  Widget _buildPaymentHistory(
+      AsyncValue<List<Map<String, dynamic>>> paymentHistoryAsync,
+      ThemeData theme,
+      bool isDark) {
+    return paymentHistoryAsync.when(
       loading: () => const ShimmerCard(height: 200),
-      error: (_, __) => Container(
+      error: (e, _) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text('Failed to load penalty info',
+        child: Text('Failed to load payment history',
             style: TextStyle(color: AppColors.error)),
       ),
-    );
-  }
-
-  Widget _buildPrepaymentInfo(LoanModel loan, ThemeData theme, double foreclosureRate) {
-    final foreclosureCharge = loan.outstandingBalance * foreclosureRate;
-    final totalForeclosureAmount = loan.outstandingBalance + foreclosureCharge;
-    final totalInterest = loan.totalRepayable - loan.amount;
-    final remainingInterest = loan.outstandingBalance > loan.amount ? loan.outstandingBalance - loan.amount : 0.0;
-    final interestSaved = (totalInterest - remainingInterest).clamp(0.0, double.infinity);
-
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.primary.withValues(alpha: 0.1),
-                AppColors.primary.withValues(alpha: 0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.account_balance_wallet_rounded,
-                        color: AppColors.primary, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Foreclosure Amount',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.6))),
-                        Text(
-                            AppFormatters.formatCurrency(
-                                totalForeclosureAmount),
-                            style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.primary)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Divider(height: 1),
-              const SizedBox(height: 16),
-              _buildPrepaymentRow('Outstanding Balance',
-                  AppFormatters.formatCurrency(loan.outstandingBalance), theme),
-              const SizedBox(height: 12),
-              _buildPrepaymentRow('Foreclosure Charge (2%)',
-                  AppFormatters.formatCurrency(foreclosureCharge), theme,
-                  isCharge: true),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.savings_rounded,
-                        color: AppColors.success, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text('Potential Interest Saved',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                    Text(
-                        AppFormatters.formatCurrency(
-                            interestSaved > 0 ? interestSaved : 0),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w900, color: AppColors.success)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.info_outline_rounded,
-                  color: theme.colorScheme.primary, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Prepayment allowed after 6 EMIs. Foreclosure charge: 2% of outstanding.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.7)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPrepaymentRow(String label, String value, ThemeData theme,
-      {bool isCharge = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
-        Text(value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: isCharge ? AppColors.error : null)),
-      ],
-    );
-  }
-
-  Widget _buildBorrowerProfile(LoanModel loan, ThemeData theme) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(32),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: AppColors.primary),
-                child: Center(
-                    child: Text((loan.customerName?.isNotEmpty == true ? loan.customerName![0] : '?'),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900))),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(loan.customerName ?? 'Unknown',
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w900)),
-                    Text(loan.customerPhone ?? '',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5))),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.call_rounded),
-                style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surface,
-                    padding: const EdgeInsets.all(12)),
-                onPressed: () => _makeCall(loan.customerPhone ?? ''),
-              ),
-            ],
-          ),
-        ),
-        if (loan.staffName != null) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
+      data: (payments) {
+        if (payments.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest
                   .withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.receipt_long_rounded,
+                      size: 48,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                  const SizedBox(height: 12),
+                  Text('No payments yet',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4))),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final recent = payments.take(10).toList();
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            children: [
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: recent.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () => _showPaymentDetails(recent[index], theme),
+                    child: _buildPaymentTile(recent[index], theme, isDark, index),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPaymentDetails(Map<String, dynamic> payment, ThemeData theme) {
+    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+    final paymentMode = payment['payment_mode']?.toString() ?? 'cash';
+    final date = _getPaymentDate(payment);
+    final collectedBy = payment['collected_by_name']?.toString();
+    final collectedByRole = payment['collected_by_role']?.toString();
+    final notes = payment['notes']?.toString();
+    final referenceNumber = payment['reference_number']?.toString();
+    final txId = payment['transaction_id']?.toString() ?? payment['id']?.toString();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  child: const Icon(Icons.badge_rounded,
-                      color: AppColors.warning, size: 20),
                 ),
-                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(24),
                     children: [
-                      Text('Assigned Agent',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.5))),
-                      Text(loan.staffName!,
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w700)),
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.payment_rounded,
+                                color: AppColors.success, size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Payment Received',
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.5))),
+                                Text(
+                                    AppFormatters.formatCurrency(amount),
+                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.success)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Details card
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildDetailRow('Payment Mode',
+                                paymentMode[0].toUpperCase() + paymentMode.substring(1),
+                                theme),
+                            _buildDetailRow(
+                                'Date & Time', AppFormatters.formatDateTime(date), theme),
+                            if (collectedBy != null)
+                              _buildDetailRow(
+                                  'Collected By', collectedBy, theme),
+                            if (collectedByRole != null)
+                              _buildDetailRow(
+                                  'Role',
+                                  collectedByRole[0].toUpperCase() +
+                                      collectedByRole.substring(1),
+                                  theme),
+                            if (referenceNumber != null && referenceNumber.isNotEmpty)
+                              _buildDetailRow('Reference', referenceNumber, theme),
+                          ],
+                        ),
+                      ),
+
+                      if (notes != null && notes.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.info.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: AppColors.info.withValues(alpha: 0.15)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.note_rounded,
+                                  color: AppColors.info, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(notes,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.7))),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+
+                      // Action buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _showEditPaymentSheet(payment, theme);
+                              },
+                              icon: const Icon(Icons.edit_rounded, size: 18),
+                              label: const Text('Edit'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                side: BorderSide(
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: txId != null
+                                  ? () {
+                                      Navigator.pop(ctx);
+                                      _confirmDeletePayment(payment, theme);
+                                    }
+                                  : null,
+                              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                              label: const Text('Delete'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                foregroundColor: AppColors.error,
+                                side: BorderSide(
+                                    color: AppColors.error.withValues(alpha: 0.3)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.call_rounded, size: 20),
-                  style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.surface,
-                      padding: const EdgeInsets.all(8)),
-                  onPressed: () => _makeCall(loan.staffPhone ?? loan.customerPhone ?? ''),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showEditPaymentSheet(Map<String, dynamic> payment, ThemeData theme) {
+    final currentAmount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+    final currentMode = payment['payment_mode']?.toString() ?? 'cash';
+    final currentNotes = payment['notes']?.toString() ?? '';
+    final currentRef = payment['reference_number']?.toString() ?? '';
+    final txId = payment['transaction_id']?.toString() ?? payment['id']?.toString();
+
+    final amountController = TextEditingController(text: currentAmount.toStringAsFixed(2));
+    final notesController = TextEditingController(text: currentNotes);
+    final refController = TextEditingController(text: currentRef);
+    String selectedMode = currentMode;
+
+    final modes = ['cash', 'upi', 'bank_transfer', 'cheque', 'other'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.dividerColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.edit_rounded,
+                              color: AppColors.primary, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text('Edit Payment',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Amount
+                          TextField(
+                            controller: amountController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Amount',
+                              prefixText: '\u20b9 ',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.2),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Payment mode
+                          Text('Payment Mode',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: modes.map((mode) {
+                              final isSelected = selectedMode == mode;
+                              return GestureDetector(
+                                onTap: () => setSheetState(() => selectedMode = mode),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primary.withValues(alpha: 0.15)
+                                        : theme.colorScheme.surfaceContainerHighest
+                                            .withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primary.withValues(alpha: 0.4)
+                                          : Colors.transparent,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    mode[0].toUpperCase() + mode.substring(1).replaceAll('_', ' '),
+                                    style: TextStyle(
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                      color: isSelected ? AppColors.primary : null,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Reference
+                          TextField(
+                            controller: refController,
+                            decoration: InputDecoration(
+                              labelText: 'Reference Number (optional)',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.2),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Notes
+                          TextField(
+                            controller: notesController,
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              labelText: 'Notes (optional)',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.2),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Save button
+                          ElevatedButton(
+                            onPressed: () async {
+                              final newAmount = double.tryParse(amountController.text);
+                              if (newAmount == null || newAmount <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Please enter a valid amount')),
+                                );
+                                return;
+                              }
+
+                              Navigator.pop(ctx);
+                              await _updatePayment(txId, newAmount, selectedMode,
+                                  refController.text, notesController.text);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: const Text('Save Changes',
+                                style: TextStyle(fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _updatePayment(String? txId, double amount, String mode,
+      String reference, String notes) async {
+    if (txId == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      await Supabase.instance.client
+          .from('transactions')
+          .update({
+            'amount': amount,
+            'payment_mode': mode,
+            'reference_number': reference.isNotEmpty ? reference : null,
+            'notes': notes.isNotEmpty ? notes : null,
+          })
+          .eq('id', txId);
+
+      ref.invalidate(paymentHistoryProvider(widget.loanId));
+      ref.invalidate(loanDetailProvider(widget.loanId));
+
+      HapticFeedback.mediumImpact();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Payment updated'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to update: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _confirmDeletePayment(Map<String, dynamic> payment, ThemeData theme) {
+    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Payment?'),
+        content: Text(
+            'This will remove the payment of ${AppFormatters.formatCurrency(amount)} and restore the loan outstanding balance.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await _deletePayment(payment);
+            },
+            child:
+                const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePayment(Map<String, dynamic> payment) async {
+    final txId = payment['transaction_id']?.toString() ?? payment['id']?.toString();
+    if (txId == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final transactionsRepo = ref.read(transactionsRepositoryProvider);
+      await transactionsRepo.deleteTransaction(txId);
+
+      ref.invalidate(paymentHistoryProvider(widget.loanId));
+      ref.invalidate(loanDetailProvider(widget.loanId));
+      ref.invalidate(emiScheduleProvider(widget.loanId));
+
+      HapticFeedback.mediumImpact();
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Payment deleted'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Widget _buildPaymentTile(
+      Map<String, dynamic> payment, ThemeData theme, bool isDark, int index) {
+    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+    final paymentMode = payment['payment_mode']?.toString() ?? 'cash';
+    final date = _getPaymentDate(payment);
+    final collectedBy = payment['collected_by_name']?.toString();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest
+            .withValues(alpha: isDark ? 0.25 : 0.35),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.success.withValues(alpha: 0.12),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: isDark ? 0.18 : 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.payment_rounded,
+              size: 18,
+              color: AppColors.success,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Payment via ${paymentMode[0].toUpperCase() + paymentMode.substring(1)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      AppFormatters.formatDateTime(date),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (collectedBy != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 3,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          collectedBy,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color
+                                ?.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
           ),
+          Text(
+            AppFormatters.formatCurrency(amount),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: AppColors.success,
+              fontWeight: FontWeight.w800,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              letterSpacing: -0.3,
+            ),
+          ),
         ],
-      ],
-    );
+      ),
+    ).animate().fadeIn(
+          duration: Duration(milliseconds: 300 + (index * 30)),
+          delay: Duration(milliseconds: index * 40),
+          curve: Curves.easeOutCubic,
+        );
   }
 
-  Widget _buildActivityTimeline(LoanModel loan,
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
-    return _ActivityTimelineWidget(
-      loan: loan,
-      scheduleAsync: scheduleAsync,
-      theme: theme,
+  Widget _buildBorrowerProfile(LoanModel loan, ThemeData theme) {
+    final hasPhoto = loan.customerPhotoUrl != null && loan.customerPhotoUrl!.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest
+            .withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Row(
+        children: [
+          if (hasPhoto)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(30),
+              child: Image.network(
+                loan.customerPhotoUrl!,
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: AppColors.primary),
+                    child: Center(
+                        child: Text(
+                            (loan.customerName?.isNotEmpty == true
+                                ? loan.customerName![0]
+                                : '?'),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900))),
+                  );
+                },
+              ),
+            )
+          else
+            Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle, color: AppColors.primary),
+              child: Center(
+                  child: Text(
+                      (loan.customerName?.isNotEmpty == true
+                          ? loan.customerName![0]
+                          : '?'),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900))),
+            ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(loan.customerName ?? 'Unknown',
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900)),
+                Text(loan.customerPhone ?? '',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5))),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.call_rounded),
+            style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.surface,
+                padding: const EdgeInsets.all(12)),
+            onPressed: () => _makeCall(loan.customerPhone ?? ''),
+          ),
+        ],
+      ),
     );
   }
 
@@ -5457,361 +5060,4 @@ class _StaffNotesWidgetState extends ConsumerState<_StaffNotesWidget> {
   }
 }
 
-class _ActivityTimelineWidget extends StatefulWidget {
-  final LoanModel loan;
-  final AsyncValue<List<EMIScheduleModel>> scheduleAsync;
-  final ThemeData theme;
 
-  const _ActivityTimelineWidget({
-    required this.loan,
-    required this.scheduleAsync,
-    required this.theme,
-  });
-
-  @override
-  State<_ActivityTimelineWidget> createState() =>
-      _ActivityTimelineWidgetState();
-}
-
-class _ActivityTimelineWidgetState extends State<_ActivityTimelineWidget> {
-  String _selectedFilter = 'all';
-  int _displayCount = 8;
-  static const int _loadMoreIncrement = 8;
-
-  List<_ActivityItem> _getAllActivities() {
-    final activities = <_ActivityItem>[];
-    final loan = widget.loan;
-    final schedule = widget.scheduleAsync.value;
-
-    // Loan creation
-    activities.add(_ActivityItem(
-      icon: Icons.add_circle_rounded,
-      color: AppColors.primary,
-      title: 'Loan Created',
-      subtitle: 'Loan ${loan.loanNumber} created',
-      date: loan.createdAt,
-      type: 'loan',
-    ));
-
-    // Disbursement
-    if (loan.disbursementDate != null) {
-      activities.add(_ActivityItem(
-        icon: Icons.currency_rupee_rounded,
-        color: AppColors.success,
-        title: 'Amount Disbursed',
-        subtitle: AppFormatters.formatCurrency(loan.amount),
-        date: loan.disbursementDate!,
-        type: 'payment',
-      ));
-    }
-
-    // Status changes
-    if (loan.status == LoanStatus.active) {
-      activities.add(_ActivityItem(
-        icon: Icons.check_circle_rounded,
-        color: AppColors.success,
-        title: 'Loan Activated',
-        subtitle: 'Status changed to Active',
-        date: loan.updatedAt,
-        type: 'status',
-      ));
-    } else if (loan.status == LoanStatus.defaultStatus) {
-      activities.add(_ActivityItem(
-        icon: Icons.warning_rounded,
-        color: AppColors.error,
-        title: 'Loan Defaulted',
-        subtitle: 'Status changed to Default',
-        date: loan.updatedAt,
-        type: 'status',
-      ));
-    } else if (loan.status == LoanStatus.restructured) {
-      activities.add(_ActivityItem(
-        icon: Icons.settings_suggest_rounded,
-        color: AppColors.accent,
-        title: 'Loan Restructured',
-        subtitle: 'Terms modified',
-        date: loan.updatedAt,
-        type: 'status',
-      ));
-    } else if (loan.status == LoanStatus.closed) {
-      activities.add(_ActivityItem(
-        icon: Icons.celebration_rounded,
-        color: Colors.amber,
-        title: 'Loan Closed',
-        subtitle: 'Fully repaid',
-        date: loan.updatedAt,
-        type: 'status',
-      ));
-    }
-
-    // EMI payments and overdue
-    if (schedule != null) {
-      // Deduplicate: if multiple records for same EMI number, keep latest paidOn
-      final seenEmis = <int, EMIScheduleModel>{};
-      for (final emi in schedule) {
-        if (emi.status == EMIStatus.paid && emi.paidOn != null) {
-          final existing = seenEmis[emi.emiNumber];
-          if (existing == null || emi.paidOn!.isAfter(existing.paidOn!)) {
-            seenEmis[emi.emiNumber] = emi;
-          }
-        }
-      }
-      for (final emi in seenEmis.values) {
-        activities.add(_ActivityItem(
-          icon: Icons.payment_rounded,
-          color: AppColors.info,
-          title: 'EMI #${emi.emiNumber} Paid',
-          subtitle:
-              '${AppFormatters.formatCurrency(emi.emiAmount)} via ${(emi.paymentMode?.name ?? 'unknown').replaceAll('_', ' ').split(' ').map((s) => s[0].toUpperCase() + s.substring(1)).join(' ')}',
-          date: emi.paidOn!,
-          type: 'payment',
-        ));
-      }
-
-      // Deduplicate overdue too
-      final seenOverdue = <int, EMIScheduleModel>{};
-      for (final emi in schedule) {
-        if (emi.isOverdue) {
-          seenOverdue.putIfAbsent(emi.emiNumber, () => emi);
-        }
-      }
-      for (final emi in seenOverdue.values) {
-        activities.add(_ActivityItem(
-          icon: Icons.warning_amber_rounded,
-          color: AppColors.error,
-          title: 'EMI #${emi.emiNumber} Overdue',
-          subtitle:
-              'Due: ${AppFormatters.formatDate(emi.dueDate)}',
-          date: emi.dueDate,
-          type: 'alert',
-        ));
-      }
-    }
-
-    // Notes added
-    if (loan.remarks != null && loan.remarks!.isNotEmpty) {
-      final noteCount = loan.remarks!.split(' | ').length;
-      activities.add(_ActivityItem(
-        icon: Icons.note_add_rounded,
-        color: AppColors.warning,
-        title: 'Notes Added',
-        subtitle: '$noteCount internal note${noteCount > 1 ? 's' : ''}',
-        date: loan.updatedAt,
-        type: 'note',
-      ));
-    }
-
-    // Sort by date (newest first)
-    activities.sort((a, b) => b.date.compareTo(a.date));
-    return activities;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = widget.theme;
-    final allActivities = _getAllActivities();
-    final filtered = _selectedFilter == 'all'
-        ? allActivities
-        : allActivities.where((a) => a.type == _selectedFilter).toList();
-    final displayed = filtered.take(_displayCount).toList();
-    final hasMore = _displayCount < filtered.length;
-
-    return Column(
-      children: [
-        // Filter chips
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildActivityFilterChip(
-                  'All (${allActivities.length})', 'all', theme),
-              const SizedBox(width: 8),
-              _buildActivityFilterChip('Payments', 'payment', theme,
-                  color: AppColors.info),
-              const SizedBox(width: 8),
-              _buildActivityFilterChip('Status', 'status', theme,
-                  color: AppColors.success),
-              const SizedBox(width: 8),
-              _buildActivityFilterChip('Alerts', 'alert', theme,
-                  color: AppColors.error),
-              const SizedBox(width: 8),
-              _buildActivityFilterChip('Notes', 'note', theme,
-                  color: AppColors.warning),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Activities list
-        if (displayed.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.timeline_rounded,
-                    size: 48,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
-                const SizedBox(height: 12),
-                Text('No activities found',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.4))),
-              ],
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              children: [
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayed.length,
-                  separatorBuilder: (_, __) => _buildTimelineConnector(theme),
-                  itemBuilder: (context, index) {
-                    final activity = displayed[index];
-                    return _buildTimelineItem(activity, theme);
-                  },
-                ),
-
-                // Load More button
-                if (hasMore) ...[
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () =>
-                        setState(() => _displayCount += _loadMoreIncrement),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                              'Load More (${filtered.length - _displayCount} remaining)',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w700)),
-                          const SizedBox(width: 4),
-                          Icon(Icons.expand_more_rounded,
-                              size: 18, color: theme.colorScheme.primary),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildActivityFilterChip(String label, String value, ThemeData theme,
-      {Color? color}) {
-    final isSelected = _selectedFilter == value;
-    final chipColor = color ?? theme.colorScheme.primary;
-    return GestureDetector(
-      onTap: () => setState(() {
-        _selectedFilter = value;
-        _displayCount = 8;
-      }),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? chipColor.withValues(alpha: 0.15)
-              : chipColor.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-              color: chipColor.withValues(alpha: isSelected ? 0.4 : 0.15)),
-        ),
-        child: Text(label,
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: isSelected
-                    ? chipColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-      ),
-    );
-  }
-
-  Widget _buildTimelineConnector(ThemeData theme) {
-    return Container(
-      width: 2,
-      height: 20,
-      color: theme.dividerColor,
-      margin: const EdgeInsets.only(left: 20),
-    );
-  }
-
-  Widget _buildTimelineItem(_ActivityItem activity, ThemeData theme) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: activity.color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(activity.icon, color: activity.color, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(activity.title,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w700)),
-              Text(activity.subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.6))),
-              const SizedBox(height: 2),
-              Text(
-                AppFormatters.formatDateTime(activity.date),
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    fontSize: 11),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActivityItem {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final DateTime date;
-  final String type;
-
-  _ActivityItem({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-    required this.date,
-    this.type = 'loan',
-  });
-}

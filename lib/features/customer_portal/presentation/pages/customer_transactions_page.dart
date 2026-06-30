@@ -297,6 +297,16 @@ class _CustomerTransactionsPageState
           ),
           prefixIcon: const Icon(Icons.search_rounded,
               color: Colors.white, size: 18),
+          suffixIcon: _searchCtrl.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close_rounded,
+                      color: Colors.white70, size: 18),
+                  onPressed: () {
+                    _searchCtrl.clear();
+                    setState(() => _query = '');
+                  },
+                )
+              : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
           isDense: true,

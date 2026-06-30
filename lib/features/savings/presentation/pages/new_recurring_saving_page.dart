@@ -8,8 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../members/data/models/member_model.dart';
-import '../../../members/presentation/providers/member_providers.dart';
+import '../../../members/presentation/widgets/member_searchable_picker.dart';
 import '../providers/new_recurring_saving_provider.dart';
 
 class NewRecurringSavingPage extends ConsumerStatefulWidget {
@@ -69,8 +68,6 @@ class _NewRecurringSavingPageState
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
-    final usersAsync = ref.watch(membersProvider);
-
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -108,7 +105,7 @@ class _NewRecurringSavingPageState
                         Expanded(
                             flex: 3,
                             child: _buildFormDetails(state, theme, isDark,
-                                primary, false, usersAsync)),
+                                primary, false)),
                         const SizedBox(width: 24),
                         Expanded(
                             flex: 2,
@@ -122,7 +119,7 @@ class _NewRecurringSavingPageState
                         _buildSummary(state, theme, isDark, primary),
                         const SizedBox(height: 20),
                         _buildFormDetails(state, theme, isDark, primary,
-                            isNarrow, usersAsync),
+                            isNarrow),
                       ],
                     );
                   }
@@ -309,8 +306,7 @@ class _NewRecurringSavingPageState
       ThemeData theme,
       bool isDark,
       Color primary,
-      bool isNarrow,
-      AsyncValue<List<MemberModel>> usersAsync) {
+      bool isNarrow) {
     return GlassCard(
       padding: EdgeInsets.all(isNarrow ? 18 : 24),
       child: Column(
@@ -323,27 +319,12 @@ class _NewRecurringSavingPageState
           // ── Member ──
           _buildLabel('MEMBER ACCOUNT', theme),
           const SizedBox(height: 10),
-          usersAsync.when(
-            data: (users) => _buildDropdown(
-              value: state.memberId,
-              hint:
-                  users.isEmpty ? 'No users found' : 'Select registered member',
-              items: users.map((u) => u.id).toList(),
-              itemLabels: users.map((u) => u.fullName).toList(),
-              onChanged: (val) => ref
-                  .read(newRecurringSavingProvider.notifier)
-                  .updateMember(val),
-              theme: theme,
-              isDark: isDark,
-            ),
-            loading: () => const LinearProgressIndicator(),
-            error: (_, __) => _buildDropdown(
-                value: null,
-                hint: 'Error loading users',
-                items: [],
-                onChanged: (_) {},
-                theme: theme,
-                isDark: isDark),
+          MemberSearchablePicker(
+            selectedId: state.memberId,
+            hint: 'Search and select member',
+            onChanged: (val) => ref
+                .read(newRecurringSavingProvider.notifier)
+                .updateMember(val),
           ),
 
           const SizedBox(height: 24),

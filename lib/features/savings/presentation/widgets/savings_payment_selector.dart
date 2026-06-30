@@ -43,12 +43,21 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
 
   // Quick Pay state
   int _installmentCount = 1;
+  late final TextEditingController _countController;
+  late final FocusNode _countFocusNode;
 
   @override
   void initState() {
     super.initState();
     _selectedIds = Set<String>.from(widget.initialSelectedDateKeys);
     _installmentEvents = _buildEventMap();
+    _countController = TextEditingController(text: '$_installmentCount');
+    _countFocusNode = FocusNode()
+      ..addListener(() {
+        if (!_countFocusNode.hasFocus && _countController.text.isEmpty) {
+          _countController.text = '$_installmentCount';
+        }
+      });
 
     // Auto-select first unpaid installment by default if nothing pre-selected
     if (_selectedIds.isEmpty) {
@@ -65,6 +74,8 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
 
   @override
   void dispose() {
+    _countController.dispose();
+    _countFocusNode.dispose();
     super.dispose();
   }
 
@@ -165,7 +176,8 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
       _selectedIds
         ..clear()
         ..addAll(selected.map((e) => _dateKey(e.dueDate)));
-      _installmentCount = count;
+      _installmentCount = take;
+      _countController.text = '$take';
     });
     widget.onSelectionChanged?.call(selectedInstallments);
   }
@@ -377,43 +389,51 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
                         : null,
                   ),
                   const SizedBox(width: 24),
-                  // Animated number with glow ring
+                  // Editable number with glow ring
                   SizedBox(
-                    width: 100,
+                    width: 120,
                     height: 100,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Glow ring
+                        // Distinct circle behind the number
                         if (_installmentCount > 0)
                           Container(
                             width: 90,
                             height: 90,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
+                              color: _cardColor(),
                               border: Border.all(
-                                color: _primaryColor().withValues(alpha: 0.15),
-                                width: 2,
+                                color: _primaryColor().withValues(alpha: 0.25),
+                                width: 2.5,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _primaryColor().withValues(alpha: 0.08),
+                                  color: _primaryColor().withValues(alpha: 0.18),
                                   blurRadius: 20,
-                                  spreadRadius: -4,
+                                  spreadRadius: -2,
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                           ),
-                        // Number
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          transitionBuilder: (child, anim) => ScaleTransition(
-                            scale: anim,
-                            child: child,
-                          ),
-                          child: Text(
-                            '$_installmentCount',
-                            key: ValueKey(_installmentCount),
+                        // Editable number field
+                        SizedBox(
+                          width: 100,
+                          height: 60,
+                          child: TextField(
+                            controller: _countController,
+                            focusNode: _countFocusNode,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             style: TextStyle(
                               fontSize: 44,
                               fontWeight: FontWeight.w900,
@@ -421,6 +441,29 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
                               color: _primaryColor(),
                               height: 1,
                             ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            onChanged: (value) {
+                              if (value.isEmpty) return;
+                              final count = int.tryParse(value);
+                              if (count != null && count > 0) {
+                                _applyQuickPay(count);
+                              }
+                            },
+                            onTap: () {
+                              _countController.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: _countController.text.length,
+                              );
+                            },
+                            onSubmitted: (value) {
+                              final count = int.tryParse(value) ?? _installmentCount;
+                              _applyQuickPay(count);
+                              _countFocusNode.unfocus();
+                            },
                           ),
                         ),
                       ],
@@ -1271,6 +1314,7 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
                                       ..addAll(newIds);
                                     // Sync installment count to match
                                     _installmentCount = newIds.length;
+                                    _countController.text = '${newIds.length}';
                                   });
                                   widget.onSelectionChanged
                                       ?.call(selectedInstallments);

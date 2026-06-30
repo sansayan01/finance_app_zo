@@ -28,8 +28,7 @@ class SavingsPage extends ConsumerStatefulWidget {
   ConsumerState<SavingsPage> createState() => _SavingsPageState();
 }
 
-class _SavingsPageState extends ConsumerState<SavingsPage>
-    with SingleTickerProviderStateMixin {
+class _SavingsPageState extends ConsumerState<SavingsPage> {
   int _activeFilter = 0; // 0: All, 1: Active, 2: Matured
   String _searchQuery = '';
 
@@ -414,6 +413,17 @@ class _SavingsPageState extends ConsumerState<SavingsPage>
                                 isDense: true,
                                 contentPadding:
                                     const EdgeInsets.symmetric(vertical: 8),
+                                suffixIcon: _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.close_rounded,
+                                            size: 16,
+                                            color: theme.colorScheme.onSurface
+                                                .withOpacity(0.4)),
+                                        onPressed: () {
+                                          setState(() => _searchQuery = '');
+                                        },
+                                      )
+                                    : null,
                               ),
                             ),
                           ),

@@ -42,12 +42,21 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
 
   // Quick Pay state
   int _installmentCount = 1;
+  late final TextEditingController _countController;
+  late final FocusNode _countFocusNode;
 
   @override
   void initState() {
     super.initState();
     _selectedIds = Set<String>.from(widget.initialSelectedIds);
     _emiEvents = _buildEventMap();
+    _countController = TextEditingController(text: '$_installmentCount');
+    _countFocusNode = FocusNode()
+      ..addListener(() {
+        if (!_countFocusNode.hasFocus && _countController.text.isEmpty) {
+          _countController.text = '$_installmentCount';
+        }
+      });
 
     // Auto-select first unpaid EMI by default if nothing pre-selected
     if (_selectedIds.isEmpty) {
@@ -64,6 +73,8 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
 
   @override
   void dispose() {
+    _countController.dispose();
+    _countFocusNode.dispose();
     super.dispose();
   }
 
@@ -137,7 +148,8 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
       _selectedIds
         ..clear()
         ..addAll(selected.map((e) => e.id));
-      _installmentCount = count;
+      _installmentCount = take;
+      _countController.text = '$take';
     });
     widget.onSelectionChanged?.call(selectedEmis);
   }
@@ -293,49 +305,6 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Overdue/today summary
-          if (overdueCount > 0 || dueTodayCount > 0) ...[
-            Row(
-              children: [
-                if (overdueCount > 0) ...[
-                  Icon(Icons.warning_amber_rounded,
-                      size: 14, color: _errorColor()),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$overdueCount overdue',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _errorColor(),
-                    ),
-                  ),
-                ],
-                if (overdueCount > 0 && dueTodayCount > 0)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Container(
-                        width: 1,
-                        height: 12,
-                        color: _borderColor()),
-                  ),
-                if (dueTodayCount > 0) ...[
-                  const Icon(Icons.schedule_rounded,
-                      size: 14, color: AppColors.orange),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$dueTodayCount due today',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.orange,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 14),
-          ],
-
           // Installment counter
           Center(
             child: Container(
@@ -363,43 +332,51 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
                         : null,
                   ),
                   const SizedBox(width: 24),
-                  // Animated number with glow ring
+                  // Editable number with glow ring
                   SizedBox(
-                    width: 100,
+                    width: 120,
                     height: 100,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Glow ring
+                        // Distinct circle behind the number
                         if (_installmentCount > 0)
                           Container(
                             width: 90,
                             height: 90,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
+                              color: _cardColor(),
                               border: Border.all(
-                                color: _primaryColor().withValues(alpha: 0.15),
-                                width: 2,
+                                color: _primaryColor().withValues(alpha: 0.25),
+                                width: 2.5,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _primaryColor().withValues(alpha: 0.08),
+                                  color: _primaryColor().withValues(alpha: 0.18),
                                   blurRadius: 20,
-                                  spreadRadius: -4,
+                                  spreadRadius: -2,
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                           ),
-                        // Number
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          transitionBuilder: (child, anim) => ScaleTransition(
-                            scale: anim,
-                            child: child,
-                          ),
-                          child: Text(
-                            '$_installmentCount',
-                            key: ValueKey(_installmentCount),
+                        // Editable number field
+                        SizedBox(
+                          width: 100,
+                          height: 60,
+                          child: TextField(
+                            controller: _countController,
+                            focusNode: _countFocusNode,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             style: TextStyle(
                               fontSize: 44,
                               fontWeight: FontWeight.w900,
@@ -407,6 +384,29 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
                               color: _primaryColor(),
                               height: 1,
                             ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            onChanged: (value) {
+                              if (value.isEmpty) return;
+                              final count = int.tryParse(value);
+                              if (count != null && count > 0) {
+                                _applyQuickPay(count);
+                              }
+                            },
+                            onTap: () {
+                              _countController.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: _countController.text.length,
+                              );
+                            },
+                            onSubmitted: (value) {
+                              final count = int.tryParse(value) ?? _installmentCount;
+                              _applyQuickPay(count);
+                              _countFocusNode.unfocus();
+                            },
                           ),
                         ),
                       ],
@@ -1331,6 +1331,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
                                 ..addAll(newIds);
                               // Sync installment count to match
                               _installmentCount = newIds.length;
+                              _countController.text = '${newIds.length}';
                             });
                             widget.onSelectionChanged
                                 ?.call(selectedEmis);

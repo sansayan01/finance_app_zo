@@ -268,6 +268,18 @@ class _TransactionFilterPanelState extends State<TransactionFilterPanel>
               textInputAction: TextInputAction.search,
             ),
           ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.close_rounded,
+                  size: 16,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight),
+              onPressed: () {
+                _searchController.clear();
+                _onSearchChanged('');
+              },
+            ),
           if (_filter.hasActiveFilters) ...[
             const SizedBox(width: 8),
             _buildFilterBadge(isDark),

@@ -73,6 +73,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                             border: InputBorder.none,
                             icon: const Icon(Icons.search_rounded,
                                 color: AppColors.primary),
+                            suffixIcon: _controller.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.close_rounded,
+                                        size: 18, color: AppColors.textTertiaryLight),
+                                    onPressed: () {
+                                      _controller.clear();
+                                      setState(() {});
+                                    },
+                                  )
+                                : null,
                           ),
                         ),
                       ),

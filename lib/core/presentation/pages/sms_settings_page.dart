@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../constants/app_colors.dart';
+import '../../providers/org_provider.dart';
 import '../../providers/sms_config_provider.dart';
 import '../../providers/sms_outbox_provider.dart';
 import '../../providers/sms_provider.dart';
@@ -325,6 +327,30 @@ class _SmsSettingsPageState extends ConsumerState<SmsSettingsPage> {
     if (phone == null || phone.isEmpty) return;
     final result = await svc.sendTestSms(phone: phone, message: 'MicroFlow test message.');
     if (!mounted) return;
+
+    // Log to sms_notifications so the test SMS appears in SMS history
+    final isSuccess = result.startsWith('Sent');
+    try {
+      final supabaseClient = ref.read(supabaseClientProvider);
+      final orgId = ref.read(currentOrgIdProvider);
+      if (orgId != null) {
+        await supabaseClient.from('sms_notifications').insert({
+          'org_id': orgId,
+          'member_phone': phone,
+          'recipient_phone': phone,
+          'recipient_name': 'Test',
+          'collector_name': 'Test',
+          'message': 'MicroFlow test message.',
+          'status': isSuccess ? 'sent' : 'failed',
+          if (!isSuccess) 'error_message': result,
+          'platform': 'android',
+          'sent_by': 'test',
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to log test SMS to sms_notifications: $e');
+    }
+
     setState(() => _testResult = 'Last test: $result');
   }
 

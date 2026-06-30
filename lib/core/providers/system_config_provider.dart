@@ -162,7 +162,7 @@ UpdateCheckResult _checkUpdateWithGitHub(
   }
 
   // Force update if below minimum version
-  if (_isVersionLower(currentAppVersion, targetMinVersion)) {
+  if (isVersionLower(currentAppVersion, targetMinVersion)) {
     return UpdateCheckResult(
       status: UpdateStatus.forceUpdate,
       updateUrl: downloadUrl,
@@ -172,7 +172,7 @@ UpdateCheckResult _checkUpdateWithGitHub(
   }
 
   // Soft update if newer version available
-  if (_isVersionLower(currentAppVersion, targetVersion)) {
+  if (isVersionLower(currentAppVersion, targetVersion)) {
     return UpdateCheckResult(
       status: UpdateStatus.softUpdate,
       updateUrl: downloadUrl,
@@ -218,7 +218,7 @@ UpdateCheckResult _checkUpdate(SystemConfig config) {
     return const UpdateCheckResult(status: UpdateStatus.noUpdate);
   }
 
-  if (_isVersionLower(currentAppVersion, targetMinVersion)) {
+  if (isVersionLower(currentAppVersion, targetMinVersion)) {
     return UpdateCheckResult(
       status: UpdateStatus.forceUpdate,
       updateUrl: updateUrl,
@@ -226,7 +226,7 @@ UpdateCheckResult _checkUpdate(SystemConfig config) {
     );
   }
 
-  if (_isVersionLower(currentAppVersion, targetCurrentVersion)) {
+  if (isVersionLower(currentAppVersion, targetCurrentVersion)) {
     return UpdateCheckResult(
       status: UpdateStatus.softUpdate,
       updateUrl: updateUrl,
@@ -252,7 +252,10 @@ Future<void> initAppVersion() async {
   debugPrint('📱 App version: $_cachedAppVersion');
 }
 
-bool _isVersionLower(String current, String target) {
+/// Compares two semantic version strings (e.g. "1.0.11" vs "1.0.9").
+/// Returns true if [current] is lower than [target].
+/// Returns false on parse errors or equal/higher versions.
+bool isVersionLower(String current, String target) {
   try {
     final currentParts = current.split('.').map(int.parse).toList();
     final targetParts = target.split('.').map(int.parse).toList();

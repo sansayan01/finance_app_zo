@@ -7,8 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../members/data/models/member_model.dart';
-import '../../../members/presentation/providers/member_providers.dart';
+import '../../../members/presentation/widgets/member_searchable_picker.dart';
 import '../../../../core/constants/enums.dart' show TenureUnit;
 import '../providers/new_loan_provider.dart';
 
@@ -65,8 +64,6 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
-    final usersAsync = ref.watch(membersProvider);
-
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -104,7 +101,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
                         Expanded(
                             flex: 3,
                             child: _buildFacilityDetails(state, theme, isDark,
-                                primary, false, usersAsync)),
+                                primary, false)),
                         const SizedBox(width: 24),
                         Expanded(
                             flex: 2,
@@ -118,7 +115,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
                         _buildFinancialSummary(state, theme, isDark, primary),
                         const SizedBox(height: 20),
                         _buildFacilityDetails(state, theme, isDark, primary,
-                            isNarrow, usersAsync),
+                            isNarrow),
                       ],
                     );
                   }
@@ -280,7 +277,7 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
   //  FACILITY DETAILS FORM
   // ═══════════════════════════════════════════════════
   Widget _buildFacilityDetails(NewLoanState state, ThemeData theme, bool isDark,
-      Color primary, bool isNarrow, AsyncValue<List<MemberModel>> usersAsync) {
+      Color primary, bool isNarrow) {
     return GlassCard(
       padding: EdgeInsets.all(isNarrow ? 18 : 24),
       child: Column(
@@ -433,27 +430,11 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
           // ── Borrower ──
           _buildLabel('BORROWER ACCOUNT', theme),
           const SizedBox(height: 10),
-          usersAsync.when(
-            data: (users) => _buildDropdown(
-              value: state.borrowerId,
-              hint: users.isEmpty
-                  ? 'No users found'
-                  : 'Select registered customer',
-              items: users.map((u) => u.id).toList(),
-              itemLabels: users.map((u) => u.fullName).toList(),
-              onChanged: (val) =>
-                  ref.read(newLoanProvider.notifier).updateBorrower(val),
-              theme: theme,
-              isDark: isDark,
-            ),
-            loading: () => const LinearProgressIndicator(),
-            error: (_, __) => _buildDropdown(
-                value: null,
-                hint: 'Error loading users',
-                items: [],
-                onChanged: (_) {},
-                theme: theme,
-                isDark: isDark),
+          MemberSearchablePicker(
+            selectedId: state.borrowerId,
+            hint: 'Search and select customer',
+            onChanged: (val) =>
+                ref.read(newLoanProvider.notifier).updateBorrower(val),
           ),
 
           const SizedBox(height: 28),

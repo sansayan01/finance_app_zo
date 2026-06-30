@@ -547,7 +547,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: _clearSearch,
               )
-            : const SizedBox(width: 16),
+            : null,
         centerTitle: false,
         title: _showSearch
             ? TextField(
@@ -562,6 +562,17 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                     fontWeight: FontWeight.w400,
                     fontSize: 16,
                   ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.close_rounded,
+                              size: 18,
+                              color: isDark ? Colors.white54 : Colors.black45),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
+                        )
+                      : null,
                 ),
                 style: TextStyle(
                   color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -745,36 +756,6 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                     isDark: isDark,
                   ),
                 ),
-
-              // Section Title + Tab Bar
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Payments',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.6,
-                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                          )),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${pending.length + overdue.length + collected.length} total',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
               // ── Tab Bar ──
               SliverToBoxAdapter(
@@ -1237,12 +1218,12 @@ class _HeroHeader extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: isDark
                     ? const [
-                        Color(0xFF1E1B4B),
-                        Color(0xFF312E81),
+                        Color(0xFF050B18),
+                        Color(0xFF0F172A),
                       ]
                     : const [
-                        Color(0xFF312E81),
-                        Color(0xFF4338CA),
+                        Color(0xFF0F172A),
+                        Color(0xFF1E3A5F),
                       ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -1255,7 +1236,7 @@ class _HeroHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Row: Total Due + Progress text & Linear progress
+                // Progress row: label + % done
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1295,48 +1276,42 @@ class _HeroHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                // Main Row: Amount + Mini Bento Metrics
+                const SizedBox(height: 12),
+                // Large Amount
+                Text(
+                  currencyFormat.format(summary.totalDue),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.5,
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Stats Row below amount
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Amount
-                    Text(
-                      currencyFormat.format(summary.totalDue),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1.0,
-                      ),
-                    ),
-                    // Bento Stats Row
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _MiniStatBadge(
-                          label: 'Done',
-                          count: summary.countCollected,
-                          amountString: _formatAmount(summary.totalCollected),
-                          color: const Color(0xFF34D399),
-                        ),
-                        const SizedBox(width: 10),
-                        _MiniStatBadge(
-                          label: 'Pending',
-                          count: summary.countPending,
-                          amountString: _formatAmount(summary.totalPending),
-                          color: const Color(0xFFFBBF24),
-                        ),
-                        const SizedBox(width: 10),
-                        _MiniStatBadge(
-                          label: 'Overdue',
-                          count: summary.countOverdue,
-                          amountString: _formatAmount(summary.totalOverdue),
-                          color: const Color(0xFFF87171),
-                        ),
-                      ],
-                    ),
+                    Expanded(child: _MiniStatBadge(
+                      label: 'Done',
+                      count: summary.countCollected,
+                      amountString: _formatAmount(summary.totalCollected),
+                      color: const Color(0xFF34D399),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: _MiniStatBadge(
+                      label: 'Pending',
+                      count: summary.countPending,
+                      amountString: _formatAmount(summary.totalPending),
+                      color: const Color(0xFFFBBF24),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: _MiniStatBadge(
+                      label: 'Overdue',
+                      count: summary.countOverdue,
+                      amountString: _formatAmount(summary.totalOverdue),
+                      color: const Color(0xFFF87171),
+                    )),
                   ],
                 ),
               ],

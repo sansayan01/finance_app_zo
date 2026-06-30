@@ -251,6 +251,19 @@ class _CustomerTransactionSearchState
               textInputAction: TextInputAction.search,
             ),
           ),
+          // Clear button
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.close_rounded,
+                  size: 16,
+                  color: isDark
+                      ? AppColors.textTertiaryDark
+                      : AppColors.textTertiaryLight),
+              onPressed: () {
+                _searchController.clear();
+                _onSearchChanged('');
+              },
+            ),
           // Filter count badge (when active)
           if (_filter.hasActiveFilters) ...[
             const SizedBox(width: 8),

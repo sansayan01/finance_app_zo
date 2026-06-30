@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/powered_by_badge.dart';
@@ -124,21 +125,12 @@ class SettingsPageV2 extends ConsumerWidget {
                     _buildSectionHeader(theme, 'SYSTEM CONNECTIVITY'),
                     _buildMenuCard(
                       theme: theme,
-                      icon: Icons.sms_rounded,
-                      title: 'SMS & Notifications',
-                      subtitle: 'Configure auto-reminders, collection receipts, and preferences',
-                      color: Colors.green,
-                      onTap: () => context.push('/settings/sms'),
-                    ).animate().fadeIn(delay: 170.ms).slideY(begin: 0.05, end: 0),
-                    const SizedBox(height: 12),
-                    _buildMenuCard(
-                      theme: theme,
                       icon: Icons.integration_instructions_outlined,
                       title: 'Integrations & Third-Party APIs',
-                      subtitle: 'Configure NVIDIA NIM, Twilio SMS alerts, WhatsApp, and SMTP',
+                      subtitle: 'Configure SMS alerts, UPI payments, WhatsApp, and SMTP',
                       color: Colors.teal,
                       onTap: () => context.push('/settings/integrations'),
-                    ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.05, end: 0),
+                    ).animate().fadeIn(delay: 170.ms).slideY(begin: 0.05, end: 0),
                     const SizedBox(height: 28),
                   ],
 
@@ -198,12 +190,18 @@ class SettingsPageV2 extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          'v1.0.8-production • Sealed SSL Layer',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
-                          ),
+                        FutureBuilder<PackageInfo>(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snap) {
+                            final ver = snap.data?.version ?? '—';
+                            return Text(
+                              'v$ver',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 12),
                         const PoweredByBadge(compact: true),

@@ -417,6 +417,18 @@ class _LoansPageState extends ConsumerState<LoansPage>
           prefixIcon: Icon(Icons.search_rounded,
               color: theme.colorScheme.primary.withValues(alpha: 0.7),
               size: 18),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.close_rounded,
+                      size: 16,
+                      color: theme.textTheme.bodySmall?.color
+                          ?.withValues(alpha: 0.6)),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

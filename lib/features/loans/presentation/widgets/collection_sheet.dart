@@ -3,11 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart' show AppFormatters;
 import '../../../../providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../payments/data/services/upi_service.dart';
+import '../../../payments/data/providers/upi_providers.dart';
+import '../../../../core/services/app_icon_service.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show dashboardLoansProvider, dashboardTransactionsProvider, activeLoansProvider, loanSummaryProvider;
 import '../../../../core/providers/branding_provider.dart';
@@ -22,6 +27,8 @@ import '../../data/models/loan_model.dart';
 import '../../data/repositories/emi_repository.dart';
 import '../../../savings/data/repositories/savings_repository.dart';
 import '../providers/loan_providers.dart';
+import '../../../payments/data/providers/payment_providers.dart';
+import '../../../branch_manager/data/providers/branch_payment_providers.dart';
 import 'emi_payment_selector.dart';
 import '../../../savings/presentation/widgets/savings_payment_selector.dart';
 import '../../../../core/widgets/premium_calendar_sheet.dart';
@@ -72,6 +79,27 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   bool _isSubmitting = false;
   bool _isBackdated = false;
   DateTime? _customCollectionDate;
+
+  // UPI QR state
+  bool _showUpiQr = false;
+  String? _upiVpa;
+  String? _upiMerchantName;
+  bool _isProcessingUpi = false;
+  bool _upiLoadError = false;
+
+  /// Dynamically builds the UPI URI with the current total amount.
+  String? get _currentUpiUri {
+    if (_upiVpa == null) return null;
+    final note = widget.mode == CollectionMode.savings
+        ? 'Savings ${widget.savingsPlan?.planName ?? ""}'
+        : 'Loan ${widget.loan?.loanNumber ?? ""} EMI';
+    return UpiService.buildUpiUri(
+      vpa: _upiVpa!,
+      amount: _totalAmount,
+      merchantName: _upiMerchantName ?? '',
+      transactionNote: note,
+    );
+  }
 
   List<EMIScheduleModel> _allEMIs = [];
   /// IDs of EMIs the user has selected for payment.
@@ -144,6 +172,68 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   String _dateKey(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
+  Future<void> _loadUpiConfig() async {
+    try {
+      final upiService = ref.read(upiServiceProvider);
+      final vpaData = await upiService.getOrgVpa();
+      if (vpaData == null || !mounted) {
+        if (mounted) setState(() => _upiLoadError = true);
+        return;
+      }
+      final vpa = vpaData['upi_vpa'] as String?;
+      final merchant = vpaData['merchant_name'] as String? ?? '';
+      if (vpa == null || vpa.isEmpty) {
+        if (mounted) setState(() => _upiLoadError = true);
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _upiVpa = vpa;
+          _upiMerchantName = merchant;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _upiLoadError = true);
+    }
+  }
+
+  Future<void> _openUpiApp() async {
+    final uri = _currentUpiUri;
+    if (uri == null) return;
+    final launched = await launchUrl(Uri.parse(uri), mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No UPI app found. Scan the QR code directly.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmUpiAndSubmit() async {
+    if (_isProcessingUpi) return;
+    setState(() => _isProcessingUpi = true);
+    HapticFeedback.mediumImpact();
+
+    try {
+      // _submit() handles the collection, snackbar, and Navigator.pop
+      await _submit();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('UPI collection failed: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingUpi = false);
+    }
+  }
+
   /// The currently selected unpaid EMIs (looked up from the full schedule).
   List<EMIScheduleModel> get _selectedEMIs =>
       _allEMIs.where((e) => _selectedEmiIds.contains(e.id)).toList();
@@ -208,7 +298,15 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
   }) {
     final isSelected = _selectedMode == mode;
     return GestureDetector(
-      onTap: () => setState(() => _selectedMode = mode),
+      onTap: () {
+        setState(() => _selectedMode = mode);
+        if (mode == 'upi') {
+          setState(() => _showUpiQr = true);
+          if (_upiVpa == null && !_upiLoadError) _loadUpiConfig();
+        } else {
+          setState(() => _showUpiQr = false);
+        }
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
@@ -255,6 +353,369 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
                     : _textSecondary,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── UPI QR Section (premium inline) ───
+  Widget _buildUpiQrSection(NumberFormat currencyFormat) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: _isDark
+              ? const [Color(0xFF0A0F1E), Color(0xFF111827)]
+              : const [Color(0xFF0F172A), Color(0xFF1E3A5F)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Top bar ──
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white70, size: 16),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Scan & Pay',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Ask the customer to scan this QR',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: AppColors.successGradient),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.success.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    currencyFormat.format(_totalAmount),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── QR Code ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: _upiLoadError
+                ? _buildQrErrorState()
+                : _currentUpiUri != null
+                    ? _buildPremiumQrFrame()
+                    : _buildQrLoadingState(),
+          ),
+
+          // ── VPA ──
+          if (_upiVpa != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.account_balance_wallet_rounded, size: 13, color: Colors.white.withValues(alpha: 0.4)),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        _upiVpa!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.2,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // ── Action buttons ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _showUpiQr = false),
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: Center(
+                        child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white.withValues(alpha: 0.5))),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                if (_currentUpiUri != null)
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _openUpiApp,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.open_in_new_rounded, size: 14, color: AppColors.primary),
+                              const SizedBox(width: 5),
+                              Text('Open UPI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_currentUpiUri != null) const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: GestureDetector(
+                    onTap: _isProcessingUpi || !_hasSelection ? null : _confirmUpiAndSubmit,
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: _isProcessingUpi || !_hasSelection
+                            ? [Colors.grey.shade600, Colors.grey.shade700]
+                            : [AppColors.success, AppColors.mint]),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: _isProcessingUpi || !_hasSelection
+                            ? []
+                            : [BoxShadow(color: AppColors.success.withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4))],
+                      ),
+                      child: Center(
+                        child: _isProcessingUpi
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, size: 16, color: Colors.white),
+                                  SizedBox(width: 6),
+                                  Text('Payment Successful', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white)),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumQrFrame() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            QrImageView(
+              data: _currentUpiUri!,
+              version: QrVersions.auto,
+              size: 200,
+              gapless: true,
+              backgroundColor: Colors.white,
+              dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF0B1D3A)),
+              eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF0E8A7D)),
+            ),
+            _buildCenterBadge(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCenterBadge() {
+    return FutureBuilder<String>(
+      future: _getIconPreset(),
+      builder: (context, snapshot) {
+        final presetId = snapshot.data ?? 'default';
+        final preset = IconPresets.getById(presetId);
+        return Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 3)),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(
+            preset.assetPreview,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildFallbackBadge(),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<String> _getIconPreset() async {
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final user = ref.read(currentUserProvider);
+      if (user?.orgId == null) return 'default';
+      final data = await client
+          .from('organizations')
+          .select('icon_preset')
+          .eq('id', user!.orgId!)
+          .maybeSingle();
+      return data?['icon_preset'] as String? ?? 'default';
+    } catch (_) {
+      return 'default';
+    }
+  }
+
+  Widget _buildFallbackBadge() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: AppColors.successGradient),
+      ),
+      child: Center(
+        child: Text(
+          'UPI',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQrErrorState() {
+    return Center(
+      child: Container(
+        width: 200,
+        height: 200,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded, color: AppColors.error, size: 32),
+            const SizedBox(height: 8),
+            Text('UPI not configured', style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () {
+                setState(() { _upiLoadError = false; _upiVpa = null; _upiMerchantName = null; });
+                _loadUpiConfig();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                child: Text('Retry', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQrLoadingState() {
+    return Center(
+      child: SizedBox(
+        width: 200,
+        height: 200,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            const SizedBox(height: 12),
+            Text('Loading QR...', style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12, fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -504,6 +965,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     ref.invalidate(dashboardTransactionsProvider);
     ref.invalidate(activeLoansProvider);
     ref.invalidate(loanSummaryProvider);
+    ref.invalidate(todayPaymentsProvider);
+    ref.invalidate(branchTodayPaymentsProvider);
   }
 
   // ─── Savings Collection ───
@@ -561,43 +1024,15 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       });
     }
 
-    // 3. Update plan balance and advance next_due_date
-    // Use the LATEST selected date as the reference point (not DateTime.now())
-    // This ensures backdated payments advance next_due_date correctly.
-    final lastSelectedDate = _selectedSavingsDates
-        .map((key) => DateTime.parse(key))
-        .reduce((a, b) => a.isAfter(b) ? a : b);
+    // 3. Plan balance, installments_paid, last_payment_date, and
+    //    next_due_date are now auto-updated by the PostgreSQL trigger
+    //    trg_update_savings_plan_on_collection (server-side).
+    //    Each INSERT into savings_collections fires the trigger,
+    //    so multi-date selections correctly increment installments_paid
+    //    and advance next_due_date per row.
 
-    // Advance exactly one period from the last paid date.
-    // installmentCount is irrelevant here — lastSelectedDate already
-    // represents the furthest date being paid.
-    DateTime nextDue;
-    switch (plan.collectionType) {
-      case 'weekly':
-        nextDue = lastSelectedDate.add(const Duration(days: 7));
-        break;
-      case 'monthly':
-        int targetMonth = lastSelectedDate.month + 1;
-        int targetYear = lastSelectedDate.year + ((targetMonth - 1) ~/ 12);
-        targetMonth = ((targetMonth - 1) % 12) + 1;
-        int targetDay = lastSelectedDate.day;
-        int daysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
-        if (targetDay > daysInMonth) targetDay = daysInMonth;
-        nextDue = DateTime(targetYear, targetMonth, targetDay);
-        break;
-      default:
-        nextDue = lastSelectedDate.add(const Duration(days: 1));
-    }
-
-    final selectedCount = _selectedSavingsDates.length;
-
-    await client.from('savings_plans').update({
-      'next_due_date': nextDue.toIso8601String().split('T').first,
-      'current_amount': plan.currentAmount + amount,
-      'installments_paid': plan.installmentsPaid + selectedCount,
-      'last_payment_date': lastSelectedDate.toIso8601String().split('T').first,
-      'updated_at': now.toIso8601String(),
-    }).eq('id', plan.id);
+    // Compute new balance for SMS display
+    final newBalance = plan.currentAmount + amount;
 
     // 3b. Dispatch SMS
     try {
@@ -616,7 +1051,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
             memberName: plan.memberName,
             planName: plan.planName,
             amount: amount,
-            newBalance: plan.currentAmount + amount,
+            newBalance: newBalance,
             collectorName: profile.fullName,
             sentBy: profile.id,
             orgName: branding?.displayName,
@@ -678,6 +1113,8 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       ref.invalidate(savingsSummaryProvider);
       ref.invalidate(memberSavingsProvider(plan.memberId));
       ref.invalidate(dashboardTransactionsProvider);
+      ref.invalidate(todayPaymentsProvider);
+      ref.invalidate(branchTodayPaymentsProvider);
     } catch (_) {}
   }
 
@@ -890,7 +1327,14 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
               ),
               const SizedBox(height: 12),
 
+              // ─── UPI QR Section (inline) ───
+              if (_showUpiQr) ...[
+                _buildUpiQrSection(currencyFormat),
+                const SizedBox(height: 12),
+              ],
+
               // ─── 6. Action Buttons -- Premium Style ───
+              if (!_showUpiQr)
               Row(
                 children: [
                   // Cancel -- frosted glass

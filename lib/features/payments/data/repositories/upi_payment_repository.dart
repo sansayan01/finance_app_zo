@@ -454,74 +454,10 @@ class UpiPaymentRepository {
           'sync_status': 'synced',
         });
 
-        // 5f. Update savings plan: balance, installments_paid,
-        //     next_due_date and last_payment_date.
-        try {
-          final planData = await _client
-              .from('savings_plans')
-              .select('current_amount, installments_paid, next_due_date, collection_type')
-              .eq('id', req.savingsPlanId!)
-              .maybeSingle();
-
-          if (planData != null) {
-            final currentAmount =
-                (planData['current_amount'] as num?)?.toDouble() ?? 0;
-            final installmentsPaid =
-                (planData['installments_paid'] as num?)?.toInt() ?? 0;
-            final collectionType =
-                (planData['collection_type'] as String?) ?? 'monthly';
-
-            // Use the installment date the customer selected, falling back
-            // to the payment creation date.
-            final referenceDate =
-                req.installmentDate ?? DateTime.parse(collectionDate);
-
-            // Advance next_due_date by one period from the reference date
-            // (mirrors CollectionSheet._submitSavings logic).
-            final currentNextDue = planData['next_due_date'] != null
-                ? DateTime.tryParse(planData['next_due_date'].toString())
-                : null;
-
-            DateTime nextDue;
-            switch (collectionType) {
-              case 'weekly':
-                nextDue = referenceDate.add(const Duration(days: 7));
-                break;
-              case 'monthly':
-                int targetMonth = referenceDate.month + 1;
-                int targetYear =
-                    referenceDate.year + ((targetMonth - 1) ~/ 12);
-                targetMonth = ((targetMonth - 1) % 12) + 1;
-                int targetDay = referenceDate.day;
-                int daysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
-                if (targetDay > daysInMonth) targetDay = daysInMonth;
-                nextDue = DateTime(targetYear, targetMonth, targetDay);
-                break;
-              default:
-                nextDue = referenceDate.add(const Duration(days: 1));
-            }
-
-            // Only advance if the new date is later than the existing one
-            final effectiveNextDue = (currentNextDue != null &&
-                    !nextDue.isAfter(currentNextDue))
-                ? currentNextDue
-                : nextDue;
-
-            final lastPaymentDate =
-                referenceDate.toIso8601String().split('T').first;
-
-            await _client.from('savings_plans').update({
-              'current_amount': currentAmount + req.amount,
-              'installments_paid': installmentsPaid + 1,
-              'next_due_date':
-                  effectiveNextDue.toIso8601String().split('T').first,
-              'last_payment_date': lastPaymentDate,
-              'updated_at': DateTime.now().toIso8601String(),
-            }).eq('id', req.savingsPlanId!);
-          }
-        } catch (_) {
-          // Plan update is best-effort; collection record is already saved.
-        }
+        // 5f. Plan balance, installments_paid, last_payment_date, and
+        //     next_due_date are now auto-updated by the PostgreSQL trigger
+        //     trg_update_savings_plan_on_collection (server-side).
+        //     No client-side update needed.
       }
     }
     return requests.length;

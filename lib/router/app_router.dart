@@ -41,6 +41,7 @@ import '../features/settings/presentation/pages/app_update_page.dart';
 import '../features/settings/presentation/pages/available_update_page.dart';
 import '../features/settings/presentation/pages/integrations_settings_page.dart';
 import '../features/settings/presentation/pages/security_compliance_page.dart';
+import '../features/settings/presentation/pages/data_backup_export_page.dart';
 import '../core/widgets/hud_navigation.dart';
 import '../core/constants/app_colors.dart';
 import '../features/loans/presentation/pages/loan_detail_page.dart';
@@ -581,6 +582,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'app-update',
                 builder: (context, state) => const AvailableUpdatePage(),
+              ),
+              GoRoute(
+                path: 'data-backup',
+                builder: (context, state) => const DataBackupExportPage(),
               ),
             ],
           ),

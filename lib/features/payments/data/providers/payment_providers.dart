@@ -659,7 +659,7 @@ final autoRefreshTimerProvider = Provider<Timer?>((ref) {
   final filter = ref.watch(paymentFilterProvider);
   if (!filter.autoRefresh || !filter.isToday) return null;
 
-  final timer = Timer.periodic(const Duration(minutes: 5), (_) {
+  final timer = Timer.periodic(const Duration(seconds: 30), (_) {
     ref.invalidate(todayPaymentsProvider);
   });
 

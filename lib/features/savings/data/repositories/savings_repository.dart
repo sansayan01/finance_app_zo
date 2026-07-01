@@ -244,18 +244,11 @@ class SavingsRepository {
     final saving = await getSavingPlanById(savingId);
     if (saving == null) return;
 
-    final newBalance = saving.currentAmount + amount;
+    final now = DateTime.now();
+    final today = now.toIso8601String().split('T').first;
 
-    // 1. Update savings plan balance
-    final updateResult = await _client.from('savings_plans').update({
-      'current_amount': newBalance,
-    }).eq('id', savingId).select();
-    if (updateResult.isEmpty) {
-      throw Exception('Failed to update savings plan balance - not found or access denied');
-    }
-
-    // 2. Record transaction
-    await _client.from('transactions').insert({
+    // 1. Record transaction
+    final txResult = await _client.from('transactions').insert({
       'member_id': saving.memberId,
       'member_name': saving.memberName,
       'savings_id': savingId,
@@ -264,6 +257,25 @@ class SavingsRepository {
       'org_id': _orgId,
       'description': 'Deposit into Savings Vault',
       'created_at': AppFormatters.nowIST(),
+    }).select('id').single();
+    final transactionId = txResult['id'] as String;
+
+    // 2. Insert savings collection record (triggers auto-update of
+    //    current_amount, installments_paid, last_payment_date,
+    //    and next_due_date via trg_update_savings_plan_on_collection).
+    await _client.from('savings_collections').insert({
+      'org_id': _orgId,
+      'savings_plan_id': savingId,
+      'member_id': saving.memberId,
+      'member_name': saving.memberName,
+      'amount_expected': amount,
+      'amount_collected': amount,
+      'is_partial': false,
+      'payment_mode': 'cash',
+      'collection_date': today,
+      'collected_at': now.toUtc().toIso8601String(),
+      'sync_status': 'synced',
+      'transaction_id': transactionId,
     });
   }
 

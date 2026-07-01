@@ -34,6 +34,8 @@ import '../../../home/data/providers/dashboard_providers.dart'
     show pendingDepositsProvider, recentTransactionsProvider,
         dashboardTransactionsProvider, todayStatsProvider;
 import '../../../payments/data/providers/payment_providers.dart';
+import '../../../customer_portal/data/providers/customer_savings_providers.dart'
+    show savingsCollectionDatesProvider, savingsCollectorNamesProvider;
 
 class SavingDetailPage extends ConsumerStatefulWidget {
   final String savingId;
@@ -74,6 +76,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   @override
   Widget build(BuildContext context) {
     final savingAsync = ref.watch(savingDetailProvider(widget.savingId));
+    final collectionDatesAsync = ref.watch(savingsCollectionDatesProvider(widget.savingId));
+    final collectorNamesAsync = ref.watch(savingsCollectorNamesProvider(widget.savingId));
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -178,7 +182,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                             const SizedBox(height: 40),
                             _buildSectionHeader('Deposit History', theme),
                             const SizedBox(height: 16),
-                            _buildTransactionList(theme),
+                            _buildTransactionList(theme, collectionDatesAsync.valueOrNull ?? {}, collectorNamesAsync.valueOrNull ?? {}),
                             const SizedBox(height: 100),
                           ],
                         ),
@@ -669,7 +673,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   void _shareVaultSummary(SavingsModel saving) {
     final progress =
         (saving.currentAmount / saving.targetAmount * 100).clamp(0, 100);
-    final daysLeft = saving.maturityDate.difference(DateTime.now()).inDays;
+    final todayMidnight = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  final daysLeft = saving.maturityDate.difference(todayMidnight).inDays;
     final buffer = StringBuffer()
       ..writeln('🏦 Savings Vault Summary')
       ..writeln('━━━━━━━━━━━━━━━━━━━━━')
@@ -1038,7 +1043,18 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         fullscreenDialog: true,
         builder: (context) => CollectionSheet.savings(savingsPlan: saving),
       ),
-    );
+    ).then((_) {
+      if (!mounted) return;
+      ref.invalidate(savingDetailProvider(saving.id));
+      ref.invalidate(savingsScheduleProvider(saving.id));
+      ref.invalidate(savingTransactionsProvider(saving.id));
+      ref.invalidate(savingsCollectionDatesProvider(saving.id));
+      ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+      ref
+          .read(savingTxPagerProvider(saving.id).notifier)
+          .refresh();
+    });
   }
 
   Widget _buildCurrentBalance(SavingsModel saving, ThemeData theme) {
@@ -1461,10 +1477,11 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     );
   }
 
-  Widget _buildIntelligenceCard(SavingsModel saving, ThemeData theme) {
-    double monthlyEquivalent = saving.monthlyDeposit;
-    final typeStr = saving.collectionType.toLowerCase();
-    if (typeStr == 'daily') {
+Widget _buildIntelligenceCard(SavingsModel saving, ThemeData theme) {
+  double monthlyEquivalent = saving.monthlyDeposit;
+  final typeStr = saving.collectionType.toLowerCase();
+  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  if (typeStr == 'daily') {
       monthlyEquivalent = saving.monthlyDeposit * 30;
     } else if (typeStr == 'weekly') {
       monthlyEquivalent = saving.monthlyDeposit * 4.33;
@@ -1514,7 +1531,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
               child: Divider(height: 1)),
           _buildInfoRow(
               'Days Remaining',
-              '${saving.maturityDate.difference(DateTime.now()).inDays} Days',
+              '${saving.maturityDate.difference(today).inDays} Days',
               theme,
               isBold: true),
         ],
@@ -1538,7 +1555,26 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     );
   }
 
-  String _savingsStatusLabel(bool isPaid, bool isOverdue) {
+  
+Widget _buildDetailRow(String label, String value, ThemeData theme,
+    {Color? valueColor}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+        Text(value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? theme.colorScheme.onSurface)),
+      ],
+    ),
+  );
+}
+String _savingsStatusLabel(bool isPaid, bool isOverdue) {
     if (isPaid) return 'PAID';
     if (isOverdue) return 'OVERDUE';
     return 'DUE';
@@ -1730,27 +1766,31 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     );
   }
 
-  Widget _buildTransactionList(ThemeData theme) {
+  Widget _buildTransactionList(ThemeData theme, Map<String, DateTime> collectionDates, Map<String, String> collectorNames) {
+    final isDark = theme.brightness == Brightness.dark;
     final pageState = ref.watch(savingTxPagerProvider(widget.savingId));
     final transactions = pageState.items;
 
     if (pageState.error != null && transactions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          child: Column(
-            children: [
-              Text('Error: ${pageState.error}', style: theme.textTheme.bodySmall),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () => ref
-                    .read(savingTxPagerProvider(widget.savingId).notifier)
-                    .refresh(),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          children: [
+            Text('Failed to load deposit history',
+                style: TextStyle(color: AppColors.error)),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => ref
+                  .read(savingTxPagerProvider(widget.savingId).notifier)
+                  .refresh(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
         ),
       );
     }
@@ -1765,156 +1805,394 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     }
 
     if (transactions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          child: Text(
-            'No transaction history available.',
-            style: theme.textTheme.bodySmall,
+      return Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest
+              .withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.receipt_long_rounded,
+                  size: 48,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+              const SizedBox(height: 12),
+              Text('No deposits yet',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.4))),
+            ],
           ),
         ),
       );
     }
 
-    return Column(
-      children: [
-        ...transactions.map((t) => _buildTransactionItem(t, theme)),
-        const SizedBox(height: 8),
-        if (pageState.hasMore)
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: pageState.isLoading
-                  ? null
-                  : () => ref
-                      .read(savingTxPagerProvider(widget.savingId).notifier)
-                      .loadMore(),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                side: BorderSide(color: theme.dividerColor),
-              ),
-              icon: pageState.isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.expand_more_rounded, size: 18),
-              label: Text(pageState.isLoading ? 'Loading…' : 'Load More'),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              '— End of history —',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest
+            .withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: [
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: transactions.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () => _showTransactionActionsSheet(transactions[index], theme),
+                child: _buildTransactionItem(transactions[index], theme, isDark, index, collectionDates, collectorNames),
+              );
+            },
           ),
-      ],
+          const SizedBox(height: 8),
+          if (pageState.hasMore)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: pageState.isLoading
+                    ? null
+                    : () => ref
+                        .read(savingTxPagerProvider(widget.savingId).notifier)
+                        .loadMore(),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  side: BorderSide(color: theme.dividerColor),
+                ),
+                icon: pageState.isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.expand_more_rounded, size: 18),
+                label: Text(pageState.isLoading ? 'Loading…' : 'Load More'),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                '— End of history —',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
   String _capitalize(String s) =>
       s.isNotEmpty ? s[0].toUpperCase() + s.substring(1) : s;
 
-  Widget _buildTransactionItem(TransactionModel tx, ThemeData theme) {
-    final isCredit = tx.type != TransactionType.savingsWithdrawal;
-    final title = tx.description ?? _capitalize(tx.type.name);
-    final date = AppFormatters.formatDate(tx.createdAt);
+Widget _buildTransactionItem(TransactionModel tx, ThemeData theme, bool isDark, int index, Map<String, DateTime> collectionDates, [Map<String, String>? collectorNames]) {
+  final isCredit = tx.type != TransactionType.savingsWithdrawal;
+  final color = isCredit ? AppColors.success : Colors.red;
+  final date = tx.createdAt;
+  final paymentMode = tx.paymentMode?.name ?? 'cash';
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => _showTransactionActionsSheet(tx),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: (isCredit ? AppColors.success : Colors.red)
-                    .withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(isCredit ? Icons.add_rounded : Icons.remove_rounded,
-                  color: isCredit ? AppColors.success : Colors.red, size: 18),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
-                  Text(date, style: theme.textTheme.bodySmall),
-                ],
-              ),
-            ),
-            Text(
-              '${isCredit ? '+' : '-'} ${AppFormatters.formatCurrency(tx.amount)}',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: isCredit ? AppColors.success : Colors.red,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Icon(Icons.chevron_right_rounded,
-                size: 18,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
-          ],
+  // Compute "deposited up to" date from linked savings collections
+  DateTime? depositedUpTo;
+  if (isCredit && collectionDates.isNotEmpty) {
+    depositedUpTo = collectionDates[tx.id];
+  }
+
+  // Get collector name from savings collections
+  final collectorName = collectorNames?[tx.id];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest
+            .withValues(alpha: isDark ? 0.25 : 0.35),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withValues(alpha: 0.12),
+          width: 1,
         ),
       ),
-    );
-  }
-
-  void _showTransactionActionsSheet(TransactionModel tx) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      showDragHandle: true,
-      builder: (sheetCtx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: isDark ? 0.18 : 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isCredit ? Icons.south_west_rounded : Icons.north_east_rounded,
+              size: 18,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Deposit via ${paymentMode[0].toUpperCase() + paymentMode.substring(1)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (depositedUpTo != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 2),
+                    child: Text(
+                      'Deposited up to ${DateFormat('MMM d, yyyy').format(depositedUpTo)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.success.withValues(alpha: 0.75),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 2),
+                Text(
+                  AppFormatters.formatDateTime(date),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.55),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              ListTile(
-                leading: const Icon(Icons.edit_rounded),
-                title: const Text('Edit Transaction'),
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _showEditTransactionDialog(tx);
-                },
+              Text(
+                '${isCredit ? '+' : '-'}${AppFormatters.formatCurrency(tx.amount)}',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  letterSpacing: -0.3,
+                ),
               ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline_rounded,
-                    color: Colors.red),
-                title: const Text('Delete Transaction',
-                    style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _confirmDeleteTransaction(tx);
-                },
-              ),
-              const SizedBox(height: 8),
+              if (collectorName != null && collectorName.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.person_outline_rounded,
+                        size: 11,
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          collectorName,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color
+                                ?.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
+        ],
+      ),
+    ).animate().fadeIn(
+          duration: Duration(milliseconds: 300 + (index * 30)),
+          delay: Duration(milliseconds: index * 40),
+          curve: Curves.easeOutCubic,
         );
-      },
-    );
   }
+
+void _showTransactionActionsSheet(TransactionModel tx, ThemeData theme) {
+  final isCredit = tx.type != TransactionType.savingsWithdrawal;
+  final amount = tx.amount;
+  final title = tx.description ?? _capitalize(tx.type.name);
+  final dateTime = AppFormatters.formatDateTime(tx.createdAt);
+  final paymentMode = tx.paymentMode?.name ?? 'cash';
+  final isDeposit = tx.type == TransactionType.savingsDeposit;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => Container(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (context, scrollController) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(24),
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: (isCredit ? AppColors.success : Colors.red)
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            isCredit ? Icons.savings_rounded : Icons.savings_rounded,
+                            color: isCredit ? AppColors.success : Colors.red,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isDeposit ? 'Deposit Received' : 'Withdrawal',
+                                style: theme.textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.5),
+                                    ),
+                              ),
+                              Text(
+                                AppFormatters.formatCurrency(amount),
+                                style: theme.textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      color: isCredit
+                                          ? AppColors.success
+                                          : Colors.red,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Details card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow('Transaction', title, theme),
+                          const SizedBox(height: 10),
+                          _buildDetailRow('Date & Time', dateTime, theme),
+                          const SizedBox(height: 10),
+                          _buildDetailRow(
+                            'Payment Mode',
+                            paymentMode[0].toUpperCase() +
+                                paymentMode.substring(1),
+                            theme,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _showEditTransactionDialog(tx);
+                            },
+                            icon: const Icon(Icons.edit_rounded, size: 18),
+                            label: const Text('Edit'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.3),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _confirmDeleteTransaction(tx);
+                            },
+                            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                            label: const Text('Delete'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              foregroundColor: AppColors.error,
+                              side: BorderSide(
+                                color: AppColors.error.withValues(alpha: 0.3),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    ),
+  );
+}
 
   void _showEditTransactionDialog(TransactionModel tx) {
     final amountController =

@@ -461,6 +461,7 @@ class EMIRepository {
               remarks,
               reference_number,
               transaction_id,
+              selected_schedule_id,
               collected_by_name,
               collected_by_role,
               created_at,
@@ -481,6 +482,7 @@ class EMIRepository {
               collection_time,
               remarks,
               reference_number,
+              selected_schedule_id,
               collected_by_name,
               collected_by_role,
               created_at,
@@ -516,6 +518,7 @@ class EMIRepository {
           'db_created_at': dbCreatedAt,
           'collection_date': dateVal,
           'collection_time': timeVal,
+          'selected_schedule_id': item['selected_schedule_id']?.toString(),
           'collected_by_name': staff?['full_name']?.toString() ?? item['collected_by_name']?.toString() ?? item['entered_by_name']?.toString(),
           'collected_by_role': staff?['role']?.toString() ?? item['collected_by_role']?.toString(),
           'source': 'collection',
@@ -556,11 +559,21 @@ class EMIRepository {
       final matchedCollectionIds = <String>{};
       final transactionIds = transactions.map((t) => t['id'].toString()).toSet();
 
+      // Build map of transaction_id -> list of selected_schedule_ids from matched collections
+      final txScheduleIds = <String, List<String>>{};
+
       // First pass: match collections to transactions using explicit transaction_id
       for (final col in collections) {
         final colTxId = col['transaction_id']?.toString() ?? '';
         if (colTxId.isNotEmpty && transactionIds.contains(colTxId)) {
           matchedCollectionIds.add(col['id'].toString());
+          final sid = col['selected_schedule_id']?.toString();
+          if (sid != null && sid.isNotEmpty) {
+            txScheduleIds.putIfAbsent(colTxId, () => []);
+            if (!txScheduleIds[colTxId]!.contains(sid)) {
+              txScheduleIds[colTxId]!.add(sid);
+            }
+          }
         }
       }
 
@@ -605,6 +618,14 @@ class EMIRepository {
             if (sum + colAmt <= txAmount + 0.01) {
               sum += colAmt;
               currentMatch.add(col['id'].toString());
+              // Collect schedule IDs from matched collections
+              final sid = col['selected_schedule_id']?.toString();
+              if (sid != null && sid.isNotEmpty) {
+                txScheduleIds.putIfAbsent(txId, () => []);
+                if (!txScheduleIds[txId]!.contains(sid)) {
+                  txScheduleIds[txId]!.add(sid);
+                }
+              }
               if ((sum - txAmount).abs() < 0.01) {
                 break;
               }
@@ -614,6 +635,15 @@ class EMIRepository {
           if ((sum - txAmount).abs() < 0.01) {
             matchedCollectionIds.addAll(currentMatch);
           }
+        }
+      }
+
+      // Attach collected schedule IDs to the transaction records in merged list
+      for (final tx in merged) {
+        final txId = tx['id'].toString();
+        final sids = txScheduleIds[txId];
+        if (sids != null && sids.isNotEmpty) {
+          tx['selected_schedule_ids'] = sids;
         }
       }
 
@@ -646,7 +676,7 @@ class EMIRepository {
             final diff = colTime.difference(exTime).inSeconds.abs();
             if (diff <= 60) {
               existing['amount'] = (existing['amount'] as double) + (col['amount'] as double);
-              
+
               final existingNotes = existing['notes']?.toString() ?? '';
               final colNotes = col['notes']?.toString() ?? '';
               if (colNotes.isNotEmpty) {
@@ -656,6 +686,13 @@ class EMIRepository {
                   existing['notes'] = '$existingNotes, $colNotes';
                 }
               }
+              // Collect selected_schedule_id into a list
+              final existingIds = (existing['selected_schedule_ids'] as List?)?.cast<String>() ?? [];
+              final colSid = col['selected_schedule_id']?.toString();
+              if (colSid != null && colSid.isNotEmpty && !existingIds.contains(colSid)) {
+                existingIds.add(colSid);
+                existing['selected_schedule_ids'] = existingIds;
+              }
               foundMatch = true;
               break;
             }
@@ -663,7 +700,13 @@ class EMIRepository {
         }
 
         if (!foundMatch) {
-          mergedCollections.add(Map<String, dynamic>.from(col));
+          final newCol = Map<String, dynamic>.from(col);
+          // Initialize selected_schedule_ids list from single value
+          final sid = newCol.remove('selected_schedule_id')?.toString();
+          if (sid != null && sid.isNotEmpty) {
+            newCol['selected_schedule_ids'] = [sid];
+          }
+          mergedCollections.add(newCol);
         }
       }
 
@@ -694,7 +737,7 @@ class EMIRepository {
                 time.minute == exTime.minute;
             if (isSameMinute) {
               existing['amount'] = (existing['amount'] as double) + (item['amount'] as double);
-              
+
               final existingNotes = existing['notes']?.toString() ?? '';
               final itemNotes = item['notes']?.toString() ?? '';
               if (itemNotes.isNotEmpty) {
@@ -704,6 +747,20 @@ class EMIRepository {
                   existing['notes'] = '$existingNotes, $itemNotes';
                 }
               }
+              // Collect selected_schedule_ids from both records
+              final existingIds = (existing['selected_schedule_ids'] as List?)?.cast<String>() ?? [];
+              final itemIds = (item['selected_schedule_ids'] as List?)?.cast<String>() ?? [];
+              final itemSid = item['selected_schedule_id']?.toString();
+              final allIds = [...existingIds];
+              for (final id in itemIds) {
+                if (!allIds.contains(id)) allIds.add(id);
+              }
+              if (itemSid != null && itemSid.isNotEmpty && !allIds.contains(itemSid)) {
+                allIds.add(itemSid);
+              }
+              if (allIds.isNotEmpty) {
+                existing['selected_schedule_ids'] = allIds;
+              }
               found = true;
               break;
             }
@@ -711,7 +768,17 @@ class EMIRepository {
         }
 
         if (!found) {
-          consolidated.add(Map<String, dynamic>.from(item));
+          final newItem = Map<String, dynamic>.from(item);
+          // Normalize: collect selected_schedule_id into list if present
+          final sid = newItem.remove('selected_schedule_id')?.toString();
+          if (sid != null && sid.isNotEmpty) {
+            final existingIds = (newItem['selected_schedule_ids'] as List?)?.cast<String>() ?? [];
+            if (!existingIds.contains(sid)) {
+              existingIds.add(sid);
+            }
+            newItem['selected_schedule_ids'] = existingIds;
+          }
+          consolidated.add(newItem);
         }
       }
 

@@ -20,6 +20,7 @@ import '../../../savings/data/services/savings_statement_pdf_service.dart';
 import '../../data/models/customer_savings_model.dart';
 import '../../data/models/customer_transaction_model.dart';
 import '../../data/providers/customer_member_provider.dart';
+import '../../data/providers/customer_realtime_providers.dart';
 import '../../data/providers/customer_savings_providers.dart';
 import '../widgets/customer_empty_state.dart';
 import '../widgets/customer_payment_trend_chart.dart' show MonthlyPaymentData;
@@ -798,6 +799,12 @@ class _CustomerSavingsDetailPageState
         ref.watch(customerSavingsDetailProvider(widget.savingsId));
     final transactionsAsync =
         ref.watch(customerSavingsTransactionsProvider(widget.savingsId));
+    final collectionDatesAsync =
+        ref.watch(savingsCollectionDatesProvider(widget.savingsId));
+    final collectorNamesAsync =
+        ref.watch(savingsCollectorNamesProvider(widget.savingsId));
+    // Subscribe to realtime updates for this savings plan
+    ref.watch(realtimeSavingsTransactionsProvider(widget.savingsId));
 
     final headerGradient = isDark
         ? const LinearGradient(
@@ -848,6 +855,8 @@ class _CustomerSavingsDetailPageState
                     customerSavingsDetailProvider(widget.savingsId));
                 ref.invalidate(
                     customerSavingsTransactionsProvider(widget.savingsId));
+                ref.invalidate(
+                    savingsCollectionDatesProvider(widget.savingsId));
               },
               color: theme.colorScheme.primary,
               child: CustomScrollView(
@@ -1020,6 +1029,10 @@ class _CustomerSavingsDetailPageState
                         );
                       }
                       final recent = transactions.take(5).toList();
+                      final collectionDates =
+                          collectionDatesAsync.valueOrNull ?? {};
+                      final collectorNames =
+                          collectorNamesAsync.valueOrNull ?? {};
                       return SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
@@ -1030,7 +1043,8 @@ class _CustomerSavingsDetailPageState
                                   AppSpacing.md, 3, AppSpacing.md, 3,
                                 ),
                                 child: _buildContributionTile(
-                                    theme, isDark, recent[index]),
+                                    theme, isDark, recent[index],
+                                    collectionDates, collectorNames),
                               ),
                             );
                           },
@@ -1360,11 +1374,25 @@ class _CustomerSavingsDetailPageState
     ThemeData theme,
     bool isDark,
     CustomerTransactionModel tx,
-  ) {
+    [Map<String, DateTime>? collectionDates,
+    Map<String, String>? collectorNames,
+  ]) {
     final isCredit = tx.isCredit;
     final color = isCredit ? AppColors.success : AppColors.warning;
     final sign = isCredit ? '+' : '-';
     final date = tx.transactionDate;
+
+    // Compute "deposited up to" date from linked savings collections
+    DateTime? depositedUpTo;
+    if (isCredit && collectionDates != null && collectionDates.isNotEmpty) {
+      depositedUpTo = collectionDates[tx.id];
+    }
+
+    // Get collector name from savings collections
+    String? collectorName;
+    if (collectorNames != null) {
+      collectorName = collectorNames[tx.id];
+    }
 
     Color statusColor;
     switch (tx.status.toLowerCase()) {
@@ -1422,6 +1450,17 @@ class _CustomerSavingsDetailPageState
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (depositedUpTo != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 2),
+                    child: Text(
+                      'Deposited up to ${DateFormat('MMM d, yyyy').format(depositedUpTo)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.success.withValues(alpha: 0.75),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -1467,14 +1506,47 @@ class _CustomerSavingsDetailPageState
               ],
             ),
           ),
-          Text(
-            '$sign${_formatCurrency(tx.amount)}',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              letterSpacing: -0.3,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$sign${_formatCurrency(tx.amount)}',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  letterSpacing: -0.3,
+                ),
+              ),
+              if (collectorName != null && collectorName.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.person_outline_rounded,
+                        size: 11,
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          collectorName,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color
+                                ?.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ],
       ),

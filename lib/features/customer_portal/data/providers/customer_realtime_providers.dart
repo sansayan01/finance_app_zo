@@ -7,6 +7,7 @@ import 'customer_notifications_providers.dart';
 import 'customer_support_providers.dart';
 import 'customer_profile_providers.dart';
 import 'customer_home_providers.dart';
+import 'customer_savings_providers.dart';
 
 /// Realtime stream of new notifications for the current customer.
 /// Auto-disposes when the last listener goes away (logout / route change).
@@ -113,6 +114,60 @@ final realtimeMemberProfileProvider = StreamProvider.autoDispose<void>((ref) {
 
   ref.onDispose(() {
     channel.unsubscribe();
+    controller.close();
+  });
+
+  return controller.stream;
+});
+
+/// Realtime stream of savings transaction + collection changes for a specific savings plan.
+/// Invalidates the transaction and collection-date providers whenever a row is inserted, updated, or deleted.
+final realtimeSavingsTransactionsProvider =
+    StreamProvider.autoDispose.family<void, String>((ref, savingsId) {
+  final client = ref.watch(supabaseClientProvider);
+  final controller = StreamController<void>();
+
+  // Listen to transactions table for this savings plan
+  final txChannel = client
+      .channel('savings_tx_$savingsId')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'transactions',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'savings_id',
+          value: savingsId,
+        ),
+        callback: (payload) {
+          ref.invalidate(customerSavingsTransactionsProvider(savingsId));
+        },
+      )
+      .subscribe();
+
+  // Listen to savings_collections table for this savings plan
+  final colChannel = client
+      .channel('savings_collections_$savingsId')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'savings_collections',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'savings_plan_id',
+          value: savingsId,
+        ),
+        callback: (payload) {
+          ref.invalidate(savingsCollectionDatesProvider(savingsId));
+          ref.invalidate(savingsCollectorNamesProvider(savingsId));
+          ref.invalidate(customerSavingsDetailProvider(savingsId));
+        },
+      )
+      .subscribe();
+
+  ref.onDispose(() {
+    txChannel.unsubscribe();
+    colChannel.unsubscribe();
     controller.close();
   });
 

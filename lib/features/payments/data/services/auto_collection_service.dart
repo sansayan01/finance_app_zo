@@ -99,10 +99,6 @@ class AutoCollectionService {
       throw Exception('Savings plan not found');
     }
     
-    final collectionType = planResp['collection_type']?.toString() ?? 'monthly';
-    final currentAmount = (planResp['current_amount'] as num?)?.toDouble() ?? 0.0;
-    final installmentsPaid = (planResp['installments_paid'] as num?)?.toInt() ?? 0;
-
     // 1. Create transaction
     final txResult = await client.from('transactions').insert({
       'member_id': payment.memberId,
@@ -138,32 +134,8 @@ class AutoCollectionService {
       'transaction_id': transactionId,
     });
 
-    // 3. Update plan balance and next_due_date
-    final dueDate = payment.dueDate;
-    DateTime nextDue;
-    switch (collectionType) {
-      case 'weekly':
-        nextDue = dueDate.add(const Duration(days: 7));
-        break;
-      case 'monthly':
-        int targetMonth = dueDate.month + 1;
-        int targetYear = dueDate.year + ((targetMonth - 1) ~/ 12);
-        targetMonth = ((targetMonth - 1) % 12) + 1;
-        int targetDay = dueDate.day;
-        int daysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
-        if (targetDay > daysInMonth) targetDay = daysInMonth;
-        nextDue = DateTime(targetYear, targetMonth, targetDay);
-        break;
-      default:
-        nextDue = dueDate.add(const Duration(days: 1));
-    }
-
-    await client.from('savings_plans').update({
-      'next_due_date': nextDue.toIso8601String().split('T').first,
-      'current_amount': currentAmount + amount,
-      'installments_paid': installmentsPaid + 1,
-      'last_payment_date': today,
-      'updated_at': now.toIso8601String(),
-    }).eq('id', planId);
+    // 3. Plan balance, installments_paid, last_payment_date, and
+    //    next_due_date are now auto-updated by the PostgreSQL trigger
+    //    trg_update_savings_plan_on_collection (server-side).
   }
 }

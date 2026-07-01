@@ -332,84 +332,70 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
                         : null,
                   ),
                   const SizedBox(width: 24),
-                  // Editable number with glow ring
-                  SizedBox(
-                    width: 120,
-                    height: 100,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Distinct circle behind the number
-                        if (_installmentCount > 0)
-                          Container(
-                            width: 90,
-                            height: 90,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _cardColor(),
-                              border: Border.all(
-                                color: _primaryColor().withValues(alpha: 0.25),
-                                width: 2.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _primaryColor().withValues(alpha: 0.18),
-                                  blurRadius: 20,
-                                  spreadRadius: -2,
-                                ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.06),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                        // Editable number field
-                        SizedBox(
-                          width: 100,
-                          height: 60,
-                          child: TextField(
-                            controller: _countController,
-                            focusNode: _countFocusNode,
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            style: TextStyle(
-                              fontSize: 44,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -2,
-                              color: _primaryColor(),
-                              height: 1,
-                            ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
-                            ),
-                            onChanged: (value) {
-                              if (value.isEmpty) return;
-                              final count = int.tryParse(value);
-                              if (count != null && count > 0) {
-                                _applyQuickPay(count);
-                              }
-                            },
-                            onTap: () {
-                              _countController.selection = TextSelection(
-                                baseOffset: 0,
-                                extentOffset: _countController.text.length,
-                              );
-                            },
-                            onSubmitted: (value) {
-                              final count = int.tryParse(value) ?? _installmentCount;
-                              _applyQuickPay(count);
-                              _countFocusNode.unfocus();
-                            },
-                          ),
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _cardColor(),
+                      border: Border.all(
+                        color: _primaryColor().withValues(alpha: 0.2),
+                        width: 2.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primaryColor().withValues(alpha: 0.18),
+                          blurRadius: 24,
+                          spreadRadius: -2,
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
                       ],
+                    ),
+                    child: Center(
+                      child: TextField(
+                        controller: _countController,
+                        focusNode: _countFocusNode,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: TextStyle(
+                          fontSize: 44,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -2,
+                          color: _primaryColor().withValues(alpha: 0.85),
+                          height: 1,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
+                          fillColor: Colors.transparent,
+                        ),
+                        onChanged: (value) {
+                          if (value.isEmpty) return;
+                          final count = int.tryParse(value);
+                          if (count != null && count > 0) {
+                            _applyQuickPay(count);
+                          }
+                        },
+                        onTap: () {
+                          _countController.selection = TextSelection(
+                            baseOffset: 0,
+                            extentOffset: _countController.text.length,
+                          );
+                        },
+                        onSubmitted: (value) {
+                          final count = int.tryParse(value) ?? _installmentCount;
+                          _applyQuickPay(count);
+                          _countFocusNode.unfocus();
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 24),
@@ -445,50 +431,75 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
     );
   }
 
-  Widget _buildCounterButton({
-    required IconData icon,
-    VoidCallback? onTap,
-  }) {
-    final enabled = onTap != null;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedScale(
-        scale: enabled ? 1.0 : 0.9,
-        duration: const Duration(milliseconds: 150),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: enabled
-                ? LinearGradient(
-                    colors: [
-                      _primaryColor(),
-                      _primaryColor().withValues(alpha: 0.8),
-                    ],
-                  )
-                : null,
-            color: enabled ? null : _fillColor(),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: enabled
-                ? [
-                    BoxShadow(
-                      color: _primaryColor().withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Icon(
-            icon,
-            size: 28,
-            color: enabled ? Colors.white : _textTertiary(),
-          ),
+Widget _buildCounterButton({
+  required IconData icon,
+  VoidCallback? onTap,
+}) {
+  final enabled = onTap != null;
+  final isPlus = icon == Icons.add_rounded;
+  return GestureDetector(
+    onTap: enabled ? onTap : null,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        gradient: enabled
+            ? LinearGradient(
+                colors: isPlus
+                    ? [
+                        _primaryColor(),
+                        _primaryColor().withValues(alpha: 0.85),
+                      ]
+                    : [
+                        _primaryColor().withValues(alpha: 0.2),
+                        _primaryColor().withValues(alpha: 0.12),
+                      ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: enabled ? null : _fillColor(),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: enabled
+              ? _primaryColor().withValues(alpha: 0.4)
+              : _borderColor().withValues(alpha: 0.2),
+          width: 1.2,
+        ),
+        boxShadow: enabled
+            ? [
+                BoxShadow(
+                  color: _primaryColor().withValues(alpha: isPlus ? 0.45 : 0.18),
+                  blurRadius: isPlus ? 24 : 12,
+                  offset: Offset(0, isPlus ? 8 : 4),
+                  spreadRadius: isPlus ? 2 : 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: AnimatedOpacity(
+        opacity: enabled ? 1.0 : 0.4,
+        duration: const Duration(milliseconds: 200),
+        child: Icon(
+          icon,
+          size: 32,
+          color: enabled
+              ? isPlus
+                  ? Colors.white
+                  : _primaryColor().withValues(alpha: 0.8)
+              : _textTertiary(),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildAllocationBreakdown(
       int overdueCount, int dueTodayCount, int unpaidCount) {

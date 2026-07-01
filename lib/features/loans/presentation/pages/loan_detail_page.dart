@@ -13,6 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -259,7 +260,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                               const SizedBox(height: 40),
                               _buildSectionHeader('Payment History', theme),
                               const SizedBox(height: 16),
-                              _buildPaymentHistory(paymentHistoryAsync, theme, isDark),
+                              _buildPaymentHistory(paymentHistoryAsync, scheduleAsync, theme, isDark),
                               const SizedBox(height: 40),
                               _buildSectionHeader('Borrower Profile', theme),
                               const SizedBox(height: 16),
@@ -1974,7 +1975,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                        '${(principalPct * 100).toInt()}/${((1 - principalPct) * 100).toInt()}',
+                        '${(principalPct * 100).toStringAsFixed(1)}% / ${((1 - principalPct) * 100).toStringAsFixed(1)}%',
                         style: theme.textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: theme.colorScheme.primary)),
@@ -2377,6 +2378,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Widget _buildPaymentHistory(
       AsyncValue<List<Map<String, dynamic>>> paymentHistoryAsync,
+      AsyncValue<List<EMIScheduleModel>> scheduleAsync,
       ThemeData theme,
       bool isDark) {
     return paymentHistoryAsync.when(
@@ -2416,6 +2418,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           );
         }
 
+        // Build EMI schedule lookup for "paid up to" dates
+        final scheduleList = scheduleAsync.valueOrNull ?? [];
+        final scheduleById = <String, EMIScheduleModel>{};
+        for (final emi in scheduleList) {
+          scheduleById[emi.id] = emi;
+        }
+
         final recent = payments.take(10).toList();
         return Container(
           padding: const EdgeInsets.all(20),
@@ -2434,7 +2443,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () => _showPaymentDetails(recent[index], theme),
-                    child: _buildPaymentTile(recent[index], theme, isDark, index),
+                    child: _buildPaymentTile(recent[index], theme, isDark, index, scheduleById),
                   );
                 },
               ),
@@ -2915,12 +2924,37 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     }
   }
 
+  /// Computes the "paid up to" date for a payment by finding the highest
+  /// due date among the EMI schedules linked via selected_schedule_ids.
+  DateTime? _computePaidUpToDate(
+      Map<String, dynamic> payment, Map<String, EMIScheduleModel> scheduleById) {
+    final scheduleIds = (payment['selected_schedule_ids'] as List?)?.cast<String>() ?? [];
+    if (scheduleIds.isEmpty) return null;
+
+    DateTime? latestDueDate;
+    for (final sid in scheduleIds) {
+      final emi = scheduleById[sid];
+      if (emi != null) {
+        if (latestDueDate == null || emi.dueDate.isAfter(latestDueDate)) {
+          latestDueDate = emi.dueDate;
+        }
+      }
+    }
+    return latestDueDate;
+  }
+
   Widget _buildPaymentTile(
-      Map<String, dynamic> payment, ThemeData theme, bool isDark, int index) {
+      Map<String, dynamic> payment, ThemeData theme, bool isDark, int index,
+      [Map<String, EMIScheduleModel>? scheduleById]) {
     final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
     final paymentMode = payment['payment_mode']?.toString() ?? 'cash';
     final date = _getPaymentDate(payment);
     final collectedBy = payment['collected_by_name']?.toString();
+
+    // Compute "paid up to" date
+    final paidUpToDate = scheduleById != null
+        ? _computePaidUpToDate(payment, scheduleById)
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -2963,53 +2997,69 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      AppFormatters.formatDateTime(date),
+                if (paidUpToDate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      'Paid up to ${DateFormat('MMM d, yyyy').format(paidUpToDate)}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color
-                            ?.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w500,
+                        color: AppColors.success.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (collectedBy != null) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        width: 3,
-                        height: 3,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: theme.textTheme.bodySmall?.color
-                              ?.withValues(alpha: 0.35),
-                        ),
+                  ),
+                Text(
+                  AppFormatters.formatDateTime(date),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color
+                        ?.withValues(alpha: 0.55),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                AppFormatters.formatCurrency(amount),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  letterSpacing: -0.3,
+                ),
+              ),
+              if (collectedBy != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.person_outline_rounded,
+                        size: 11,
+                        color: theme.textTheme.bodySmall?.color
+                            ?.withValues(alpha: 0.5),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 3),
                       Flexible(
                         child: Text(
                           collectedBy,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.textTheme.bodySmall?.color
-                                ?.withValues(alpha: 0.5),
+                                ?.withValues(alpha: 0.6),
                             fontWeight: FontWeight.w500,
+                            fontSize: 11,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
-              ],
-            ),
-          ),
-          Text(
-            AppFormatters.formatCurrency(amount),
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: AppColors.success,
-              fontWeight: FontWeight.w800,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              letterSpacing: -0.3,
-            ),
+            ],
           ),
         ],
       ),

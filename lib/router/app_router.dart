@@ -591,7 +591,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/search',
-            builder: (context, state) => const SearchPage(),
+            builder: (context, state) {
+              final initialQuery = state.extra as String?;
+              return SearchPage(initialQuery: initialQuery);
+            },
           ),
           GoRoute(
             path: '/notifications',

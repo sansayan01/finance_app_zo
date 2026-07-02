@@ -1,10 +1,14 @@
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/branded_loading.dart';
+import '../../../../core/widgets/premium_search_overlay.dart';
+import '../../../settings/data/searchable_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/utils/formatters.dart';
@@ -111,7 +115,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 }
 
-// ─── Section 1: Header ───
+// ─── Section 1: Header with Premium Search ───
 
 class _Header extends ConsumerWidget {
   const _Header();
@@ -165,7 +169,8 @@ class _Header extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Icon(greetingIcon,
                       size: 14,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.6)),
+                      color:
+                          theme.colorScheme.primary.withValues(alpha: 0.6)),
                 ],
               ),
               const SizedBox(height: 4),
@@ -184,7 +189,8 @@ class _Header extends ConsumerWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      color:
+                          theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: DynamicBrandText(
@@ -212,7 +218,16 @@ class _Header extends ConsumerWidget {
               const SizedBox(width: 12),
               _HeaderIconBtn(
                 icon: Icons.search_rounded,
-                onTap: () => context.push('/search'),
+                onTap: () {
+                  PremiumSearchOverlay.show(
+                    context,
+                    onSearch: (query) {
+                      Navigator.of(context).pop();
+                      context.push('/search', extra: query);
+                    },
+                    fetchResults: (query) => _liveSearch(ref, query),
+                  );
+                },
               ),
             ],
           ),
@@ -220,6 +235,113 @@ class _Header extends ConsumerWidget {
       ],
     ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05, end: 0);
   }
+}
+
+/// Live search across members, staff, loans, and settings.
+Future<List<OverlaySearchResult>> _liveSearch(WidgetRef ref, String query) async {
+  final client = ref.read(supabaseClientProvider);
+  final orgId = ref.read(currentOrgIdProvider);
+  if (orgId == null || orgId.isEmpty || query.length < 2) return [];
+
+  final results = <OverlaySearchResult>[];
+  final ctx = ref.context;
+
+  // ── Search settings (instant, no network) ──
+  final settingsHits = SettingsSearchRegistry.search(query);
+  for (final s in settingsHits) {
+    results.add(OverlaySearchResult(
+      id: 'setting_${s.id}',
+      title: s.title,
+      subtitle: s.subtitle,
+      icon: s.icon,
+      color: s.color,
+      onTap: () {
+        Navigator.of(ctx).pop();
+        ctx.push(s.route);
+      },
+    ));
+  }
+
+  // ── Search members ──
+  try {
+    final members = await client
+        .from('members')
+        .select('id, full_name, phone, member_id')
+        .eq('org_id', orgId)
+        .or('full_name.ilike.%$query%,phone.ilike.%$query%,member_id.ilike.%$query%')
+        .limit(5);
+    for (final m in members as List) {
+      final memberId = m['id'] as String;
+      results.add(OverlaySearchResult(
+        id: memberId,
+        title: m['full_name'] as String? ?? 'Unknown',
+        subtitle: m['phone'] as String? ?? '',
+        icon: Icons.person_rounded,
+        color: AppColors.accentLight,
+        onTap: () {
+          Navigator.of(ctx).pop();
+          ctx.push('/users/$memberId');
+        },
+      ));
+    }
+  } catch (_) {}
+
+  // ── Search staff ──
+  try {
+    final staff = await client
+        .from('profiles')
+        .select('id, full_name, email, role')
+        .eq('org_id', orgId)
+        .or('full_name.ilike.%$query%,email.ilike.%$query%')
+        .limit(5);
+    for (final s in staff as List) {
+      final role = s['role'] as String? ?? '';
+      final label = role == 'collectionAgent'
+          ? 'Agent'
+          : role == 'manager'
+              ? 'Manager'
+              : role.toUpperCase();
+      final staffId = s['id'] as String;
+      results.add(OverlaySearchResult(
+        id: staffId,
+        title: s['full_name'] as String? ?? 'Unknown',
+        subtitle: label,
+        icon: Icons.badge_rounded,
+        color: AppColors.success,
+        onTap: () {
+          Navigator.of(ctx).pop();
+          ctx.push('/users/$staffId');
+        },
+      ));
+    }
+  } catch (_) {}
+
+  // ── Search loans ──
+  try {
+    final loans = await client
+        .from('loans')
+        .select('id, loan_number, member_name, amount')
+        .eq('org_id', orgId)
+        .or('loan_number.ilike.%$query%,member_name.ilike.%$query%')
+        .limit(5);
+    for (final l in loans as List) {
+      final amt = (l['amount'] as num?)?.toDouble() ?? 0;
+      final loanId = l['id'] as String;
+      results.add(OverlaySearchResult(
+        id: loanId,
+        title: l['loan_number'] as String? ?? 'Unknown',
+        subtitle: '${l['member_name'] ?? 'Unknown'} · ₹${amt.toStringAsFixed(0)}',
+        icon: Icons.request_quote_rounded,
+        color: AppColors.primary,
+        onTap: () {
+          Navigator.of(ctx).pop();
+          ctx.push('/loans/$loanId');
+        },
+      ));
+    }
+  } catch (_) {}
+
+  return results;
 }
 
 // ─── Section 2: Overdue Banner ───

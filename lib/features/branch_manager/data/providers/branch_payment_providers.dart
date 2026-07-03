@@ -17,6 +17,12 @@ class BranchPaymentFilterState {
   final DateTime selectedDate;
   final PaymentSortBy sortBy;
   final bool autoRefresh;
+  final PaymentType? paymentTypeFilter;
+  final Set<PaymentStatus> statusFilters;
+  final double? minAmount;
+  final double? maxAmount;
+  final Set<String> paymentModeFilters;
+  final Set<OverdueBucket> overdueDayFilters;
 
   const BranchPaymentFilterState({
     this.searchQuery = '',
@@ -24,6 +30,12 @@ class BranchPaymentFilterState {
     required this.selectedDate,
     this.sortBy = PaymentSortBy.statusPriority,
     this.autoRefresh = true,
+    this.paymentTypeFilter,
+    this.statusFilters = const {},
+    this.minAmount,
+    this.maxAmount,
+    this.paymentModeFilters = const {},
+    this.overdueDayFilters = const {},
   });
 
   BranchPaymentFilterState copyWith({
@@ -33,6 +45,15 @@ class BranchPaymentFilterState {
     PaymentSortBy? sortBy,
     bool? autoRefresh,
     bool clearAgent = false,
+    PaymentType? paymentTypeFilter,
+    bool clearPaymentType = false,
+    Set<PaymentStatus>? statusFilters,
+    double? minAmount,
+    bool clearMinAmount = false,
+    double? maxAmount,
+    bool clearMaxAmount = false,
+    Set<String>? paymentModeFilters,
+    Set<OverdueBucket>? overdueDayFilters,
   }) {
     return BranchPaymentFilterState(
       searchQuery: searchQuery ?? this.searchQuery,
@@ -40,8 +61,23 @@ class BranchPaymentFilterState {
       selectedDate: selectedDate ?? this.selectedDate,
       sortBy: sortBy ?? this.sortBy,
       autoRefresh: autoRefresh ?? this.autoRefresh,
+      paymentTypeFilter: clearPaymentType ? null : (paymentTypeFilter ?? this.paymentTypeFilter),
+      statusFilters: statusFilters ?? this.statusFilters,
+      minAmount: clearMinAmount ? null : (minAmount ?? this.minAmount),
+      maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
+      paymentModeFilters: paymentModeFilters ?? this.paymentModeFilters,
+      overdueDayFilters: overdueDayFilters ?? this.overdueDayFilters,
     );
   }
+
+  bool get hasActiveFilters =>
+      agentId != null ||
+      paymentTypeFilter != null ||
+      statusFilters.isNotEmpty ||
+      minAmount != null ||
+      maxAmount != null ||
+      paymentModeFilters.isNotEmpty ||
+      overdueDayFilters.isNotEmpty;
 
   bool get isToday {
     final now = DateTime.now();
@@ -92,6 +128,40 @@ class BranchPaymentFilterNotifier
 
   void toggleAutoRefresh() {
     state = state.copyWith(autoRefresh: !state.autoRefresh);
+  }
+
+  void setPaymentType(PaymentType? type) {
+    state = state.copyWith(
+      paymentTypeFilter: type,
+      clearPaymentType: type == null,
+    );
+  }
+
+  void toggleStatusFilter(PaymentStatus status) {
+    final updated = Set<PaymentStatus>.from(state.statusFilters);
+    updated.contains(status) ? updated.remove(status) : updated.add(status);
+    state = state.copyWith(statusFilters: updated);
+  }
+
+  void setAmountRange({double? min, double? max, bool clearMin = false, bool clearMax = false}) {
+    state = state.copyWith(
+      minAmount: min,
+      maxAmount: max,
+      clearMinAmount: clearMin,
+      clearMaxAmount: clearMax,
+    );
+  }
+
+  void togglePaymentMode(String mode) {
+    final updated = Set<String>.from(state.paymentModeFilters);
+    updated.contains(mode) ? updated.remove(mode) : updated.add(mode);
+    state = state.copyWith(paymentModeFilters: updated);
+  }
+
+  void toggleOverdueBucket(OverdueBucket bucket) {
+    final updated = Set<OverdueBucket>.from(state.overdueDayFilters);
+    updated.contains(bucket) ? updated.remove(bucket) : updated.add(bucket);
+    state = state.copyWith(overdueDayFilters: updated);
   }
 
   void resetFilters() {
@@ -368,7 +438,7 @@ final branchTodayPaymentsProvider =
     final allActivePlans = await client
         .from('savings_plans')
         .select(
-            'id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id')
+            'id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, start_date, member_id, installments_paid, total_installments')
         .eq('org_id', orgId)
         .eq('status', 'active');
 
@@ -470,17 +540,36 @@ final branchTodayPaymentsProvider =
           : null;
       final selectedDateOnly = DateTime(
           selectedDate.year, selectedDate.month, selectedDate.day);
+      final collectionType = plan['collection_type'] ?? 'daily';
       final isOverdue = !isCollected &&
-          nextDateOnly != null &&
-          nextDateOnly.isBefore(selectedDateOnly);
-      // diff days matches TodayPayment.daysOverdue (DateTime.now().difference(dueDate).inDays).
-      final daysOverdueForAmount = isOverdue
-          ? selectedDateOnly.difference(nextDateOnly).inDays
-          : 0;
+          (nextDateOnly != null
+              ? nextDateOnly.isBefore(selectedDateOnly)
+              : collectionType == 'daily');
       final deposit = (plan['monthly_deposit'] as num?)?.toDouble() ?? 0;
-      // For overdue rows, sum up missed installments so the card shows the real amount owed
+
+      final paidCount = (plan['installments_paid'] as num?)?.toInt() ?? 0;
+      final startDateStr = plan['start_date'] as String?;
+      final startDate = startDateStr != null ? DateTime.tryParse(startDateStr) : null;
+
+      int expectedUpToToday = 0;
+      if (startDate != null) {
+        final startOnly = DateTime(startDate.year, startDate.month, startDate.day);
+        final diffDays = selectedDateOnly.difference(startOnly).inDays;
+        switch (collectionType) {
+          case 'weekly':
+            expectedUpToToday = (diffDays ~/ 7) + 1;
+            break;
+          case 'monthly':
+            expectedUpToToday = ((diffDays ~/ 30)) + 1;
+            break;
+          default: // daily
+            expectedUpToToday = diffDays + 1;
+        }
+      }
+
+      final overdueCount = isOverdue ? (expectedUpToToday - paidCount - 1).clamp(0, expectedUpToToday) : 0;
       final overdueAmount =
-          isOverdue ? deposit * daysOverdueForAmount : deposit;
+          isOverdue ? deposit * overdueCount : deposit;
 
       payments.add(TodayPayment(
         id: plan['id'],
@@ -513,7 +602,6 @@ final branchTodayPaymentsProvider =
 
       // For daily collections that are overdue and not yet collected,
       // add a SEPARATE pending entry for today's collection.
-      final collectionType = plan['collection_type'] ?? 'daily';
       if (!isCollected &&
           isOverdue &&
           collectionType == 'daily' &&
@@ -559,10 +647,55 @@ final branchTodayPaymentsProvider =
     }).toList();
   }
 
+  // Apply advanced filters
+  filtered = _applyAdvancedFilters(filtered, filters);
+
   _sortPayments(filtered, filters.sortBy);
 
   return TodayPaymentData(payments: filtered, allPayments: payments);
 });
+
+// =====================================================
+// ADVANCED FILTERS HELPER
+// =====================================================
+
+List<TodayPayment> _applyAdvancedFilters(
+  List<TodayPayment> payments,
+  BranchPaymentFilterState filters,
+) {
+  var result = payments;
+
+  if (filters.paymentTypeFilter != null) {
+    result = result.where((p) => p.type == filters.paymentTypeFilter).toList();
+  }
+
+  if (filters.statusFilters.isNotEmpty) {
+    result = result.where((p) => filters.statusFilters.contains(p.status)).toList();
+  }
+
+  if (filters.minAmount != null) {
+    result = result.where((p) => p.amountExpected >= filters.minAmount!).toList();
+  }
+
+  if (filters.maxAmount != null) {
+    result = result.where((p) => p.amountExpected <= filters.maxAmount!).toList();
+  }
+
+  if (filters.paymentModeFilters.isNotEmpty) {
+    result = result.where((p) =>
+        p.paymentMode != null && filters.paymentModeFilters.contains(p.paymentMode)
+    ).toList();
+  }
+
+  if (filters.overdueDayFilters.isNotEmpty) {
+    result = result.where((p) {
+      if (!p.isOverdue) return true;
+      return filters.overdueDayFilters.any((bucket) => bucket.matches(p.daysOverdue));
+    }).toList();
+  }
+
+  return result;
+}
 
 // =====================================================
 // SORT HELPER (same logic as admin)

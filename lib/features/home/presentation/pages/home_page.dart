@@ -88,23 +88,23 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _Header(),
+                  const RepaintBoundary(child: _Header()),
                   const SizedBox(height: 20),
-                  const _OverdueBanner(),
+                  const RepaintBoundary(child: _OverdueBanner()),
                   const SizedBox(height: 28),
-                  const _HeroCard(),
+                  const RepaintBoundary(child: _HeroCard()),
                   const SizedBox(height: 16),
-                  const _FinancialSummaryStrip(),
+                  const RepaintBoundary(child: _FinancialSummaryStrip()),
                   const SizedBox(height: 28),
-                  const _QuickActions(),
+                  const RepaintBoundary(child: _QuickActions()),
                   const SizedBox(height: 28),
-                  const LiveAgentsMapCard(),
+                  const RepaintBoundary(child: LiveAgentsMapCard()),
                   const SizedBox(height: 28),
-                  _ActiveLoansSection(onViewAll: widget.onViewAllLoans),
+                  RepaintBoundary(child: _ActiveLoansSection(onViewAll: widget.onViewAllLoans)),
                   const SizedBox(height: 28),
-                  _SavingsSection(onViewAll: widget.onViewAllSavings),
+                  RepaintBoundary(child: _SavingsSection(onViewAll: widget.onViewAllSavings)),
                   const SizedBox(height: 28),
-                  const _RecentTransactions(),
+                  const RepaintBoundary(child: _RecentTransactions()),
                 ],
               ),
             ),
@@ -149,6 +149,9 @@ class _Header extends ConsumerWidget {
         ? user.fullName.trim().split(RegExp(r'\s+')).first
         : 'User';
 
+    // First letter for avatar
+    final initial = firstName.isNotEmpty ? firstName[0].toUpperCase() : '?';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -158,33 +161,76 @@ class _Header extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Text(
-                    greeting,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.bodySmall?.color
-                          ?.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.w500,
+                  // Avatar with glow
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.primary.withValues(alpha: 0.7),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          spreadRadius: -2,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Icon(greetingIcon,
-                      size: 14,
-                      color:
-                          theme.colorScheme.primary.withValues(alpha: 0.6)),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            greeting,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withValues(alpha: 0.6),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(greetingIcon,
+                              size: 14,
+                              color:
+                                  theme.colorScheme.primary.withValues(alpha: 0.6)),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        firstName,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.8,
+                          fontSize: 26,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Text(
-                    firstName,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.8,
-                      fontSize: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -438,6 +484,8 @@ class _HeroCard extends ConsumerWidget {
                 todayStatsAsync.valueOrNull?['collected'] as double? ?? 0.0;
             return GlassCard(
               elevated: true,
+              glassmorphic: true,
+              borderColor: theme.colorScheme.primary.withValues(alpha: 0.15),
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               child: Stack(
                 clipBehavior: Clip.none,
@@ -486,7 +534,7 @@ class _HeroCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppFormatters.formatCompactCurrency(
+                        AppFormatters.formatCurrency(
                             summary.totalOutstanding),
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
@@ -518,7 +566,7 @@ class _HeroCard extends ConsumerWidget {
                           Expanded(
                             child: _HeroStat(
                               label: "Today's Collection",
-                              value: AppFormatters.formatCompactCurrency(
+                              value: AppFormatters.formatCurrency(
                                   collected),
                               icon: Icons.payments_rounded,
                               color: isDark
@@ -585,7 +633,7 @@ class _FinancialSummaryStrip extends ConsumerWidget {
             _SummaryChip(
               label: 'Disbursed',
               value:
-                  AppFormatters.formatCompactCurrency(summary.totalDisbursed),
+                  AppFormatters.formatCurrency(summary.totalDisbursed),
               icon: Icons.outbond_rounded,
               color: AppColors.primary,
             ),
@@ -593,14 +641,14 @@ class _FinancialSummaryStrip extends ConsumerWidget {
             _SummaryChip(
               label: 'Collected',
               value:
-                  AppFormatters.formatCompactCurrency(summary.totalCollected),
+                  AppFormatters.formatCurrency(summary.totalCollected),
               icon: Icons.move_to_inbox_rounded,
               color: AppColors.success,
             ),
             const SizedBox(width: 10),
             _SummaryChip(
               label: 'Overdue',
-              value: AppFormatters.formatCompactCurrency(summary.overdueAmount),
+              value: AppFormatters.formatCurrency(summary.overdueAmount),
               icon: Icons.timer_rounded,
               color: AppColors.error,
             ),
@@ -626,10 +674,24 @@ class _QuickActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: theme.textTheme.titleMedium
-              ?.copyWith(fontWeight: FontWeight.w700),
+        Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.flash_on_rounded, size: 16, color: AppColors.warning),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Quick Actions',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         Column(
@@ -743,10 +805,24 @@ class _ActiveLoansSection extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Active Loans',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.request_quote_rounded, size: 16, color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Active Loans',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
             ),
             GestureDetector(
               onTap: onViewAll,
@@ -773,6 +849,7 @@ class _ActiveLoansSection extends ConsumerWidget {
           data: (loans) {
             if (loans.isEmpty) {
               return GlassCard(
+                glassmorphic: true,
                 padding: const EdgeInsets.all(32),
                 child: Center(
                   child:
@@ -834,10 +911,24 @@ class _SavingsSection extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Savings Dashboard',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: successColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.savings_rounded, size: 16, color: successColor),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Savings Dashboard',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
             ),
             Row(
               children: [
@@ -900,13 +991,14 @@ class _SavingsSection extends ConsumerWidget {
         // Summary Hero Card
         summaryAsync.when(
           data: (summary) => GlassCard(
+            glassmorphic: true,
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
                 Expanded(
                   child: _SavingsStat(
                     label: 'Total Savings',
-                    value: AppFormatters.formatCompactCurrency(
+                    value: AppFormatters.formatCurrency(
                         summary.totalSavings),
                     icon: Icons.account_balance_wallet_outlined,
                     color: successColor,
@@ -931,7 +1023,7 @@ class _SavingsSection extends ConsumerWidget {
                 Expanded(
                   child: _SavingsStat(
                     label: 'Interest Earned',
-                    value: AppFormatters.formatCompactCurrency(
+                    value: AppFormatters.formatCurrency(
                         summary.interestEarned),
                     icon: Icons.trending_up_outlined,
                     color: AppColors.accentLight,
@@ -951,6 +1043,7 @@ class _SavingsSection extends ConsumerWidget {
           data: (savings) {
             if (savings.isEmpty) {
               return GlassCard(
+                glassmorphic: true,
                 padding: const EdgeInsets.all(32),
                 child: Center(
                   child: Column(
@@ -1012,6 +1105,7 @@ class _SavingsSection extends ConsumerWidget {
             if (upcoming.isEmpty) return const SizedBox.shrink();
 
             return GlassCard(
+              glassmorphic: true,
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1128,10 +1222,24 @@ class _RecentTransactions extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Recent Transactions',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.3),
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentLight.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.receipt_long_rounded, size: 16, color: AppColors.accentLight),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Recent Transactions',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.3),
+                ),
+              ],
             ),
             GestureDetector(
               onTap: () => context.push('/transactions'),
@@ -1183,6 +1291,7 @@ class _RecentTransactions extends ConsumerWidget {
               );
             }
             return GlassCard(
+              glassmorphic: true,
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: transactions.asMap().entries.map((entry) {
@@ -1478,6 +1587,7 @@ class _QuickActionBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return GlassCard(
+      glassmorphic: true,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 18),
       borderRadius: 20,
       onTap: onTap,
@@ -1527,6 +1637,8 @@ class _LoanCard extends StatelessWidget {
             : StatusType.pending;
 
     return GlassCard(
+      glassmorphic: true,
+      borderColor: theme.colorScheme.primary.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(20),
       onTap: () {},
       child: Column(
@@ -1604,13 +1716,13 @@ class _LoanCard extends StatelessWidget {
             children: [
               _LoanStat(
                   label: 'Principal',
-                  value: AppFormatters.formatCompactCurrency(loan.amount)),
+                  value: AppFormatters.formatCurrency(loan.amount)),
               _LoanStat(
                   label: 'EMI',
                   value: AppFormatters.formatCurrency(loan.emiAmount)),
               _LoanStat(
                   label: 'Outstanding',
-                  value: AppFormatters.formatCompactCurrency(
+                  value: AppFormatters.formatCurrency(
                       loan.outstandingBalance)),
             ],
           ),
@@ -1656,6 +1768,8 @@ class _SavingsCard extends StatelessWidget {
     final isNearMaturity = daysRemaining <= 30;
 
     return GlassCard(
+      glassmorphic: true,
+      borderColor: successColor.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(20),
       onTap: () {},
       child: Column(
@@ -1775,7 +1889,7 @@ class _SavingsCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '${AppFormatters.formatCompactCurrency(saving.targetAmount - saving.currentAmount)} remaining',
+                '${AppFormatters.formatCurrency(saving.targetAmount - saving.currentAmount)} remaining',
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontSize: 11,
                   color: theme.textTheme.bodySmall?.color,
@@ -1792,7 +1906,7 @@ class _SavingsCard extends StatelessWidget {
                 child: _SavingsMetric(
                   label: 'Current',
                   value:
-                      AppFormatters.formatCompactCurrency(saving.currentAmount),
+                      AppFormatters.formatCurrency(saving.currentAmount),
                   icon: Icons.account_balance_outlined,
                   color: successColor,
                 ),
@@ -1801,7 +1915,7 @@ class _SavingsCard extends StatelessWidget {
               Expanded(
                 child: _SavingsMetric(
                   label: 'Monthly',
-                  value: AppFormatters.formatCompactCurrency(
+                  value: AppFormatters.formatCurrency(
                       saving.monthlyDeposit),
                   icon: Icons.calendar_today_outlined,
                   color: AppColors.primary,
@@ -1970,12 +2084,30 @@ class _SummaryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: -2,
+          ),
+          // Top-edge highlight
+          BoxShadow(
+            color: Colors.white.withValues(alpha: isDark ? 0.02 : 0.4),
+            blurRadius: 0,
+            offset: const Offset(0, -0.5),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

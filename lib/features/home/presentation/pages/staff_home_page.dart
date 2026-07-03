@@ -367,7 +367,7 @@ class _StaffHomePageState extends ConsumerState<StaffHomePage> {
                   Expanded(
                     child: _MissionStat(
                       label: 'Target',
-                      value: AppFormatters.formatCompactCurrency(stats.target),
+                      value: AppFormatters.formatCurrency(stats.target),
                       icon: Icons.flag_outlined,
                       color: primary,
                       theme: theme,
@@ -382,7 +382,7 @@ class _StaffHomePageState extends ConsumerState<StaffHomePage> {
                     child: _MissionStat(
                       label: 'Collected',
                       value:
-                          AppFormatters.formatCompactCurrency(stats.collected),
+                          AppFormatters.formatCurrency(stats.collected),
                       icon: Icons.check_circle_outline,
                       color: AppColors.success,
                       theme: theme,
@@ -397,7 +397,7 @@ class _StaffHomePageState extends ConsumerState<StaffHomePage> {
                     child: _MissionStat(
                       label: 'Remaining',
                       value:
-                          AppFormatters.formatCompactCurrency(stats.remaining),
+                          AppFormatters.formatCurrency(stats.remaining),
                       icon: Icons.timelapse_outlined,
                       color: AppColors.orange,
                       theme: theme,
@@ -1512,7 +1512,7 @@ class _TransactionListTile extends StatelessWidget {
           ),
         ),
         Text(
-          '${isDeposit ? '+' : '-'} ${AppFormatters.formatCompactCurrency(transaction.amount)}',
+          '${isDeposit ? '+' : '-'} ${AppFormatters.formatCurrency(transaction.amount)}',
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: color,

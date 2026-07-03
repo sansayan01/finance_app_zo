@@ -401,7 +401,7 @@ class _StaffTimelinePageState extends ConsumerState<StaffTimelinePage> {
           Expanded(
             child: _StatMini(
               label: "TODAY'S COLLECTED",
-              value: AppFormatters.formatCompactCurrency(stats.collected),
+              value: AppFormatters.formatCurrency(stats.collected),
               icon: Icons.arrow_downward_rounded,
               color: AppColors.success,
               isDark: isDark,

@@ -861,7 +861,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           Expanded(
             child: _StatMini(
               label: "TODAY'S INFLOW",
-              value: AppFormatters.formatCompactCurrency(collected),
+              value: AppFormatters.formatCurrency(collected),
               icon: Icons.arrow_downward_rounded,
               color: AppColors.success,
               isDark: isDark,
@@ -871,7 +871,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           Expanded(
             child: _StatMini(
               label: 'DISBURSED',
-              value: AppFormatters.formatCompactCurrency(disbursed),
+              value: AppFormatters.formatCurrency(disbursed),
               icon: Icons.arrow_upward_rounded,
               color: AppColors.error,
               isDark: isDark,

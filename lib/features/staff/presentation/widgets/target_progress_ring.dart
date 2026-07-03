@@ -118,13 +118,13 @@ class _TargetProgressRingState extends State<TargetProgressRing>
 
                 // Achieved / Target
                 Text(
-                  '₹${AppFormatters.formatCompactCurrency(widget.target.achievedAmount)}',
+                  '₹${AppFormatters.formatCurrency(widget.target.achievedAmount)}',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
-                  'of ₹${AppFormatters.formatCompactCurrency(widget.target.targetAmount)}',
+                  'of ₹${AppFormatters.formatCurrency(widget.target.targetAmount)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),

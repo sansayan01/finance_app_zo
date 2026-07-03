@@ -28,6 +28,26 @@ extension PaymentSortByX on PaymentSortBy {
       };
 }
 
+enum OverdueBucket {
+  days1to7,
+  days8to30,
+  days30plus,
+}
+
+extension OverdueBucketX on OverdueBucket {
+  String get label => switch (this) {
+    OverdueBucket.days1to7 => '1–7 days',
+    OverdueBucket.days8to30 => '8–30 days',
+    OverdueBucket.days30plus => '30+ days',
+  };
+
+  bool matches(int daysOverdue) => switch (this) {
+    OverdueBucket.days1to7 => daysOverdue >= 1 && daysOverdue <= 7,
+    OverdueBucket.days8to30 => daysOverdue >= 8 && daysOverdue <= 30,
+    OverdueBucket.days30plus => daysOverdue > 30,
+  };
+}
+
 class TodayPayment {
   final String id;
   final PaymentType type;

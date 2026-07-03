@@ -1028,27 +1028,67 @@ class _CustomerSavingsDetailPageState
                           ),
                         );
                       }
-                      final recent = transactions.take(5).toList();
                       final collectionDates =
                           collectionDatesAsync.valueOrNull ?? {};
                       final collectorNames =
                           collectorNamesAsync.valueOrNull ?? {};
-                      return SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return _staggered(
-                              6 + index,
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  AppSpacing.md, 3, AppSpacing.md, 3,
+                      return SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            // Compact scrollable deposit list
+                            SizedBox(
+                              height: 430,
+                              child: ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
                                 ),
-                                child: _buildContributionTile(
-                                    theme, isDark, recent[index],
-                                    collectionDates, collectorNames),
+                                itemCount: transactions.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 6),
+                                itemBuilder: (context, index) {
+                                  return _buildContributionTile(
+                                    theme,
+                                    isDark,
+                                    transactions[index],
+                                    collectionDates,
+                                    collectorNames,
+                                  );
+                                },
                               ),
-                            );
-                          },
-                          childCount: recent.length,
+                            ),
+                            // View All button (only if more than 5 transactions)
+                            if (transactions.length > 5)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 12,
+                                  bottom: 4,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      context.push('/customer/transactions'),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'View All Transactions',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 16,
+                                        color: AppColors.primary,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       );
                     },

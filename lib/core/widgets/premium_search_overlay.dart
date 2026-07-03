@@ -466,10 +466,10 @@ class _PremiumSearchOverlayState extends State<PremiumSearchOverlay>
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// Result Tile with staggered entrance
+// Result Tile with staggered entrance (TweenAnimationBuilder, no controller)
 // ══════════════════════════════════════════════════════════════════════════════
 
-class _Tile extends StatefulWidget {
+class _Tile extends StatelessWidget {
   final OverlaySearchResult result;
   final int index;
   final bool isDark;
@@ -483,100 +483,72 @@ class _Tile extends StatefulWidget {
   });
 
   @override
-  State<_Tile> createState() => _TileState();
-}
-
-class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
-  late final AnimationController _c;
-  late final Animation<double> _fade;
-  late final Animation<Offset> _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 200 + widget.index * 40),
-    );
-    _fade = CurvedAnimation(parent: _c, curve: Curves.easeOut);
-    _slide = Tween(begin: const Offset(0, 0.08), end: Offset.zero).animate(
-      CurvedAnimation(parent: _c, curve: Curves.easeOutCubic),
-    );
-    Future.delayed(Duration(milliseconds: 40 + widget.index * 40), () {
-      if (mounted) _c.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final r = widget.result;
+    final r = result;
 
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(
-        position: _slide,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: r.color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: Icon(r.icon, size: 19, color: r.color),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 200 + index * 40),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(offset: Offset(0, (1 - t) * 8), child: child),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: r.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(11),
                   ),
-                  const SizedBox(width: 13),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  child: Icon(r.icon, size: 19, color: r.color),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        r.title,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (r.subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 1),
                         Text(
-                          r.title,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.5,
+                          r.subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: AppColors.textTertiaryLight,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (r.subtitle.isNotEmpty) ...[
-                          const SizedBox(height: 1),
-                          Text(
-                            r.subtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 12,
-                              color: AppColors.textTertiaryLight,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: AppColors.textTertiaryLight.withValues(alpha: 0.4),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.textTertiaryLight.withValues(alpha: 0.4),
+                ),
+              ],
             ),
           ),
         ),

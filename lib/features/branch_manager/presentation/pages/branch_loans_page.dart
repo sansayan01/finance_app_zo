@@ -339,7 +339,7 @@ class _BranchLoansPageState extends ConsumerState<BranchLoansPage> {
               theme, isDark,
               icon: Icons.account_balance_wallet_rounded,
               label: 'Outstanding',
-              value: AppFormatters.formatCompactCurrency(totalOutstanding),
+              value: AppFormatters.formatCurrency(totalOutstanding),
               color: AppColors.info,
             ),
           ),
@@ -497,14 +497,14 @@ class _BranchLoansPageState extends ConsumerState<BranchLoansPage> {
                 child: _buildDetailColumn(
                   theme, isDark,
                   label: 'Loan Amount',
-                  value: AppFormatters.formatCompactCurrency(loan.amount),
+                  value: AppFormatters.formatCurrency(loan.amount),
                 ),
               ),
               Expanded(
                 child: _buildDetailColumn(
                   theme, isDark,
                   label: 'Outstanding',
-                  value: AppFormatters.formatCompactCurrency(loan.outstandingBalance),
+                  value: AppFormatters.formatCurrency(loan.outstandingBalance),
                   valueColor: loan.outstandingBalance > 0
                       ? AppColors.warning
                       : AppColors.success,

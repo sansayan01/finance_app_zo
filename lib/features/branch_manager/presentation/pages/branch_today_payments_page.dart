@@ -1,12 +1,19 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:open_filex/open_filex.dart';
+import '../../../../core/utils/file_download.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../payments/data/models/today_payment_model.dart';
 import '../../../payments/data/providers/payment_providers.dart' show TodayPaymentData;
@@ -130,12 +137,9 @@ class _BranchTodayPaymentsPageState
   }
 
   void _showFilterSheet() {
-    final filters = ref.read(branchPaymentFilterProvider);
     final user = ref.read(currentUserProvider);
     final branchId = user?.branchId;
     if (branchId == null) return;
-
-    final agentsAsync = ref.watch(branchPaymentAgentsProvider(branchId));
 
     showModalBottomSheet(
       context: context,
@@ -144,7 +148,14 @@ class _BranchTodayPaymentsPageState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => SafeArea(
+      builder: (ctx) => Consumer(
+        builder: (ctx, ref, _) {
+          final filters = ref.watch(branchPaymentFilterProvider);
+          final agentsAsync = ref.watch(branchPaymentAgentsProvider(branchId));
+          final minController = TextEditingController(text: filters.minAmount?.toStringAsFixed(0) ?? '');
+          final maxController = TextEditingController(text: filters.maxAmount?.toStringAsFixed(0) ?? '');
+          final notifier = ref.read(branchPaymentFilterProvider.notifier);
+          return SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -170,55 +181,66 @@ class _BranchTodayPaymentsPageState
                           fontSize: 18, fontWeight: FontWeight.w700)),
                   TextButton(
                     onPressed: () {
-                      ref
-                          .read(branchPaymentFilterProvider.notifier)
-                          .resetFilters();
+                      notifier.resetFilters();
                       Navigator.pop(ctx);
                     },
                     child: const Text('Reset'),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              const Text('Agent',
-                  style:
-                      TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 8),
-              agentsAsync.when(
-                loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Error: $e'),
-                data: (agents) => Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    FilterChip(
-                      label: const Text('All Agents'),
-                      selected: filters.agentId == null,
-                      onSelected: (_) {
-                        ref
-                            .read(branchPaymentFilterProvider.notifier)
-                            .setAgent(null);
-                      },
-                      selectedColor:
-                          AppColors.primary.withValues(alpha: 0.15),
-                      checkmarkColor: AppColors.primary,
-                    ),
-                    ...agents.map((a) => FilterChip(
-                          label: Text(a['name']!),
-                          selected: filters.agentId == a['id'],
-                          onSelected: (_) {
-                            ref
-                                .read(branchPaymentFilterProvider.notifier)
-                                .setAgent(a['id']);
-                          },
-                          selectedColor:
-                              AppColors.primary.withValues(alpha: 0.15),
-                          checkmarkColor: AppColors.primary,
-                        )),
-                  ],
+              const SizedBox(height: 12),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSection('Payment Type', Wrap(
+                        spacing: 8, runSpacing: 8,
+                        children: [
+                          FilterChip(label: const Text('Both'), selected: filters.paymentTypeFilter == null, onSelected: (_) => notifier.setPaymentType(null), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                          FilterChip(label: const Text('EMI'), selected: filters.paymentTypeFilter == PaymentType.emi, onSelected: (_) => notifier.setPaymentType(PaymentType.emi), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                          FilterChip(label: const Text('Savings'), selected: filters.paymentTypeFilter == PaymentType.savings, onSelected: (_) => notifier.setPaymentType(PaymentType.savings), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                        ],
+                      )),
+                      _buildSection('Status', Wrap(
+                        spacing: 8, runSpacing: 8,
+                        children: [
+                          FilterChip(label: const Text('Pending'), selected: filters.statusFilters.contains(PaymentStatus.pending), onSelected: (_) => notifier.toggleStatusFilter(PaymentStatus.pending), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                          FilterChip(label: const Text('Overdue'), selected: filters.statusFilters.contains(PaymentStatus.overdue), onSelected: (_) => notifier.toggleStatusFilter(PaymentStatus.overdue), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                          FilterChip(label: const Text('Collected'), selected: filters.statusFilters.contains(PaymentStatus.collected), onSelected: (_) => notifier.toggleStatusFilter(PaymentStatus.collected), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                        ],
+                      )),
+                      _buildSection('Amount Range', Row(children: [
+                        Expanded(child: TextField(controller: minController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(hintText: 'Min', isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), onChanged: (v) => notifier.setAmountRange(min: double.tryParse(v), clearMin: v.isEmpty, max: filters.maxAmount))),
+                        const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('—', style: TextStyle(color: Colors.grey))),
+                        Expanded(child: TextField(controller: maxController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(hintText: 'Max', isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), onChanged: (v) => notifier.setAmountRange(min: filters.minAmount, max: double.tryParse(v), clearMax: v.isEmpty))),
+                      ])),
+                      _buildSection('Payment Mode', Wrap(
+                        spacing: 8, runSpacing: 8,
+                        children: [for (final mode in ['Cash', 'UPI', 'Bank Transfer', 'Cheque'])
+                          FilterChip(label: Text(mode), selected: filters.paymentModeFilters.contains(mode.toLowerCase()), onSelected: (_) => notifier.togglePaymentMode(mode.toLowerCase()), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                        ],
+                      )),
+                      _buildSection('Overdue Days', Wrap(
+                        spacing: 8, runSpacing: 8,
+                        children: OverdueBucket.values.map((b) => FilterChip(label: Text(b.label), selected: filters.overdueDayFilters.contains(b), onSelected: (_) => notifier.toggleOverdueBucket(b), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary)).toList(),
+                      )),
+                      _buildSection('Agent', agentsAsync.when(
+                        loading: () => const LinearProgressIndicator(),
+                        error: (e, _) => Text('Error: $e'),
+                        data: (agents) => Wrap(
+                          spacing: 8, runSpacing: 8,
+                          children: [
+                            FilterChip(label: const Text('All Agents'), selected: filters.agentId == null, onSelected: (_) => notifier.setAgent(null), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary),
+                            ...agents.map((a) => FilterChip(label: Text(a['name']!), selected: filters.agentId == a['id'], onSelected: (_) => notifier.setAgent(a['id']), selectedColor: AppColors.primary.withValues(alpha: 0.15), checkmarkColor: AppColors.primary)),
+                          ],
+                        ),
+                      )),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -238,116 +260,194 @@ class _BranchTodayPaymentsPageState
             ],
           ),
         ),
+        );
+        },
       ),
     );
   }
 
-  void _showShareSheet(TodayPaymentData data) {
+  Widget _buildSection(String label, Widget child) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handlePdfExport(TodayPaymentData data) async {
     final filters = ref.read(branchPaymentFilterProvider);
+    final fileName = 'payments_report_${filters.dateLabel.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    const mime = 'application/pdf';
+
+    try {
+      final bytes = await PaymentExport.generatePdf(data, filters.dateLabel);
+
+      if (kIsWeb) {
+        downloadFileForWeb(bytes, fileName, mime);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Report downloaded: $fileName'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ));
+        }
+      } else {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(bytes);
+
+        if (mounted) {
+          _showReportReadySheet(
+            dateLabel: filters.dateLabel,
+            file: file,
+            ext: 'pdf',
+            mime: mime,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to export report: $e'),
+          backgroundColor: AppColors.error,
+        ));
+      }
+    }
+  }
+
+  void _showReportReadySheet({
+    required String dateLabel,
+    required File file,
+    required String ext,
+    required String mime,
+  }) {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text('Export & Share',
-                  style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          12,
+          24,
+          MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                child: const Icon(Icons.share_rounded,
-                    color: AppColors.primary, size: 20),
               ),
-              title: const Text('Share Summary'),
-              subtitle: const Text('Share text summary via any app'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final text = PaymentExport.generateSummaryText(
-                    data, filters.dateLabel);
-                await SharePlus.instance.share(
-                  ShareParams(
-                    text: text,
-                    subject: 'Payments - ${filters.dateLabel}',
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
+              const SizedBox(height: 20),
+
+              // Success icon
+              Container(
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.table_chart_rounded,
-                    color: AppColors.success, size: 20),
-              ),
-              title: const Text('Export CSV'),
-              subtitle: const Text('Download payment data as CSV file'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                try {
-                  await PaymentExport.shareCsv(
-                      data.allPayments, filters.dateLabel);
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Export failed: $e'),
-                      backgroundColor: Colors.redAccent,
-                    ));
-                  }
-                }
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.success,
+                  size: 28,
                 ),
-                child: const Icon(Icons.copy_rounded,
-                    color: AppColors.info, size: 20),
               ),
-              title: const Text('Copy Summary'),
-              subtitle: const Text('Copy summary to clipboard'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final text = PaymentExport.generateSummaryText(
-                    data, filters.dateLabel);
-                await Clipboard.setData(ClipboardData(text: text));
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Summary copied to clipboard'),
-                    backgroundColor: AppColors.success,
-                  ));
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 16),
+
+              Text(
+                'Report Ready',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                file.path.split('/').last,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+
+              // Open button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    OpenFilex.open(file.path);
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: Text(
+                    'Open ${ext.toUpperCase()}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Share button
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(
+                      ShareParams(
+                        files: [XFile(file.path, mimeType: mime)],
+                        text: 'Payments Report - $dateLabel',
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.ios_share_rounded, size: 18),
+                  label: const Text(
+                    'Share',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -403,7 +503,7 @@ class _BranchTodayPaymentsPageState
           .maybeSingle();
       if (response != null && mounted) {
         final plan = SavingsModel.fromJson(response);
-        Navigator.of(context).push(
+        Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
             builder: (context) => CollectionSheet.savings(savingsPlan: plan),
@@ -430,7 +530,7 @@ class _BranchTodayPaymentsPageState
           .maybeSingle();
       if (response != null && mounted) {
         final loan = LoanModel.fromJson(response);
-        Navigator.of(context).push(
+        Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
             builder: (context) => CollectionSheet(loan: loan),
@@ -562,8 +662,7 @@ class _BranchTodayPaymentsPageState
         ref.watch(branchTodayPaymentsProvider(branchId));
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : const Color(0xFFF5F6FA),
+      backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: _isScrolled
@@ -649,7 +748,7 @@ class _BranchTodayPaymentsPageState
             IconButton(
               icon: Icon(
                 Icons.filter_list_rounded,
-                color: filters.agentId != null ? AppColors.primary : null,
+                color: filters.hasActiveFilters ? AppColors.primary : null,
               ),
               onPressed: _showFilterSheet,
             ),
@@ -657,7 +756,7 @@ class _BranchTodayPaymentsPageState
               icon: const Icon(Icons.more_vert_rounded),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
-              itemBuilder: (ctx) => [
+              itemBuilder: (ctx) => <PopupMenuEntry<dynamic>>[
                 PopupMenuItem(
                   child: ListTile(
                     leading: Icon(
@@ -693,12 +792,25 @@ class _BranchTodayPaymentsPageState
                   onTap: () => ref.invalidate(
                       branchTodayPaymentsProvider(branchId)),
                 ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  child: const ListTile(
+                    leading: Icon(Icons.picture_as_pdf_rounded, size: 20),
+                    title: Text('Export PDF'),
+                    dense: true,
+                  ),
+                  onTap: () => paymentsAsync.maybeWhen(
+                    data: (data) => Future.delayed(Duration.zero, () => _handlePdfExport(data)),
+                    orElse: () {},
+                  ),
+                ),
               ],
             ),
           ],
         ],
       ),
-      body: paymentsAsync.when(
+      body: AuroraBackground(
+        child: paymentsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -769,7 +881,7 @@ class _BranchTodayPaymentsPageState
               ),
 
               // Active Filters
-              if (filters.agentId != null)
+              if (filters.hasActiveFilters)
                 SliverToBoxAdapter(
                   child: _buildActiveFilters(filters, isDark),
                 ),
@@ -805,17 +917,6 @@ class _BranchTodayPaymentsPageState
           );
         },
       ),
-      floatingActionButton: paymentsAsync.maybeWhen(
-        data: (data) => FloatingActionButton.extended(
-          onPressed: () => _showShareSheet(data),
-          icon: const Icon(Icons.ios_share_rounded, size: 20),
-          label: const Text('Export',
-              style: TextStyle(fontWeight: FontWeight.w600)),
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 4,
-        ),
-        orElse: () => null,
       ),
     );
   }
@@ -840,7 +941,19 @@ class _BranchTodayPaymentsPageState
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Filtered by: Agent',
+              () {
+                final labels = <String>[];
+                if (filters.agentId != null) labels.add('Agent');
+                if (filters.paymentTypeFilter != null) {
+                  labels.add(filters.paymentTypeFilter == PaymentType.emi ? 'EMI' : 'Savings');
+                }
+                if (filters.statusFilters.isNotEmpty) labels.add('Status');
+                if (filters.minAmount != null || filters.maxAmount != null) labels.add('Amount');
+                if (filters.paymentModeFilters.isNotEmpty) labels.add('Payment Mode');
+                if (filters.overdueDayFilters.isNotEmpty) labels.add('Overdue Days');
+                if (labels.length > 3) return 'Filtered by: ${labels.length} active filters';
+                return 'Filtered by: ${labels.join(' + ')}';
+              }(),
               style: const TextStyle(
                   fontSize: 13,
                   color: AppColors.primary,
@@ -1389,26 +1502,12 @@ class _PaymentCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: GlassCard(
+        glassmorphic: true,
         margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.cardDark : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: payment.statusColor.withValues(alpha: isDark ? 0.15 : 0.08),
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isDark ? Colors.black : Colors.grey.shade100)
-                  .withValues(alpha: isDark ? 0.25 : 0.45),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        borderRadius: 14,
+        borderColor: payment.statusColor.withValues(alpha: isDark ? 0.15 : 0.1),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -1588,7 +1687,6 @@ class _PaymentCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }
@@ -1764,119 +1862,119 @@ class _HeroHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: ClipRRect(
+      margin: const EdgeInsets.fromLTRB(20, 72, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [
+                  Color(0xFF080D1A),
+                  Color(0xFF0F172A),
+                ]
+              : const [
+                  Color(0xFF0F172A),
+                  Color(0xFF1E3A5F),
+                ],
+        ),
         borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark
-                    ? const [
-                        Color(0xFF050B18),
-                        Color(0xFF0F172A),
-                      ]
-                    : const [
-                        Color(0xFF0F172A),
-                        Color(0xFF1E3A5F),
-                      ],
+        border: Border.all(
+          color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.1),
+          width: 0.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Progress row: label + % done
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'TOTAL DUE TODAY',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
               ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.1),
-                width: 0.8,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Progress row: label + % done
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'TOTAL DUE TODAY',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
+              Row(
+                children: [
+                  Text(
+                    '${(progress * 100).toInt()}% Done',
+                    style: const TextStyle(
+                      color: Color(0xFF34D399),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 60,
+                    height: 4,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        backgroundColor: Colors.white.withValues(alpha: 0.12),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34D399)),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          '${(progress * 100).toInt()}% Done',
-                          style: const TextStyle(
-                            color: Color(0xFF34D399),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 60,
-                          height: 4,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(2),
-                            child: LinearProgressIndicator(
-                              value: progress.clamp(0.0, 1.0),
-                              backgroundColor: Colors.white.withValues(alpha: 0.12),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34D399)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Large Amount
-                Text(
-                  currencyFormat.format(summary.totalDue),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.5,
-                    height: 1.0,
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Stats Row below amount
-                Row(
-                  children: [
-                    Expanded(child: _MiniStatBadge(
-                      label: 'Done',
-                      count: summary.countCollected,
-                      amountString: _formatAmount(summary.totalCollected),
-                      color: const Color(0xFF34D399),
-                    )),
-                    const SizedBox(width: 8),
-                    Expanded(child: _MiniStatBadge(
-                      label: 'Pending',
-                      count: summary.countPending,
-                      amountString: _formatAmount(summary.totalPending),
-                      color: const Color(0xFFFBBF24),
-                    )),
-                    const SizedBox(width: 8),
-                    Expanded(child: _MiniStatBadge(
-                      label: 'Overdue',
-                      count: summary.countOverdue,
-                      amountString: _formatAmount(summary.totalOverdue),
-                      color: const Color(0xFFF87171),
-                    )),
-                  ],
-                ),
-              ],
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Large Amount
+          Text(
+            currencyFormat.format(summary.totalDue),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 38,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.5,
+              height: 1.1,
             ),
           ),
-        ),
+          const SizedBox(height: 18),
+          // Stats Row below amount
+          Row(
+            children: [
+              Expanded(child: _MiniStatBadge(
+                label: 'Done',
+                count: summary.countCollected,
+                amountString: _formatAmount(summary.totalCollected),
+                color: const Color(0xFF34D399),
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: _MiniStatBadge(
+                label: 'Pending',
+                count: summary.countPending,
+                amountString: _formatAmount(summary.totalPending),
+                color: const Color(0xFFFBBF24),
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: _MiniStatBadge(
+                label: 'Overdue',
+                count: summary.countOverdue,
+                amountString: _formatAmount(summary.totalOverdue),
+                color: const Color(0xFFF87171),
+              )),
+            ],
+          ),
+        ],
       ),
     );
   }

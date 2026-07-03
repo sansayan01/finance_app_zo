@@ -13,6 +13,7 @@ import 'core/providers/storage_providers.dart';
 import 'core/providers/system_config_provider.dart';
 import 'core/config/env_config.dart';
 import 'core/services/sms_outbox_service.dart';
+import 'core/services/notification_service.dart';
 import 'app.dart';
 
 Future<void> main() async {
@@ -82,7 +83,10 @@ Future<void> main() async {
     // 3b. Cache app version for update checks
     await initAppVersion();
 
-    // 3c. Migrate legacy SharedPreferences SMS queue into the new Hive outbox.
+    // 3c. Initialize notification service for auto-update prompts
+    await NotificationService.init();
+
+    // 3d. Migrate legacy SharedPreferences SMS queue into the new Hive outbox.
     try {
       await Hive.initFlutter();
       final outbox = await SmsOutboxService.open();

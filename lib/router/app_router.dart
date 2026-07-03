@@ -517,11 +517,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/users',
-            builder: (context, state) => const UsersPage(),
+            builder: (context, state) => UsersPage(
+              initialBranchId: state.uri.queryParameters['branch_id'],
+            ),
           ),
           GoRoute(
             path: '/users/new',
-            builder: (context, state) => const NewUserPage(),
+            builder: (context, state) => NewUserPage(
+              initialBranchId: state.uri.queryParameters['branch_id'],
+            ),
           ),
           GoRoute(
             path: '/users/import',

@@ -9,6 +9,7 @@ class CustomerSavingsModel {
   final DateTime? maturityDate;
   final String status;
   final String collectionType;
+  final List<String> frozenDates;
 
   CustomerSavingsModel({
     required this.id,
@@ -21,6 +22,7 @@ class CustomerSavingsModel {
     this.maturityDate,
     required this.status,
     this.collectionType = 'monthly',
+    this.frozenDates = const [],
   });
 
   factory CustomerSavingsModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,10 @@ class CustomerSavingsModel {
           : null,
       status: json['status']?.toString() ?? 'active',
       collectionType: json['collection_type']?.toString() ?? 'monthly',
+      frozenDates: (json['frozen_dates'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
     );
   }
 

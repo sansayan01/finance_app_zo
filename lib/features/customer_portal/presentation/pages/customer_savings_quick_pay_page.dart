@@ -16,6 +16,7 @@ class _SavingsInst {
   final int number;
   final DateTime dueDate;
   final bool isPaid;
+  final bool isFrozen;
   final double amount;
   final String dateKey; // YYYY-MM-DD
 
@@ -23,6 +24,7 @@ class _SavingsInst {
     required this.number,
     required this.dueDate,
     required this.isPaid,
+    required this.isFrozen,
     required this.amount,
     required this.dateKey,
   });
@@ -93,6 +95,7 @@ class _CustomerSavingsQuickPayPageState
     final total = plan.tenureMonths ?? 12;
     final amount = plan.monthlyDeposit;
     final collectionType = plan.collectionType;
+    final frozenSet = plan.frozenDates.toSet();
 
     if (maturity == null || amount <= 0 || total <= 0) return installments;
 
@@ -127,6 +130,7 @@ class _CustomerSavingsQuickPayPageState
         number: number,
         dueDate: currentDate,
         isPaid: false,
+        isFrozen: frozenSet.contains(dateKey),
         amount: amount,
         dateKey: dateKey,
       ));
@@ -154,7 +158,7 @@ class _CustomerSavingsQuickPayPageState
   }
 
   List<_SavingsInst> _unpaid(List<_SavingsInst> all) =>
-      all.where((i) => !i.isPaid).toList();
+      all.where((i) => !i.isPaid && !i.isFrozen).toList();
 
   Map<DateTime, List<_SavingsInst>> _buildEventMap(List<_SavingsInst> unpaid) {
     final map = <DateTime, List<_SavingsInst>>{};
@@ -209,6 +213,13 @@ class _CustomerSavingsQuickPayPageState
 
           final all = _generateInstallments(plan);
           final unpaid = _unpaid(all);
+          // Derive frozen keys from the installments themselves (not just plan.frozenDates)
+          final frozenKeys = all
+              .where((i) => i.isFrozen)
+              .map((i) => i.dateKey)
+              .toSet();
+          debugPrint('Frozen dates from plan: ${plan.frozenDates}');
+          debugPrint('Frozen keys from installments: $frozenKeys');
 
           if (unpaid.isEmpty) {
             return Center(
@@ -223,8 +234,11 @@ class _CustomerSavingsQuickPayPageState
             );
           }
 
-          // Sync
-          _selectedDateKeys.removeWhere((dk) => !unpaid.any((i) => i.dateKey == dk));
+          // Sync — remove any keys that are no longer unpaid or are frozen
+          _selectedDateKeys.removeWhere((dk) {
+            if (frozenKeys.contains(dk)) return true;
+            return !unpaid.any((i) => i.dateKey == dk);
+          });
           if (_tabController.index == 0) {
             if (_installmentCount > unpaid.length) _installmentCount = unpaid.length;
             _applyQuickPay(unpaid, _installmentCount);
@@ -293,7 +307,7 @@ class _CustomerSavingsQuickPayPageState
         children: [
           Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: _primaryColor().withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(20),
@@ -311,17 +325,30 @@ class _CustomerSavingsQuickPayPageState
                           }
                         : null,
                   ),
-                  const SizedBox(width: 24),
-                  Text(
-                    '$_installmentCount',
-                    style: TextStyle(
-                      fontSize: 44,
-                      fontWeight: FontWeight.w900,
-                      color: _primaryColor(),
-                      height: 1,
+                  const SizedBox(width: 16),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Text(
+                      '$_installmentCount',
+                      key: ValueKey<int>(_installmentCount),
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: _primaryColor(),
+                        height: 1,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 16),
                   _buildCounterButton(
                     icon: Icons.add_rounded,
                     onTap: _installmentCount < unpaid.length
@@ -468,7 +495,13 @@ class _CustomerSavingsQuickPayPageState
     final unpaid = _unpaid(all);
     final instEvents = _buildEventMap(unpaid);
 
-    final tempSelected = Set<String>.from(_selectedDateKeys);
+    // Filter out frozen dates from the current selection
+    final frozenKeys = all.where((i) => i.isFrozen).map((i) => i.dateKey).toSet();
+    debugPrint('Calendar popup - frozenKeys: $frozenKeys, _selectedDateKeys: $_selectedDateKeys');
+    final tempSelected = Set<String>.from(
+      _selectedDateKeys.where((dk) => !frozenKeys.contains(dk)),
+    );
+    debugPrint('Calendar popup - tempSelected after filter: $tempSelected');
 
     DateTime focusedDay = DateTime.now();
     if (tempSelected.isNotEmpty) {
@@ -649,7 +682,8 @@ class _CustomerSavingsQuickPayPageState
                                 // tableBorder not available in this TableCalendar version
                                 enabledDayPredicate: (day) {
                                   final events = _eventsForDay(day, instEvents);
-                                  return events.isNotEmpty && !events.every((i) => i.isPaid);
+                                  return events.isNotEmpty &&
+                                      events.any((i) => !i.isPaid && !i.isFrozen);
                                 },
                                 selectedDayPredicate: (day) {
                                   final key = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
@@ -662,7 +696,10 @@ class _CustomerSavingsQuickPayPageState
                                     if (tempSelected.contains(key)) {
                                       tempSelected.remove(key);
                                     } else {
-                                      tempSelected.add(key);
+                                      final events = _eventsForDay(selectedDay, instEvents);
+                                      if (events.any((i) => !i.isPaid && !i.isFrozen)) {
+                                        tempSelected.add(key);
+                                      }
                                     }
                                   });
                                 },
@@ -748,6 +785,7 @@ class _CustomerSavingsQuickPayPageState
                                   children: [
                                     _buildLegendDot(_primaryColor(), 'Upcoming'),
                                     _buildLegendDot(_isDark ? AppColors.successDark : Colors.green, 'Paid'),
+                                    _buildLegendDot(Colors.orange, 'Frozen'),
                                     _buildLegendDot(_textTertiary(), 'Unavailable'),
                                   ],
                                 ),
@@ -767,7 +805,7 @@ class _CustomerSavingsQuickPayPageState
                                       final date = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
                                       final events = _eventsForDay(date, instEvents);
                                       for (final inst in events) {
-                                        if (!inst.isPaid) {
+                                        if (!inst.isPaid && !inst.isFrozen) {
                                           newKeys.add(inst.dateKey);
                                         }
                                       }

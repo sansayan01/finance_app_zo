@@ -14,6 +14,12 @@ class PaymentFilterState {
   final DateTime selectedDate;
   final PaymentSortBy sortBy;
   final bool autoRefresh;
+  final PaymentType? paymentTypeFilter;
+  final Set<PaymentStatus> statusFilters;
+  final double? minAmount;
+  final double? maxAmount;
+  final Set<String> paymentModeFilters;
+  final Set<OverdueBucket> overdueDayFilters;
 
   const PaymentFilterState({
     this.searchQuery = '',
@@ -22,6 +28,12 @@ class PaymentFilterState {
     required this.selectedDate,
     this.sortBy = PaymentSortBy.statusPriority,
     this.autoRefresh = true,
+    this.paymentTypeFilter,
+    this.statusFilters = const {},
+    this.minAmount,
+    this.maxAmount,
+    this.paymentModeFilters = const {},
+    this.overdueDayFilters = const {},
   });
 
   PaymentFilterState copyWith({
@@ -33,6 +45,15 @@ class PaymentFilterState {
     bool? autoRefresh,
     bool clearBranch = false,
     bool clearAgent = false,
+    PaymentType? paymentTypeFilter,
+    bool clearPaymentType = false,
+    Set<PaymentStatus>? statusFilters,
+    double? minAmount,
+    bool clearMinAmount = false,
+    double? maxAmount,
+    bool clearMaxAmount = false,
+    Set<String>? paymentModeFilters,
+    Set<OverdueBucket>? overdueDayFilters,
   }) {
     return PaymentFilterState(
       searchQuery: searchQuery ?? this.searchQuery,
@@ -41,8 +62,24 @@ class PaymentFilterState {
       selectedDate: selectedDate ?? this.selectedDate,
       sortBy: sortBy ?? this.sortBy,
       autoRefresh: autoRefresh ?? this.autoRefresh,
+      paymentTypeFilter: clearPaymentType ? null : (paymentTypeFilter ?? this.paymentTypeFilter),
+      statusFilters: statusFilters ?? this.statusFilters,
+      minAmount: clearMinAmount ? null : (minAmount ?? this.minAmount),
+      maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
+      paymentModeFilters: paymentModeFilters ?? this.paymentModeFilters,
+      overdueDayFilters: overdueDayFilters ?? this.overdueDayFilters,
     );
   }
+
+  bool get hasActiveFilters =>
+      branchId != null ||
+      agentId != null ||
+      paymentTypeFilter != null ||
+      statusFilters.isNotEmpty ||
+      minAmount != null ||
+      maxAmount != null ||
+      paymentModeFilters.isNotEmpty ||
+      overdueDayFilters.isNotEmpty;
 
   bool get isToday {
     final now = DateTime.now();
@@ -101,6 +138,40 @@ class PaymentFilterNotifier extends StateNotifier<PaymentFilterState> {
 
   void toggleAutoRefresh() {
     state = state.copyWith(autoRefresh: !state.autoRefresh);
+  }
+
+  void setPaymentType(PaymentType? type) {
+    state = state.copyWith(
+      paymentTypeFilter: type,
+      clearPaymentType: type == null,
+    );
+  }
+
+  void toggleStatusFilter(PaymentStatus status) {
+    final updated = Set<PaymentStatus>.from(state.statusFilters);
+    updated.contains(status) ? updated.remove(status) : updated.add(status);
+    state = state.copyWith(statusFilters: updated);
+  }
+
+  void setAmountRange({double? min, double? max, bool clearMin = false, bool clearMax = false}) {
+    state = state.copyWith(
+      minAmount: min,
+      maxAmount: max,
+      clearMinAmount: clearMin,
+      clearMaxAmount: clearMax,
+    );
+  }
+
+  void togglePaymentMode(String mode) {
+    final updated = Set<String>.from(state.paymentModeFilters);
+    updated.contains(mode) ? updated.remove(mode) : updated.add(mode);
+    state = state.copyWith(paymentModeFilters: updated);
+  }
+
+  void toggleOverdueBucket(OverdueBucket bucket) {
+    final updated = Set<OverdueBucket>.from(state.overdueDayFilters);
+    updated.contains(bucket) ? updated.remove(bucket) : updated.add(bucket);
+    state = state.copyWith(overdueDayFilters: updated);
   }
 
   void resetFilters() {
@@ -228,7 +299,7 @@ final todayPaymentsProvider =
     // Query D: Savings plans (joined with members)
     var plansQuery = client
         .from('savings_plans')
-        .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, member_id, '
+        .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, start_date, member_id, installments_paid, total_installments, '
             'members(id, full_name, phone, branch_id, agent_id)')
         .eq('status', 'active');
     if (!isSuperAdmin) plansQuery = plansQuery.eq('org_id', orgId!);
@@ -466,17 +537,45 @@ final todayPaymentsProvider =
           ? DateTime(nextDueParsed.year, nextDueParsed.month, nextDueParsed.day)
           : null;
       final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+      final collectionType = plan['collection_type'] ?? 'daily';
+      // A savings plan is overdue if it's not collected AND either:
+      // (a) next_due_date is set and is before the selected date, or
+      // (b) next_due_date is null (never updated / first time due) and collection_type is daily
+      //     — daily plans with null next_due_date are implicitly overdue if not collected
       final isOverdue = !isCollected &&
-          nextDateOnly != null &&
-          nextDateOnly.isBefore(selectedDateOnly);
-      // diff days matches TodayPayment.daysOverdue (DateTime.now().difference(dueDate).inDays).
-      final daysOverdueForAmount = isOverdue
-          ? selectedDateOnly.difference(nextDateOnly).inDays
-          : 0;
+          (nextDateOnly != null
+              ? nextDateOnly.isBefore(selectedDateOnly)
+              : collectionType == 'daily');
       final deposit = (plan['monthly_deposit'] as num?)?.toDouble() ?? 0;
-      // For overdue rows, sum up missed installments so the card shows the real amount owed
+
+      // Compute actual overdue installments from installments_paid vs expected.
+      // This is more accurate than using next_due_date difference because
+      // next_due_date only reflects the last advanced due date, not total missed.
+      final paidCount = (plan['installments_paid'] as num?)?.toInt() ?? 0;
+      final startDateStr = plan['start_date'] as String?;
+      final startDate = startDateStr != null ? DateTime.tryParse(startDateStr) : null;
+
+      int expectedUpToToday = 0;
+      if (startDate != null) {
+        final startOnly = DateTime(startDate.year, startDate.month, startDate.day);
+        final diffDays = selectedDateOnly.difference(startOnly).inDays;
+        switch (collectionType) {
+          case 'weekly':
+            expectedUpToToday = (diffDays ~/ 7) + 1;
+            break;
+          case 'monthly':
+            expectedUpToToday = ((diffDays ~/ 30)) + 1;
+            break;
+          default: // daily
+            expectedUpToToday = diffDays + 1;
+        }
+      }
+
+      // Subtract 1 because today's installment is "due today", not overdue.
+      // Overdue = installments expected BEFORE today that haven't been paid.
+      final overdueCount = isOverdue ? (expectedUpToToday - paidCount - 1).clamp(0, expectedUpToToday) : 0;
       final overdueAmount =
-          isOverdue ? deposit * daysOverdueForAmount : deposit;
+          isOverdue ? deposit * overdueCount : deposit;
 
       payments.add(TodayPayment(
         id: plan['id'],
@@ -514,7 +613,6 @@ final todayPaymentsProvider =
 
       // For daily collections that are overdue and not yet collected,
       // add a SEPARATE pending entry for today's collection.
-      final collectionType = plan['collection_type'] ?? 'daily';
       if (!isCollected &&
           isOverdue &&
           collectionType == 'daily' &&
@@ -559,11 +657,52 @@ final todayPaymentsProvider =
     }).toList();
   }
 
+  // Apply advanced filters
+  filtered = _applyAdvancedFilters(filtered, filters);
+
   // Apply sorting
   _sortPayments(filtered, filters.sortBy);
 
   return TodayPaymentData(payments: filtered, allPayments: payments);
 });
+
+List<TodayPayment> _applyAdvancedFilters(
+  List<TodayPayment> payments,
+  PaymentFilterState filters,
+) {
+  var result = payments;
+
+  if (filters.paymentTypeFilter != null) {
+    result = result.where((p) => p.type == filters.paymentTypeFilter).toList();
+  }
+
+  if (filters.statusFilters.isNotEmpty) {
+    result = result.where((p) => filters.statusFilters.contains(p.status)).toList();
+  }
+
+  if (filters.minAmount != null) {
+    result = result.where((p) => p.amountExpected >= filters.minAmount!).toList();
+  }
+
+  if (filters.maxAmount != null) {
+    result = result.where((p) => p.amountExpected <= filters.maxAmount!).toList();
+  }
+
+  if (filters.paymentModeFilters.isNotEmpty) {
+    result = result.where((p) =>
+        p.paymentMode != null && filters.paymentModeFilters.contains(p.paymentMode)
+    ).toList();
+  }
+
+  if (filters.overdueDayFilters.isNotEmpty) {
+    result = result.where((p) {
+      if (!p.isOverdue) return true;
+      return filters.overdueDayFilters.any((bucket) => bucket.matches(p.daysOverdue));
+    }).toList();
+  }
+
+  return result;
+}
 
 void _sortPayments(List<TodayPayment> payments, PaymentSortBy sortBy) {
   switch (sortBy) {

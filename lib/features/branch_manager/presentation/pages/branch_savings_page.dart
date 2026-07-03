@@ -296,7 +296,7 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
               theme, isDark,
               icon: Icons.savings_rounded,
               label: 'Total Saved',
-              value: AppFormatters.formatCompactCurrency(totalSaved),
+              value: AppFormatters.formatCurrency(totalSaved),
               color: AppColors.success,
             ),
           ),
@@ -316,7 +316,7 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
               theme, isDark,
               icon: Icons.track_changes_rounded,
               label: 'Target',
-              value: AppFormatters.formatCompactCurrency(totalTarget),
+              value: AppFormatters.formatCurrency(totalTarget),
               color: AppColors.accent,
             ),
           ),
@@ -464,7 +464,7 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
                 child: _buildDetailColumn(
                   theme, isDark,
                   label: 'Saved',
-                  value: AppFormatters.formatCompactCurrency(saving.currentAmount),
+                  value: AppFormatters.formatCurrency(saving.currentAmount),
                   valueColor: AppColors.success,
                 ),
               ),
@@ -472,7 +472,7 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
                 child: _buildDetailColumn(
                   theme, isDark,
                   label: 'Target',
-                  value: AppFormatters.formatCompactCurrency(saving.targetAmount),
+                  value: AppFormatters.formatCurrency(saving.targetAmount),
                 ),
               ),
               Expanded(
@@ -480,7 +480,7 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
                   theme, isDark,
                   label: saving.collectionType[0].toUpperCase() +
                       saving.collectionType.substring(1),
-                  value: AppFormatters.formatCompactCurrency(saving.monthlyDeposit),
+                  value: AppFormatters.formatCurrency(saving.monthlyDeposit),
                 ),
               ),
             ],

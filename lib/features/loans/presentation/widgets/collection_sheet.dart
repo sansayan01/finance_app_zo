@@ -1215,227 +1215,239 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-
-              // ─── Outstanding / Collected Premium Stat Card ───
-              Container(
-                width: double.infinity,
-                height: 60,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.12),
-                      AppColors.accent.withValues(alpha: 0.08),
-                    ],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final outstandingCard = Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.12),
+                    AppColors.accent.withValues(alpha: 0.08),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  width: 1,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.mode == CollectionMode.savings
+                          ? 'Collected'
+                          : 'Outstanding',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      currencyFormat.format(
                         widget.mode == CollectionMode.savings
-                            ? 'Collected'
-                            : 'Outstanding',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
+                            ? widget.savingsPlan!.currentAmount
+                            : widget.loan!.outstandingBalance,
                       ),
-                      Text(
-                        currencyFormat.format(
-                          widget.mode == CollectionMode.savings
-                              ? widget.savingsPlan!.currentAmount
-                              : widget.loan!.outstandingBalance,
-                        ),
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                        ),
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+            );
 
-              const SizedBox(height: 12),
-
-              // Schedule selector (scrollable) -- mode-dependent
-              Expanded(
-                child: widget.mode == CollectionMode.savings
-                    ? _buildSavingsBody(currencyFormat)
-                    : _buildLoanBody(currencyFormat),
-              ),
-
-              const SizedBox(height: 10),
-
-              // ─── 5. Payment Mode Chips -- Gradient Selection ───
-              const Text('Payment Mode',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 12)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPaymentModeChip(
-                      icon: Icons.money_rounded,
-                      label: 'Cash',
-                      mode: 'cash',
+            final paymentModeSection = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Payment Mode',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 12)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPaymentModeChip(
+                        icon: Icons.money_rounded,
+                        label: 'Cash',
+                        mode: 'cash',
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildPaymentModeChip(
-                      icon: Icons.qr_code_rounded,
-                      label: 'UPI',
-                      mode: 'upi',
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildPaymentModeChip(
+                        icon: Icons.qr_code_rounded,
+                        label: 'UPI',
+                        mode: 'upi',
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildPaymentModeChip(
-                      icon: Icons.account_balance_rounded,
-                      label: 'Bank',
-                      mode: 'bank_transfer',
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildPaymentModeChip(
+                        icon: Icons.account_balance_rounded,
+                        label: 'Bank',
+                        mode: 'bank_transfer',
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildPaymentModeChip(
-                      icon: Icons.receipt_rounded,
-                      label: 'Cheque',
-                      mode: 'cheque',
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildPaymentModeChip(
+                        icon: Icons.receipt_rounded,
+                        label: 'Cheque',
+                        mode: 'cheque',
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // ─── UPI QR Section (inline) ───
-              if (_showUpiQr) ...[
-                _buildUpiQrSection(currencyFormat),
-                const SizedBox(height: 12),
+                  ],
+                ),
               ],
+            );
 
-              // ─── 6. Action Buttons -- Premium Style ───
-              if (!_showUpiQr)
-              Row(
+            if (_showUpiQr) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    outstandingCard,
+                    const SizedBox(height: 12),
+                    paymentModeSection,
+                    const SizedBox(height: 12),
+                    _buildUpiQrSection(currencyFormat),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Cancel -- frosted glass
+                  const SizedBox(height: 8),
+                  outstandingCard,
+                  const SizedBox(height: 12),
+
+                  // Schedule selector (scrollable) -- mode-dependent
                   Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: _fillColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _separator,
-                            width: 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: _textSecondary,
+                    child: widget.mode == CollectionMode.savings
+                        ? _buildSavingsBody(currencyFormat)
+                        : _buildLoanBody(currencyFormat),
+                  ),
+
+                  const SizedBox(height: 10),
+                  paymentModeSection,
+                  const SizedBox(height: 12),
+
+                  // ─── 6. Action Buttons -- Premium Style ───
+                  Row(
+                    children: [
+                      // Cancel -- frosted glass
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: _fillColor,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: _separator,
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: _textSecondary,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Collect -- gradient with glow
-                  Expanded(
-                    flex: 2,
-                    child: GestureDetector(
-                      onTap: _isSubmitting || !_hasSelection
-                          ? null
-                          : _submit,
-                      child: Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [
-                            AppColors.success,
-                            AppColors.mint,
-                          ]),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: _isSubmitting || !_hasSelection
-                              ? []
-                              : [
-                                  BoxShadow(
-                                    color: AppColors.success
-                                        .withValues(alpha: 0.35),
-                                    blurRadius: 16,
-                                    offset:
-                                        const Offset(0, 6),
-                                    spreadRadius: -4,
-                                  ),
-                                ],
-                        ),
-                        child: Center(
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child:
-                                      CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisSize:
-                                      MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                        Icons
-                                            .check_circle_rounded,
-                                        size: 20,
-                                        color:
-                                            Colors.white),
-                                    const SizedBox(
-                                        width: 8),
-                                    Text(
-                                      'Collect ${currencyFormat.format(_totalAmount)}',
-                                      style: const TextStyle(
-                                        fontWeight:
-                                            FontWeight.w700,
-                                        fontSize: 15,
-                                        color:
-                                            Colors.white,
+                      const SizedBox(width: 12),
+                      // Collect -- gradient with glow
+                      Expanded(
+                        flex: 2,
+                        child: GestureDetector(
+                          onTap: _isSubmitting || !_hasSelection
+                              ? null
+                              : _submit,
+                          child: Container(
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(colors: [
+                                AppColors.success,
+                                AppColors.mint,
+                              ]),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: _isSubmitting || !_hasSelection
+                                  ? []
+                                  : [
+                                      BoxShadow(
+                                        color: AppColors.success
+                                            .withValues(alpha: 0.35),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 6),
+                                        spreadRadius: -4,
                                       ),
+                                    ],
+                            ),
+                            child: Center(
+                              child: _isSubmitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                            Icons.check_circle_rounded,
+                                            size: 20,
+                                            color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Collect ${currencyFormat.format(_totalAmount)}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
+                  const SizedBox(height: 12),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

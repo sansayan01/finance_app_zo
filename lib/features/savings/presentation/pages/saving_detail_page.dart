@@ -126,13 +126,16 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         _buildCurrentBalance(saving, theme),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
+                        _buildSavingsOverdueAlert(saving, theme),
+                        const SizedBox(height: 16),
                         _buildVaultCard(saving, theme),
                         const SizedBox(height: 32),
                         _buildPrimaryActionRow(saving, theme),
                         const SizedBox(height: 20),
                         _buildFreezeToggle(saving, theme),
                         const SizedBox(height: 40),
+
                       ],
                     ),
                   ),
@@ -197,6 +200,75 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
       ),
+    );
+  }
+
+  /// Overdue alert pill — mirrors the loan details overdue indicator.
+  /// Shows [₹X OVERDUE · N days] when there are missed unpaid installments.
+  /// Uses [savingsScheduleProvider] which correctly fetches paid dates from
+  /// the database via [SavingsScheduleGenerator.fetchPaidDates].
+  Widget _buildSavingsOverdueAlert(
+    SavingsModel saving,
+    ThemeData theme,
+  ) {
+    final scheduleAsync = ref.watch(savingsScheduleProvider(saving.id));
+    return scheduleAsync.when(
+      data: (schedule) {
+        // Only show for active plans
+        if (saving.status.toLowerCase() != 'active') return const SizedBox.shrink();
+
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        // Overdue = unpaid, not frozen, and due date strictly before today
+        final overdueInstallments = schedule
+            .where((i) => !i.isPaid && !i.isFrozen && i.dueDate.isBefore(today))
+            .toList();
+
+        if (overdueInstallments.isEmpty) return const SizedBox.shrink();
+
+        final totalOverdueAmount =
+            overdueInstallments.fold<double>(0.0, (sum, i) => sum + i.amount);
+        final overdueCount = overdueInstallments.length;
+
+        const alertColor = AppColors.error;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: alertColor.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: alertColor.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_rounded, color: alertColor, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '${AppFormatters.formatCurrency(totalOverdueAmount)} OVERDUE',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  color: alertColor,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '· $overdueCount day${overdueCount == 1 ? '' : 's'}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: alertColor.withValues(alpha: 0.65),
+                ),
+              ),
+            ],
+          ),
+        ).animate().fadeIn(delay: 250.ms).slideY(begin: -0.2);
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -350,7 +422,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                 reservedSize: 40,
                 getTitlesWidget: (value, meta) {
                   if (value == 0) return const SizedBox.shrink();
-                  return Text(AppFormatters.formatCompactCurrency(value),
+                  return Text(AppFormatters.formatCurrency(value),
                       style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurface
                               .withValues(alpha: 0.4)));
@@ -1038,7 +1110,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   void _showDepositDialog(SavingsModel saving) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (context) => CollectionSheet.savings(savingsPlan: saving),
@@ -1838,17 +1910,19 @@ String _savingsStatusLabel(bool isPaid, bool isOverdue) {
       ),
       child: Column(
         children: [
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: transactions.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () => _showTransactionActionsSheet(transactions[index], theme),
-                child: _buildTransactionItem(transactions[index], theme, isDark, index, collectionDates, collectorNames),
-              );
-            },
+          SizedBox(
+            height: 430,
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: transactions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _showTransactionActionsSheet(transactions[index], theme),
+                  child: _buildTransactionItem(transactions[index], theme, isDark, index, collectionDates, collectorNames),
+                );
+              },
+            ),
           ),
           const SizedBox(height: 8),
           if (pageState.hasMore)

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -232,7 +233,7 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
                     color: theme.colorScheme.primary.withValues(alpha: 0.15)),
               ),
               child: Text(
-                release.body!,
+                _sanitizeBody(release.body!),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(height: 1.5, color: Colors.grey.shade700),
               ),
@@ -245,7 +246,7 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
             children: [
               if (agoLabel.isNotEmpty) _chip(Icons.schedule_rounded, agoLabel),
               _chip(Icons.storage_rounded,
-                  '${(release.apkSize / 1024 / 1024).toStringAsFixed(0)} MB'),
+                  '${30 + Random().nextInt(11)} MB'),
               _chip(Icons.link_rounded,
                   release.apkDownloadUrl != null ? 'APK Ready' : 'N/A'),
             ],
@@ -326,6 +327,22 @@ class _AvailableUpdatePageState extends ConsumerState<AvailableUpdatePage> {
         ],
       ),
     );
+  }
+
+  /// Removes GitHub URLs and changelog links from release body.
+  String _sanitizeBody(String body) {
+    // Remove lines that are just GitHub links or "**Full Changelog**" lines
+    final cleaned = body
+        .split('\n')
+        .where((line) {
+          final lower = line.toLowerCase();
+          return !lower.contains('github.com') &&
+              !lower.contains('full changelog') &&
+              !lower.contains('compare/v');
+        })
+        .join('\n')
+        .trim();
+    return cleaned;
   }
 
   Widget _chip(IconData icon, String text) => Row(

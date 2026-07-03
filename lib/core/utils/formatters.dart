@@ -8,11 +8,6 @@ class AppFormatters {
     decimalDigits: 2,
   );
 
-  static final _compactCurrencyFormat = NumberFormat.compactCurrency(
-    symbol: '₹',
-    decimalDigits: 0,
-  );
-
   /// Returns the currency symbol (e.g. '₹') from the formatter.
   static String get currencySymbol => _currencyFormat.currencySymbol;
 
@@ -25,10 +20,6 @@ class AppFormatters {
 
   static String formatCurrency(double amount) {
     return _currencyFormat.format(amount);
-  }
-
-  static String formatCompactCurrency(double amount) {
-    return _compactCurrencyFormat.format(amount);
   }
 
   static String formatPercent(double value) {

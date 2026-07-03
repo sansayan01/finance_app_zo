@@ -240,7 +240,7 @@ class _CustomerLoanQuickPayPageState
           // Counter
           Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: _primaryColor().withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(20),
@@ -258,22 +258,30 @@ class _CustomerLoanQuickPayPageState
                           }
                         : null,
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 16),
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        ),
+                      );
+                    },
                     child: Text(
                       '$_installmentCount',
-                      key: ValueKey(_installmentCount),
+                      key: ValueKey<int>(_installmentCount),
                       style: TextStyle(
-                        fontSize: 44,
+                        fontSize: 36,
                         fontWeight: FontWeight.w900,
                         color: _primaryColor(),
                         height: 1,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 16),
                   _buildCounterButton(
                     icon: Icons.add_rounded,
                     onTap: _installmentCount < unpaid.length

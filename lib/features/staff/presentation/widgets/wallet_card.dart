@@ -70,7 +70,7 @@ class WalletCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '₹${AppFormatters.formatCompactCurrency(wallet.cashInHand)}',
+                          AppFormatters.formatCurrency(wallet.cashInHand),
                           style: theme.textTheme.headlineMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w900,
@@ -109,7 +109,7 @@ class WalletCard extends StatelessWidget {
                         icon: Icons.payments_outlined,
                         label: 'Today Collected',
                         value:
-                            '₹${AppFormatters.formatCompactCurrency(wallet.totalCollectedToday)}',
+                            AppFormatters.formatCurrency(wallet.totalCollectedToday),
                         theme: theme,
                       ),
                     ),
@@ -123,7 +123,7 @@ class WalletCard extends StatelessWidget {
                         icon: Icons.account_balance_wallet_outlined,
                         label: 'Digital',
                         value:
-                            '₹${AppFormatters.formatCompactCurrency(wallet.digitalBalance)}',
+                            AppFormatters.formatCurrency(wallet.digitalBalance),
                         theme: theme,
                       ),
                     ),

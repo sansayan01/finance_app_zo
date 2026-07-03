@@ -455,7 +455,7 @@ class AnalyticsPage extends ConsumerWidget {
         Expanded(
           child: _OverviewCard(
             title: 'Total Disbursement',
-            value: AppFormatters.formatCompactCurrency(stats.totalDisbursed),
+            value: AppFormatters.formatCurrency(stats.totalDisbursed),
             change: _formatChange(stats.disbursementChange),
             isPositive: stats.disbursementChange >= 0,
             chartData: stats.monthlyDisbursements,
@@ -466,7 +466,7 @@ class AnalyticsPage extends ConsumerWidget {
         Expanded(
           child: _OverviewCard(
             title: 'Total Collection',
-            value: AppFormatters.formatCompactCurrency(stats.totalCollected),
+            value: AppFormatters.formatCurrency(stats.totalCollected),
             change: _formatChange(stats.collectionChange),
             isPositive: stats.collectionChange >= 0,
             chartData: stats.monthlyCollections,
@@ -501,7 +501,7 @@ class AnalyticsPage extends ConsumerWidget {
             Expanded(
               child: _MetricCard(
                 label: 'Total Savings',
-                value: AppFormatters.formatCompactCurrency(stats.totalSavings),
+                value: AppFormatters.formatCurrency(stats.totalSavings),
                 icon: Icons.savings_outlined,
                 color: successColor,
                 theme: theme,
@@ -522,7 +522,7 @@ class AnalyticsPage extends ConsumerWidget {
               child: _MetricCard(
                 label: 'Interest Earned',
                 value:
-                    AppFormatters.formatCompactCurrency(stats.interestEarned),
+                    AppFormatters.formatCurrency(stats.interestEarned),
                 icon: Icons.trending_up_outlined,
                 color: AppColors.accentLight,
                 theme: theme,
@@ -536,7 +536,7 @@ class AnalyticsPage extends ConsumerWidget {
             Expanded(
               child: _MetricCard(
                 label: 'Avg Balance',
-                value: AppFormatters.formatCompactCurrency(
+                value: AppFormatters.formatCurrency(
                     stats.averageSavingsBalance),
                 icon: Icons.account_balance_wallet_outlined,
                 color: AppColors.info,
@@ -833,7 +833,7 @@ class AnalyticsPage extends ConsumerWidget {
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            AppFormatters.formatCompactCurrency(value),
+                            AppFormatters.formatCurrency(value),
                             style: theme.textTheme.bodySmall
                                 ?.copyWith(fontSize: 9),
                           );
@@ -1457,7 +1457,7 @@ class _DelinquencyItem extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        Text(AppFormatters.formatCompactCurrency(amount),
+        Text(AppFormatters.formatCurrency(amount),
             style: theme.textTheme.bodyMedium
                 ?.copyWith(fontWeight: FontWeight.w700)),
       ],

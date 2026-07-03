@@ -41,6 +41,7 @@ class LoanModel {
   // Date freeze
   final bool freezeEnabled;
   final int frozenCount;
+  final int gracePeriodDays;
 
   // Joined Data
   final String? customerName;
@@ -91,6 +92,7 @@ class LoanModel {
     this.interestBasis,
     this.freezeEnabled = false,
     this.frozenCount = 0,
+    this.gracePeriodDays = 0,
   });
 
   LoanModel copyWith({
@@ -127,6 +129,7 @@ class LoanModel {
     DateTime? updatedAt,
     bool? freezeEnabled,
     int? frozenCount,
+    int? gracePeriodDays,
     String? customerName,
     String? customerPhone,
     String? customerPhotoUrl,
@@ -170,6 +173,7 @@ class LoanModel {
       updatedAt: updatedAt ?? this.updatedAt,
       freezeEnabled: freezeEnabled ?? this.freezeEnabled,
       frozenCount: frozenCount ?? this.frozenCount,
+      gracePeriodDays: gracePeriodDays ?? this.gracePeriodDays,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       customerPhotoUrl: customerPhotoUrl ?? this.customerPhotoUrl,
@@ -289,6 +293,7 @@ class LoanModel {
       interestBasis: json['interest_basis'] as String?,
       freezeEnabled: json['freeze_enabled'] as bool? ?? false,
       frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
+      gracePeriodDays: (json['grace_period_days'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -317,6 +322,7 @@ class LoanModel {
       'interest_type': interestType.name,
       'freeze_enabled': freezeEnabled,
       'frozen_count': frozenCount,
+      'grace_period_days': gracePeriodDays,
       'disbursement_date': disbursementDate?.toIso8601String(),
       'first_emi_date': firstEmiDate?.toIso8601String(),
       'paid_emis': paidEmis,

@@ -36,7 +36,9 @@ import 'user_audit_page.dart';
 /// with rich filtering, sorting, pagination, bulk admin tools and inline
 /// per-row actions.
 class UsersPage extends ConsumerStatefulWidget {
-  const UsersPage({super.key});
+  final String? initialBranchId;
+
+  const UsersPage({super.key, this.initialBranchId});
 
   @override
   ConsumerState<UsersPage> createState() => _UsersPageState();
@@ -99,6 +101,24 @@ class _UsersPageState extends ConsumerState<UsersPage>
         () => _maybeLoadMore(_customersScroll, UserHubTab.customers));
     _suspendedScroll.addListener(
         () => _maybeLoadMore(_suspendedScroll, UserHubTab.suspended));
+    // Apply initial branch filter from query params
+    if (widget.initialBranchId != null) {
+      Future.microtask(() {
+        for (final tab in [
+          UserHubTab.team,
+          UserHubTab.customers,
+          UserHubTab.suspended,
+        ]) {
+          ref
+              .read(userHubQueryProvider(tab).notifier)
+              .setBranch(widget.initialBranchId);
+          ref
+              .read(userHubPageProvider(tab).notifier)
+              .loadFirstPage();
+        }
+      });
+    }
+
     // Invalidate all user providers for fresh data
     Future.microtask(() {
       ref.invalidate(userStatsProvider);

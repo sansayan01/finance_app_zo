@@ -19,13 +19,6 @@ void main() {
       });
     });
 
-    group('formatCompactCurrency', () {
-      test('formats large numbers', () {
-        expect(AppFormatters.formatCompactCurrency(100000), '₹100K');
-        expect(AppFormatters.formatCompactCurrency(1000000), '₹1M');
-      });
-    });
-
     group('formatDate', () {
       test('formats DateTime to readable string', () {
         final date = DateTime(2024, 6, 15);

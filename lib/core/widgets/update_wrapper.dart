@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import '../providers/system_config_provider.dart';
 import '../services/app_update_service.dart';
 import '../services/github_release_service.dart';
+import '../services/notification_service.dart';
 
 class UpdateWrapper extends ConsumerStatefulWidget {
   final Widget child;
@@ -97,10 +100,34 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
   }
 
   void _showTelegramUpdateDialog(
-      BuildContext context, UpdateCheckResult result, bool isForce) {
+      BuildContext context, UpdateCheckResult result, bool isForce) async {
     final service = ref.read(appUpdateServiceProvider);
     final theme = Theme.of(context);
 
+    // Check if APK was already downloaded in background by AutoUpdateService
+    final dir = await getTemporaryDirectory();
+    final apkPath = '${dir.path}/microflow_update.apk';
+    final apkFile = File(apkPath);
+    final alreadyDownloaded = await apkFile.exists();
+
+    if (alreadyDownloaded) {
+      // Set completed state so dialog shows "Install Now" directly
+      _downloadProgress = DownloadProgress(
+        state: DownloadState.completed,
+        progress: 1.0,
+        filePath: apkPath,
+      );
+      // Cancel any background update notification
+      await NotificationService.cancelUpdateNotification();
+    }
+
+    if (!mounted) return;
+    _presentUpdateDialog(this.context, result, isForce, service, theme);
+  }
+
+  void _presentUpdateDialog(
+      BuildContext context, UpdateCheckResult result, bool isForce,
+      AppUpdateService service, ThemeData theme) {
     showDialog(
       context: context,
       barrierDismissible: !isForce,
@@ -225,12 +252,14 @@ class _UpdateWrapperState extends ConsumerState<UpdateWrapper>
                         width: double.infinity,
                         child: isCompleted
                             ? ElevatedButton.icon(
-                                onPressed: () {
+                                onPressed: () async {
+                                  await NotificationService
+                                      .cancelUpdateNotification();
                                   final path = _downloadProgress.filePath;
                                   if (path != null) {
                                     service.installFromPath(path);
                                   }
-                                  Navigator.pop(ctx);
+                                  if (ctx.mounted) Navigator.pop(ctx);
                                 },
                                 style: ElevatedButton.styleFrom(
                                   padding:

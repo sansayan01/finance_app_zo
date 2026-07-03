@@ -273,7 +273,7 @@ class TodayAgendaList extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '₹${AppFormatters.formatCompactCurrency(amount)}',
+                  AppFormatters.formatCurrency(amount),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,

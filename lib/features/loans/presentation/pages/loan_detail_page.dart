@@ -187,7 +187,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                         children: [
                           _buildHugeBalance(loan, theme),
                           const SizedBox(height: 16),
-                          _buildNextDueAlert(scheduleAsync, theme),
+                          _buildNextDueAlert(loan, scheduleAsync, theme),
                           const SizedBox(height: 24),
                           _buildDigitalPass(loan, theme),
                           const SizedBox(height: 32),
@@ -571,7 +571,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   }
 
   Widget _buildNextDueAlert(
-      AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
+      LoanModel loan, AsyncValue<List<EMIScheduleModel>> scheduleAsync, ThemeData theme) {
     return scheduleAsync.when(
       data: (schedule) {
         if (schedule.isEmpty) {
@@ -579,6 +579,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
 
         final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
         final unpaidEmis = schedule
             .where((e) =>
                 e.status != EMIStatus.paid &&
@@ -590,20 +592,66 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         }
         final nextEmi = unpaidEmis.first;
 
-        final daysDiff = nextEmi.dueDate.difference(now).inDays;
-        final isOverdue = daysDiff < 0;
+        // An EMI is overdue if its due date is strictly before today
+        final overdueEmis = unpaidEmis.where((e) => e.dueDate.isBefore(today)).toList();
+        final isOverdue = overdueEmis.isNotEmpty;
+
+        final daysDiff = nextEmi.dueDate.difference(today).inDays;
         final isDueToday = daysDiff == 0;
         final isDueSoon = daysDiff > 0 && daysDiff <= 7;
 
+        // ── Overdue: single-row alert ──────────────────────────────
+        if (isOverdue) {
+          const alertColor = AppColors.error;
+          final totalOverdueAmount = overdueEmis.fold<double>(0.0, (sum, e) => sum + e.emiAmount);
+          // Total overdue days counted from the oldest overdue EMI
+          final overdueDays = today.difference(overdueEmis.first.dueDate).inDays;
+
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: alertColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: alertColor.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_rounded, color: alertColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  '${AppFormatters.formatCurrency(totalOverdueAmount)} OVERDUE',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    color: alertColor,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '· $overdueDays day${overdueDays == 1 ? '' : 's'}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: alertColor.withValues(alpha: 0.65),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 250.ms).slideY(begin: -0.2);
+        }
+
+
+
+
+        // ── Not overdue: single-row pill ───────────────────────────
         Color alertColor;
         String alertText;
         IconData alertIcon;
 
-        if (isOverdue) {
-          alertColor = AppColors.error;
-          alertText = '${daysDiff.abs()} days OVERDUE';
-          alertIcon = Icons.error_rounded;
-        } else if (isDueToday) {
+        if (isDueToday) {
           alertColor = AppColors.warning;
           alertText = 'DUE TODAY';
           alertIcon = Icons.schedule_rounded;
@@ -864,7 +912,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                 : null
             : null;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -909,18 +957,18 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         child: Column(
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: color.withValues(alpha: 0.1),
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(label,
                 style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
           ],
         ),
       ),
@@ -2435,17 +2483,19 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           ),
           child: Column(
             children: [
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: recent.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () => _showPaymentDetails(recent[index], theme),
-                    child: _buildPaymentTile(recent[index], theme, isDark, index, scheduleById),
-                  );
-                },
+              SizedBox(
+                height: 430,
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: recent.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () => _showPaymentDetails(recent[index], theme),
+                      child: _buildPaymentTile(recent[index], theme, isDark, index, scheduleById),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -3155,7 +3205,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   // --- Handlers ---
   void _showCollectionSheet(
       BuildContext context, LoanModel loan, EMIScheduleModel? emi) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (context) => CollectionSheet(loan: loan, emi: emi),

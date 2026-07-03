@@ -267,7 +267,7 @@ class _BranchManagerDashboardState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppFormatters.formatCompactCurrency(
+                    AppFormatters.formatCurrency(
                         stats.outstandingAmount),
                     style: theme.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w800,
@@ -296,7 +296,7 @@ class _BranchManagerDashboardState
                       Expanded(
                         child: _HeroStat(
                           label: "Today's Collection",
-                          value: AppFormatters.formatCompactCurrency(
+                          value: AppFormatters.formatCurrency(
                               todayCollection),
                           icon: Icons.payments_rounded,
                           color: isDark
@@ -352,7 +352,7 @@ class _BranchManagerDashboardState
           children: [
             _SummaryChip(
               label: 'Disbursed',
-              value: AppFormatters.formatCompactCurrency(
+              value: AppFormatters.formatCurrency(
                   stats.totalDisbursements),
               icon: Icons.outbond_rounded,
               color: AppColors.primary,
@@ -360,7 +360,7 @@ class _BranchManagerDashboardState
             const SizedBox(width: 10),
             _SummaryChip(
               label: 'Collected',
-              value: AppFormatters.formatCompactCurrency(
+              value: AppFormatters.formatCurrency(
                   stats.totalCollections),
               icon: Icons.move_to_inbox_rounded,
               color: AppColors.success,
@@ -610,7 +610,7 @@ class _BranchManagerDashboardState
                 Expanded(
                   child: _SavingsStat(
                     label: 'Total Savings',
-                    value: AppFormatters.formatCompactCurrency(
+                    value: AppFormatters.formatCurrency(
                         (summary['total_balance'] as num?)?.toDouble() ?? 0),
                     icon: Icons.account_balance_wallet_outlined,
                     color: successColor,
@@ -1184,13 +1184,13 @@ class _LoanCard extends StatelessWidget {
             children: [
               _LoanStat(
                   label: 'Principal',
-                  value: AppFormatters.formatCompactCurrency(loan.amount)),
+                  value: AppFormatters.formatCurrency(loan.amount)),
               _LoanStat(
                   label: 'EMI',
                   value: AppFormatters.formatCurrency(loan.emiAmount)),
               _LoanStat(
                   label: 'Outstanding',
-                  value: AppFormatters.formatCompactCurrency(
+                  value: AppFormatters.formatCurrency(
                       loan.outstandingBalance)),
             ],
           ),
@@ -1348,7 +1348,7 @@ class _SavingsCard extends StatelessWidget {
                     color: isCompleted ? successColor : null,
                   )),
               Text(
-                  '${AppFormatters.formatCompactCurrency(saving.targetAmount - saving.currentAmount)} remaining',
+                  '${AppFormatters.formatCurrency(saving.targetAmount - saving.currentAmount)} remaining',
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 11,
                     color: theme.textTheme.bodySmall?.color,
@@ -1361,7 +1361,7 @@ class _SavingsCard extends StatelessWidget {
               Expanded(
                 child: _SavingsMetric(
                   label: 'Current',
-                  value: AppFormatters.formatCompactCurrency(
+                  value: AppFormatters.formatCurrency(
                       saving.currentAmount),
                   icon: Icons.account_balance_outlined,
                   color: successColor,
@@ -1371,7 +1371,7 @@ class _SavingsCard extends StatelessWidget {
               Expanded(
                 child: _SavingsMetric(
                   label: 'Monthly',
-                  value: AppFormatters.formatCompactCurrency(
+                  value: AppFormatters.formatCurrency(
                       saving.monthlyDeposit),
                   icon: Icons.calendar_today_outlined,
                   color: AppColors.primary,

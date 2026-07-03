@@ -279,7 +279,7 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
                       Icons.trending_up_rounded, theme),
                   const SizedBox(width: 8),
                   _buildBentoPill(
-                      AppFormatters.formatCompactCurrency(totalTarget),
+                      AppFormatters.formatCurrency(totalTarget),
                       'GOAL',
                       Icons.flag_outlined, theme),
                 ],

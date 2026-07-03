@@ -630,10 +630,10 @@ class BranchMemberDetailPage extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _buildMiniStat(theme, isDark, 'Amount', AppFormatters.formatCompactCurrency(amount)),
+              _buildMiniStat(theme, isDark, 'Amount', AppFormatters.formatCurrency(amount)),
               const SizedBox(width: 20),
               _buildMiniStat(
-                theme, isDark, 'Outstanding', AppFormatters.formatCompactCurrency(outstanding),
+                theme, isDark, 'Outstanding', AppFormatters.formatCurrency(outstanding),
                 valueColor: outstanding > 0 ? AppColors.warning : AppColors.success,
               ),
             ],
@@ -700,10 +700,10 @@ class BranchMemberDetailPage extends ConsumerWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _buildMiniStat(theme, isDark, 'Saved', AppFormatters.formatCompactCurrency(currentAmount),
+              _buildMiniStat(theme, isDark, 'Saved', AppFormatters.formatCurrency(currentAmount),
                   valueColor: AppColors.success),
               const SizedBox(width: 20),
-              _buildMiniStat(theme, isDark, 'Target', AppFormatters.formatCompactCurrency(targetAmount)),
+              _buildMiniStat(theme, isDark, 'Target', AppFormatters.formatCurrency(targetAmount)),
             ],
           ),
           const SizedBox(height: 10),
@@ -807,7 +807,7 @@ class BranchMemberDetailPage extends ConsumerWidget {
             ),
           ),
           Text(
-            '${isCredit ? '+' : '-'}${AppFormatters.formatCompactCurrency(amount)}',
+            '${isCredit ? '+' : '-'}${AppFormatters.formatCurrency(amount)}',
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: color,

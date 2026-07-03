@@ -39,10 +39,10 @@ class AppColors {
 
   // ─── Dark Theme — Smooth Obsidian & Slate ───
   static const Color backgroundDark =
-      Color(0xFF0F1115); // Deeper, more neutral obsidian
-  static const Color surfaceDark = Color(0xFF181C24); // Refined surface depth
-  static const Color cardDark = Color(0xFF222731); // Subtly lighter for cards
-  static const Color elevatedDark = Color(0xFF2A313D); // Elevated surfaces
+      Color(0xFF030508); // Ultra-deep — near-black for maximum glassmorphic contrast
+  static const Color surfaceDark = Color(0xFF0C1018); // Refined surface depth
+  static const Color cardDark = Color(0xFF141824); // Subtly lighter for cards
+  static const Color elevatedDark = Color(0xFF1C2030); // Elevated surfaces
   static const Color textPrimaryDark =
       Color(0xFFE2E8F0); // Dimmed slate for smoothness
   static const Color textSecondaryDark = Color(0xFF94A3B8); // Slate 400

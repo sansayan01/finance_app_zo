@@ -56,6 +56,9 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
         if (!_countFocusNode.hasFocus && _countController.text.isEmpty) {
           _countController.text = '$_installmentCount';
         }
+        if (mounted) {
+          setState(() {});
+        }
       });
 
     // Auto-select first unpaid EMI by default if nothing pre-selected
@@ -308,7 +311,7 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
           // Installment counter
           Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -331,10 +334,10 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
                           }
                         : null,
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 16),
                   Container(
-                    width: 90,
-                    height: 90,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: _cardColor(),
@@ -356,49 +359,93 @@ class _EmiPaymentSelectorState extends State<EmiPaymentSelector> {
                       ],
                     ),
                     child: Center(
-                      child: TextField(
-                        controller: _countController,
-                        focusNode: _countFocusNode,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          IgnorePointer(
+                            ignoring: !_countFocusNode.hasFocus,
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: _countFocusNode.hasFocus ? 1.0 : 0.0,
+                              child: TextField(
+                                controller: _countController,
+                                focusNode: _countFocusNode,
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.center,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1.5,
+                                  color: _primaryColor().withValues(alpha: 0.85),
+                                  height: 1,
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                  isDense: true,
+                                  fillColor: Colors.transparent,
+                                ),
+                                onChanged: (value) {
+                                  if (value.isEmpty) return;
+                                  final count = int.tryParse(value);
+                                  if (count != null && count > 0) {
+                                     _applyQuickPay(count);
+                                  }
+                                },
+                                onTap: () {
+                                  _countController.selection = TextSelection(
+                                    baseOffset: 0,
+                                    extentOffset: _countController.text.length,
+                                  );
+                                },
+                                onSubmitted: (value) {
+                                  final count = int.tryParse(value) ?? _installmentCount;
+                                  _applyQuickPay(count);
+                                  _countFocusNode.unfocus();
+                                },
+                              ),
+                            ),
+                          ),
+                          if (!_countFocusNode.hasFocus)
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                _countFocusNode.requestFocus();
+                              },
+                              child: Center(
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  transitionBuilder: (Widget child, Animation<double> animation) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: ScaleTransition(
+                                        scale: animation,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    '$_installmentCount',
+                                    key: ValueKey<int>(_installmentCount),
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -1.5,
+                                      color: _primaryColor().withValues(alpha: 0.85),
+                                      height: 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
-                        style: TextStyle(
-                          fontSize: 44,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -2,
-                          color: _primaryColor().withValues(alpha: 0.85),
-                          height: 1,
-                        ),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          isDense: true,
-                          fillColor: Colors.transparent,
-                        ),
-                        onChanged: (value) {
-                          if (value.isEmpty) return;
-                          final count = int.tryParse(value);
-                          if (count != null && count > 0) {
-                            _applyQuickPay(count);
-                          }
-                        },
-                        onTap: () {
-                          _countController.selection = TextSelection(
-                            baseOffset: 0,
-                            extentOffset: _countController.text.length,
-                          );
-                        },
-                        onSubmitted: (value) {
-                          final count = int.tryParse(value) ?? _installmentCount;
-                          _applyQuickPay(count);
-                          _countFocusNode.unfocus();
-                        },
                       ),
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 16),
                   _buildCounterButton(
                     icon: Icons.add_rounded,
                     onTap: _installmentCount < unpaidCount
@@ -442,8 +489,8 @@ Widget _buildCounterButton({
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
-      width: 64,
-      height: 64,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
         gradient: enabled
             ? LinearGradient(
@@ -461,7 +508,7 @@ Widget _buildCounterButton({
               )
             : null,
         color: enabled ? null : _fillColor(),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: enabled
               ? _primaryColor().withValues(alpha: 0.4)
@@ -489,7 +536,7 @@ Widget _buildCounterButton({
         duration: const Duration(milliseconds: 200),
         child: Icon(
           icon,
-          size: 32,
+          size: 28,
           color: enabled
               ? isPlus
                   ? Colors.white
@@ -951,6 +998,49 @@ Widget _buildCounterButton({
                                       ),
                                     ),
                                   ),
+                                // Today button - jump to today's date
+                                if (tempSelected.isNotEmpty)
+                                  const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setPopupState(() {
+                                      focusedDay = DateTime.now();
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(colors: [
+                                        _primaryColor().withValues(alpha: 0.12),
+                                        _primaryColor().withValues(alpha: 0.06),
+                                      ]),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: _primaryColor()
+                                            .withValues(alpha: 0.2),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.today_rounded,
+                                            size: 13,
+                                            color: _primaryColor()),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Today',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: _primaryColor(),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),

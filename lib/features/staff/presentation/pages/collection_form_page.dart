@@ -296,7 +296,7 @@ class _CollectionFormPageState extends ConsumerState<CollectionFormPage>
                   ),
                 ),
                 Text(
-                  '₹${AppFormatters.formatCompactCurrency(_amountExpected)}',
+                  AppFormatters.formatCurrency(_amountExpected),
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,

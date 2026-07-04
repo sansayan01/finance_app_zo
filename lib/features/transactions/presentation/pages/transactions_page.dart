@@ -1,11 +1,18 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:printing/printing.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/utils/file_download.dart';
+import '../../../../core/models/statement_org_info.dart';
+import '../../../../core/providers/branding_provider.dart';
+import '../../../../core/providers/org_provider.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/utils/formatters.dart';
@@ -341,10 +348,31 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
       final periodLabel = _periodLabel(options);
 
+      // Fetch org info for branding
+      StatementOrgInfo? orgInfo;
+      try {
+        final orgRaw = await ref.read(currentOrgProvider.future);
+        final brandingState = ref.read(brandingProvider);
+        final logoBytes = brandingState.value != null
+            ? ref.read(brandingProvider.notifier).cachedLogoBytes
+            : null;
+        orgInfo = StatementOrgInfo(
+          name: (orgRaw?['display_name'] ?? orgRaw?['name'] ?? 'MicroFlow Pro').toString(),
+          address: orgRaw?['address'] as String?,
+          city: orgRaw?['city'] as String?,
+          state: orgRaw?['state'] as String?,
+          pincode: orgRaw?['pincode'] as String?,
+          phone: orgRaw?['phone'] as String?,
+          email: orgRaw?['email'] as String?,
+          gstNumber: orgRaw?['gst_number'] as String?,
+          logoBytes: logoBytes,
+        );
+      } catch (_) {}
+
       switch (options.format) {
         case StatementFormat.pdf:
           bytes = await TransactionPdfService.generate(
-              transactions: data, options: options);
+              transactions: data, options: options, orgInfo: orgInfo);
           ext = 'pdf';
           mime = 'application/pdf';
           break;
@@ -474,19 +502,15 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(ctx);
-                    if (ext == 'pdf') {
-                      Printing.layoutPdf(
-                        onLayout: (format) async => bytes,
-                        name: fileName,
-                      );
+                    if (kIsWeb) {
+                      downloadFileForWeb(bytes, fileName, mime);
                     } else {
-                      SharePlus.instance.share(ShareParams(
-                        files: [
-                          XFile.fromData(bytes, mimeType: mime, name: fileName),
-                        ],
-                      ));
+                      final dir = await getApplicationDocumentsDirectory();
+                      final file = File('${dir.path}/$fileName');
+                      await file.writeAsBytes(bytes);
+                      await OpenFilex.open(file.path);
                     }
                   },
                   icon: const Icon(Icons.open_in_new_rounded, size: 18),
@@ -507,15 +531,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(ctx);
-                    if (ext == 'pdf') {
-                      Printing.sharePdf(bytes: bytes, filename: fileName);
+                    if (kIsWeb) {
+                      downloadFileForWeb(bytes, fileName, mime);
                     } else {
+                      final dir = await getApplicationDocumentsDirectory();
+                      final file = File('${dir.path}/$fileName');
+                      await file.writeAsBytes(bytes);
                       SharePlus.instance.share(ShareParams(
-                        files: [
-                          XFile.fromData(bytes, mimeType: mime, name: fileName),
-                        ],
+                        files: [XFile(file.path, mimeType: mime)],
                         text: 'Transaction Report',
                       ));
                     }

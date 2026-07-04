@@ -1,22 +1,35 @@
-import '../../../../core/widgets/shimmer_card.dart';
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/file_download.dart';
+import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_button.dart';
 import '../../../../core/widgets/aurora_background.dart';
+import '../../../../core/providers/branding_provider.dart';
+import '../../../../core/providers/org_provider.dart';
+import '../../../../core/models/statement_org_info.dart';
 import '../../data/models/loan_model.dart';
+import '../../data/services/portfolio_statement_pdf_service.dart';
 import '../providers/loan_providers.dart';
+import '../widgets/portfolio_statement_options_sheet.dart';
+import '../widgets/statement_generation_overlay.dart';
 import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class LoansPage extends ConsumerStatefulWidget {
   final void Function(String loanId)? onLoanTap;
@@ -140,6 +153,263 @@ class _LoansPageState extends ConsumerState<LoansPage>
     return await ref.read(loansProvider.future).then((_) => null);
   }
 
+  Future<void> _handlePortfolioStatement() async {
+    HapticFeedback.mediumImpact();
+    final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+
+    final options = await showModalBottomSheet<PortfolioStatementOptions>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const PortfolioStatementOptionsSheet(),
+    );
+    if (options == null || !mounted) return;
+
+    StatementGenerationOverlay.show(context);
+
+    try {
+      final summary = await ref.read(loanSummaryProvider.future);
+      final loans = await ref.read(loansProvider.future);
+      final orgRaw = await ref.read(currentOrgProvider.future);
+      final brandingState = ref.read(brandingProvider);
+      final logoBytes = brandingState.value != null
+          ? ref.read(brandingProvider.notifier).cachedLogoBytes
+          : null;
+
+      final org = StatementOrgInfo(
+        name: (orgRaw?['display_name'] ??
+                orgRaw?['name'] ??
+                'MicroFlow Pro')
+            .toString(),
+        address: orgRaw?['address'] as String?,
+        city: orgRaw?['city'] as String?,
+        state: orgRaw?['state'] as String?,
+        pincode: orgRaw?['pincode'] as String?,
+        phone: orgRaw?['phone'] as String?,
+        email: orgRaw?['email'] as String?,
+        gstNumber: orgRaw?['gst_number'] as String?,
+        logoBytes: logoBytes,
+      );
+
+      final now = DateTime.now();
+      final ref0 =
+          'PORTFOLIO-${now.millisecondsSinceEpoch.toRadixString(36).toUpperCase()}';
+
+      // Calculate overdue amounts from EMI schedule for each loan
+      final overdueAmounts = <String, double>{};
+      for (final loan in loans) {
+        if (loan.status != LoanStatus.active &&
+            loan.status != LoanStatus.defaultStatus) {
+          continue;
+        }
+        try {
+          final schedule = await ref.read(emiScheduleProvider(loan.id).future);
+          final today = DateTime(now.year, now.month, now.day);
+          final overdueEmis = schedule
+              .where((e) => e.status != EMIStatus.paid &&
+                  e.status != EMIStatus.waived &&
+                  e.status != EMIStatus.frozen &&
+                  e.dueDate.isBefore(today))
+              .toList();
+          if (overdueEmis.isNotEmpty) {
+            final total = overdueEmis.fold<double>(
+                0.0, (sum, e) => sum + e.emiAmount);
+            overdueAmounts[loan.id] = total;
+          }
+        } catch (_) {}
+      }
+
+      final bytes = await PortfolioStatementPdfService.buildPortfolioStatement(
+        summary: summary,
+        loans: loans,
+        org: org,
+        generatedByName: ref.read(currentUserProvider)?.fullName,
+        periodStart: options.periodStart,
+        periodEnd: options.periodEnd,
+        statementRef: ref0,
+        overdueAmounts: overdueAmounts,
+      );
+
+      final fileName =
+          'portfolio_statement_${now.millisecondsSinceEpoch}.pdf';
+
+      File? localFile;
+      if (kIsWeb) {
+        downloadFileForWeb(bytes, fileName, 'application/pdf');
+      } else {
+        final dir = await getApplicationDocumentsDirectory();
+        localFile = File('${dir.path}/$fileName');
+        await localFile.writeAsBytes(bytes);
+      }
+
+      StatementGenerationOverlay.dismiss();
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      if (!mounted) return;
+      if (kIsWeb) {
+        messenger.showSnackBar(SnackBar(
+          content: Text('Statement downloaded: $fileName'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+      } else {
+        _showStatementReadySheet(
+          file: localFile!,
+          fileName: fileName,
+        );
+      }
+    } catch (e, st) {
+      debugPrint('Portfolio statement generation failed: $e\n$st');
+      StatementGenerationOverlay.dismiss();
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Failed to generate statement.',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$e',
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+        backgroundColor: theme.colorScheme.error,
+        duration: const Duration(seconds: 8),
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    }
+  }
+
+  void _showStatementReadySheet({
+    required File file,
+    required String fileName,
+  }) {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          12,
+          24,
+          MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.success,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Statement Ready',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                fileName,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color
+                      ?.withValues(alpha: 0.5),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    OpenFilex.open(file.path);
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: const Text(
+                    'Open PDF',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(ShareParams(
+                      files: [XFile(file.path, mimeType: 'application/pdf')],
+                      text: 'Loan Portfolio Statement',
+                    ));
+                  },
+                  icon: const Icon(Icons.ios_share_rounded, size: 18),
+                  label: const Text(
+                    'Share',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loansAsync = ref.watch(loansProvider);
@@ -204,7 +474,37 @@ class _LoansPageState extends ConsumerState<LoansPage>
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 12),
+                            // Portfolio Statement button
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                _handlePortfolioStatement();
+                              },
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.black.withValues(alpha: 0.03),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: theme.dividerColor.withValues(alpha: 0.15),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.description_rounded,
+                                  size: 20,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            )
+                                .animate()
+                                .fadeIn(delay: 150.ms)
+                                .scale(begin: const Offset(0.9, 0.9)),
+                            const SizedBox(width: 10),
                             if (widget.showCreateButton)
                               GlassButton(
                                 label: 'DEPLOY',

@@ -209,7 +209,7 @@ class _SavingsPaymentSelectorState extends State<SavingsPaymentSelector> {
     final unpaidInstallments = _unpaidInstallments;
     final overdueCount = unpaidInstallments.where(_isOverdue).length;
     final dueTodayCount = unpaidInstallments.where(_isDueToday).length;
-    final paidCount = widget.installments.length - unpaidInstallments.length;
+    final paidCount = widget.installments.where((e) => e.isPaid).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -741,7 +741,7 @@ Widget _buildCounterButton({
   Widget _buildStatusSummary(
       int unpaid, int overdue, int dueToday, int paid) {
     final frozenCount =
-        widget.installments.where((e) => e.isFrozen).length;
+        widget.installments.where((e) => e.isFrozen && !e.isPaid).length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(

@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -30,6 +31,7 @@ import '../../data/services/savings_statement_models.dart';
 import '../../data/services/savings_statement_pdf_service.dart';
 import '../../data/services/savings_statement_excel_service.dart';
 import '../../data/services/savings_statement_csv_service.dart';
+import '../../../loans/presentation/widgets/statement_generation_overlay.dart';
 import '../../../home/data/providers/dashboard_providers.dart'
     show pendingDepositsProvider, recentTransactionsProvider,
         dashboardTransactionsProvider, todayStatsProvider;
@@ -787,21 +789,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     );
     if (options == null || !mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            SizedBox(
-              width: 18, height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-            ),
-            SizedBox(width: 12),
-            Text('Generating statement…'),
-          ],
-        ),
-        duration: Duration(seconds: 30),
-      ),
-    );
+    StatementGenerationOverlay.show(context);
 
     try {
       final memberId = saving.memberId;
@@ -834,6 +822,20 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         gstNumber: orgRaw?['gst_number'] as String?,
         logoBytes: logoBytes,
       );
+
+      // Calculate overdue amount from schedule
+      double overdueAmount = 0;
+      try {
+        final schedule = await ref.read(savingsScheduleProvider(saving.id).future);
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final overdueInstallments = schedule
+            .where((i) => !i.isPaid && !i.isFrozen && i.dueDate.isBefore(today))
+            .toList();
+        if (overdueInstallments.isNotEmpty) {
+          overdueAmount = overdueInstallments.fold<double>(0.0, (sum, i) => sum + i.amount);
+        }
+      } catch (_) {}
 
       final results = await Future.wait<dynamic>([plansFuture, txnsFuture, memberResponseFuture]);
       final plans = results[0] as List<SavingsModel>;
@@ -956,6 +958,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             org: org,
             statementRef: statementRef,
             generatedByName: ref.read(currentUserProvider)?.fullName,
+            overdueAmount: overdueAmount,
           );
           ext = 'pdf';
           mimeType = 'application/pdf';
@@ -979,27 +982,161 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
       final filename = 'savings_statement_${saving.memberId}.$ext';
 
+      File? localFile;
       if (kIsWeb) {
         downloadFileForWeb(bytes, filename, mimeType);
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/$filename');
-        await file.writeAsBytes(bytes);
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [XFile(file.path)],
-            subject: 'Savings Statement - ${saving.memberName}',
-          ),
+        localFile = File('${dir.path}/$filename');
+        await localFile.writeAsBytes(bytes);
+      }
+
+      StatementGenerationOverlay.dismiss();
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      if (!mounted) return;
+      if (kIsWeb) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Statement downloaded: $filename'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+      } else {
+        _showStatementReadySheet(
+          file: localFile!,
+          fileName: filename,
+          memberName: saving.memberName,
         );
       }
     } catch (e) {
+      StatementGenerationOverlay.dismiss();
+      await Future.delayed(const Duration(milliseconds: 200));
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate statement: $e')),
+          SnackBar(
+            content: Text('Failed to generate statement: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     }
+  }
+
+  void _showStatementReadySheet({
+    required File file,
+    required String fileName,
+    required String memberName,
+  }) {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          12,
+          24,
+          MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.success,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Statement Ready',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                fileName,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    OpenFilex.open(file.path);
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: const Text(
+                    'Open',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    SharePlus.instance.share(ShareParams(
+                      files: [XFile(file.path)],
+                      text: 'Savings Statement - $memberName',
+                    ));
+                  },
+                  icon: const Icon(Icons.ios_share_rounded, size: 18),
+                  label: const Text(
+                    'Share',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showDeleteDialog() {

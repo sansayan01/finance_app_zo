@@ -883,22 +883,24 @@ class TransactionPdfService {
               flex: 2,
               child: pw.Container(
                 padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 4, vertical: 1),
+                    horizontal: 3, vertical: 1),
                 decoration: pw.BoxDecoration(
                   color: tb.isInflow
                       ? StatementColors.green50
                       : StatementColors.red50,
-                  borderRadius: pw.BorderRadius.circular(3),
+                  borderRadius: pw.BorderRadius.circular(2),
                 ),
-                child: pw.Text(
-                  tb.isInflow ? 'Inflow' : 'Outflow',
-                  style: pw.TextStyle(
-                    fontSize: 6.5,
-                    fontWeight: pw.FontWeight.bold,
-                    color: tb.isInflow
-                        ? StatementColors.green700
-                        : StatementColors.red700,
-                    font: _fontSemiBold,
+                child: pw.Center(
+                  child: pw.Text(
+                    tb.isInflow ? 'Inflow' : 'Outflow',
+                    style: pw.TextStyle(
+                      fontSize: 6,
+                      fontWeight: pw.FontWeight.bold,
+                      color: tb.isInflow
+                          ? StatementColors.green700
+                          : StatementColors.red700,
+                      font: _fontSemiBold,
+                    ),
                   ),
                 ),
               ),
@@ -1100,11 +1102,11 @@ class TransactionPdfService {
     );
 
     final headerRow = [
-      pw.Expanded(flex: 1, child: pw.Text('#', style: headerStyle)),
+      pw.Expanded(flex: 1, child: pw.Center(child: pw.Text('#', style: headerStyle))),
       pw.Expanded(flex: 3, child: pw.Text('Date & Time', style: headerStyle)),
       pw.Expanded(flex: 4, child: pw.Text('Member', style: headerStyle)),
-      pw.Expanded(flex: 2, child: pw.Text('Type', style: headerStyle)),
-      pw.Expanded(flex: 2, child: pw.Text('Mode', style: headerStyle)),
+      pw.Expanded(flex: 2, child: pw.Center(child: pw.Text('Type', style: headerStyle))),
+      pw.Expanded(flex: 2, child: pw.Center(child: pw.Text('Mode', style: headerStyle))),
       pw.Expanded(flex: 3, child: pw.Text('Collected By', style: headerStyle)),
       pw.Expanded(flex: 2, child: pw.Align(alignment: pw.Alignment.centerRight, child: pw.Text('Amount', style: headerStyle))),
     ];
@@ -1143,18 +1145,20 @@ class TransactionPdfService {
         ),
         child: pw.Row(
           children: [
-            pw.Expanded(flex: 1, child: pw.Text(data[0], style: pw.TextStyle(fontSize: 7, color: StatementColors.grey500, font: _fontRegular))),
+            pw.Expanded(flex: 1, child: pw.Center(child: pw.Text(data[0], style: pw.TextStyle(fontSize: 7, color: StatementColors.grey500, font: _fontRegular)))),
             pw.Expanded(flex: 3, child: pw.Text(data[1], style: pw.TextStyle(fontSize: 7, color: StatementColors.grey700, font: _fontRegular))),
             pw.Expanded(flex: 4, child: pw.Text(data[2], style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: StatementColors.grey900, font: _fontSemiBold))),
             pw.Expanded(flex: 2, child: pw.Container(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 1),
               decoration: pw.BoxDecoration(
                 color: isInflow ? StatementColors.green100 : StatementColors.red100,
-                borderRadius: pw.BorderRadius.circular(3),
+                borderRadius: pw.BorderRadius.circular(2),
               ),
-              child: pw.Text(data[3], style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold, color: isInflow ? StatementColors.green700 : StatementColors.red700, font: _fontSemiBold)),
+              child: pw.Center(
+                child: pw.Text(data[3], style: pw.TextStyle(fontSize: 6, fontWeight: pw.FontWeight.bold, color: isInflow ? StatementColors.green700 : StatementColors.red700, font: _fontSemiBold)),
+              ),
             )),
-            pw.Expanded(flex: 2, child: pw.Text(data[4], style: pw.TextStyle(fontSize: 7, color: StatementColors.grey600, font: _fontRegular))),
+            pw.Expanded(flex: 2, child: pw.Center(child: pw.Text(data[4], style: pw.TextStyle(fontSize: 7, color: StatementColors.grey600, font: _fontRegular)))),
             pw.Expanded(flex: 3, child: pw.Text(data[5], style: pw.TextStyle(fontSize: 7, color: StatementColors.grey600, font: _fontRegular))),
             pw.Expanded(flex: 2, child: pw.Align(
               alignment: pw.Alignment.centerRight,

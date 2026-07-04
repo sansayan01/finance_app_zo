@@ -1862,7 +1862,7 @@ class _HeroHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(20, 72, 20, 8),
+      margin: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + kToolbarHeight - 28, 20, 8),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(

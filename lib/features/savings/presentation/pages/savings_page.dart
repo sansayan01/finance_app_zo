@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/file_download.dart';
 import '../../../../core/widgets/aurora_background.dart';
@@ -688,18 +689,10 @@ class _PremiumSavingCard extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-              child: Row(
+                child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [primary.withOpacity(0.15), primary.withOpacity(0.06)]),
-                      border: Border.all(color: primary.withOpacity(0.12), width: 1),
-                    ),
-                    child: Center(child: Text(initial, style: TextStyle(color: primary, fontSize: 15, fontWeight: FontWeight.w800))),
-                  ),
+                  _buildAvatar(primary, initial),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -744,6 +737,74 @@ class _PremiumSavingCard extends StatelessWidget {
               child: LinearProgressIndicator(value: progress, backgroundColor: theme.colorScheme.onSurface.withOpacity(0.04), valueColor: AlwaysStoppedAnimation<Color>(statusColor)),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  String? _resolvePhotoUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+    final trimmed = rawUrl.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final path = trimmed.startsWith('avatars/')
+        ? trimmed.substring('avatars/'.length)
+        : trimmed;
+    return 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/avatars/$path';
+  }
+
+  Widget _buildAvatar(Color primary, String initial) {
+    final photoUrl = _resolvePhotoUrl(saving.memberPhotoUrl);
+    final decoration = BoxDecoration(
+      borderRadius: BorderRadius.circular(10),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [primary.withOpacity(0.15), primary.withOpacity(0.06)],
+      ),
+      border: Border.all(color: primary.withOpacity(0.12), width: 1),
+    );
+
+    if (photoUrl == null) {
+      return Container(
+        width: 38,
+        height: 38,
+        decoration: decoration,
+        child: Center(
+          child: Text(
+            initial,
+            style: TextStyle(
+              color: primary,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: decoration,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: CachedNetworkImage(
+          imageUrl: photoUrl,
+          fit: BoxFit.cover,
+          memCacheWidth: 76,
+          memCacheHeight: 76,
+          errorWidget: (_, __, ___) => Center(
+            child: Text(
+              initial,
+              style: TextStyle(
+                color: primary,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
         ),
       ),
     );

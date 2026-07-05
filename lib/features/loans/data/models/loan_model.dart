@@ -284,8 +284,16 @@ class LoanModel {
           : DateTime.now(),
       customerName: profilesJson?['full_name'] as String?,
       customerPhone: profilesJson?['phone'] as String?,
-      customerPhotoUrl: (profilesJson?['profile_photo_url'] ??
-          profilesJson?['shop_photo_url']) as String?,
+      customerPhotoUrl: () {
+        final direct = profilesJson?['profile_photo_url'] as String?;
+        if (direct != null && direct.isNotEmpty) return direct;
+        final shop = profilesJson?['shop_photo_url'] as String?;
+        if (shop != null && shop.isNotEmpty) return shop;
+        final profileJson = profilesJson?['profile'] as Map<String, dynamic>?;
+        final avatar = profileJson?['avatar_url'] as String?;
+        if (avatar != null && avatar.isNotEmpty) return avatar;
+        return null;
+      }(),
       staffName: staffJson?['full_name'] as String?,
       staffPhone: staffJson?['phone'] as String?,
       interestMode: json['interest_mode'] as String?,

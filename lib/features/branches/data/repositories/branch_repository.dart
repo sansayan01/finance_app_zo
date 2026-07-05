@@ -190,11 +190,25 @@ class BranchRepository {
   Future<List<Map<String, dynamic>>> getBranchMembers(String branchId) async {
     final response = await _client
         .from('members')
-        .select('id, full_name, phone, status, profile_id')
+        .select('''
+          id, full_name, phone, status, profile_id,
+          profile:profiles(avatar_url)
+        ''')
         .eq('branch_id', branchId)
         .order('full_name')
         .limit(200);
 
-    return List<Map<String, dynamic>>.from(response);
+    final List<Map<String, dynamic>> members = List<Map<String, dynamic>>.from(response);
+
+    for (final member in members) {
+      final profile = member['profile'] as Map<String, dynamic>?;
+      if (profile != null) {
+        member['avatar_url'] = profile['avatar_url'] as String?;
+      } else {
+        member['avatar_url'] = null;
+      }
+    }
+
+    return members;
   }
 }

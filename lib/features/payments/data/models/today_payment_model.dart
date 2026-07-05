@@ -71,6 +71,7 @@ class TodayPayment {
   final DateTime? collectedAt;
   final String? remarks;
   final String? collectionId; // collections.id for delete/revert
+  final String? memberPhotoUrl;
 
   const TodayPayment({
     required this.id,
@@ -95,6 +96,7 @@ class TodayPayment {
     this.collectedAt,
     this.remarks,
     this.collectionId,
+    this.memberPhotoUrl,
   });
 
   bool get isCollected => status == PaymentStatus.collected;
@@ -223,6 +225,7 @@ class GroupedOverduePayment {
   final String? memberPhone;
   final String? branchId;
   final String? agentId;
+  final String? memberPhotoUrl;
   final List<TodayPayment> payments;
 
   const GroupedOverduePayment({
@@ -231,6 +234,7 @@ class GroupedOverduePayment {
     this.memberPhone,
     this.branchId,
     this.agentId,
+    this.memberPhotoUrl,
     required this.payments,
   });
 
@@ -286,6 +290,7 @@ class GroupedOverduePayment {
         memberPhone: first.memberPhone,
         branchId: first.branchId,
         agentId: first.agentId,
+        memberPhotoUrl: first.memberPhotoUrl,
         payments: payments,
       );
     }).toList();

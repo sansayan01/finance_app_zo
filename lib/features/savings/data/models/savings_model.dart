@@ -24,6 +24,7 @@ class SavingsModel {
   final double totalReturnAmount;
   final int installmentsPaid;
   final DateTime? lastPaymentDate;
+  final String? memberPhotoUrl;
 
   // Date freeze
   final bool freezeEnabled;
@@ -61,6 +62,7 @@ class SavingsModel {
     this.totalReturnAmount = 0,
     this.installmentsPaid = 0,
     this.lastPaymentDate,
+    this.memberPhotoUrl,
     this.freezeEnabled = false,
     this.frozenCount = 0,
     this.frozenDates = const [],
@@ -103,6 +105,16 @@ class SavingsModel {
       lastPaymentDate: json['last_payment_date'] != null
           ? DateTime.tryParse(json['last_payment_date'] as String)
           : null,
+      memberPhotoUrl: (json['member_photo_url'] as String?) ??
+          (json['member_avatar_url'] as String?) ??
+          (() {
+            final m = json['members'] as Map<String, dynamic>?;
+            if (m == null) return null;
+            final direct = (m['profile_photo_url'] ?? m['shop_photo_url']) as String?;
+            if (direct != null && direct.isNotEmpty) return direct;
+            final profile = m['profile'] as Map<String, dynamic>?;
+            return (profile?['avatar_url'] as String?);
+          })(),
       freezeEnabled: json['freeze_enabled'] as bool? ?? false,
       frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
       frozenDates: (json['frozen_dates'] as List<dynamic>?)

@@ -107,7 +107,7 @@ class SavingsRepository {
     try {
       final response = await _client
           .from('savings_plans')
-          .select('*, members:member_id(full_name)')
+          .select('*, members:member_id(full_name, phone, profile_photo_url, profile:profile_id(avatar_url))')
           .eq('org_id', _orgId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
@@ -123,7 +123,7 @@ class SavingsRepository {
     try {
       final response = await _client
           .from('savings_plans')
-          .select('*, members:member_id(full_name)')
+          .select('*, members:member_id(full_name, phone, profile_photo_url, profile:profile_id(avatar_url))')
           .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -170,6 +170,21 @@ class SavingsRepository {
         lastPaymentDate: json['last_payment_date'] != null
             ? DateTime.tryParse(json['last_payment_date'].toString())
             : null,
+        memberPhotoUrl: () {
+          final m = json['members'];
+          if (m is! Map) return null;
+          final direct = m['profile_photo_url']?.toString();
+          if (direct != null && direct.isNotEmpty) return direct;
+          final p = m['profile'];
+          if (p is Map) {
+            final avatar = p['avatar_url']?.toString();
+            if (avatar != null && avatar.isNotEmpty) return avatar;
+          } else {
+            final avatar = m['avatar_url']?.toString();
+            if (avatar != null && avatar.isNotEmpty) return avatar;
+          }
+          return null;
+        }(),
         freezeEnabled: json['freeze_enabled'] as bool? ?? false,
         frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
         frozenDates: (json['frozen_dates'] as List<dynamic>?)
@@ -184,7 +199,7 @@ class SavingsRepository {
     try {
       final response = await _client
           .from('savings_plans')
-          .select('*, members:member_id(full_name)')
+          .select('*, members:member_id(full_name, phone, profile_photo_url, profile:profile_id(avatar_url))')
           .eq('org_id', _orgId)
           .eq('member_id', memberId)
           .order('created_at', ascending: false);
@@ -199,7 +214,7 @@ class SavingsRepository {
     try {
       final response = await _client
           .from('savings_plans')
-          .select('*, members:member_id(full_name)')
+          .select('*, members:member_id(full_name, phone, profile_photo_url, profile:profile_id(avatar_url))')
           .eq('id', id)
           .maybeSingle();
 

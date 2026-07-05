@@ -389,37 +389,74 @@ final branchTodayPaymentsProvider =
         continue;
       }
 
-      final existingIdx = payments.indexWhere(
-          (p) => p.loanNumber == col['loan_number'] && p.isCollected);
+      final collectionAmountCollected = (col['amount_collected'] as num?)?.toDouble() ?? 0;
 
-      if (existingIdx == -1) {
-        payments.add(TodayPayment(
-          id: col['id'],
-          type: col['collection_type'] == 'savings'
-              ? PaymentType.savings
-              : PaymentType.emi,
+      // Check if there's an existing unpaid EMI entry for the same loan
+      // If so, update it to be collected instead of adding a duplicate
+      final existingEmiIdx = payments.indexWhere(
+          (p) => p.loanId == col['loan_id'] && !p.isCollected && p.type == PaymentType.emi);
+
+      if (existingEmiIdx != -1) {
+        // Update the existing EMI entry to mark it as collected
+        final existingEmi = payments[existingEmiIdx];
+        payments[existingEmiIdx] = TodayPayment(
+          id: existingEmi.id,
+          type: existingEmi.type,
           status: PaymentStatus.collected,
-          memberName: col['member_name'] ?? 'Unknown',
-          memberPhone: col['member_phone'],
-          memberId: col['member_id'],
-          branchId: branchId,
-          branchName: null,
-          agentId: col['staff_id'],
-          agentName: null,
-          amountExpected:
-              (col['amount_expected'] as num?)?.toDouble() ?? 0,
-          amountCollected:
-              (col['amount_collected'] as num?)?.toDouble() ?? 0,
-          dueDate: DateTime.parse(col['collection_date']),
-          loanNumber: col['loan_number'],
-          loanId: col['loan_id'],
-          paymentMode: col['payment_mode'],
+          memberName: existingEmi.memberName,
+          memberPhone: existingEmi.memberPhone,
+          memberId: existingEmi.memberId,
+          branchId: existingEmi.branchId,
+          branchName: existingEmi.branchName,
+          agentId: existingEmi.agentId,
+          agentName: existingEmi.agentName,
+          amountExpected: existingEmi.amountExpected,
+          amountCollected: collectionAmountCollected > 0 ? collectionAmountCollected : existingEmi.amountExpected,
+          penaltyAmount: existingEmi.penaltyAmount,
+          dueDate: existingEmi.dueDate,
+          loanNumber: existingEmi.loanNumber,
+          loanId: existingEmi.loanId,
+          emiNumber: existingEmi.emiNumber,
+          planName: existingEmi.planName,
+          paymentMode: col['payment_mode'] as String?,
           collectedAt: col['collection_time'] != null
-              ? DateTime.tryParse(
-                  '${col['collection_date']}T${col['collection_time']}')
-              : null,
-          remarks: col['remarks'],
-        ));
+              ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')?.toLocal()
+              : DateTime.now(),
+          remarks: col['remarks'] as String?,
+          collectionId: col['id'] as String?,
+        );
+      } else {
+        // No existing EMI entry found, add as new collected payment
+        final existingCollectedIdx = payments.indexWhere(
+            (p) => p.loanNumber == col['loan_number'] && p.isCollected);
+
+        if (existingCollectedIdx == -1) {
+          payments.add(TodayPayment(
+            id: col['id'],
+            type: col['collection_type'] == 'savings'
+                ? PaymentType.savings
+                : PaymentType.emi,
+            status: PaymentStatus.collected,
+            memberName: col['member_name'] ?? 'Unknown',
+            memberPhone: col['member_phone'],
+            memberId: col['member_id'],
+            branchId: branchId,
+            branchName: null,
+            agentId: col['staff_id'],
+            agentName: null,
+            amountExpected: (col['amount_expected'] as num?)?.toDouble() ?? 0,
+            amountCollected: collectionAmountCollected,
+            dueDate: DateTime.parse(col['collection_date']),
+            loanNumber: col['loan_number'],
+            loanId: col['loan_id'],
+            paymentMode: col['payment_mode'] as String?,
+            collectedAt: col['collection_time'] != null
+                ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')?.toLocal()
+                : null,
+            remarks: col['remarks'] as String?,
+            collectionId: col['id'] as String?,
+          ));
+        }
       }
     }
   } catch (e, stack) {
@@ -427,42 +464,9 @@ final branchTodayPaymentsProvider =
     debugPrint(stack.toString());
   }
 
-  // Post-process: fix EMI entries that have collections today but
-  // emi_schedule.is_paid wasn't updated yet (avoids duplicates in both
-  // pending/overdue AND collected).
-  // Match by loanId + dueDate to ensure only the specific EMI that was
-  // collected is marked as collected, not all EMIs for the same loan.
-  {
-    // Build a set of (loanId, dueDate) pairs that have collections today
-    final collectedEmiKeys = <String>{};
-    for (final p in payments) {
-      if (p.isCollected && p.loanId != null) {
-        // Use loanId + dueDate as the unique key for an EMI
-        final dueDateStr = '${p.dueDate.year}-${p.dueDate.month.toString().padLeft(2, '0')}-${p.dueDate.day.toString().padLeft(2, '0')}';
-        collectedEmiKeys.add('${p.loanId}_$dueDateStr');
-      }
-    }
-
-    for (int i = 0; i < payments.length; i++) {
-      final p = payments[i];
-      if (!p.isCollected && p.loanId != null) {
-        final dueDateStr = '${p.dueDate.year}-${p.dueDate.month.toString().padLeft(2, '0')}-${p.dueDate.day.toString().padLeft(2, '0')}';
-        final emiKey = '${p.loanId}_$dueDateStr';
-        if (collectedEmiKeys.contains(emiKey)) {
-          payments[i] = TodayPayment(
-            id: p.id, type: p.type, status: PaymentStatus.collected,
-            memberName: p.memberName, memberPhone: p.memberPhone, memberId: p.memberId,
-            branchId: p.branchId, branchName: p.branchName, agentId: p.agentId, agentName: p.agentName,
-            amountExpected: p.amountExpected, amountCollected: p.amountExpected,
-            penaltyAmount: p.penaltyAmount, dueDate: p.dueDate, loanNumber: p.loanNumber,
-            loanId: p.loanId, emiNumber: p.emiNumber, planName: p.planName,
-            paymentMode: p.paymentMode, collectedAt: DateTime.now(), remarks: p.remarks,
-            collectionId: p.collectionId,
-          );
-        }
-      }
-    }
-  }
+  // Post-process: No longer needed - collections now update existing EMI entries
+  // directly instead of creating duplicates. The collection processing loop above
+  // handles marking EMIs as collected when a matching collection exists.
 
   // -------------------------------------------------------
   // 3. SAVINGS — savings_plans has no branch_id,

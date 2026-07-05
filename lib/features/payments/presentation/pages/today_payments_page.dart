@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../core/utils/file_download.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -2320,6 +2321,7 @@ class _PaymentCard extends StatelessWidget {
                 label: payment.memberName,
                 color: payment.typeColor,
                 isCollected: payment.isCollected,
+                photoUrl: payment.memberPhotoUrl,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -2574,6 +2576,7 @@ class _GroupedCollectedList extends StatelessWidget {
                       label: memberName,
                       color: AppColors.success,
                       isCollected: true,
+                      photoUrl: payment.memberPhotoUrl,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -2782,6 +2785,7 @@ class _GroupedOverdueCard extends StatelessWidget {
                 label: name,
                 color: AppColors.error,
                 isCollected: false,
+                photoUrl: group.memberPhotoUrl,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -2947,17 +2951,68 @@ class _PaymentAvatar extends StatelessWidget {
   final String label;
   final Color color;
   final bool isCollected;
+  final String? photoUrl;
 
   const _PaymentAvatar({
     required this.type,
     required this.label,
     required this.color,
     required this.isCollected,
+    this.photoUrl,
   });
+
+  String? _resolvedPhoto() {
+    final raw = photoUrl;
+    if (raw == null || raw.trim().isEmpty) return null;
+    final trimmed = raw.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    final path = trimmed.startsWith('avatars/')
+        ? trimmed.substring('avatars/'.length)
+        : trimmed;
+    return 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/avatars/$path';
+  }
 
   @override
   Widget build(BuildContext context) {
     final initial = label.isNotEmpty ? label[0].toUpperCase() : '?';
+    final resolved = _resolvedPhoto();
+    Widget avatar;
+    if (resolved != null) {
+      avatar = ClipRRect(
+        borderRadius: BorderRadius.circular(9),
+        child: CachedNetworkImage(
+          imageUrl: resolved,
+          fit: BoxFit.cover,
+          width: 36,
+          height: 36,
+          memCacheWidth: 72,
+          memCacheHeight: 72,
+          errorWidget: (_, __, ___) => Center(
+            child: Text(
+              initial,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      avatar = Center(
+        child: Text(
+          initial,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
+          ),
+        ),
+      );
+    }
     return Container(
       width: 36,
       height: 36,
@@ -2976,16 +3031,7 @@ class _PaymentAvatar extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: Center(
-        child: Text(
-          initial,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-            color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
-          ),
-        ),
-      ),
+      child: avatar,
     );
   }
 }

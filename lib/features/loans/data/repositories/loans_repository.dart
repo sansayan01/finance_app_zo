@@ -19,7 +19,7 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, members:customer_id(full_name, phone, profile_photo_url), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone, profile_photo_url, profile:profile_id(avatar_url)), staff:staff_id(full_name)')
           .eq('org_id', _orgId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -39,7 +39,7 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, members:customer_id(full_name, phone, profile_photo_url), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone, profile_photo_url, profile:profile_id(avatar_url)), staff:staff_id(full_name)')
           .eq('org_id', _orgId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
@@ -139,7 +139,7 @@ class LoansRepository {
       final response = await _client
           .from('loans')
           .select(
-              '*, members:customer_id(full_name, phone, profile_photo_url), staff:staff_id(full_name)')
+              '*, members:customer_id(full_name, phone, profile_photo_url, profile:profile_id(avatar_url)), staff:staff_id(full_name)')
           .eq('id', id)
           .maybeSingle();
 

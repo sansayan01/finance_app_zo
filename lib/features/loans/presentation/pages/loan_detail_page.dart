@@ -3123,6 +3123,17 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   Widget _buildBorrowerProfile(LoanModel loan, ThemeData theme) {
     final hasPhoto = loan.customerPhotoUrl != null && loan.customerPhotoUrl!.isNotEmpty;
 
+    String? photoUrl;
+    if (hasPhoto) {
+      final raw = loan.customerPhotoUrl!.trim();
+      if (raw.startsWith('http://') || raw.startsWith('https://')) {
+        photoUrl = raw;
+      } else {
+        final rel = raw.startsWith('avatars/') ? raw.substring('avatars/'.length) : raw;
+        photoUrl = 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/avatars/$rel';
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -3136,7 +3147,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             ClipRRect(
               borderRadius: BorderRadius.circular(30),
               child: Image.network(
-                loan.customerPhotoUrl!,
+                photoUrl ?? loan.customerPhotoUrl!,
                 width: 60,
                 height: 60,
                 fit: BoxFit.cover,

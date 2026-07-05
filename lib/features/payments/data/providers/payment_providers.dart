@@ -265,13 +265,30 @@ final todayPaymentsProvider =
     return null;
   }
 
+  // Resolve a member's profile photo URL from a joined members map, in the
+  // same priority order: profile_photo_url → shop_photo_url → profile.avatar_url
+  String? resolveMemberPhoto(Map<String, dynamic>? member) {
+    if (member == null) return null;
+    final direct = (member['profile_photo_url'] ?? member['shop_photo_url'])?.toString();
+    if (direct != null && direct.isNotEmpty) return direct;
+    final profile = member['profile'];
+    if (profile is Map) {
+      final avatar = profile['avatar_url']?.toString();
+      if (avatar != null && avatar.isNotEmpty) return avatar;
+    } else {
+      final avatar = member['avatar_url']?.toString();
+      if (avatar != null && avatar.isNotEmpty) return avatar;
+    }
+    return null;
+  }
+
   try {
     // 1. Build queries to run in parallel
     
     // Query A: EMI base for selected date (joined with loans and members)
     // Only fetch unpaid EMIs - paid EMIs are handled separately via collections
     const emiSelect = 'id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id, '
-        'loans!emi_schedule_loan_id_fkey(id, loan_number, branch_id, customer_id, agent_id, members!fk_loans_customer(id, full_name, phone))';
+        'loans!emi_schedule_loan_id_fkey(id, loan_number, branch_id, customer_id, agent_id, members!fk_loans_customer(id, full_name, phone, profile_photo_url, profile:profile_id(avatar_url)))';
 
     final emiBase = client
         .from('emi_schedule')
@@ -302,7 +319,7 @@ final todayPaymentsProvider =
     var plansQuery = client
         .from('savings_plans')
         .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, start_date, member_id, installments_paid, total_installments, '
-            'members(id, full_name, phone, branch_id, agent_id)')
+            'members(id, full_name, phone, branch_id, agent_id, profile_photo_url, profile:profile_id(avatar_url))')
         .eq('status', 'active');
     if (!isSuperAdmin) plansQuery = plansQuery.eq('org_id', orgId!);
 
@@ -399,6 +416,7 @@ final todayPaymentsProvider =
         collectedAt: emi['paid_on'] != null
             ? DateTime.tryParse(emi['paid_on'])?.toLocal()
             : null,
+        memberPhotoUrl: resolveMemberPhoto(member),
       ));
     }
 
@@ -418,70 +436,75 @@ final todayPaymentsProvider =
         collectionIdByLoanNumber[loanNum] = col['id'] as String;
       }
 
-      final existingIdx = payments.indexWhere(
-          (p) => p.loanNumber == col['loan_number'] && p.isCollected);
+      final collectionAmountCollected = (col['amount_collected'] as num?)?.toDouble() ?? 0;
 
-      if (existingIdx == -1) {
-        payments.add(TodayPayment(
-          id: col['id'],
-          type: col['collection_type'] == 'savings'
-              ? PaymentType.savings
-              : PaymentType.emi,
+      // Check if there's an existing unpaid EMI entry for the same loan
+      // If so, update it to be collected instead of adding a duplicate
+      final existingEmiIdx = payments.indexWhere(
+          (p) => p.loanId == col['loan_id'] && !p.isCollected && p.type == PaymentType.emi);
+
+      if (existingEmiIdx != -1) {
+        // Update the existing EMI entry to mark it as collected
+        final existingEmi = payments[existingEmiIdx];
+        payments[existingEmiIdx] = TodayPayment(
+          id: existingEmi.id,
+          type: existingEmi.type,
           status: PaymentStatus.collected,
-          memberName: col['member_name'] ?? 'Unknown',
-          memberPhone: col['member_phone'],
-          memberId: col['member_id'],
-          branchId: null,
-          branchName: null,
-          agentId: col['staff_id'],
-          agentName: null,
-          amountExpected:
-              (col['amount_expected'] as num?)?.toDouble() ?? 0,
-          amountCollected:
-              (col['amount_collected'] as num?)?.toDouble() ?? 0,
-          dueDate: DateTime.parse(col['collection_date']),
-          loanNumber: col['loan_number'],
-          loanId: col['loan_id'],
-          paymentMode: col['payment_mode'],
+          memberName: existingEmi.memberName,
+          memberPhone: existingEmi.memberPhone,
+          memberId: existingEmi.memberId,
+          branchId: existingEmi.branchId,
+          branchName: existingEmi.branchName,
+          agentId: existingEmi.agentId,
+          agentName: existingEmi.agentName,
+          amountExpected: existingEmi.amountExpected,
+          amountCollected: collectionAmountCollected > 0 ? collectionAmountCollected : existingEmi.amountExpected,
+          penaltyAmount: existingEmi.penaltyAmount,
+          dueDate: existingEmi.dueDate,
+          loanNumber: existingEmi.loanNumber,
+          loanId: existingEmi.loanId,
+          emiNumber: existingEmi.emiNumber,
+          planName: existingEmi.planName,
+          paymentMode: col['payment_mode'] as String?,
           collectedAt: col['collection_time'] != null
               ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')?.toLocal()
-              : null,
-          remarks: col['remarks'],
+              : DateTime.now(),
+          remarks: col['remarks'] as String?,
           collectionId: col['id'] as String?,
-        ));
-      }
-    }
+          memberPhotoUrl: existingEmi.memberPhotoUrl,
+        );
+      } else {
+        // No existing EMI entry found, add as new collected payment
+        final existingCollectedIdx = payments.indexWhere(
+            (p) => p.loanNumber == col['loan_number'] && p.isCollected);
 
-    // Backfill collectionId for collected EMIs that were deduplicated
-    for (int i = 0; i < payments.length; i++) {
-      final p = payments[i];
-      if (p.isCollected && p.collectionId == null && p.loanNumber != null) {
-        final cid = collectionIdByLoanNumber[p.loanNumber!];
-        if (cid != null) {
-          payments[i] = TodayPayment(
-            id: p.id,
-            type: p.type,
-            status: p.status,
-            memberName: p.memberName,
-            memberPhone: p.memberPhone,
-            memberId: p.memberId,
-            branchId: p.branchId,
-            branchName: p.branchName,
-            agentId: p.agentId,
-            agentName: p.agentName,
-            amountExpected: p.amountExpected,
-            amountCollected: p.amountCollected,
-            penaltyAmount: p.penaltyAmount,
-            dueDate: p.dueDate,
-            loanNumber: p.loanNumber,
-            loanId: p.loanId,
-            emiNumber: p.emiNumber,
-            planName: p.planName,
-            paymentMode: p.paymentMode,
-            collectedAt: p.collectedAt,
-            remarks: p.remarks,
-            collectionId: cid,
-          );
+        if (existingCollectedIdx == -1) {
+          payments.add(TodayPayment(
+            id: col['id'],
+            type: col['collection_type'] == 'savings'
+                ? PaymentType.savings
+                : PaymentType.emi,
+            status: PaymentStatus.collected,
+            memberName: col['member_name'] ?? 'Unknown',
+            memberPhone: col['member_phone'],
+            memberId: col['member_id'],
+            branchId: null,
+            branchName: null,
+            agentId: col['staff_id'],
+            agentName: null,
+            amountExpected: (col['amount_expected'] as num?)?.toDouble() ?? 0,
+            amountCollected: collectionAmountCollected,
+            dueDate: DateTime.parse(col['collection_date']),
+            loanNumber: col['loan_number'],
+            loanId: col['loan_id'],
+            paymentMode: col['payment_mode'] as String?,
+            collectedAt: col['collection_time'] != null
+                ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')?.toLocal()
+                : null,
+            remarks: col['remarks'] as String?,
+            collectionId: col['id'] as String?,
+            memberPhotoUrl: null,
+          ));
         }
       }
     }
@@ -630,6 +653,7 @@ final todayPaymentsProvider =
         collectionId: isCollected
             ? existingCollection['id'] as String?
             : null,
+        memberPhotoUrl: resolveMemberPhoto(member),
       ));
 
       // For daily collections that are overdue and not yet collected,
@@ -638,6 +662,7 @@ final todayPaymentsProvider =
           isOverdue &&
           collectionType == 'daily' &&
           !selectedDateOnly.isAfter(DateTime.now())) {
+        final todayPhotoUrl = resolveMemberPhoto(member);
         payments.add(TodayPayment(
           id: '${plan['id']}_today',
           type: PaymentType.savings,
@@ -656,6 +681,7 @@ final todayPaymentsProvider =
           paymentMode: null,
           collectedAt: null,
           collectionId: null,
+          memberPhotoUrl: todayPhotoUrl,
         ));
       }
     }

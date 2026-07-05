@@ -332,12 +332,18 @@ final todayPaymentsProvider =
     final List<dynamic> collectionsToday = results[4] as List<dynamic>;
 
     // 3. Process EMIs (today + overdue)
-    // Build lookup of loan numbers with collections today to prevent
+    // Build lookup of (loanId, dueDate) pairs with collections today to prevent
     // showing the same EMI in both pending/overdue AND collected.
-    final collectedLoanNumbers = collections
-        .where((c) => c['loan_number'] != null)
-        .map((c) => c['loan_number'] as String)
-        .toSet();
+    // Use loanId + dueDate instead of loanNumber to ensure only the specific
+    // EMI that was collected is marked as collected, not all EMIs for the same loan.
+    final collectedEmiKeys = <String>{};
+    for (final c in collections) {
+      final loanId = c['loan_id'] as String?;
+      final collectionDate = c['collection_date'] as String?;
+      if (loanId != null && collectionDate != null) {
+        collectedEmiKeys.add('${loanId}_$collectionDate');
+      }
+    }
 
     final allEmiDues = [...emiDues, ...overdueEmis];
     
@@ -357,7 +363,8 @@ final todayPaymentsProvider =
         continue;
       }
 
-      final isPaid = emi['is_paid'] == true || collectedLoanNumbers.contains(loan['loan_number']);
+      final emiKey = '${loan['id']}_${emi['due_date']}';
+      final isPaid = emi['is_paid'] == true || collectedEmiKeys.contains(emiKey);
       final dueDate = DateTime.parse(emi['due_date']);
       final isOverdue = !isPaid && dueDate.isBefore(
           DateTime(filters.selectedDate.year, filters.selectedDate.month,

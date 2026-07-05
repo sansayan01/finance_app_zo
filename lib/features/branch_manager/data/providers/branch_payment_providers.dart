@@ -428,24 +428,36 @@ final branchTodayPaymentsProvider =
   // Post-process: fix EMI entries that have collections today but
   // emi_schedule.is_paid wasn't updated yet (avoids duplicates in both
   // pending/overdue AND collected).
+  // Match by loanId + dueDate to ensure only the specific EMI that was
+  // collected is marked as collected, not all EMIs for the same loan.
   {
-    final collectedLoanNums = payments
-        .where((p) => p.isCollected && p.loanNumber != null)
-        .map((p) => p.loanNumber!)
-        .toSet();
+    // Build a set of (loanId, dueDate) pairs that have collections today
+    final collectedEmiKeys = <String>{};
+    for (final p in payments) {
+      if (p.isCollected && p.loanId != null) {
+        // Use loanId + dueDate as the unique key for an EMI
+        final dueDateStr = '${p.dueDate.year}-${p.dueDate.month.toString().padLeft(2, '0')}-${p.dueDate.day.toString().padLeft(2, '0')}';
+        collectedEmiKeys.add('${p.loanId}_$dueDateStr');
+      }
+    }
+
     for (int i = 0; i < payments.length; i++) {
       final p = payments[i];
-      if (!p.isCollected && p.loanNumber != null && collectedLoanNums.contains(p.loanNumber!)) {
-        payments[i] = TodayPayment(
-          id: p.id, type: p.type, status: PaymentStatus.collected,
-          memberName: p.memberName, memberPhone: p.memberPhone, memberId: p.memberId,
-          branchId: p.branchId, branchName: p.branchName, agentId: p.agentId, agentName: p.agentName,
-          amountExpected: p.amountExpected, amountCollected: p.amountExpected,
-          penaltyAmount: p.penaltyAmount, dueDate: p.dueDate, loanNumber: p.loanNumber,
-          loanId: p.loanId, emiNumber: p.emiNumber, planName: p.planName,
-          paymentMode: p.paymentMode, collectedAt: DateTime.now(), remarks: p.remarks,
-          collectionId: p.collectionId,
-        );
+      if (!p.isCollected && p.loanId != null) {
+        final dueDateStr = '${p.dueDate.year}-${p.dueDate.month.toString().padLeft(2, '0')}-${p.dueDate.day.toString().padLeft(2, '0')}';
+        final emiKey = '${p.loanId}_$dueDateStr';
+        if (collectedEmiKeys.contains(emiKey)) {
+          payments[i] = TodayPayment(
+            id: p.id, type: p.type, status: PaymentStatus.collected,
+            memberName: p.memberName, memberPhone: p.memberPhone, memberId: p.memberId,
+            branchId: p.branchId, branchName: p.branchName, agentId: p.agentId, agentName: p.agentName,
+            amountExpected: p.amountExpected, amountCollected: p.amountExpected,
+            penaltyAmount: p.penaltyAmount, dueDate: p.dueDate, loanNumber: p.loanNumber,
+            loanId: p.loanId, emiNumber: p.emiNumber, planName: p.planName,
+            paymentMode: p.paymentMode, collectedAt: DateTime.now(), remarks: p.remarks,
+            collectionId: p.collectionId,
+          );
+        }
       }
     }
   }

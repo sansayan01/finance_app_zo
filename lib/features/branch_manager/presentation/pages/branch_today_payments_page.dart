@@ -1024,9 +1024,10 @@ class _BranchTodayPaymentsPageState
 
     final Map<String, List<TodayPayment>> grouped = {};
     for (final p in collected) {
-      grouped.putIfAbsent(p.memberName, () => []).add(p);
+      final key = '${p.memberName}_${p.type.name}';
+      grouped.putIfAbsent(key, () => []).add(p);
     }
-    final memberNames = grouped.keys.toList();
+    final groupKeys = grouped.keys.toList();
     final user = ref.read(currentUserProvider);
     final branchId = user?.branchId ?? '';
 
@@ -1036,17 +1037,20 @@ class _BranchTodayPaymentsPageState
       },
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        itemCount: memberNames.length,
+        itemCount: groupKeys.length,
         itemBuilder: (context, index) {
-          final memberName = memberNames[index];
-          final payments = grouped[memberName]!;
+          final groupKey = groupKeys[index];
+          final payments = grouped[groupKey]!;
           final totalCollected = payments.fold<double>(0, (sum, p) => sum + (p.amountCollected ?? p.amountExpected));
           final representative = payments.first;
+          final memberName = representative.memberName;
+          final typeLabel = representative.typeLabel;
 
           return GestureDetector(
               onTap: () => _showPaymentDetails(representative),
               child: _GroupedCollectedCard(
                 memberName: memberName,
+                typeLabel: typeLabel,
                 payments: payments,
                 totalCollected: totalCollected,
                 isDark: isDark,
@@ -2207,10 +2211,11 @@ class _PremiumTabBar extends StatelessWidget {
 
 class _GroupedCollectedCard extends StatelessWidget {
   final String memberName;
+  final String typeLabel;
   final List<TodayPayment> payments;
   final double totalCollected;
   final bool isDark;
-  const _GroupedCollectedCard({required this.memberName, required this.payments, required this.totalCollected, required this.isDark});
+  const _GroupedCollectedCard({required this.memberName, required this.typeLabel, required this.payments, required this.totalCollected, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -2250,7 +2255,7 @@ class _GroupedCollectedCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        memberName,
+                        '$memberName • $typeLabel',
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 14,

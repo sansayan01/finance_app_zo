@@ -12,11 +12,18 @@ class PortfolioStatementOptions {
   });
 }
 
-enum _RangePreset { thisMonth, last3M, last6M, thisFY }
+enum _RangePreset { thisMonth, last3M, last6M, thisFY, custom }
 
 /// Simplified options sheet for portfolio-level statement generation.
 class PortfolioStatementOptionsSheet extends StatefulWidget {
-  const PortfolioStatementOptionsSheet({super.key});
+  final String? title;
+  final String? description;
+
+  const PortfolioStatementOptionsSheet({
+    super.key,
+    this.title,
+    this.description,
+  });
 
   @override
   State<PortfolioStatementOptionsSheet> createState() =>
@@ -26,6 +33,8 @@ class PortfolioStatementOptionsSheet extends StatefulWidget {
 class _PortfolioStatementOptionsSheetState
     extends State<PortfolioStatementOptionsSheet> {
   _RangePreset _preset = _RangePreset.thisFY;
+  DateTime? _customStart;
+  DateTime? _customEnd;
 
   (DateTime, DateTime) _resolveRange() {
     final now = DateTime.now();
@@ -39,6 +48,8 @@ class _PortfolioStatementOptionsSheetState
       case _RangePreset.thisFY:
         final fyStartYear = now.month >= 4 ? now.year : now.year - 1;
         return (DateTime(fyStartYear, 4, 1), now);
+      case _RangePreset.custom:
+        return (_customStart ?? now, _customEnd ?? now);
     }
   }
 
@@ -52,6 +63,27 @@ class _PortfolioStatementOptionsSheetState
         return 'Last 6 Months';
       case _RangePreset.thisFY:
         return 'This FY';
+      case _RangePreset.custom:
+        return 'Custom';
+    }
+  }
+
+  Future<void> _pickCustomRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(now.year + 1, 12, 31),
+      initialDateRange: _customStart != null && _customEnd != null
+          ? DateTimeRange(start: _customStart!, end: _customEnd!)
+          : null,
+    );
+    if (picked != null) {
+      setState(() {
+        _customStart = picked.start;
+        _customEnd = picked.end;
+        _preset = _RangePreset.custom;
+      });
     }
   }
 
@@ -84,11 +116,11 @@ class _PortfolioStatementOptionsSheetState
               ),
             ),
             const SizedBox(height: 18),
-            Text('Portfolio Statement',
+            Text(widget.title ?? 'Portfolio Statement',
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w900)),
             const SizedBox(height: 4),
-            Text('Generate a summary of your entire loan portfolio.',
+            Text(widget.description ?? 'Generate a summary of your entire portfolio.',
                 style: theme.textTheme.bodySmall),
             const SizedBox(height: 20),
 
@@ -100,7 +132,13 @@ class _PortfolioStatementOptionsSheetState
               children: _RangePreset.values.map((p) {
                 final selected = _preset == p;
                 return GestureDetector(
-                  onTap: () => setState(() => _preset = p),
+                  onTap: () async {
+                    if (p == _RangePreset.custom) {
+                      await _pickCustomRange();
+                    } else {
+                      setState(() => _preset = p);
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 8),

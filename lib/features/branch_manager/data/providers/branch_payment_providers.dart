@@ -425,6 +425,31 @@ final branchTodayPaymentsProvider =
     debugPrint(stack.toString());
   }
 
+  // Post-process: fix EMI entries that have collections today but
+  // emi_schedule.is_paid wasn't updated yet (avoids duplicates in both
+  // pending/overdue AND collected).
+  {
+    final collectedLoanNums = payments
+        .where((p) => p.isCollected && p.loanNumber != null)
+        .map((p) => p.loanNumber!)
+        .toSet();
+    for (int i = 0; i < payments.length; i++) {
+      final p = payments[i];
+      if (!p.isCollected && p.loanNumber != null && collectedLoanNums.contains(p.loanNumber!)) {
+        payments[i] = TodayPayment(
+          id: p.id, type: p.type, status: PaymentStatus.collected,
+          memberName: p.memberName, memberPhone: p.memberPhone, memberId: p.memberId,
+          branchId: p.branchId, branchName: p.branchName, agentId: p.agentId, agentName: p.agentName,
+          amountExpected: p.amountExpected, amountCollected: p.amountExpected,
+          penaltyAmount: p.penaltyAmount, dueDate: p.dueDate, loanNumber: p.loanNumber,
+          loanId: p.loanId, emiNumber: p.emiNumber, planName: p.planName,
+          paymentMode: p.paymentMode, collectedAt: DateTime.now(), remarks: p.remarks,
+          collectionId: p.collectionId,
+        );
+      }
+    }
+  }
+
   // -------------------------------------------------------
   // 3. SAVINGS — savings_plans has no branch_id,
   //    fetch plans then members separately (sequential queries per project pattern)
@@ -470,12 +495,17 @@ final branchTodayPaymentsProvider =
     }).toList();
 
     // Fetch savings collections for the selected date
+    // Use collected_at (UTC timestamp) to detect any collection made today,
+    // regardless of collection_date which may differ for overdue installments.
+    final dayStartUtc = DateTime(d.year, d.month, d.day).toUtc();
+    final dayEndUtc = DateTime(d.year, d.month, d.day + 1).toUtc();
     final collectionsToday = await client
         .from('savings_collections')
         .select(
-            'id, savings_plan_id, amount_collected, payment_mode, created_at')
+            'id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
         .eq('org_id', orgId)
-        .eq('collection_date', dateStr);
+        .gte('collected_at', dayStartUtc.toIso8601String())
+        .lt('collected_at', dayEndUtc.toIso8601String());
 
     final collectionsMap = {
       for (final col in collectionsToday as List)

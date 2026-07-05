@@ -721,12 +721,13 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
           .maybeSingle();
       if (response != null && mounted) {
         final plan = SavingsModel.fromJson(response);
-        Navigator.of(context, rootNavigator: true).push(
+        await Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
             builder: (context) => CollectionSheet.savings(savingsPlan: plan),
           ),
         );
+        if (mounted) ref.invalidate(todayPaymentsProvider);
       }
     } catch (e) {
       if (mounted) {
@@ -748,12 +749,13 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
           .maybeSingle();
       if (response != null && mounted) {
         final loan = LoanModel.fromJson(response);
-        Navigator.of(context, rootNavigator: true).push(
+        await Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
             builder: (context) => CollectionSheet(loan: loan),
           ),
         );
+        if (mounted) ref.invalidate(todayPaymentsProvider);
       }
     } catch (e) {
       if (mounted) {
@@ -1034,6 +1036,11 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                   pendingCount: pending.length,
                   overdueCount: overdue.length,
                   collectedCount: collected.length,
+                  collectedAmountText: collected.isNotEmpty
+                      ? (summary.totalCollected >= 1000
+                          ? '\u20b9${(summary.totalCollected / 1000).toStringAsFixed(1)}k'
+                          : '\u20b9${summary.totalCollected.toInt()}')
+                      : null,
                   isDark: isDark,
                 ),
               ),
@@ -1075,16 +1082,11 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                       onTap: (g) => () { if (g.payments.isNotEmpty) _showPaymentDetails(g.payments.first); },
                       onRefresh: () async => ref.invalidate(todayPaymentsProvider),
                     ),
-                    _PaymentList(
-                      payments: collected,
+                    _GroupedCollectedList(
+                      collected: collected,
                       isDark: isDark,
-                      emptyTitle: 'No collections yet',
-                      emptySubtitle: 'Start collecting to see them here',
-                      emptyIcon: Icons.receipt_long_rounded,
-                      emptyColor: AppColors.primary,
                       onCall: (p) => p.memberPhone != null ? () => _makePhoneCall(p.memberPhone!) : null,
                       onRemind: (p) => () => _sendReminder(p),
-                      onCollect: (p) => null,
                       onTap: (p) => () => _showPaymentDetails(p),
                       onRefresh: () async => ref.invalidate(todayPaymentsProvider),
                     ),
@@ -1172,7 +1174,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          currencyFormat.format(payment.amountExpected),
+                          currencyFormat.format(payment.isCollected ? (payment.amountCollected ?? payment.amountExpected) : payment.amountExpected),
                           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: payment.statusColor, letterSpacing: -0.8),
                         ),
                         if (payment.penaltyAmount > 0)
@@ -1954,6 +1956,7 @@ class _PremiumTabBar extends StatelessWidget {
   final int pendingCount;
   final int overdueCount;
   final int collectedCount;
+  final String? collectedAmountText;
   final bool isDark;
 
   const _PremiumTabBar({
@@ -1961,6 +1964,7 @@ class _PremiumTabBar extends StatelessWidget {
     required this.pendingCount,
     required this.overdueCount,
     required this.collectedCount,
+    this.collectedAmountText,
     required this.isDark,
   });
 
@@ -1996,7 +2000,7 @@ class _PremiumTabBar extends StatelessWidget {
           tabs: [
             _TabPill(label: 'Pending', count: pendingCount, color: AppColors.warning),
             _TabPill(label: 'Overdue', count: overdueCount, color: AppColors.error),
-            _TabPill(label: 'Done', count: collectedCount, color: AppColors.success),
+            _TabPill(label: 'Done', count: collectedCount, color: AppColors.success, amountText: collectedAmountText),
           ],
         ),
       ),
@@ -2004,11 +2008,16 @@ class _PremiumTabBar extends StatelessWidget {
   }
 }
 
+// â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"
+//  TAB PILL
+// â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"
+
 class _TabPill extends StatelessWidget {
   final String label;
   final int count;
   final Color color;
-  const _TabPill({required this.label, required this.count, required this.color});
+  final String? amountText;
+  const _TabPill({required this.label, required this.count, required this.color, this.amountText});
 
   @override
   Widget build(BuildContext context) {
@@ -2025,7 +2034,7 @@ class _TabPill extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              '$count',
+              amountText != null ? '$count · $amountText' : '$count',
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
             ),
           ),
@@ -2340,7 +2349,7 @@ class _PaymentCard extends StatelessWidget {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              currencyFormat.format(payment.amountExpected),
+                              currencyFormat.format(payment.isCollected ? (payment.amountCollected ?? payment.amountExpected) : payment.amountExpected),
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 14.5,
@@ -2491,6 +2500,144 @@ class _PaymentCard extends StatelessWidget {
 // ————————————————————————————————————————————————————————————————————————————
 
 // GROUPED OVERDUE LIST — one card per member
+
+// â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"
+//  GROUPED COLLECTED LIST — one card per member, cumulative amounts
+// â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"â"
+
+class _GroupedCollectedList extends StatelessWidget {
+  final List<TodayPayment> collected;
+  final bool isDark;
+  final VoidCallback? Function(TodayPayment) onCall;
+  final VoidCallback Function(TodayPayment) onRemind;
+  final VoidCallback Function(TodayPayment) onTap;
+  final Future<void> Function() onRefresh;
+
+  const _GroupedCollectedList({
+    required this.collected,
+    required this.isDark,
+    required this.onCall,
+    required this.onRemind,
+    required this.onTap,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (collected.isEmpty) {
+      return _EmptyView(
+        title: 'No collections yet',
+        subtitle: 'Start collecting to see them here',
+        icon: Icons.receipt_long_rounded,
+        color: AppColors.primary,
+        isDark: isDark,
+      );
+    }
+
+    // Group by member
+    final Map<String, List<TodayPayment>> grouped = {};
+    for (final p in collected) {
+      grouped.putIfAbsent(p.memberName, () => []).add(p);
+    }
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: AppColors.primary,
+      child: ListView.builder(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+        itemCount: grouped.length,
+        itemBuilder: (context, index) {
+          final memberName = grouped.keys.elementAt(index);
+          final payments = grouped[memberName]!;
+          final totalCollected = payments.fold<double>(0, (sum, p) => sum + (p.amountCollected ?? p.amountExpected));
+          final payment = payments.first; // representative for callbacks
+
+          return _StaggeredFadeIn(
+            index: index,
+            child: GestureDetector(
+              onTap: () => onTap(payment),
+              child: GlassCard(
+                glassmorphic: true,
+                margin: const EdgeInsets.only(bottom: 10),
+                borderRadius: 14,
+                borderColor: AppColors.success.withValues(alpha: isDark ? 0.18 : 0.12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _PaymentAvatar(
+                      type: payment.type,
+                      label: memberName,
+                      color: AppColors.success,
+                      isCollected: true,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  memberName,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                    letterSpacing: -0.2,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0).format(totalCollected),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 14.5,
+                                  letterSpacing: -0.4,
+                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '${payments.length} ${payments.length == 1 ? 'payment' : 'payments'} collected',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
 
 class _GroupedOverdueList extends StatelessWidget {
   final List<GroupedOverduePayment> groups;

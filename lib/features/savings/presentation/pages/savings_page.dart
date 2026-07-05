@@ -70,7 +70,10 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
     final options = await showModalBottomSheet<PortfolioStatementOptions>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => const PortfolioStatementOptionsSheet(),
+      builder: (_) => const PortfolioStatementOptionsSheet(
+        title: 'Savings Portfolio Statement',
+        description: 'Generate a summary of your entire savings portfolio.',
+      ),
     );
     if (options == null || !mounted) return;
 

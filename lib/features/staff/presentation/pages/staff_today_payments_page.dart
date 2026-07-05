@@ -468,7 +468,7 @@ class _StaffTodayPaymentsPageState
     );
   }
 
-  Future<void> _openSavingsCollection(TodayPayment payment) async {
+  Future<void> _openSavingsCollection(TodayPayment payment, String branchId) async {
     // Fetch the full savings plan
     final client = ref.read(supabaseClientProvider);
     final planId = payment.id.endsWith('_today')
@@ -482,12 +482,13 @@ class _StaffTodayPaymentsPageState
           .maybeSingle();
       if (response != null && mounted) {
         final plan = SavingsModel.fromJson(response);
-        Navigator.of(context, rootNavigator: true).push(
+        await Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
             builder: (context) => CollectionSheet.savings(savingsPlan: plan),
           ),
         );
+        if (mounted) ref.invalidate(branchTodayPaymentsProvider(branchId));
       }
     } catch (e) {
       if (mounted) {
@@ -498,7 +499,7 @@ class _StaffTodayPaymentsPageState
     }
   }
 
-  Future<void> _openEmiCollection(TodayPayment payment) async {
+  Future<void> _openEmiCollection(TodayPayment payment, String branchId) async {
     if (payment.loanId == null) return;
     try {
       final client = ref.read(supabaseClientProvider);
@@ -509,12 +510,13 @@ class _StaffTodayPaymentsPageState
           .maybeSingle();
       if (response != null && mounted) {
         final loan = LoanModel.fromJson(response);
-        Navigator.of(context, rootNavigator: true).push(
+        await Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
             builder: (context) => CollectionSheet(loan: loan),
           ),
         );
+        if (mounted) ref.invalidate(branchTodayPaymentsProvider(branchId));
       }
     } catch (e) {
       if (mounted) {
@@ -525,11 +527,11 @@ class _StaffTodayPaymentsPageState
     }
   }
 
-  void _showQuickCollect(TodayPayment payment) {
+  void _showQuickCollect(TodayPayment payment, String branchId) {
     if (payment.type == PaymentType.savings) {
-      _openSavingsCollection(payment);
+      _openSavingsCollection(payment, branchId);
     } else if (payment.type == PaymentType.emi && payment.loanId != null) {
-      _openEmiCollection(payment);
+      _openEmiCollection(payment, branchId);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to collect — missing payment data')),
@@ -917,6 +919,11 @@ class _StaffTodayPaymentsPageState
                   pendingCount: pending.length,
                   overdueCount: overdue.length,
                   collectedCount: collected.length,
+                  collectedAmountText: collected.isNotEmpty
+                      ? (summary.totalCollected >= 1000
+                          ? '\u20b9${(summary.totalCollected / 1000).toStringAsFixed(1)}k'
+                          : '\u20b9${summary.totalCollected.toInt()}')
+                      : null,
                   isDark: isDark,
                 ),
               ),
@@ -931,10 +938,7 @@ class _StaffTodayPaymentsPageState
                         AppColors.warning, branchId),
                     _buildGroupedOverdueList(
                         groupedOverdue, isDark, branchId),
-                    _buildPaymentList(collected, overdue, isDark, 'No collections yet',
-                        'Payments you collect will appear here',
-                        Icons.check_circle_outline_rounded,
-                        AppColors.success, branchId),
+                    _buildGroupedCollectedList(collected, isDark, branchId),
                   ],
                 ),
               ),
@@ -1047,7 +1051,7 @@ class _StaffTodayPaymentsPageState
               ? () {
                   final hasOverdues = payment.isOverdue || overduePayments.any((o) => o.memberId == payment.memberId && payment.memberId != null);
                   if (hasOverdues) {
-                    _showQuickCollect(payment);
+                    _showQuickCollect(payment, branchId);
                   } else {
                     _performAutoCollection(payment, branchId);
                   }
@@ -1059,7 +1063,7 @@ class _StaffTodayPaymentsPageState
             isDark: isDark,
             onCall: onCallFn,
             onRemind: onRemindFn,
-            onTap: () => _showPaymentDetails(payment),
+            onTap: () => _showPaymentDetails(payment, branchId),
             onCollect: onCollectFn,
           );
 
@@ -1130,6 +1134,57 @@ class _StaffTodayPaymentsPageState
   }
 
   // Grouped Overdue List — one card per loan
+  // Grouped Collected List — one card per member
+  Widget _buildGroupedCollectedList(
+      List<TodayPayment> collected, bool isDark, String branchId) {
+    if (collected.isEmpty) {
+      return _AnimatedEmptyState(
+        title: 'No collections yet',
+        subtitle: 'Payments you collect will appear here',
+        icon: Icons.check_circle_outline_rounded,
+        color: AppColors.success,
+        isDark: isDark,
+      );
+    }
+
+    final Map<String, List<TodayPayment>> grouped = {};
+    for (final p in collected) {
+      final key = '${p.memberName}_${p.type.name}';
+      grouped.putIfAbsent(key, () => []).add(p);
+    }
+    final groupKeys = grouped.keys.toList();
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        HapticFeedback.lightImpact();
+        ref.invalidate(branchTodayPaymentsProvider(branchId));
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        itemCount: groupKeys.length,
+        itemBuilder: (context, index) {
+          final groupKey = groupKeys[index];
+          final payments = grouped[groupKey]!;
+          final totalCollected = payments.fold<double>(0, (sum, p) => sum + (p.amountCollected ?? p.amountExpected));
+          final representative = payments.first;
+          final memberName = representative.memberName;
+          final typeLabel = representative.typeLabel;
+
+          return GestureDetector(
+              onTap: () => _showPaymentDetails(representative, branchId),
+              child: _GroupedCollectedCard(
+                memberName: memberName,
+                typeLabel: typeLabel,
+                payments: payments,
+                totalCollected: totalCollected,
+                isDark: isDark,
+              ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildGroupedOverdueList(
       List<GroupedOverduePayment> groups, bool isDark, String branchId) {
     if (groups.isEmpty) {
@@ -1167,13 +1222,13 @@ class _StaffTodayPaymentsPageState
             onTap: () {
               // Show details for the first payment
               if (group.payments.isNotEmpty) {
-                _showPaymentDetails(group.payments.first);
+                _showPaymentDetails(group.payments.first, branchId);
               }
             },
             onCollect: () {
               // Collect using the first payment's loan info
               if (group.payments.isNotEmpty) {
-                _showQuickCollect(group.payments.first);
+                _showQuickCollect(group.payments.first, branchId);
               }
             },
           );
@@ -1195,7 +1250,7 @@ class _StaffTodayPaymentsPageState
               if (direction == DismissDirection.startToEnd) {
                 HapticFeedback.mediumImpact();
                 if (group.payments.isNotEmpty) {
-                  _showQuickCollect(group.payments.first);
+                  _showQuickCollect(group.payments.first, branchId);
                 }
               } else if (direction == DismissDirection.endToStart) {
                 if (group.memberPhone != null) {
@@ -1287,7 +1342,7 @@ class _StaffTodayPaymentsPageState
     }
   }
 
-  void _showPaymentDetails(TodayPayment payment) {
+  void _showPaymentDetails(TodayPayment payment, String branchId) {
     final currencyFormat =
         NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
     final dateFormat = DateFormat('dd MMM yyyy');
@@ -1348,7 +1403,7 @@ class _StaffTodayPaymentsPageState
                       ),
                     ),
                     Text(
-                      currencyFormat.format(payment.amountExpected),
+                      currencyFormat.format(payment.isCollected ? (payment.amountCollected ?? payment.amountExpected) : payment.amountExpected),
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
@@ -1434,9 +1489,9 @@ class _StaffTodayPaymentsPageState
                         icon: Icons.payment_rounded,
                         color: AppColors.primary,
                         onTap: () {
-                          HapticFeedback.mediumImpact();
-                          Navigator.pop(ctx);
-                          _showQuickCollect(payment);
+                           HapticFeedback.mediumImpact();
+                           Navigator.pop(ctx);
+                           _showQuickCollect(payment, branchId);
                         },
                       ),
                     ],
@@ -1648,7 +1703,7 @@ class _PaymentCard extends StatelessWidget {
                           textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              currencyFormat.format(payment.amountExpected),
+                              currencyFormat.format(payment.isCollected ? (payment.amountCollected ?? payment.amountExpected) : payment.amountExpected),
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 14.5,
@@ -1852,6 +1907,99 @@ class _ActionCircle extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════
 // GROUPED OVERDUE CARD — shows multiple overdue EMIs in one card
 // ═══════════════════════════════════════════════════════════════════════════
+
+class _GroupedCollectedCard extends StatelessWidget {
+  final String memberName;
+  final String typeLabel;
+  final List<TodayPayment> payments;
+  final double totalCollected;
+  final bool isDark;
+  const _GroupedCollectedCard({required this.memberName, required this.typeLabel, required this.payments, required this.totalCollected, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat.currency(symbol: '\u20b9', decimalDigits: 0);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.success.withValues(alpha: isDark ? 0.18 : 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.black : Colors.grey.shade100).withValues(alpha: isDark ? 0.2 : 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.success.withValues(alpha: 0.12),
+            child: Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '$memberName • $typeLabel',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          letterSpacing: -0.2,
+                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      currencyFormat.format(totalCollected),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14.5,
+                        letterSpacing: -0.4,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '${payments.length} ${payments.length == 1 ? 'payment' : 'payments'} collected',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _GroupedOverdueCard extends StatelessWidget {
   final GroupedOverduePayment group;
@@ -2300,6 +2448,7 @@ class _PremiumTabBar extends StatelessWidget {
   final int pendingCount;
   final int overdueCount;
   final int collectedCount;
+  final String? collectedAmountText;
   final bool isDark;
 
   const _PremiumTabBar({
@@ -2307,6 +2456,7 @@ class _PremiumTabBar extends StatelessWidget {
     required this.pendingCount,
     required this.overdueCount,
     required this.collectedCount,
+    this.collectedAmountText,
     required this.isDark,
   });
 
@@ -2356,6 +2506,7 @@ class _PremiumTabBar extends StatelessWidget {
             index: 2,
             controller: controller,
             activeColor: AppColors.success,
+            amountText: collectedAmountText,
           ),
         ],
       ),
@@ -2369,6 +2520,7 @@ class _TabPill extends AnimatedWidget {
   final int index;
   final TabController controller;
   final Color activeColor;
+  final String? amountText;
 
   const _TabPill({
     required this.label,
@@ -2376,6 +2528,7 @@ class _TabPill extends AnimatedWidget {
     required this.index,
     required this.controller,
     required this.activeColor,
+    this.amountText,
   }) : super(listenable: controller);
 
   @override
@@ -2424,7 +2577,7 @@ class _TabPill extends AnimatedWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                '$count',
+                amountText != null ? '$count · $amountText' : '$count',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,

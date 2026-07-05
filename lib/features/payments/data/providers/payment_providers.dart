@@ -305,10 +305,15 @@ final todayPaymentsProvider =
     if (!isSuperAdmin) plansQuery = plansQuery.eq('org_id', orgId!);
 
     // Query E: Savings collections for selected date
+    // Use collected_at (UTC timestamp) to detect any collection made today,
+    // regardless of collection_date which may differ for overdue installments.
+    final dayStartUtc = DateTime(d.year, d.month, d.day).toUtc();
+    final dayEndUtc = DateTime(d.year, d.month, d.day + 1).toUtc();
     var savingsColQuery = client
         .from('savings_collections')
         .select('id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
-        .eq('collection_date', dateStr);
+        .gte('collected_at', dayStartUtc.toIso8601String())
+        .lt('collected_at', dayEndUtc.toIso8601String());
     if (!isSuperAdmin) savingsColQuery = savingsColQuery.eq('org_id', orgId!);
 
     // 2. Await all Supabase requests concurrently
@@ -327,6 +332,13 @@ final todayPaymentsProvider =
     final List<dynamic> collectionsToday = results[4] as List<dynamic>;
 
     // 3. Process EMIs (today + overdue)
+    // Build lookup of loan numbers with collections today to prevent
+    // showing the same EMI in both pending/overdue AND collected.
+    final collectedLoanNumbers = collections
+        .where((c) => c['loan_number'] != null)
+        .map((c) => c['loan_number'] as String)
+        .toSet();
+
     final allEmiDues = [...emiDues, ...overdueEmis];
     
     for (final emi in allEmiDues) {
@@ -345,7 +357,7 @@ final todayPaymentsProvider =
         continue;
       }
 
-      final isPaid = emi['is_paid'] == true;
+      final isPaid = emi['is_paid'] == true || collectedLoanNumbers.contains(loan['loan_number']);
       final dueDate = DateTime.parse(emi['due_date']);
       final isOverdue = !isPaid && dueDate.isBefore(
           DateTime(filters.selectedDate.year, filters.selectedDate.month,
@@ -749,13 +761,13 @@ class TodayPaymentData {
       TodayPaymentSummary.fromPayments(allPayments);
 
   List<TodayPayment> get pendingPayments =>
-      payments.where((p) => p.isPending).toList();
+      allPayments.where((p) => p.isPending).toList();
 
   List<TodayPayment> get collectedPayments =>
-      payments.where((p) => p.isCollected).toList();
+      allPayments.where((p) => p.isCollected).toList();
 
   List<TodayPayment> get overduePayments =>
-      payments.where((p) => p.isOverdue).toList();
+      allPayments.where((p) => p.isOverdue).toList();
 
   List<GroupedOverduePayment> get groupedOverduePayments =>
       GroupedOverduePayment.group(overduePayments);

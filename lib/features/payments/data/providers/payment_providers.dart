@@ -269,13 +269,15 @@ final todayPaymentsProvider =
     // 1. Build queries to run in parallel
     
     // Query A: EMI base for selected date (joined with loans and members)
+    // Only fetch unpaid EMIs - paid EMIs are handled separately via collections
     const emiSelect = 'id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id, '
         'loans!emi_schedule_loan_id_fkey(id, loan_number, branch_id, customer_id, agent_id, members!fk_loans_customer(id, full_name, phone))';
-        
+
     final emiBase = client
         .from('emi_schedule')
         .select(emiSelect)
-        .eq('due_date', dateStr);
+        .eq('due_date', dateStr)
+        .eq('is_paid', false);
     final emiQuery = (isSuperAdmin ? emiBase : emiBase.eq('org_id', orgId!))
         .order('due_date', ascending: true);
 

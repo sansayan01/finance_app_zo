@@ -226,13 +226,15 @@ final branchTodayPaymentsProvider =
   // 1. EMI DUES — filter loans by branch_id at DB level
   // -------------------------------------------------------
   try {
-    // Fetch EMI dues for the selected date
+    // Fetch EMI dues for the selected date - only unpaid EMIs
+    // Paid EMIs are handled separately via collections
     final emiDues = await client
         .from('emi_schedule')
         .select(
             'id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id')
         .eq('org_id', orgId)
         .eq('due_date', dateStr)
+        .eq('is_paid', false)
         .order('due_date', ascending: true);
 
     // Overdue EMIs (due before selected date, still unpaid)

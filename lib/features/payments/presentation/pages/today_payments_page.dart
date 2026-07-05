@@ -2534,10 +2534,11 @@ class _GroupedCollectedList extends StatelessWidget {
       );
     }
 
-    // Group by member
+    // Group by member + type (separate EMI and Savings cards)
     final Map<String, List<TodayPayment>> grouped = {};
     for (final p in collected) {
-      grouped.putIfAbsent(p.memberName, () => []).add(p);
+      final key = '${p.memberName}_${p.type.name}';
+      grouped.putIfAbsent(key, () => []).add(p);
     }
 
     return RefreshIndicator(
@@ -2548,10 +2549,12 @@ class _GroupedCollectedList extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
         itemCount: grouped.length,
         itemBuilder: (context, index) {
-          final memberName = grouped.keys.elementAt(index);
-          final payments = grouped[memberName]!;
+          final groupKey = grouped.keys.elementAt(index);
+          final payments = grouped[groupKey]!;
           final totalCollected = payments.fold<double>(0, (sum, p) => sum + (p.amountCollected ?? p.amountExpected));
           final payment = payments.first; // representative for callbacks
+          final memberName = payment.memberName;
+          final typeLabel = payment.typeLabel;
 
           return _StaggeredFadeIn(
             index: index,
@@ -2583,7 +2586,7 @@ class _GroupedCollectedList extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  memberName,
+                                  '$memberName • $typeLabel',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 14,

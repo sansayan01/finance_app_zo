@@ -464,9 +464,19 @@ final branchTodayPaymentsProvider =
     debugPrint(stack.toString());
   }
 
-  // Post-process: No longer needed - collections now update existing EMI entries
-  // directly instead of creating duplicates. The collection processing loop above
-  // handles marking EMIs as collected when a matching collection exists.
+  // Deduplicate collected EMI entries: keep only one per loanId
+  {
+    final seenLoanIds = <String>{};
+    payments.removeWhere((p) {
+      if (p.isCollected && p.type == PaymentType.emi && p.loanId != null) {
+        if (seenLoanIds.contains(p.loanId)) {
+          return true; // remove duplicate
+        }
+        seenLoanIds.add(p.loanId!);
+      }
+      return false;
+    });
+  }
 
   // -------------------------------------------------------
   // 3. SAVINGS — savings_plans has no branch_id,

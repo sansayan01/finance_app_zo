@@ -509,6 +509,20 @@ final todayPaymentsProvider =
       }
     }
 
+    // Deduplicate collected EMI entries: keep only one per loanId
+    {
+      final seenLoanIds = <String>{};
+      payments.removeWhere((p) {
+        if (p.isCollected && p.type == PaymentType.emi && p.loanId != null) {
+          if (seenLoanIds.contains(p.loanId)) {
+            return true; // remove duplicate
+          }
+          seenLoanIds.add(p.loanId!);
+        }
+        return false;
+      });
+    }
+
     // 5. Process savings plans
     final selectedDate = filters.selectedDate;
     final dayOfWeek = selectedDate.weekday - 1; // 0=Mon, 6=Sun

@@ -1,7 +1,7 @@
 name: microflow_pro
 description: "MicroFlow Pro - Premium Micro-Finance Management Ecosystem"
 publish_to: 'none'
-version: 1.0.1+2020
+version: 1.0.1+2021
 
 environment:
   sdk: ^3.4.0
@@ -92,7 +92,7 @@ dev_dependencies:
 
   # Code Generation
   build_runner: ^2.4.13
-  freezed: ^3.2.5
+  freezed: ^2.5.0
   json_serializable: ^6.8.0
 
   # Integration Testing

@@ -47,12 +47,14 @@ class CustomerBiometricService {
     try {
       return await _localAuth.authenticate(
         localizedReason: reason,
-        persistAcrossBackgrounding: true,
+      options: const AuthenticationOptions(
+        stickyAuth: true,
         biometricOnly: false,
-      );
-    } on PlatformException {
-      return false;
-    }
+      ),
+    );
+} on PlatformException {
+  return false;
+}
   }
 
   /// Reads the persisted biometric-enabled preference.

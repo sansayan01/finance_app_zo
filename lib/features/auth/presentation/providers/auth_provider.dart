@@ -92,10 +92,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
               try {
                 final bool didAuthenticate = await auth.authenticate(
                   localizedReason: 'Please authenticate to access MicroFlow Pro',
-                  persistAcrossBackgrounding: true,
-                  biometricOnly: false,
-                );
-
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false,
+        ),
+      );
                 if (!didAuthenticate) {
                   await _repository.signOut();
                   state = state.copyWith(status: AuthStatus.unauthenticated);

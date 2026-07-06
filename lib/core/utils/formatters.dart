@@ -5,7 +5,7 @@ class AppFormatters {
 
   static final _currencyFormat = NumberFormat.currency(
     symbol: '₹',
-    decimalDigits: 0,
+    decimalDigits: 2,
   );
 
   /// Returns the currency symbol (e.g. '₹') from the formatter.

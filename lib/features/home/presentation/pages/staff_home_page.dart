@@ -614,7 +614,7 @@ class _StaffHomePageState extends ConsumerState<StaffHomePage> {
                               createdAt: DateTime.now(),
                             ),
                     );
-                    return CollectionSheet(loan: loan, emi: emi);
+                    return CollectionSheet(loan: loan, emi: emi, branchId: ref.read(currentUserProvider)?.branchId);
                   },
                   loading: () => _buildLoadingSheet(context),
                   error: (_, __) => _buildErrorSheet(context, 'EMI not found'),

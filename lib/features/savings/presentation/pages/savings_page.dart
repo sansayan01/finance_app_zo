@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/file_download.dart';
 import '../../../../core/widgets/aurora_background.dart';
@@ -27,6 +28,8 @@ import '../../../loans/presentation/widgets/portfolio_statement_options_sheet.da
 import '../../../loans/presentation/widgets/statement_generation_overlay.dart';
 import '../../../home/data/providers/dashboard_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../loans/presentation/widgets/collection_sheet.dart';
+import '../../../../providers/supabase_provider.dart';
 
 class SavingsPage extends ConsumerStatefulWidget {
   final void Function(String savingId)? onSavingTap;
@@ -61,6 +64,49 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _openSavingsCollection(SavingsModel saving) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CollectionSheet.savings(
+          savingsPlan: saving,
+          branchId: ref.read(currentUserProvider)?.branchId,
+        ),
+      ),
+    ).then((_) {
+      ref.invalidate(savingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+    });
+  }
+
+  Future<void> _makePhoneCall(String phone) async {
+    final url = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch phone dialer')),
+        );
+      }
+    }
+  }
+
+  Future<String?> _getMemberPhone(String memberId) async {
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final member = await client
+          .from('members')
+          .select('phone')
+          .eq('id', memberId)
+          .maybeSingle();
+      return member?['phone']?.toString();
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _handlePortfolioStatement() async {
@@ -303,6 +349,23 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
         ],
       ),
       actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Center(
+            child: GestureDetector(
+              onTap: () => context.push('/savings/withdrawals'),
+              child: Container(
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: theme.dividerColor.withOpacity(0.15), width: 1),
+                ),
+                child: Icon(Icons.inbox_rounded, size: 16, color: Colors.orange),
+              ),
+            ),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: Center(
@@ -608,7 +671,9 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final saving = filtered[index];
-                return Padding(
+                final isActive = saving.status == 'active';
+
+                Widget card = Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: GestureDetector(
                     onTap: () {
@@ -622,6 +687,47 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
                     child: _PremiumSavingCard(saving: saving),
                   ),
                 ).animate().fadeIn(delay: (40 * index).ms, duration: 300.ms).slideY(begin: 0.04, end: 0, duration: 300.ms);
+
+                if (isActive) {
+                  card = Dismissible(
+                    key: ValueKey('saving_${saving.id}'),
+                    direction: DismissDirection.horizontal,
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        HapticFeedback.mediumImpact();
+                        _openSavingsCollection(saving);
+                      } else {
+                        HapticFeedback.lightImpact();
+                        final messenger = ScaffoldMessenger.of(context);
+                        final phone = await _getMemberPhone(saving.memberId);
+                        if (!mounted) return false;
+                        if (phone != null && phone.isNotEmpty) {
+                          _makePhoneCall(phone);
+                        } else {
+                          messenger.showSnackBar(
+                            const SnackBar(content: Text('No phone number found for this member')),
+                          );
+                        }
+                      }
+                      return false;
+                    },
+                    background: _SwipeBackground(
+                      icon: Icons.payment_rounded,
+                      label: 'Collect',
+                      color: AppColors.success,
+                      align: Alignment.centerLeft,
+                    ),
+                    secondaryBackground: _SwipeBackground(
+                      icon: Icons.call_rounded,
+                      label: 'Call',
+                      color: AppColors.success,
+                      align: Alignment.centerRight,
+                    ),
+                    child: card,
+                  );
+                }
+
+                return card;
               },
               childCount: filtered.length,
             ),
@@ -824,4 +930,54 @@ class _FilterDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => 90;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
+}
+
+class _SwipeBackground extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Alignment align;
+
+  const _SwipeBackground({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.align,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      alignment: align,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.0),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: align == Alignment.centerRight
+            ? [
+                Text(label,
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13)),
+                const SizedBox(width: 6),
+                Icon(icon, color: color, size: 18),
+              ]
+            : [
+                Icon(icon, color: color, size: 18),
+                const SizedBox(width: 6),
+                Text(label,
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13)),
+              ],
+      ),
+    );
+  }
 }

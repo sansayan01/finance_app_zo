@@ -33,6 +33,7 @@ import '../features/setup/data/providers/setup_provider.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/loans/presentation/pages/loans_page.dart';
 import '../features/savings/presentation/pages/savings_page.dart';
+import '../features/savings/presentation/pages/withdraw_approval_queue_page.dart';
 import '../features/settings/presentation/pages/settings_page_v2.dart';
 import '../features/settings/presentation/pages/organization_settings_page.dart';
 import '../features/settings/presentation/pages/profile_page.dart';
@@ -494,6 +495,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/savings',
             builder: (context, state) => const SavingsPage(),
+          ),
+          GoRoute(
+            path: '/savings/withdrawals',
+            builder: (context, state) => const WithdrawApprovalQueuePage(),
           ),
           GoRoute(
             path: '/savings/new',

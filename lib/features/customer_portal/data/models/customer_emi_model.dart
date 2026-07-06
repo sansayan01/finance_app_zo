@@ -35,8 +35,11 @@ class CustomerEmiModel {
           ? DateTime.tryParse(json['due_date'].toString())
           : null,
       emiAmount: (json['emi_amount'] as num?)?.toDouble() ?? 0,
-      amountPaid: (json['amount_paid'] as num?)?.toDouble() ??
-          ((json['is_paid'] == true) ? (json['emi_amount'] as num?)?.toDouble() ?? 0 : 0),
+      amountPaid: ((json['amount_paid'] as num?)?.toDouble() ?? 0) > 0
+          ? (json['amount_paid'] as num?)?.toDouble() ?? 0
+          : (json['is_paid'] == true)
+              ? (json['emi_amount'] as num?)?.toDouble() ?? 0
+              : 0,
       principal: (json['principal'] as num?)?.toDouble() ?? 0,
       interest: (json['interest'] as num?)?.toDouble() ?? 0,
       balanceAfter: (json['balance_after'] as num?)?.toDouble() ?? 0,

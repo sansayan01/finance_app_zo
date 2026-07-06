@@ -1,0 +1,544 @@
+name: MicroFlow Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.5-beta.1)'
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.ref_name || inputs.tag }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.44.x'
+  JAVA_TOOL_OPTIONS: '-Xmx4096m'
+
+jobs:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 1: Detect release lane from tag format
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  detect-lane:
+    name: Detect Release Lane
+    runs-on: ubuntu-latest
+    outputs:
+      lane: ${{ steps.parse.outputs.lane }}
+      version: ${{ steps.parse.outputs.version }}
+      build_number: ${{ steps.parse.outputs.build_number }}
+      is_production: ${{ steps.parse.outputs.is_production }}
+      is_beta: ${{ steps.parse.outputs.is_beta }}
+      is_staging: ${{ steps.parse.outputs.is_staging }}
+      tag_name: ${{ steps.parse.outputs.tag_name }}
+    steps:
+      - name: Parse tag into lane
+        id: parse
+        run: |
+          TAG="${GITHUB_REF_NAME:-${{ inputs.tag }}}"
+          TAG_V="${TAG#v}"
+
+          # Staging: v1.0.x-staging.N
+          if [[ "$TAG_V" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-staging\.([0-9]+)$ ]]; then
+            echo "lane=staging" >> "$GITHUB_OUTPUT"
+            echo "is_staging=true" >> "$GITHUB_OUTPUT"
+            echo "is_beta=false" >> "$GITHUB_OUTPUT"
+            echo "is_production=false" >> "$GITHUB_OUTPUT"
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+
+          # Beta: v1.0.x-beta.N
+          elif [[ "$TAG_V" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-beta\.([0-9]+)$ ]]; then
+            echo "lane=beta" >> "$GITHUB_OUTPUT"
+            echo "is_staging=false" >> "$GITHUB_OUTPUT"
+            echo "is_beta=true" >> "$GITHUB_OUTPUT"
+            echo "is_production=false" >> "$GITHUB_OUTPUT"
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+
+          # Production: v1.0.x
+          elif [[ "$TAG_V" =~ ^([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "lane=production" >> "$GITHUB_OUTPUT"
+            echo "is_staging=false" >> "$GITHUB_OUTPUT"
+            echo "is_beta=false" >> "$GITHUB_OUTPUT"
+            echo "is_production=true" >> "$GITHUB_OUTPUT"
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Unrecognized tag format: $TAG"
+            echo "Expected: v1.0.0, v1.0.0-beta.1, or v1.0.0-staging.1"
+            exit 1
+          fi
+
+          # Build number: from tag suffix (+N) or fall back to run_number
+          if [[ "$TAG_V" =~ \+([0-9]+)$ ]]; then
+            echo "build_number=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "build_number=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "tag_name=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Tag: $TAG -> Lane: $(grep '^lane=' "$GITHUB_OUTPUT" | cut -d= -f2)"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 2: Merge development -> main (production only)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  merge-to-main:
+    name: Merge Development -> Main
+    needs: detect-lane
+    if: needs.detect-lane.outputs.is_production == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Merge development into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin development
+          git merge origin/development --no-edit \
+            -m "chore: merge development into main for release ${{ github.ref_name }}"
+          git push origin main
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 3: Quality gate — analyze + test (always runs)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  quality-gate:
+    name: Quality Gate (Analyze + Test)
+    needs: detect-lane
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          setup-java: 'false'
+      - name: Flutter Analyze
+        run: flutter analyze --no-fatal-infos
+      - name: Flutter Test
+        run: flutter test --reporter=github
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 3b: Database migration (auto-apply via Supabase CLI)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  db-migration:
+    name: Database Migration
+    needs: [detect-lane, quality-gate]
+    if: needs.quality-gate.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Supabase CLI
+        run: |
+          curl -sSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar xz
+          sudo mv supabase /usr/local/bin/supabase
+          supabase --version
+
+      # Login to Supabase (uses access token — the non-interactive equivalent of `supabase login`)
+      - name: "Supabase Login"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase login --token "$SUPABASE_ACCESS_TOKEN"
+
+      # Staging: push to staging Supabase
+      - name: "Migrate: Staging Supabase"
+        if: needs.detect-lane.outputs.is_staging == 'true'
+        run: |
+          cd supabase
+          supabase link --project-ref tccwdpsnuudzfyxfoohk
+          supabase db push
+          echo "Staging migrations applied successfully"
+
+      # Beta: push to staging Supabase (beta goes to staging first)
+      - name: "Migrate: Staging Supabase (Beta)"
+        if: needs.detect-lane.outputs.is_beta == 'true'
+        run: |
+          cd supabase
+          supabase link --project-ref tccwdpsnuudzfyxfoohk
+          supabase db push
+          echo "Staging migrations applied for beta"
+
+      # Production: push to production Supabase
+      - name: "Migrate: Production Supabase"
+        if: needs.detect-lane.outputs.is_production == 'true'
+        run: |
+          cd supabase
+          supabase link --project-ref mirdnsifontxoccjwgak
+          supabase db push
+          echo "Production migrations applied successfully"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 4: Validate tag matches pubspec (production only)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  validate-tag:
+    name: Validate Tag Matches Pubspec
+    needs: [detect-lane, merge-to-main]
+    if: |
+      always() &&
+      needs.detect-lane.outputs.is_production == 'true' &&
+      needs.merge-to-main.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Compare tag version to pubspec.yaml
+        run: |
+          TAG_VERSION="${{ needs.detect-lane.outputs.version }}"
+          PUBSPEC_VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d+ -f1)
+
+          echo "Tag version:    $TAG_VERSION"
+          echo "Pubspec version: $PUBSPEC_VERSION"
+
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match pubspec.yaml ($PUBSPEC_VERSION)"
+            exit 1
+          fi
+          echo "Version match confirmed: $TAG_VERSION"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 5: APK size budget check (production only)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  apk-size-check:
+    name: APK Size Budget Check
+    needs: [detect-lane, quality-gate]
+    if: needs.detect-lane.outputs.is_production == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          setup-java: 'true'
+      - name: Decode Android Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+      - name: Decode Key Properties
+        run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
+      - name: Build APK for size measurement
+        run: |
+          flutter build apk --release \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+      - name: Evaluate APK size
+        run: |
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+          BYTES=$(stat -c%s "$APK")
+          MB=$(echo "scale=2; $BYTES / 1048576" | bc)
+          echo "APK size: ${MB}MB (${BYTES} bytes)"
+
+          WARN=$((100 * 1048576))
+          FAIL=$((200 * 1048576))
+
+          if [ "$BYTES" -gt "$FAIL" ]; then
+            echo "::error::APK size ${MB}MB EXCEEDS 200MB hard budget - release blocked"
+            exit 1
+          elif [ "$BYTES" -gt "$WARN" ]; then
+            echo "::warning::APK size ${MB}MB exceeds 100MB soft budget"
+          fi
+          echo "APK size within budget: ${MB}MB"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 6: Build Android (conditional per lane)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  build-android:
+    name: Build Android (${{ needs.detect-lane.outputs.lane }})
+    needs: [detect-lane, quality-gate, validate-tag, apk-size-check, db-migration]
+    if: |
+      always() &&
+      needs.quality-gate.result == 'success' &&
+      needs.db-migration.result == 'success' &&
+      (needs.detect-lane.outputs.is_production != 'true' || needs.validate-tag.result == 'success') &&
+      (needs.detect-lane.outputs.is_production != 'true' || needs.apk-size-check.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          setup-java: 'true'
+
+      - name: Decode Android Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+      - name: Decode Key Properties
+        run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
+
+      # ── PRODUCTION: universal APK + split APKs + AAB ──
+      - name: "Build: Universal APK (Production)"
+        if: needs.detect-lane.outputs.is_production == 'true'
+        run: |
+          flutter build apk --release \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+
+      - name: "Build: Split APKs (Production)"
+        if: needs.detect-lane.outputs.is_production == 'true'
+        run: |
+          flutter build apk --release --split-per-abi \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+
+      - name: "Build: AAB (Production)"
+        if: needs.detect-lane.outputs.is_production == 'true'
+        run: |
+          flutter build appbundle --release \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+
+      # ── BETA: universal APK + split APKs ──
+      - name: "Build: Universal APK (Beta)"
+        if: needs.detect-lane.outputs.is_beta == 'true'
+        run: |
+          flutter build apk --release \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+
+      - name: "Build: Split APKs (Beta)"
+        if: needs.detect-lane.outputs.is_beta == 'true'
+        run: |
+          flutter build apk --release --split-per-abi \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+
+      # ── STAGING: universal APK only ──
+      - name: "Build: Universal APK (Staging)"
+        if: needs.detect-lane.outputs.is_staging == 'true'
+        run: |
+          flutter build apk --release \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.STAGING_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.STAGING_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.STAGING_SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.STAGING_POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.STAGING_POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.STAGING_MAPBOX_ACCESS_TOKEN }}"
+
+      # ── Prepare & upload artifacts ──
+      - name: Prepare artifacts
+        run: |
+          mkdir -p build-artifacts
+          LANE="${{ needs.detect-lane.outputs.lane }}"
+          VER="${{ needs.detect-lane.outputs.version }}"
+
+          # Universal APK (always present)
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "build-artifacts/microflow-pro-${VER}-${LANE}-universal.apk"
+
+          # Split APKs (production + beta)
+          for arch in arm64-v8a armeabi-v7a x86_64; do
+            SRC="build/app/outputs/flutter-apk/app-${arch}-release.apk"
+            [ -f "$SRC" ] && cp "$SRC" "build-artifacts/"
+          done
+
+          # AAB (production only)
+          AAB="build/app/outputs/bundle/release/app-release.aab"
+          [ -f "$AAB" ] && cp "$AAB" "build-artifacts/microflow-pro-${VER}.aab"
+
+          echo "Artifacts:"
+          ls -lh build-artifacts/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ needs.detect-lane.outputs.lane }}-${{ needs.detect-lane.outputs.version }}
+          path: build-artifacts/
+          retention-days: ${{ needs.detect-lane.outputs.is_staging == 'true' && 7 || 30 }}
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 7: Build iOS (production only)
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  build-ios:
+    name: Build iOS (Production)
+    needs: [detect-lane, quality-gate, validate-tag]
+    if: |
+      always() &&
+      needs.detect-lane.outputs.is_production == 'true' &&
+      needs.quality-gate.result == 'success' &&
+      needs.validate-tag.result == 'success'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          setup-java: 'false'
+
+      - name: Decode iOS signing certificate
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          echo "$IOS_CERTIFICATE_P12_BASE64" | base64 --decode > /tmp/certificate.p12
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > /tmp/profile.mobileprovision
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import /tmp/certificate.p12 -k build.keychain \
+            -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Build iOS IPA
+        run: |
+          flutter build ios --release \
+            --build-number=${{ needs.detect-lane.outputs.build_number || github.run_number }} \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release \
+            -archivePath build/Runner.xcarchive archive
+          xcodebuild -exportArchive -archivePath build/Runner.xcarchive \
+            -exportOptionsPlist ExportOptions.plist -exportPath build/output
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ needs.detect-lane.outputs.version }}
+          path: build/output/Runner.ipa
+          retention-days: 30
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 8: Release gate — central pass/fail checkpoint
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  release-gate:
+    name: Release Gate (All Checks)
+    needs: [detect-lane, quality-gate, validate-tag, apk-size-check, db-migration, build-android, build-ios]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all required jobs passed
+        run: |
+          LANE="${{ needs.detect-lane.outputs.lane }}"
+          echo "Release Gate for: $LANE"
+
+          # These always gate
+          for JOB in quality-gate db-migration build-android; do
+            RESULT="${{ needs[JOB].result }}"
+            echo "  $JOB: $RESULT"
+            if [ "$RESULT" != "success" ]; then
+              echo "::error::Gate FAILED - $JOB resulted in $RESULT"
+              exit 1
+            fi
+          done
+
+          # Production-only gates
+          if [ "$LANE" = "production" ]; then
+            for JOB in validate-tag apk-size-check build-ios; do
+              RESULT="${{ needs[JOB].result }}"
+              echo "  $JOB: $RESULT"
+              if [ "$RESULT" != "success" ]; then
+                echo "::error::Production gate FAILED - $JOB resulted in $RESULT"
+                exit 1
+              fi
+            done
+          fi
+
+          echo "All gates passed for $LANE"
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  #  STEP 9: Create GitHub Release
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  create-github-release:
+    name: Create GitHub Release
+    needs: [detect-lane, release-gate, build-android, build-ios]
+    if: |
+      always() &&
+      needs.release-gate.result == 'success' &&
+      needs.detect-lane.outputs.lane != 'staging'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Download Android artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-${{ needs.detect-lane.outputs.lane }}-${{ needs.detect-lane.outputs.version }}
+          path: release-artifacts
+          merge-multiple: true
+
+      # Download iOS artifacts (production only)
+      - uses: actions/download-artifact@v4
+        if: needs.detect-lane.outputs.is_production == 'true'
+        with:
+          name: ios-ipa-${{ needs.detect-lane.outputs.version }}
+          path: release-artifacts
+          merge-multiple: true
+
+      # Production: latest release with all artifacts
+      - name: Create Production Release
+        if: needs.detect-lane.outputs.is_production == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.detect-lane.outputs.tag_name }}
+          name: "Release ${{ needs.detect-lane.outputs.version }}"
+          generate_release_notes: true
+          make_latest: true
+          files: |
+            release-artifacts/*.apk
+            release-artifacts/*.aab
+            release-artifacts/*.ipa
+
+      # Beta: pre-release with APKs only
+      - name: Create Beta Pre-Release
+        if: needs.detect-lane.outputs.is_beta == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.detect-lane.outputs.tag_name }}
+          name: "Beta ${{ needs.detect-lane.outputs.version }}"
+          prerelease: true
+          generate_release_notes: true
+          files: |
+            release-artifacts/*.apk
+
+      # Clean up auto-generated source archives
+      - name: Remove auto-generated source archives
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.detect-lane.outputs.tag_name }}"
+          RELEASE_ID=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq '.id')
+          if [ -n "$RELEASE_ID" ]; then
+            gh api "repos/${{ github.repository }}/releases/$RELEASE_ID/assets" \
+              --jq '.[] | select(.name | test("\\.(zip|tar\\.gz)$")) | .id' \
+            | while read ASSET_ID; do
+                echo "Removing auto-generated asset: $ASSET_ID"
+                gh api -X DELETE "repos/${{ github.repository }}/releases/$RELEASE_ID/assets/$ASSET_ID"
+              done
+          fi

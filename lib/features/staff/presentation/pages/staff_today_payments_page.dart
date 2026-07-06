@@ -485,7 +485,7 @@ class _StaffTodayPaymentsPageState
         await Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (context) => CollectionSheet.savings(savingsPlan: plan),
+            builder: (context) => CollectionSheet.savings(savingsPlan: plan, branchId: branchId),
           ),
         );
         if (mounted) ref.invalidate(branchTodayPaymentsProvider(branchId));
@@ -513,7 +513,7 @@ class _StaffTodayPaymentsPageState
         await Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (context) => CollectionSheet(loan: loan),
+            builder: (context) => CollectionSheet(loan: loan, branchId: branchId),
           ),
         );
         if (mounted) ref.invalidate(branchTodayPaymentsProvider(branchId));

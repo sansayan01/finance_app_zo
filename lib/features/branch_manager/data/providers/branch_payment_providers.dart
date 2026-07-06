@@ -326,8 +326,9 @@ final branchTodayPaymentsProvider =
         amountExpected: (emi['emi_amount'] as num?)?.toDouble() ?? 0,
         penaltyAmount: (emi['penalty_amount'] as num?)?.toDouble() ?? 0,
         amountCollected: isPaid
-            ? (emi['amount_paid'] as num?)?.toDouble() ??
-                (emi['emi_amount'] as num?)?.toDouble()
+            ? ((emi['amount_paid'] as num?)?.toDouble() ?? 0) > 0
+                ? (emi['amount_paid'] as num?)?.toDouble()
+                : (emi['emi_amount'] as num?)?.toDouble()
             : null,
         dueDate: dueDate,
         loanNumber: loan['loan_number'],
@@ -352,7 +353,7 @@ final branchTodayPaymentsProvider =
     final collections = await client
         .from('collections')
         .select(
-            'id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, member_id, staff_id, remarks')
+            'id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, selected_schedule_id, member_id, staff_id, remarks')
         .eq('org_id', orgId)
         .eq('collection_date', dateStr)
         .order('collection_time', ascending: false);
@@ -391,10 +392,19 @@ final branchTodayPaymentsProvider =
 
       final collectionAmountCollected = (col['amount_collected'] as num?)?.toDouble() ?? 0;
 
-      // Check if there's an existing unpaid EMI entry for the same loan
+      // Check if there's an existing unpaid EMI entry for the same loan/schedule
       // If so, update it to be collected instead of adding a duplicate
-      final existingEmiIdx = payments.indexWhere(
-          (p) => p.loanId == col['loan_id'] && !p.isCollected && p.type == PaymentType.emi);
+      // Use selected_schedule_id first (exact match), then fallback to loanId match
+      final selectedScheduleId = col['selected_schedule_id'] as String?;
+      int existingEmiIdx = -1;
+      if (selectedScheduleId != null) {
+        existingEmiIdx = payments.indexWhere(
+            (p) => p.id == selectedScheduleId && !p.isCollected && p.type == PaymentType.emi);
+      }
+      if (existingEmiIdx == -1) {
+        existingEmiIdx = payments.indexWhere(
+            (p) => p.loanId == col['loan_id'] && !p.isCollected && p.type == PaymentType.emi);
+      }
 
       if (existingEmiIdx != -1) {
         // Update the existing EMI entry to mark it as collected
@@ -427,10 +437,17 @@ final branchTodayPaymentsProvider =
         );
       } else {
         // No existing EMI entry found, add as new collected payment
-        final existingCollectedIdx = payments.indexWhere(
-            (p) => p.loanNumber == col['loan_number'] && p.isCollected);
+        // Check if this exact schedule was already added as collected
+        final existingCollectedIdx = selectedScheduleId != null
+            ? payments.indexWhere(
+                (p) => p.id == selectedScheduleId && p.isCollected)
+            : -1;
+        final existingLoanCollectedIdx = existingCollectedIdx == -1
+            ? payments.indexWhere(
+                (p) => p.loanNumber == col['loan_number'] && p.isCollected)
+            : existingCollectedIdx;
 
-        if (existingCollectedIdx == -1) {
+        if (existingLoanCollectedIdx == -1) {
           payments.add(TodayPayment(
             id: col['id'],
             type: col['collection_type'] == 'savings'
@@ -464,15 +481,16 @@ final branchTodayPaymentsProvider =
     debugPrint(stack.toString());
   }
 
-  // Deduplicate collected EMI entries: keep only one per loanId
+  // Deduplicate collected EMI entries: keep only one per loanId+emiNumber
   {
-    final seenLoanIds = <String>{};
+    final seenEmiKeys = <String>{};
     payments.removeWhere((p) {
       if (p.isCollected && p.type == PaymentType.emi && p.loanId != null) {
-        if (seenLoanIds.contains(p.loanId)) {
+        final key = '${p.loanId}_${p.emiNumber}';
+        if (seenEmiKeys.contains(key)) {
           return true; // remove duplicate
         }
-        seenLoanIds.add(p.loanId!);
+        seenEmiKeys.add(key);
       }
       return false;
     });

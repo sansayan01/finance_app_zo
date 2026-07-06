@@ -9,6 +9,7 @@ class CustomerLoanModel {
   final String status;
   final DateTime? disbursementDate;
   final DateTime? firstEmiDate;
+  final DateTime? nextDueDate;
   final String? memberName;
   final String? purpose;
   final String frequency;
@@ -30,6 +31,7 @@ class CustomerLoanModel {
     required this.status,
     this.disbursementDate,
     this.firstEmiDate,
+    this.nextDueDate,
     this.memberName,
     this.purpose,
     this.frequency = 'monthly',
@@ -59,6 +61,9 @@ class CustomerLoanModel {
           : null,
       firstEmiDate: json['first_emi_date'] != null
           ? DateTime.tryParse(json['first_emi_date'].toString())
+          : null,
+      nextDueDate: json['next_due_date'] != null
+          ? DateTime.tryParse(json['next_due_date'].toString())
           : null,
       memberName: json['member_name']?.toString(),
       purpose: json['purpose']?.toString(),

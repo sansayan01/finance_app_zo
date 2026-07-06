@@ -29,6 +29,20 @@ import 'bulk_import_members_page.dart';
 import 'org_chart_page.dart';
 import 'user_audit_page.dart';
 
+
+/// Resolves avatar URLs that may be relative storage paths to full public URLs.
+String? _resolveProfilePhotoUrl(String? rawUrl) {
+  if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+  final trimmed = rawUrl.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  final path = trimmed.startsWith('avatars/')
+      ? trimmed.substring('avatars/'.length)
+      : trimmed;
+  return 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/avatars/$path';
+}
+
 /// Premium User Hub.
 ///
 /// Provides a single command-center surface for the entire workforce —
@@ -2820,7 +2834,7 @@ class _Avatar extends StatelessWidget {
                 image: (profile.avatarUrl != null &&
                         profile.avatarUrl!.trim().isNotEmpty)
                     ? DecorationImage(
-                        image: CachedNetworkImageProvider(profile.avatarUrl!),
+                        image: CachedNetworkImageProvider(_resolveProfilePhotoUrl(profile.avatarUrl!)!),
                         fit: BoxFit.cover,
                       )
                     : null,

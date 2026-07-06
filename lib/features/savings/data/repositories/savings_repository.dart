@@ -1138,4 +1138,152 @@ class SavingsRepository {
       return false;
     }
   }
+
+  /// Submits a savings withdrawal request for manager approval.
+  Future<void> submitWithdrawalRequest({
+    required String savingsPlanId,
+    required double amount,
+    required double penaltyAmount,
+    required String paymentMode,
+    required String memberId,
+    required String requestedById,
+    String? notes,
+  }) async {
+    // Fetch plan details
+    final plan = await _client
+        .from('savings_plans')
+        .select('current_amount, maturity_date, status')
+        .eq('id', savingsPlanId)
+        .maybeSingle();
+    if (plan == null) throw Exception('Savings plan not found');
+    if (plan['status'] != 'active') {
+      throw Exception('Cannot withdraw from an inactive vault');
+    }
+
+    final currentBalance =
+        (plan['current_amount'] as num?)?.toDouble() ?? 0;
+    if (amount <= 0) throw Exception('Amount must be greater than zero');
+    if (amount > currentBalance) {
+      throw Exception(
+          'Insufficient balance. Available: ₹${currentBalance.toStringAsFixed(0)}');
+    }
+
+    final maturityDate = DateTime.parse(plan['maturity_date']);
+    final isPremature = DateTime.now().isBefore(maturityDate);
+
+    // Get branch and profile from member
+    final member = await _client
+        .from('members')
+        .select('branch_id')
+        .eq('id', memberId)
+        .maybeSingle();
+    final branchId = member?['branch_id'] as String?;
+
+    // Look up the profile ID (requested_by references profiles.id, not auth.users.id)
+    final profile = await _client
+        .from('profiles')
+        .select('id')
+        .eq('user_id', requestedById)
+        .maybeSingle();
+    final profileId = profile?['id'] as String?;
+
+    // Build notes JSON with withdrawal details
+    final metadata = {
+      'savings_plan_id': savingsPlanId,
+      'amount': amount,
+      'payment_mode': paymentMode,
+      'penalty_amount': penaltyAmount,
+      'is_premature': isPremature,
+      'current_balance': currentBalance,
+    };
+
+    await _client.from('pending_approvals').insert({
+      'org_id': _orgId,
+      if (branchId != null) 'branch_id': branchId,
+      'type': 'withdrawal',
+      'member_id': memberId,
+      'requested_by': profileId,
+      'status': 'pending',
+      'notes': metadata.toString(),
+    });
+
+    debugPrint(
+        'submitWithdrawalRequest: ₹$amount (penalty: ₹$penaltyAmount) submitted');
+  }
+
+  /// Approves or rejects a pending withdrawal request.
+  /// On approval, creates the transaction and updates the plan balance.
+  Future<void> processWithdrawalApproval({
+    required String approvalId,
+    required String reviewedById,
+    bool approve = true,
+    String? rejectionReason,
+  }) async {
+    final approval = await _client
+        .from('pending_approvals')
+        .select('*')
+        .eq('id', approvalId)
+        .maybeSingle();
+    if (approval == null) throw Exception('Approval record not found');
+
+    // Update approval status
+    await _client.from('pending_approvals').update({
+      'status': approve ? 'approved' : 'rejected',
+      if (rejectionReason != null) 'notes': rejectionReason,
+    }).eq('id', approvalId);
+
+    if (!approve) return;
+
+    // Parse metadata from notes
+    final notesStr = approval['notes'] as String? ?? '';
+    // Extract savings_plan_id and amount from the stored metadata
+    final savingsPlanId = _extractFromNotes(notesStr, 'savings_plan_id');
+    final amount = _extractDoubleFromNotes(notesStr, 'amount');
+    final paymentMode = _extractFromNotes(notesStr, 'payment_mode');
+
+    if (savingsPlanId == null || amount == null || amount <= 0) {
+      throw Exception('Invalid withdrawal metadata');
+    }
+
+    // Look up the approver's profile info
+    final approverProfile = await _client
+        .from('profiles')
+        .select('id, full_name, role')
+        .eq('user_id', reviewedById)
+        .maybeSingle();
+
+    // Create the withdrawal transaction
+    await _client.from('transactions').insert({
+      'savings_id': savingsPlanId,
+      'amount': amount,
+      'type': 'savingsWithdrawal',
+      'payment_mode': paymentMode ?? 'cash',
+      'member_id': approval['member_id'],
+      'org_id': _orgId,
+      'description': 'Savings withdrawal (approved)',
+      'transaction_date': DateTime.now().toIso8601String(),
+      if (approverProfile != null) ...{
+        'collected_by_user_id': approverProfile['id'],
+        'collected_by_name': approverProfile['full_name'],
+        'collected_by_role': approverProfile['role'],
+      },
+    });
+
+    // Recalculate plan balance
+    await recalculateBalance(savingsPlanId);
+
+    debugPrint('processWithdrawalApproval: ₹$amount withdrawn from $savingsPlanId');
+  }
+
+  String? _extractFromNotes(String notes, String key) {
+    // Simple key extraction from "Map {key: value}" format
+    final regex = RegExp('$key:\\s*([^,}]+)');
+    final match = regex.firstMatch(notes);
+    return match?.group(1)?.trim();
+  }
+
+  double? _extractDoubleFromNotes(String notes, String key) {
+    final str = _extractFromNotes(notes, key);
+    return str != null ? double.tryParse(str) : null;
+  }
 }

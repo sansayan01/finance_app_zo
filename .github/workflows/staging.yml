@@ -14,8 +14,8 @@ env:
   JAVA_TOOL_OPTIONS: '-Xmx4096m'
 
 jobs:
-  test:
-    name: Test
+  quality-gate:
+    name: Quality Gate (Analyze + Test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,24 +24,16 @@ jobs:
           echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> .env
           echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> .env
           cp .env assets/.env
-      - uses: subosito/flutter-action@v2
+      - uses: ./.github/actions/setup-flutter
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.PUB_CACHE }}
-            .dart_tool/
-          key: pub-${{ hashFiles('pubspec.lock') }}
-          restore-keys: pub-
-      - run: flutter pub get
+          setup-java: 'false'
       - run: flutter analyze --no-fatal-infos
       - run: flutter test --reporter=github
 
   build-android:
     name: Build Android (Staging)
-    needs: test
+    needs: quality-gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,24 +42,10 @@ jobs:
           echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> .env
           echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> .env
           cp .env assets/.env
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-      - uses: subosito/flutter-action@v2
+      - uses: ./.github/actions/setup-flutter
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.PUB_CACHE }}
-            .dart_tool/
-          key: pub-${{ hashFiles('pubspec.lock') }}
-          restore-keys: pub-
-      - run: flutter pub get
-      - name: Increase Gradle heap for CI
-        run: sed -i 's/-Xmx[0-9]*G/-Xmx6G/' android/gradle.properties
+          setup-java: 'true'
       - name: Build Release APK
         run: |
           flutter build apk --release \
@@ -87,19 +65,33 @@ jobs:
 
   notify:
     name: Slack Notification
-    needs: build-android
+    needs: [quality-gate, build-android]
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Notify status
+      - name: Notify success
+        if: needs.build-android.result == 'success'
         continue-on-error: true
         uses: rtCamp/action-slack-notify@v2
-        if: ${{ needs.build-android.result == 'success' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
-          title: Staging Deployed
+          title: "Staging Deployed"
           text: |
-            Staging build successful for commit ${{ github.sha }}.
+            Build successful for commit ${{ github.sha }}.
             Branch: ${{ github.ref_name }}
+            Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Notify failure
+        if: always() && (needs.quality-gate.result != 'success' || needs.build-android.result != 'success')
+        continue-on-error: true
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          title: "Staging Build Failed"
+          color: danger
+          text: |
+            Quality gate: ${{ needs.quality-gate.result }}
+            Build: ${{ needs.build-android.result }}
             Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

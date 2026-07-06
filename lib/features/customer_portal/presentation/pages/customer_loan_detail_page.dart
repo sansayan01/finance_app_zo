@@ -606,10 +606,10 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
               value: _formatDate(loan.disbursementDate!),
               isDark: isDark,
             ),
-          if (loan.firstEmiDate != null)
+          if (loan.nextDueDate != null || loan.firstEmiDate != null)
             _DetailRow(
               label: 'Next Due',
-              value: _formatDate(loan.firstEmiDate!),
+              value: _formatDate(loan.nextDueDate ?? loan.firstEmiDate!),
               isDark: isDark,
             ),
           if (loan.purpose != null)

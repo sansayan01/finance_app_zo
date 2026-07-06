@@ -3219,7 +3219,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (context) => CollectionSheet(loan: loan, emi: emi),
+        builder: (context) => CollectionSheet(loan: loan, emi: emi, branchId: ref.read(currentUserProvider)?.branchId),
       ),
     );
   }

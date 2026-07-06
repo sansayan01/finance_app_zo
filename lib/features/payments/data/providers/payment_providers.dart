@@ -62,7 +62,9 @@ class PaymentFilterState {
       selectedDate: selectedDate ?? this.selectedDate,
       sortBy: sortBy ?? this.sortBy,
       autoRefresh: autoRefresh ?? this.autoRefresh,
-      paymentTypeFilter: clearPaymentType ? null : (paymentTypeFilter ?? this.paymentTypeFilter),
+      paymentTypeFilter: clearPaymentType
+          ? null
+          : (paymentTypeFilter ?? this.paymentTypeFilter),
       statusFilters: statusFilters ?? this.statusFilters,
       minAmount: clearMinAmount ? null : (minAmount ?? this.minAmount),
       maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
@@ -91,15 +93,28 @@ class PaymentFilterState {
   String get dateLabel {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final selected = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    final selected =
+        DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
     final diff = today.difference(selected).inDays;
 
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     if (diff == -1) return 'Tomorrow';
     // Show exact date with full month name
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${selectedDate.day} ${months[selectedDate.month - 1]} ${selectedDate.year}';
   }
 }
@@ -153,7 +168,11 @@ class PaymentFilterNotifier extends StateNotifier<PaymentFilterState> {
     state = state.copyWith(statusFilters: updated);
   }
 
-  void setAmountRange({double? min, double? max, bool clearMin = false, bool clearMax = false}) {
+  void setAmountRange(
+      {double? min,
+      double? max,
+      bool clearMin = false,
+      bool clearMax = false}) {
     state = state.copyWith(
       minAmount: min,
       maxAmount: max,
@@ -234,8 +253,7 @@ final paymentAgentsProvider =
 });
 
 // Main payments data provider
-final todayPaymentsProvider =
-    FutureProvider<TodayPaymentData>((ref) async {
+final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
   final user = ref.watch(currentUserProvider);
   debugPrint('todayPaymentsProvider: user = $user');
   debugPrint('todayPaymentsProvider: user.orgId = ${user?.orgId}');
@@ -249,7 +267,8 @@ final todayPaymentsProvider =
   final isSuperAdmin = user.role == UserRole.superAdmin;
   final filters = ref.watch(paymentFilterProvider);
   final d = filters.selectedDate;
-  final dateStr = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  final dateStr =
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   debugPrint('todayPaymentsProvider: orgId = $orgId, dateStr = $dateStr');
 
   final List<TodayPayment> payments = [];
@@ -269,7 +288,8 @@ final todayPaymentsProvider =
   // same priority order: profile_photo_url → shop_photo_url → profile.avatar_url
   String? resolveMemberPhoto(Map<String, dynamic>? member) {
     if (member == null) return null;
-    final direct = (member['profile_photo_url'] ?? member['shop_photo_url'])?.toString();
+    final direct =
+        (member['profile_photo_url'] ?? member['shop_photo_url'])?.toString();
     if (direct != null && direct.isNotEmpty) return direct;
     final profile = member['profile'];
     if (profile is Map) {
@@ -284,10 +304,11 @@ final todayPaymentsProvider =
 
   try {
     // 1. Build queries to run in parallel
-    
+
     // Query A: EMI base for selected date (joined with loans and members)
     // Only fetch unpaid EMIs - paid EMIs are handled separately via collections
-    const emiSelect = 'id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id, '
+    const emiSelect =
+        'id, emi_number, due_date, emi_amount, amount_paid, is_paid, status, penalty_amount, paid_on, payment_mode, loan_id, '
         'loans!emi_schedule_loan_id_fkey(id, loan_number, branch_id, customer_id, agent_id, members!fk_loans_customer(id, full_name, phone, profile_photo_url, profile:profile_id(avatar_url)))';
 
     final emiBase = client
@@ -304,21 +325,25 @@ final todayPaymentsProvider =
         .select(emiSelect)
         .lt('due_date', dateStr)
         .eq('is_paid', false);
-    final overdueQuery = (isSuperAdmin ? overdueBase : overdueBase.eq('org_id', orgId!))
-        .order('due_date', ascending: true);
+    final overdueQuery =
+        (isSuperAdmin ? overdueBase : overdueBase.eq('org_id', orgId!))
+            .order('due_date', ascending: true);
 
     // Query C: Collections for selected date
     final collectionsBase = client
         .from('collections')
-        .select('id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, member_id, staff_id, remarks')
+        .select(
+            'id, amount_expected, amount_collected, collection_type, payment_mode, collection_date, collection_time, member_name, member_phone, loan_number, loan_id, selected_schedule_id, member_id, staff_id, remarks')
         .eq('collection_date', dateStr);
-    final collectionsQuery = (isSuperAdmin ? collectionsBase : collectionsBase.eq('org_id', orgId!))
-        .order('collection_time', ascending: false);
+    final collectionsQuery =
+        (isSuperAdmin ? collectionsBase : collectionsBase.eq('org_id', orgId!))
+            .order('collection_time', ascending: false);
 
     // Query D: Savings plans (joined with members)
     var plansQuery = client
         .from('savings_plans')
-        .select('id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, start_date, member_id, installments_paid, total_installments, '
+        .select(
+            'id, plan_name, monthly_deposit, collection_type, collection_day_of_week, collection_day_of_month, next_due_date, start_date, member_id, installments_paid, total_installments, '
             'members(id, full_name, phone, branch_id, agent_id, profile_photo_url, profile:profile_id(avatar_url))')
         .eq('status', 'active');
     if (!isSuperAdmin) plansQuery = plansQuery.eq('org_id', orgId!);
@@ -330,7 +355,8 @@ final todayPaymentsProvider =
     final dayEndUtc = DateTime(d.year, d.month, d.day + 1).toUtc();
     var savingsColQuery = client
         .from('savings_collections')
-        .select('id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
+        .select(
+            'id, savings_plan_id, amount_collected, payment_mode, collected_at, created_at')
         .gte('collected_at', dayStartUtc.toIso8601String())
         .lt('collected_at', dayEndUtc.toIso8601String());
     if (!isSuperAdmin) savingsColQuery = savingsColQuery.eq('org_id', orgId!);
@@ -351,26 +377,27 @@ final todayPaymentsProvider =
     final List<dynamic> collectionsToday = results[4] as List<dynamic>;
 
     // 3. Process EMIs (today + overdue)
-    // Build lookup of (loanId, dueDate) pairs with collections today to prevent
-    // showing the same EMI in both pending/overdue AND collected.
-    // Use loanId + dueDate instead of loanNumber to ensure only the specific
-    // EMI that was collected is marked as collected, not all EMIs for the same loan.
-    final collectedEmiKeys = <String>{};
+    // A collection's collection_date is the date the payment was recorded, not
+    // necessarily the due date of the EMI it settles. Only the explicit schedule
+    // link is safe here; matching loan_id + collection_date can incorrectly mark
+    // today's EMI as collected when the user paid older installments.
+    final collectedScheduleIds = <String>{};
     for (final c in collections) {
-      final loanId = c['loan_id'] as String?;
-      final collectionDate = c['collection_date'] as String?;
-      if (loanId != null && collectionDate != null) {
-        collectedEmiKeys.add('${loanId}_$collectionDate');
+      final scheduleId = c['selected_schedule_id'] as String?;
+      if (scheduleId != null) {
+        collectedScheduleIds.add(scheduleId);
       }
     }
 
     final allEmiDues = [...emiDues, ...overdueEmis];
-    
+
     for (final emi in allEmiDues) {
-      final loan = getNestedMap(emi['loans!emi_schedule_loan_id_fkey']) ?? getNestedMap(emi['loans']);
+      final loan = getNestedMap(emi['loans!emi_schedule_loan_id_fkey']) ??
+          getNestedMap(emi['loans']);
       if (loan == null) continue;
-      
-      final member = getNestedMap(loan['members!fk_loans_customer']) ?? getNestedMap(loan['members']);
+
+      final member = getNestedMap(loan['members!fk_loans_customer']) ??
+          getNestedMap(loan['members']);
 
       // Apply branch filter
       if (filters.branchId != null && loan['branch_id'] != filters.branchId) {
@@ -382,12 +409,12 @@ final todayPaymentsProvider =
         continue;
       }
 
-      final emiKey = '${loan['id']}_${emi['due_date']}';
-      final isPaid = emi['is_paid'] == true || collectedEmiKeys.contains(emiKey);
+      final isPaid = emi['is_paid'] == true ||
+          collectedScheduleIds.contains(emi['id']?.toString());
       final dueDate = DateTime.parse(emi['due_date']);
-      final isOverdue = !isPaid && dueDate.isBefore(
-          DateTime(filters.selectedDate.year, filters.selectedDate.month,
-              filters.selectedDate.day));
+      final isOverdue = !isPaid &&
+          dueDate.isBefore(DateTime(filters.selectedDate.year,
+              filters.selectedDate.month, filters.selectedDate.day));
 
       payments.add(TodayPayment(
         id: emi['id'],
@@ -405,8 +432,9 @@ final todayPaymentsProvider =
         amountExpected: (emi['emi_amount'] as num?)?.toDouble() ?? 0,
         penaltyAmount: (emi['penalty_amount'] as num?)?.toDouble() ?? 0,
         amountCollected: isPaid
-            ? (emi['amount_paid'] as num?)?.toDouble() ??
-                (emi['emi_amount'] as num?)?.toDouble()
+            ? ((emi['amount_paid'] as num?)?.toDouble() ?? 0) > 0
+                ? (emi['amount_paid'] as num?)?.toDouble()
+                : (emi['emi_amount'] as num?)?.toDouble()
             : null,
         dueDate: dueDate,
         loanNumber: loan['loan_number'],
@@ -436,12 +464,26 @@ final todayPaymentsProvider =
         collectionIdByLoanNumber[loanNum] = col['id'] as String;
       }
 
-      final collectionAmountCollected = (col['amount_collected'] as num?)?.toDouble() ?? 0;
+      final collectionAmountCollected =
+          (col['amount_collected'] as num?)?.toDouble() ?? 0;
+      final selectedScheduleId = col['selected_schedule_id'] as String?;
 
-      // Check if there's an existing unpaid EMI entry for the same loan
+      // Check if there's an existing unpaid EMI entry for the same loan/schedule
       // If so, update it to be collected instead of adding a duplicate
-      final existingEmiIdx = payments.indexWhere(
-          (p) => p.loanId == col['loan_id'] && !p.isCollected && p.type == PaymentType.emi);
+      // Use selected_schedule_id first (exact match), then fallback to loanId match
+      int existingEmiIdx = -1;
+      if (selectedScheduleId != null) {
+        existingEmiIdx = payments.indexWhere((p) =>
+            p.id == selectedScheduleId &&
+            !p.isCollected &&
+            p.type == PaymentType.emi);
+      }
+      if (existingEmiIdx == -1) {
+        existingEmiIdx = payments.indexWhere((p) =>
+            p.loanId == col['loan_id'] &&
+            !p.isCollected &&
+            p.type == PaymentType.emi);
+      }
 
       if (existingEmiIdx != -1) {
         // Update the existing EMI entry to mark it as collected
@@ -458,7 +500,9 @@ final todayPaymentsProvider =
           agentId: existingEmi.agentId,
           agentName: existingEmi.agentName,
           amountExpected: existingEmi.amountExpected,
-          amountCollected: collectionAmountCollected > 0 ? collectionAmountCollected : existingEmi.amountExpected,
+          amountCollected: collectionAmountCollected > 0
+              ? collectionAmountCollected
+              : existingEmi.amountExpected,
           penaltyAmount: existingEmi.penaltyAmount,
           dueDate: existingEmi.dueDate,
           loanNumber: existingEmi.loanNumber,
@@ -467,7 +511,9 @@ final todayPaymentsProvider =
           planName: existingEmi.planName,
           paymentMode: col['payment_mode'] as String?,
           collectedAt: col['collection_time'] != null
-              ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')?.toLocal()
+              ? DateTime.tryParse(
+                      '${col['collection_date']}T${col['collection_time']}')
+                  ?.toLocal()
               : DateTime.now(),
           remarks: col['remarks'] as String?,
           collectionId: col['id'] as String?,
@@ -475,10 +521,17 @@ final todayPaymentsProvider =
         );
       } else {
         // No existing EMI entry found, add as new collected payment
-        final existingCollectedIdx = payments.indexWhere(
-            (p) => p.loanNumber == col['loan_number'] && p.isCollected);
+        // Check if this exact schedule was already added as collected
+        final existingCollectedIdx = selectedScheduleId != null
+            ? payments
+                .indexWhere((p) => p.id == selectedScheduleId && p.isCollected)
+            : -1;
+        final existingLoanCollectedIdx = existingCollectedIdx == -1
+            ? payments.indexWhere(
+                (p) => p.loanNumber == col['loan_number'] && p.isCollected)
+            : existingCollectedIdx;
 
-        if (existingCollectedIdx == -1) {
+        if (existingLoanCollectedIdx == -1) {
           payments.add(TodayPayment(
             id: col['id'],
             type: col['collection_type'] == 'savings'
@@ -499,7 +552,9 @@ final todayPaymentsProvider =
             loanId: col['loan_id'],
             paymentMode: col['payment_mode'] as String?,
             collectedAt: col['collection_time'] != null
-                ? DateTime.tryParse('${col['collection_date']}T${col['collection_time']}')?.toLocal()
+                ? DateTime.tryParse(
+                        '${col['collection_date']}T${col['collection_time']}')
+                    ?.toLocal()
                 : null,
             remarks: col['remarks'] as String?,
             collectionId: col['id'] as String?,
@@ -509,15 +564,16 @@ final todayPaymentsProvider =
       }
     }
 
-    // Deduplicate collected EMI entries: keep only one per loanId
+    // Deduplicate collected EMI entries: keep only one per loanId+emiNumber
     {
-      final seenLoanIds = <String>{};
+      final seenEmiKeys = <String>{};
       payments.removeWhere((p) {
         if (p.isCollected && p.type == PaymentType.emi && p.loanId != null) {
-          if (seenLoanIds.contains(p.loanId)) {
+          final key = '${p.loanId}_${p.emiNumber}';
+          if (seenEmiKeys.contains(key)) {
             return true; // remove duplicate
           }
-          seenLoanIds.add(p.loanId!);
+          seenEmiKeys.add(key);
         }
         return false;
       });
@@ -550,8 +606,10 @@ final todayPaymentsProvider =
       if (nextDue != null) {
         final nextDueDate = DateTime.tryParse(nextDue);
         if (nextDueDate != null) {
-          final nextDateOnly = DateTime(nextDueDate.year, nextDueDate.month, nextDueDate.day);
-          final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+          final nextDateOnly =
+              DateTime(nextDueDate.year, nextDueDate.month, nextDueDate.day);
+          final selectedDateOnly =
+              DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
           if (!nextDateOnly.isAfter(selectedDateOnly)) {
             return true;
           }
@@ -590,11 +648,13 @@ final todayPaymentsProvider =
 
       // Determine if overdue (next_due_date is before today's date)
       final nextDueStr = plan['next_due_date'] as String?;
-      final nextDueParsed = nextDueStr != null ? DateTime.tryParse(nextDueStr) : null;
+      final nextDueParsed =
+          nextDueStr != null ? DateTime.tryParse(nextDueStr) : null;
       final nextDateOnly = nextDueParsed != null
           ? DateTime(nextDueParsed.year, nextDueParsed.month, nextDueParsed.day)
           : null;
-      final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+      final selectedDateOnly =
+          DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
       final collectionType = plan['collection_type'] ?? 'daily';
       // A savings plan is overdue if it's not collected AND either:
       // (a) next_due_date is set and is before the selected date, or
@@ -611,11 +671,13 @@ final todayPaymentsProvider =
       // next_due_date only reflects the last advanced due date, not total missed.
       final paidCount = (plan['installments_paid'] as num?)?.toInt() ?? 0;
       final startDateStr = plan['start_date'] as String?;
-      final startDate = startDateStr != null ? DateTime.tryParse(startDateStr) : null;
+      final startDate =
+          startDateStr != null ? DateTime.tryParse(startDateStr) : null;
 
       int expectedUpToToday = 0;
       if (startDate != null) {
-        final startOnly = DateTime(startDate.year, startDate.month, startDate.day);
+        final startOnly =
+            DateTime(startDate.year, startDate.month, startDate.day);
         final diffDays = selectedDateOnly.difference(startOnly).inDays;
         switch (collectionType) {
           case 'weekly':
@@ -631,9 +693,10 @@ final todayPaymentsProvider =
 
       // Subtract 1 because today's installment is "due today", not overdue.
       // Overdue = installments expected BEFORE today that haven't been paid.
-      final overdueCount = isOverdue ? (expectedUpToToday - paidCount - 1).clamp(0, expectedUpToToday) : 0;
-      final overdueAmount =
-          isOverdue ? deposit * overdueCount : deposit;
+      final overdueCount = isOverdue
+          ? (expectedUpToToday - paidCount - 1).clamp(0, expectedUpToToday)
+          : 0;
+      final overdueAmount = isOverdue ? deposit * overdueCount : deposit;
 
       payments.add(TodayPayment(
         id: plan['id'],
@@ -654,19 +717,20 @@ final todayPaymentsProvider =
             : null,
         dueDate: isCollected
             ? DateTime.parse(dateStr)
-            : (nextDueStr != null ? DateTime.parse(nextDueStr) : DateTime.parse(dateStr)),
+            : (nextDueStr != null
+                ? DateTime.parse(nextDueStr)
+                : DateTime.parse(dateStr)),
         planName: plan['plan_name'],
         paymentMode: isCollected ? existingCollection['payment_mode'] : null,
         collectedAt: isCollected
             ? (existingCollection['collected_at'] != null
-                ? DateTime.tryParse(existingCollection['collected_at'])?.toLocal()
+                ? DateTime.tryParse(existingCollection['collected_at'])
+                    ?.toLocal()
                 : (existingCollection['created_at'] != null
                     ? DateTime.tryParse(existingCollection['created_at'])
                     : null))
             : null,
-        collectionId: isCollected
-            ? existingCollection['id'] as String?
-            : null,
+        collectionId: isCollected ? existingCollection['id'] as String? : null,
         memberPhotoUrl: resolveMemberPhoto(member),
       ));
 
@@ -738,27 +802,33 @@ List<TodayPayment> _applyAdvancedFilters(
   }
 
   if (filters.statusFilters.isNotEmpty) {
-    result = result.where((p) => filters.statusFilters.contains(p.status)).toList();
+    result =
+        result.where((p) => filters.statusFilters.contains(p.status)).toList();
   }
 
   if (filters.minAmount != null) {
-    result = result.where((p) => p.amountExpected >= filters.minAmount!).toList();
+    result =
+        result.where((p) => p.amountExpected >= filters.minAmount!).toList();
   }
 
   if (filters.maxAmount != null) {
-    result = result.where((p) => p.amountExpected <= filters.maxAmount!).toList();
+    result =
+        result.where((p) => p.amountExpected <= filters.maxAmount!).toList();
   }
 
   if (filters.paymentModeFilters.isNotEmpty) {
-    result = result.where((p) =>
-        p.paymentMode != null && filters.paymentModeFilters.contains(p.paymentMode)
-    ).toList();
+    result = result
+        .where((p) =>
+            p.paymentMode != null &&
+            filters.paymentModeFilters.contains(p.paymentMode))
+        .toList();
   }
 
   if (filters.overdueDayFilters.isNotEmpty) {
     result = result.where((p) {
       if (!p.isOverdue) return true;
-      return filters.overdueDayFilters.any((bucket) => bucket.matches(p.daysOverdue));
+      return filters.overdueDayFilters
+          .any((bucket) => bucket.matches(p.daysOverdue));
     }).toList();
   }
 
@@ -772,18 +842,16 @@ void _sortPayments(List<TodayPayment> payments, PaymentSortBy sortBy) {
     case PaymentSortBy.nameDesc:
       payments.sort((a, b) => b.memberName.compareTo(a.memberName));
     case PaymentSortBy.amountHigh:
-      payments.sort(
-          (a, b) => b.amountExpected.compareTo(a.amountExpected));
+      payments.sort((a, b) => b.amountExpected.compareTo(a.amountExpected));
     case PaymentSortBy.amountLow:
-      payments.sort(
-          (a, b) => a.amountExpected.compareTo(b.amountExpected));
+      payments.sort((a, b) => a.amountExpected.compareTo(b.amountExpected));
     case PaymentSortBy.dueDateOldest:
       payments.sort((a, b) => a.dueDate.compareTo(b.dueDate));
     case PaymentSortBy.dueDateNewest:
       payments.sort((a, b) => b.dueDate.compareTo(a.dueDate));
     case PaymentSortBy.branchAsc:
-      payments.sort(
-          (a, b) => (a.branchName ?? '').compareTo(b.branchName ?? ''));
+      payments
+          .sort((a, b) => (a.branchName ?? '').compareTo(b.branchName ?? ''));
     case PaymentSortBy.statusPriority:
       payments.sort((a, b) {
         final statusOrder = {
@@ -791,8 +859,8 @@ void _sortPayments(List<TodayPayment> payments, PaymentSortBy sortBy) {
           PaymentStatus.pending: 1,
           PaymentStatus.collected: 2,
         };
-        final statusCompare = (statusOrder[a.status] ?? 3)
-            .compareTo(statusOrder[b.status] ?? 3);
+        final statusCompare =
+            (statusOrder[a.status] ?? 3).compareTo(statusOrder[b.status] ?? 3);
         if (statusCompare != 0) return statusCompare;
         return a.dueDate.compareTo(b.dueDate);
       });
@@ -803,7 +871,8 @@ class TodayPaymentData {
   final List<TodayPayment> payments;
   final List<TodayPayment> allPayments;
 
-  const TodayPaymentData({required this.payments, List<TodayPayment>? allPayments})
+  const TodayPaymentData(
+      {required this.payments, List<TodayPayment>? allPayments})
       : allPayments = allPayments ?? payments;
 
   TodayPaymentSummary get summary =>

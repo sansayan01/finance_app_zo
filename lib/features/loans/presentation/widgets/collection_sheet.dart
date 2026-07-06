@@ -47,12 +47,16 @@ class CollectionSheet extends ConsumerStatefulWidget {
   /// Required: which mode to use
   final CollectionMode mode;
 
+  /// Branch ID for provider invalidation (needed for branchTodayPaymentsProvider)
+  final String? branchId;
+
   const CollectionSheet({
     super.key,
     this.loan,
     this.emi,
     this.savingsPlan,
     this.mode = CollectionMode.loan,
+    this.branchId,
   }) : assert(
           mode == CollectionMode.loan ? loan != null : savingsPlan != null,
           'loan is required for loan mode, savingsPlan for savings mode',
@@ -64,6 +68,7 @@ class CollectionSheet extends ConsumerStatefulWidget {
     super.key,
     required SavingsModel savingsPlan,
     // ignore: unnecessary_this
+    this.branchId,
   })  : loan = null,
         emi = null,
         // ignore: unnecessary_this, prefer_initializing_formals
@@ -966,7 +971,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     ref.invalidate(activeLoansProvider);
     ref.invalidate(loanSummaryProvider);
     ref.invalidate(todayPaymentsProvider);
-    ref.invalidate(branchTodayPaymentsProvider);
+    if (widget.branchId != null) {
+      ref.invalidate(branchTodayPaymentsProvider(widget.branchId!));
+    }
   }
 
   // ─── Savings Collection ───
@@ -1114,7 +1121,9 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       ref.invalidate(memberSavingsProvider(plan.memberId));
       ref.invalidate(dashboardTransactionsProvider);
       ref.invalidate(todayPaymentsProvider);
-      ref.invalidate(branchTodayPaymentsProvider);
+      if (widget.branchId != null) {
+        ref.invalidate(branchTodayPaymentsProvider(widget.branchId!));
+      }
     } catch (_) {}
   }
 

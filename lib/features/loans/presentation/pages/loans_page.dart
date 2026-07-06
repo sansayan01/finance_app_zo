@@ -28,6 +28,7 @@ import '../../data/services/portfolio_statement_pdf_service.dart';
 import '../providers/loan_providers.dart';
 import '../widgets/portfolio_statement_options_sheet.dart';
 import '../widgets/statement_generation_overlay.dart';
+import '../widgets/collection_sheet.dart';
 import '../../../home/data/providers/dashboard_providers.dart' show loanSummaryProvider;
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -151,6 +152,35 @@ class _LoansPageState extends ConsumerState<LoansPage>
     ref.invalidate(loansProvider);
     ref.invalidate(loanSummaryProvider);
     return await ref.read(loansProvider.future).then((_) => null);
+  }
+
+  void _openCollectionSheet(LoanModel loan) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CollectionSheet(
+          loan: loan,
+          branchId: ref.read(currentUserProvider)?.branchId,
+        ),
+      ),
+    ).then((_) {
+      ref.invalidate(loansProvider);
+      ref.invalidate(loanSummaryProvider);
+    });
+  }
+
+  Future<void> _makePhoneCall(String phone) async {
+    final url = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch phone dialer')),
+        );
+      }
+    }
   }
 
   Future<void> _handlePortfolioStatement() async {
@@ -601,19 +631,25 @@ class _LoansPageState extends ConsumerState<LoansPage>
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (ctx, i) {
-                            final card = Padding(
+                            final loan = filtered[i];
+                            final isActive =
+                                loan.status == LoanStatus.active;
+                            final hasPhone = loan.customerPhone != null &&
+                                loan.customerPhone!.trim().isNotEmpty;
+
+                            Widget card = Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: _PremiumLoanCard(
-                                loan: filtered[i],
+                                loan: loan,
                                 onTap: widget.onLoanTap != null
-                                    ? () => widget.onLoanTap!(filtered[i].id)
+                                    ? () => widget.onLoanTap!(loan.id)
                                     : null,
                               ),
                             );
-                            // Only animate first 10 items to avoid
-                            // creating animation controllers off-screen
+
+                            // Only animate first 10 items
                             if (i < 10) {
-                              return card
+                              card = card
                                   .animate()
                                   .fadeIn(delay: (40 * i).ms)
                                   .slideY(
@@ -621,6 +657,40 @@ class _LoansPageState extends ConsumerState<LoansPage>
                                       end: 0,
                                       curve: Curves.easeOutQuart);
                             }
+
+                            if (isActive) {
+                              card = Dismissible(
+                                key: ValueKey('loan_${loan.id}'),
+                                direction: DismissDirection.horizontal,
+                                confirmDismiss: (direction) async {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
+                                    HapticFeedback.mediumImpact();
+                                    _openCollectionSheet(loan);
+                                  } else if (hasPhone) {
+                                    HapticFeedback.lightImpact();
+                                    _makePhoneCall(loan.customerPhone!);
+                                  }
+                                  return false;
+                                },
+                                background: _SwipeBackground(
+                                  icon: Icons.payment_rounded,
+                                  label: 'Collect',
+                                  color: AppColors.success,
+                                  align: Alignment.centerLeft,
+                                ),
+                                secondaryBackground: hasPhone
+                                    ? _SwipeBackground(
+                                        icon: Icons.call_rounded,
+                                        label: 'Call',
+                                        color: AppColors.success,
+                                        align: Alignment.centerRight,
+                                      )
+                                    : null,
+                                child: card,
+                              );
+                            }
+
                             return card;
                           },
                           childCount: filtered.length,
@@ -997,6 +1067,27 @@ class _PremiumLoanCard extends StatelessWidget {
   final VoidCallback? onTap;
   const _PremiumLoanCard({required this.loan, this.onTap});
 
+  DateTime _computeNextDueDate(LoanModel loan) {
+    final firstEmi = loan.firstEmiDate ?? loan.createdAt.add(const Duration(days: 30));
+    final paid = loan.paidEmis;
+    final unit = (loan.tenureUnit ?? 'month').toLowerCase();
+    switch (unit) {
+      case 'day':
+      case 'days':
+        return firstEmi.add(Duration(days: paid));
+      case 'week':
+      case 'weeks':
+        return firstEmi.add(Duration(days: paid * 7));
+      case 'year':
+      case 'years':
+        return DateTime(firstEmi.year + paid ~/ 12, firstEmi.month + paid % 12, firstEmi.day);
+      case 'month':
+      case 'months':
+      default:
+        return DateTime(firstEmi.year, firstEmi.month + paid, firstEmi.day);
+    }
+  }
+
   Future<void> _makeCall(String phone) async {
     final url = Uri.parse('tel:$phone');
     if (await canLaunchUrl(url)) await launchUrl(url);
@@ -1199,7 +1290,7 @@ class _PremiumLoanCard extends StatelessWidget {
                     Icon(Icons.event_repeat_rounded, size: 12, color: primary),
                     const SizedBox(width: 4),
                     Text(
-                      'Next Due: ${AppFormatters.formatDate(loan.firstEmiDate ?? loan.createdAt.add(const Duration(days: 30)))}',
+                      'Next Due: ${AppFormatters.formatDate(loan.nextDueDate ?? _computeNextDueDate(loan))}',
                       style: TextStyle(
                           color: primary,
                           fontWeight: FontWeight.w700,
@@ -1281,4 +1372,54 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_SliverHeaderDelegate oldDelegate) => true;
+}
+
+class _SwipeBackground extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Alignment align;
+
+  const _SwipeBackground({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.align,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      alignment: align,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.0),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: align == Alignment.centerRight
+            ? [
+                Text(label,
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13)),
+                const SizedBox(width: 6),
+                Icon(icon, color: color, size: 18),
+              ]
+            : [
+                Icon(icon, color: color, size: 18),
+                const SizedBox(width: 6),
+                Text(label,
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13)),
+              ],
+      ),
+    );
+  }
 }

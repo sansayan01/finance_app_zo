@@ -24,9 +24,11 @@ class LoansRepository {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      return (response as List)
+      final loans = (response as List)
           .map((json) => LoanModel.fromJson(json))
           .toList();
+
+      return _enrichWithNextDueDates(loans);
     } catch (e, st) {
       debugPrint('⚠️ getAllLoans error: $e');
       debugPrint('   stack: $st');
@@ -45,13 +47,52 @@ class LoansRepository {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      return (response as List)
+      final loans = (response as List)
           .map((json) => LoanModel.fromJson(json))
           .toList();
+
+      return _enrichWithNextDueDates(loans);
     } catch (e, st) {
       debugPrint('⚠️ getActiveLoans error: $e');
       debugPrint('   stack: $st');
       return [];
+    }
+  }
+
+  /// Fetches the first unpaid EMI due_date for each loan and sets nextDueDate.
+  Future<List<LoanModel>> _enrichWithNextDueDates(List<LoanModel> loans) async {
+    if (loans.isEmpty) return loans;
+
+    final loanIds = loans.map((l) => l.id).toList();
+    try {
+      final emiRows = await _client
+          .from('emi_schedule')
+          .select('loan_id, due_date')
+          .filter('loan_id', 'in', loanIds)
+          .eq('is_paid', false)
+          .order('emi_number', ascending: true);
+
+      // Map loan_id → first unpaid due_date
+      final Map<String, DateTime> nextDueMap = {};
+      for (final row in (emiRows as List)) {
+        final loanId = row['loan_id'] as String;
+        if (nextDueMap.containsKey(loanId)) continue;
+        final dueDate = row['due_date'] as String?;
+        if (dueDate != null) {
+          nextDueMap[loanId] = DateTime.parse(dueDate);
+        }
+      }
+
+      return loans.map((loan) {
+        final nextDue = nextDueMap[loan.id];
+        if (nextDue != null && (loan.nextDueDate == null || nextDue.isBefore(loan.nextDueDate!))) {
+          return loan.copyWith(nextDueDate: nextDue);
+        }
+        return loan;
+      }).toList();
+    } catch (e) {
+      debugPrint('⚠️ _enrichWithNextDueDates error: $e');
+      return loans;
     }
   }
 

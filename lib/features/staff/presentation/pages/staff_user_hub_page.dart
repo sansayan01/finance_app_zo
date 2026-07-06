@@ -13,6 +13,18 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../branch_manager/data/providers/branch_scoped_providers.dart';
 import '../../data/providers/staff_branch_providers.dart';
 
+String? _resolveAvatarUrl(String? rawUrl) {
+  if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+  final trimmed = rawUrl.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  final path = trimmed.startsWith('avatars/')
+      ? trimmed.substring('avatars/'.length)
+      : trimmed;
+  return 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/avatars/$path';
+}
+
 class StaffUserHubPage extends ConsumerStatefulWidget {
   const StaffUserHubPage({super.key});
 
@@ -907,7 +919,7 @@ class _MemberCard extends StatelessWidget {
     final totalLoans = (member['total_loans'] as int?) ?? 0;
     final totalSavings = (member['total_savings'] as num?)?.toDouble() ?? 0;
     final profileId = member['profile_id'] as String?;
-    final avatarUrl = member['avatar_url'] as String?;
+    final avatarUrl = _resolveAvatarUrl(member['avatar_url'] as String?);
     final f = NumberFormat.currency(locale: 'en_IN', symbol: '\u20B9', decimalDigits: 0);
 
     final avatarColor = isActive
@@ -919,7 +931,7 @@ class _MemberCard extends StatelessWidget {
       onTap: () {
         final navigateId = profileId ?? member['id'] as String?;
         if (navigateId != null) {
-          context.go('/staff/user-hub/$navigateId');
+          context.push('/staff/user-hub/$navigateId');
         }
       },
       child: Column(

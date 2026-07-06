@@ -92,8 +92,9 @@ class _CustomerLoansPageState extends ConsumerState<CustomerLoansPage>
   DateTime? _nextEmiDate(List<CustomerLoanModel> loans) {
     final now = DateTime.now();
     final upcoming = loans
-        .where((l) => l.status == 'active' && l.firstEmiDate != null)
-        .map((l) => l.firstEmiDate!)
+        .where((l) => l.status == 'active')
+        .map((l) => l.nextDueDate ?? l.firstEmiDate)
+        .whereType<DateTime>()
         .where((d) => d.isAfter(now.subtract(const Duration(days: 1))))
         .toList()
       ..sort((a, b) => a.compareTo(b));

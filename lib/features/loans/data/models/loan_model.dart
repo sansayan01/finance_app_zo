@@ -20,6 +20,7 @@ class LoanModel {
   final InterestType interestType;
   final DateTime? disbursementDate;
   final DateTime? firstEmiDate;
+  final DateTime? nextDueDate;
   final int paidEmis;
   final int totalEmis;
   final DateTime? lastPaymentDate;
@@ -70,6 +71,7 @@ class LoanModel {
     required this.interestType,
     this.disbursementDate,
     this.firstEmiDate,
+    this.nextDueDate,
     this.paidEmis = 0,
     this.totalEmis = 0,
     this.lastPaymentDate,
@@ -115,6 +117,7 @@ class LoanModel {
     InterestType? interestType,
     DateTime? disbursementDate,
     DateTime? firstEmiDate,
+    DateTime? nextDueDate,
     int? paidEmis,
     int? totalEmis,
     DateTime? lastPaymentDate,
@@ -159,6 +162,7 @@ class LoanModel {
       interestType: interestType ?? this.interestType,
       disbursementDate: disbursementDate ?? this.disbursementDate,
       firstEmiDate: firstEmiDate ?? this.firstEmiDate,
+      nextDueDate: nextDueDate ?? this.nextDueDate,
       paidEmis: paidEmis ?? this.paidEmis,
       totalEmis: totalEmis ?? this.totalEmis,
       lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
@@ -258,6 +262,9 @@ class LoanModel {
               ? DateTime.parse((json['first_emi_date'] ??
                   json['first_installment_date']) as String)
               : null,
+      nextDueDate: json['next_due_date'] != null
+          ? DateTime.parse(json['next_due_date'] as String)
+          : null,
       paidEmis: (json['paid_emis'] as num?)?.toInt() ?? 0,
       totalEmis: (json['total_emis'] as num?)?.toInt() ?? 0,
       lastPaymentDate: json['last_payment_date'] != null

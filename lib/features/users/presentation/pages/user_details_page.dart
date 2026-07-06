@@ -27,6 +27,18 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/data/providers/branch_providers.dart';
 import '../../../branches/models/branch_model.dart';
 
+String? resolveProfilePhotoUrl(String? rawUrl) {
+  if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+  final trimmed = rawUrl.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  final path = trimmed.startsWith('avatars/')
+      ? trimmed.substring('avatars/'.length)
+      : trimmed;
+  return 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/avatars/$path';
+}
+
 class UserDetailsPage extends ConsumerWidget {
   final String userId;
   const UserDetailsPage({super.key, required this.userId});
@@ -2374,7 +2386,7 @@ class UserDetailsPage extends ConsumerWidget {
                             ],
                             image: hasAvatar
                                 ? DecorationImage(
-                                    image: CachedNetworkImageProvider(user.avatarUrl!),
+                                    image: CachedNetworkImageProvider(resolveProfilePhotoUrl(user.avatarUrl!)!),
                                     fit: BoxFit.cover,
                                   )
                                 : null,

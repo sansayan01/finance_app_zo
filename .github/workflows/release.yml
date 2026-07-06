@@ -8,6 +8,25 @@ env:
   FLUTTER_VERSION: '3.27.x'
 
 jobs:
+  merge-to-main:
+    name: Merge Development → Main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Merge development into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin development
+          git merge origin/development --no-edit -m "chore: merge development into main for release"
+          git push origin main
+
   validate-tag:
     name: Validate Tag
     runs-on: ubuntu-latest
@@ -32,7 +51,7 @@ jobs:
 
   test:
     name: Test
-    needs: validate-tag
+    needs: [merge-to-main, validate-tag]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -144,31 +163,3 @@ jobs:
           files: |
             release-assets/app-release.apk
             release-assets/app-release.aab
-
-  upload-to-supabase-storage:
-    name: Upload APK to Supabase Storage
-    needs: [validate-tag, build-android]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: production-release
-          path: release-assets
-
-      - name: Upload APK to Supabase Storage
-        run: |
-          curl -X POST "${SUPABASE_URL}/storage/v1/object/app-updates/apk/microflow-latest.apk" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            -H "x-upsert: true" \
-            --data-binary @release-assets/app-release.apk
-
-          # Update system_config with new version
-          curl -X PATCH "${SUPABASE_URL}/rest/v1/system_config?id=eq.1" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: return=minimal" \
-            -d "{\"current_version_android\": \"${{ needs.validate-tag.outputs.version }}\", \"update_url_android\": \"${SUPABASE_URL}/storage/v1/object/public/app-updates/apk/microflow-latest.apk\"}"
-        env:
-          SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

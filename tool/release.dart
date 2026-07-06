@@ -245,7 +245,42 @@ Future<void> main(List<String> args) async {
 
   stdout.writeln();
 
-  // ── Step 5: Tag and push ─────────────────────────────────────────────────
+  // ── Step 5: Merge development → main ─────────────────────────────────────
+  _info('Merging development → main...');
+
+  if (isDryRun) {
+    _ok('Would merge development into main');
+  } else {
+    // Fetch latest
+    await _run('git fetch origin', workingDirectory: projectDir, showOutput: false);
+
+    // Switch to main and merge
+    await _run('git checkout main', workingDirectory: projectDir, showOutput: false);
+    final mergeResult = await _run(
+      'git merge origin/development --no-edit -m "chore: merge development into main for release v$newVersion"',
+      workingDirectory: projectDir,
+    );
+
+    if (mergeResult.exitCode != 0) {
+      _warn('Merge conflict detected. Aborting merge...');
+      await _run('git merge --abort', workingDirectory: projectDir, showOutput: false);
+      await _run('git checkout development', workingDirectory: projectDir, showOutput: false);
+      _fail('Could not merge. Fix conflicts manually and try again.');
+      exit(1);
+    }
+
+    // Push main
+    await _run('git push origin main', workingDirectory: projectDir);
+
+    // Switch back to development
+    await _run('git checkout development', workingDirectory: projectDir, showOutput: false);
+
+    _ok('Merged development → main');
+  }
+
+  stdout.writeln();
+
+  // ── Step 6: Tag and push ─────────────────────────────────────────────────
   _info('Tagging and pushing...');
 
   final tagVersion = newVersion;

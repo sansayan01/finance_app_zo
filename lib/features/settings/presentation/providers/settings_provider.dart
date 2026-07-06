@@ -94,7 +94,6 @@ class SystemSettingsNotifier extends StateNotifier<SystemSettings> {
         try {
           final didAuth = await auth.authenticate(
             localizedReason: 'Authenticate to enable Biometric Login',
-            persistAcrossBackgrounding: true,
           );
           if (!didAuth) return; // User cancelled, do not toggle
         } catch (_) {

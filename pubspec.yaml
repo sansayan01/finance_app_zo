@@ -1,7 +1,7 @@
 name: microflow_pro
 description: "MicroFlow Pro - Premium Micro-Finance Management Ecosystem"
 publish_to: 'none'
-version: 1.0.2+2028
+version: 1.0.1+2029
 
 environment:
   sdk: ^3.4.0
@@ -73,10 +73,12 @@ dependencies:
   # Mapbox
   mapbox_maps_flutter: ^2.7.0
 
+  # Google Drive backup
+  google_sign_in: ^6.2.2
+
   # Statement generation
   pdf: ^3.11.1
   printing: ^5.13.3
-  csv: ^6.0.0
   excel: ^4.0.6
   crypto: ^3.0.5
 

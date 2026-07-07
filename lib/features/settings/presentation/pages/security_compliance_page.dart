@@ -66,8 +66,8 @@ class SecurityCompliancePage extends ConsumerWidget {
               _buildTappablePolicyCard(
                 theme: theme,
                 title: 'Data Backup & Export',
-                subtitle: 'Automated off-site database backups',
-                description: 'Triggers on-demand full database backups to cold storage. Export system datasets securely to encrypted XLSX, CSV, or formatted PDF structures.',
+                subtitle: 'Cloud backup to Google Drive',
+                description: 'Connect your Google Drive account and back up your organization data as a restorable JSON snapshot. Includes full record content and a metadata manifest.',
                 priority: 'P1',
                 icon: Icons.cloud_upload_outlined,
                 color: Colors.blue,

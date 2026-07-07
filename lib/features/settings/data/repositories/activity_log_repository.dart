@@ -55,12 +55,23 @@ class ActivityLogRepository {
   }
 
   Future<List<ActivityLogModel>> fetchLogs() async {
-    final orgId = _orgId;
+    // Resolve org id: prefer the injected value, fall back to the
+    // current user's profile (same pattern as `log()`).
+    String? orgId = _orgId;
     if (orgId == null) {
-      // No org scope — return empty list instead of fetching all logs
-      // across all tenants (a privacy bug).
-      return const [];
+      final currentUser = _client.auth.currentUser;
+      if (currentUser != null) {
+        try {
+          final profile = await _client
+              .from('profiles')
+              .select('org_id')
+              .eq('user_id', currentUser.id)
+              .maybeSingle();
+          orgId = profile?['org_id'] as String?;
+        } catch (_) {}
+      }
     }
+    if (orgId == null) return const [];
     final response = await _client
         .from('activity_logs')
         .select()

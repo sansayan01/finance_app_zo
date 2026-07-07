@@ -63,6 +63,21 @@ class EnvConfig {
       const String.fromEnvironment('POSTHOG_HOST',
           defaultValue: 'https://app.posthog.com');
 
+  // Google Drive Backup (OAuth client IDs — public, no secrets)
+  static String get googleWebClientId =>
+      dotenv.env['GOOGLE_WEB_CLIENT_ID'] ??
+      const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID', defaultValue: '');
+
+  static String get googleIosClientId =>
+      dotenv.env['GOOGLE_IOS_CLIENT_ID'] ??
+      const String.fromEnvironment('GOOGLE_IOS_CLIENT_ID', defaultValue: '');
+
+  /// OAuth redirect URI for Google Drive backup. Override per environment.
+  /// Falls back to the current web origin (localhost in dev, domain in prod).
+  static String get googleRedirectUri =>
+      dotenv.env['GOOGLE_REDIRECT_URI'] ??
+      const String.fromEnvironment('GOOGLE_REDIRECT_URI', defaultValue: '');
+
   // GitHub Configuration (for in-app update checks)
   static String get githubToken =>
       dotenv.env['GITHUB_TOKEN'] ??

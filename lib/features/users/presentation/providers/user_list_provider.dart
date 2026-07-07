@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../providers/supabase_provider.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
 import 'new_user_provider.dart';
@@ -210,6 +211,18 @@ final userDetailsProvider =
   try {
     return users.firstWhere((u) => u.id == id);
   } catch (_) {
+    // Not found in users list — try fetching directly from members table
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final member = await client
+          .from('members')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+      if (member != null) {
+        return ProfileModel.fromMembersJson(member);
+      }
+    } catch (_) {}
     return null;
   }
 });

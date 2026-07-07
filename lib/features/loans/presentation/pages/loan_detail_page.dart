@@ -709,7 +709,9 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     final progress = loan.totalRepayable > 0 ? ((loan.totalRepayable - loan.outstandingBalance) / loan.totalRepayable).clamp(0.0, 1.0) : 0.0;
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/users/${loan.customerId}'),
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       height: 220,
       decoration: BoxDecoration(
@@ -893,7 +895,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2);
+    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
+    );
   }
 
   Widget _buildPrimaryActionRow(LoanModel loan,
@@ -933,8 +936,8 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     Icons.notifications_active_rounded,
                     theme.colorScheme.onSurface,
                     () => _sendPaymentReminder(loan)),
-              _buildActionButton('Message', Icons.chat_bubble_rounded,
-                  theme.colorScheme.onSurface, () => _makeWhatsApp(loan)),
+              _buildActionButton('Call', Icons.phone_rounded,
+                  theme.colorScheme.onSurface, () => _makeCall(loan.customerPhone ?? '')),
             ],
           ),
         ).animate().fadeIn(delay: 400.ms);
@@ -4389,180 +4392,429 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     if (await canLaunchUrl(Uri.parse(url))) await launchUrl(Uri.parse(url));
   }
 
-  Future<void> _makeWhatsApp(LoanModel loan) async {
+
+
+  Future<void> _sendPaymentReminder(LoanModel loan) async {
+    HapticFeedback.mediumImpact();
+    final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final schedule = await ref.read(emiScheduleProvider(widget.loanId).future);
-    if (!mounted) return;
     final nextEmi = schedule.isNotEmpty
         ? schedule.firstWhere((e) => e.status != EMIStatus.paid,
             orElse: () => schedule.last)
         : null;
 
     String dueInfo = '';
+    Color dueColor = AppColors.textSecondary;
     if (nextEmi != null && nextEmi.status != EMIStatus.paid) {
       final daysDiff = nextEmi.dueDate.difference(DateTime.now()).inDays;
       if (daysDiff < 0) {
-        dueInfo =
-            '\n\nYour EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is OVERDUE by ${daysDiff.abs()} days (Due: ${AppFormatters.formatDate(nextEmi.dueDate)}).';
+        dueInfo = '${daysDiff.abs()} days overdue';
+        dueColor = AppColors.error;
       } else if (daysDiff == 0) {
-        dueInfo =
-            '\n\nYour EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is DUE TODAY.';
+        dueInfo = 'Due today';
+        dueColor = AppColors.warning;
       } else {
-        dueInfo =
-            '\n\nYour next EMI #${nextEmi.emiNumber} of ${AppFormatters.formatCurrency(nextEmi.emiAmount)} is due in $daysDiff days (${AppFormatters.formatDate(nextEmi.dueDate)}).';
+        dueInfo = 'Due in $daysDiff days';
+        dueColor = AppColors.primary;
       }
     }
 
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.85,
+          expand: false,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(24, 24, 24,
+                    24 + MediaQuery.of(context).padding.bottom),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: theme.dividerColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_active_rounded,
+                            color: AppColors.primary,
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Send Reminder',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                loan.customerName ?? 'Unknown',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: const Icon(Icons.close_rounded),
+                          style: IconButton.styleFrom(
+                            backgroundColor: isDark
+                                ? AppColors.fillDark
+                                : AppColors.fillLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Loan Summary Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.08),
+                            AppColors.accent.withValues(alpha: 0.04),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildSummaryItem(
+                                'Outstanding',
+                                AppFormatters.formatCurrency(loan.outstandingBalance),
+                                AppColors.primary,
+                                theme,
+                              ),
+                              _buildSummaryItem(
+                                'Loan #',
+                                loan.loanNumber,
+                                AppColors.textSecondary,
+                                theme,
+                              ),
+                            ],
+                          ),
+                          if (dueInfo.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: dueColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    dueColor == AppColors.error
+                                        ? Icons.warning_rounded
+                                        : dueColor == AppColors.warning
+                                            ? Icons.access_time_rounded
+                                            : Icons.calendar_today_rounded,
+                                    size: 16,
+                                    color: dueColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'EMI #${nextEmi!.emiNumber} - $dueInfo',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: dueColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Message Preview
+                    Text(
+                      'Message Preview',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: theme.dividerColor.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        'Payment Reminder\n'
+                        'Loan: ${loan.loanNumber}\n'
+                        'Outstanding: ${AppFormatters.formatCurrency(loan.outstandingBalance)}\n'
+                        '${dueInfo.isNotEmpty ? 'Status: $dueInfo\n' : ''}'
+                        'Please pay at earliest.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Channel Buttons
+                    Text(
+                      'Send via',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildChannelButton(
+                            context: ctx,
+                            label: 'SMS',
+                            icon: Icons.sms_rounded,
+                            color: AppColors.info,
+                            onTap: () => _sendReminderViaChannel(
+                              ctx,
+                              loan,
+                              'sms',
+                              messenger,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildChannelButton(
+                            context: ctx,
+                            label: 'WhatsApp',
+                            icon: Icons.chat_rounded,
+                            color: const Color(0xFF25D366),
+                            onTap: () => _sendReminderViaChannel(
+                              ctx,
+                              loan,
+                              'whatsapp',
+                              messenger,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildChannelButton(
+                            context: ctx,
+                            label: 'Telegram',
+                            icon: Icons.telegram_rounded,
+                            color: const Color(0xFF0088CC),
+                            onTap: () => _sendReminderViaChannel(
+                              ctx,
+                              loan,
+                              'telegram',
+                              messenger,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(
+      String label, String value, Color valueColor, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChannelButton({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withValues(alpha: 0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sendReminderViaChannel(
+    BuildContext ctx,
+    LoanModel loan,
+    String channel,
+    ScaffoldMessengerState messenger,
+  ) async {
+    Navigator.pop(ctx);
+
     if (loan.customerPhone == null || loan.customerPhone!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('Customer phone number not available')),
       );
       return;
     }
 
-    final msg = Uri.encodeComponent(
-        'Hi ${loan.customerName},\n\nThis is regarding your loan ${loan.loanNumber}.\n\nOutstanding Balance: ${AppFormatters.formatCurrency(loan.outstandingBalance)}$dueInfo\n\nPlease contact us for any queries. Thank you!');
-    final url = 'https://wa.me/${loan.customerPhone}?text=$msg';
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    final schedule = await ref.read(emiScheduleProvider(widget.loanId).future);
+    final nextEmi = schedule.isNotEmpty
+        ? schedule.firstWhere((e) => e.status != EMIStatus.paid,
+            orElse: () => schedule.last)
+        : null;
+
+    String reminderMsg = 'Payment Reminder\n'
+        'Loan: ${loan.loanNumber}\n'
+        'Outstanding: ${AppFormatters.formatCurrency(loan.outstandingBalance)}';
+
+    if (nextEmi != null && nextEmi.status != EMIStatus.paid) {
+      final daysDiff = nextEmi.dueDate.difference(DateTime.now()).inDays;
+      if (daysDiff < 0) {
+        reminderMsg += '\nEMI #${nextEmi.emiNumber}: ${daysDiff.abs()} days OVERDUE';
+      } else if (daysDiff == 0) {
+        reminderMsg += '\nEMI #${nextEmi.emiNumber}: DUE TODAY';
+      } else {
+        reminderMsg += '\nNext EMI #${nextEmi.emiNumber}: Due in $daysDiff days';
+      }
     }
-  }
+    reminderMsg += '\n\nPlease pay at earliest.';
 
-  Future<void> _sendPaymentReminder(LoanModel loan) async {
-    HapticFeedback.mediumImpact();
-    final messenger = ScaffoldMessenger.of(context);
-    final dialogTheme = Theme.of(context);
+    String url;
+    String successMsg;
+    String errorMsg;
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Send Payment Reminder'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Send reminder to ${loan.customerName}?',
-                style: dialogTheme.textTheme.bodyMedium),
-            const SizedBox(height: 8),
-            Text(
-                'Outstanding: ${AppFormatters.formatCurrency(loan.outstandingBalance)}',
-                style: dialogTheme.textTheme.bodySmall?.copyWith(
-                    color: dialogTheme.colorScheme.onSurface
-                        .withValues(alpha: 0.6))),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.sms_rounded, size: 18),
-            onPressed: () async {
-              Navigator.pop(ctx);
+    switch (channel) {
+      case 'sms':
+        url = 'sms:${loan.customerPhone}?body=${Uri.encodeComponent(reminderMsg)}';
+        successMsg = 'SMS reminder sent';
+        errorMsg = 'Could not open SMS app';
+        break;
+      case 'whatsapp':
+        url = 'https://wa.me/${loan.customerPhone}?text=${Uri.encodeComponent(reminderMsg)}';
+        successMsg = 'WhatsApp reminder sent';
+        errorMsg = 'Could not open WhatsApp';
+        break;
+      case 'telegram':
+        url = 'https://t.me/${loan.customerPhone}?text=${Uri.encodeComponent(reminderMsg)}';
+        successMsg = 'Telegram reminder sent';
+        errorMsg = 'Could not open Telegram';
+        break;
+      default:
+        return;
+    }
 
-              if (loan.customerPhone == null || loan.customerPhone!.isEmpty) {
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Customer phone number not available')),
-                );
-                return;
-              }
-
-              final schedule =
-                  await ref.read(emiScheduleProvider(widget.loanId).future);
-              final nextEmi = schedule.isNotEmpty
-                  ? schedule.firstWhere((e) => e.status != EMIStatus.paid,
-                      orElse: () => schedule.last)
-                  : null;
-
-              String reminderMsg =
-                  'Payment Reminder - Loan ${loan.loanNumber}. ';
-              reminderMsg +=
-                  'Outstanding: ${AppFormatters.formatCurrency(loan.outstandingBalance)}. ';
-              if (nextEmi != null && nextEmi.status != EMIStatus.paid) {
-                final daysDiff =
-                    nextEmi.dueDate.difference(DateTime.now()).inDays;
-                if (daysDiff < 0) {
-                  reminderMsg +=
-                      'EMI #${nextEmi.emiNumber} is ${daysDiff.abs()} days overdue. ';
-                } else if (daysDiff == 0) {
-                  reminderMsg += 'EMI #${nextEmi.emiNumber} is due TODAY. ';
-                } else {
-                  reminderMsg +=
-                      'Next EMI #${nextEmi.emiNumber} due in $daysDiff days. ';
-                }
-              }
-              reminderMsg += 'Please pay at earliest.';
-
-              final smsUrl =
-                  'sms:${loan.customerPhone}?body=${Uri.encodeComponent(reminderMsg)}';
-              if (await canLaunchUrl(Uri.parse(smsUrl))) {
-                await launchUrl(Uri.parse(smsUrl));
-                if (!mounted) return;
-                messenger.showSnackBar(
-                    const SnackBar(content: Text('SMS reminder sent')));
-              } else {
-                if (!mounted) return;
-                messenger.showSnackBar(
-                    const SnackBar(content: Text('Could not open SMS app')));
-              }
-            },
-            label: const Text('SMS'),
-          ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.chat_rounded, size: 18, semanticLabel: 'WhatsApp'),
-            onPressed: () async {
-              Navigator.pop(ctx);
-
-              if (loan.customerPhone == null || loan.customerPhone!.isEmpty) {
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Customer phone number not available')),
-                );
-                return;
-              }
-
-              final schedule =
-                  await ref.read(emiScheduleProvider(widget.loanId).future);
-              final nextEmi = schedule.isNotEmpty
-                  ? schedule.firstWhere((e) => e.status != EMIStatus.paid,
-                      orElse: () => schedule.last)
-                  : null;
-
-              String reminderMsg =
-                  'Payment Reminder\nLoan: ${loan.loanNumber}\nOutstanding: ${AppFormatters.formatCurrency(loan.outstandingBalance)}';
-              if (nextEmi != null && nextEmi.status != EMIStatus.paid) {
-                final daysDiff =
-                    nextEmi.dueDate.difference(DateTime.now()).inDays;
-                if (daysDiff < 0) {
-                  reminderMsg +=
-                      '\nEMI #${nextEmi.emiNumber}: ${daysDiff.abs()} days OVERDUE';
-                } else if (daysDiff == 0) {
-                  reminderMsg += '\nEMI #${nextEmi.emiNumber}: DUE TODAY';
-                } else {
-                  reminderMsg +=
-                      '\nNext EMI #${nextEmi.emiNumber}: Due in $daysDiff days';
-                }
-              }
-              reminderMsg += '\n\nPlease pay at earliest.';
-
-              final waUrl =
-                  'https://wa.me/${loan.customerPhone}?text=${Uri.encodeComponent(reminderMsg)}';
-              if (await canLaunchUrl(Uri.parse(waUrl))) {
-                await launchUrl(Uri.parse(waUrl),
-                    mode: LaunchMode.externalApplication);
-                if (!mounted) return;
-                messenger.showSnackBar(
-                    const SnackBar(content: Text('WhatsApp reminder sent')));
-              } else {
-                if (!mounted) return;
-                messenger.showSnackBar(
-                    const SnackBar(content: Text('Could not open WhatsApp')));
-              }
-            },
-            label: const Text('WhatsApp'),
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF25D366)),
-          ),
-        ],
-      ),
-    );
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url),
+          mode: LaunchMode.externalApplication);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(successMsg)));
+    } else {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(errorMsg)));
+    }
   }
 
   Future<void> _handleLoanRestructure() async {

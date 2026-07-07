@@ -1670,7 +1670,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         (saving.currentAmount / saving.targetAmount).clamp(0.0, 1.0);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/users/${saving.memberId}'),
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       height: 220,
       decoration: BoxDecoration(
@@ -1870,7 +1872,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2);
+    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
+    );
   }
 
   Widget _buildFreezeToggle(SavingsModel saving, ThemeData theme) {
@@ -2413,7 +2416,7 @@ String _savingsStatusLabel(bool isPaid, bool isOverdue) {
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest
             .withValues(alpha: 0.3),
@@ -2424,6 +2427,7 @@ String _savingsStatusLabel(bool isPaid, bool isOverdue) {
           SizedBox(
             height: 430,
             child: ListView.separated(
+              padding: EdgeInsets.zero,
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: transactions.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),

@@ -273,12 +273,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
 
         // Admin role trying to access staff pages → redirect to admin
-        // Exceptions: executiveAdmin can access /staff/collection and /staff/upi-confirmations
+        // Exceptions: executiveAdmin can access /staff/collection, /staff/upi-confirmations, and /branch/members/:id
         if (role == UserRole.executiveAdmin &&
             (isStaffPath || isBranchPath || isCustomerPath)) {
           final isAllowedRoute =
               state.matchedLocation.startsWith('/staff/collection') ||
-              state.matchedLocation.startsWith('/staff/upi-confirmations');
+              state.matchedLocation.startsWith('/staff/upi-confirmations') ||
+              state.matchedLocation.startsWith('/branch/members/');
           if (!isAllowedRoute) {
             return '/';
           }

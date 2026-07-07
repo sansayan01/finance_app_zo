@@ -114,6 +114,51 @@ class RestoreBackupService {
     };
   }
 
+  // ── Compare two backups ──────────────────────────────────────────────
+
+  /// Compare two backup JSONs and return a diff summary.
+  Map<String, dynamic> compareBackups(Map<String, dynamic> backupA, Map<String, dynamic> backupB) {
+    final metaA = backupA['metadata'] as Map<String, dynamic>? ?? {};
+    final metaB = backupB['metadata'] as Map<String, dynamic>? ?? {};
+
+    final catsA = metaA['categories'] as Map<String, dynamic>? ?? {};
+    final catsB = metaB['categories'] as Map<String, dynamic>? ?? {};
+
+    final allKeys = <String>{...catsA.keys, ...catsB.keys};
+    final diffs = <Map<String, dynamic>>[];
+
+    for (final key in allKeys) {
+      final countA = (catsA[key] as int?) ?? 0;
+      final countB = (catsB[key] as int?) ?? 0;
+      final change = countB - countA;
+      diffs.add({
+        'category': key,
+        'count_a': countA,
+        'count_b': countB,
+        'change': change,
+        'status': change == 0 ? 'unchanged' : (change > 0 ? 'added' : 'removed'),
+      });
+    }
+
+    final totalA = metaA['total_records'] as int? ?? 0;
+    final totalB = metaB['total_records'] as int? ?? 0;
+
+    return {
+      'backup_a': {
+        'date': metaA['generated_at'] ?? '',
+        'total_records': totalA,
+        'org_name': metaA['org_name'] ?? '',
+      },
+      'backup_b': {
+        'date': metaB['generated_at'] ?? '',
+        'total_records': totalB,
+        'org_name': metaB['org_name'] ?? '',
+      },
+      'total_change': totalB - totalA,
+      'diffs': diffs,
+    };
+  }
+
   // ── Restore (upsert all tables) ──────────────────────────────────────
 
   /// Restore data from a parsed backup JSON into the database.
@@ -125,6 +170,7 @@ class RestoreBackupService {
   Future<RestoreResult> restoreBackup({
     required String orgId,
     required Map<String, dynamic> backup,
+    Set<String>? selectedCategories,
     RestoreProgressCallback? onProgress,
   }) async {
     final data = backup['data'] as Map<String, dynamic>? ?? {};
@@ -133,8 +179,13 @@ class RestoreBackupService {
     var tablesRestored = 0;
     var tablesFailed = 0;
 
+    // If specific categories selected, filter to only those
+    final effectiveOrder = selectedCategories != null
+        ? _restoreOrder.where((t) => selectedCategories.contains(t)).toList()
+        : _restoreOrder;
+
     // Get only the tables that exist in both the backup and our restore order
-    final tablesToRestore = _restoreOrder
+    final tablesToRestore = effectiveOrder
         .where((t) => data.containsKey(t) && (data[t] as List).isNotEmpty)
         .toList();
 

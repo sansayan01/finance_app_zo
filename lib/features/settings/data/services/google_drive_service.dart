@@ -492,6 +492,19 @@ class GoogleDriveService {
     }
   }
 
+  // ── Delete backup file from Drive ────────────────────────────────────
+
+  Future<void> deleteBackup(String fileId, DriveConnectionState connection) async {
+    final accessToken = await getAccessToken(connection);
+    final resp = await http.delete(
+      Uri.parse('https://www.googleapis.com/drive/v3/files/$fileId'),
+      headers: {'Authorization': 'Bearer $accessToken'},
+    );
+    if (resp.statusCode != 200) {
+      debugPrint('deleteBackup error: ${resp.statusCode} ${resp.body}');
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────
 
   String _formatBytes(int bytes) {

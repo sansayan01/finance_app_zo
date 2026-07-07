@@ -232,6 +232,10 @@ class BackupExportService {
         'time_minute': 0,
         'categories': kBackupCategories.map((c) => c.key).toList(),
         'notify_on_complete': true,
+        'retention_enabled': false,
+        'retention_mode': 'count',
+        'retention_count': 10,
+        'retention_days': 30,
       };
 
   Future<bool> updateScheduleSettings(

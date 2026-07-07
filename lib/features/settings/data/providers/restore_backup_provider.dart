@@ -111,6 +111,7 @@ class RestoreTriggerNotifier extends StateNotifier<AsyncValue<void>> {
     required DriveConnectionState connection,
     required String fileId,
     required String fileName,
+    Set<String>? selectedCategories,
   }) async {
     state = const AsyncValue.loading();
     _updateProgress(const RestoreProgressState(
@@ -148,6 +149,7 @@ class RestoreTriggerNotifier extends StateNotifier<AsyncValue<void>> {
       final result = await _restoreService.restoreBackup(
         orgId: orgId,
         backup: backup,
+        selectedCategories: selectedCategories,
         onProgress: (step, progress, current, total) {
           _updateProgress(RestoreProgressState(
             status: RestoreProgress.restoring,
@@ -194,3 +196,56 @@ final restoreTriggerProvider =
     ref,
   );
 });
+
+// ---------------------------------------------------------------------------
+// SELECTIVE RESTORE
+// ---------------------------------------------------------------------------
+
+/// FK dependency graph — children require parents
+const Map<String, List<String>> restoreDependencies = {
+  'loans': ['members', 'branches'],
+  'emi_schedule': ['loans', 'members'],
+  'savings': ['members', 'branches'],
+  'savings_plans': ['members'],
+  'transactions': ['loans', 'members'],
+  'collections': ['loans', 'members', 'branches'],
+  'savings_collections': ['savings', 'members'],
+  'cash_deposits': ['staff_profiles'],
+  'wallet_transactions': ['staff_profiles'],
+  'visit_logs': ['staff_profiles'],
+  'staff_streaks': ['staff_profiles'],
+  'achievements': ['staff_profiles'],
+};
+
+/// All categories in the backup (read from backup metadata)
+final backupCategoriesProvider = StateProvider.autoDispose<Set<String>>((ref) => {});
+
+/// Selected categories for restore (default: all)
+final selectedCategoriesForRestoreProvider = StateProvider.autoDispose<Set<String>>((ref) {
+  return ref.watch(backupCategoriesProvider);
+});
+
+/// Auto-toggle dependencies when user selects/deselects a category
+Set<String> applyDependencies(Set<String> selected, String category, bool add, Map<String, List<String>> deps) {
+  final result = Set<String>.from(selected);
+  if (add) {
+    // Add category and all its parents
+    result.add(category);
+    for (final parent in deps[category] ?? []) {
+      result.add(parent);
+    }
+  } else {
+    // Remove category and all its children that depend on it
+    result.remove(category);
+    for (final entry in deps.entries) {
+      if (entry.value.contains(category)) {
+        // Check if any other parent of this child is still selected
+        final otherParentsSelected = entry.value.any((p) => p != category && result.contains(p));
+        if (!otherParentsSelected) {
+          result.remove(entry.key);
+        }
+      }
+    }
+  }
+  return result;
+}

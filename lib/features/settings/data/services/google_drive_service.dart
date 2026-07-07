@@ -15,6 +15,7 @@ class DriveConnectionState {
   final bool connected;
   final String? email;
   final String? refreshToken;
+  final String? accessToken;
   final String? folderId;
   final String? connectedAt;
 
@@ -22,6 +23,7 @@ class DriveConnectionState {
     this.connected = false,
     this.email,
     this.refreshToken,
+    this.accessToken,
     this.folderId,
     this.connectedAt,
   });
@@ -31,6 +33,7 @@ class DriveConnectionState {
       connected: json['connected'] as bool? ?? false,
       email: json['email'] as String?,
       refreshToken: json['refresh_token'] as String?,
+      accessToken: json['access_token'] as String?,
       folderId: json['folder_id'] as String?,
       connectedAt: json['connected_at'] as String?,
     );
@@ -40,6 +43,7 @@ class DriveConnectionState {
         'connected': connected,
         if (email != null) 'email': email,
         if (refreshToken != null) 'refresh_token': refreshToken,
+        if (accessToken != null) 'access_token': accessToken,
         if (folderId != null) 'folder_id': folderId,
         if (connectedAt != null) 'connected_at': connectedAt,
       };
@@ -159,6 +163,7 @@ class GoogleDriveService {
         connected: true,
         email: email,
         refreshToken: refreshToken,
+        accessToken: accessToken,
         folderId: folderId,
         connectedAt: DateTime.now().toIso8601String(),
       );
@@ -208,13 +213,21 @@ class GoogleDriveService {
     final tokenResponse = await _exchangeCodeForTokens(serverAuthCode);
     final refreshToken = tokenResponse['refresh_token'] as String?;
 
-    final accessToken = await _getAccessTokenFromRefresh(refreshToken ?? '');
+    // Use the access token from the exchange directly.
+    // Only refresh later if it expires.
+    final accessToken = tokenResponse['access_token'] as String? ??
+        (refreshToken != null ? await _getAccessTokenFromRefresh(refreshToken) : null);
+    if (accessToken == null) {
+      throw Exception('No access token received from Google');
+    }
+
     final folderId = await _createOrGetBackupFolder(accessToken, orgId);
 
     final state = DriveConnectionState(
       connected: true,
       email: account.email,
       refreshToken: refreshToken,
+      accessToken: accessToken,
       folderId: folderId,
       connectedAt: DateTime.now().toIso8601String(),
     );
@@ -237,20 +250,29 @@ class GoogleDriveService {
   // ── Token Management ──────────────────────────────────────────────────
 
   Future<String> getAccessToken(DriveConnectionState connection) async {
+    // Prefer refresh token (long-lived), fall back to stored access token
     if (connection.refreshToken != null) {
       return _getAccessTokenFromRefresh(connection.refreshToken!);
     }
-    throw Exception('No refresh token. Please reconnect Google Drive.');
+    if (connection.accessToken != null) {
+      return connection.accessToken!;
+    }
+    throw Exception('No valid token. Please reconnect Google Drive.');
   }
 
   Future<String> _getAccessTokenFromRefresh(String refreshToken) async {
+    // Use Edge Function for token refresh too (needs client_secret)
+    final supabaseUrl = _client.rest.url.replaceAll('/rest/v1', '');
     final response = await http.post(
-      Uri.parse('https://oauth2.googleapis.com/token'),
-      body: {
-        'client_id': EnvConfig.googleWebClientId,
+      Uri.parse('$supabaseUrl/functions/v1/google-token-exchange'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken ?? ''}',
+      },
+      body: jsonEncode({
         'grant_type': 'refresh_token',
         'refresh_token': refreshToken,
-      },
+      }),
     );
 
     if (response.statusCode != 200) {
@@ -265,16 +287,18 @@ class GoogleDriveService {
     String authCode, {
     String? redirectUri,
   }) async {
-    final body = <String, String>{
-      'code': authCode,
-      'client_id': EnvConfig.googleWebClientId,
-      'grant_type': 'authorization_code',
-    };
-    if (redirectUri != null) body['redirect_uri'] = redirectUri;
-
+    // Use Supabase Edge Function to exchange tokens (keeps client_secret server-side)
+    final supabaseUrl = _client.rest.url.replaceAll('/rest/v1', '');
     final response = await http.post(
-      Uri.parse('https://oauth2.googleapis.com/token'),
-      body: body,
+      Uri.parse('$supabaseUrl/functions/v1/google-token-exchange'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken ?? ''}',
+      },
+      body: jsonEncode({
+        'code': authCode,
+        if (redirectUri != null) 'redirect_uri': redirectUri,
+      }),
     );
 
     if (response.statusCode != 200) {
@@ -342,31 +366,37 @@ class GoogleDriveService {
     final fileName = '${safeOrgName}_backup_$timestamp.json';
     final jsonBytes = utf8.encode(jsonEncode(jsonData));
 
-    final uri = Uri.parse(
-      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+    // Use multipart/related format (Google Drive API v3 requirement)
+    final boundary = 'microflow_boundary_${DateTime.now().millisecondsSinceEpoch}';
+    final metadata = jsonEncode({
+      'name': fileName,
+      'parents': [folderId],
+      'mimeType': 'application/json',
+    });
+
+    final body = StringBuffer()
+      ..writeln('--$boundary')
+      ..writeln('Content-Type: application/json; charset=UTF-8')
+      ..writeln()
+      ..write(metadata)
+      ..writeln()
+      ..writeln('--$boundary')
+      ..writeln('Content-Type: application/json')
+      ..writeln()
+      ..write(utf8.decode(jsonBytes))
+      ..writeln()
+      ..writeln('--$boundary--');
+
+    final bodyBytes = utf8.encode(body.toString());
+
+    final response = await http.post(
+      Uri.parse('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'multipart/related; boundary=$boundary',
+      },
+      body: bodyBytes,
     );
-
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer $accessToken';
-
-    request.fields[''] = '';
-    request.files.add(http.MultipartFile.fromBytes(
-      'metadata',
-      utf8.encode(jsonEncode({
-        'name': fileName,
-        'parents': [folderId],
-        'mimeType': 'application/json',
-      })),
-    ));
-
-    request.files.add(http.MultipartFile.fromBytes(
-      'file',
-      jsonBytes,
-      filename: fileName,
-    ));
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode != 200) {
       throw Exception('Upload failed: ${response.statusCode} ${response.body}');
@@ -385,7 +415,7 @@ class GoogleDriveService {
   Future<List<Map<String, dynamic>>> listBackups(
     DriveConnectionState connection,
   ) async {
-    if (connection.folderId == null || connection.refreshToken == null) {
+    if (connection.folderId == null) {
       return const [];
     }
 

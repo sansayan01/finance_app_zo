@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/org_provider.dart';
@@ -29,8 +30,11 @@ final driveConnectionProvider =
   return service.getConnectionState(orgId);
 });
 
-/// Whether Google client IDs are configured (needed to show/hide the connect button).
+/// Whether Google client IDs are configured.
+/// On web: checks the .env GOOGLE_WEB_CLIENT_ID.
+/// On mobile: always true (client ID is in strings.xml / native config).
 final driveClientIdConfiguredProvider = Provider<bool>((ref) {
+  if (!kIsWeb) return true; // Mobile reads from native config, not .env
   return EnvConfig.googleWebClientId.isNotEmpty;
 });
 
@@ -157,6 +161,7 @@ class DriveBackupNotifier extends StateNotifier<AsyncValue<void>> {
 
       _ref.invalidate(exportHistoryProvider);
       _ref.invalidate(categoryCountsProvider);
+      _ref.invalidate(driveBackupsProvider);
 
       state = const AsyncValue.data(null);
 

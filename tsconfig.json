@@ -8,9 +8,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "files": [
-    ".vscode/dummy.ts"
-  ],
   "exclude": [
     "supabase/**/*",
     "node_modules"

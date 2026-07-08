@@ -2978,60 +2978,65 @@ class _PaymentAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final initial = label.isNotEmpty ? label[0].toUpperCase() : '?';
     final resolved = _resolvedPhoto();
-    Widget avatar;
-    if (resolved != null) {
-      avatar = ClipRRect(
-        borderRadius: BorderRadius.circular(9),
-        child: CachedNetworkImage(
-          imageUrl: resolved,
-          fit: BoxFit.cover,
-          width: 36,
-          height: 36,
-          memCacheWidth: 72,
-          memCacheHeight: 72,
-          errorWidget: (_, __, ___) => Center(
-            child: Text(
-              initial,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
-              ),
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
+    Widget buildLetterAvatar() {
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary.withValues(alpha: 0.25),
+              primary.withValues(alpha: 0.05)
+            ],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            initial,
+            style: TextStyle(
+              color: primary,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ),
       );
-    } else {
-      avatar = Center(
-        child: Text(
-          initial,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-            color: color.withValues(alpha: isCollected ? 0.5 : 0.85),
-          ),
-        ),
-      );
     }
+
     return Container(
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: isCollected ? 0.08 : 0.18),
-            color.withValues(alpha: isCollected ? 0.02 : 0.06),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(10),
+        shape: BoxShape.circle,
         border: Border.all(
-          color: color.withValues(alpha: isCollected ? 0.05 : 0.12),
-          width: 1,
+          color: primary.withValues(alpha: 0.25),
+          width: 1.5,
         ),
       ),
-      child: avatar,
+      child: ClipOval(
+        child: resolved != null
+            ? CachedNetworkImage(
+                imageUrl: resolved,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: primary.withValues(alpha: 0.05),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              errorWidget: (context, url, error) => buildLetterAvatar(),
+            )
+            : buildLetterAvatar(),
+      ),
     );
   }
 }

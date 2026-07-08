@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/branded_loading.dart';
 import '../../../../core/widgets/premium_search_overlay.dart';
@@ -151,6 +152,46 @@ class _Header extends ConsumerWidget {
 
     // First letter for avatar
     final initial = firstName.isNotEmpty ? firstName[0].toUpperCase() : '?';
+    final avatarUrl = user?.avatarUrl;
+
+    String? resolvePhotoUrl(String? rawUrl) {
+      if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+      final trimmed = rawUrl.trim();
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+      final path = trimmed.startsWith('avatars/')
+          ? trimmed.substring('avatars/'.length)
+          : trimmed;
+      return 'https://tccwdpsnuudzfyxfoohk.supabase.co/storage/v1/object/public/avatars/$path';
+    }
+
+    final resolvedPhotoUrl = resolvePhotoUrl(avatarUrl);
+
+    Widget buildLetterAvatar() {
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.25),
+              theme.colorScheme.primary.withValues(alpha: 0.05)
+            ],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            initial,
+            style: TextStyle(
+              color: theme.colorScheme.primary,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      );
+    }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -163,17 +204,13 @@ class _Header extends ConsumerWidget {
                 children: [
                   // Avatar with glow
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.7),
-                        ],
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                        width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -183,15 +220,26 @@ class _Header extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    child: Center(
-                      child: Text(
-                        initial,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                    child: ClipOval(
+                      child: resolvedPhotoUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: resolvedPhotoUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => buildLetterAvatar(),
+                            )
+                          : buildLetterAvatar(),
                     ),
                   ),
                   const SizedBox(width: 12),

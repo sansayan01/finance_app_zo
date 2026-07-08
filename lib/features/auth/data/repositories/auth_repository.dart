@@ -369,6 +369,7 @@ class AuthRepository {
       phone:
           user.phone ?? (profile != null ? profile['phone'] as String? : null),
       role: role,
+      avatarUrl: profile?['avatar_url'] as String?,
       orgId: profile?['org_id'] as String?,
       branchId: profile?['branch_id'] as String?,
       memberId: profile?['member_id'] as String?,

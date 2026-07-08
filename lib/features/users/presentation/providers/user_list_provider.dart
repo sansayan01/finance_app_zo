@@ -209,7 +209,25 @@ final userDetailsProvider =
     FutureProvider.family<ProfileModel?, String>((ref, id) async {
   final users = await ref.watch(userListProvider.future);
   try {
-    return users.firstWhere((u) => u.id == id);
+    final profile = users.firstWhere((u) => u.id == id);
+    // If the profile is from the `profiles` table and has no linked member
+    // ID, the downstream loan/savings filters will fail (they key on the
+    // member table's primary key).  Resolve the linked member record so that
+    // `memberCode` is populated correctly.
+    if (!profile.isMember && profile.memberCode == null) {
+      try {
+        final client = ref.read(supabaseClientProvider);
+        final member = await client
+            .from('members')
+            .select('*')
+            .eq('profile_id', id)
+            .maybeSingle();
+        if (member != null) {
+          return ProfileModel.fromMembersJson(member);
+        }
+      } catch (_) {}
+    }
+    return profile;
   } catch (_) {
     // Not found in users list — try fetching directly from members table
     try {
@@ -221,6 +239,18 @@ final userDetailsProvider =
           .maybeSingle();
       if (member != null) {
         return ProfileModel.fromMembersJson(member);
+      }
+    } catch (_) {}
+    // Fallback: try the profiles table
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final row = await client
+          .from('profiles')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+      if (row != null) {
+        return ProfileModel.fromJson(row);
       }
     } catch (_) {}
     return null;

@@ -3,6 +3,7 @@ import '../../data/models/loan_model.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../users/presentation/providers/user_list_provider.dart';
 
 import '../../data/repositories/emi_repository.dart';
 import '../../data/models/emi_schedule_model.dart';
@@ -91,5 +92,17 @@ final paymentHistoryProvider =
 final userLoansProvider =
     FutureProvider.autoDispose.family<List<LoanModel>, String>((ref, userId) async {
   final loans = await ref.watch(allLoansProvider.future);
-  return loans.where((l) => l.customerId == userId).toList();
+  final userDetails = await ref.watch(userDetailsProvider(userId).future);
+  // userDetails.id is the member table primary key (may differ from userId
+  // when userId is a profile ID).  Also match on memberId column on loans.
+  final memberPk = userDetails?.id;
+  final memberCode = userDetails?.memberCode;
+  return loans.where((l) =>
+      l.customerId == userId ||
+      (memberPk != null && l.customerId == memberPk) ||
+      (memberCode != null && l.customerId == memberCode) ||
+      (memberPk != null && l.memberId == memberPk) ||
+      (memberCode != null && l.memberId == memberCode) ||
+      l.memberId == userId
+  ).toList();
 });

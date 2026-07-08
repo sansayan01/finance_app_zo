@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -88,18 +87,6 @@ class UserDetailsPage extends ConsumerWidget {
                                       context, ref, user, loans, savings,
                                       theme: theme, isDark: isDark),
                                 ],
-                                if (loans.isNotEmpty) ...[
-                                  const SizedBox(height: 28),
-                                  _buildTrustScoreGauge(user, theme, isDark),
-                                ],
-                                const SizedBox(height: 32),
-                                _buildPortfolioHub(
-                                    loans, savings, theme, isDark),
-                                if (loans.isNotEmpty) ...[
-                                  const SizedBox(height: 32),
-                                  _buildRepaymentdiscipline(
-                                      loans, theme, isDark),
-                                ],
                                 const SizedBox(height: 32),
                                 _buildKYCVault(user, theme, isDark),
                                 const SizedBox(height: 32),
@@ -174,7 +161,7 @@ class UserDetailsPage extends ConsumerWidget {
         const SizedBox(height: 20),
         _buildAdminIdentityContext(user, theme, isDark),
         const SizedBox(height: 20),
-        _buildAdminFinancialExposure(loans, savings, theme, isDark),
+        _buildAdminFinancialExposure(context, user, loans, savings, theme, isDark),
         const SizedBox(height: 20),
         _buildAdminRolePermissions(context, ref, user, theme, isDark),
         const SizedBox(height: 20),
@@ -183,8 +170,6 @@ class UserDetailsPage extends ConsumerWidget {
         _buildAdminAuditTimeline(ref, user, theme, isDark),
         const SizedBox(height: 20),
         _buildAdminNotes(context, ref, user, theme, isDark),
-        const SizedBox(height: 20),
-        _buildAdminCompliance(context, ref, user, theme, isDark),
         const SizedBox(height: 20),
         _buildAdminViewAsUser(context, user, loans, savings, theme, isDark),
       ],
@@ -287,68 +272,372 @@ class UserDetailsPage extends ConsumerWidget {
   }
 
   // ---------------------------------------------------------------------------
-  // PHASE 3b — FINANCIAL EXPOSURE
+  // PHASE 3b — FINANCIAL EXPOSURE (redesigned: 50:50 loan + savings)
   // ---------------------------------------------------------------------------
-  Widget _buildAdminFinancialExposure(List<LoanModel> loans,
-      List<SavingsModel> savings, ThemeData theme, bool isDark) {
+  Widget _buildAdminFinancialExposure(
+      BuildContext context,
+      ProfileModel user,
+      List<LoanModel> loans,
+      List<SavingsModel> savings,
+      ThemeData theme,
+      bool isDark) {
+    // ── Derived data ──
     final activeLoans =
         loans.where((l) => l.status == LoanStatus.active).toList();
-    final closedLoans =
-        loans.where((l) => l.status == LoanStatus.closed).toList();
-    final defaultedLoans = loans
-        .where((l) =>
-            l.status == LoanStatus.defaultStatus ||
-            l.status == LoanStatus.restructured)
-        .toList();
-    final totalOutstanding = activeLoans.fold<double>(
-        0.0, (s, l) => s + l.outstandingBalance);
-    final totalSavings =
+    final activeSavings =
+        savings.where((s) => s.status == 'active').toList();
+
+    final totalOutstanding =
+        activeLoans.fold<double>(0.0, (s, l) => s + l.outstandingBalance);
+    final totalDisbursed =
+        loans.fold<double>(0.0, (s, l) => s + l.amount);
+    final totalSavingsBalance =
+        savings.fold<double>(0.0, (s, x) => s + x.currentAmount);
+    final totalSavingsTarget =
         savings.fold<double>(0.0, (s, x) => s + x.targetAmount);
+    final netExposure = totalOutstanding - totalSavingsBalance;
+
+    // Overdue / risk
+    final now = DateTime.now();
+    final overdueLoans = activeLoans
+        .where(
+            (l) => l.nextDueDate != null && l.nextDueDate!.isBefore(now))
+        .toList();
+    final overdueAmount =
+        overdueLoans.fold<double>(0.0, (s, l) => s + l.outstandingBalance);
+    final delinquencyPct =
+        totalOutstanding > 0 ? (overdueAmount / totalOutstanding) : 0.0;
+
+    // Trust score
+
+    // Risk color
+    Color riskColor(double pct) {
+      if (pct >= 0.15) return Colors.red;
+      if (pct >= 0.05) return Colors.orange;
+      return isDark ? AppColors.successDark : AppColors.success;
+    }
+
+    final accent = isDark ? AppColors.successDark : AppColors.success;
+    final hasAccounts = activeLoans.isNotEmpty || activeSavings.isNotEmpty;
 
     return _AdminCard(
       title: 'Financial Exposure',
       icon: Icons.trending_up_rounded,
-      accent: isDark ? AppColors.successDark : AppColors.success,
+      accent: accent,
       isDark: isDark,
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: riskColor(delinquencyPct).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.shield_rounded,
+                size: 14, color: riskColor(delinquencyPct)),
+            const SizedBox(width: 4),
+            Text(
+              delinquencyPct >= 0.15
+                  ? 'HIGH RISK'
+                  : delinquencyPct >= 0.05
+                      ? 'MODERATE'
+                      : 'LOW RISK',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: riskColor(delinquencyPct),
+              ),
+            ),
+          ],
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Hero stats row ──
           Row(
             children: [
               Expanded(
-                child: _bigStat(
+                child: _exposureHeroStat(
                   label: 'OUTSTANDING',
                   value: '₹${_compact(totalOutstanding)}',
+                  subtitle: '₹${_compact(totalDisbursed)} disbursed',
                   color: theme.colorScheme.primary,
                   theme: theme,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: _bigStat(
+                child: _exposureHeroStat(
+                  label: 'NET EXPOSURE',
+                  value: '₹${_compact(netExposure.clamp(0.0, double.infinity))}',
+                  subtitle: netExposure < 0
+                      ? 'Savings exceed loans'
+                      : 'Loans minus savings',
+                  color: netExposure <= 0 ? accent : Colors.orange,
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _exposureHeroStat(
                   label: 'SAVINGS BAL',
-                  value: '₹${_compact(totalSavings)}',
-                  color:
-                      isDark ? AppColors.successDark : AppColors.success,
+                  value: '₹${_compact(totalSavingsBalance)}',
+                  subtitle: '₹${_compact(totalSavingsTarget)} target',
+                  color: accent,
                   theme: theme,
                 ),
               ),
             ],
           ),
+
+          const SizedBox(height: 16),
+          _divider(theme),
           const SizedBox(height: 14),
+
+          // ── Active Financial Accounts ──
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _miniStat('Active', activeLoans.length, Colors.blue, theme),
-              const SizedBox(width: 8),
-              _miniStat('Closed', closedLoans.length, Colors.grey, theme),
-              const SizedBox(width: 8),
-              _miniStat(
-                  'Defaulted', defaultedLoans.length, Colors.red, theme),
-              const SizedBox(width: 8),
-              _miniStat('Plans', savings.length,
-                  isDark ? AppColors.successDark : AppColors.success, theme),
+              Text('ACTIVE FINANCIAL ACCOUNTS',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                      fontSize: 9)),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                    '${activeLoans.length + activeSavings.length}',
+                    style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900)),
+              ),
             ],
           ),
+          const SizedBox(height: 10),
+
+          if (!hasAccounts)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text('No active financial accounts',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey, fontWeight: FontWeight.w500)),
+              ),
+            )
+          else ...[
+            // Active loans
+            for (final loan in activeLoans) ...[
+              _buildAccountCard(
+                context: context,
+                icon: Icons.account_balance_wallet_rounded,
+                iconColor: theme.colorScheme.primary,
+                title: loan.loanNumber,
+                subtitle: '₹${_compact(loan.outstandingBalance)} outstanding',
+                progressLabel: loan.totalEmis > 0
+                    ? '${loan.paidEmis}/${loan.totalEmis} EMIs'
+                    : null,
+                progressPct: loan.totalEmis > 0
+                    ? (loan.paidEmis / loan.totalEmis).clamp(0.0, 1.0)
+                    : 0.0,
+                badge: _isLoanOverdue(loan)
+                    ? _accountBadge('OVERDUE', Colors.red, theme)
+                    : _accountBadge('LOAN', theme.colorScheme.primary, theme),
+                badgeColor: theme.colorScheme.primary,
+                onTap: () =>
+                    context.push('/loans/${loan.id}'),
+                theme: theme,
+              ),
+              const SizedBox(height: 8),
+            ],
+            // Active savings
+            for (final plan in activeSavings) ...[
+              _buildAccountCard(
+                context: context,
+                icon: Icons.savings_rounded,
+                iconColor: accent,
+                title: plan.planName.isNotEmpty ? plan.planName : 'Savings Plan',
+                subtitle:
+                    '₹${_compact(plan.currentAmount)} / ₹${_compact(plan.targetAmount)}',
+                progressLabel: plan.totalInstallments > 0
+                    ? '${plan.installmentsPaid}/${plan.totalInstallments} installments'
+                    : null,
+                progressPct: plan.totalInstallments > 0
+                    ? (plan.installmentsPaid / plan.totalInstallments)
+                        .clamp(0.0, 1.0)
+                    : 0.0,
+                badge:
+                    _accountBadge('SAVINGS', accent, theme),
+                badgeColor: accent,
+                onTap: () =>
+                    context.push('/savings/${plan.id}'),
+                theme: theme,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Whether a loan has a past-due next payment.
+  bool _isLoanOverdue(LoanModel loan) {
+    return loan.nextDueDate != null &&
+        loan.nextDueDate!.isBefore(DateTime.now());
+  }
+
+  /// Small badge chip for account cards.
+  Widget _accountBadge(String label, Color color, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 9, fontWeight: FontWeight.w800)),
+    );
+  }
+
+  /// Tappable card in the Active Financial Accounts list.
+  Widget _buildAccountCard({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    String? progressLabel,
+    double progressPct = 0.0,
+    required Widget badge,
+    required Color badgeColor,
+    required VoidCallback onTap,
+    required ThemeData theme,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: iconColor.withValues(alpha: 0.12)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(title,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700, fontSize: 13)),
+                      ),
+                      badge,
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: theme.textTheme.bodySmall?.color
+                              ?.withValues(alpha: 0.7))),
+                  if (progressLabel != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(3),
+                            child: LinearProgressIndicator(
+                              value: progressPct,
+                              minHeight: 4,
+                              backgroundColor:
+                                  iconColor.withValues(alpha: 0.1),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(iconColor),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(progressLabel,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: iconColor)),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded,
+                color: theme.textTheme.bodySmall?.color
+                    ?.withValues(alpha: 0.3),
+                size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Helper: hero stat card ──
+  Widget _exposureHeroStat({
+    required String label,
+    required String value,
+    required String subtitle,
+    required Color color,
+    required ThemeData theme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
+                  fontSize: 9)),
+          const SizedBox(height: 6),
+          Text(value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900, color: color)),
+          const SizedBox(height: 3),
+          Text(subtitle,
+              style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  color: color.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -635,89 +924,6 @@ class UserDetailsPage extends ConsumerWidget {
             ],
           );
         },
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // PHASE 5c — COMPLIANCE
-  // ---------------------------------------------------------------------------
-  Widget _buildAdminCompliance(BuildContext context, WidgetRef ref,
-      ProfileModel user, ThemeData theme, bool isDark) {
-    final exportsAsync = ref.watch(userDataExportsProvider(user.id));
-    return _AdminCard(
-      title: 'Compliance & Data Rights',
-      icon: Icons.gavel_rounded,
-      accent: Colors.indigo,
-      isDark: isDark,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Right-to-export and right-to-be-forgotten controls. Every '
-            'request is audit-logged and tied to your admin profile.',
-            style:
-                theme.textTheme.bodySmall?.copyWith(fontSize: 12, height: 1.4),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _handleRequestDataExport(context, ref, user),
-                  icon: const Icon(Icons.download_rounded, size: 16),
-                  label: const Text('Request Data Export'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.indigo,
-                    side: BorderSide(color: Colors.indigo.withValues(alpha: 0.5)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () =>
-                      _showDeleteWithReasonDialog(context, ref, user),
-                  icon: const Icon(Icons.delete_forever_rounded, size: 16),
-                  label: const Text('Delete (Reason)'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          exportsAsync.when(
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (exports) {
-              if (exports.isEmpty) return const SizedBox.shrink();
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _divider(theme),
-                  const SizedBox(height: 8),
-                  Text('RECENT EXPORT REQUESTS',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                          fontSize: 10)),
-                  const SizedBox(height: 8),
-                  for (final ex in exports.take(5))
-                    _exportRow(ex, theme, isDark),
-                ],
-              );
-            },
-          ),
-        ],
       ),
     );
   }
@@ -1520,126 +1726,6 @@ class UserDetailsPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleRequestDataExport(
-      BuildContext context, WidgetRef ref, ProfileModel user) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Request data export?'),
-        content: Text(
-            'A data-export request will be queued for ${user.fullName ?? "this user"}. '
-            'A backend job will compile the file and the download link will '
-            'appear here when ready.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('CANCEL')),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('REQUEST')),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    try {
-      await ref
-          .read(userRepositoryProvider)
-          .requestUserDataExport(profileId: user.id);
-      ref.invalidate(userDataExportsProvider(user.id));
-      ref.invalidate(userAuditLogsProvider(
-          UserAuditQuery(profileId: user.id, authUserId: user.userId)));
-      if (context.mounted) _toast(context, 'Export queued.');
-    } catch (e) {
-      if (context.mounted) _toast(context, 'Failed: $e', error: true);
-    }
-  }
-
-  Future<void> _showDeleteWithReasonDialog(
-      BuildContext context, WidgetRef ref, ProfileModel user) async {
-    final reasonCtrl = TextEditingController();
-    bool busy = false;
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, setState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
-            title: const Text('Permanently delete user?'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'This is irreversible. The profile will be removed and '
-                    'their auth account deleted via the delete-user Edge '
-                    'Function. A reason is required for compliance.',
-                    style:
-                        Theme.of(ctx).textTheme.bodySmall?.copyWith(fontSize: 12),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: reasonCtrl,
-                    maxLines: 3,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      labelText: 'Reason *',
-                      hintText: 'e.g. KYC fraud confirmed; user request',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                  onPressed: busy ? null : () => Navigator.pop(ctx, false),
-                  child: const Text('CANCEL')),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: busy
-                    ? null
-                    : () async {
-                        if (reasonCtrl.text.trim().isEmpty) return;
-                        setState(() => busy = true);
-                        try {
-                          await ref
-                              .read(userRepositoryProvider)
-                              .deleteUserWithReason(
-                                profileId: user.id,
-                                reason: reasonCtrl.text,
-                              );
-                          if (ctx.mounted) Navigator.pop(ctx, true);
-                        } catch (e) {
-                          if (ctx.mounted) {
-                            setState(() => busy = false);
-                            _toast(context, 'Failed: $e', error: true);
-                          }
-                        }
-                      },
-                child: busy
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('DELETE'),
-              ),
-            ],
-          );
-        });
-      },
-    );
-    if (result == true && context.mounted) {
-      ref.invalidate(userListProvider);
-      _toast(context, 'User deleted.');
-      context.pop();
-    }
-  }
-
   Future<void> _openViewAsSheet(
       BuildContext context,
       ProfileModel user,
@@ -1879,59 +1965,6 @@ class UserDetailsPage extends ConsumerWidget {
     );
   }
 
-  Widget _bigStat(
-      {required String label,
-      required String value,
-      required Color color,
-      required ThemeData theme}) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                  fontSize: 10)),
-          const SizedBox(height: 6),
-          Text(value,
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.w900, color: color)),
-        ],
-      ),
-    );
-  }
-
-  Widget _miniStat(String label, int n, Color color, ThemeData theme) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          children: [
-            Text('$n',
-                style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900, color: color)),
-            Text(label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 10,
-                    letterSpacing: 0.5)),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _auditRow(
       Map<String, dynamic> row, ThemeData theme, bool isDark) {
     final action = (row['action'] ?? '—').toString();
@@ -2062,55 +2095,6 @@ class UserDetailsPage extends ConsumerWidget {
               const PopupMenuItem(value: 'delete', child: Text('Delete')),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _exportRow(
-      Map<String, dynamic> ex, ThemeData theme, bool isDark) {
-    final status = (ex['status'] ?? 'pending').toString();
-    final created = ex['created_at']?.toString();
-    final url = ex['file_url']?.toString();
-    Color c;
-    switch (status) {
-      case 'completed':
-        c = Colors.green;
-        break;
-      case 'processing':
-        c = Colors.blue;
-        break;
-      case 'failed':
-        c = Colors.red;
-        break;
-      default:
-        c = Colors.orange;
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                  color: c.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6)),
-              child: Text(status.toUpperCase(),
-                  style: TextStyle(
-                      color: c,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1))),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _fmtDate(created != null ? DateTime.tryParse(created) : null),
-              style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
-            ),
-          ),
-          if (url != null && url.isNotEmpty)
-            const Icon(Icons.cloud_download_rounded,
-                size: 16, color: Colors.green),
         ],
       ),
     );
@@ -2628,226 +2612,6 @@ class UserDetailsPage extends ConsumerWidget {
     });
   }
 
-  Widget _buildTrustScoreGauge(
-      ProfileModel user, ThemeData theme, bool isDark) {
-    final primary = theme.colorScheme.primary;
-    // Real score logic would go here, using a default based on history
-    const score = 785.0;
-
-    return GlassCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Platform Trust Score',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w800)),
-                  Text('Performance-based Credit Rating',
-                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 12)),
-                ],
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('ACTIVE',
-                    style: TextStyle(
-                        color: AppColors.success,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 140,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CustomPaint(
-                  size: const Size(200, 100),
-                  painter: _GaugePainter(score: score, color: primary),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 30),
-                    Text(
-                      '${score.toInt()}',
-                      style: theme.textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 42,
-                          letterSpacing: -1),
-                    ),
-                    Text(
-                      'OF 900',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 10,
-                          letterSpacing: 2),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(delay: 100.ms)
-        .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1));
-  }
-
-  Widget _buildPortfolioHub(List<LoanModel> loans, List<SavingsModel> savings,
-      ThemeData theme, bool isDark) {
-    final active = loans.where((l) => l.status == LoanStatus.active).toList();
-    final totalOut = active.fold<double>(
-        0.0, (double sum, LoanModel l) => sum + l.outstandingBalance);
-    final totalSavings = savings.fold<double>(
-        0.0, (double sum, SavingsModel s) => sum + s.targetAmount);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 16),
-          child: Text('Portfolio Overview',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w900)),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: _buildPortfolioCard(
-                'Active Liability',
-                '₹${(totalOut / 1000).toStringAsFixed(1)}k',
-                '${active.length} Active Loans',
-                Icons.trending_up_rounded,
-                theme.colorScheme.primary,
-                theme,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildPortfolioCard(
-                'Asset Value',
-                '₹${(totalSavings / 1000).toStringAsFixed(1)}k',
-                '${savings.length} Plans',
-                Icons.account_balance_rounded,
-                isDark ? AppColors.successDark : AppColors.success,
-                theme,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.05, end: 0);
-  }
-
-  Widget _buildPortfolioCard(String label, String value, String subValue,
-      IconData icon, Color color, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 16),
-          Text(value,
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 2),
-          Text(label,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(fontSize: 11, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          Text(subValue,
-              style: TextStyle(
-                  color: color, fontSize: 10, fontWeight: FontWeight.w900)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRepaymentdiscipline(
-      List<LoanModel> loans, ThemeData theme, bool isDark) {
-    return GlassCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Repayment Discipline',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-              Icon(Icons.bar_chart_rounded,
-                  size: 20, color: theme.colorScheme.primary),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 100,
-            child: BarChart(
-              BarChartData(
-                gridData: const FlGridData(show: false),
-                titlesData: const FlTitlesData(show: false),
-                borderData: FlBorderData(show: false),
-                barGroups: [
-                  _makeGroupData(0, 8, theme.colorScheme.primary),
-                  _makeGroupData(1, 10, theme.colorScheme.primary),
-                  _makeGroupData(2, 9, theme.colorScheme.primary),
-                  _makeGroupData(3, 12, theme.colorScheme.primary),
-                  _makeGroupData(4, 11, theme.colorScheme.primary),
-                  _makeGroupData(5, 14, theme.colorScheme.primary),
-                  _makeGroupData(6, 13, theme.colorScheme.primary),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              'Historical Collection Performance',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(fontSize: 10, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.05, end: 0);
-  }
-
-  BarChartGroupData _makeGroupData(int x, double y, Color color) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          color: color,
-          width: 12,
-          borderRadius: BorderRadius.circular(4),
-          backDrawRodData: BackgroundBarChartRodData(
-              show: true, toY: 15, color: color.withValues(alpha: 0.05)),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSmsToggle(
     BuildContext context,
@@ -3282,46 +3046,6 @@ class _ActionIslandButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _GaugePainter extends CustomPainter {
-  final double score;
-  final Color color;
-  _GaugePainter({required this.score, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 14
-      ..strokeCap = StrokeCap.round;
-
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height * 2);
-    const startAngle = math.pi;
-    const sweepAngle = math.pi;
-
-    // Background track
-    paint.color = color.withValues(alpha: 0.1);
-    canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
-
-    // Active track
-    final activeSweep = (score / 900) * math.pi;
-    paint.color = color;
-    canvas.drawArc(rect, startAngle, activeSweep, false, paint);
-
-    // Dot at the end
-    final angle = startAngle + activeSweep;
-    final center = Offset(size.width / 2, size.height);
-    final radius = size.width / 2;
-    final x = center.dx + radius * math.cos(angle);
-    final y = center.dy + radius * math.sin(angle);
-
-    final dotPaint = Paint()..color = Colors.white;
-    canvas.drawCircle(Offset(x, y), 5, dotPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 class _AuroraBackground extends StatelessWidget {

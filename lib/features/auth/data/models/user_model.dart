@@ -264,7 +264,7 @@ class ProfileModel {
       avatarUrl: (json['profile_photo_url'] ?? json['shop_photo_url'])?.toString(),
       memberCode: json['member_id']?.toString(),
       staffCode: json['staff_code']?.toString(),
-      status: AccountStatus.active,
+      status: parseStatus(json['status']?.toString()),
       isOnDuty: json['is_on_duty'] as bool? ?? false,
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.tryParse(json['date_of_birth'].toString())

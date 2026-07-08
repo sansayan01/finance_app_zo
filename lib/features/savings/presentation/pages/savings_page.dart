@@ -862,28 +862,26 @@ class _PremiumSavingCard extends StatelessWidget {
 
   Widget _buildAvatar(Color primary, String initial) {
     final photoUrl = _resolvePhotoUrl(saving.memberPhotoUrl);
-    final decoration = BoxDecoration(
-      borderRadius: BorderRadius.circular(10),
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [primary.withOpacity(0.15), primary.withOpacity(0.06)],
-      ),
-      border: Border.all(color: primary.withOpacity(0.12), width: 1),
-    );
 
-    if (photoUrl == null) {
+    Widget buildLetterAvatar() {
       return Container(
-        width: 38,
-        height: 38,
-        decoration: decoration,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary.withValues(alpha: 0.25),
+              primary.withValues(alpha: 0.05)
+            ],
+          ),
+        ),
         child: Center(
           child: Text(
             initial,
             style: TextStyle(
               color: primary,
               fontSize: 15,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ),
@@ -891,27 +889,35 @@ class _PremiumSavingCard extends StatelessWidget {
     }
 
     return Container(
-      width: 38,
-      height: 38,
-      decoration: decoration,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(9),
-        child: CachedNetworkImage(
-          imageUrl: photoUrl,
-          fit: BoxFit.cover,
-          memCacheWidth: 76,
-          memCacheHeight: 76,
-          errorWidget: (_, __, ___) => Center(
-            child: Text(
-              initial,
-              style: TextStyle(
-                color: primary,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: primary.withValues(alpha: 0.25),
+          width: 1.5,
         ),
+      ),
+      child: ClipOval(
+        child: photoUrl != null
+            ? CachedNetworkImage(
+                imageUrl: photoUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: primary.withValues(alpha: 0.05),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => buildLetterAvatar(),
+              )
+            : buildLetterAvatar(),
       ),
     );
   }
@@ -925,9 +931,9 @@ class _FilterDelegate extends SliverPersistentHeaderDelegate {
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => SizedBox.expand(child: child);
 
   @override
-  double get maxExtent => 90;
+  double get maxExtent => 96;
   @override
-  double get minExtent => 90;
+  double get minExtent => 96;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => true;
 }

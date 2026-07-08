@@ -609,6 +609,7 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
               size: 200,
               gapless: true,
               backgroundColor: Colors.white,
+              errorCorrectionLevel: QrErrorCorrectLevel.H,
               dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF0B1D3A)),
               eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF0E8A7D)),
             ),

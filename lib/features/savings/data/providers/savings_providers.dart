@@ -6,6 +6,7 @@ import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../../../transactions/data/repositories/transactions_repository.dart';
 import '../../../transactions/data/models/transaction_model.dart';
+import '../../../users/presentation/providers/user_list_provider.dart';
 
 final savingsRepositoryProvider = Provider.autoDispose<SavingsRepository>((ref) {
   final orgId = ref.watch(currentOrgIdOrThrowProvider);
@@ -133,7 +134,16 @@ final savingTxPagerProvider = StateNotifierProvider.family.autoDispose<SavingTxP
 final userSavingsProvider =
     FutureProvider.family.autoDispose<List<SavingsModel>, String>((ref, userId) async {
   final savings = await ref.watch(allSavingsProvider.future);
-  return savings.where((s) => s.memberId == userId).toList();
+  final userDetails = await ref.watch(userDetailsProvider(userId).future);
+  // userDetails.id is the member table primary key (may differ from userId
+  // when userId is a profile ID).  Also match on memberCode.
+  final memberPk = userDetails?.id;
+  final memberCode = userDetails?.memberCode;
+  return savings.where((s) =>
+      s.memberId == userId ||
+      (memberPk != null && s.memberId == memberPk) ||
+      (memberCode != null && s.memberId == memberCode)
+  ).toList();
 });
 
 final memberSavingsProvider =

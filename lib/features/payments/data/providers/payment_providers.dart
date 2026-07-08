@@ -392,6 +392,14 @@ final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
     final allEmiDues = [...emiDues, ...overdueEmis];
 
     for (final emi in allEmiDues) {
+      // If this EMI was already collected today (via selected_schedule_id in
+      // today's collections), skip adding it to the payments list here.
+      // The collection-processing step below will add it as a collected entry.
+      // This prevents duplicate overdue+collected entries when the DB trigger
+      // hasn't yet set is_paid=true on the schedule.
+      final emiId = emi['id']?.toString();
+      if (emiId != null && collectedScheduleIds.contains(emiId)) continue;
+
       final loan = getNestedMap(emi['loans!emi_schedule_loan_id_fkey']) ??
           getNestedMap(emi['loans']);
       if (loan == null) continue;
@@ -564,19 +572,30 @@ final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
       }
     }
 
-    // Deduplicate collected EMI entries: keep only one per loanId+emiNumber
+    // Deduplicate EMI entries: keep only one per loanId+emiNumber.
+    // Previously only removed duplicate *collected* entries, which left
+    // stale overdue entries in place when both overdue and collected
+    // versions existed for the same EMI. Now collects all candidates
+    // per key and keeps the collected entry if one exists, otherwise
+    // the first non-collected entry.
     {
-      final seenEmiKeys = <String>{};
-      payments.removeWhere((p) {
-        if (p.isCollected && p.type == PaymentType.emi && p.loanId != null) {
+      final emiByLoanEmiKey = <String, List<TodayPayment>>{};
+      for (final p in payments) {
+        if (p.type == PaymentType.emi && p.loanId != null) {
           final key = '${p.loanId}_${p.emiNumber}';
-          if (seenEmiKeys.contains(key)) {
-            return true; // remove duplicate
-          }
-          seenEmiKeys.add(key);
+          emiByLoanEmiKey.putIfAbsent(key, () => []).add(p);
         }
-        return false;
-      });
+      }
+      for (final entry in emiByLoanEmiKey.entries) {
+        if (entry.value.length <= 1) continue;
+        final collected = entry.value.where((p) => p.isCollected).toList();
+        final keep = collected.isNotEmpty ? collected.first : entry.value.first;
+        final removeIds = entry.value
+            .where((p) => p.id != keep.id)
+            .map((p) => p.id)
+            .toSet();
+        payments.removeWhere((p) => removeIds.contains(p.id));
+      }
     }
 
     // 5. Process savings plans
@@ -768,6 +787,38 @@ final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
     debugPrint(stack.toString());
   }
 
+  // Remove overdue entries for loans/savings that have a collected entry today.
+  // This ensures that once a payment is processed for a loan, the entire loan
+  // card disappears from the Overdue section (not just the single paid EMI).
+  {
+    final collectedLoanIds = <String>{};
+    final collectedPlanIds = <String>{};
+    for (final p in payments) {
+      if (p.isCollected) {
+        if (p.type == PaymentType.emi && p.loanId != null) {
+          collectedLoanIds.add(p.loanId!);
+        } else if (p.type == PaymentType.savings && p.planName != null) {
+          // Match by planId: collected savings entry ID == plan ID
+          collectedPlanIds.add(p.id);
+        }
+      }
+    }
+    payments.removeWhere((p) {
+      if (p.isOverdue) {
+        if (p.type == PaymentType.emi &&
+            p.loanId != null &&
+            collectedLoanIds.contains(p.loanId)) {
+          return true; // remove overdue EMI for a loan that was paid today
+        }
+        if (p.type == PaymentType.savings &&
+            collectedPlanIds.contains(p.id)) {
+          return true; // remove overdue savings for a plan that was paid today
+        }
+      }
+      return false;
+    });
+  }
+
   // Apply search filter
   List<TodayPayment> filtered = payments;
   if (filters.searchQuery.isNotEmpty) {
@@ -788,7 +839,10 @@ final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
   // Apply sorting
   _sortPayments(filtered, filters.sortBy);
 
-  return TodayPaymentData(payments: filtered, allPayments: payments);
+  // Use `filtered` for both payments and allPayments so the summary counts
+  // (pending/overdue/collected) reflect the final grouped-card list, not
+  // the raw EMI-level list.
+  return TodayPaymentData(payments: filtered, allPayments: filtered);
 });
 
 List<TodayPayment> _applyAdvancedFilters(
@@ -886,6 +940,19 @@ class TodayPaymentData {
 
   List<TodayPayment> get overduePayments =>
       allPayments.where((p) => p.isOverdue).toList();
+
+  /// Count of unique overdue groups (by loan/member), matching the number
+  /// of cards actually displayed in the Overdue tab, not the raw EMI count.
+  int get groupedOverdueCount {
+    final seen = <String>{};
+    for (final p in allPayments) {
+      if (p.isOverdue) {
+        final key = '${p.memberId ?? p.id}_${p.type.name}';
+        seen.add(key);
+      }
+    }
+    return seen.length;
+  }
 
   List<GroupedOverduePayment> get groupedOverduePayments =>
       GroupedOverduePayment.group(overduePayments);

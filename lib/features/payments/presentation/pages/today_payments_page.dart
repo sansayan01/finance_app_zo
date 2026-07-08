@@ -1004,7 +1004,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
           final summary = data.summary;
           final pending = data.pendingPayments;
           final collected = data.collectedPayments;
-          final overdue = data.overduePayments;
+          final groupedOverdueCount = data.groupedOverdueCount;
 
           return CustomScrollView(
             controller: _scrollController,
@@ -1035,7 +1035,7 @@ class _TodayPaymentsPageState extends ConsumerState<TodayPaymentsPage>
                 child: _PremiumTabBar(
                   controller: _tabController,
                   pendingCount: pending.length,
-                  overdueCount: overdue.length,
+                  overdueCount: groupedOverdueCount,
                   collectedCount: collected.length,
                   collectedAmountText: collected.isNotEmpty
                       ? (summary.totalCollected >= 1000

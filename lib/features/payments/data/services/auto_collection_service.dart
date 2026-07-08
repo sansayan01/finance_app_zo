@@ -67,9 +67,20 @@ class AutoCollectionService {
       'transaction_id': transactionId,
     });
 
-    // 3. Loan balance is updated automatically by the SQL trigger
-    //    `update_schedule_on_collection_v2` when collections are inserted.
-    //    No client-side update needed.
+    // 3. Directly mark this EMI as paid in the schedule table.
+    //    The SQL trigger `update_schedule_on_collection_v2` should do this,
+    //    but may not fire reliably. Updating here ensures the provider sees
+    //    `is_paid = true` immediately so the EMI doesn't appear in "Overdue".
+    try {
+      await client.from('emi_schedule').update({
+        'is_paid': true,
+        'paid_on': now.toIso8601String(),
+        'payment_mode': 'cash',
+        'is_overdue': false,
+      }).eq('id', payment.id);
+    } catch (_) {
+      // Non-fatal: the SQL trigger may still handle it
+    }
   }
 
   /// Auto-collects a Savings payment directly.

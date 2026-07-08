@@ -861,6 +861,23 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
         'selected_schedule_id': emi.id,
         'transaction_id': transactionId,
       });
+
+      // 2b. Directly mark this EMI as paid in the schedule table.
+      //     The SQL trigger `update_schedule_on_collection_v2` is supposed to do
+      //     this, but in practice it may not fire or may have race conditions.
+      //     Updating here ensures the provider sees `is_paid = true` immediately
+      //     so the EMI doesn't appear in the "Overdue" tab after collection.
+      try {
+        await client.from('emi_schedule').update({
+          'is_paid': true,
+          'paid_on': now.toIso8601String(),
+          'payment_mode': _selectedMode,
+          'is_overdue': false,
+        }).eq('id', emi.id);
+      } catch (e) {
+        debugPrint('CollectionSheet: direct emi_schedule update failed: $e');
+        // Non-fatal: the SQL trigger may still handle it
+      }
     }
 
     // 3. Loan balance is updated automatically by the SQL trigger

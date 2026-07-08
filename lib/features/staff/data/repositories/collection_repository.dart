@@ -152,6 +152,7 @@ class CollectionRepository {
     final payload = {
       'loan_id': loanId,
       'loan_schedule_id': loanScheduleId,
+      'selected_schedule_id': loanScheduleId,
       'member_id': memberId,
       'staff_id': staffId,
       'member_name': memberName,
@@ -181,6 +182,23 @@ class CollectionRepository {
 
     if (response == null) {
       throw Exception('Failed to record collection');
+    }
+
+    // Directly mark the EMI schedule as paid so the Today's Payments provider
+    // sees `is_paid = true` immediately (avoids overdue+collected duplicates).
+    // The SQL trigger `update_schedule_on_collection_v2` should also do this,
+    // but we update here as a safety net.
+    if (loanScheduleId != null && loanScheduleId.isNotEmpty) {
+      try {
+        await _client.from('emi_schedule').update({
+          'is_paid': true,
+          'paid_on': now.toIso8601String(),
+          'payment_mode': paymentMode.name,
+          'is_overdue': false,
+        }).eq('id', loanScheduleId);
+      } catch (_) {
+        // Non-fatal: the SQL trigger may still handle it
+      }
     }
 
     return CollectionModel.fromJson(response);

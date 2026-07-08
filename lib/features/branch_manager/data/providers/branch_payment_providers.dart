@@ -708,6 +708,35 @@ final branchTodayPaymentsProvider =
     debugPrint(stack.toString());
   }
 
+  // Remove overdue entries for loans/savings that have a collected entry today.
+  {
+    final collectedLoanIds = <String>{};
+    final collectedPlanIds = <String>{};
+    for (final p in payments) {
+      if (p.isCollected) {
+        if (p.type == PaymentType.emi && p.loanId != null) {
+          collectedLoanIds.add(p.loanId!);
+        } else if (p.type == PaymentType.savings && p.planName != null) {
+          collectedPlanIds.add(p.id);
+        }
+      }
+    }
+    payments.removeWhere((p) {
+      if (p.isOverdue) {
+        if (p.type == PaymentType.emi &&
+            p.loanId != null &&
+            collectedLoanIds.contains(p.loanId)) {
+          return true;
+        }
+        if (p.type == PaymentType.savings &&
+            collectedPlanIds.contains(p.id)) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
   // -------------------------------------------------------
   // 4. APPLY SEARCH + SORT
   // -------------------------------------------------------
@@ -728,7 +757,7 @@ final branchTodayPaymentsProvider =
 
   _sortPayments(filtered, filters.sortBy);
 
-  return TodayPaymentData(payments: filtered, allPayments: payments);
+  return TodayPaymentData(payments: filtered, allPayments: filtered);
 });
 
 // =====================================================

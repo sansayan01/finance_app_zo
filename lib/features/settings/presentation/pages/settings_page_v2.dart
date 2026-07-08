@@ -552,7 +552,7 @@ class SettingsPageV2 extends ConsumerWidget {
               subtitle: const Text('Guides, tutorials, and troubleshooting walkthroughs'),
               onTap: () {
                 Navigator.pop(ctx);
-                _showComingSoon(context, 'Help Center', 'Full searchable handbook of support articles and localized videos.', Colors.blueGrey);
+                context.push('/settings/help-center');
               },
             ),
             ListTile(
@@ -561,7 +561,7 @@ class SettingsPageV2 extends ConsumerWidget {
               subtitle: const Text('Submit ticket directly to the platform Super Admins'),
               onTap: () {
                 Navigator.pop(ctx);
-                _showComingSoon(context, 'Support Ticketing', 'Seamless logging of errors with active screenshots and device log attachments.', Colors.blueGrey);
+                context.push('/settings/report-issue');
               },
             ),
             ListTile(
@@ -570,7 +570,7 @@ class SettingsPageV2 extends ConsumerWidget {
               subtitle: const Text('Information on regulatory compliance and data storage'),
               onTap: () {
                 Navigator.pop(ctx);
-                _showComingSoon(context, 'Policies & Disclosures', 'Official legal disclosures and local regulatory mandates.', Colors.blueGrey);
+                context.push('/settings/legal-policies');
               },
             ),
           ],

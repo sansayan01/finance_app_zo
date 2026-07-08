@@ -75,7 +75,7 @@ class SecurityCompliancePage extends ConsumerWidget {
               ).animate(delay: 150.ms).fadeIn().slideY(begin: 0.05, end: 0),
               const SizedBox(height: 16),
 
-              _buildPolicyCard(
+              _buildTappablePolicyCard(
                 theme: theme,
                 title: 'Password Complexity',
                 subtitle: 'Enforce strong structural password rules',
@@ -83,10 +83,11 @@ class SecurityCompliancePage extends ConsumerWidget {
                 priority: 'P2',
                 icon: Icons.password_rounded,
                 color: Colors.red,
+                onTap: () => context.push('/settings/password-rules'),
               ).animate(delay: 180.ms).fadeIn().slideY(begin: 0.05, end: 0),
               const SizedBox(height: 16),
 
-              _buildPolicyCard(
+              _buildTappablePolicyCard(
                 theme: theme,
                 title: 'Auto-Logout & Locks',
                 subtitle: 'Session time-out configuration',
@@ -94,10 +95,11 @@ class SecurityCompliancePage extends ConsumerWidget {
                 priority: 'P2',
                 icon: Icons.timer_outlined,
                 color: Colors.orange,
+                onTap: () => context.push('/settings/session-locks'),
               ).animate(delay: 210.ms).fadeIn().slideY(begin: 0.05, end: 0),
               const SizedBox(height: 16),
 
-              _buildPolicyCard(
+              _buildTappablePolicyCard(
                 theme: theme,
                 title: 'Two-Factor Authentication',
                 subtitle: 'Enforce MFA across admin levels',
@@ -105,10 +107,11 @@ class SecurityCompliancePage extends ConsumerWidget {
                 priority: 'P2',
                 icon: Icons.verified_user_outlined,
                 color: Colors.green,
+                onTap: () => context.push('/settings/two-factor-auth'),
               ).animate(delay: 240.ms).fadeIn().slideY(begin: 0.05, end: 0),
               const SizedBox(height: 16),
 
-              _buildPolicyCard(
+              _buildTappablePolicyCard(
                 theme: theme,
                 title: 'Audit Log Retention',
                 subtitle: 'Compliance retention period parameters',
@@ -116,6 +119,7 @@ class SecurityCompliancePage extends ConsumerWidget {
                 priority: 'P2',
                 icon: Icons.archive_outlined,
                 color: Colors.brown,
+                onTap: () => context.push('/settings/audit-retention'),
               ).animate(delay: 270.ms).fadeIn().slideY(begin: 0.05, end: 0),
             ],
           ),
@@ -186,88 +190,6 @@ class SecurityCompliancePage extends ConsumerWidget {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPolicyCard({
-    required ThemeData theme,
-    required String title,
-    required String subtitle,
-    required String description,
-    required String priority,
-    required IconData icon,
-    required Color color,
-  }) {
-    return GlassCard(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: (priority == 'P1' ? Colors.orange : Colors.grey).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        priority,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: priority == 'P1' ? Colors.orange : Colors.blueGrey,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  description,
-                  style: const TextStyle(fontSize: 13, height: 1.45),
-                ),
-                const SizedBox(height: 12),
-                const Row(
-                  children: [
-                    Icon(Icons.construction_rounded, size: 14, color: Colors.amber),
-                    SizedBox(width: 6),
-                    Text(
-                      'Development pipeline schedule.',
-                      style: TextStyle(fontSize: 12, color: Colors.amber),
-                    ),
-                  ],
-                ),
-              ],
             ),
           ),
         ],

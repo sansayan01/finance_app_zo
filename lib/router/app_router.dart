@@ -43,6 +43,13 @@ import '../features/settings/presentation/pages/available_update_page.dart';
 import '../features/settings/presentation/pages/integrations_settings_page.dart';
 import '../features/settings/presentation/pages/security_compliance_page.dart';
 import '../features/settings/presentation/pages/data_backup_export_page.dart';
+import '../features/settings/presentation/pages/password_rules_page.dart';
+import '../features/settings/presentation/pages/session_locks_page.dart';
+import '../features/settings/presentation/pages/two_factor_auth_page.dart';
+import '../features/settings/presentation/pages/audit_retention_page.dart';
+import '../features/settings/presentation/pages/help_center_page.dart';
+import '../features/settings/presentation/pages/report_issue_page.dart';
+import '../features/settings/presentation/pages/legal_policies_page.dart';
 import '../core/widgets/hud_navigation.dart';
 import '../core/constants/app_colors.dart';
 import '../features/loans/presentation/pages/loan_detail_page.dart';
@@ -596,6 +603,34 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'data-backup',
                 builder: (context, state) => const DataBackupExportPage(),
+              ),
+              GoRoute(
+                path: 'password-rules',
+                builder: (context, state) => const PasswordRulesPage(),
+              ),
+              GoRoute(
+                path: 'session-locks',
+                builder: (context, state) => const SessionLocksPage(),
+              ),
+              GoRoute(
+                path: 'two-factor-auth',
+                builder: (context, state) => const TwoFactorAuthPage(),
+              ),
+              GoRoute(
+                path: 'audit-retention',
+                builder: (context, state) => const AuditRetentionPage(),
+              ),
+              GoRoute(
+                path: 'help-center',
+                builder: (context, state) => const HelpCenterPage(),
+              ),
+              GoRoute(
+                path: 'report-issue',
+                builder: (context, state) => const ReportIssuePage(),
+              ),
+              GoRoute(
+                path: 'legal-policies',
+                builder: (context, state) => const LegalPoliciesPage(),
               ),
             ],
           ),

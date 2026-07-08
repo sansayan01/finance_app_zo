@@ -1472,7 +1472,7 @@ class _HeroHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + kToolbarHeight - 28, 20, 8),
+      margin: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + kToolbarHeight - 38, 20, 8),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -1635,7 +1635,7 @@ class _MiniStatBadge extends StatelessWidget {
                 '$count $label',
                 style: TextStyle(
                   color: color,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w900,
                   height: 1.0,
                 ),
@@ -1647,7 +1647,7 @@ class _MiniStatBadge extends StatelessWidget {
             amountString,
             style: TextStyle(
               color: color.withValues(alpha: 0.9),
-              fontSize: 10,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
               height: 1.0,
             ),
@@ -2554,6 +2554,7 @@ class _GroupedCollectedList extends StatelessWidget {
           final groupKey = grouped.keys.elementAt(index);
           final payments = grouped[groupKey]!;
           final totalCollected = payments.fold<double>(0, (sum, p) => sum + (p.amountCollected ?? p.amountExpected));
+          final totalInstallments = payments.fold<int>(0, (sum, p) => sum + p.installmentCount);
           final payment = payments.first; // representative for callbacks
           final memberName = payment.memberName;
           final typeLabel = payment.typeLabel;
@@ -2621,7 +2622,7 @@ class _GroupedCollectedList extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  '${payments.length} ${payments.length == 1 ? 'payment' : 'payments'} collected',
+                                  '$totalInstallments ${totalInstallments == 1 ? 'payment' : 'payments'} collected',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,

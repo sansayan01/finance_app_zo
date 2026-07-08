@@ -72,6 +72,7 @@ class TodayPayment {
   final String? remarks;
   final String? collectionId; // collections.id for delete/revert
   final String? memberPhotoUrl;
+  final int installmentCount; // number of installments collected (savings multi-collect)
 
   const TodayPayment({
     required this.id,
@@ -97,6 +98,7 @@ class TodayPayment {
     this.remarks,
     this.collectionId,
     this.memberPhotoUrl,
+    this.installmentCount = 1,
   });
 
   bool get isCollected => status == PaymentStatus.collected;

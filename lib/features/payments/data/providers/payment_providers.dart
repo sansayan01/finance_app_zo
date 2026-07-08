@@ -603,12 +603,16 @@ final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
     final dayOfWeek = selectedDate.weekday - 1; // 0=Mon, 6=Sun
     final dayOfMonth = selectedDate.day;
 
-    final collectionsMap = {
-      for (final col in collectionsToday)
-        if (col['savings_plan_id'] != null)
-          col['savings_plan_id'] as String: col
-    };
-    final collectedPlanIds = collectionsMap.keys.toSet();
+    // Aggregate multiple collections per savings plan (e.g. 3 installments
+    // collected on the same day). Previously only the last collection survived.
+    final Map<String, List<dynamic>> savingsCollectionsByPlan = {};
+    for (final col in collectionsToday) {
+      final planId = col['savings_plan_id'] as String?;
+      if (planId != null) {
+        savingsCollectionsByPlan.putIfAbsent(planId, () => []).add(col);
+      }
+    }
+    final collectedPlanIds = savingsCollectionsByPlan.keys.toSet();
 
     // Filter plans that are due on the selected date OR were already collected today
     final savingsDues = allActivePlans.where((plan) {
@@ -662,8 +666,16 @@ final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
         continue;
       }
 
-      final existingCollection = collectionsMap[plan['id']];
-      final isCollected = existingCollection != null;
+      final planCollections = savingsCollectionsByPlan[plan['id']];
+      final isCollected = planCollections != null && planCollections.isNotEmpty;
+      // Aggregate: sum amounts, use latest collection for metadata
+      final totalCollected = isCollected
+          ? planCollections.fold<double>(
+              0.0,
+              (sum, c) => sum + ((c['amount_collected'] as num?)?.toDouble() ?? 0),
+            )
+          : 0.0;
+      final latestCollection = isCollected ? planCollections.last : null;
 
       // Determine if overdue (next_due_date is before today's date)
       final nextDueStr = plan['next_due_date'] as String?;
@@ -731,26 +743,25 @@ final todayPaymentsProvider = FutureProvider<TodayPaymentData>((ref) async {
         agentId: member['agent_id'],
         agentName: null,
         amountExpected: overdueAmount,
-        amountCollected: isCollected
-            ? (existingCollection['amount_collected'] as num?)?.toDouble()
-            : null,
+        amountCollected: isCollected ? totalCollected : null,
         dueDate: isCollected
             ? DateTime.parse(dateStr)
             : (nextDueStr != null
                 ? DateTime.parse(nextDueStr)
                 : DateTime.parse(dateStr)),
         planName: plan['plan_name'],
-        paymentMode: isCollected ? existingCollection['payment_mode'] : null,
+        paymentMode: isCollected ? latestCollection['payment_mode'] : null,
         collectedAt: isCollected
-            ? (existingCollection['collected_at'] != null
-                ? DateTime.tryParse(existingCollection['collected_at'])
+            ? (latestCollection['collected_at'] != null
+                ? DateTime.tryParse(latestCollection['collected_at'])
                     ?.toLocal()
-                : (existingCollection['created_at'] != null
-                    ? DateTime.tryParse(existingCollection['created_at'])
+                : (latestCollection['created_at'] != null
+                    ? DateTime.tryParse(latestCollection['created_at'])
                     : null))
             : null,
-        collectionId: isCollected ? existingCollection['id'] as String? : null,
+        collectionId: isCollected ? latestCollection['id'] as String? : null,
         memberPhotoUrl: resolveMemberPhoto(member),
+        installmentCount: isCollected ? planCollections.length : 1,
       ));
 
       // For daily collections that are overdue and not yet collected,

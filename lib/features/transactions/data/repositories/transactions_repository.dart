@@ -437,17 +437,19 @@ class TransactionsRepository {
         await _client.rpc('delete_savings_transaction', params: {
           'p_transaction_id': id,
         });
-        return;
       } catch (_) {
         // RPC missing or blocked — fall through to client-side revert
+        await _deleteSavingsDepositClientSide(
+          transactionId: id,
+          savingsPlanId: savingsId,
+          amount: amount,
+          memberId: memberId,
+          orgId: orgId,
+        );
       }
-      await _deleteSavingsDepositClientSide(
-        transactionId: id,
-        savingsPlanId: savingsId,
-        amount: amount,
-        memberId: memberId,
-        orgId: orgId,
-      );
+      // Recalculate next_due_date from remaining collections so the plan
+      // correctly shows as Overdue (not Pending) after deletion.
+      await _recalcSavingsNextDueDate(savingsId);
       return;
     }
 
@@ -679,6 +681,60 @@ class TransactionsRepository {
         // Give up silently — the delete still removed the ledger entry
       }
     }
+  }
+
+  /// Recalculate `next_due_date` from remaining savings collections after a
+  /// delete. The RPC `recalculate_savings_balance` may advance the date to
+  /// today even when no collections remain, which breaks overdue detection.
+  /// This client-side fix ensures the date reflects the actual last paid date.
+  Future<void> _recalcSavingsNextDueDate(String savingsPlanId) async {
+    try {
+      final plan = await _client
+          .from('savings_plans')
+          .select('start_date, collection_type')
+          .eq('id', savingsPlanId)
+          .maybeSingle();
+      if (plan == null) return;
+
+      final startDateStr = plan['start_date'] as String?;
+      final collectionType = plan['collection_type'] as String? ?? 'daily';
+      final startDate =
+          startDateStr != null ? DateTime.tryParse(startDateStr) : null;
+
+      // Find the latest remaining collection date
+      final lastCol = await _client
+          .from('savings_collections')
+          .select('collection_date')
+          .eq('savings_plan_id', savingsPlanId)
+          .order('collection_date', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      DateTime newNextDue;
+      if (lastCol != null) {
+        final lastDate = DateTime.parse(lastCol['collection_date']);
+        switch (collectionType) {
+          case 'weekly':
+            newNextDue = lastDate.add(const Duration(days: 7));
+            break;
+          case 'monthly':
+            newNextDue = DateTime(lastDate.year, lastDate.month + 1, lastDate.day);
+            break;
+          default: // daily
+            newNextDue = lastDate.add(const Duration(days: 1));
+        }
+      } else {
+        // No collections left — use start_date so provider detects overdue
+        newNextDue = startDate ?? DateTime.now();
+      }
+
+      // Do NOT advance next_due_date to today. If it's in the past, that's
+      // correct — it means the plan has overdue installments.
+
+      await _client.from('savings_plans').update({
+        'next_due_date': newNextDue.toIso8601String().split('T').first,
+      }).eq('id', savingsPlanId);
+    } catch (_) {}
   }
 
   Future<int> deleteTransactions(List<String> ids) async {

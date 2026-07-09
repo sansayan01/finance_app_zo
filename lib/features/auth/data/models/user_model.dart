@@ -149,6 +149,7 @@ class ProfileModel {
   final String? pincode;
   final UserRole? role;
   final String? orgId;
+  final String? orgName;
   final String? branchId;
   final String? branchName;
   final String? employeeId;
@@ -182,6 +183,7 @@ class ProfileModel {
     this.pincode,
     this.role,
     this.orgId,
+    this.orgName,
     this.branchId,
     this.branchName,
     this.employeeId,
@@ -214,6 +216,8 @@ class ProfileModel {
       pincode: json['pincode']?.toString(),
       role: parseRole(json['role']?.toString() ?? 'customer'),
       orgId: json['org_id']?.toString(),
+      orgName:
+          json['organizations'] is Map ? json['organizations']['name']?.toString() : null,
       branchId: json['branch_id']?.toString(),
       branchName:
           json['branch'] is Map ? json['branch']['name']?.toString() : null,
@@ -257,6 +261,8 @@ class ProfileModel {
       pincode: json['pincode']?.toString(),
       role: UserRole.customer,
       orgId: json['org_id']?.toString(),
+      orgName:
+          json['organizations'] is Map ? json['organizations']['name']?.toString() : null,
       branchId: json['branch_id']?.toString(),
       branchName:
           json['branch'] is Map ? json['branch']['name']?.toString() : null,
@@ -302,6 +308,7 @@ class ProfileModel {
       pincode: pincode,
       role: role ?? this.role,
       orgId: orgId,
+      orgName: orgName,
       branchId: branchId ?? this.branchId,
       branchName: branchName ?? this.branchName,
       employeeId: employeeId,

@@ -11,6 +11,9 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
+  /// Static getter for the plugin instance (used by PushNotificationService).
+  static FlutterLocalNotificationsPlugin get plugin => _plugin;
+
   /// Initialize the notification plugin with an Android channel.
   static Future<void> init() async {
     if (_initialized) return;
@@ -24,8 +27,8 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    // Create high-importance Android notification channel
-    const channel = AndroidNotificationChannel(
+    // Create high-importance Android notification channel for app updates
+    const updateChannel = AndroidNotificationChannel(
       'app_updates',
       'App Updates',
       description: 'Notifications for app update downloads and installations',
@@ -34,7 +37,21 @@ class NotificationService {
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+        ?.createNotificationChannel(updateChannel);
+
+    // Create channel for push notifications
+    const pushChannel = AndroidNotificationChannel(
+      'push_notifications',
+      'Push Notifications',
+      description: 'Notifications from MicroFlow Pro',
+      importance: Importance.high,
+      enableVibration: true,
+      playSound: true,
+    );
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(pushChannel);
 
     _initialized = true;
     debugPrint('🔔 NotificationService initialized');

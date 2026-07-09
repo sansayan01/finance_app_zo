@@ -31,6 +31,9 @@ class SavingsModel {
   final int frozenCount;
   final List<String> frozenDates;
 
+  // SMS notifications
+  final bool smsEnabled;
+
   /// Computed: total return minus total capital invested (opening + installments * amount).
   double get interestAmount => totalReturnAmount > 0
       ? totalReturnAmount - (openingBalance + (monthlyDeposit * totalInstallments))
@@ -66,6 +69,7 @@ class SavingsModel {
     this.freezeEnabled = false,
     this.frozenCount = 0,
     this.frozenDates = const [],
+    this.smsEnabled = true,
   });
 
   factory SavingsModel.fromJson(Map<String, dynamic> json) {
@@ -121,6 +125,7 @@ class SavingsModel {
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      smsEnabled: json['sms_enabled'] as bool? ?? true,
     );
   }
 
@@ -152,6 +157,7 @@ class SavingsModel {
       'freeze_enabled': freezeEnabled,
       'frozen_count': frozenCount,
       'frozen_dates': frozenDates,
+      'sms_enabled': smsEnabled,
     };
   }
 
@@ -184,6 +190,7 @@ class SavingsModel {
     bool? freezeEnabled,
     int? frozenCount,
     List<String>? frozenDates,
+    bool? smsEnabled,
   }) {
     return SavingsModel(
       id: id ?? this.id,
@@ -214,6 +221,7 @@ class SavingsModel {
       freezeEnabled: freezeEnabled ?? this.freezeEnabled,
       frozenCount: frozenCount ?? this.frozenCount,
       frozenDates: frozenDates ?? this.frozenDates,
+      smsEnabled: smsEnabled ?? this.smsEnabled,
     );
   }
 }

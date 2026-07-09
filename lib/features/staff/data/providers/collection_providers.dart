@@ -174,21 +174,32 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
       final branding = _ref.read(brandingProvider).valueOrNull;
       final collectorName = staffProfile?.fullName ?? 'Staff';
 
-      // Always fetch sms_enabled for this member
+      // Fetch phone from member and loan's sms_enabled setting
       String? phone = collection.memberPhone;
       bool smsEnabled = true;
-      if (collection.memberId != null) {
+      final client = _ref.read(supabaseClientProvider);
+
+      // Fetch phone from member if not available
+      if (collection.memberId != null && (phone == null || phone.isEmpty)) {
         try {
-          final client = _ref.read(supabaseClientProvider);
           final memberInfo = await client
               .from('members')
-              .select('phone, sms_enabled')
+              .select('phone')
               .eq('id', collection.memberId!)
               .maybeSingle();
-          if (phone == null || phone.isEmpty) {
-            phone = memberInfo?['phone']?.toString();
-          }
-          smsEnabled = memberInfo?['sms_enabled'] as bool? ?? true;
+          phone = memberInfo?['phone']?.toString();
+        } catch (_) {}
+      }
+
+      // Fetch loan's sms_enabled setting (per-account control)
+      if (collection.loanId != null) {
+        try {
+          final loanInfo = await client
+              .from('loans')
+              .select('sms_enabled')
+              .eq('id', collection.loanId!)
+              .maybeSingle();
+          smsEnabled = loanInfo?['sms_enabled'] as bool? ?? true;
         } catch (_) {}
       }
 

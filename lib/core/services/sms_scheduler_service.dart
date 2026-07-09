@@ -133,24 +133,49 @@ class SmsSchedulerService {
       // PostgREST resolve the relationship from `loans.customer_id` ->
       // `members.id`. If the FK name differs the query will fail and we
       // bail out gracefully.
-      final response = await _client
-          .from('loan_schedules')
-          .select(
-            'id, due_date, emi_amount, emi, is_paid, is_overdue, '
-            'loans!inner(id, org_id, customer_id, loan_number, '
-            'emi_amount, outstanding_amount, status, '
-            'members!loans_customer_id_fkey(id, full_name, name, phone, sms_enabled))',
-          )
-          .eq('loans.org_id', orgId)
-          .lte('due_date', todayStr)
-          .eq('is_paid', false)
-          .inFilter(
-            'loans.status',
-            const ['active', 'approved', 'restructured', 'pending'],
-          )
-          .limit(500);
+      //
+      // Note: sms_enabled column may not exist yet. If the query fails,
+      // we retry without it and default to true (SMS enabled).
+      List<dynamic> response;
+      try {
+        response = await _client
+            .from('loan_schedules')
+            .select(
+              'id, due_date, emi_amount, emi, is_paid, is_overdue, '
+              'loans!inner(id, org_id, customer_id, loan_number, '
+              'emi_amount, outstanding_amount, status, sms_enabled, '
+              'members!loans_customer_id_fkey(id, full_name, name, phone))',
+            )
+            .eq('loans.org_id', orgId)
+            .lte('due_date', todayStr)
+            .eq('is_paid', false)
+            .inFilter(
+              'loans.status',
+              const ['active', 'approved', 'restructured', 'pending'],
+            )
+            .limit(500);
+      } catch (e) {
+        // sms_enabled column might not exist - retry without it
+        debugPrint('runReminderPass: retrying without sms_enabled column');
+        response = await _client
+            .from('loan_schedules')
+            .select(
+              'id, due_date, emi_amount, emi, is_paid, is_overdue, '
+              'loans!inner(id, org_id, customer_id, loan_number, '
+              'emi_amount, outstanding_amount, status, '
+              'members!loans_customer_id_fkey(id, full_name, name, phone))',
+            )
+            .eq('loans.org_id', orgId)
+            .lte('due_date', todayStr)
+            .eq('is_paid', false)
+            .inFilter(
+              'loans.status',
+              const ['active', 'approved', 'restructured', 'pending'],
+            )
+            .limit(500);
+      }
 
-      final rows = (response as List).cast<Map<String, dynamic>>();
+      final rows = response.map((e) => e as Map<String, dynamic>).toList();
       if (rows.isEmpty) {
         debugPrint('runReminderPass: no due schedules for org=$_orgId');
         return 0;
@@ -183,8 +208,8 @@ class SmsSchedulerService {
           final phone = _memberPhone(member);
           if (phone == null || phone.isEmpty) continue;
 
-          // Skip members who have opted out of SMS
-          final smsEnabled = member?['sms_enabled'] as bool? ?? true;
+          // Skip loans that have SMS notifications disabled
+          final smsEnabled = loan['sms_enabled'] as bool? ?? true;
           if (!smsEnabled) continue;
 
           final memberName = _memberName(member);

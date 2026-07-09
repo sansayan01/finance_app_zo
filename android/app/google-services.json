@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "341779080411",
+    "project_id": "microflow-442f8",
+    "storage_bucket": "microflow-442f8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:341779080411:android:ca71c3cb5e3cc6ebe458fe",
+        "android_client_info": {
+          "package_name": "com.microflow.pro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACSwUvBxinL8JrUth7GhWq7k5C0FJfQAw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

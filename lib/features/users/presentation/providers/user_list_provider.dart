@@ -219,7 +219,7 @@ final userDetailsProvider =
         final client = ref.read(supabaseClientProvider);
         final member = await client
             .from('members')
-            .select('*')
+            .select('*, branch:branches(id, name), organizations:org_id(id, name)')
             .eq('profile_id', id)
             .maybeSingle();
         if (member != null) {
@@ -234,7 +234,7 @@ final userDetailsProvider =
       final client = ref.read(supabaseClientProvider);
       final member = await client
           .from('members')
-          .select('*')
+          .select('*, branch:branches(id, name), organizations:org_id(id, name)')
           .eq('id', id)
           .maybeSingle();
       if (member != null) {
@@ -246,7 +246,7 @@ final userDetailsProvider =
       final client = ref.read(supabaseClientProvider);
       final row = await client
           .from('profiles')
-          .select('*')
+          .select('*, branch:branches!branch_id(id, name), organizations:org_id(id, name)')
           .eq('id', id)
           .maybeSingle();
       if (row != null) {

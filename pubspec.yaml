@@ -1,7 +1,7 @@
 name: microflow_pro
 description: "MicroFlow Pro - Premium Micro-Finance Management Ecosystem"
 publish_to: 'none'
-version: 1.0.1+2029
+version: 1.0.2+2030
 
 environment:
   sdk: ^3.4.0
@@ -23,6 +23,10 @@ dependencies:
 
   # Backend
   supabase_flutter: ^2.8.0
+
+  # Firebase (Push Notifications)
+  firebase_core: ^3.12.0
+  firebase_messaging: ^15.2.0
 
   # Local Database (Offline Storage)
   hive: ^2.2.3
@@ -100,6 +104,9 @@ dev_dependencies:
   # Integration Testing
   integration_test:
     sdk: flutter
+
+  # Dev-only: one-time schema bootstrap script (bin/bootstrap_device_tokens.dart)
+  postgres: ^3.4.0
 
 flutter:
   uses-material-design: true

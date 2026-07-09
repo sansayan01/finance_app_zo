@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Service for creating, managing, and smart-generating customer notifications.
 ///
-/// Works against the existing `customer_notifications` Supabase table and can
-/// be extended to push via FCM when Firebase Messaging is added.
+/// Works against the existing `customer_notifications` Supabase table and
+/// triggers push notifications via database triggers when enabled.
 class CustomerNotificationService {
   final SupabaseClient _client;
 
@@ -39,6 +40,9 @@ class CustomerNotificationService {
   // ---------------------------------------------------------------------------
 
   /// Create a single notification row in `customer_notifications`.
+  ///
+  /// Push notifications are dispatched from Dart (no DB trigger) by calling
+  /// the `send-push-notification` Edge Function after the row is inserted.
   Future<void> createNotification({
     required String customerId,
     required String title,
@@ -46,14 +50,33 @@ class CustomerNotificationService {
     required String type,
     Map<String, dynamic>? data,
   }) async {
-    await _client.from('customer_notifications').insert({
+    final inserted = await _client.from('customer_notifications').insert({
       'customer_id': customerId,
       'title': title,
       'message': message,
       'type': type,
       'is_read': false,
       if (data != null) 'data': data,
-    });
+    }).select('id').single();
+
+    // Best-effort push — never block or fail the notification insert.
+    try {
+      await _client.functions.invoke(
+        'send-push-notification',
+        body: {
+          'customer_id': customerId,
+          'title': title,
+          'body': message,
+          'data': {
+            'type': type,
+            'id': inserted['id']?.toString(),
+            if (data != null) ...data,
+          },
+        },
+      );
+    } catch (e) {
+      debugPrint('⚠️ Push trigger failed (customer): $e');
+    }
   }
 
   /// Batch-mark every unread notification for [customerId] as read.

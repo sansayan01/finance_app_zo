@@ -424,3 +424,17 @@ final superAdminActionsProvider =
   final repository = ref.watch(superAdminRepositoryProvider);
   return SuperAdminActionsNotifier(repository, ref);
 });
+
+/// Branch Locations Provider (for platform map)
+final branchLocationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  try {
+    return await client
+        .from('branches')
+        .select('id, name, location_lat, location_lng')
+        .not('location_lat', 'is', null)
+        .not('location_lng', 'is', null);
+  } catch (e) {
+    return [];
+  }
+});

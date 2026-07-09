@@ -34,6 +34,7 @@ class AmortizationRow {
 
 class NewLoanState {
   final String? borrowerId;
+  final String? productId;
   final double principalAmount;
   final InterestMode interestMode;
   final double interestRate;
@@ -66,6 +67,7 @@ class NewLoanState {
 
   NewLoanState({
     this.borrowerId,
+    this.productId,
     this.principalAmount = 50000,
     this.interestMode = InterestMode.rate,
     this.interestRate = 2,
@@ -89,6 +91,7 @@ class NewLoanState {
 
   NewLoanState copyWith({
     String? borrowerId,
+    String? productId,
     double? principalAmount,
     InterestMode? interestMode,
     double? interestRate,
@@ -111,6 +114,7 @@ class NewLoanState {
   }) {
     return NewLoanState(
       borrowerId: borrowerId ?? this.borrowerId,
+      productId: productId ?? this.productId,
       principalAmount: principalAmount ?? this.principalAmount,
       interestMode: interestMode ?? this.interestMode,
       interestRate: interestRate ?? this.interestRate,
@@ -431,6 +435,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
   NewLoanNotifier(this._repository, this._ref) : super(NewLoanState());
 
   void updateBorrower(String? id) => state = state.copyWith(borrowerId: id);
+  void updateProductId(String? id) => state = state.copyWith(productId: id);
   void updatePrincipal(double amount) =>
       state = state.copyWith(principalAmount: amount);
   void updateInterestMode(InterestMode mode) =>
@@ -538,6 +543,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
 
         loanId = await _repository.createMigrationLoan(
           borrowerId: state.borrowerId!,
+          productId: state.productId,
           principal: state.principalAmount,
           interestRate: state.interestMode == InterestMode.rate
               ? state.interestRate
@@ -614,6 +620,7 @@ class NewLoanNotifier extends StateNotifier<NewLoanState> {
         // ── Normal Path ──
         loanId = await _repository.createLoan(
           borrowerId: state.borrowerId!,
+          productId: state.productId,
           principal: state.principalAmount,
           interestRate: state.interestMode == InterestMode.rate
               ? state.interestRate

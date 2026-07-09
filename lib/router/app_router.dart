@@ -50,6 +50,7 @@ import '../features/settings/presentation/pages/audit_retention_page.dart';
 import '../features/settings/presentation/pages/help_center_page.dart';
 import '../features/settings/presentation/pages/report_issue_page.dart';
 import '../features/settings/presentation/pages/legal_policies_page.dart';
+import '../features/settings/presentation/pages/products_page.dart';
 import '../core/widgets/hud_navigation.dart';
 import '../core/constants/app_colors.dart';
 import '../features/loans/presentation/pages/loan_detail_page.dart';
@@ -632,6 +633,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'legal-policies',
                 builder: (context, state) => const LegalPoliciesPage(),
               ),
+              GoRoute(
+                path: 'products',
+                builder: (context, state) => const ProductsPage(),
+              ),
             ],
           ),
           GoRoute(
@@ -663,7 +668,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/live-map',
-            builder: (context, state) => const ManagerLiveMapPage(),
+            builder: (context, state) {
+              final branchId = state.uri.queryParameters['branch'];
+              return ManagerLiveMapPage(branchId: branchId);
+            },
           ),
           // Admin Org Management Routes
           GoRoute(

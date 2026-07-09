@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../members/presentation/widgets/member_searchable_picker.dart';
+import '../../../settings/data/providers/products_providers.dart';
 import '../../../../core/constants/enums.dart' show TenureUnit;
 import '../providers/new_loan_provider.dart';
 
@@ -285,6 +286,13 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
         children: [
           _buildSectionHeader('Facility Details', Icons.account_balance_rounded,
               theme, primary),
+          const SizedBox(height: 20),
+
+          // ── Product Template Selector ──
+          _buildLabel('SELECT PRODUCT (OPTIONAL)', theme),
+          const SizedBox(height: 10),
+          _buildProductSelector(state, theme, isDark),
+
           const SizedBox(height: 20),
 
           // ── Migration Toggle ──
@@ -1406,6 +1414,137 @@ class _NewLoanPageState extends ConsumerState<NewLoanPage> {
         tenureLabel: _formatTenure(state),
       ),
     );
+  }
+
+  // ═══════════════════════════════════════════════════
+  //  PRODUCT TEMPLATE SELECTOR
+  // ═══════════════════════════════════════════════════
+  Widget _buildProductSelector(NewLoanState state, ThemeData theme, bool isDark) {
+    final asyncProducts = ref.watch(loanProductsProvider);
+    return asyncProducts.when(
+      loading: () => const LinearProgressIndicator(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (products) {
+        final activeProducts = products.where((p) => p['is_active'] == true).toList();
+        if (activeProducts.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.fillDark : AppColors.fillLight,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: DropdownButtonFormField<String>(
+            initialValue: state.productId,
+            isExpanded: true,
+            items: [
+              const DropdownMenuItem(
+                value: null,
+                child: Text('None (Manual Entry)',
+                    style: TextStyle(fontStyle: FontStyle.italic)),
+              ),
+              ...activeProducts.map((p) => DropdownMenuItem(
+                    value: p['id'] as String,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(p['name']?.toString() ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(
+                          '${p['interest_rate']}% ${p['interest_mode']} · ${p['tenure_months']} ${p['tenure_unit']} · ${p['frequency']}',
+                          style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+            onChanged: (productId) {
+              ref.read(newLoanProvider.notifier).updateProductId(productId);
+              if (productId != null) {
+                final product = activeProducts.firstWhere((p) => p['id'] == productId);
+                _applyLoanProduct(product);
+              }
+            },
+            decoration: const InputDecoration(
+              labelText: 'Loan Product',
+              hintText: 'Select a product template',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _applyLoanProduct(Map<String, dynamic> product) {
+    final notifier = ref.read(newLoanProvider.notifier);
+
+    // Interest mode (rate vs amount)
+    if (product['interest_mode'] == 'amount') {
+      notifier.updateInterestMode(InterestMode.amount);
+      notifier.updateInterestAmount((product['interest_rate'] as num?)?.toDouble() ?? 0);
+    } else {
+      notifier.updateInterestMode(InterestMode.rate);
+      notifier.updateInterestRate((product['interest_rate'] as num?)?.toDouble() ?? 0);
+    }
+
+    // Interest basis
+    final basisStr = product['interest_basis']?.toString() ?? 'onPrincipal';
+    notifier.updateInterestRateBasis(
+      InterestBasis.values.firstWhere(
+        (e) => e.name == basisStr,
+        orElse: () => InterestBasis.onPrincipal,
+      ),
+    );
+
+    // Interest logic (reducing vs flat) — use the new field if present
+    final logicStr = product['interest_logic']?.toString();
+    if (logicStr != null) {
+      notifier.updateInterestLogic(
+        InterestLogic.values.firstWhere(
+          (e) => e.name == logicStr,
+          orElse: () => InterestLogic.reducingBalance,
+        ),
+      );
+    } else {
+      // Fallback: derive from interest_mode
+      notifier.updateInterestLogic(
+        product['interest_mode'] == 'flat'
+            ? InterestLogic.flat
+            : InterestLogic.reducingBalance,
+      );
+    }
+
+    // Tenure
+    notifier.updateTenureValue(product['tenure_months'] ?? 12);
+    notifier.updateTenureUnit(
+      TenureUnit.values.firstWhere(
+        (e) => e.name == (product['tenure_unit'] ?? 'months'),
+        orElse: () => TenureUnit.months,
+      ),
+    );
+
+    // Collection type (frequency)
+    notifier.updateCollectionType(
+      CollectionType.values.firstWhere(
+        (e) => e.name == (product['frequency'] ?? 'monthly'),
+        orElse: () => CollectionType.monthly,
+      ),
+    );
+
+    // Default principal
+    final defaultPrincipal = (product['default_principal'] as num?)?.toDouble();
+    if (defaultPrincipal != null && defaultPrincipal > 0) {
+      notifier.updatePrincipal(defaultPrincipal);
+      _principalController.text = defaultPrincipal.toInt().toString();
+    }
+
+    // Update text controllers
+    _rateController.text = product['interest_mode'] == 'amount'
+        ? ((product['interest_rate'] as num?)?.toDouble() ?? 0).toStringAsFixed(0)
+        : ((product['interest_rate'] as num?)?.toDouble() ?? 0).toStringAsFixed(1);
+    _tenureController.text = (product['tenure_months'] ?? 12).toString();
   }
 }
 

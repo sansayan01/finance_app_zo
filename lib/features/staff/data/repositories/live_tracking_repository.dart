@@ -1,5 +1,8 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/polyline_utils.dart';
 
 /// Data access for the live field agent tracking feature.
 /// - Fetches latest location snapshot per staff
@@ -26,10 +29,11 @@ class LiveTrackingRepository {
     }
   }
 
-  // ─── Realtime: Stream of new location inserts for this org ──────────────────
+  // ─── Realtime: Stream of new location inserts/updates for this org ─────────
 
   RealtimeChannel subscribeToAgentLocations({
     required void Function(Map<String, dynamic> payload) onUpdate,
+    void Function(Map<String, dynamic>)? onDeactivate,
   }) {
     final channel = _client
         .channel('staff_locations_$orgId')
@@ -46,6 +50,26 @@ class LiveTrackingRepository {
             final newRecord = payload.newRecord;
             if (newRecord.isNotEmpty) {
               onUpdate(newRecord);
+            }
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'staff_locations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'org_id',
+            value: orgId,
+          ),
+          callback: (payload) {
+            final record = payload.newRecord;
+            if (record.isNotEmpty) {
+              if (record['is_active'] == false) {
+                onDeactivate?.call(record);
+              } else {
+                onUpdate(record);
+              }
             }
           },
         )
@@ -77,6 +101,75 @@ class LiveTrackingRepository {
       debugPrint('[LiveTracking] Error fetching breadcrumbs: $e');
       return [];
     }
+  }
+
+  /// Get breadcrumbs for a date range with smart downsampling.
+  /// For long time ranges, applies Douglas-Peucker simplification to reduce point count.
+  Future<List<Map<String, dynamic>>> getBreadcrumbsForDateRange(
+    String staffId,
+    DateTime start,
+    DateTime end, {
+    int maxPoints = 2000,
+  }) async {
+    try {
+      final data = await _client
+          .from('staff_locations')
+          .select('latitude, longitude, recorded_at, activity_type, speed')
+          .eq('staff_id', staffId)
+          .eq('org_id', orgId)
+          .gte('recorded_at', start.toIso8601String())
+          .lte('recorded_at', end.toIso8601String())
+          .order('recorded_at', ascending: true);
+
+      if (data.isEmpty) return data;
+
+      // If we have more points than maxPoints, apply downsampling
+      if (data.length > maxPoints) {
+        final points = data.map((r) => LatLng(
+          (r['latitude'] as num).toDouble(),
+          (r['longitude'] as num).toDouble(),
+        )).toList();
+
+        // Calculate appropriate tolerance based on data density
+        final timeRange = end.difference(start).inHours;
+        final tolerance = timeRange > 24 ? 50.0 : 20.0; // meters
+
+        final simplified = PolylineUtils.simplify(points, tolerance);
+
+        // Map back to original data structure using nearest points
+        final result = <Map<String, dynamic>>[];
+        for (final sPoint in simplified) {
+          // Find the closest original point
+          Map<String, dynamic>? closest;
+          double minDist = double.infinity;
+          for (final original in data) {
+            final lat = (original['latitude'] as num).toDouble();
+            final lng = (original['longitude'] as num).toDouble();
+            final dist = _quickDistance(sPoint.latitude, sPoint.longitude, lat, lng);
+            if (dist < minDist) {
+              minDist = dist;
+              closest = original;
+            }
+          }
+          if (closest != null && !result.any((r) => r['recorded_at'] == closest!['recorded_at'])) {
+            result.add(closest);
+          }
+        }
+        return result;
+      }
+
+      return data;
+    } catch (e) {
+      debugPrint('[LiveTracking] Error fetching date range breadcrumbs: $e');
+      return [];
+    }
+  }
+
+  /// Quick approximate distance for sorting (not precise, but fast).
+  double _quickDistance(double lat1, double lng1, double lat2, double lng2) {
+    final dLat = lat2 - lat1;
+    final dLng = (lng2 - lng1) * cos((lat1 + lat2) / 2 * pi / 180);
+    return sqrt(dLat * dLat + dLng * dLng) * 111320; // rough meters
   }
 
   // ─── Agent detail: Stats for a specific agent today ──────────────────────────

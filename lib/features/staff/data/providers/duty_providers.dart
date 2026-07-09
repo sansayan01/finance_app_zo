@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
 import '../repositories/duty_repository.dart';
 import '../providers/staff_providers.dart';
 import '../providers/live_tracking_providers.dart';
+import '../services/geofence_service.dart';
 
 // ─── Repository Provider ──────────────────────────────────────────────────────
 
@@ -59,6 +62,19 @@ class OnDutyNotifier extends StateNotifier<AsyncValue<bool>> {
         );
       } catch (_) {
         // Position is optional, continue without it
+      }
+
+      // Geofence check (non-blocking — warn but allow)
+      if (position != null) {
+        final zones = _ref.read(geofenceZonesProvider).valueOrNull ?? [];
+        final geofenceService = _ref.read(geofenceServiceProvider);
+        final containing = geofenceService.findContainingZones(
+          position.latitude, position.longitude, zones,
+        );
+        if (containing.isEmpty && zones.isNotEmpty) {
+          debugPrint('[Duty] Warning: Agent is outside all geofence zones');
+          // Could show a dialog here — for now just log
+        }
       }
 
       if (!currentState) {
@@ -140,3 +156,19 @@ final todayDutySessionsProvider =
   final repo = ref.watch(dutyRepositoryProvider);
   return repo.getTodayDutySessions(profile.id);
 });
+
+// ─── Geofence Providers ────────────────────────────────────────────────────
+
+final geofenceServiceProvider = Provider<GeofenceService>((ref) {
+  final client = Supabase.instance.client;
+  return GeofenceService(client);
+});
+
+final geofenceZonesProvider = FutureProvider<List<GeofenceZone>>((ref) async {
+  final service = ref.watch(geofenceServiceProvider);
+  final profile = await ref.watch(staffProfileProvider.future);
+  if (profile == null || profile.orgId == null) return [];
+  return service.loadZones(profile.orgId!);
+});
+
+final geofenceEventsProvider = StateProvider<List<GeofenceEvent>>((ref) => []);

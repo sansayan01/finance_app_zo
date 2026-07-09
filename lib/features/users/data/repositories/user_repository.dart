@@ -99,7 +99,7 @@ class UserRepository {
       // 1. Fetch from profiles table (customers with role = 'customer')
       var profileQuery = _client
           .from('profiles')
-          .select('*, branch:branches!branch_id(id, name)')
+          .select('*, branch:branches!branch_id(id, name), organizations:org_id(id, name)')
           .eq('org_id', _orgId)
           .eq('role', 'customer')
           .not('status', 'eq', 'inactive')
@@ -131,7 +131,7 @@ class UserRepository {
         final membersLimit = limit - results.length;
         var membersQuery = _client
             .from('members')
-            .select('*, branch:branches(id, name)')
+            .select('*, branch:branches(id, name), organizations:org_id(id, name)')
             .eq('org_id', _orgId)
             .not('kyc_status', 'eq', 'rejected');
 

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../../settings/data/providers/activity_log_repository_provider.dart';
+import '../../../../core/services/push_notification_provider.dart';
 
 final Provider<AuthRepository?> authRepositoryProvider =
     Provider<AuthRepository?>((ref) {
@@ -65,8 +66,9 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository? _repository;
+  final Ref? _ref;
 
-  AuthNotifier(this._repository) : super(const AuthState()) {
+  AuthNotifier(this._repository, [this._ref]) : super(const AuthState()) {
     _checkSession();
   }
 
@@ -143,6 +145,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
+
+      // Register FCM token after successful login
+      _registerFcmToken();
+
       return true;
     } catch (e) {
       final errorInfo = _getErrorMessage(e);
@@ -204,6 +210,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signOut() async {
     if (_repository == null) return;
+
+    // Delete FCM tokens before signing out
+    try {
+      final fcmService = _ref?.read(fcmTokenServiceProvider);
+      await fcmService?.deleteTokens();
+    } catch (e) {
+      debugPrint('⚠️ Error deleting FCM tokens on logout: $e');
+    }
+
     await _repository.signOut();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
@@ -218,6 +233,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       // ignore
+    }
+  }
+
+  /// Register FCM token and initialize push notification handlers after login.
+  void _registerFcmToken() {
+    try {
+      // Register FCM token with backend
+      final fcmService = _ref?.read(fcmTokenServiceProvider);
+      fcmService?.initialize();
+
+      // Initialize push notification handlers (foreground messages, taps)
+      final pushService = _ref?.read(pushNotificationServiceProvider);
+      pushService?.initialize();
+    } catch (e) {
+      debugPrint('⚠️ Error registering FCM token: $e');
     }
   }
 
@@ -352,7 +382,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final StateNotifierProvider<AuthNotifier, AuthState> authProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repository);
+  return AuthNotifier(repository, ref);
 });
 
 final Provider<UserModel?> currentUserProvider = Provider<UserModel?>((ref) {

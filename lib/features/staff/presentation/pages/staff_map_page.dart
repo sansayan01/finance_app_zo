@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/location_permission_helper.dart';
 import '../../data/providers/duty_providers.dart';
 import '../../data/providers/live_tracking_providers.dart';
 import '../../data/providers/staff_map_providers.dart';
@@ -64,6 +65,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
   void dispose() {
     _pulseCtrl.dispose();
     _breadcrumbRefreshTimer?.cancel();
+    _mapboxMap = null; // Release reference
     super.dispose();
   }
 
@@ -76,23 +78,12 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
 
   Future<void> _initLocation() async {
     try {
-      geo.LocationPermission permission =
-          await geo.Geolocator.checkPermission();
-      if (permission == geo.LocationPermission.denied) {
-        permission = await geo.Geolocator.requestPermission();
-        if (permission == geo.LocationPermission.denied) {
-          setState(() {
-            _loadingLocation = false;
-            _locationError = 'Location permission denied';
-          });
-          return;
-        }
-      }
-      if (permission == geo.LocationPermission.deniedForever) {
+      final hasPermission =
+          await LocationPermissionHelper.ensureForegroundPermission();
+      if (!hasPermission) {
         setState(() {
+          _locationError = 'Location permission denied. Please enable in Settings.';
           _loadingLocation = false;
-          _locationError =
-              'Location permanently denied. Enable in Settings.';
         });
         return;
       }

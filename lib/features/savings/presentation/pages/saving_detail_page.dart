@@ -136,6 +136,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                         _buildPrimaryActionRow(saving, theme),
                         const SizedBox(height: 20),
                         _buildFreezeToggle(saving, theme),
+                        const SizedBox(height: 12),
+                        _buildSmsToggle(saving, theme),
                         const SizedBox(height: 40),
 
                       ],
@@ -1957,6 +1959,100 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     }).eq('id', saving.id);
     ref.invalidate(savingDetailProvider(widget.savingId));
     ref.invalidate(allSavingsProvider);
+  }
+
+  Widget _buildSmsToggle(SavingsModel saving, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: saving.smsEnabled
+                ? Colors.green.withValues(alpha: 0.4)
+                : theme.dividerColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: saving.smsEnabled
+                    ? Colors.green.withValues(alpha: 0.15)
+                    : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                saving.smsEnabled
+                    ? Icons.notifications_active_rounded
+                    : Icons.notifications_off_rounded,
+                size: 18,
+                color: saving.smsEnabled
+                    ? Colors.green
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'SMS Notifications',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    saving.smsEnabled
+                        ? 'Reminders sent for this savings plan'
+                        : 'No SMS for this savings plan',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch.adaptive(
+              value: saving.smsEnabled,
+              activeThumbColor: Colors.green,
+              onChanged: (val) => _toggleSms(saving, val),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleSms(SavingsModel saving, bool enabled) async {
+    HapticFeedback.lightImpact();
+    final client = ref.read(supabaseClientProvider);
+    await client.from('savings_plans').update({
+      'sms_enabled': enabled,
+    }).eq('id', saving.id);
+    ref.invalidate(savingDetailProvider(widget.savingId));
+    ref.invalidate(allSavingsProvider);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(enabled
+              ? 'SMS reminders enabled for this savings plan'
+              : 'SMS reminders disabled for this savings plan'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   Widget _buildPrimaryActionRow(SavingsModel saving, ThemeData theme) {

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
@@ -5,6 +7,7 @@ import '../../../../core/providers/org_provider.dart';
 import '../../../../core/services/live_location_service.dart';
 import '../repositories/live_tracking_repository.dart';
 import '../providers/staff_providers.dart';
+import 'sync_providers.dart';
 
 // ─── Repository Provider ──────────────────────────────────────────────────────
 
@@ -19,7 +22,8 @@ final liveTrackingRepositoryProvider =
 final liveLocationServiceProvider =
     Provider<LiveLocationService>((ref) {
   final client = ref.watch(supabaseClientProvider);
-  final service = LiveLocationService(client);
+  final offlineEngine = ref.watch(syncEngineProvider);
+  final service = LiveLocationService(client, offlineEngine: offlineEngine);
   ref.onDispose(() => service.dispose());
   return service;
 });
@@ -75,12 +79,22 @@ class LiveAgentLocationsNotifier
 
   RealtimeChannel? _channel;
 
-  /// Stores previous positions for smooth interpolation
-  final Map<String, Map<String, dynamic>> _previousPositions = {};
+  /// Render state per agent: keeps the last rendered position ('prev') and the
+  /// freshly received GPS fix ('target'), each tagged with a timestamp (`_ts`).
+  /// This lets the page interpolate smoothly between fixes.
+  final Map<String, Map<String, dynamic>> _renderState = {};
 
-  /// Get previous position for an agent (used for animation)
+  /// Get previous position for an agent (used for animation).
+  /// Kept for backward compatibility — returns the 'prev' render state.
   Map<String, dynamic>? getPreviousPosition(String staffId) =>
-      _previousPositions[staffId];
+      _renderState[staffId]?['prev'] as Map<String, dynamic>?;
+
+  /// Timestamp (ms) of the previous target fix, used to derive the animation
+  /// duration so movement matches the real elapsed time between GPS fixes.
+  int? getPreviousTargetTs(String staffId) {
+    final target = _renderState[staffId]?['target'] as Map<String, dynamic>?;
+    return target?['_ts'] as int?;
+  }
 
   void seedFromSnapshot(List<Map<String, dynamic>> locations) {
     final map = <String, Map<String, dynamic>>{};
@@ -89,36 +103,138 @@ class LiveAgentLocationsNotifier
       if (staffId != null) map[staffId] = loc;
     }
     state = map;
+    // Reset render state so the first realtime fix starts a fresh glide.
+    _renderState.clear();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final entry in map.entries) {
+      final pos = Map<String, dynamic>.from(entry.value);
+      pos['_ts'] = now;
+      _renderState[entry.key] = {'prev': Map.from(pos), 'target': pos};
+    }
   }
 
   void applyRealtimeUpdate(Map<String, dynamic> payload) {
     final staffId = payload['staff_id'] as String?;
     if (staffId == null) return;
 
-    // Store previous position for smooth animation
+    // Merge new location into existing agent data (keep name/phone from snapshot)
     final existing = state[staffId];
-    if (existing != null) {
-      _previousPositions[staffId] = Map.from(existing);
+    final existingData = existing ?? {};
+    final merged = <String, dynamic>{
+      ...existingData,
+      'latitude': payload['latitude'],
+      'longitude': payload['longitude'],
+      'speed': payload['speed'],
+      'heading': payload['heading'],
+      'activity_type': payload['activity_type'],
+      'battery_level': payload['battery_level'],
+      'is_charging': payload['is_charging'],
+      'is_active': payload['is_active'],
+      'recorded_at': payload['recorded_at'],
+      'accuracy': payload['accuracy'],
+    };
+
+    // Build the new target fix with a timestamp.
+    final target = Map<String, dynamic>.from(merged);
+    target['_ts'] = DateTime.now().millisecondsSinceEpoch;
+
+    // The current rendered position becomes the new 'prev'. Fall back to the
+    // previous target if we have no render state yet (e.g. first fix).
+    final render = _renderState[staffId];
+    final prev = (render != null
+        ? Map<String, dynamic>.from(render['target'] as Map<String, dynamic>)
+        : Map<String, dynamic>.from(merged))
+      ..['_ts'] = (render?['target'] as Map<String, dynamic>?)?['_ts']
+              as int? ??
+          target['_ts'];
+
+    _renderState[staffId] = {'prev': prev, 'target': target};
+    state = {...state, staffId: merged};
+  }
+
+  /// Compute elapsed-time-based animation duration (ms) between the previous
+  /// target fix and a new target fix. Clamped so movement always glides
+  /// (400–1500ms) regardless of GPS report cadence.
+  int getDurationForFix(String staffId) {
+    final render = _renderState[staffId];
+    if (render == null) return 1000;
+    final prevTs =
+        (render['prev'] as Map<String, dynamic>)['_ts'] as int? ?? 0;
+    final targetTs =
+        (render['target'] as Map<String, dynamic>)['_ts'] as int? ?? 0;
+    final delta = targetTs - prevTs;
+    if (delta <= 0) return 1000;
+    return delta.clamp(400, 1500);
+  }
+
+  /// Returns an interpolated render position for [staffId] at fraction [t]
+  /// (0..1) between the previous and target fixes. Latitude/longitude are
+  /// linearly interpolated; heading is interpolated with 359°→0° wraparound.
+  ///
+  /// Returns `{lat, lng, heading}`. When no render state exists the merged
+  /// agent record is used directly (no movement needed).
+  Map<String, double> getInterpolatedPosition(
+      String staffId, double t, Map<String, dynamic> fallback) {
+    final render = _renderState[staffId];
+    if (render == null) {
+      return {
+        'lat': _toDouble(fallback['latitude']),
+        'lng': _toDouble(fallback['longitude']),
+        'heading': _toDouble(fallback['heading']),
+      };
     }
 
-    // Merge new location into existing agent data (keep name/phone from snapshot)
-    final existingData = existing ?? {};
-    state = {
-      ...state,
-      staffId: {
-        ...existingData,
-        'latitude': payload['latitude'],
-        'longitude': payload['longitude'],
-        'speed': payload['speed'],
-        'heading': payload['heading'],
-        'activity_type': payload['activity_type'],
-        'battery_level': payload['battery_level'],
-        'is_charging': payload['is_charging'],
-        'is_active': payload['is_active'],
-        'recorded_at': payload['recorded_at'],
-      },
-    };
+    final prev = render['prev'] as Map<String, dynamic>;
+    final target = render['target'] as Map<String, dynamic>;
+
+    final prevLat = _toDouble(prev['latitude']);
+    final prevLng = _toDouble(prev['longitude']);
+    final targetLat = _toDouble(target['latitude']);
+    final targetLng = _toDouble(target['longitude']);
+
+    final lat = prevLat + (targetLat - prevLat) * t;
+    final lng = prevLng + (targetLng - prevLng) * t;
+
+    // Effective heading per fix: use the device-reported heading when it is
+    // available (>0), otherwise derive the travel direction from the movement
+    // vector (atan2(dLng, dLat), 0° = North, clockwise).
+    final prevHeading = _effectiveHeading(staffId, prev, prevLng, prevLat);
+    final targetHeading =
+        _effectiveHeading(staffId, target, targetLng, targetLat);
+
+    // Heading interpolation with shortest-path wraparound.
+    final heading = _lerpAngle(prevHeading, targetHeading, t);
+
+    return {'lat': lat, 'lng': lng, 'heading': heading};
   }
+
+  double _toDouble(dynamic v) => (v is num) ? v.toDouble() : 0.0;
+
+  /// Effective heading (degrees, 0 = North, clockwise) for a fix. Uses the
+  /// device-reported heading when available, otherwise the bearing from the
+  /// previous rendered position (`_renderState[staffId]['prev']`) to this fix.
+  double _effectiveHeading(String staffId,
+      Map<String, dynamic> fix, double lng, double lat) {
+    final deviceHeading = _toDouble(fix['heading']);
+    if (deviceHeading > 0) return deviceHeading;
+    final prev = _renderState[staffId]?['prev'] as Map<String, dynamic>?;
+    final prevLng = prev != null ? _toDouble(prev['longitude']) : 0.0;
+    final prevLat = prev != null ? _toDouble(prev['latitude']) : 0.0;
+    final dLat = lat - prevLat;
+    final dLng = lng - prevLng;
+    if (dLat == 0 && dLng == 0) return deviceHeading;
+    return (math.atan2(dLng, dLat) * 180 / math.pi) % 360;
+  }
+
+  /// Linearly interpolate two angles in degrees along the shortest arc,
+  /// handling the 359°→0° (and 0°→359°) wrap.
+  double _lerpAngle(double from, double to, double t) {
+    double diff = (to - from) % 360;
+    if (diff < -180) diff += 360;
+    if (diff > 180) diff -= 360;
+    return (from + diff * t) % 360;
+  }
+
 
   void setChannel(RealtimeChannel? channel) {
     _channel = channel;

@@ -9,6 +9,7 @@ enum CollectionType { daily, weekly, monthly }
 
 class NewRecurringSavingState {
   final String? memberId;
+  final String? productId;
   final CollectionType collectionType;
   final double installmentAmount;
   final double maturityAmount;
@@ -30,6 +31,7 @@ class NewRecurringSavingState {
 
   NewRecurringSavingState({
     this.memberId,
+    this.productId,
     this.collectionType = CollectionType.monthly,
     this.installmentAmount = 1000,
     this.maturityAmount = 12500,
@@ -85,6 +87,7 @@ class NewRecurringSavingState {
 
   NewRecurringSavingState copyWith({
     String? memberId,
+    String? productId,
     CollectionType? collectionType,
     double? installmentAmount,
     double? maturityAmount,
@@ -116,6 +119,7 @@ class NewRecurringSavingState {
 
     return NewRecurringSavingState(
       memberId: memberId ?? this.memberId,
+      productId: productId ?? this.productId,
       collectionType: newCollectionType,
       installmentAmount: installmentAmount ?? this.installmentAmount,
       maturityAmount: maturityAmount ?? this.maturityAmount,
@@ -237,6 +241,7 @@ class NewRecurringSavingNotifier
       : super(NewRecurringSavingState());
 
   void updateMember(String? id) => state = state.copyWith(memberId: id);
+  void updateProductId(String? id) => state = state.copyWith(productId: id);
   void updateCollectionType(CollectionType type) =>
       state = state.copyWith(collectionType: type);
   void updateInstallmentAmount(double amount) =>
@@ -296,6 +301,7 @@ class NewRecurringSavingNotifier
         );
         final migration = await _repository.createMigrationSavingsPlan(
           memberId: state.memberId!,
+          productId: state.productId,
           installmentAmount: state.installmentAmount,
           totalReturnAmount: state.maturityAmount,
           startDate: state.startDate,
@@ -328,6 +334,7 @@ class NewRecurringSavingNotifier
       } else {
         await _repository.createSavingsPlan(
           memberId: state.memberId!,
+          productId: state.productId,
           installmentAmount: state.installmentAmount,
           maturityAmount: state.maturityAmount,
           maturityDate: state.maturityDate,

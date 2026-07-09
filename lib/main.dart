@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'core/config/firebase_options.dart';
 import 'core/providers/storage_providers.dart';
 import 'core/providers/system_config_provider.dart';
 import 'core/config/env_config.dart';
 import 'core/services/sms_outbox_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/background_handler.dart';
 import 'app.dart';
 
 Future<void> main() async {
@@ -32,9 +36,25 @@ Future<void> main() async {
     }
     debugPrint('✅ .env loaded');
     debugPrint('🔗 ENV SUPABASE_URL: ${dotenv.env['SUPABASE_URL']}');
-    debugPrint('🔗 ENV SUPABASE_ANON_KEY: ${dotenv.env['SUPABASE_ANON_KEY']?.substring(0, 20)}...');
+    debugPrint('🔗 ENV MAPBOX_ACCESS_TOKEN: ${dotenv.env['MAPBOX_ACCESS_TOKEN']?.isNotEmpty == true ? "present (len=${dotenv.env['MAPBOX_ACCESS_TOKEN']!.length})" : "MISSING"}');
+    debugPrint('🔗 dotenv keys: ${dotenv.env.keys.toList()}');
 
-    // 1. Set orientations
+    // 1. Initialize Firebase (required for push notifications)
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint('✅ Firebase initialized');
+
+      // Register background message handler
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      debugPrint('✅ FCM background handler registered');
+    } catch (e) {
+      debugPrint('⚠️ Firebase initialization failed: $e');
+      debugPrint('⚠️ Push notifications will not work without Firebase');
+    }
+
+    // 2. Set orientations
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,

@@ -26,8 +26,7 @@ final currentOrgIdOrThrowProvider = Provider<String>((ref) {
   return orgId;
 });
 
-/// Async variant — returns null if no org is assigned, doesn't throw.
-/// Use when you want to render a "no org yet" UI.
+/// Safe variant — returns null if no org is assigned (works for superAdmin).
 final currentOrgIdOrNullProvider = Provider<String?>((ref) {
   return ref.watch(currentOrgIdProvider);
 });

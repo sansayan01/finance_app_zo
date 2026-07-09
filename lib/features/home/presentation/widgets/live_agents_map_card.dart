@@ -47,6 +47,16 @@ class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard> {
             .read(liveAgentLocationsProvider.notifier)
             .applyRealtimeUpdate(payload);
       },
+      onDeactivate: (record) {
+        if (!mounted) return;
+        final agentId = record['staff_id']?.toString();
+        if (agentId != null) {
+          ref.read(liveAgentLocationsProvider.notifier).applyRealtimeUpdate({
+            ...record,
+            'is_active': false,
+          });
+        }
+      },
     );
 
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {

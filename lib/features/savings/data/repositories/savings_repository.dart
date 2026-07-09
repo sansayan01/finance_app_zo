@@ -12,6 +12,7 @@ class SavingsRepository {
 
   Future<String> createSavingsPlan({
     required String memberId,
+    String? productId,
     required double installmentAmount,
     required double maturityAmount,
     required DateTime maturityDate,
@@ -77,6 +78,7 @@ class SavingsRepository {
       'current_amount': openingBalance,
       'total_return_amount': totalReturnAmount,
       'freeze_enabled': freezeEnabled,
+      if (productId != null) 'product_id': productId,
     };
 
     if (tenureUnit != null) {
@@ -325,6 +327,7 @@ class SavingsRepository {
   /// (now()) so a fresh migration never carries an ancient timestamp.
   Future<({String planId, String? transactionId})> createMigrationSavingsPlan({
     required String memberId,
+    String? productId,
     required double installmentAmount,
     required double totalReturnAmount,
     required DateTime startDate,
@@ -408,6 +411,7 @@ class SavingsRepository {
       'installments_paid': installmentsPaid,
       'last_payment_date': lastPaymentDate.toIso8601String().split('T')[0],
       'freeze_enabled': freezeEnabled,
+      if (productId != null) 'product_id': productId,
     };
 
     if (collectionDayOfWeek != null) {

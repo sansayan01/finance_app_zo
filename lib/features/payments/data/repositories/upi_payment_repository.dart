@@ -73,6 +73,22 @@ class UpiPaymentRepository {
           'action_type': 'open_upi_confirmations',
           'action_data': {},
         });
+
+        // Best-effort push (replaces the old DB trigger).
+        try {
+          await _client.functions.invoke(
+            'send-push-notification',
+            body: {
+              'staff_id': staff['id'],
+              'title': 'New UPI Payment',
+              'body':
+                  '₹${totalAmount.toStringAsFixed(2)} $typeLabel payment submitted via UPI. Tap to verify.',
+              'data': {'type': 'upi', 'priority': 'high', 'target': 'staff'},
+            },
+          );
+        } catch (_) {
+          // Non-critical — don't fail the notification if push fails
+        }
       }
     } catch (_) {
       // Non-critical — don't fail the payment if notification fails

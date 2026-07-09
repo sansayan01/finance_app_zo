@@ -96,11 +96,11 @@ class SettingsSearchRegistry {
     SearchableSetting(
       id: 'loan_products',
       title: 'Loan & Savings Products',
-      subtitle: 'Loan schemes, savings rules, yield rates',
+      subtitle: 'Loan schemes, savings plans, rates, limits',
       icon: Icons.account_balance_outlined,
       color: Colors.indigo,
-      keywords: ['loan', 'savings', 'product', 'scheme', 'rate', 'interest', 'yield', 'limit'],
-      route: '/settings',
+      keywords: ['loan', 'savings', 'product', 'scheme', 'rate', 'interest', 'yield', 'limit', 'deposit', 'collection'],
+      route: '/settings/products',
     ),
 
     // ── Integrations ──

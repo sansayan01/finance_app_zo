@@ -108,14 +108,7 @@ class SettingsPageV2 extends ConsumerWidget {
                       title: 'Loan & Savings Products',
                       subtitle: 'Setup loan schemes, savings rules, yield rates, and limits',
                       color: Colors.indigo,
-                      badgeText: 'P0',
-                      badgeColor: Colors.red,
-                      onTap: () => _showComingSoon(
-                        context,
-                        'Product Engine CRUD',
-                        'Allows complete creation and editing of dynamic loan types (rates, charges, grace buffers) and savings programs.',
-                        Colors.red,
-                      ),
+                      onTap: () => context.push('/settings/products'),
                     ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.05, end: 0),
                     const SizedBox(height: 28),
                   ],
@@ -451,76 +444,6 @@ class SettingsPageV2 extends ConsumerWidget {
             child: const Text('Sign Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String title, String description, Color color) {
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'ROADMAP',
-                    style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              description,
-              style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.25)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.construction_rounded, size: 16, color: Colors.amber),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Development pipeline schedule. Fully offline capable.',
-                      style: TextStyle(fontSize: 12, color: Colors.amber),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

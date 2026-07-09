@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Legacy typography class. The AppTheme now handles all typography via ThemeData.
 /// These are kept as utility styles but should NOT be used for hardcoded colors.
@@ -7,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTypography {
   AppTypography._();
 
-  static TextStyle get _baseStyle => GoogleFonts.inter();
+  static TextStyle get _baseStyle => const TextStyle(fontFamily: 'Inter');
 
   static TextStyle get displayLarge => _baseStyle.copyWith(
         fontSize: 48,
@@ -104,17 +103,20 @@ class AppTypography {
         height: 1.4,
       );
 
-  static TextStyle get monoLarge => GoogleFonts.jetBrainsMono(
+  static TextStyle get monoLarge => const TextStyle(
+        fontFamily: 'monospace',
         fontSize: 20,
         fontWeight: FontWeight.w600,
       );
 
-  static TextStyle get monoMedium => GoogleFonts.jetBrainsMono(
+  static TextStyle get monoMedium => const TextStyle(
+        fontFamily: 'monospace',
         fontSize: 16,
         fontWeight: FontWeight.w500,
       );
 
-  static TextStyle get monoSmall => GoogleFonts.jetBrainsMono(
+  static TextStyle get monoSmall => const TextStyle(
+        fontFamily: 'monospace',
         fontSize: 14,
         fontWeight: FontWeight.w400,
       );

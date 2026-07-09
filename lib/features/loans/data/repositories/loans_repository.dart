@@ -195,6 +195,7 @@ class LoansRepository {
 
   Future<String> createLoan({
     required String borrowerId,
+    String? productId,
     required double principal,
     required double interestRate,
     required int tenureMonths,
@@ -282,6 +283,7 @@ class LoansRepository {
       if (tenureValue != null) 'tenure_value': tenureValue,
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
       'freeze_enabled': freezeEnabled,
+      if (productId != null) 'product_id': productId,
     }).select('id').single();
 
     final loanId = result['id'] as String;
@@ -304,6 +306,7 @@ class LoansRepository {
   /// [openingBalance] is the total amount already paid before migration.
   Future<String> createMigrationLoan({
     required String borrowerId,
+    String? productId,
     required double principal,
     required double interestRate,
     required int tenureMonths,
@@ -397,6 +400,7 @@ class LoansRepository {
       if (tenureValue != null) 'tenure_value': tenureValue,
       if (tenureUnit != null) 'tenure_unit': tenureUnit,
       'freeze_enabled': freezeEnabled,
+      if (productId != null) 'product_id': productId,
     }).select('id').single();
 
     final loanId = result['id'] as String;

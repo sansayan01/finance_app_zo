@@ -1,13 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
+
+/// Build a TextTheme where every style uses our locally bundled Inter font.
+/// This replaces GoogleFonts.interTextTheme() which creates a mismatched
+/// family name ('Inter_regular') vs the pubspec-registered 'Inter'.
+TextTheme interTextTheme([TextTheme? base]) {
+  final b = base ?? const TextTheme();
+  TextStyle withInter(TextStyle? s) =>
+      (s ?? const TextStyle()).copyWith(fontFamily: 'Inter');
+  return TextTheme(
+    displayLarge: withInter(b.displayLarge),
+    displayMedium: withInter(b.displayMedium),
+    displaySmall: withInter(b.displaySmall),
+    headlineLarge: withInter(b.headlineLarge),
+    headlineMedium: withInter(b.headlineMedium),
+    headlineSmall: withInter(b.headlineSmall),
+    titleLarge: withInter(b.titleLarge),
+    titleMedium: withInter(b.titleMedium),
+    titleSmall: withInter(b.titleSmall),
+    bodyLarge: withInter(b.bodyLarge),
+    bodyMedium: withInter(b.bodyMedium),
+    bodySmall: withInter(b.bodySmall),
+    labelLarge: withInter(b.labelLarge),
+    labelMedium: withInter(b.labelMedium),
+    labelSmall: withInter(b.labelSmall),
+  );
+}
 
 class AppTheme {
   AppTheme._();
 
   static ThemeData get lightTheme {
-    final baseTextTheme = GoogleFonts.interTextTheme();
+    final baseTextTheme = interTextTheme();
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -284,8 +309,7 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    final baseTextTheme =
-        GoogleFonts.interTextTheme(ThemeData.dark().textTheme);
+    final baseTextTheme = interTextTheme(ThemeData.dark().textTheme);
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,

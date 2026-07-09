@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../settings/data/providers/products_providers.dart';
 import '../../../members/presentation/widgets/member_searchable_picker.dart';
 import '../providers/new_recurring_saving_provider.dart';
 
@@ -315,6 +316,13 @@ class _NewRecurringSavingPageState
           _buildSectionHeader('Account Parameters',
               Icons.account_balance_wallet_rounded, theme, primary),
           const SizedBox(height: 28),
+
+          // ── Product Template Selector ──
+          _buildLabel('SELECT PRODUCT (OPTIONAL)', theme),
+          const SizedBox(height: 10),
+          _buildProductSelector(state, theme, isDark),
+
+          const SizedBox(height: 24),
 
           // ── Member ──
           _buildLabel('MEMBER ACCOUNT', theme),
@@ -1200,5 +1208,108 @@ class _NewRecurringSavingPageState
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
+  }
+
+  // ═══════════════════════════════════════════════════
+  //  PRODUCT TEMPLATE SELECTOR
+  // ═══════════════════════════════════════════════════
+  Widget _buildProductSelector(NewRecurringSavingState state, ThemeData theme, bool isDark) {
+    final asyncProducts = ref.watch(savingsProductsProvider);
+    return asyncProducts.when(
+      loading: () => const LinearProgressIndicator(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (products) {
+        final activeProducts = products.where((p) => p['is_active'] == true).toList();
+        if (activeProducts.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.fillDark : AppColors.fillLight,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: DropdownButtonFormField<String>(
+            initialValue: state.productId,
+            isExpanded: true,
+            items: [
+              const DropdownMenuItem(
+                value: null,
+                child: Text('None (Manual Entry)',
+                    style: TextStyle(fontStyle: FontStyle.italic)),
+              ),
+              ...activeProducts.map((p) => DropdownMenuItem(
+                    value: p['id'] as String,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(p['name']?.toString() ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(
+                          '${p['interest_rate']}% · ${p['collection_type']} · ${p['tenure']} ${p['tenure_unit']}',
+                          style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+            onChanged: (productId) {
+              ref.read(newRecurringSavingProvider.notifier).updateProductId(productId);
+              if (productId != null) {
+                final product = activeProducts.firstWhere((p) => p['id'] == productId);
+                _applySavingsProduct(product);
+              }
+            },
+            decoration: const InputDecoration(
+              labelText: 'Savings Product',
+              hintText: 'Select a product template',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _applySavingsProduct(Map<String, dynamic> product) {
+    final notifier = ref.read(newRecurringSavingProvider.notifier);
+
+    // Collection type
+    notifier.updateCollectionType(
+      CollectionType.values.firstWhere(
+        (e) => e.name == (product['collection_type'] ?? 'monthly'),
+        orElse: () => CollectionType.monthly,
+      ),
+    );
+
+    // Tenure
+    notifier.updateTenure(product['tenure'] ?? 12);
+    notifier.updateTenureUnit(
+      TenureUnit.values.firstWhere(
+        (e) => e.name == (product['tenure_unit'] ?? 'months'),
+        orElse: () => TenureUnit.months,
+      ),
+    );
+
+    // Premature penalty
+    notifier.updatePrematurePenalty((product['premature_penalty'] as num?)?.toDouble() ?? 0);
+
+    // Default installment amount
+    final defaultInstallment = (product['default_installment'] as num?)?.toDouble();
+    if (defaultInstallment != null && defaultInstallment > 0) {
+      notifier.updateInstallmentAmount(defaultInstallment);
+      _installmentController.text = defaultInstallment.toInt().toString();
+    }
+
+    // Default maturity amount
+    final defaultMaturity = (product['default_maturity_amount'] as num?)?.toDouble();
+    if (defaultMaturity != null && defaultMaturity > 0) {
+      notifier.updateMaturityAmount(defaultMaturity);
+      _maturityAmountController.text = defaultMaturity.toInt().toString();
+    }
+
+    // Update text controllers
+    _tenureController.text = (product['tenure'] ?? 12).toString();
+    _penaltyController.text = ((product['premature_penalty'] as num?)?.toDouble() ?? 0).toStringAsFixed(0);
   }
 }

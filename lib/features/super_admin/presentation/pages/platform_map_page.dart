@@ -74,19 +74,19 @@ class _PlatformMapPageState extends ConsumerState<PlatformMapPage> {
                             ),
                             MarkerLayer(
                               markers: [
-                                // India center region
-                                _CoverageMarker(LatLng(28.6139, 77.2090),
-                                    'North'), // Delhi
-                                _CoverageMarker(LatLng(19.0760, 72.8777),
-                                    'West'), // Mumbai
-                                _CoverageMarker(LatLng(13.0827, 80.2707),
-                                    'South'), // Chennai
-                                _CoverageMarker(LatLng(22.5726, 88.3639),
-                                    'East'), // Kolkata
-                                _CoverageMarker(LatLng(12.9716, 77.5946),
-                                    'South'), // Bangalore
-                                _CoverageMarker(LatLng(17.3850, 78.4867),
-                                    'Central'), // Hyderabad
+                                ...ref.watch(branchLocationsProvider).when(
+                                  data: (branches) => branches.map((b) =>
+                                    _CoverageMarker(
+                                      LatLng(
+                                        (b['location_lat'] as num).toDouble(),
+                                        (b['location_lng'] as num).toDouble(),
+                                      ),
+                                      b['name'] ?? 'Unknown',
+                                    ),
+                                  ),
+                                  loading: () => [],
+                                  error: (_, __) => [],
+                                ),
                               ],
                             ),
                           ],

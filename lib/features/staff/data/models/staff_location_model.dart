@@ -28,6 +28,14 @@ class StaffLocationModel extends Equatable {
   // Timestamps
   final DateTime recordedAt;
 
+  // Organization / Branch
+  final String? orgId;
+  final String? branchId;
+
+  // Live tracking
+  final bool isActive;
+  final String? sessionId;
+
   // Sync
   final SyncStatus syncStatus;
   final DateTime createdAt;
@@ -45,6 +53,10 @@ class StaffLocationModel extends Equatable {
     this.batteryLevel,
     this.isCharging = false,
     required this.recordedAt,
+    this.orgId,
+    this.branchId,
+    this.isActive = false,
+    this.sessionId,
     this.syncStatus = SyncStatus.synced,
     required this.createdAt,
   });
@@ -63,6 +75,10 @@ class StaffLocationModel extends Equatable {
       batteryLevel: json['battery_level'] as int?,
       isCharging: json['is_charging'] as bool? ?? false,
       recordedAt: DateTime.parse(json['recorded_at'] as String),
+      orgId: json['org_id'] as String?,
+      branchId: json['branch_id'] as String?,
+      isActive: json['is_active'] as bool? ?? false,
+      sessionId: json['session_id'] as String?,
       syncStatus: _parseSyncStatus(json['sync_status'] as String?),
       createdAt: DateTime.parse(json['created_at'] as String),
     );
@@ -82,6 +98,10 @@ class StaffLocationModel extends Equatable {
       'battery_level': batteryLevel,
       'is_charging': isCharging,
       'recorded_at': recordedAt.toIso8601String(),
+      'org_id': orgId,
+      'branch_id': branchId,
+      'is_active': isActive,
+      'session_id': sessionId,
       'sync_status': syncStatus.name,
       'created_at': createdAt.toIso8601String(),
     };
@@ -100,6 +120,10 @@ class StaffLocationModel extends Equatable {
       'battery_level': batteryLevel,
       'is_charging': isCharging,
       'recorded_at': recordedAt.toIso8601String(),
+      'org_id': orgId,
+      'branch_id': branchId,
+      'is_active': isActive,
+      'session_id': sessionId,
       'sync_status': 'synced',
     };
   }
@@ -150,6 +174,10 @@ class StaffLocationModel extends Equatable {
     int? batteryLevel,
     bool? isCharging,
     DateTime? recordedAt,
+    String? orgId,
+    String? branchId,
+    bool? isActive,
+    String? sessionId,
     SyncStatus? syncStatus,
     DateTime? createdAt,
   }) {
@@ -166,6 +194,10 @@ class StaffLocationModel extends Equatable {
       batteryLevel: batteryLevel ?? this.batteryLevel,
       isCharging: isCharging ?? this.isCharging,
       recordedAt: recordedAt ?? this.recordedAt,
+      orgId: orgId ?? this.orgId,
+      branchId: branchId ?? this.branchId,
+      isActive: isActive ?? this.isActive,
+      sessionId: sessionId ?? this.sessionId,
       syncStatus: syncStatus ?? this.syncStatus,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -185,6 +217,10 @@ class StaffLocationModel extends Equatable {
         batteryLevel,
         isCharging,
         recordedAt,
+        orgId,
+        branchId,
+        isActive,
+        sessionId,
         syncStatus,
         createdAt,
       ];

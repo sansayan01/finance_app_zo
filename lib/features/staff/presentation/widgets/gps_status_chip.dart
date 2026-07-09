@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../../core/utils/location_permission_helper.dart';
 
 enum GpsStatus {
   active,
@@ -45,18 +46,18 @@ class GpsStatusChip extends StatelessWidget {
   }
 
   static Future<GpsStatus> checkStatus() async {
-    final permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      return GpsStatus.noPermission;
+    final status = await LocationPermissionHelper.checkStatus();
+    switch (status) {
+      case LocationPermissionStatus.granted:
+        return GpsStatus.active;
+      case LocationPermissionStatus.serviceDisabled:
+        return GpsStatus.disabled;
+      case LocationPermissionStatus.denied:
+      case LocationPermissionStatus.permanentlyDenied:
+        return GpsStatus.noPermission;
+      default:
+        return GpsStatus.inactive;
     }
-
-    final enabled = await Geolocator.isLocationServiceEnabled();
-    if (!enabled) {
-      return GpsStatus.disabled;
-    }
-
-    return GpsStatus.active;
   }
 
   @override

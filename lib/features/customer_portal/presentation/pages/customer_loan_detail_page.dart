@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:printing/printing.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -21,7 +24,9 @@ import '../../../loans/data/models/loan_model.dart';
 import '../../../loans/data/services/loan_statement_pdf_service.dart';
 import '../../../loans/data/services/loan_statement_excel_service.dart';
 import '../../../loans/data/services/loan_statement_csv_service.dart';
+import '../../../loans/data/services/qr_png.dart';
 import '../../../loans/presentation/providers/loan_providers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/customer_loan_model.dart';
 import '../../data/models/customer_emi_model.dart';
 import '../../data/providers/customer_loans_providers.dart';
@@ -1001,12 +1006,8 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       interestRate: loan.interestRate,
                                       tenureMonths: loan.tenureMonths,
                                       emiAmount: loan.emiAmount,
-                                      totalInterest:
-                                          (loan.emiAmount *
-                                                  loan.tenureMonths) -
-                                              loan.amount,
-                                      totalRepayable: loan.emiAmount *
-                                          loan.tenureMonths,
+                                      totalInterest: loan.totalInterest,
+                                      totalRepayable: loan.totalRepayable,
                                       outstandingBalance:
                                           loan.outstandingBalance,
                                       interestType: InterestType.values.firstWhere(
@@ -1026,12 +1027,15 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       customerName: loan.memberName,
                                     );
 
-                                    // Map EMI schedule
-                                    final emiAsync = ref.read(
+                                    // Map EMI schedule — await the future so
+                                    // the schedule is always fully loaded
+                                    // (mirrors the admin flow). Using
+                                    // valueOrNull could yield an empty list if
+                                    // the provider hadn't resolved yet.
+                                    final emiList = await ref.read(
                                         customerEmiScheduleProvider(
-                                            widget.loanId));
-                                    final emiList =
-                                        emiAsync.valueOrNull ?? [];
+                                                widget.loanId)
+                                            .future);
 
                                     final adminSchedule = emiList
                                         .map((e) => EMIScheduleModel(
@@ -1088,6 +1092,14 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       }
                                     }
 
+                                    // Statement reference — same format as the
+                                    // executive admin portal.
+                                    final statementRef =
+                                        'STMT-${adminLoan.loanNumber}-${DateTime.now().millisecondsSinceEpoch.toRadixString(36).toUpperCase()}';
+                                    final generatedByName =
+                                        ref.read(currentUserProvider)?.fullName ??
+                                            loan.memberName;
+
                                     // Generate statement in the selected format
                                     Uint8List fileBytes;
                                     String fileExt;
@@ -1099,6 +1111,7 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                         org: org,
                                         periodStart: periodStart,
                                         periodEnd: periodEnd,
+                                        statementRef: statementRef,
                                       );
                                       fileExt = 'xlsx';
                                     } else if (selectedFormat == 'csv') {
@@ -1112,14 +1125,21 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       fileExt = 'csv';
                                     } else {
                                       // PDF (default)
+                                      final qrBytes = await QrPng.generate(
+                                        'loan:${adminLoan.loanNumber}',
+                                        size: 200,
+                                      );
                                       fileBytes = await LoanStatementPdfService
                                           .buildCustomerStatement(
                                         loan: adminLoan,
                                         schedule: adminSchedule,
                                         payments: payments,
                                         org: org,
+                                        generatedByName: generatedByName,
                                         periodStart: periodStart,
                                         periodEnd: periodEnd,
+                                        statementRef: statementRef,
+                                        qrPngBytes: qrBytes,
                                       );
                                       fileExt = 'pdf';
                                     }
@@ -1268,10 +1288,18 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                   child: InkWell(
                                     onTap: () async {
                                       HapticFeedback.lightImpact();
-                                      if (_generatedPdfBytes != null) {
-                                        await Printing.layoutPdf(
-                                            onLayout: (format) async =>
-                                                _generatedPdfBytes!);
+                                      if (_generatedPdfBytes != null &&
+                                          _statementFilename != null) {
+                                        final messenger = ScaffoldMessenger.of(context);
+                                        final dir = await getApplicationDocumentsDirectory();
+                                        final file = File('${dir.path}/$_statementFilename');
+                                        await file.writeAsBytes(_generatedPdfBytes!);
+                                        final result = await OpenFilex.open(file.path);
+                                        if (result.type != ResultType.done && mounted) {
+                                          messenger.showSnackBar(
+                                            SnackBar(content: Text('Could not open file: ${result.message}')),
+                                          );
+                                        }
                                       }
                                     },
                                     borderRadius: BorderRadius.circular(14),
@@ -1325,9 +1353,13 @@ class _CustomerLoanDetailPageState extends ConsumerState<CustomerLoanDetailPage>
                                       HapticFeedback.lightImpact();
                                       if (_generatedPdfBytes != null &&
                                           _statementFilename != null) {
-                                        await Printing.sharePdf(
-                                            bytes: _generatedPdfBytes!,
-                                            filename: _statementFilename!);
+                                        final dir = await getApplicationDocumentsDirectory();
+                                        final file = File('${dir.path}/$_statementFilename');
+                                        await file.writeAsBytes(_generatedPdfBytes!);
+                                        SharePlus.instance.share(ShareParams(
+                                          files: [XFile(file.path)],
+                                          text: 'Loan Statement',
+                                        ));
                                       }
                                     },
                                     borderRadius: BorderRadius.circular(14),

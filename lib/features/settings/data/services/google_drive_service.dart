@@ -210,6 +210,10 @@ class GoogleDriveService {
     debugPrint('Redirect URI: $redirectUri');
     await launchUrl(authUrl, mode: LaunchMode.platformDefault);
 
+    if (context != null && !context.mounted) {
+      return const DriveConnectionState();
+    }
+
     // Try clipboard first, then fall back to a paste dialog
     final code = await _getAuthCodeViaClipboard(context: context);
     if (code == null) throw Exception('No auth code provided.');
@@ -259,7 +263,7 @@ class GoogleDriveService {
       }
     } catch (_) {}
 
-    if (context == null) return null;
+    if (context == null || !context.mounted) return null;
 
     final controller = TextEditingController();
     final code = await showDialog<String>(

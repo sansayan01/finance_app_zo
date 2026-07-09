@@ -37,6 +37,13 @@
                  At runtime, MainActivity.setIcon() enables exactly one activity-alias
                  (e.g. .MainActivityDefault) and disables the others + this activity, so
                  only one launcher icon shows on the homescreen at any time. -->
+            <!-- Google OAuth redirect via custom URL scheme (no Firebase/SHA-1 needed) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.microflow.pro" android:host="oauth2callback" />
+            </intent-filter>
         </activity>
 
         <!-- ═══════════════════════════════════════════════════════════

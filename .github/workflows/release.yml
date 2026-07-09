@@ -144,7 +144,8 @@ jobs:
             --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
             --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
             --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
-            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="${{ secrets.GOOGLE_WEB_CLIENT_ID }}"
 
       - name: Build Split APKs (per architecture)
         run: |
@@ -155,7 +156,8 @@ jobs:
             --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
             --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
             --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
-            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="${{ secrets.GOOGLE_WEB_CLIENT_ID }}"
 
       - name: Build Signed AAB
         run: |
@@ -166,7 +168,8 @@ jobs:
             --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
             --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
             --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
-            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}"
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="${{ secrets.GOOGLE_WEB_CLIENT_ID }}"
 
       - name: Prepare flat artifacts
         run: |

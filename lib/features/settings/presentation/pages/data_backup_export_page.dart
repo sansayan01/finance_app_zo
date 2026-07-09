@@ -2646,7 +2646,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     if (orgId == null) return;
     try {
       final service = ref.read(googleDriveServiceProvider);
-      await service.signIn(orgId);
+      await service.signIn(orgId, context: context);
       ref.invalidate(driveConnectionProvider);
       ref.invalidate(driveBackupsProvider);
       if (mounted) showSuccessSnackBar(context, 'Google Drive connected successfully!');

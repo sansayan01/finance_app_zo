@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -51,9 +52,8 @@ class DriveConnectionState {
 
 /// Service for Google Drive OAuth + file upload.
 ///
-/// On **mobile** (Android/iOS): uses the `google_sign_in` plugin.
-/// On **web**: uses a direct OAuth redirect flow via `url_launcher`
-/// because the plugin's `signIn()` method is deprecated and broken on web.
+/// Uses browser-based OAuth via `url_launcher` on all platforms
+/// (no Firebase SHA-1 registration required).
 class GoogleDriveService {
   final SupabaseClient _client;
   GoogleDriveService(this._client);
@@ -61,14 +61,6 @@ class GoogleDriveService {
   // ── Scopes ────────────────────────────────────────────────────────────
 
   static const _scopes = ['https://www.googleapis.com/auth/drive.file'];
-
-  // ── Mobile: GoogleSignIn plugin ────────────────────────────────────────
-
-  GoogleSignIn get _googleSignIn => GoogleSignIn(
-        scopes: _scopes,
-        clientId: null, // Android/iOS reads from native config
-        serverClientId: EnvConfig.googleWebClientId,
-      );
 
   // ── Web: OAuth redirect URI ───────────────────────────────────────────
 
@@ -81,11 +73,11 @@ class GoogleDriveService {
 
   // ── signIn (platform-aware) ───────────────────────────────────────────
 
-  Future<DriveConnectionState> signIn(String orgId) async {
+  Future<DriveConnectionState> signIn(String orgId, {BuildContext? context}) async {
     if (kIsWeb) {
       return _signInWeb(orgId);
     }
-    return _signInMobile(orgId);
+    return _signInMobile(orgId, context: context);
   }
 
   // ── Web: Direct OAuth redirect flow ───────────────────────────────────
@@ -196,54 +188,121 @@ class GoogleDriveService {
     }
   }
 
-  // ── Mobile: google_sign_in plugin ─────────────────────────────────────
+  // ── Mobile: browser-based OAuth (no Firebase/SHA-1 needed) ─────────────
 
-  Future<DriveConnectionState> _signInMobile(String orgId) async {
-    debugPrint('GoogleDriveService [mobile]: calling _googleSignIn.signIn()...');
-    final account = await _googleSignIn.signIn();
-    if (account == null) throw Exception('Google Sign-In was cancelled.');
-    debugPrint('GoogleDriveService [mobile]: account: ${account.email}');
-
-    final serverAuthCode = account.serverAuthCode;
-    if (serverAuthCode == null || serverAuthCode.isEmpty) {
-      throw Exception('No server auth code received.');
+  Future<DriveConnectionState> _signInMobile(String orgId, {BuildContext? context}) async {
+    final clientId = EnvConfig.googleWebClientId;
+    if (clientId.isEmpty) {
+      throw Exception('GOOGLE_WEB_CLIENT_ID is not configured in .env');
     }
+
+    final redirectUri = 'com.microflow.pro://oauth2callback';
+    final authUrl = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', {
+      'client_id': clientId,
+      'redirect_uri': redirectUri,
+      'response_type': 'code',
+      'scope': _scopes.join(' '),
+      'access_type': 'offline',
+      'prompt': 'consent',
+    });
+
+    debugPrint('GoogleDriveService [mobile]: opening OAuth URL in browser...');
+    debugPrint('Redirect URI: $redirectUri');
+    await launchUrl(authUrl, mode: LaunchMode.platformDefault);
+
+    // Try clipboard first, then fall back to a paste dialog
+    final code = await _getAuthCodeViaClipboard(context: context);
+    if (code == null) throw Exception('No auth code provided.');
+
     debugPrint('GoogleDriveService [mobile]: exchanging auth code...');
-
-    final tokenResponse = await _exchangeCodeForTokens(serverAuthCode);
+    final tokenResponse = await _exchangeCodeForTokens(code, redirectUri: redirectUri);
     final refreshToken = tokenResponse['refresh_token'] as String?;
-
-    // Use the access token from the exchange directly.
-    // Only refresh later if it expires.
     final accessToken = tokenResponse['access_token'] as String? ??
         (refreshToken != null ? await _getAccessTokenFromRefresh(refreshToken) : null);
-    if (accessToken == null) {
-      throw Exception('No access token received from Google');
-    }
+    if (accessToken == null) throw Exception('No access token received from Google');
+
+    // Get user email from token info
+    String email = 'unknown@gmail.com';
+    try {
+      final userInfoResp = await http.get(
+        Uri.parse('https://www.googleapis.com/oauth2/v2/userinfo'),
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+      if (userInfoResp.statusCode == 200) {
+        final userInfo = jsonDecode(userInfoResp.body) as Map<String, dynamic>;
+        email = userInfo['email'] as String? ?? email;
+      }
+    } catch (_) {}
 
     final folderId = await _createOrGetBackupFolder(accessToken, orgId);
-
     final state = DriveConnectionState(
       connected: true,
-      email: account.email,
+      email: email,
       refreshToken: refreshToken,
       accessToken: accessToken,
       folderId: folderId,
       connectedAt: DateTime.now().toIso8601String(),
     );
     await _persistConnectionState(orgId, state);
-
     return state;
+  }
+
+  /// Try to read auth code from clipboard; if not found, show a paste dialog.
+  Future<String?> _getAuthCodeViaClipboard({BuildContext? context}) async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text ?? '';
+      final match = RegExp(r'code=([A-Za-z0-9_\-]+)').firstMatch(text);
+      if (match != null && match.group(1)!.length > 10) {
+        debugPrint('GoogleDriveService: auto-pasted auth code from clipboard');
+        return match.group(1);
+      }
+    } catch (_) {}
+
+    if (context == null) return null;
+
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.g_mobiledata_rounded, size: 40, color: Colors.blue),
+        title: const Text('Paste Auth Code'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Copy the authorization code from the browser URL bar, then paste it here:',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'Paste code here...',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Connect'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return code?.isEmpty == true ? null : code;
   }
 
   // ── Disconnect ────────────────────────────────────────────────────────
 
   Future<void> signOut(String orgId) async {
-    if (!kIsWeb) {
-      try {
-        await _googleSignIn.signOut();
-      } catch (_) {}
-    }
     await _persistConnectionState(orgId, const DriveConnectionState());
   }
 

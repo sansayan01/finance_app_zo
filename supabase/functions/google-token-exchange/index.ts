@@ -11,14 +11,8 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { code, redirect_uri } = await req.json();
-
-    if (!code) {
-      return new Response(
-        JSON.stringify({ error: "Missing code parameter" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const body = await req.json();
+    const { code, redirect_uri, grant_type, refresh_token } = body;
 
     const clientId = Deno.env.get("GOOGLE_WEB_CLIENT_ID");
     const clientSecret = Deno.env.get("GOOGLE_WEB_CLIENT_SECRET");
@@ -30,17 +24,31 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Exchange authorization code for tokens
+    // Determine grant type: explicit "refresh_token" or infer from presence of code
+    const isRefresh = grant_type === "refresh_token" && refresh_token;
+
+    if (!isRefresh && !code) {
+      return new Response(
+        JSON.stringify({ error: "Missing code or refresh_token parameter" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Build params for the chosen grant type
     const params = new URLSearchParams({
-      code,
       client_id: clientId,
       client_secret: clientSecret,
-      grant_type: "authorization_code",
+      ...(isRefresh
+        ? {
+            grant_type: "refresh_token",
+            refresh_token: refresh_token,
+          }
+        : {
+            code: code,
+            grant_type: "authorization_code",
+            ...(redirect_uri ? { redirect_uri } : {}),
+          }),
     });
-
-    if (redirect_uri) {
-      params.append("redirect_uri", redirect_uri);
-    }
 
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",

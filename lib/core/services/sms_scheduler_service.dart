@@ -12,6 +12,7 @@ import 'sms_service.dart';
 import '../providers/org_provider.dart';
 import '../providers/sms_config_provider.dart';
 import '../providers/sms_outbox_provider.dart';
+import '../providers/sms_provider.dart' show dispatchOutboxRow;
 
 /// Thin Dart wrapper around the Android-side `SmsReminderWorker`.
 /// On Android we delegate to WorkManager; on iOS this is a no-op.
@@ -246,6 +247,25 @@ class SmsSchedulerService {
       }
       debugPrint(
           'runReminderPass: org=$_orgId due=${rows.length} enqueued=$enqueued');
+
+      // Dispatch all pending rows — the outbox enqueue above only stores them;
+      // without this call they would sit pending until a manual retry.
+      int dispatched = 0;
+      for (final row in _outbox.pendingDue()) {
+        try {
+          final ok = await dispatchOutboxRow(
+            outbox: _outbox,
+            row: row,
+            smsService: _smsService,
+            supabaseClient: _client,
+            orgId: _orgId,
+          );
+          if (ok) dispatched++;
+        } catch (e) {
+          debugPrint('runReminderPass: dispatch failed for ${row.id}: $e');
+        }
+      }
+      debugPrint('runReminderPass: dispatched=$dispatched of $enqueued');
       return enqueued;
     } catch (e, stack) {
       debugPrint('runReminderPass: query failed: $e');

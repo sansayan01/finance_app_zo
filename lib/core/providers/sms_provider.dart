@@ -119,24 +119,15 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     }
 
     // Proactive permission check for Android
+    bool permissionDenied = false;
     if (Platform.isAndroid && !forceDispatch) {
       final hasPermission = await _smsService.hasSmsPermission();
       if (!hasPermission) {
         debugPrint('CollectionSmsSender: SMS permission missing, requesting...');
         final granted = await _smsService.requestSmsPermission();
         if (!granted) {
-          debugPrint('CollectionSmsSender: SMS permission denied by user');
-          await _logSms(
-            memberId: memberId,
-            recipientPhone: phone,
-            recipientName: memberName,
-            collectorName: collectorName,
-            message: '',
-            status: 'failed',
-            errorMessage: 'SMS permission denied',
-            sentBy: sentBy,
-          );
-          return null;
+          debugPrint('CollectionSmsSender: SMS permission denied — will enqueue for retry');
+          permissionDenied = true;
         }
       }
     }
@@ -183,8 +174,10 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
         sentBy: sentBy,
         status: OutboxStatus.pending,
         attempts: 0,
-        lastError: null,
-        scheduledFor: DateTime.now(),
+        lastError: permissionDenied ? 'SMS permission denied — retrying' : null,
+        scheduledFor: permissionDenied
+            ? DateTime.now().add(const Duration(seconds: 30))
+            : DateTime.now(),
         createdAt: DateTime.now(),
       ),
       smsService: smsService,
@@ -259,24 +252,15 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
     }
 
     // Proactive permission check for Android
+    bool permissionDenied = false;
     if (Platform.isAndroid && !forceDispatch) {
       final hasPermission = await _smsService.hasSmsPermission();
       if (!hasPermission) {
         debugPrint('CollectionSmsSender: SMS permission missing, requesting...');
         final granted = await _smsService.requestSmsPermission();
         if (!granted) {
-          debugPrint('CollectionSmsSender: SMS permission denied by user');
-          await _logSms(
-            memberId: memberId,
-            recipientPhone: phone,
-            recipientName: memberName,
-            collectorName: collectorName,
-            message: '',
-            status: 'failed',
-            errorMessage: 'SMS permission denied',
-            sentBy: sentBy,
-          );
-          return null;
+          debugPrint('CollectionSmsSender: SMS permission denied — will enqueue for retry');
+          permissionDenied = true;
         }
       }
     }
@@ -317,8 +301,10 @@ class CollectionSmsSender extends StateNotifier<CollectionSmsState> {
         sentBy: sentBy,
         status: OutboxStatus.pending,
         attempts: 0,
-        lastError: null,
-        scheduledFor: DateTime.now(),
+        lastError: permissionDenied ? 'SMS permission denied — retrying' : null,
+        scheduledFor: permissionDenied
+            ? DateTime.now().add(const Duration(seconds: 30))
+            : DateTime.now(),
         createdAt: DateTime.now(),
       ),
       smsService: smsService,

@@ -1,7 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
-- **2026-07-11:** Super admin portal overhaul done. Shell rewritten to frosted glass HUD + bottom bar (matching exec admin). Dashboard rebuilt with exec admin design system (AppColors, gradient bg, frosted cards, staggered animations). Organizations page built (search, filter chips, org cards, create dialog). Settings page with theme toggle. Route guards fixed (ref.watch in shell). Debug logging added to `allOrganizationsProvider` + `getAllOrganizations` — orgs not showing on staging despite data existing. RLS policy `((id = get_user_org_id()) OR (created_by = auth.uid))` confirmed. `created_by` is null on Test Org. Debug print statements pending removal. SUPER ADMIN on staging: msayan9733@gmail.com.
+- **2026-07-11:** Super admin portal overhaul committed. Organizations page root cause found: `allOrganizationsProvider` was a `FutureProvider.autoDispose.family` keyed by `Map<String,dynamic>` — Dart Map uses identity equality so every rebuild created a new cache key → infinite loading loop (280ms per request, page stuck on skeleton). Fixed by replacing Map arg with `OrgsQuery` value class. RLS was never the problem. Org data confirmed queryable on staging. SUPER ADMIN on staging: msayan9733@gmail.com.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
 
 ## graphify
@@ -101,6 +101,7 @@ This CLAUDE.md is my **brain**. It evolves every single session. Every prompt, e
 - **Supabase PostgREST `table:table(count)` is invalid syntax.** The repo had `profiles:profiles(count)` which silently fails and returns `[]`. Correct approach: select the rows (`profiles(id)`) and count client-side, or use a separate count query.
 - **RLS policies can silently kill queries.** The `organizations` table has `org_select: ((id = get_user_org_id()) OR (created_by = auth.uid))`. If `created_by` is null and the user's org doesn't match, the query returns empty with no error. The repo's try/catch hides the real issue.
 - **`ShellRoute.builder` with `ref.read()` never rebuilds.** It fires once when the route is first built. If auth is null at that point, it stays stuck on spinner/error forever. Fix: move the auth check into the shell widget itself using `ref.watch()` so it reactively rebuilds.
+- **Never key `FutureProvider.autoDispose.family` with `Map<String,dynamic>`.** Dart Map uses identity equality — a fresh map literal on every build = new cache key = new provider = infinite loading loop. Always use a Dart record, a custom class with `==`/`hashCode`, or primitive types for family keys.
 
 ---
 

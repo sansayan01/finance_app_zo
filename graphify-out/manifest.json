@@ -1175,8 +1175,8 @@
     "semantic_hash": "3ba9286569d5cb77f37f0cc39da856ce"
   },
   "lib/features/super_admin/data/providers/super_admin_providers.dart": {
-    "mtime": 1783759424.535082,
-    "ast_hash": "e187a20e768906eab125d47071570ee0",
+    "mtime": 1783760427.5682654,
+    "ast_hash": "475f4920351843e95d02e17bcbbbae09",
     "semantic_hash": ""
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {
@@ -1185,8 +1185,8 @@
     "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/organizations_management_page.dart": {
-    "mtime": 1783731072.6192307,
-    "ast_hash": "4ac9e5d6a5345972539b57a0a73925c2",
+    "mtime": 1783760921.0415683,
+    "ast_hash": "0a1f5de18b6d3b1902064fda02127288",
     "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/super_admin_dashboard.dart": {
@@ -5045,8 +5045,8 @@
     "semantic_hash": "41559f5fc3eee3c0e967aaf7ebc431b3"
   },
   "CLAUDE.md": {
-    "mtime": 1783731924.9914265,
-    "ast_hash": "0f85d9d19c6dd0b4d056ec7728d590e3",
+    "mtime": 1783763166.8737574,
+    "ast_hash": "cd4daac806a6d01691f1af64c9f0738f",
     "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {

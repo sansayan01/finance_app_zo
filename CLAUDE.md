@@ -1,7 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
-- **2026-07-11:** Super admin overhaul committed. Org detail page rebuilt as command center — orgDetailFullProvider (parallel query: org+profiles+branches+activity_logs+member_count), metrics grid, members section with search+role filter, branches list, activity feed, danger zone. Zero DB migrations. SUPER ADMIN on staging: msayan9733@gmail.com.
+- **2026-07-11:** Super admin overhaul committed. Org detail page rebuilt as tabbed command center — Members/Branches/Activity tabs, quick stats bar, search+role filter chips, inline suspend action, zero warnings, zero DB migrations. SUPER ADMIN on staging: msayan9733@gmail.com.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
 
 ## graphify

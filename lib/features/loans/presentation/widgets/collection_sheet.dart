@@ -899,19 +899,20 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
       try {
         debugPrint('CollectionSheet: initiating SMS dispatch...');
         String? phone = widget.loan!.customerPhone;
-        // Use the loan's sms_enabled setting (per-account control)
-        bool smsEnabled = widget.loan!.smsEnabled;
-
-        // Fetch phone from member if not available
+        // SMS opt-out lives on the member row (members.sms_enabled is the only
+        // SMS opt-out column that exists). Read it from there, not the loan.
+        bool smsEnabled = true;
+        String? memberId = widget.loan!.memberId ?? widget.loan!.customerId;
         try {
           final memberInfo = await client
               .from('members')
-              .select('phone')
-              .eq('id', widget.loan!.customerId)
+              .select('phone, sms_enabled')
+              .eq('id', memberId)
               .maybeSingle();
           if (phone == null || phone.isEmpty) {
             phone = memberInfo?['phone']?.toString();
           }
+          smsEnabled = memberInfo?['sms_enabled'] as bool? ?? true;
         } catch (_) {}
 
         final branding = ref.read(brandingProvider).valueOrNull;
@@ -1061,19 +1062,19 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
 
     // 3b. Dispatch SMS - use savings plan's sms_enabled setting
     try {
-      // Fetch phone from member if not available
+      // Fetch phone + SMS opt-out from the member row (members.sms_enabled is
+      // the only SMS opt-out column that exists — not the savings plan).
       String? phone;
+      bool smsEnabled = true;
       try {
         final memberInfo = await client
             .from('members')
-            .select('phone')
+            .select('phone, sms_enabled')
             .eq('id', plan.memberId)
             .maybeSingle();
         phone = memberInfo?['phone']?.toString();
+        smsEnabled = memberInfo?['sms_enabled'] as bool? ?? true;
       } catch (_) {}
-
-      // Use the savings plan's sms_enabled setting (per-account control)
-      final smsEnabled = plan.smsEnabled;
 
       final branding = ref.read(brandingProvider).valueOrNull;
       await ref.read(collectionSmsSenderProvider.notifier).enqueueSavings(

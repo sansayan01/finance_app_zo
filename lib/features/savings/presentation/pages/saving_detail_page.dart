@@ -59,12 +59,32 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   final ValueNotifier<double> _scrollOffset = ValueNotifier<double>(0);
   bool _hasScrolledTimeline = false;
 
+  /// Member-level SMS opt-out state, sourced from members.sms_enabled (the
+  /// only SMS opt-out column that exists). The savings detail toggle drives
+  /// this member flag.
+  final ValueNotifier<bool> _memberSmsEnabled = ValueNotifier<bool>(true);
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
       _scrollOffset.value = _scrollController.offset;
     });
+    _loadMemberSmsEnabled();
+  }
+
+  Future<void> _loadMemberSmsEnabled() async {
+    final saving = ref.read(savingDetailProvider(widget.savingId)).value;
+    if (saving == null) return;
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final memberInfo = await client
+          .from('members')
+          .select('sms_enabled')
+          .eq('id', saving.memberId)
+          .maybeSingle();
+      _memberSmsEnabled.value = memberInfo?['sms_enabled'] as bool? ?? true;
+    } catch (_) {}
   }
 
   @override
@@ -72,6 +92,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     _scrollController.dispose();
     _timelineController.dispose();
     _scrollOffset.dispose();
+    _memberSmsEnabled.dispose();
     super.dispose();
   }
 
@@ -1963,83 +1984,91 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
   Widget _buildSmsToggle(SavingsModel saving, ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: saving.smsEnabled
-                ? Colors.green.withValues(alpha: 0.4)
-                : theme.dividerColor.withValues(alpha: 0.3),
-            width: 1,
+    return ValueListenableBuilder<bool>(
+      valueListenable: _memberSmsEnabled,
+      builder: (context, smsEnabled, _) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: smsEnabled
+                    ? Colors.green.withValues(alpha: 0.4)
+                    : theme.dividerColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: smsEnabled
+                        ? Colors.green.withValues(alpha: 0.15)
+                        : theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    smsEnabled
+                        ? Icons.notifications_active_rounded
+                        : Icons.notifications_off_rounded,
+                    size: 18,
+                    color: smsEnabled
+                        ? Colors.green
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SMS Notifications',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        smsEnabled
+                            ? 'Reminders sent for this savings plan'
+                            : 'No SMS for this savings plan',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: smsEnabled,
+                  activeThumbColor: Colors.green,
+                  onChanged: (val) => _toggleSms(saving, val),
+                ),
+              ],
+            ),
           ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: saving.smsEnabled
-                    ? Colors.green.withValues(alpha: 0.15)
-                    : theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                saving.smsEnabled
-                    ? Icons.notifications_active_rounded
-                    : Icons.notifications_off_rounded,
-                size: 18,
-                color: saving.smsEnabled
-                    ? Colors.green
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SMS Notifications',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                  Text(
-                    saving.smsEnabled
-                        ? 'Reminders sent for this savings plan'
-                        : 'No SMS for this savings plan',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Switch.adaptive(
-              value: saving.smsEnabled,
-              activeThumbColor: Colors.green,
-              onChanged: (val) => _toggleSms(saving, val),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
   Future<void> _toggleSms(SavingsModel saving, bool enabled) async {
     HapticFeedback.lightImpact();
     final client = ref.read(supabaseClientProvider);
-    await client.from('savings_plans').update({
+    // Persist on the member row — members.sms_enabled is the only SMS opt-out
+    // column that exists. The savings detail toggle drives member SMS.
+    await client.from('members').update({
       'sms_enabled': enabled,
-    }).eq('id', saving.id);
+    }).eq('id', saving.memberId);
+    _memberSmsEnabled.value = enabled;
     ref.invalidate(savingDetailProvider(widget.savingId));
     ref.invalidate(allSavingsProvider);
     if (mounted) {

@@ -191,15 +191,16 @@ class CollectionNotifier extends StateNotifier<AsyncValue<CollectionModel?>> {
         } catch (_) {}
       }
 
-      // Fetch loan's sms_enabled setting (per-account control)
-      if (collection.loanId != null) {
+      // SMS opt-out lives on the member row (members.sms_enabled is the only
+      // SMS opt-out column). Read it from there, not from the loan.
+      if (collection.memberId != null) {
         try {
-          final loanInfo = await client
-              .from('loans')
+          final memberInfo = await client
+              .from('members')
               .select('sms_enabled')
-              .eq('id', collection.loanId!)
+              .eq('id', collection.memberId!)
               .maybeSingle();
-          smsEnabled = loanInfo?['sms_enabled'] as bool? ?? true;
+          smsEnabled = memberInfo?['sms_enabled'] as bool? ?? true;
         } catch (_) {}
       }
 

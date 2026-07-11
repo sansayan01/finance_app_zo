@@ -117,6 +117,11 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   final ValueNotifier<double> _scrollOffset = ValueNotifier(0);
   bool _hasScrolledTimeline = false;
 
+  /// Member-level SMS opt-out state, sourced from members.sms_enabled (the
+  /// only SMS opt-out column that exists). The loan/savings detail toggles
+  /// drive this member flag.
+  final ValueNotifier<bool> _memberSmsEnabled = ValueNotifier<bool>(true);
+
   /// Returns a short, display-friendly label for an [EMIStatus].
   /// Always pass [EMIScheduleModel.effectiveStatus] (not the raw `status`)
   /// so the label reflects the actual overdue state computed from `dueDate`.
@@ -135,6 +140,22 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     _scrollController.addListener(() {
       _scrollOffset.value = _scrollController.offset;
     });
+    _loadMemberSmsEnabled();
+  }
+
+  Future<void> _loadMemberSmsEnabled() async {
+    final loan = ref.read(loanDetailProvider(widget.loanId)).value;
+    if (loan == null) return;
+    final memberId = loan.memberId ?? loan.customerId;
+    try {
+      final client = ref.read(supabaseClientProvider);
+      final memberInfo = await client
+          .from('members')
+          .select('sms_enabled')
+          .eq('id', memberId)
+          .maybeSingle();
+      _memberSmsEnabled.value = memberInfo?['sms_enabled'] as bool? ?? true;
+    } catch (_) {}
   }
 
   @override
@@ -142,6 +163,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
     _scrollController.dispose();
     _timelineController.dispose();
     _scrollOffset.dispose();
+    _memberSmsEnabled.dispose();
     super.dispose();
   }
 
@@ -549,83 +571,92 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   Widget _buildSmsToggle(LoanModel loan, ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: loan.smsEnabled
-                ? Colors.green.withValues(alpha: 0.4)
-                : theme.dividerColor.withValues(alpha: 0.3),
-            width: 1,
+    return ValueListenableBuilder<bool>(
+      valueListenable: _memberSmsEnabled,
+      builder: (context, smsEnabled, _) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: smsEnabled
+                    ? Colors.green.withValues(alpha: 0.4)
+                    : theme.dividerColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: smsEnabled
+                        ? Colors.green.withValues(alpha: 0.15)
+                        : theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    smsEnabled
+                        ? Icons.notifications_active_rounded
+                        : Icons.notifications_off_rounded,
+                    size: 18,
+                    color: smsEnabled
+                        ? Colors.green
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SMS Notifications',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        smsEnabled
+                            ? 'Reminders sent for this loan'
+                            : 'No SMS for this loan',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: smsEnabled,
+                  activeThumbColor: Colors.green,
+                  onChanged: (val) => _toggleSms(loan, val),
+                ),
+              ],
+            ),
           ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: loan.smsEnabled
-                    ? Colors.green.withValues(alpha: 0.15)
-                    : theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                loan.smsEnabled
-                    ? Icons.notifications_active_rounded
-                    : Icons.notifications_off_rounded,
-                size: 18,
-                color: loan.smsEnabled
-                    ? Colors.green
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SMS Notifications',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                  Text(
-                    loan.smsEnabled
-                        ? 'Reminders sent for this loan'
-                        : 'No SMS for this loan',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Switch.adaptive(
-              value: loan.smsEnabled,
-              activeThumbColor: Colors.green,
-              onChanged: (val) => _toggleSms(loan, val),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
   Future<void> _toggleSms(LoanModel loan, bool enabled) async {
     HapticFeedback.lightImpact();
     final client = ref.read(supabaseClientProvider);
-    await client.from('loans').update({
+    // Persist on the member row — members.sms_enabled is the only SMS opt-out
+    // column that exists. The loan/savings detail toggles drive member SMS.
+    final memberId = loan.memberId ?? loan.customerId;
+    await client.from('members').update({
       'sms_enabled': enabled,
-    }).eq('id', loan.id);
+    }).eq('id', memberId);
+    _memberSmsEnabled.value = enabled;
     ref.invalidate(loanDetailProvider(widget.loanId));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

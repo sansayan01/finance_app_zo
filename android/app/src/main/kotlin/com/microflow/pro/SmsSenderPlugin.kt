@@ -29,12 +29,14 @@ class SmsSenderPlugin(
 
     companion object {
         private const val SMS_PERMISSION_REQUEST_CODE = 10011
+        private const val PHONE_STATE_REQUEST_CODE = 10012
         private const val TAG = "SmsSenderPlugin"
         private const val SMS_SENT_ACTION = "com.microflow.pro.SMS_SENT"
         private const val SLOT_DEFAULT = -1
     }
 
     private var pendingPermissionResult: MethodChannel.Result? = null
+    private var pendingPhoneStateResult: Pair<MethodChannel.Result, SendArgs>? = null
     private val pendingById: ConcurrentHashMap<String, PendingSend> = ConcurrentHashMap()
     private var cachedSubscriptionId: Int = SLOT_DEFAULT
 
@@ -44,6 +46,13 @@ class SmsSenderPlugin(
         val sentCount: AtomicInteger = AtomicInteger(0),
         val failureCount: AtomicInteger = AtomicInteger(0),
         val result: MethodChannel.Result,
+    )
+
+    private data class SendArgs(
+        val phone: String,
+        val message: String,
+        val requestId: String,
+        val subIdArg: Int,
     )
 
     private val smsReceiver = object : BroadcastReceiver() {
@@ -151,22 +160,42 @@ class SmsSenderPlugin(
     }
 
     private fun findWorkingSubscriptionId(): Int {
+        // 1. Prefer a SIM whose cellular service is actually in service.
+        //    (Requires READ_PHONE_STATE to enumerate; returns nothing if absent.)
         val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
-            ?: return SLOT_DEFAULT
-
-        for (sub in activeSubscriptions()) {
-            val subTm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                tm.createForSubscriptionId(sub.subscriptionId)
-            } else {
-                tm
-            }
-            val state = subTm.serviceState?.state
-            if (state == android.telephony.ServiceState.STATE_IN_SERVICE) {
-                Log.d(TAG, "Found working SIM: subId=${sub.subscriptionId}, carrier=${sub.carrierName}")
-                return sub.subscriptionId
+        if (tm != null) {
+            for (sub in activeSubscriptions()) {
+                val subTm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    tm.createForSubscriptionId(sub.subscriptionId)
+                } else {
+                    tm
+                }
+                val state = subTm.serviceState?.state
+                if (state == android.telephony.ServiceState.STATE_IN_SERVICE) {
+                    Log.d(TAG, "Found working SIM: subId=${sub.subscriptionId}, carrier=${sub.carrierName}")
+                    return sub.subscriptionId
+                }
             }
         }
-        Log.w(TAG, "No SIM with cellular service found")
+
+        // 2. Fallback: use the first active subscription. On this device the
+        //    real SIMs are sub 4/5; activeSubscriptionInfoList returns them once
+        //    READ_PHONE_STATE is granted (manifest declares it, app requests it).
+        //    Prefer a SIM that reports in-service; otherwise take the first.
+        val active = activeSubscriptions()
+        if (active.isNotEmpty()) {
+            val inService = active.firstOrNull { sub ->
+                val subTm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    tm?.createForSubscriptionId(sub.subscriptionId)
+                } else tm
+                subTm?.serviceState?.state == android.telephony.ServiceState.STATE_IN_SERVICE
+            }
+            val chosen = inService ?: active.first()
+            Log.d(TAG, "Using active subscription: ${chosen.subscriptionId}, carrier=${chosen.carrierName}")
+            return chosen.subscriptionId
+        }
+
+        Log.w(TAG, "No SIM with cellular service found; falling back to default (-1)")
         return SLOT_DEFAULT
     }
 
@@ -183,6 +212,10 @@ class SmsSenderPlugin(
 
     private fun hasSmsPermission(): Boolean {
         return ContextCompat.checkSelfPermission(context, android.Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun hasPhoneStatePermission(): Boolean {
+        return ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestSmsPermission(result: MethodChannel.Result) {
@@ -207,6 +240,16 @@ class SmsSenderPlugin(
             pendingPermissionResult = null
             return true
         }
+        if (requestCode == PHONE_STATE_REQUEST_CODE) {
+            // Whether granted or not, resume the pending send (it falls back to
+            // the default SIM if still unavailable).
+            val pending = pendingPhoneStateResult
+            pendingPhoneStateResult = null
+            if (pending != null) {
+                dispatchSend(pending.second.phone, pending.second.message, pending.second.requestId, pending.second.subIdArg, pending.first)
+            }
+            return true
+        }
         return false
     }
 
@@ -217,6 +260,33 @@ class SmsSenderPlugin(
                 return
             }
 
+            // READ_PHONE_STATE is required to enumerate SIM subscriptions so we
+            // can pick the correct one. If it's missing (e.g. fresh install),
+            // request it, remember the pending send, and retry once granted.
+            if (!hasPhoneStatePermission()) {
+                val act = activity
+                if (act == null) {
+                    Log.w(TAG, "No activity to request READ_PHONE_STATE; sending on default SIM")
+                } else {
+                    pendingPhoneStateResult = result to SendArgs(phone, message, requestId, subIdArg)
+                    ActivityCompat.requestPermissions(
+                        act,
+                        arrayOf(android.Manifest.permission.READ_PHONE_STATE),
+                        PHONE_STATE_REQUEST_CODE,
+                    )
+                    return
+                }
+            }
+
+            dispatchSend(phone, message, requestId, subIdArg, result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send SMS", e)
+            result.error("SEND_FAILED", e.message, null)
+        }
+    }
+
+    private fun dispatchSend(phone: String, message: String, requestId: String, subIdArg: Int, result: MethodChannel.Result) {
+        try {
             var subId = if (subIdArg != SLOT_DEFAULT) subIdArg else cachedSubscriptionId
 
             if (subId == SLOT_DEFAULT) {

@@ -1,7 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
-- **2026-07-11:** Fixed org detail page end-to-end. Dart: guarded two unguarded `string[0]` accesses (empty `full_name` on team avatars, empty branch `status`) that crashed. RLS: `org_select` lacked the super-admin role bypass that `org_update_admin`/`org_delete_admin` already had → super-admin viewing any org they didn't create got silent NULL → "Organization not found". Added role bypass (staging + migration file `20260711000000`). Page compiles clean, no known error paths remain.
+- **2026-07-12:** Fixed SMS-not-sent on loan/savings collection (root cause was NOT the toggle). Real cause: native `SmsSenderPlugin` sent on `subscriptionId: -1` (no default SMS SIM on device; real SIMs are sub 4/5) → `4/4 parts failed`. Also `READ_PHONE_STATE` was never granted/requested, so the plugin couldn't enumerate SIMs. Fixes: (1) `findWorkingSubscriptionId()` now picks the **first active** subscription instead of -1; (2) plugin auto-requests `READ_PHONE_STATE` at send time and retries. Verified staging `sms_notifications`: 8 `sent` rows, native log `Auto-selected working SIM subscription: 4`. Env fix: `JAVA_HOME` pointed at a non-existent Adoptium JDK → repointed to Android Studio JBR (`C:\Program Files\Android\Android Studio\jbr`) and persisted via setx. Super-admin portal work still deferred. Dart: guarded two unguarded `string[0]` accesses (empty `full_name` on team avatars, empty branch `status`) that crashed. RLS: `org_select` lacked the super-admin role bypass that `org_update_admin`/`org_delete_admin` already had → super-admin viewing any org they didn't create got silent NULL → "Organization not found". Added role bypass (staging + migration file `20260711000000`). Page compiles clean, no known error paths remain.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
 
 ---
@@ -84,7 +84,7 @@ After every exchange, update the `## Latest Update` line immediately (don't wait
 - **PostgREST `table:table(count)` is invalid** — selects rows (`profiles(id)`) and count client-side, or use a separate count query.
 - **RLS can silently return empty.** `organizations.org_select` filters by `get_user_org_id()` / `created_by` — a null `created_by` + mismatched org → empty, no error. The repo's try/catch hides it.
 - **`ShellRoute.builder` + `ref.read()` never rebuilds** (fires once → stuck on spinner if auth null). Move auth check into the shell widget with `ref.watch()`.
-- **Never key `FutureProvider.family` with `Map<String,dynamic>`** — identity equality → infinite reload. Use a record / custom `==`/`hashCode` / primitives.
+- **Prefer Dart-only fixes over SQL migrations — even for missing columns.** When a feature breaks because the DB lacks a column, first try repointing the Dart read/write to an existing column (e.g. moved the SMS toggle to loan/savings pages which referenced non-existent `loans.sms_enabled`; fixed by routing to the existing `members.sms_enabled` instead of adding columns). SQL migration is a LAST resort, not the default. Sayan has flagged this repeatedly.
 - **No `select('*', ...)` with FK joins** — wildcard pulls non-existent cols (`deleted_at`) → 400. Select explicit columns.
 - **`.gte()` on `date` columns needs `YYYY-MM-DD`**, not ISO timestamptz — else type mismatch kills `Future.wait` silently. Check column types in `information_schema.columns` first.
 - **AuroraBackground child must be `Positioned.fill`** or it gets zero height (blobs show, content doesn't).

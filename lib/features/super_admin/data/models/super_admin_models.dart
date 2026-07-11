@@ -440,3 +440,87 @@ class PlatformRevenue extends Equatable {
   @override
   List<Object?> get props => [id, amount, status, createdAt];
 }
+
+// =====================================================
+// ORGANIZATION DETAIL — typed model for the detail page
+// =====================================================
+
+/// Full organization detail data — assembled from 6 parallel queries.
+/// Used by [orgDetailFullProvider] and the admin org detail page.
+class OrgDetailData {
+  /// Core org record (27 columns).
+  final Map<String, dynamic> org;
+
+  /// All profiles (staff/users) belonging to this org.
+  final List<Map<String, dynamic>> profiles;
+
+  /// All branches belonging to this org.
+  final List<Map<String, dynamic>> branches;
+
+  /// Recent activity logs for this org (last 15).
+  final List<Map<String, dynamic>> activityLogs;
+
+  /// Total member count.
+  final int memberCount;
+
+  /// Total loan count.
+  final int loanCount;
+
+  /// Active loan count.
+  final int activeLoanCount;
+
+  /// Total loan amount disbursed.
+  final double totalLoanAmount;
+
+  /// Total collections in last 30 days.
+  final double recentCollections;
+
+  /// Collection count in last 30 days.
+  final int recentCollectionCount;
+
+  /// Pending approval count.
+  final int pendingApprovalCount;
+
+  const OrgDetailData({
+    required this.org,
+    this.profiles = const [],
+    this.branches = const [],
+    this.activityLogs = const [],
+    this.memberCount = 0,
+    this.loanCount = 0,
+    this.activeLoanCount = 0,
+    this.totalLoanAmount = 0,
+    this.recentCollections = 0,
+    this.recentCollectionCount = 0,
+    this.pendingApprovalCount = 0,
+  });
+
+  /// Shorthand accessors for commonly used org fields.
+  String get id => org['id'] as String? ?? '';
+  String get name => org['name'] as String? ?? '';
+  String get displayName => org['display_name'] as String? ?? name;
+  String get slug => org['slug'] as String? ?? '';
+  String get status => org['status'] as String? ?? 'unknown';
+  String get plan => org['plan'] as String? ?? 'free';
+  String? get phone => org['phone'] as String?;
+  String? get email => org['email'] as String?;
+  String? get address => org['address'] as String?;
+  String? get city => org['city'] as String?;
+  String? get state => org['state'] as String?;
+  String? get pincode => org['pincode'] as String?;
+  String? get gstNumber => org['gst_number'] as String?;
+  String? get logoUrl => org['logo_url'] as String?;
+  int get maxBranches => (org['max_branches'] as num?)?.toInt() ?? 10;
+  int get maxStaff => (org['max_staff'] as num?)?.toInt() ?? 20;
+  int get maxMembers => (org['max_members'] as num?)?.toInt() ?? 500;
+  DateTime? get createdAt => DateTime.tryParse(org['created_at'] as String? ?? '');
+  DateTime? get trialEndsAt => DateTime.tryParse(org['trial_ends_at'] as String? ?? '');
+
+  /// Staff count (executiveAdmin + manager + collectionAgent).
+  int get staffCount => profiles.where((p) {
+    final role = p['role'] as String? ?? '';
+    return role == 'executiveAdmin' || role == 'manager' || role == 'collectionAgent';
+  }).length;
+
+  bool get hasContactInfo => phone != null || email != null || address != null;
+}

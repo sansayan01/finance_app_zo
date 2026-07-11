@@ -112,34 +112,74 @@ class SuperAdminRepository {
     }
   }
 
-  /// Full organization detail: org + profiles + branches + activity (parallel)
-  Future<Map<String, dynamic>?> getOrganizationFullDetail(String orgId) async {
+  /// Full organization detail: 6 parallel queries → OrgDetailData.
+  /// No migrations needed — uses existing columns only.
+  Future<OrgDetailData?> getOrganizationFullDetail(String orgId) async {
     try {
-      // Fire all three queries in parallel — no blocking.
+      final now = DateTime.now();
+      final thirtyDaysAgo = now.subtract(const Duration(days: 30)).toIso8601String();
+
       final results = await Future.wait([
-        // 1. Org with joined profiles + branches (no deleted_at columns)
+        // 1. Org + profiles + branches (27 org cols + joins)
         _client.from('organizations').select('''
               id, name, slug, status, plan, created_at, updated_at,
-              display_name, address, city, state, pincode,
+              display_name, phone, email, address, city, state, pincode,
+              gst_number, logo_url, primary_color, brand_color, icon_preset,
               max_branches, max_staff, max_members,
-              profiles:profiles(id, user_id, full_name, email, role, created_at, branch_id),
-              branches:branches(id, name, code, status, manager_id, created_at)
+              trial_ends_at, created_by, is_setup_complete,
+              profiles:profiles(id, user_id, full_name, email, role, phone, branch_id, created_at, avatar_url, is_active, last_login),
+              branches:branches(id, name, code, status, zone, district, city, state, manager_id, created_at)
             ''').eq('id', orgId).maybeSingle(),
-        // 2. Activity logs for this org (last 20)
+        // 2. Activity logs (last 15)
         _client.from('activity_logs').select('''
               id, action, details, type, created_at, user_name
-            ''').eq('org_id', orgId).order('created_at', ascending: false).limit(20),
-        // 3. Members count for this org
-        _client.from('members').select('id').eq('org_id', orgId),
+            ''').eq('org_id', orgId).order('created_at', ascending: false).limit(15),
+        // 3. Members — count + breakdown
+        _client.from('members').select('id, kyc_status, status').eq('org_id', orgId),
+        // 4. Loans — count + total amount + active count
+        _client.from('loans').select('id, amount, status').eq('org_id', orgId),
+        // 5. Collections — total + count (last 30 days)
+        _client.from('collections')
+            .select('id, amount_collected')
+            .eq('org_id', orgId)
+            .gte('collection_date', thirtyDaysAgo),
+        // 6. Pending approvals
+        _client.from('pending_approvals')
+            .select('id')
+            .eq('org_id', orgId)
+            .eq('status', 'pending'),
       ]);
 
       if (results[0] == null) return null;
 
       final org = Map<String, dynamic>.from(results[0] as Map);
-      org['activity_logs'] = results[1];
-      org['member_count'] = (results[2] as List).length;
+      final profiles = (results[1] as List).cast<Map<String, dynamic>>();
+      final branches = (results[2] as List).cast<Map<String, dynamic>>();
+      final activityLogs = (results[3] as List).cast<Map<String, dynamic>>();
+      final membersList = (results[4] as List).cast<Map<String, dynamic>>();
+      final loansList = (results[5] as List).cast<Map<String, dynamic>>();
+      final collectionsList = (results[6] as List).cast<Map<String, dynamic>>();
+      final pendingList = (results[7] as List).cast<Map<String, dynamic>>();
 
-      return org;
+      final totalLoanAmount = loansList.fold<double>(
+          0, (sum, l) => sum + ((l['amount'] as num?)?.toDouble() ?? 0));
+      final activeLoans = loansList.where((l) => l['status'] == 'active').length;
+      final recentCollectionsTotal = collectionsList.fold<double>(
+          0, (sum, c) => sum + ((c['amount_collected'] as num?)?.toDouble() ?? 0));
+
+      return OrgDetailData(
+        org: org,
+        profiles: profiles,
+        branches: branches,
+        activityLogs: activityLogs,
+        memberCount: membersList.length,
+        loanCount: loansList.length,
+        activeLoanCount: activeLoans,
+        totalLoanAmount: totalLoanAmount,
+        recentCollections: recentCollectionsTotal,
+        recentCollectionCount: collectionsList.length,
+        pendingApprovalCount: pendingList.length,
+      );
     } catch (e) {
       return null;
     }

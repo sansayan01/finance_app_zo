@@ -425,8 +425,8 @@
     "semantic_hash": "d769ca2afa6ae64a3fb5e0447c5587a2"
   },
   "lib/features/admin/presentation/pages/admin_org_detail_page.dart": {
-    "mtime": 1783765971.7183409,
-    "ast_hash": "4bd9541c6fd474bfb9ad854ac68386c6",
+    "mtime": 1783767398.535389,
+    "ast_hash": "8cfc24cd100e093aac4f019f467bf2b3",
     "semantic_hash": ""
   },
   "lib/features/admin/presentation/pages/admin_org_settings_page.dart": {
@@ -1170,18 +1170,18 @@
     "semantic_hash": "15a0b859c2ff3b8b8b987e200bdf0a42"
   },
   "lib/features/super_admin/data/models/super_admin_models.dart": {
-    "mtime": 1782453010.650273,
-    "ast_hash": "3ba9286569d5cb77f37f0cc39da856ce",
-    "semantic_hash": "3ba9286569d5cb77f37f0cc39da856ce"
+    "mtime": 1783766988.4080753,
+    "ast_hash": "9168abf4ea655ea8a1f3528972fd4740",
+    "semantic_hash": ""
   },
   "lib/features/super_admin/data/providers/super_admin_providers.dart": {
-    "mtime": 1783765131.6639278,
-    "ast_hash": "a65de06f4503576b7b7530939b665fd3",
+    "mtime": 1783767225.7624521,
+    "ast_hash": "7918de762f8a1251594e7f3de6d1eb6d",
     "semantic_hash": ""
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {
-    "mtime": 1783765113.7253525,
-    "ast_hash": "bea8a9e518cf88146eccc6f6f5c9dd8e",
+    "mtime": 1783767147.6684988,
+    "ast_hash": "a86809db376f06b45787433cad8af891",
     "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/organizations_management_page.dart": {
@@ -1695,9 +1695,9 @@
     "semantic_hash": "8569ba84f2590681b47f27c66db77309"
   },
   "pubspec.yaml": {
-    "mtime": 1783589201.3662927,
-    "ast_hash": "2af28c4b4856168f393975cc4a8592fa",
-    "semantic_hash": "2af28c4b4856168f393975cc4a8592fa"
+    "mtime": 1783767634.8012307,
+    "ast_hash": "a0eb771b8c471826b2d1a84e65667a5b",
+    "semantic_hash": ""
   },
   "README.md": {
     "mtime": 1782453010.1038387,

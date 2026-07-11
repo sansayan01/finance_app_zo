@@ -64,10 +64,9 @@ final organizationDetailsProvider =
 });
 
 /// Organization Full Detail Provider
-/// Rich join: org + profiles + branches + activity logs + member count.
-/// Fires three queries in parallel on the backend side.
+/// 6 parallel queries → OrgDetailData typed model.
 final orgDetailFullProvider =
-    FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, orgId) async {
+    FutureProvider.autoDispose.family<OrgDetailData?, String>((ref, orgId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
   return repository.getOrganizationFullDetail(orgId);
 });
@@ -213,7 +212,7 @@ class SuperAdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
       final success = await _repository.updateOrganizationStatus(orgId, status);
       if (success) {
         _ref.invalidate(allOrganizationsProvider);
-        _ref.invalidate(organizationDetailsProvider(orgId));
+        _ref.invalidate(orgDetailFullProvider(orgId));
         await _repository.logAuditEvent(
           action: 'update_status',
           entityType: 'organization',

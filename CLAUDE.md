@@ -103,6 +103,7 @@ This CLAUDE.md is my **brain**. It evolves every single session. Every prompt, e
 - **`ShellRoute.builder` with `ref.read()` never rebuilds.** It fires once when the route is first built. If auth is null at that point, it stays stuck on spinner/error forever. Fix: move the auth check into the shell widget itself using `ref.watch()` so it reactively rebuilds.
 - **Never key `FutureProvider.autoDispose.family` with `Map<String,dynamic>`.** Dart Map uses identity equality — a fresh map literal on every build = new cache key = new provider = infinite loading loop. Always use a Dart record, a custom class with `==`/`hashCode`, or primitive types for family keys.
 - **Never use `select('*', ...)` in Supabase/PostgREST with foreign key joins.** Wildcard expands to all columns including any that don't exist (like `deleted_at`), causing a 400 error. Always select explicit columns when using sub-select joins like `profiles:profiles(...)`.
+- **PostgREST `.gte()` on `date` columns needs `YYYY-MM-DD` format, not ISO8601 timestamptz.** `collection_date` is a `date` type — passing `2026-07-11T15:00:00.000` causes a type mismatch error that kills `Future.wait` silently. Always check column types with `information_schema.columns` before filtering.
 
 ---
 

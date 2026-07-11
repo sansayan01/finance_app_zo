@@ -87,7 +87,7 @@ class SuperAdminRepository {
   Future<Map<String, dynamic>?> getOrganizationById(String orgId) async {
     try {
       final response = await _client.from('organizations').select('''
-            *,
+            id, name, slug, status, plan, created_at,
             profiles:profiles(id, full_name, email, role, created_at),
             branches:branches(*),
             subscriptions:subscriptions(*)

@@ -1,7 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
-- **2026-07-11:** Org detail rebuilt as command center — OrgDetailData typed model, 7 queries with per-query error handling, 9 sections, status/plan toggles via direct update. Fixed: results[7] out-of-bounds, is_setup_complete column missing, single-query failure killing entire page. SDK ^3.10.0. SUPER ADMIN on staging: msayan9733@gmail.com.
+- **2026-07-11:** Org detail page premium rewrite — user manually rebuilt with AuroraBackground, GlassCard, ShimmerCard, StatusBadge, SliverAppBar (pinned), collapsible tiles for Members/Branches/Activity, 1874 lines. OrgDetailData typed model + 7 queries with per-query error handling underneath. SDK ^3.10.0. SUPER ADMIN on staging: msayan9733@gmail.com.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
 
 ## graphify

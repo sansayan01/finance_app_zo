@@ -425,8 +425,8 @@
     "semantic_hash": "d769ca2afa6ae64a3fb5e0447c5587a2"
   },
   "lib/features/admin/presentation/pages/admin_org_detail_page.dart": {
-    "mtime": 1783767398.535389,
-    "ast_hash": "8cfc24cd100e093aac4f019f467bf2b3",
+    "mtime": 1783770343.0424743,
+    "ast_hash": "630bb57a0118c7fec6c1d4e9358a14a7",
     "semantic_hash": ""
   },
   "lib/features/admin/presentation/pages/admin_org_settings_page.dart": {
@@ -5045,8 +5045,8 @@
     "semantic_hash": "41559f5fc3eee3c0e967aaf7ebc431b3"
   },
   "CLAUDE.md": {
-    "mtime": 1783767954.5983417,
-    "ast_hash": "69ac3323ceeae96a47aa00de8e897934",
+    "mtime": 1783768131.3805063,
+    "ast_hash": "4420233ad177ade1df168e100693dac6",
     "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {

@@ -12,24 +12,21 @@ import '../../../../features/settings/data/repositories/activity_log_repository.
 final adminOrgDetailProvider =
     FutureProvider.family<Map<String, dynamic>?, String>((ref, orgId) async {
   final client = ref.read(supabaseClientProvider);
-  // Filter out soft-deleted organizations from the read path.
   return client
       .from('organizations')
-      .select()
+      .select('id, name, slug, status, plan, created_at')
       .eq('id', orgId)
-      .isFilter('deleted_at', null)
       .maybeSingle();
 });
 
-/// Reactive list of all *active* (non-deleted, non-suspended) orgs.
+/// Reactive list of all orgs.
 /// Re-fetches when `currentOrgProvider` emits.
 final adminOrgListProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final client = ref.read(supabaseClientProvider);
   final response = await client
       .from('organizations')
-      .select()
-      .isFilter('deleted_at', null)
+      .select('id, name, slug, status, plan, created_at')
       .order('created_at', ascending: false);
   return (response as List).cast<Map<String, dynamic>>();
 });

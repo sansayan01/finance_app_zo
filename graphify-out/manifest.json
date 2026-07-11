@@ -1180,8 +1180,8 @@
     "semantic_hash": ""
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {
-    "mtime": 1783758074.2217634,
-    "ast_hash": "b1775f82a3605da9ed105871c5bb93b6",
+    "mtime": 1783759651.6253304,
+    "ast_hash": "1fb15fa314b96c5a2d87b26c23fb0855",
     "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/organizations_management_page.dart": {

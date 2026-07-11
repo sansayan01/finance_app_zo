@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/super_admin_models.dart';
 
@@ -77,7 +78,8 @@ class SuperAdminRepository {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      return [];
+      debugPrint('❌ getAllOrganizations CRITICAL: $e');
+      rethrow;
     }
   }
 

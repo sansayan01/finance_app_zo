@@ -1,16 +1,16 @@
 # Graph Report - finance_app_zo  (2026-07-11)
 
 ## Corpus Check
-- 895 files · ~1,120,121 words
+- 895 files · ~1,121,671 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 14535 nodes · 20260 edges · 798 communities (605 shown, 193 thin omitted)
+- 14558 nodes · 20290 edges · 790 communities (598 shown, 192 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 25 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8d25df62`
+- Built from commit: `c2f74a7b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -440,7 +440,6 @@
 - [[_COMMUNITY_Community 422|Community 422]]
 - [[_COMMUNITY_Community 423|Community 423]]
 - [[_COMMUNITY_Community 424|Community 424]]
-- [[_COMMUNITY_Community 425|Community 425]]
 - [[_COMMUNITY_Community 426|Community 426]]
 - [[_COMMUNITY_Community 427|Community 427]]
 - [[_COMMUNITY_Community 428|Community 428]]
@@ -466,15 +465,11 @@
 - [[_COMMUNITY_Community 450|Community 450]]
 - [[_COMMUNITY_Community 451|Community 451]]
 - [[_COMMUNITY_Community 452|Community 452]]
-- [[_COMMUNITY_Community 453|Community 453]]
 - [[_COMMUNITY_Community 454|Community 454]]
 - [[_COMMUNITY_Community 455|Community 455]]
 - [[_COMMUNITY_Community 456|Community 456]]
 - [[_COMMUNITY_Community 457|Community 457]]
 - [[_COMMUNITY_Community 458|Community 458]]
-- [[_COMMUNITY_Community 459|Community 459]]
-- [[_COMMUNITY_Community 460|Community 460]]
-- [[_COMMUNITY_Community 461|Community 461]]
 - [[_COMMUNITY_Community 462|Community 462]]
 - [[_COMMUNITY_Community 463|Community 463]]
 - [[_COMMUNITY_Community 464|Community 464]]
@@ -538,9 +533,6 @@
 - [[_COMMUNITY_Community 539|Community 539]]
 - [[_COMMUNITY_Community 540|Community 540]]
 - [[_COMMUNITY_Community 541|Community 541]]
-- [[_COMMUNITY_Community 542|Community 542]]
-- [[_COMMUNITY_Community 543|Community 543]]
-- [[_COMMUNITY_Community 544|Community 544]]
 - [[_COMMUNITY_Community 545|Community 545]]
 - [[_COMMUNITY_Community 546|Community 546]]
 - [[_COMMUNITY_Community 547|Community 547]]
@@ -551,7 +543,6 @@
 - [[_COMMUNITY_Community 552|Community 552]]
 - [[_COMMUNITY_Community 553|Community 553]]
 - [[_COMMUNITY_Community 554|Community 554]]
-- [[_COMMUNITY_Community 555|Community 555]]
 - [[_COMMUNITY_Community 556|Community 556]]
 - [[_COMMUNITY_Community 557|Community 557]]
 - [[_COMMUNITY_Community 558|Community 558]]
@@ -575,11 +566,9 @@
 - [[_COMMUNITY_Community 576|Community 576]]
 - [[_COMMUNITY_Community 577|Community 577]]
 - [[_COMMUNITY_Community 578|Community 578]]
-- [[_COMMUNITY_Community 579|Community 579]]
 - [[_COMMUNITY_Community 580|Community 580]]
 - [[_COMMUNITY_Community 581|Community 581]]
 - [[_COMMUNITY_Community 582|Community 582]]
-- [[_COMMUNITY_Community 583|Community 583]]
 - [[_COMMUNITY_Community 584|Community 584]]
 - [[_COMMUNITY_Community 585|Community 585]]
 - [[_COMMUNITY_Community 586|Community 586]]
@@ -592,10 +581,8 @@
 - [[_COMMUNITY_Community 593|Community 593]]
 - [[_COMMUNITY_Community 594|Community 594]]
 - [[_COMMUNITY_Community 595|Community 595]]
-- [[_COMMUNITY_Community 596|Community 596]]
 - [[_COMMUNITY_Community 597|Community 597]]
 - [[_COMMUNITY_Community 598|Community 598]]
-- [[_COMMUNITY_Community 599|Community 599]]
 - [[_COMMUNITY_Community 600|Community 600]]
 - [[_COMMUNITY_Community 601|Community 601]]
 - [[_COMMUNITY_Community 602|Community 602]]
@@ -645,7 +632,6 @@
 - [[_COMMUNITY_Community 646|Community 646]]
 - [[_COMMUNITY_Community 647|Community 647]]
 - [[_COMMUNITY_Community 648|Community 648]]
-- [[_COMMUNITY_Community 649|Community 649]]
 - [[_COMMUNITY_Community 650|Community 650]]
 - [[_COMMUNITY_Community 651|Community 651]]
 - [[_COMMUNITY_Community 652|Community 652]]
@@ -673,6 +659,7 @@
 - [[_COMMUNITY_Community 674|Community 674]]
 - [[_COMMUNITY_Community 675|Community 675]]
 - [[_COMMUNITY_Community 676|Community 676]]
+- [[_COMMUNITY_Community 677|Community 677]]
 - [[_COMMUNITY_Community 678|Community 678]]
 - [[_COMMUNITY_Community 679|Community 679]]
 - [[_COMMUNITY_Community 680|Community 680]]
@@ -685,6 +672,7 @@
 - [[_COMMUNITY_Community 687|Community 687]]
 - [[_COMMUNITY_Community 688|Community 688]]
 - [[_COMMUNITY_Community 689|Community 689]]
+- [[_COMMUNITY_Community 691|Community 691]]
 - [[_COMMUNITY_Community 692|Community 692]]
 - [[_COMMUNITY_Community 694|Community 694]]
 - [[_COMMUNITY_Community 695|Community 695]]
@@ -793,6 +781,10 @@
 - [[_COMMUNITY_Community 799|Community 799]]
 - [[_COMMUNITY_Community 800|Community 800]]
 - [[_COMMUNITY_Community 801|Community 801]]
+- [[_COMMUNITY_Community 803|Community 803]]
+- [[_COMMUNITY_Community 804|Community 804]]
+- [[_COMMUNITY_Community 805|Community 805]]
+- [[_COMMUNITY_Community 812|Community 812]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `currentUserProvider` - 83 edges
@@ -825,7 +817,7 @@
 - **Supabase Skill Feedback Loop** — supabase_skill_skill, supabase_references_skill-feedback_feedback, supabase_assets_feedback-issue-template_feedback, assets_feedback-issue-template_feedback [INFERRED 0.85]
 - **Marketing Landing Site Spec Set** — marketing-landing-site_requirements_requirements, marketing-landing-site_design_design, marketing-landing-site_tasks_tasks [INFERRED 0.90]
 
-## Communities (798 total, 193 thin omitted)
+## Communities (790 total, 192 thin omitted)
 
 ### Community 0 - "SMS & Admin Core"
 Cohesion: 0.02
@@ -833,15 +825,15 @@ Nodes (123): ../core/presentation/pages/sms_history_page.dart, ../core/presentat
 
 ### Community 1 - "Payments & Collection"
 Cohesion: 0.02
-Nodes (113): ../../data/models/today_payment_model.dart, ../../data/providers/payment_providers.dart, ../../data/services/auto_collection_service.dart, ../../data/utils/payment_export.dart, _ActionCircle, _ActiveFiltersBanner, align, amountString (+105 more)
+Nodes (102): ../../data/models/today_payment_model.dart, ../../data/providers/payment_providers.dart, ../../data/services/auto_collection_service.dart, ../../data/utils/payment_export.dart, _ActionCircle, _ActiveFiltersBanner, align, amountString (+94 more)
 
 ### Community 2 - "Member & Org Management"
 Cohesion: 0.02
-Nodes (117): bulk_import_members_page.dart, InheritedWidget, ../../../invitations/data/models/org_invitation_model.dart, ../../../invitations/data/providers/invitation_providers.dart, org_chart_page.dart, build, ManageInvitationsPage, _ActiveFiltersStrip (+109 more)
+Nodes (136): bulk_import_members_page.dart, ConsumerWidget, InheritedWidget, ../../../invitations/data/models/org_invitation_model.dart, ../../../invitations/data/providers/invitation_providers.dart, org_chart_page.dart, _handleAction, _RowActions (+128 more)
 
 ### Community 3 - "Branch Users & Tabs"
 Cohesion: 0.02
-Nodes (131): _BranchTab get, _ActiveFiltersStrip, _AddUserFab, _AuroraBackdrop, _Avatar, _branchId, _BranchPageNotifier, _branchPageProvider (+123 more)
+Nodes (111): _BranchTab get, _ActiveFiltersStrip, _branchId, _BranchPageNotifier, _branchPageProvider, _BranchPageState, _BranchQuery, _BranchQueryNotifier (+103 more)
 
 ### Community 4 - "Location & Geofencing"
 Cohesion: 0.02
@@ -857,19 +849,19 @@ Nodes (83): ../../data/models/upi_payment_request_model.dart, _advanceDate, _Adv
 
 ### Community 7 - "Integrations & Email"
 Cohesion: 0.02
-Nodes (82): ?, ../../data/providers/integrations_providers.dart, ../../data/providers/payment_gateway_providers.dart, bg, build, _buildCommunicationsTab, _buildEmailCard, _buildGatewayConfigCard (+74 more)
+Nodes (80): ?, ../../data/providers/integrations_providers.dart, ../../data/providers/payment_gateway_providers.dart, bg, build, _buildCommunicationsTab, _buildEmailCard, _buildGatewayConfigCard (+72 more)
 
 ### Community 8 - "User Details & Audit"
 Cohesion: 0.02
 Nodes (80): _aadharController, accent, _accountBadge, _ActionIslandButton, _addressController, _AdminCard, _auditColorFor, _auditRow (+72 more)
 
 ### Community 9 - "Auth & Branding"
-Cohesion: 0.13
-Nodes (15): _activeFilter, _applyFilters, BranchSavingsPage, _BranchSavingsPageState, _buildDetailColumn, _buildEmptyState, _buildSavingsCard, _buildSearchBar (+7 more)
+Cohesion: 0.08
+Nodes (24): ../../../../core/widgets/status_badge.dart, ../../data/models/customer_emi_model.dart, _activeFilter, _applyFilters, BranchSavingsPage, _BranchSavingsPageState, _buildDetailColumn, _buildEmptyState (+16 more)
 
 ### Community 10 - "Staff Dashboard Core"
-Cohesion: 0.11
-Nodes (17): ../../data/providers/super_admin_providers.dart, _ActionData, _buildActivity, _buildHeader, _buildMetrics, _buildRevenue, _cardDecoration, color (+9 more)
+Cohesion: 0.04
+Nodes (54): List, collectionType, currentAmount, CustomerSavingsModel, displayName, fromJson, frozenDates, id (+46 more)
 
 ### Community 11 - "Savings & Deposits"
 Cohesion: 0.03
@@ -877,23 +869,23 @@ Nodes (73): ../../../customer_portal/data/providers/customer_savings_providers.d
 
 ### Community 12 - "Loan Management"
 Cohesion: 0.03
-Nodes (72): ../../data/services/loan_statement_csv_service.dart, ../../data/services/loan_statement_excel_service.dart, ../../data/services/qr_png.dart, _archiveStatement, _buildActionButton, _buildAmbientBackground, _buildAppBar, _buildBorrowerProfile (+64 more)
+Nodes (102): ../../data/services/loan_statement_csv_service.dart, ../../data/services/loan_statement_excel_service.dart, ../../data/services/qr_png.dart, _loadEmiSchedule, _loadLoanData, _saveLoan, _addNote, _archiveStatement (+94 more)
 
 ### Community 13 - "Supabase Client Config"
 Cohesion: 0.08
 Nodes (24): amount, confirmedAt, confirmedBy, createdAt, currency, customerId, emiScheduleId, fromJson (+16 more)
 
 ### Community 14 - "Firebase & Notifications"
-Cohesion: 0.05
-Nodes (54): _AuroraBackground, _CountUp, Duration, _CountUp, _CountUpState, _StarRating, _StarRatingState, _SuperPremiumActionChip (+46 more)
+Cohesion: 0.09
+Nodes (34): _AuroraBackground, _CountUp, _CountUp, _CountUpState, _StarRating, _StarRatingState, _SuperPremiumActionChip, _SuperPremiumActionChipState (+26 more)
 
 ### Community 15 - "Push Notifications & FCM"
-Cohesion: 0.03
-Nodes (72): Duration get, action, activeOrganizations, activeUsers, affectedServices, amount, assignedTo, avgLoanAmount (+64 more)
+Cohesion: 0.02
+Nodes (88): Duration get, Equatable, ActivityLogModel, CustomReportModel, OrgMetricsModel, BranchStats, OrgBrandingModel, StaffLocationModel (+80 more)
 
 ### Community 16 - "Admin Portal Pages"
 Cohesion: 0.03
-Nodes (69): ../../data/providers/security_policies_providers.dart, AuditRetentionPage, _AuditRetentionPageState, _autoArchive, build, _buildSaveButton, _buildToggleTile, createState (+61 more)
+Nodes (75): ../../data/providers/security_policies_providers.dart, AuditRetentionPage, _AuditRetentionPageState, _autoArchive, build, _buildSaveButton, _buildToggleTile, createState (+67 more)
 
 ### Community 17 - "Branch Collections"
 Cohesion: 0.03
@@ -913,7 +905,7 @@ Nodes (15): customer_savings_achievement_badge.dart, double get, _AchievementTie
 
 ### Community 21 - "Branch Reports & Charts"
 Cohesion: 0.03
-Nodes (67): ../../data/models/transaction_model.dart, ../../data/services/transaction_csv_service.dart, ../../data/services/transaction_excel_service.dart, ../../data/services/transaction_pdf_service.dart, _HeroCard, _deletePayment, _submitWithdrawalRequest, _showSavingsDepositSheet (+59 more)
+Nodes (64): ../../data/models/transaction_model.dart, ../../data/services/transaction_csv_service.dart, ../../data/services/transaction_excel_service.dart, ../../data/services/transaction_pdf_service.dart, _deletePayment, _submitWithdrawalRequest, _showSavingsDepositSheet, _buildDateGroup (+56 more)
 
 ### Community 22 - "SMS Templates & History"
 Cohesion: 0.03
@@ -940,12 +932,12 @@ Cohesion: 0.03
 Nodes (59): InterestType, activeLoans, amount, approvedBy, copyWith, createdAt, createdBy, customerId (+51 more)
 
 ### Community 28 - "Widget System (Glass/Shimmer)"
-Cohesion: 0.06
-Nodes (34): ../../../../core/widgets/sparkline_chart.dart, ../../../home/presentation/widgets/live_agents_map_card.dart, amount, color, createdAt, createState, description, _generateSavingsTrend (+26 more)
+Cohesion: 0.09
+Nodes (33): branch_manager_providers.dart, BranchAnalyticsPage, _BranchAnalyticsPageState, build, BranchCollectionsPage, _BranchCollectionsPageState, build, _buildSavingsSection (+25 more)
 
 ### Community 29 - "Theme & Design System"
-Cohesion: 0.04
-Nodes (56): ../../../loans/data/repositories/loans_repository.dart, ../../../members/data/models/member_model.dart, ../../../members/data/repositories/members_repository.dart, activeMembers, activeSavingsAccounts, AnalyticsStats, averageSavingsBalance, avgBalance (+48 more)
+Cohesion: 0.03
+Nodes (58): ../../../loans/data/repositories/loans_repository.dart, ../../../members/data/models/member_model.dart, ../../../members/data/repositories/members_repository.dart, activeMembers, activeSavingsAccounts, AnalyticsPeriod, AnalyticsPeriodLabel, AnalyticsStats (+50 more)
 
 ### Community 30 - "Staff Payments & Export"
 Cohesion: 0.05
@@ -956,24 +948,24 @@ Cohesion: 0.12
 Nodes (15): amount, CustomerTransactionModel, description, fromJson, id, isCredit, isDebit, isPending (+7 more)
 
 ### Community 32 - "Chatbot & AI Assistant"
-Cohesion: 0.05
-Nodes (57): ../../data/repositories/savings_repository.dart, MaterialPageRoute, _buildGroupedCollectedList, _buildPaymentList, _openEmiCollection, _openSavingsCollection, _performAutoCollection, _Header (+49 more)
+Cohesion: 0.06
+Nodes (52): ../../data/repositories/savings_repository.dart, MaterialPageRoute, _buildGroupedCollectedList, _buildPaymentList, _openEmiCollection, _openSavingsCollection, _performAutoCollection, _freezeSingleEMI (+44 more)
 
 ### Community 33 - "Notification Preferences"
 Cohesion: 0.04
 Nodes (56): qr_png.dart, amount, _buildBody, buildCustomerStatement, _buildCustomerStatementImpl, _buildHealthAndInfoRow, _buildLedgerTable, _buildOverdueAging (+48 more)
 
 ### Community 34 - "Supabase Best Practices"
-Cohesion: 0.12
-Nodes (17): _buildEmptyState, _buildLoanCard, _buildSavingsCard, createState, dispose, _formatNum, _infoChip, initState (+9 more)
+Cohesion: 0.05
+Nodes (53): ../../data/providers/products_providers.dart, build, _buildEmptyState, _buildProductCard, _formatNum, _handleAction, _infoChip, LoanProductsPage (+45 more)
 
 ### Community 35 - "Flutter Widgets (Glass/Morph)"
-Cohesion: 0.04
-Nodes (55): Equatable, ActivityLogModel, CustomReportModel, OrgMetricsModel, BranchStats, OrgBrandingModel, StaffProfileModel, ../models/super_admin_models.dart (+47 more)
+Cohesion: 0.05
+Nodes (41): ../models/super_admin_models.dart, addTicketMessage, _client, createAnnouncement, createMaintenanceWindow, createOrganization, deleteAnnouncement, getActivityFeed (+33 more)
 
 ### Community 36 - "Branch Manager Dashboard"
 Cohesion: 0.04
-Nodes (59): ../../data/services/portfolio_statement_pdf_service.dart, _FinancialSummaryStrip, _ActionButton, align, _AnalyticsCard, build, _buildAnalyticsDashboard, _buildLetterAvatar (+51 more)
+Nodes (50): ../../data/services/portfolio_statement_pdf_service.dart, _ActionButton, align, _AnalyticsCard, _buildAnalyticsDashboard, _buildLetterAvatar, _buildPillFilters, _buildPopupItem (+42 more)
 
 ### Community 37 - "Customer Transaction Flow"
 Cohesion: 0.04
@@ -993,31 +985,31 @@ Nodes (53): _addressCtrl, autofillHints, build, children, _cityCtrl, client, con
 
 ### Community 41 - "Branch Savings Page"
 Cohesion: 0.04
-Nodes (51): ../../data/models/savings_installment_model.dart, _applyQuickPay, _borderColor, build, _buildAllocationBreakdown, _buildBreakdownRow, _buildCompactHeader, _buildCounterButton (+43 more)
+Nodes (53): ../../data/models/savings_installment_model.dart, _applyQuickPay, _borderColor, build, _buildAllocationBreakdown, _buildBreakdownRow, _buildCompactHeader, _buildCounterButton (+45 more)
 
 ### Community 42 - "Branch Loans Page"
 Cohesion: 0.04
-Nodes (51): ../providers/chat_config_provider.dart, chatProvider, ../providers/chat_provider.dart, ScrollController, _buildChatPanel, _buildErrorState, _buildFloatingButton, _buildHeader (+43 more)
+Nodes (52): ../providers/chat_config_provider.dart, chatProvider, ../providers/chat_provider.dart, ScrollController, build, _buildChatPanel, _buildErrorState, _buildFloatingButton (+44 more)
 
 ### Community 43 - "Statement Generation"
-Cohesion: 0.13
-Nodes (16): Point, Create(), Destroy(), GetThisFromHandle(), OnCreate(), OnDestroy(), Scale(), UnregisterWindowClass() (+8 more)
+Cohesion: 0.11
+Nodes (29): HWND, LPARAM, LRESULT, Point, MessageHandler(), Create(), Destroy(), EnableFullDpiSupportIfAvailable() (+21 more)
 
 ### Community 44 - "Duty & Shift Tracking"
 Cohesion: 0.04
-Nodes (50): agentId, allPayments, _applyAdvancedFilters, autoRefresh, branchId, client, collectedPayments, copyWith (+42 more)
+Nodes (52): agentId, allPayments, _applyAdvancedFilters, autoRefresh, branchId, client, collectedPayments, copyWith (+44 more)
 
 ### Community 45 - "Org Settings & Config"
 Cohesion: 0.04
-Nodes (56): ../../../branch_manager/data/providers/branch_payment_providers.dart, emi_payment_selector.dart, EMIScheduleModel? get, ../../../payments/data/providers/upi_providers.dart, ../../../payments/data/services/upi_service.dart, collectionSmsSenderProvider, ../../../savings/data/models/savings_installment_model.dart, ../../../savings/presentation/widgets/savings_payment_selector.dart (+48 more)
+Nodes (51): ../../../branch_manager/data/providers/branch_payment_providers.dart, emi_payment_selector.dart, EMIScheduleModel? get, ../../../payments/data/providers/upi_providers.dart, ../../../payments/data/services/upi_service.dart, ../../../savings/data/models/savings_installment_model.dart, ../../../savings/presentation/widgets/savings_payment_selector.dart, ../../../staff/data/providers/staff_providers.dart (+43 more)
 
 ### Community 46 - "Branch Scoped State"
 Cohesion: 0.04
-Nodes (51): CurvedAnimation, _animation, _buildEmptyState, _buildErrorState, _buildGradientHeader, _buildLoadingState, _buildSummaryCard, child (+43 more)
+Nodes (47): CurvedAnimation, _animation, _buildEmptyState, _buildErrorState, _buildGradientHeader, _buildLoadingState, _buildSummaryCard, child (+39 more)
 
 ### Community 47 - "Permission & Access"
-Cohesion: 0.09
-Nodes (21): ../models/customer_emi_model.dart, ../models/customer_loan_model.dart, ../models/customer_savings_model.dart, ../models/customer_transaction_model.dart, _client, CustomerHomeRepository, getDashboardData, getRecentTransactions (+13 more)
+Cohesion: 0.33
+Nodes (5): errorFormatter, messenger, raw, showErrorSnackBar, showSuccessSnackBar
 
 ### Community 48 - "Staff Payments UI"
 Cohesion: 0.04
@@ -1025,7 +1017,7 @@ Nodes (51): ../../data/providers/customer_home_providers.dart, amount, _applyFil
 
 ### Community 49 - "Web Portal Components"
 Cohesion: 0.04
-Nodes (58): ../../data/providers/branch_providers.dart, _addressCtrl, branch, _BranchCard, BranchFormDialog, _BranchFormDialogState, BranchManagementPage, _BranchManagementPageState (+50 more)
+Nodes (50): ../../data/providers/branch_providers.dart, _addressCtrl, branch, _BranchCard, _buildAppBar, _buildEmptyState, _buildErrorState, _buildHeader (+42 more)
 
 ### Community 50 - "Marketing Landing Site"
 Cohesion: 0.09
@@ -1048,16 +1040,16 @@ Cohesion: 0.04
 Nodes (49): allUsers, branchId, bulkInsertMembers, changeRole, changeStatus, copyWith, customerListProvider, deleteUsers (+41 more)
 
 ### Community 55 - "Admin Audit Trail"
-Cohesion: 0.05
-Nodes (37): DateTime?, action, AuditAction, AuditActionExtension, AuditLogModel, createdAt, entityId, entityType (+29 more)
+Cohesion: 0.12
+Nodes (17): action, AuditAction, AuditActionExtension, AuditLogModel, createdAt, entityId, entityType, fromJson (+9 more)
 
 ### Community 56 - "Branch Analytics Charts"
 Cohesion: 0.04
-Nodes (53): ../../data/models/customer_feedback_model.dart, ../../data/providers/customer_feedback_providers.dart, _animatingIndex, _bounceController, build, _buildComposeSection, _buildGradientHeader, _canSubmit (+45 more)
+Nodes (48): ../../data/models/customer_feedback_model.dart, ../../data/providers/customer_feedback_providers.dart, _animatingIndex, _bounceController, build, _buildComposeSection, _buildGradientHeader, _canSubmit (+40 more)
 
 ### Community 57 - "Savings Withdrawal Flow"
-Cohesion: 0.04
-Nodes (48): accentColor, _backgroundController, _buildAmbientOrbs, _buildErrorState, _buildHeaderGradient, _buildLoanChip, _buildMiniMetric, _buildNetWorthCard (+40 more)
+Cohesion: 0.03
+Nodes (63): accentColor, _backgroundController, _buildAmbientOrbs, _buildDashboard, _buildErrorState, _buildHeaderGradient, _buildLoanChip, _buildMiniMetric (+55 more)
 
 ### Community 58 - "Customer Feedback System"
 Cohesion: 0.04
@@ -1080,20 +1072,20 @@ Cohesion: 0.04
 Nodes (47): _applyQuickPay, _borderColor, build, _buildAllocationBreakdown, _buildBreakdownRow, _buildCompactHeader, _buildCounterButton, _buildEventMap (+39 more)
 
 ### Community 63 - "Branch Users List"
-Cohesion: 0.09
-Nodes (27): Activity, Array, Boolean, BroadcastReceiver, ConcurrentHashMap, Context, CoroutineWorker, FlutterFragmentActivity (+19 more)
+Cohesion: 0.07
+Nodes (34): Activity, Array, Boolean, BroadcastReceiver, ConcurrentHashMap, Context, CoroutineWorker, FlutterFragmentActivity (+26 more)
 
 ### Community 64 - "Collection History"
 Cohesion: 0.04
-Nodes (46): DateTime get, alreadyPaidAmount, _calculateMaturityDate, CollectionType, _computeNextDueDateFromStart, copyWith, createSavingsPlan, _daysInMonth (+38 more)
+Nodes (46): CollectionType, DateTime get, alreadyPaidAmount, _calculateMaturityDate, CollectionType, _computeNextDueDateFromStart, copyWith, createSavingsPlan (+38 more)
 
 ### Community 65 - "Payment Gateway Config"
-Cohesion: 0.05
-Nodes (46): ../../../../core/utils/statement_formatters.dart, dart:typed_data, orgId, repository, loan_statement_pdf_service.dart, ../models/emi_schedule_model.dart, ../models/loan_model.dart, package:excel/excel.dart (+38 more)
+Cohesion: 0.08
+Nodes (25): app_update.dart, bool get, apkPath, AppUpdate, downloadUrl, fileSizeMb, firebaseAppId, fromJson (+17 more)
 
 ### Community 66 - "Email Service Layer"
 Cohesion: 0.04
-Nodes (44): CollectionType, ../../data/models/savings_model.dart, ../../data/providers/savings_providers.dart, build, _buildBottomBar, _buildDatePicker, _buildDivider, _buildDropdown (+36 more)
+Nodes (46): ../../data/models/savings_model.dart, ../../data/providers/savings_providers.dart, build, _buildBottomBar, _buildDatePicker, _buildDivider, _buildDropdown, _buildFormDetails (+38 more)
 
 ### Community 67 - "Community 67"
 Cohesion: 0.05
@@ -1117,7 +1109,7 @@ Nodes (73): AnimatedWidget, ../../data/providers/branch_payment_providers.dart, 
 
 ### Community 72 - "Community 72"
 Cohesion: 0.07
-Nodes (39): ../../data/providers/branch_scoped_providers.dart, BranchAnalyticsPage, _BranchAnalyticsPageState, build, _buildCollectionTrend, _buildHealthScore, _buildKPICards, _buildLoanPortfolio (+31 more)
+Nodes (25): EdgeInsetsGeometry?, PreferredSizeWidget, Size get, Widget, blurSigma, borderRadius, build, child (+17 more)
 
 ### Community 73 - "Community 73"
 Cohesion: 0.05
@@ -1137,11 +1129,11 @@ Nodes (44): Writing Guidelines for Postgres References, Section: Advanced Featur
 
 ### Community 77 - "Community 77"
 Cohesion: 0.05
-Nodes (36): Alignment, ../../../auth/presentation/providers/auth_provider.dart, ../../../../core/utils/file_download.dart, ../../data/services/portfolio_savings_statement_pdf_service.dart, ../../../loans/presentation/widgets/portfolio_statement_options_sheet.dart, ../../../loans/presentation/widgets/statement_generation_overlay.dart, _activeFilter, align (+28 more)
+Nodes (42): Alignment, ../../../../core/utils/file_download.dart, ../../data/services/portfolio_savings_statement_pdf_service.dart, ../../../loans/presentation/widgets/portfolio_statement_options_sheet.dart, ../../../loans/presentation/widgets/statement_generation_overlay.dart, _buildSavingsOverdueAlert, _buildSavingsUpcomingPayments, _activeFilter (+34 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.05
-Nodes (42): ../../data/providers/staff_map_providers.dart, _buildMap, _breadcrumbRefreshTimer, build, _buildBottomBar, _buildErrorBanner, _buildFabColumn, _buildFrostedHeader (+34 more)
+Cohesion: 0.06
+Nodes (35): ../../data/providers/staff_map_providers.dart, _breadcrumbRefreshTimer, _buildBottomBar, _buildErrorBanner, _buildFabColumn, _buildFrostedHeader, _buildLoadingOverlay, _buildMap (+27 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.05
@@ -1160,12 +1152,12 @@ Cohesion: 0.11
 Nodes (24): metadata, VALUES, metadata, ROLES, metadata, CtaBand(), FAQS, FeatureHighlights() (+16 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.04
-Nodes (55): ChangeNotifier, _acceptInvitation, _buildHeader, _buildTopBar, _buildAppBar, build, _handleUpdate, accentColor (+47 more)
+Cohesion: 0.07
+Nodes (30): accentColor, _buildActionButton, _buildCreateOrgButton, _buildDivider, _buildField, _buildNeoGlassCard, colors, _controller (+22 more)
 
 ### Community 84 - "Community 84"
-Cohesion: 0.07
-Nodes (28): affectedComponents, category, content, createdAt, description, durationSeconds, fromJson, HelpArticleModel (+20 more)
+Cohesion: 0.06
+Nodes (30): repository, staffWalletProvider, ../models/streak_model.dart, dailySummaryProvider, ensureTodayTarget, getActiveVisit, getCurrentActivity, getDailySummary (+22 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.08
@@ -1176,8 +1168,8 @@ Cohesion: 0.05
 Nodes (41): ../../../../core/widgets/premium_calendar_sheet.dart, ../../data/models/transaction_filter.dart, _amountMaxController, _amountMinController, _applyAmountRange, _applyDatePreset, build, _buildActiveFiltersRow (+33 more)
 
 ### Community 87 - "Community 87"
-Cohesion: 0.07
-Nodes (29): ../config/env_config.dart, dart:async, Dio, ../models/chat_message.dart, ../models/github_release.dart, package:dio/dio.dart, package:permission_handler/permission_handler.dart, ../providers/system_config_provider.dart (+21 more)
+Cohesion: 0.11
+Nodes (17): package:permission_handler/permission_handler.dart, ../providers/system_config_provider.dart, AutoUpdateService, _checkAndUpdate, _checking, dispose, _downloadApk, _downloadComplete (+9 more)
 
 ### Community 88 - "Community 88"
 Cohesion: 0.05
@@ -1197,31 +1189,31 @@ Nodes (40): active,
 
 ### Community 91 - "Community 91"
 Cohesion: 0.05
-Nodes (40): ActivityType, action, ActivityLogModel, fromJson, id, ActivityType, details, timestamp (+32 more)
+Nodes (42): accuracy, ActivityType, altitude, batteryLevel, branchId, copyWith, createdAt, fromJson (+34 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.12
-Nodes (15): package:pdf/pdf.dart, package:printing/printing.dart, _buildOrgHeader, CustomerReceiptService, _dateTimeFmt, downloadReceipt, _formatPaymentMode, generateReceipt (+7 more)
+Nodes (16): package:pdf/pdf.dart, package:pdf/widgets.dart, package:printing/printing.dart, _buildOrgHeader, CustomerReceiptService, _dateTimeFmt, downloadReceipt, _formatPaymentMode (+8 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.09
-Nodes (43): ConsumerState, ConsumerStatefulWidget, ../../../../core/services/location_service.dart, BreakLoggingPage, _BreakLoggingPageState, _checkCurrentBreakStatus, _handleBreakAction, CashDepositPage (+35 more)
+Cohesion: 0.08
+Nodes (23): dart:math, ../../data/models/customer_loan_model.dart, CustomerLoanModel, calculateEMI, calculateTotalInterest, calculateTotalPayment, CustomerEmiCalculatorService, generateSchedule (+15 more)
 
 ### Community 94 - "Community 94"
 Cohesion: 0.05
-Nodes (42): addPendingOperation, clearAll, clearCollections, clearCustomers, clearLoans, clearPendingOperations, _collections, _collectionsBox (+34 more)
+Nodes (40): addPendingOperation, clearAll, clearCollections, clearCustomers, clearLoans, clearPendingOperations, _collections, _collectionsBox (+32 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.05
 Nodes (40): _aadharController, _addressController, autofillHints, build, _buildSectionTitle, client, _confirmPasswordController, controller (+32 more)
 
 ### Community 96 - "Community 96"
-Cohesion: 0.03
-Nodes (61): repository, staffWalletProvider, ../models/staff_profile_model.dart, ../models/streak_model.dart, ../models/target_model.dart, ../models/wallet_model.dart, dailySummaryProvider, ensureTodayTarget (+53 more)
+Cohesion: 0.06
+Nodes (31): ../models/staff_profile_model.dart, ../models/target_model.dart, ../models/wallet_model.dart, _client, completeVisit, endBreak, ensureTodayTarget, getActiveVisit (+23 more)
 
 ### Community 97 - "Community 97"
-Cohesion: 0.06
-Nodes (39): ../../../../core/services/offline_queue_service.dart, ../../../loans/presentation/providers/loan_providers.dart, ../../../loans/presentation/widgets/collection_sheet.dart, build, _buildDueList, _buildDueListItems, _buildErrorSheet, _buildHeader (+31 more)
+Cohesion: 0.05
+Nodes (46): ../../../../core/services/offline_queue_service.dart, ../../../loans/presentation/providers/loan_providers.dart, ../../../loans/presentation/widgets/collection_sheet.dart, _buildForm, _buildWalletSection, build, _buildDueList, _buildDueListItems (+38 more)
 
 ### Community 98 - "Community 98"
 Cohesion: 0.05
@@ -1229,19 +1221,19 @@ Nodes (39): activeAccounts, averageBalance, collectionType, copyWith, createdAt,
 
 ### Community 99 - "Community 99"
 Cohesion: 0.04
-Nodes (55): apiUsageStatsProvider, auditLogsProvider, branchLocationsProvider, client, createAnnouncement, createMaintenanceWindow, createOrganization, deleteAnnouncement (+47 more)
+Nodes (56): apiUsageStatsProvider, auditLogsProvider, branchLocationsProvider, client, createAnnouncement, createMaintenanceWindow, createOrganization, deleteAnnouncement (+48 more)
 
 ### Community 100 - "Community 100"
 Cohesion: 0.09
 Nodes (39): Asme Landing, Assets React Reactlogo, Assets Vite Vitelogo, Blog Mficolllections Post, Blog Staffgamification Post, Composeplans Separateemicards Plan, Content Marketing, Customer Portal (+31 more)
 
 ### Community 101 - "Community 101"
-Cohesion: 0.07
-Nodes (28): ../../../customer_portal/data/providers/customer_member_provider.dart, ../models/upi_payment_request_model.dart, checkExistingPending, client, customerId, customerUpiRequestsProvider, getCustomerRequests, getOrgRequests (+20 more)
+Cohesion: 0.13
+Nodes (14): ../../../customer_portal/data/providers/customer_member_provider.dart, checkExistingPending, client, customerId, customerUpiRequestsProvider, getCustomerRequests, getOrgRequests, getPendingRequests (+6 more)
 
 ### Community 102 - "Community 102"
-Cohesion: 0.04
-Nodes (53): List, collectionType, currentAmount, CustomerSavingsModel, displayName, fromJson, frozenDates, id (+45 more)
+Cohesion: 0.10
+Nodes (18): main, main, package:integration_test/integration_test.dart, package:microflow_pro/app.dart, package:microflow_pro/core/providers/storage_providers.dart, package:microflow_pro/core/services/sms_service.dart, package:shared_preferences/shared_preferences.dart, ../providers/storage_providers.dart (+10 more)
 
 ### Community 103 - "Community 103"
 Cohesion: 0.05
@@ -1261,8 +1253,8 @@ Cohesion: 0.05
 Nodes (44): ../../../../core/utils/kyc_validators.dart, FocusNode, _aadharController, _AadharFormatter, _addressController, build, _buildBottomBar, _buildBranchDropdown (+36 more)
 
 ### Community 107 - "Community 107"
-Cohesion: 0.08
-Nodes (26): ../../data/models/customer_profile_model.dart, ../../data/providers/customer_member_provider.dart, ../../data/providers/customer_profile_providers.dart, _anim, _buildAvatarSection, _buildBody, _buildErrorState, _buildHeader (+18 more)
+Cohesion: 0.07
+Nodes (27): ../core/constants/layout.dart, ../../data/models/customer_profile_model.dart, ../../data/providers/customer_member_provider.dart, ../../data/providers/customer_profile_providers.dart, _anim, _buildAvatarSection, _buildBody, _buildErrorState (+19 more)
 
 ### Community 108 - "Community 108"
 Cohesion: 0.06
@@ -1274,11 +1266,11 @@ Nodes (36): static const Color, static const EdgeInsets, static EdgeInsets, acce
 
 ### Community 110 - "Community 110"
 Cohesion: 0.05
-Nodes (41): ../constants/app_colors.dart, AppTheme, b, interTextTheme, withInter, _anim, build, _buildBar (+33 more)
+Nodes (36): _anim, build, _buildBar, _buildResults, _cache, _close, color, createState (+28 more)
 
 ### Community 111 - "Community 111"
 Cohesion: 0.10
-Nodes (27): sitemap(), STATIC_ROUTES, ArticleJsonLd(), ArticleJsonLdProps, BlogPage(), metadata, PostBody(), PostBodyProps (+19 more)
+Nodes (28): NotFound(), sitemap(), STATIC_ROUTES, ArticleJsonLd(), ArticleJsonLdProps, BlogPage(), metadata, PostBody() (+20 more)
 
 ### Community 112 - "Community 112"
 Cohesion: 0.07
@@ -1290,7 +1282,7 @@ Nodes (35): ../models/savings_installment_model.dart, ../models/savings_model.da
 
 ### Community 114 - "Community 114"
 Cohesion: 0.05
-Nodes (44): Object?, _buildSavingsOverdueAlert, _buildSavingsUpcomingPayments, _buildTransactionList, _buildYieldChart, _generateStatement, allSavingsProvider, client (+36 more)
+Nodes (39): Object?, _buildTransactionList, _buildYieldChart, allSavingsProvider, client, copyWith, empty, error (+31 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.06
@@ -1298,7 +1290,7 @@ Nodes (35): addAdminNote, adminSetUserPassword, _applyOrder, bulkInsertMembers, 
 
 ### Community 116 - "Community 116"
 Cohesion: 0.05
-Nodes (46): ../../data/providers/gamification_providers.dart, ../models/achievement_model.dart, ../models/leaderboard_model.dart, LeaderboardModel, _achievementCard, _achievements, build, createState (+38 more)
+Nodes (43): ../../data/providers/collection_providers.dart, _achievementCard, _achievements, build, createState, dispose, GamificationDashboard, _GamificationDashboardState (+35 more)
 
 ### Community 117 - "Community 117"
 Cohesion: 0.06
@@ -1317,8 +1309,8 @@ Cohesion: 0.06
 Nodes (34): achievements, activityLogs, branches, cashDeposits, collections, collectionTargets, emiSchedule, loans (+26 more)
 
 ### Community 121 - "Community 121"
-Cohesion: 0.11
-Nodes (18): appName, appVersion, debugInfo, EnvConfig, githubToken, googleIosClientId, googleRedirectUri, googleWebClientId (+10 more)
+Cohesion: 0.07
+Nodes (28): affectedComponents, category, content, createdAt, description, durationSeconds, fromJson, HelpArticleModel (+20 more)
 
 ### Community 122 - "Community 122"
 Cohesion: 0.06
@@ -1334,27 +1326,27 @@ Nodes (37): ../../../branches/presentation/pages/branch_management_page.dart, _a
 
 ### Community 125 - "Community 125"
 Cohesion: 0.06
-Nodes (32): ../../../../core/models/statement_org_info.dart, Font, ../models/today_payment_model.dart, ../providers/payment_providers.dart, _buildFooter, _buildHeader, _buildHeaderCell, _buildPaymentTable (+24 more)
+Nodes (33): ../../../../core/constants/statement_colors.dart, ../../../../core/models/statement_org_info.dart, Font, ../models/today_payment_model.dart, ../providers/payment_providers.dart, _buildFooter, _buildHeader, _buildHeaderCell (+25 more)
 
 ### Community 126 - "Community 126"
 Cohesion: 0.06
-Nodes (35): Animation, AnimationController, AuroraBackground, build, child, createState, _ctrl, dispose (+27 more)
+Nodes (32): Animation, Color, build, color, createState, CustomerSavingsAchievementBadge, _CustomerSavingsAchievementBadgeState, dispose (+24 more)
 
 ### Community 127 - "Community 127"
-Cohesion: 0.06
-Nodes (32): paths, @/*, client, ../providers/duty_providers.dart, dutyRepositoryProvider, geofenceEventsProvider, geofenceServiceProvider, geofenceZonesProvider (+24 more)
+Cohesion: 0.07
+Nodes (29): client, ../providers/duty_providers.dart, dutyRepositoryProvider, geofenceEventsProvider, geofenceServiceProvider, geofenceZonesProvider, getActiveDutySession, getTodayDutyMinutes (+21 more)
 
 ### Community 128 - "Community 128"
-Cohesion: 0.05
-Nodes (48): LoanModel, _buildForm, _activityDisplay, build, _buildActionCard, _buildAgendaSection, _buildDailyTargetCompact, _buildDashboardItem (+40 more)
+Cohesion: 0.06
+Nodes (35): LoanModel, _activityDisplay, build, _buildActionCard, _buildDailyTargetCompact, _buildDashboardItem, _buildDivider, _buildFinancialOverview (+27 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.06
-Nodes (44): branch_manager_providers.dart, branchStatsProvider, BranchCollectionsPage, _BranchCollectionsPageState, build, build, BranchDetailSheet, build (+36 more)
+Cohesion: 0.04
+Nodes (57): branchStatsProvider, ../../../../core/widgets/sparkline_chart.dart, ../../../home/presentation/widgets/live_agents_map_card.dart, build, BranchDetailSheet, build, amount, BranchManagerDashboard (+49 more)
 
 ### Community 130 - "Community 130"
-Cohesion: 0.10
-Nodes (20): ../../data/models/activity_log_model.dart, ../../data/providers/activity_log_repository_provider.dart, biometricAuth, copyWith, currency, defaultLoanInterest, defaultSavingsYield, enableNotifications (+12 more)
+Cohesion: 0.11
+Nodes (18): ../../data/models/activity_log_model.dart, ../../data/providers/activity_log_repository_provider.dart, biometricAuth, copyWith, currency, defaultLoanInterest, defaultSavingsYield, enableNotifications (+10 more)
 
 ### Community 131 - "Community 131"
 Cohesion: 0.06
@@ -1365,24 +1357,24 @@ Cohesion: 0.06
 Nodes (33): _buildDisclaimer, _buildFooter, _buildHeader, _buildImpl, _buildLoanTable, buildPortfolioStatement, _buildSectionTitle, _buildStatusDistribution (+25 more)
 
 ### Community 133 - "Community 133"
-Cohesion: 0.09
-Nodes (21): authState, branchCollectionsProvider, branchDailySummaryProvider, branchId, branchManagerDashboardProvider, branchOverdueLoansProvider, branchStaffProvider, branchStatsProvider (+13 more)
+Cohesion: 0.05
+Nodes (38): ../models/branch_stats_model.dart, authState, branchCollectionsProvider, branchDailySummaryProvider, branchId, branchManagerDashboardProvider, branchOverdueLoansProvider, branchStaffProvider (+30 more)
 
 ### Community 134 - "Community 134"
-Cohesion: 0.06
-Nodes (31): accentColor, backgroundColor, copyWith, createdAt, customDomain, domainVerified, emailFooterText, emailHeaderText (+23 more)
+Cohesion: 0.04
+Nodes (43): createdAt, CustomerNotificationModel, data, fromJson, id, isRead, message, readAt (+35 more)
 
 ### Community 135 - "Community 135"
-Cohesion: 0.07
-Nodes (26): ../../features/staff/data/models/staff_location_model.dart, ../../features/staff/data/services/offline_sync_engine.dart, package:battery_plus/battery_plus.dart, package:connectivity_plus/connectivity_plus.dart, _battery, _buildLocationModel, _client, _connectivitySub (+18 more)
+Cohesion: 0.05
+Nodes (45): ../../features/staff/data/models/staff_location_model.dart, ../../features/staff/data/services/offline_sync_engine.dart, package:battery_plus/battery_plus.dart, package:connectivity_plus/connectivity_plus.dart, package:geolocator/geolocator.dart, dispose, hasBackgroundPermission, _isRunning (+37 more)
 
 ### Community 136 - "Community 136"
 Cohesion: 0.06
-Nodes (30): ../../../../core/constants/statement_colors.dart, balance, build, _buildCustomerBlock, _buildFooter, _buildHeader, _buildLedgerTable, _buildPdf (+22 more)
+Nodes (32): StatementOrgInfo, LoanStatementOrgInfo, balance, build, _buildCustomerBlock, _buildFooter, _buildHeader, _buildLedgerTable (+24 more)
 
 ### Community 137 - "Community 137"
-Cohesion: 0.06
-Nodes (32): amount, _buildDelinquencyAnalysis, _buildErrorState, _buildExportButton, _buildHeader, _buildHealthScoreGauge, _buildMemberInsights, _buildPortfolioOverview (+24 more)
+Cohesion: 0.05
+Nodes (40): ../../../../core/utils/formatters.dart, ../../data/models/customer_transaction_model.dart, amount, _buildDelinquencyAnalysis, _buildErrorState, _buildExportButton, _buildHeader, _buildHealthScoreGauge (+32 more)
 
 ### Community 138 - "Community 138"
 Cohesion: 0.06
@@ -1405,16 +1397,16 @@ Cohesion: 0.06
 Nodes (31): activeLoans, address, city, code, copyWith, createdAt, displayName, district (+23 more)
 
 ### Community 143 - "Community 143"
-Cohesion: 0.08
-Nodes (33): ../../data/providers/duty_providers.dart, activeDutySessionProvider, onDutyProvider, todayDutyMinutesProvider, Timer?, build, createState, dispose (+25 more)
+Cohesion: 0.06
+Nodes (42): ../../data/providers/duty_providers.dart, _buildMap, _buildGPSStatusChip, build, _drawBreadcrumbTrail, _drawCustomerPins, StaffMapPage, _StaffMapPageState (+34 more)
 
 ### Community 144 - "Community 144"
 Cohesion: 0.08
 Nodes (30): ../../data/providers/sync_providers.dart, isOnlineProvider, build, _buildEmptyState, _buildOperationItem, _buildOperationsList, _buildStatCol, _buildSummaryCard (+22 more)
 
 ### Community 145 - "Community 145"
-Cohesion: 0.04
-Nodes (48): ActivityLogModel, ../../../../core/widgets/aurora_background.dart, ../../../../core/widgets/premium_search_overlay.dart, ../../data/providers/activity_logs_provider.dart, ../../data/providers/dashboard_providers.dart, ActivityLogsPage, build, isFirst (+40 more)
+Cohesion: 0.02
+Nodes (93): ../../../../core/widgets/premium_search_overlay.dart, ../../data/providers/dashboard_providers.dart, _AddUserFab, _AuroraBackdrop, _Avatar, _ChoiceChip, _EmptyState, _FilterChipPill (+85 more)
 
 ### Community 146 - "Community 146"
 Cohesion: 0.10
@@ -1425,20 +1417,20 @@ Cohesion: 0.06
 Nodes (31): SavingsSummary, _buildDisclaimer, _buildFooter, _buildHeader, _buildImpl, _buildPlansTable, buildPortfolioStatement, _buildSectionTitle (+23 more)
 
 ### Community 148 - "Community 148"
-Cohesion: 0.05
-Nodes (34): ../../../../core/services/app_icon_service.dart, ../core/widgets/hud_navigation.dart, ../../data/constants/legal_content.dart, IconPreset, package:flutter_animate/flutter_animate.dart, build, _buildPolicySection, LegalPoliciesPage (+26 more)
+Cohesion: 0.10
+Nodes (19): appName, appVersion, debugInfo, EnvConfig, githubToken, googleIosClientId, googleRedirectUri, googleWebClientId (+11 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.10
-Nodes (25): ../../../../core/providers/branding_provider.dart, core/services/auto_update_service.dart, ../../../../core/services/push_notification_provider.dart, core/theme/app_theme.dart, core/widgets/update_wrapper.dart, features/settings/data/providers/brand_provider.dart, build, createState (+17 more)
+Cohesion: 0.05
+Nodes (51): ../../../../core/providers/branding_provider.dart, core/services/auto_update_service.dart, ../../../../core/services/push_notification_provider.dart, core/theme/app_theme.dart, core/widgets/update_wrapper.dart, features/settings/data/providers/brand_provider.dart, build, createState (+43 more)
 
 ### Community 150 - "Community 150"
-Cohesion: 0.05
-Nodes (42): color, icon, id, keywords, route, search, SearchableSetting, _settings (+34 more)
+Cohesion: 0.07
+Nodes (30): build, _buildCelebrationBanner, _buildGoalReachedCard, _buildMiniStats, _buildProgressBar, color, createState, currentAmount (+22 more)
 
 ### Community 151 - "Community 151"
-Cohesion: 0.08
-Nodes (32): ConsumerWidget, package:cached_network_image/cached_network_image.dart, _handleAction, _RowActions, _UserRow, _import, _buildLogo, _bulkDelete (+24 more)
+Cohesion: 0.11
+Nodes (18): ../models/api_key_model.dart, ApiRepository, _client, createExport, createIntegration, createWebhook, deleteApiKey, deleteIntegration (+10 more)
 
 ### Community 152 - "Community 152"
 Cohesion: 0.06
@@ -1457,12 +1449,12 @@ Cohesion: 0.07
 Nodes (29): animationFast, animationNormal, animationSlow, animationSlower, AppSpacing, blurHeavy, blurLight, blurMedium (+21 more)
 
 ### Community 156 - "Community 156"
-Cohesion: 0.05
-Nodes (42): ../../../../core/widgets/glass_card.dart, ../../data/providers/staff_providers.dart, _breakStartTime, BreakType, build, _buildActiveBreakCard, _buildBreakSetup, _buildBreakTypeSelector (+34 more)
+Cohesion: 0.03
+Nodes (56): ../../../../core/widgets/smokey_background.dart, ../../data/models/wallet_model.dart, WalletModel, package:flutter/services.dart, BreakLoggingPage, _breakStartTime, BreakType, build (+48 more)
 
 ### Community 157 - "Community 157"
-Cohesion: 0.07
-Nodes (29): ../../../../core/utils/url_utils.dart, accessToken, checkForRedirectCode, _clearUrlParams, _client, connected, connectedAt, _createOrGetBackupFolder (+21 more)
+Cohesion: 0.04
+Nodes (55): ../../../../core/utils/url_utils.dart, dart:convert, google_drive_service.dart, package:http/http.dart, apiKey, baseUrl, EmailService, isConfigured (+47 more)
 
 ### Community 158 - "Community 158"
 Cohesion: 0.09
@@ -1477,16 +1469,16 @@ Cohesion: 0.05
 Nodes (40): LocalAuthentication, package:local_auth/local_auth.dart, authenticate, false, getAvailableBiometrics, getBiometricLabel, isBiometricAvailable, isBiometricEnabled (+32 more)
 
 ### Community 161 - "Community 161"
-Cohesion: 0.05
-Nodes (36): AuthState, ../../data/models/user_model.dart, ../../data/repositories/auth_repository.dart, ../features/auth/presentation/providers/auth_provider.dart, UserModel, provider, AuthErrorType, AuthNotifier (+28 more)
+Cohesion: 0.07
+Nodes (26): ../../data/models/user_model.dart, ../../data/repositories/auth_repository.dart, UserModel, AuthErrorType, authRepositoryProvider, AuthState, AuthStatus, changePassword (+18 more)
 
 ### Community 162 - "Community 162"
 Cohesion: 0.04
-Nodes (53): dart:io, file_download_stub.dart, ../models/transaction_model.dart, package:flutter/foundation.dart, package:flutter_image_compress/flutter_image_compress.dart, package:microflow_pro/features/auth/presentation/providers/auth_provider.dart, package:microflow_pro/features/payments/data/models/today_payment_model.dart, package:microflow_pro/features/payments/data/providers/payment_providers.dart (+45 more)
+Nodes (64): ../../../../core/utils/statement_formatters.dart, dart:typed_data, file_download_stub.dart, loan_statement_pdf_service.dart, ../models/emi_schedule_model.dart, ../models/transaction_model.dart, package:excel/excel.dart, package:intl/intl.dart (+56 more)
 
 ### Community 163 - "Community 163"
 Cohesion: 0.06
-Nodes (34): _CircleIconButton, ../../../../core/widgets/progress_gauge.dart, customerSavingsProvider, ../../data/providers/customer_savings_providers.dart, _CircleIconButtonState, _CircleIconButtonState, build, _buildErrorState (+26 more)
+Nodes (33): _CircleIconButton, ../../../../core/widgets/progress_gauge.dart, customerSavingsProvider, ../../data/providers/customer_savings_providers.dart, Offset, _CircleIconButtonState, _CircleIconButtonState, build (+25 more)
 
 ### Community 164 - "Community 164"
 Cohesion: 0.10
@@ -1524,7 +1516,7 @@ Nodes (20): billingRepositoryProvider, cancelSubscription, checkLimit, client, c
 
 ### Community 172 - "Community 172"
 Cohesion: 0.05
-Nodes (46): ../../data/providers/customer_biometric_providers.dart, ../../data/providers/customer_notification_preferences_provider.dart, _animatedEntry, _buildAboutSection, _buildDivider, _buildNavigationTile, _buildNotificationsSection, _buildPasswordField (+38 more)
+Nodes (44): ../../data/providers/customer_biometric_providers.dart, ../../data/providers/customer_notification_preferences_provider.dart, _animatedEntry, _buildAboutSection, _buildDivider, _buildNavigationTile, _buildNotificationsSection, _buildPasswordField (+36 more)
 
 ### Community 173 - "Community 173"
 Cohesion: 0.07
@@ -1539,12 +1531,12 @@ Cohesion: 0.07
 Nodes (27): activeLoans, amount, CustomerLoanSummary, disbursementDate, emiAmount, firstEmiDate, frequency, fromJson (+19 more)
 
 ### Community 176 - "Community 176"
-Cohesion: 0.06
-Nodes (35): PreferredSizeWidget, ../services/haptic_service.dart, Size get, Widget, activeIcon, build, _buildHUDItem, child (+27 more)
+Cohesion: 0.10
+Nodes (21): ../services/haptic_service.dart, activeIcon, build, _buildHUDItem, child, createState, currentIndex, dispose (+13 more)
 
 ### Community 177 - "Community 177"
-Cohesion: 0.12
-Nodes (16): ../../../../core/constants/enums.dart, _client, detectAndFreezeSkippedEMIs, EMIRepository, _extendLoanTenure, freezeSingleEMI, generateSchedule, getByLoanId (+8 more)
+Cohesion: 0.11
+Nodes (16): content, icon, kDataProcessingSections, kLegalLastUpdated, kPrivacyPolicySections, kRefundPolicySections, kTermsOfServiceSections, LegalSection (+8 more)
 
 ### Community 178 - "Community 178"
 Cohesion: 0.05
@@ -1571,8 +1563,8 @@ Cohesion: 0.08
 Nodes (26): ../../data/models/chat_message.dart, ../../data/repositories/chatbot_repository.dart, package:flutter_tts/flutter_tts.dart, package:speech_to_text/speech_to_text.dart, chatbotRepositoryProvider, ChatNotifier, ChatState, clearHistory (+18 more)
 
 ### Community 184 - "Community 184"
-Cohesion: 0.08
-Nodes (25): build, _buildActionButton, _buildActiveVisitCard, _buildActiveVisitView, _buildCheckInView, _buildHeaderCard, _buildLocationStatus, _buildNotesField (+17 more)
+Cohesion: 0.05
+Nodes (68): ConsumerState, ../../../../core/services/location_service.dart, ../../data/providers/staff_providers.dart, _BreakLoggingPageState, _checkCurrentBreakStatus, _handleBreakAction, _CashDepositPageState, _submit (+60 more)
 
 ### Community 185 - "Community 185"
 Cohesion: 0.07
@@ -1583,8 +1575,8 @@ Cohesion: 0.09
 Nodes (22): FlPluginRegistry, fl_register_plugins(), FlView, GApplication, gboolean, gchar, GObject, GtkApplication (+14 more)
 
 ### Community 187 - "Community 187"
-Cohesion: 0.22
-Nodes (9): ../../data/constants/faq_data.dart, _buildCategoryChip, _buildEmptyState, _buildFaqCard, createState, HelpCenterPage, _HelpCenterPageState, _searchQuery (+1 more)
+Cohesion: 0.08
+Nodes (30): ../../data/providers/customer_connection_provider.dart, ../../data/providers/customer_notifications_providers.dart, ../../data/providers/customer_realtime_providers.dart, package:microflow_pro/core/constants/app_spacing.dart, package:microflow_pro/core/widgets/shimmer_card.dart, _handleSubmit, build, _buildErrorState (+22 more)
 
 ### Community 188 - "Community 188"
 Cohesion: 0.07
@@ -1607,16 +1599,16 @@ Cohesion: 0.09
 Nodes (25): DownloadProgress, updateCheckProvider, appUpdateServiceProvider, ../services/app_update_service.dart, githubReleaseServiceProvider, _BlockingOverlay, build, child (+17 more)
 
 ### Community 193 - "Community 193"
-Cohesion: 0.17
-Nodes (13): build, _refresh, _buildBranchAssignmentSection, _confirmAndChangeStatus, _EditProfileSheet, _EditProfileSheetState, _handleForceLogout, _handlePasswordReset (+5 more)
+Cohesion: 0.10
+Nodes (23): class _FakeFilterBuilder extends, class _FakeQueryBuilder extends, Directory, package:hive/hive.dart, package:microflow_pro/core/providers/org_provider.dart, package:microflow_pro/core/providers/sms_outbox_provider.dart, package:microflow_pro/core/providers/sms_provider.dart, package:microflow_pro/core/services/sms_outbox_service.dart (+15 more)
 
 ### Community 194 - "Community 194"
 Cohesion: 0.06
 Nodes (34): 10. IMAGE-FIRST CODEX WEBSITE WORKFLOW, 11. WHEN TO TRIGGER IMAGE GENERATION FIRST, 13. WEBSITE REFERENCE RULE, 15. RESPONSIVE FIRST-VIEW RULE, 16. ANTI-NESTED-BOX RULE, 17. REDUCE MICRO-UI CLUTTER RULE, 18. SECTION IMAGE GENERATION RULE, 19. WEBSITE IMAGE SYSTEM RULE (+26 more)
 
 ### Community 195 - "Community 195"
-Cohesion: 0.08
-Nodes (25): app_update.dart, bool get, apkPath, AppUpdate, downloadUrl, fileSizeMb, firebaseAppId, fromJson (+17 more)
+Cohesion: 0.05
+Nodes (39): ../constants/app_spacing.dart, double?, amountMax, amountMin, clearAll, copyWith, CustomerTransactionFilter, dateFrom (+31 more)
 
 ### Community 196 - "Community 196"
 Cohesion: 0.08
@@ -1627,24 +1619,24 @@ Cohesion: 0.10
 Nodes (25): PageController, build, _buildBottomNav, _buildInputField, _buildStep1, _buildStep2, _buildStep3, _buildStepHeader (+17 more)
 
 ### Community 198 - "Community 198"
-Cohesion: 0.06
-Nodes (31): ../../data/providers/customer_connection_provider.dart, ../../data/providers/customer_notifications_providers.dart, ../../data/providers/customer_realtime_providers.dart, Offset, package:go_router/go_router.dart, package:microflow_pro/core/constants/app_spacing.dart, package:microflow_pro/core/widgets/shimmer_card.dart, _buildErrorState (+23 more)
+Cohesion: 0.15
+Nodes (10): class, DartProject, RegisterPlugins(), PluginRegistry, RECT, OnCreate(), GetClientArea(), SetChildContent() (+2 more)
 
 ### Community 199 - "Community 199"
 Cohesion: 0.06
 Nodes (34): 10. DEVICE MOCKUP FRAME RULE, 11. ONBOARDING FLOW RULE, 12. FIRST SCREEN CLEANLINESS RULE, 13. SAFE AREA AND SYSTEM REGION RULE, 14. NAVIGATION RULE, 15. CLEAN LAYOUT RULE, 16. CREATIVE IMAGE DIRECTION RULE, 17. BACKGROUND TEXTURE AND SURFACE RULE (+26 more)
 
 ### Community 200 - "Community 200"
-Cohesion: 0.07
-Nodes (26): dart:convert, google_drive_service.dart, package:http/http.dart, apiKey, baseUrl, EmailService, isConfigured, send (+18 more)
+Cohesion: 0.09
+Nodes (22): customer_payment_trend_chart.dart, package:fl_chart/fl_chart.dart, _animController, build, _buildChart, _buildEmptyState, createState, CustomerSavingsGrowthChart (+14 more)
 
 ### Community 201 - "Community 201"
-Cohesion: 0.11
-Nodes (18): _client, createTransaction, _deleteLoanCollectionClientSide, _deleteSavingsDepositClientSide, deleteTransaction, deleteTransactions, getMemberSavingsTransactions, getRecentTransactions (+10 more)
+Cohesion: 0.06
+Nodes (34): ../../../../core/constants/enums.dart, _client, detectAndFreezeSkippedEMIs, EMIRepository, _extendLoanTenure, freezeSingleEMI, generateSchedule, getByLoanId (+26 more)
 
 ### Community 202 - "Community 202"
-Cohesion: 0.11
-Nodes (19): AsyncNotifier, CustomerNotificationPreferences, ../models/customer_notification_preferences.dart, build, client, CustomerNotificationPreferencesNotifier, customerNotificationPreferencesRepositoryProvider, _mergeFromServer (+11 more)
+Cohesion: 0.05
+Nodes (39): AsyncNotifier, copyWith, CustomerNotificationPreferences, ../models/customer_notification_preferences.dart, defaults, emailEnabled, emiReminder1Day, emiReminder3Days (+31 more)
 
 ### Community 203 - "Community 203"
 Cohesion: 0.06
@@ -1667,8 +1659,8 @@ Cohesion: 0.08
 Nodes (24): ../../data/services/loan_statement_pdf_service.dart, StatementVariant, build, createState, _customEnd, _customStart, format, _formatIcon (+16 more)
 
 ### Community 208 - "Community 208"
-Cohesion: 0.07
-Nodes (26): @pragma, fcm_token_service.dart, notification_navigation_handler.dart, package:firebase_messaging/firebase_messaging.dart, package:flutter_local_notifications/flutter_local_notifications.dart, push_notification_service.dart, firebaseMessagingBackgroundHandler, FcmTokenService (+18 more)
+Cohesion: 0.05
+Nodes (41): fcm_token_service.dart, FlutterEngine, FlutterLocalNotificationsPlugin, GoRouter, notification_navigation_handler.dart, _buildAppBar, GeneratedPluginRegistrant, push_notification_service.dart (+33 more)
 
 ### Community 209 - "Community 209"
 Cohesion: 0.08
@@ -1676,11 +1668,11 @@ Nodes (24): CollectionModel, ../models/collection_model.dart, _client, Collectio
 
 ### Community 210 - "Community 210"
 Cohesion: 0.15
-Nodes (20): _buildQuickActions, _buildQuickActions, Route /branch, Route /branch/settings, Route /customer, Route /loans, Route /payments, Route /savings (+12 more)
+Nodes (20): _buildQuickActions, _buildQuickActions, Route /branch, Route /branch/settings, Route /customer, Route /loans, Route /members/onboarding, Route /savings (+12 more)
 
 ### Community 211 - "Community 211"
-Cohesion: 0.08
-Nodes (24): package:geolocator/geolocator.dart, dispose, hasBackgroundPermission, _isRunning, _locationController, onLocation, _positionSub, requestBackgroundPermission (+16 more)
+Cohesion: 0.09
+Nodes (22): ../models/achievement_model.dart, ../models/leaderboard_model.dart, LeaderboardModel, gamificationRepositoryProvider, getLeaderboard, getUserPoints, getUserRank, monthlyLeaderboardProvider (+14 more)
 
 ### Community 212 - "Community 212"
 Cohesion: 0.08
@@ -1691,12 +1683,12 @@ Cohesion: 0.08
 Nodes (23): accountActivation, agentCollectionAlert, collectionConfirmationToMember, emiPaymentReceived, emiReminder3Days, emiReminderDueToday, emiReminderOverdue, emiReminderOverdueWithBalance (+15 more)
 
 ### Community 214 - "Community 214"
-Cohesion: 0.10
-Nodes (18): app.dart, android, DefaultFirebaseOptions, ios, core/config/env_config.dart, core/config/firebase_options.dart, core/providers/storage_providers.dart, core/services/background_handler.dart (+10 more)
+Cohesion: 0.08
+Nodes (22): app.dart, android, DefaultFirebaseOptions, ios, core/config/env_config.dart, core/config/firebase_options.dart, core/providers/storage_providers.dart, core/services/background_handler.dart (+14 more)
 
 ### Community 215 - "Community 215"
-Cohesion: 0.06
-Nodes (34): customer_loan_breakdown_chart.dart, customer_payment_trend_chart.dart, customer_savings_growth_chart.dart, animation, build, child, createState, CustomerDashboardCharts (+26 more)
+Cohesion: 0.11
+Nodes (18): customer_loan_breakdown_chart.dart, customer_savings_growth_chart.dart, animation, build, child, createState, CustomerDashboardCharts, _CustomerDashboardChartsState (+10 more)
 
 ### Community 216 - "Community 216"
 Cohesion: 0.08
@@ -1711,8 +1703,8 @@ Cohesion: 0.08
 Nodes (23): aadharNumber, address, area, copyWith, CustomerProfileModel, dateOfBirth, email, fatherName (+15 more)
 
 ### Community 219 - "Community 219"
-Cohesion: 0.23
-Nodes (9): _In_, _In_opt_, wWinMain(), CreateAndAttachConsole(), GetCommandLineArguments(), Utf8FromUtf16(), GetWindowClass(), vector (+1 more)
+Cohesion: 0.09
+Nodes (23): Duration, animate, _animation, animationDuration, backgroundColor, borderRadius, build, center (+15 more)
 
 ### Community 220 - "Community 220"
 Cohesion: 0.09
@@ -1731,16 +1723,16 @@ Cohesion: 0.08
 Nodes (23): avatarUrl, collectionsCount, currentUserRank, currentUserStaffId, endDate, entries, fromJson, LeaderboardEntry (+15 more)
 
 ### Community 224 - "Community 224"
-Cohesion: 0.10
-Nodes (20): copyWith, defaults, emailEnabled, emiReminder1Day, emiReminder3Days, emiReminderOnDue, fromJson, fromJsonString (+12 more)
+Cohesion: 0.12
+Nodes (27): ConsumerStatefulWidget, build, _ChangePasswordSheet, _ChangePasswordSheetState, build, CustomerHomePage, _CustomerHomePageState, build (+19 more)
 
 ### Community 225 - "Community 225"
 Cohesion: 0.08
 Nodes (23): _applyResolution, _client, ConflictRecord, ConflictResolutionService, ConflictStrategy, ConflictType, _defaultStrategies, detectConflicts (+15 more)
 
 ### Community 226 - "Community 226"
-Cohesion: 0.04
-Nodes (50): build, _buildPermissionCard, createState, _infoTile, _pickSim, _sectionHeader, SmsSettingsPage, _SmsSettingsPageState (+42 more)
+Cohesion: 0.06
+Nodes (34): _buildPermissionCard, createState, _infoTile, _pickSim, _sectionHeader, _switchTile, _testResult, _timePickerTile (+26 more)
 
 ### Community 227 - "Community 227"
 Cohesion: 0.17
@@ -1751,8 +1743,8 @@ Cohesion: 0.06
 Nodes (34): 10. DEVICE MOCKUP FRAME RULE, 11. ONBOARDING FLOW RULE, 12. FIRST SCREEN CLEANLINESS RULE, 13. SAFE AREA AND SYSTEM REGION RULE, 14. NAVIGATION RULE, 15. CLEAN LAYOUT RULE, 16. CREATIVE IMAGE DIRECTION RULE, 17. BACKGROUND TEXTURE AND SURFACE RULE (+26 more)
 
 ### Community 229 - "Community 229"
-Cohesion: 0.08
-Nodes (24): package:fl_chart/fl_chart.dart, amount, _animController, build, _buildChart, _buildEmptyState, createState, CustomerPaymentTrendChart (+16 more)
+Cohesion: 0.11
+Nodes (18): amount, _animController, build, _buildChart, _buildEmptyState, createState, CustomerPaymentTrendChart, _CustomerPaymentTrendChartState (+10 more)
 
 ### Community 230 - "Community 230"
 Cohesion: 0.09
@@ -1763,20 +1755,20 @@ Cohesion: 0.09
 Nodes (22): ../../data/models/org_subscription_model.dart, ../../data/models/subscription_plan_model.dart, badge, _BillingCycleToggle, _BillingCycleToggleState, createState, _CurrentSubscriptionCard, isCurrentPlan (+14 more)
 
 ### Community 232 - "Community 232"
-Cohesion: 0.22
-Nodes (8): ../models/customer_ticket_model.dart, addMessage, _client, createTicket, CustomerSupportRepository, getTicketMessages, getTickets, _orgId
+Cohesion: 0.13
+Nodes (14): ../models/upi_payment_request_model.dart, checkExistingPending, _client, confirmBatch, confirmPayment, createRequest, _formatDateOnly, getCustomerRequests (+6 more)
 
 ### Community 233 - "Community 233"
-Cohesion: 0.06
-Nodes (39): ../../../loans/data/providers/loan_providers.dart, LoanSummary, _buildStaffSnapshot, _buildQuickActions, _ActiveLoansSection, build, _OverdueBanner, _RecentTransactions (+31 more)
+Cohesion: 0.09
+Nodes (22): ../../../loans/data/providers/loan_providers.dart, LoanSummary, activeLoansProvider, activeSavingsProvider, agenda, allLoans, client, getActiveLoans (+14 more)
 
 ### Community 234 - "Community 234"
-Cohesion: 0.08
-Nodes (23): ../../../../core/widgets/status_badge.dart, ../../data/models/customer_emi_model.dart, amountPaid, balanceAfter, CustomerEmiModel, dueDate, emiAmount, emiNumber (+15 more)
+Cohesion: 0.13
+Nodes (14): amountPaid, balanceAfter, CustomerEmiModel, dueDate, emiAmount, emiNumber, fromJson, id (+6 more)
 
 ### Community 235 - "Community 235"
-Cohesion: 0.07
-Nodes (42): ApiNotifier, AvatarUploadNotifier, BillingNotifier, BranchNotifier, BrandingNotifier, BrandingNotifier, CollectionNotifier, BiometricToggleNotifier (+34 more)
+Cohesion: 0.12
+Nodes (29): AuthState, ApiNotifier, AuthNotifier, AvatarUploadNotifier, BillingNotifier, BranchNotifier, BrandingNotifier, BrandingNotifier (+21 more)
 
 ### Community 236 - "Community 236"
 Cohesion: 0.24
@@ -1795,12 +1787,12 @@ Cohesion: 0.09
 Nodes (21): AppTypography, _baseStyle, bodyLarge, bodyMedium, bodySmall, displayLarge, displayMedium, displaySmall (+13 more)
 
 ### Community 240 - "Community 240"
-Cohesion: 0.10
-Nodes (21): ../../../../core/utils/error_formatter.dart, ../../../../features/settings/data/models/activity_log_model.dart, ../../../../features/settings/data/repositories/activity_log_repository.dart, AdminOrgDetailPage, adminOrgDetailProvider, build, _buildAppBar, _buildContent (+13 more)
+Cohesion: 0.05
+Nodes (42): ../../../../core/utils/error_formatter.dart, ../../../../features/settings/data/models/activity_log_model.dart, ../../../../features/settings/data/repositories/activity_log_repository.dart, ../../../../features/super_admin/data/providers/super_admin_providers.dart, _activityColor, _activityIcon, AdminOrgDetailPage, _AdminOrgDetailPageState (+34 more)
 
 ### Community 241 - "Community 241"
-Cohesion: 0.05
-Nodes (39): ApiKeyModel, ApiKeyWithSecret, config, createdAt, ../models/api_key_model.dart, events, expiresAt, fromJson (+31 more)
+Cohesion: 0.10
+Nodes (21): ApiKeyModel, ApiKeyWithSecret, config, createdAt, events, expiresAt, fromJson, fullKey (+13 more)
 
 ### Community 242 - "Community 242"
 Cohesion: 0.09
@@ -1811,16 +1803,16 @@ Cohesion: 0.11
 Nodes (19): ../../../../core/widgets/glassmorphic_card.dart, AdminDashboardPage, build, _buildOrgCard, _buildSectionHeader, _buildStatsRow, color, data (+11 more)
 
 ### Community 244 - "Community 244"
-Cohesion: 0.09
-Nodes (21): acceptedAt, branchId, createdAt, email, expiresAt, fromJson, id, invitedBy (+13 more)
+Cohesion: 0.05
+Nodes (40): ActivityType, DateTime?, action, ActivityLogModel, fromJson, id, ActivityType, details (+32 more)
 
 ### Community 245 - "Community 245"
-Cohesion: 0.05
-Nodes (39): ../constants/app_spacing.dart, double?, amountMax, amountMin, clearAll, copyWith, CustomerTransactionFilter, dateFrom (+31 more)
+Cohesion: 0.15
+Nodes (12): activity_log_repository_provider.dart, paths, @/*, ../models/activity_log_model.dart, ../models/brand_model.dart, package:microflow_pro/core/services/app_icon_service.dart, repo, _applyIconPreset (+4 more)
 
 ### Community 246 - "Community 246"
 Cohesion: 0.12
-Nodes (25): _loadEmiSchedule, _loadLoanData, _saveLoan, _addNote, build, _emailArchived, _handleDelete, _handleLoanRestructure (+17 more)
+Nodes (23): ChangeNotifier, _acceptInvitation, _buildHeader, _buildTopBar, _buildAppBar, build, _handleUpdate, build (+15 more)
 
 ### Community 247 - "Community 247"
 Cohesion: 0.09
@@ -1851,16 +1843,16 @@ Cohesion: 0.06
 Nodes (30): 10. FINAL PRE-FLIGHT CHECK, 1. ACTIVE BASELINE CONFIGURATION, 2. DEFAULT ARCHITECTURE & CONVENTIONS, 3. DESIGN ENGINEERING DIRECTIVES (Bias Correction), 4. CREATIVE PROACTIVITY (Anti-Slop Implementation), 5. PERFORMANCE GUARDRAILS, 6. TECHNICAL REFERENCE (Dial Definitions), 7. AI TELLS (Forbidden Patterns) (+22 more)
 
 ### Community 254 - "Community 254"
-Cohesion: 0.09
-Nodes (21): availableForDeposit, cashInHand, copyWith, createdAt, digitalBalance, fromJson, id, isOverLimit (+13 more)
+Cohesion: 0.10
+Nodes (20): availableForDeposit, cashInHand, copyWith, createdAt, digitalBalance, fromJson, id, isOverLimit (+12 more)
 
 ### Community 255 - "Community 255"
-Cohesion: 0.12
-Nodes (17): ../../data/providers/products_providers.dart, build, _buildEmptyState, _buildProductCard, _formatNum, _handleAction, _infoChip, LoanProductsPage (+9 more)
+Cohesion: 0.17
+Nodes (13): build, _refresh, _buildBranchAssignmentSection, _confirmAndChangeStatus, _EditProfileSheet, _EditProfileSheetState, _handleForceLogout, _handlePasswordReset (+5 more)
 
 ### Community 256 - "Community 256"
-Cohesion: 0.04
-Nodes (46): CustomPainter, dart:math, ../../data/models/customer_savings_model.dart, _SparklinePainter, _TimelinePainter, _AmbientBlobPainter, _PremiumRingGaugePainter, TicketBorderPainter (+38 more)
+Cohesion: 0.08
+Nodes (26): CustomPainter, _SparklinePainter, _TimelinePainter, _AmbientBlobPainter, _PremiumRingGaugePainter, TicketBorderPainter, _AuroraPainter, _RipplePainter (+18 more)
 
 ### Community 257 - "Community 257"
 Cohesion: 0.10
@@ -1871,24 +1863,24 @@ Cohesion: 0.10
 Nodes (20): package:microflow_pro/core/constants/app_colors.dart, package:microflow_pro/features/staff/data/providers/live_tracking_providers.dart, _breadcrumbs, build, createState, _currentIndex, _dateButton, dispose (+12 more)
 
 ### Community 259 - "Community 259"
-Cohesion: 0.06
-Nodes (27): ../../../../../core/models/app_update.dart, AppUpdateApi, appUpdateApiProvider, _client, createAppUpdate, fetchActiveForAndroid, fetchLatestActiveForAndroid, ../models/customer_feedback_model.dart (+19 more)
+Cohesion: 0.17
+Nodes (11): customer_home_providers.dart, customer_notifications_providers.dart, customer_profile_providers.dart, customer_savings_providers.dart, customer_support_providers.dart, channel, client, colChannel (+3 more)
 
 ### Community 260 - "Community 260"
 Cohesion: 0.08
 Nodes (22): LocationService, backgroundLocationServiceProvider, client, locationCleanupServiceProvider, locationServiceProvider, service, BackgroundLocationService, ../services/background_location_service.dart (+14 more)
 
 ### Community 261 - "Community 261"
-Cohesion: 0.11
-Nodes (17): ../../../../core/widgets/smokey_background.dart, _amountController, build, _buildAmountSection, _buildMethodSection, _buildNotesSection, _buildReferenceSection, _buildSubmitButton (+9 more)
+Cohesion: 0.17
+Nodes (11): ../../data/models/member_model.dart, ../../data/repositories/members_repository.dart, MemberSummary, getMembers, getMemberSummary, membersRepositoryProvider, membersSearchQueryProvider, memberSummaryProvider (+3 more)
 
 ### Community 262 - "Community 262"
 Cohesion: 0.11
 Nodes (19): _RangePreset, build, createState, _customEnd, _customStart, description, label, periodEnd (+11 more)
 
 ### Community 263 - "Community 263"
-Cohesion: 0.17
-Nodes (11): client, customerId, customerNotificationsRepositoryProvider, getNotifications, getUnreadCount, markAllAsRead, markAsRead, notificationMarkReadProvider (+3 more)
+Cohesion: 0.11
+Nodes (18): ../models/customer_notification_model.dart, client, customerId, customerNotificationsRepositoryProvider, getNotifications, getUnreadCount, markAllAsRead, markAsRead (+10 more)
 
 ### Community 264 - "Community 264"
 Cohesion: 0.10
@@ -1903,8 +1895,8 @@ Cohesion: 0.10
 Nodes (20): dependencies, class-variance-authority, clsx, gray-matter, @mdx-js/loader, @mdx-js/react, next, @next/mdx (+12 more)
 
 ### Community 267 - "Community 267"
-Cohesion: 0.12
-Nodes (15): _loadEmailConfig, _saveEmail, _sendTestEmail, client, emailCommunicationsProvider, emailSettingsServiceProvider, getCommunications, getTemplates (+7 more)
+Cohesion: 0.09
+Nodes (19): client, orgId, client, orgId, package:microflow_pro/providers/supabase_provider.dart, client, currentProfileIdProvider, null (+11 more)
 
 ### Community 268 - "Community 268"
 Cohesion: 0.06
@@ -1915,32 +1907,32 @@ Cohesion: 0.06
 Nodes (30): Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria (+22 more)
 
 ### Community 270 - "Community 270"
-Cohesion: 0.09
-Nodes (23): ../../data/providers/collection_providers.dart, _streakCard, _targetRing, _buildTargetColumn, build, _buildCircularProgress, _buildDailyTarget, _buildEmptyTarget (+15 more)
+Cohesion: 0.40
+Nodes (5): unreadNotificationCountProvider, Route /notifications, _navigateToNotifications, build, NotificationBell
 
 ### Community 271 - "Community 271"
 Cohesion: 0.11
 Nodes (17): ../../../loans/presentation/widgets/statement_options_sheet.dart, amountMax, amountMin, copyWith, customEnd, customStart, format, hasActiveFilters (+9 more)
 
 ### Community 272 - "Community 272"
-Cohesion: 0.16
-Nodes (13): _buildProductSelector, _saveSavings, _SavingsProductsTab, build, _buildEmptyState, _buildProductCard, _formatNum, _handleAction (+5 more)
+Cohesion: 0.18
+Nodes (10): cleanupOldNotifications, client, customerId, customerNotificationServiceProvider, generateSmartNotifications, orgId, service, smartNotificationTriggerProvider (+2 more)
 
 ### Community 273 - "Community 273"
 Cohesion: 0.12
 Nodes (19): ../../../../core/models/github_release.dart, core/providers/system_config_provider.dart, ../../../../core/services/github_release_service.dart, AppUpdatePage, _AppUpdatePageState, build, _buildCurrentStatusCard, createState (+11 more)
 
 ### Community 274 - "Community 274"
-Cohesion: 0.38
-Nodes (11): HWND, LPARAM, LRESULT, MessageHandler(), EnableFullDpiSupportIfAvailable(), GetHandle(), MessageHandler(), UpdateTheme() (+3 more)
+Cohesion: 0.09
+Nodes (21): ../models/customer_ticket_model.dart, addMessage, client, createTicket, createTicketProvider, customerId, customerSupportRepositoryProvider, getTicketMessages (+13 more)
 
 ### Community 275 - "Community 275"
 Cohesion: 0.06
 Nodes (30): For --cluster-only, For git commit hook, For /graphify add, For /graphify explain, For /graphify path, For /graphify query, For native CLAUDE.md integration, For --update (incremental re-extraction) (+22 more)
 
 ### Community 276 - "Community 276"
-Cohesion: 0.05
-Nodes (39): Color, EdgeInsetsGeometry?, Gradient, backgroundColor, borderColor, borderRadius, build, _buildGlassmorphic (+31 more)
+Cohesion: 0.09
+Nodes (23): Gradient, backgroundColor, borderColor, borderRadius, build, _buildGlassmorphic, _buildLegacy, child (+15 more)
 
 ### Community 277 - "Community 277"
 Cohesion: 0.09
@@ -1959,16 +1951,16 @@ Cohesion: 0.06
 Nodes (30): Acceptance criteria, Architecture, Component Map, Customer Portal — UPI Payment Bottom Sheet, Data Flow — Customer Payment, Data Flow — Staff Confirmation, Data Model, Error Handling (+22 more)
 
 ### Community 281 - "Community 281"
-Cohesion: 0.12
-Nodes (15): AppUpdateCheckResult, package:microflow_pro/core/models/app_update.dart, package:microflow_pro/core/models/app_update_status.dart, package:microflow_pro/features/settings/data/datasources/app_update_api.dart, package:microflow_pro/features/settings/data/repositories/app_update_repository.dart, androidUpdateStatusProvider, _derive, repo (+7 more)
+Cohesion: 0.08
+Nodes (22): ../../../../../core/models/app_update.dart, AppUpdateApi, appUpdateApiProvider, _client, createAppUpdate, fetchActiveForAndroid, fetchLatestActiveForAndroid, AppUpdateCheckResult (+14 more)
 
 ### Community 282 - "Community 282"
 Cohesion: 0.11
 Nodes (17): billingCycle, cancelAtPeriodEnd, canceledAt, currentPeriodEnd, currentPeriodStart, fromJson, id, isActive (+9 more)
 
 ### Community 283 - "Community 283"
-Cohesion: 0.22
-Nodes (10): build, _confirmBatchWithDialog, _confirmSelected, _rejectBatch, _rejectPayment, UpiConfirmationsPage, _UpiConfirmationsPageState, allUpiRequestsProvider (+2 more)
+Cohesion: 0.10
+Nodes (20): ../../data/models/org_invitation_model.dart, ../../data/providers/invitation_providers.dart, AcceptInvitationPage, _AcceptInvitationPageState, build, createState, dispose, error (+12 more)
 
 ### Community 284 - "Community 284"
 Cohesion: 0.09
@@ -1976,7 +1968,7 @@ Nodes (21): DownloadProgress get, AppUpdateService, cancelDownload, _cancelToken
 
 ### Community 285 - "Community 285"
 Cohesion: 0.04
-Nodes (55): ../core/constants/app_colors.dart, ../../../../core/constants/app_spacing.dart, ../../data/models/customer_notification_model.dart, ../../data/models/customer_ticket_model.dart, ../../data/models/customer_transaction_model.dart, CustomerTicketModel, package:flutter/material.dart, Route /customer/receipt (+47 more)
+Nodes (60): ../core/constants/app_colors.dart, ../../../../core/widgets/glass_card.dart, ../../data/constants/faq_data.dart, ../../data/constants/legal_content.dart, ../../data/providers/gamification_providers.dart, ../../data/providers/notification_providers.dart, package:flutter/material.dart, package:flutter_riverpod/flutter_riverpod.dart (+52 more)
 
 ### Community 286 - "Community 286"
 Cohesion: 0.14
@@ -1995,20 +1987,20 @@ Cohesion: 0.07
 Nodes (27): Adding Tests, Best Practices, CI/CD, Code coverage too low, Common Patterns, Integration, Integration tests timeout, Linux/Mac (+19 more)
 
 ### Community 290 - "Community 290"
-Cohesion: 0.11
-Nodes (17): BorderRadius?, GradientTransform, _animation, borderRadius, build, child, _controller, createState (+9 more)
+Cohesion: 0.07
+Nodes (25): AnimationController, BorderRadius?, GradientTransform, AuroraBackground, build, child, createState, _ctrl (+17 more)
 
 ### Community 291 - "Community 291"
-Cohesion: 0.19
-Nodes (10): NotFound(), Footer(), MobileMenu(), Nav(), LABELS, ThemeToggle(), FooterConfig, NavItem (+2 more)
+Cohesion: 0.21
+Nodes (9): Footer(), MobileMenu(), Nav(), LABELS, ThemeToggle(), FooterConfig, NavItem, SiteConfig (+1 more)
 
 ### Community 292 - "Community 292"
 Cohesion: 0.10
-Nodes (20): build, _buildPresetIcon, createState, dispose, _fadeAnimation, _fadeController, _iconPreset, initState (+12 more)
+Nodes (21): package:cached_network_image/cached_network_image.dart, build, _buildPresetIcon, createState, dispose, _fadeAnimation, _fadeController, _iconPreset (+13 more)
 
 ### Community 293 - "Community 293"
-Cohesion: 0.05
-Nodes (47): ../core/constants/layout.dart, ../../data/models/org_invitation_model.dart, ../../data/providers/invitation_providers.dart, AcceptInvitationPage, _AcceptInvitationPageState, build, createState, dispose (+39 more)
+Cohesion: 0.09
+Nodes (25): _buildActions, color, createState, dispose, _emailController, _getRoleColor, invitation, _InvitationCard (+17 more)
 
 ### Community 294 - "Community 294"
 Cohesion: 0.12
@@ -2024,16 +2016,16 @@ Nodes (16): Fake, package:mocktail/mocktail.dart, required Widget child,
   List, AsyncCallback, createTestableWidget, enterTextAndPump, FakeLoanModel, FakeSavingsModel (+8 more)
 
 ### Community 297 - "Community 297"
-Cohesion: 0.10
-Nodes (17): content, icon, kDataProcessingSections, kLegalLastUpdated, kPrivacyPolicySections, kRefundPolicySections, kTermsOfServiceSections, LegalSection (+9 more)
+Cohesion: 0.22
+Nodes (8): StatusType, build, _colorsFor, glow, label, StatusBadge, StatusType, type
 
 ### Community 298 - "Community 298"
-Cohesion: 0.20
-Nodes (9): package:latlong2/latlong.dart, static const double, _earthRadiusMeters, _haversine, _perpendicularDistance, PolylineUtils, simplify, _toRadians (+1 more)
+Cohesion: 0.11
+Nodes (18): package:latlong2/latlong.dart, static const double, circleToPolygon, distanceToPolygonEdge, _earthRadiusMeters, GeofenceUtils, haversineDistance, isInsideCircle (+10 more)
 
 ### Community 299 - "Community 299"
-Cohesion: 0.10
-Nodes (19): address, city, email, fallback, grievanceOfficer, grievancePhone, gstNumber, logoBytes (+11 more)
+Cohesion: 0.12
+Nodes (16): address, city, email, fallback, grievanceOfficer, grievancePhone, gstNumber, logoBytes (+8 more)
 
 ### Community 300 - "Community 300"
 Cohesion: 0.19
@@ -2044,32 +2036,32 @@ Cohesion: 0.13
 Nodes (15): build, color, icon, isAtLimit, isNearLimit, label, limit, percentage (+7 more)
 
 ### Community 302 - "Community 302"
-Cohesion: 0.15
-Nodes (14): GoRouter, _buildAppBar, Route /customer/payments, Route /staff, Route /staff/notifications, Route /staff/visits, handleNotificationData, _navigateStaff (+6 more)
+Cohesion: 0.22
+Nodes (10): build, _confirmBatchWithDialog, _confirmSelected, _rejectBatch, _rejectPayment, UpiConfirmationsPage, _UpiConfirmationsPageState, allUpiRequestsProvider (+2 more)
 
 ### Community 303 - "Community 303"
 Cohesion: 0.25
-Nodes (4): class, DartProject, FlutterWindow(), FlutterWindow()
+Nodes (8): chatbotEnabled, ChatConfig, ChatConfigNotifier, copyWith, _enabledKey, _loadConfig, toggleChatbot, static const
 
 ### Community 304 - "Community 304"
-Cohesion: 0.07
-Nodes (31): ../../data/providers/support_ticket_providers.dart, ../../data/repositories/support_ticket_repository.dart, build, _buildEmptyState, _buildMessageThread, _buildPriorityBadge, _buildPriorityOption, _buildStatusBadge (+23 more)
+Cohesion: 0.08
+Nodes (30): ../../data/providers/support_ticket_providers.dart, ../../data/repositories/support_ticket_repository.dart, build, _buildEmptyState, _buildMessageThread, _buildPriorityBadge, _buildPriorityOption, _buildStatusBadge (+22 more)
 
 ### Community 305 - "Community 305"
 Cohesion: 0.07
 Nodes (33): MapController, package:flutter_map/flutter_map.dart, _AgentDetailSheet, _AgentDetailSheetState, build, _fitMapToAgents, _initRealtime, managerGeofenceZonesProvider (+25 more)
 
 ### Community 306 - "Community 306"
-Cohesion: 0.18
-Nodes (18): build, build, CustomerHomePage, _CustomerHomePageState, build, CustomerNotificationsPage, _CustomerNotificationsPageState, build (+10 more)
+Cohesion: 0.25
+Nodes (7): ../config/env_config.dart, Dio, ../models/github_release.dart, package:dio/dio.dart, _dio, fetchLatestRelease, GitHubReleaseService
 
 ### Community 307 - "Community 307"
 Cohesion: 0.13
 Nodes (15): _buildEmpty, _colorFor, createState, _future, _iconFor, initState, isFirst, isLast (+7 more)
 
 ### Community 308 - "Community 308"
-Cohesion: 0.11
-Nodes (17): ../../../../core/widgets/branded_loading.dart, _biometricEnabled, build, _buildActionTile, _buildInfoTile, _buildProfileCard, _buildSection, _buildSwitchTile (+9 more)
+Cohesion: 0.04
+Nodes (64): ../../../auth/data/models/user_model.dart, ../../../auth/presentation/providers/auth_provider.dart, branchStaffProvider, ../../../chatbot/presentation/providers/chat_config_provider.dart, ../../../../core/services/haptic_service.dart, ../../../../core/theme/theme_provider.dart, ../../../../core/widgets/branded_loading.dart, ../../../../core/widgets/powered_by_badge.dart (+56 more)
 
 ### Community 309 - "Community 309"
 Cohesion: 0.08
@@ -2100,24 +2092,24 @@ Cohesion: 0.13
 Nodes (14): BranchStatus, CollectionFrequency, CustomerStatus, EMIStatus, InterestType, KYCStatus, LoanStatus, PaymentMode (+6 more)
 
 ### Community 316 - "Community 316"
-Cohesion: 0.03
-Nodes (68): ../../../../core/providers/org_provider.dart, customer_member_provider.dart, client, orgId, ../models/customer_profile_model.dart, package:microflow_pro/providers/supabase_provider.dart, client, customerHomeRepositoryProvider (+60 more)
+Cohesion: 0.12
+Nodes (16): ../models/customer_feedback_model.dart, client, createFeedbackProvider, customerFeedbackRepositoryProvider, customerId, getFeedbacks, orgId, _ref (+8 more)
 
 ### Community 317 - "Community 317"
-Cohesion: 0.11
-Nodes (18): ../../../auth/data/models/user_model.dart, ../models/branch_stats_model.dart, assignAgentToArea, BranchManagerRepository, _client, getBranchCollections, getBranchDailySummary, getBranchInfo (+10 more)
+Cohesion: 0.25
+Nodes (7): ../models/member_model.dart, _client, createMember, getMembers, getMemberSummary, MembersRepository, _orgId
 
 ### Community 318 - "Community 318"
-Cohesion: 0.13
-Nodes (14): all, AppIconService, assetPreview, _channel, colorValue, description, getById, getCurrentIcon (+6 more)
+Cohesion: 0.07
+Nodes (26): color, icon, id, keywords, route, search, SearchableSetting, _settings (+18 more)
 
 ### Community 319 - "Community 319"
-Cohesion: 0.11
-Nodes (18): ../models/user_model.dart, AuthRepository, authStateChanges, _checkEmailInProfiles, _client, _createOrgAndProfile, getCurrentUser, _logRepo (+10 more)
+Cohesion: 0.25
+Nodes (7): checkIn, checkOut, ref, repository, visitCheckInProvider, ../repositories/staff_repository.dart, StaffRepository
 
 ### Community 320 - "Community 320"
-Cohesion: 0.12
-Nodes (17): ../../data/providers/branch_manager_providers.dart, _activeFilter, _applyFilters, BranchMembersPage, _BranchMembersPageState, build, _buildEmptyState, _buildMemberCard (+9 more)
+Cohesion: 0.11
+Nodes (18): ../models/customer_emi_model.dart, ../models/customer_loan_model.dart, client, customerLoansProvider, customerLoansRepositoryProvider, getCustomerLoans, getEmiSchedule, getLoanById (+10 more)
 
 ### Community 321 - "Community 321"
 Cohesion: 0.08
@@ -2136,8 +2128,8 @@ Cohesion: 0.17
 Nodes (12): ../../data/models/invoice_model.dart, ../../data/providers/billing_providers.dart, InvoiceModel, build, _detailRow, invoice, _InvoiceCard, InvoicesPage (+4 more)
 
 ### Community 325 - "Community 325"
-Cohesion: 0.06
-Nodes (44): branchStaffProvider, ../../../chatbot/presentation/providers/chat_config_provider.dart, ../../../../core/services/haptic_service.dart, ../../../../core/theme/theme_provider.dart, ../../../../core/widgets/powered_by_badge.dart, ../../data/providers/brand_provider.dart, package:package_info_plus/package_info_plus.dart, PackageInfo (+36 more)
+Cohesion: 0.07
+Nodes (25): ../../../../core/theme/design_system.dart, ../../data/providers/super_admin_providers.dart, _ActionData, _buildActivity, _buildHeader, _buildMetrics, _buildQuickActions, _buildRevenue (+17 more)
 
 ### Community 326 - "Community 326"
 Cohesion: 0.09
@@ -2152,8 +2144,8 @@ Cohesion: 0.09
 Nodes (21): 1. Router Integration ✅, 2. Offline Sync Integration ✅, 3. Security ✅, 4. Performance ✅, Branch Manager Portal, 📊 Code Statistics, Customer Portal, 📝 Database Notes (+13 more)
 
 ### Community 329 - "Community 329"
-Cohesion: 0.38
-Nodes (6): RegisterPlugins(), PluginRegistry, RECT, OnCreate(), GetClientArea(), SetChildContent()
+Cohesion: 0.33
+Nodes (7): _BillingContent, BillingPage, build, billingNotifierProvider, currentSubscriptionProvider, subscriptionPlansProvider, Route /billing/invoices
 
 ### Community 330 - "Community 330"
 Cohesion: 0.08
@@ -2168,8 +2160,8 @@ Cohesion: 0.18
 Nodes (13): brandkit skill, design-taste-frontend v1 skill, design-taste-frontend skill (v2), gpt-taste skill, high-end-visual-design skill, image-to-code skill, imagegen-frontend-mobile skill, imagegen-frontend-web skill (+5 more)
 
 ### Community 333 - "Community 333"
-Cohesion: 0.33
-Nodes (7): _BillingContent, BillingPage, build, billingNotifierProvider, currentSubscriptionProvider, subscriptionPlansProvider, Route /billing/invoices
+Cohesion: 0.06
+Nodes (31): @pragma, package:firebase_messaging/firebase_messaging.dart, package:flutter/foundation.dart, package:flutter_image_compress/flutter_image_compress.dart, package:flutter_local_notifications/flutter_local_notifications.dart, package:open_filex/open_filex.dart, package:path_provider/path_provider.dart, firebaseMessagingBackgroundHandler (+23 more)
 
 ### Community 334 - "Community 334"
 Cohesion: 0.24
@@ -2184,28 +2176,28 @@ Cohesion: 0.12
 Nodes (16): AchievementModel, Achievements, category, copyWith, description, fromJson, icon, id (+8 more)
 
 ### Community 337 - "Community 337"
-Cohesion: 0.12
-Nodes (16): ../../../../core/widgets/glass_button.dart, _activeFilter, _applyFilters, BranchLoansPage, _BranchLoansPageState, _buildDetailColumn, _buildEmptyState, _buildLoanCard (+8 more)
+Cohesion: 0.17
+Nodes (11): customer_member_provider.dart, ../models/customer_profile_model.dart, client, customerProfileRepositoryProvider, data, fromJson, memberId, orgId (+3 more)
 
 ### Community 338 - "Community 338"
-Cohesion: 0.17
-Nodes (15): ../../data/providers/live_tracking_providers.dart, _buildGPSStatusChip, _maybePromptTracking, isTrackingProvider, startTrackingProvider, stopTrackingProvider, build, createState (+7 more)
+Cohesion: 0.33
+Nodes (5): ../constants/app_colors.dart, AppTheme, b, interTextTheme, withInter
 
 ### Community 339 - "Community 339"
 Cohesion: 0.10
 Nodes (19): Code Quality, Color and Surfaces, Component Patterns, Content, Design Audit, Fix Priority, How This Works, Iconography (+11 more)
 
 ### Community 340 - "Community 340"
-Cohesion: 0.12
-Nodes (15): ../../../../core/widgets/shimmer_card.dart, package:flutter/services.dart, _buildCollectionCard, _buildEmptyState, _buildStatsGrid, _buildStatTile, createState, _getPaymentModeColor (+7 more)
+Cohesion: 0.25
+Nodes (7): static OverlayEntry?, build, dismiss, _entry, show, StatementGenerationOverlay, _StatementGenerationOverlayWidget
 
 ### Community 341 - "Community 341"
 Cohesion: 0.15
 Nodes (12): static final RegExp, _aadharRegex, formatPhoneForDisplay, KYCValidators, maskAadhar, maskPAN, _panRegex, _phoneRegex (+4 more)
 
 ### Community 342 - "Community 342"
-Cohesion: 0.12
-Nodes (16): ../../data/models/customer_loan_model.dart, CustomerLoanModel, backgroundColor, build, _buildMetric, _buildProgressRing, _buildStatusBadge, CustomerLoanCard (+8 more)
+Cohesion: 0.06
+Nodes (32): ../../../../core/constants/app_spacing.dart, ../../data/models/customer_notification_model.dart, ../../data/models/customer_savings_model.dart, VoidCallback, build, _buildCtaButton, ctaLabel, CustomerEmptyState (+24 more)
 
 ### Community 343 - "Community 343"
 Cohesion: 0.17
@@ -2228,8 +2220,8 @@ Cohesion: 0.50
 Nodes (3): main, package:microflow_pro/core/constants/enums.dart, package:microflow_pro/features/loans/data/models/loan_model.dart
 
 ### Community 348 - "Community 348"
-Cohesion: 0.18
-Nodes (10): client, createFeedbackProvider, customerFeedbackRepositoryProvider, customerId, getFeedbacks, orgId, _ref, repository (+2 more)
+Cohesion: 0.47
+Nodes (6): _loadMetadata, _onCompareTap, _SelectiveRestoreDialog, _SelectiveRestoreDialogState, driveConnectionProvider, restoreBackupServiceProvider
 
 ### Community 349 - "Community 349"
 Cohesion: 0.26
@@ -2240,8 +2232,8 @@ Cohesion: 0.23
 Nodes (8): Any, Bool, FlutterAppDelegate, FlutterResult, AppDelegate, AppDelegate, NSApplication, UIApplication
 
 ### Community 351 - "Community 351"
-Cohesion: 0.20
-Nodes (9): _client, createProduct, deleteProduct, getProduct, getProducts, _orgId, SavingsProductsService, toggleActive (+1 more)
+Cohesion: 0.50
+Nodes (4): BranchFormDialog, _BranchFormDialogState, _buildManagerDropdown, potentialManagersProvider
 
 ### Community 352 - "Community 352"
 Cohesion: 0.24
@@ -2260,8 +2252,8 @@ Cohesion: 0.24
 Nodes (10): Supabase Skill Feedback Issue Template (.claude), Marketing Landing Site Design Doc, Marketing Landing Site Requirements Doc, Marketing Landing Site Implementation Plan, Supabase Postgres Best Practices Changelog, Supabase Postgres Best Practices Skill, Supabase Skill Feedback Issue Template (.kiro), Supabase Skill Changelog (.kiro) (+2 more)
 
 ### Community 356 - "Community 356"
-Cohesion: 0.06
-Nodes (31): ActivityLogRepository, emi_repository.dart, activityLogRepositoryProvider, orgScopedActivityLogRepositoryProvider, ../../../../providers/supabase_provider.dart, ../repositories/activity_log_repository.dart, _activityLogRepository, _client (+23 more)
+Cohesion: 0.04
+Nodes (56): ActivityLogRepository, emi_repository.dart, orgId, repository, ../models/loan_model.dart, ../models/user_model.dart, activityLogRepositoryProvider, orgScopedActivityLogRepositoryProvider (+48 more)
 
 ### Community 357 - "Community 357"
 Cohesion: 0.20
@@ -2273,15 +2265,15 @@ Nodes (19): Current State, Files Summary, Goal, Implementation Plan: Integrate P
 
 ### Community 359 - "Community 359"
 Cohesion: 0.04
-Nodes (52): branchMembersProvider, _activeFilter, _applyFilters, _AuroraBackdrop, build, _buildEmptyState, _buildFilterChips, _buildHero (+44 more)
+Nodes (54): branchMembersProvider, build, _activeFilter, _applyFilters, _AuroraBackdrop, build, _buildEmptyState, _buildFilterChips (+46 more)
 
 ### Community 360 - "Community 360"
 Cohesion: 0.13
 Nodes (14): createdAt, CustomerFeedbackModel, fromJson, id, isInReview, isNew, isResolved, message (+6 more)
 
 ### Community 361 - "Community 361"
-Cohesion: 0.13
-Nodes (14): SyncStatus, build, _buildStatusIcon, _formatTime, _getBackgroundColor, _getBorderColor, _getStatusText, _getTextColor (+6 more)
+Cohesion: 0.06
+Nodes (32): ../../../../core/widgets/glass_button.dart, package:url_launcher/url_launcher.dart, _activeFilter, _applyFilters, BranchLoansPage, _BranchLoansPageState, _buildDetailColumn, _buildEmptyState (+24 more)
 
 ### Community 362 - "Community 362"
 Cohesion: 0.11
@@ -2289,7 +2281,7 @@ Nodes (18): 1. Define the Atmosphere, 2. Map the Color Palette, 3. Establish Typ
 
 ### Community 363 - "Community 363"
 Cohesion: 0.50
-Nodes (4): _buildQuickActions, Route /super-admin/organizations, Route /super-admin/settings, Route /super-admin/users
+Nodes (4): BranchManagementPage, _BranchManagementPageState, _confirmDelete, branchNotifierProvider
 
 ### Community 364 - "Community 364"
 Cohesion: 0.11
@@ -2328,8 +2320,8 @@ Cohesion: 0.11
 Nodes (18): package:crypto/crypto.dart, date, _dateFmt, daysLabel, healthGrade, healthGradeLabel, isoDate, _isoDateFmt (+10 more)
 
 ### Community 373 - "Community 373"
-Cohesion: 0.05
-Nodes (33): kBottomNavBarHeight, kBottomNavInsets, kBottomNavSafeArea, kFabSafeAreaPadding, dart:ui, EdgeInsets, IconData, package:flutter/widgets.dart (+25 more)
+Cohesion: 0.04
+Nodes (50): kBottomNavBarHeight, kBottomNavInsets, kBottomNavSafeArea, kFabSafeAreaPadding, ../../../../core/services/app_icon_service.dart, ../core/widgets/hud_navigation.dart, dart:ui, EdgeInsets (+42 more)
 
 ### Community 374 - "Community 374"
 Cohesion: 0.25
@@ -2352,8 +2344,8 @@ Cohesion: 0.32
 Nodes (8): Today's Payments Page — Glassmorphic Upgrade, PDF Report for Today's Payments, Compact Deposit History with Internal Scroll + View All, Upgrade Savings Statement PDF, Data Backup & Export Page, Savings Withdrawal — Approval-Based Flow with Penalty Enforcement, Advanced Filtering for Export Workflow, Integrate Product Templates into Loan & Savings Creation
 
 ### Community 379 - "Community 379"
-Cohesion: 0.29
-Nodes (6): client, getProducts, orgId, service, ../services/loan_products_service.dart, ../services/savings_products_service.dart
+Cohesion: 0.50
+Nodes (4): _MonthHeaderDelegate, _SliverHeaderDelegate, _FilterDelegate, SliverPersistentHeaderDelegate
 
 ### Community 380 - "Community 380"
 Cohesion: 0.11
@@ -2372,8 +2364,8 @@ Cohesion: 0.29
 Nodes (6): answer, category, FaqItem, kFaqCategories, kFaqItems, question
 
 ### Community 385 - "Community 385"
-Cohesion: 0.20
-Nodes (7): Flutter, FlutterSceneDelegate, RunnerTests, RunnerTests, SceneDelegate, UIKit, XCTestCase
+Cohesion: 0.28
+Nodes (5): Flutter, FlutterSceneDelegate, RunnerTests, SceneDelegate, UIKit
 
 ### Community 386 - "Community 386"
 Cohesion: 0.12
@@ -2392,8 +2384,8 @@ Cohesion: 0.12
 Nodes (16): 1. `lib/features/loans/presentation/widgets/collection_sheet.dart`, 2. `lib/features/loans/presentation/widgets/collection_sheet.dart` (imports), 3. No new packages needed, Action buttons visibility:, `_buildUpiQrSection()` widget:, `_confirmUpiAndSubmit()` method:, Detailed Implementation, Files to Modify (+8 more)
 
 ### Community 391 - "Community 391"
-Cohesion: 0.67
-Nodes (3): Brand System, Tailwind Theme Tokens, Typography (next/font)
+Cohesion: 0.50
+Nodes (4): _loadEmailConfig, _saveEmail, _sendTestEmail, emailSettingsServiceProvider
 
 ### Community 392 - "Community 392"
 Cohesion: 0.12
@@ -2404,8 +2396,8 @@ Cohesion: 0.40
 Nodes (5): supabaseServiceKey, supabaseUrl, corsHeaders(), jsonResponse(), serviceClient
 
 ### Community 394 - "Community 394"
-Cohesion: 0.22
-Nodes (7): Cocoa, RegisterGeneratedPlugins(), FlutterMacOS, FlutterPluginRegistry, NSWindow, MainFlutterWindow, XCTest
+Cohesion: 0.16
+Nodes (9): Cocoa, RegisterGeneratedPlugins(), FlutterMacOS, FlutterPluginRegistry, RunnerTests, NSWindow, MainFlutterWindow, XCTest (+1 more)
 
 ### Community 395 - "Community 395"
 Cohesion: 0.33
@@ -2416,8 +2408,8 @@ Cohesion: 0.33
 Nodes (5): cardVariants, featureItemVariants, featureListVariants, Pricing(), tiers
 
 ### Community 398 - "Community 398"
-Cohesion: 0.14
-Nodes (13): ../../../loans/data/models/emi_schedule_model.dart, ../../../loans/data/models/loan_model.dart, ../../../loans/data/services/loan_statement_pdf_service.dart, package:pdf/widgets.dart, ../../../savings/data/services/savings_statement_models.dart, ../../../savings/data/services/savings_statement_pdf_service.dart, CustomerStatementService, downloadPdfBytes (+5 more)
+Cohesion: 0.20
+Nodes (11): ../../data/providers/live_tracking_providers.dart, stopTrackingProvider, build, createState, dispose, initState, _isLoading, LiveTrackingToggleWidget (+3 more)
 
 ### Community 399 - "Community 399"
 Cohesion: 0.33
@@ -2428,8 +2420,8 @@ Cohesion: 0.12
 Nodes (15): 1. Concrete Transformation Patterns, 2. Error-First Structure, 3. Quantified Impact, 4. Self-Contained Examples, 5. Semantic Naming, Code Example Standards, Comments, Impact Level Guidelines (+7 more)
 
 ### Community 401 - "Community 401"
-Cohesion: 0.15
-Nodes (15): _buildDashboard, _buildPremiumHeader, _buildPremiumQuickActions, _buildYourLoans, Route /customer/account-settings, Route /customer/emi-calculator, Route /customer/feedback, Route /customer/loans (+7 more)
+Cohesion: 0.67
+Nodes (3): `.env.example`, Env Validator (`lib/env.ts`), Environment Variables
 
 ### Community 402 - "Community 402"
 Cohesion: 0.33
@@ -2460,8 +2452,8 @@ Cohesion: 0.40
 Nodes (4): slideVariants, starContainerVariants, starItemVariants, Testimonials
 
 ### Community 410 - "Community 410"
-Cohesion: 0.19
-Nodes (14): build, _clearSearch, _handlePdfExport, _onSearchChanged, _pickDate, _showFilterSheet, _showSortSheet, TodayPaymentsPage (+6 more)
+Cohesion: 0.14
+Nodes (13): ../../data/models/customer_ticket_model.dart, CustomerTicketModel, build, _buildPriorityChip, CustomerTicketCard, _formatDate, _getPriorityColor, _getPriorityIcon (+5 more)
 
 ### Community 411 - "Community 411"
 Cohesion: 0.40
@@ -2480,8 +2472,8 @@ Cohesion: 0.12
 Nodes (15): Current State (from exploration), Files NOT Modified, Files to Modify, Goal, Implementation Plan, Step 1: Add AuroraBackground to Page Body, Step 2: Convert Payment Cards to Glassmorphic, Step 3: Convert Overdue Cards to Glassmorphic (+7 more)
 
 ### Community 415 - "Community 415"
-Cohesion: 0.17
-Nodes (11): customer_home_providers.dart, customer_notifications_providers.dart, customer_profile_providers.dart, customer_savings_providers.dart, customer_support_providers.dart, channel, client, colChannel (+3 more)
+Cohesion: 0.19
+Nodes (13): build, SmsSettingsPage, _SmsSettingsPageState, smsConfigProvider, smsOutboxProvider, smsServiceProvider, Route /sms-history, initState (+5 more)
 
 ### Community 416 - "Community 416"
 Cohesion: 0.13
@@ -2500,8 +2492,8 @@ Cohesion: 0.50
 Nodes (3): package:flutter_driver/driver_extension.dart, package:microflow_pro/main.dart, main
 
 ### Community 420 - "Community 420"
-Cohesion: 0.04
-Nodes (47): class _FakeFilterBuilder extends, class _FakeQueryBuilder extends, Directory, Matcher, main, package:flutter_test/flutter_test.dart, package:hive/hive.dart, package:microflow_pro/core/providers/org_provider.dart (+39 more)
+Cohesion: 0.09
+Nodes (18): dart:io, main, package:flutter_test/flutter_test.dart, package:microflow_pro/core/utils/formatters.dart, package:microflow_pro/core/widgets/glass_button.dart, package:microflow_pro/core/widgets/shimmer_loading.dart, package:microflow_pro/core/widgets/status_badge.dart, package:microflow_pro/features/auth/data/models/user_model.dart (+10 more)
 
 ### Community 422 - "Community 422"
 Cohesion: 0.50
@@ -2512,20 +2504,16 @@ Cohesion: 0.50
 Nodes (3): dependencies, @kilocode/plugin, @opencode-ai/plugin
 
 ### Community 424 - "Community 424"
-Cohesion: 0.11
-Nodes (16): activity_log_repository_provider.dart, ../models/activity_log_model.dart, BrandModel, copyWith, ../models/brand_model.dart, fromJson, iconPreset, name (+8 more)
-
-### Community 425 - "Community 425"
-Cohesion: 0.17
-Nodes (11): ../../data/models/member_model.dart, ../../data/repositories/members_repository.dart, MemberSummary, getMembers, getMemberSummary, membersRepositoryProvider, membersSearchQueryProvider, memberSummaryProvider (+3 more)
+Cohesion: 0.25
+Nodes (7): BrandModel, copyWith, fromJson, iconPreset, name, toJson, BrandNotifier
 
 ### Community 426 - "Community 426"
 Cohesion: 0.10
 Nodes (22): int get, new_user_provider.dart, build, build, _buildAdminAuditTimeline, _buildAdminNotes, UserDetailsPage, adminNotesProvider (+14 more)
 
 ### Community 427 - "Community 427"
-Cohesion: 0.18
-Nodes (12): _buildQuickActions, _buildDisbursementVsCollection, _buildPortfolioTrend, _buildEmptyState, _buildAppBar, _buildFloatingActionIsland, Route /loans/new, Route /members/onboarding (+4 more)
+Cohesion: 0.09
+Nodes (28): _buildQuickActions, _buildStaffSnapshot, _buildQuickActions, _buildDisbursementVsCollection, _buildPortfolioTrend, build, _FinancialSummaryStrip, _HeroCard (+20 more)
 
 ### Community 428 - "Community 428"
 Cohesion: 0.50
@@ -2540,40 +2528,24 @@ Cohesion: 0.67
 Nodes (3): corsHeaders(), jsonResponse(), serviceClient
 
 ### Community 451 - "Community 451"
-Cohesion: 0.20
-Nodes (9): _client, createProduct, deleteProduct, getProduct, getProducts, LoanProductsService, _orgId, toggleActive (+1 more)
+Cohesion: 0.05
+Nodes (39): package:supabase_flutter/supabase_flutter.dart, isAuthenticatedProvider, supabaseUserProvider, ActivityLogRepository, _client, fetchLogs, log, _orgId (+31 more)
 
 ### Community 452 - "Community 452"
-Cohesion: 0.20
-Nodes (9): amount, dueDate, fetchPaidDates, generate, isFrozen, isPaid, number, SavingsInstallment (+1 more)
-
-### Community 453 - "Community 453"
-Cohesion: 0.20
-Nodes (9): circleToPolygon, distanceToPolygonEdge, _earthRadiusMeters, GeofenceUtils, haversineDistance, isInsideCircle, isInsidePolygon, _pointToSegmentDistance (+1 more)
+Cohesion: 0.12
+Nodes (13): amount, dueDate, fetchPaidDates, generate, isFrozen, isPaid, number, SavingsInstallment (+5 more)
 
 ### Community 454 - "Community 454"
 Cohesion: 0.13
 Nodes (12): Fix suggestion, Source, What happened, Skill Feedback, Steps, Core Principles, Making and Committing Schema Changes, Reference Guides (+4 more)
 
 ### Community 455 - "Community 455"
-Cohesion: 0.25
-Nodes (8): chatbotEnabled, ChatConfig, ChatConfigNotifier, copyWith, _enabledKey, _loadConfig, toggleChatbot, static const
+Cohesion: 0.15
+Nodes (12): ../../../loans/data/models/emi_schedule_model.dart, ../../../loans/data/models/loan_model.dart, ../../../loans/data/services/loan_statement_pdf_service.dart, ../../../savings/data/services/savings_statement_models.dart, ../../../savings/data/services/savings_statement_pdf_service.dart, CustomerStatementService, downloadPdfBytes, downloadStatement (+4 more)
 
 ### Community 456 - "Community 456"
 Cohesion: 0.13
 Nodes (15): Appendix B - Canonical Sources (read these before reinventing), Apple Liquid Glass (Apple platforms only), Atlassian, Bootstrap, Carbon, Fluent UI, GOV.UK, Material Web (+7 more)
-
-### Community 459 - "Community 459"
-Cohesion: 0.22
-Nodes (8): client, orgId, getPendingOrders, paymentGatewayRepositoryProvider, pendingGatewayPaymentsProvider, repo, ../repositories/payment_gateway_repository.dart, PaymentGatewayRepository
-
-### Community 460 - "Community 460"
-Cohesion: 0.25
-Nodes (7): ../models/customer_notification_model.dart, _client, CustomerNotificationsRepository, getNotifications, getUnreadCount, markAllAsRead, markAsRead
-
-### Community 461 - "Community 461"
-Cohesion: 0.25
-Nodes (7): ../models/member_model.dart, _client, createMember, getMembers, getMemberSummary, MembersRepository, _orgId
 
 ### Community 462 - "Community 462"
 Cohesion: 0.67
@@ -2585,7 +2557,7 @@ Nodes (14): 1. Visual Theme & Atmosphere, 2. Color Palette & Roles, 3. Typograph
 
 ### Community 533 - "Community 533"
 Cohesion: 0.13
-Nodes (14): Accessibility Design, Design Document, Diagrams, `.env.example`, Env Validator (`lib/env.ts`), Environment Variables, Error Handling, Lead Capture Sequence (+6 more)
+Nodes (14): Accessibility Design, Brand System, Design Document, Diagrams, Error Handling, Lead Capture Sequence, Overview, Performance Design (+6 more)
 
 ### Community 534 - "Community 534"
 Cohesion: 0.13
@@ -2616,16 +2588,8 @@ Cohesion: 0.14
 Nodes (14): 2. THE COMBINATORIAL VARIATION ENGINE, Background Character, Background Mode (per-section), Composition Anchor (per-section), CTA Variation, Hero Architecture, Hero Scale (per-page), Motion-Implied Language (+6 more)
 
 ### Community 541 - "Community 541"
-Cohesion: 0.14
-Nodes (14): IntegrationsSettingsPage, _IntegrationsSettingsPageState, _loadGatewayConfig, _loadUpiConfig, _loadWhatsAppConfig, _saveGatewayConfig, _saveUpi, _saveWhatsApp (+6 more)
-
-### Community 542 - "Community 542"
-Cohesion: 0.40
-Nodes (4): ../../../../core/theme/design_system.dart, build, UsersManagementPage, allUsersProvider
-
-### Community 544 - "Community 544"
-Cohesion: 0.29
-Nodes (5): FlutterEngine, FlutterLocalNotificationsPlugin, GeneratedPluginRegistrant, GeneratedPluginRegistrant, -registerWithRegistry
+Cohesion: 0.20
+Nodes (10): IntegrationsSettingsPage, _IntegrationsSettingsPageState, _loadGatewayConfig, _loadUpiConfig, _saveGatewayConfig, _saveUpi, paymentGatewayServiceProvider, upiServiceProvider (+2 more)
 
 ### Community 545 - "Community 545"
 Cohesion: 0.15
@@ -2664,12 +2628,8 @@ Cohesion: 0.18
 Nodes (10): Deployment (Vercel), Environment Variables, Environment Variables on Vercel, Local Setup, MicroFlow Pro — Marketing Site, Notes, Prerequisites, Project Layout (+2 more)
 
 ### Community 554 - "Community 554"
-Cohesion: 0.07
-Nodes (26): branchAsync, client, currentStaffBranchIdProvider, orgId, profile, staffProfileId, staffTimelineProvider, client (+18 more)
-
-### Community 555 - "Community 555"
-Cohesion: 0.07
-Nodes (29): ../../data/providers/notification_providers.dart, main, main, package:flutter_riverpod/flutter_riverpod.dart, package:integration_test/integration_test.dart, package:microflow_pro/app.dart, package:microflow_pro/core/providers/storage_providers.dart, package:shared_preferences/shared_preferences.dart (+21 more)
+Cohesion: 0.08
+Nodes (26): ../../../../core/providers/org_provider.dart, branchAsync, client, currentStaffBranchIdProvider, orgId, profile, staffProfileId, staffTimelineProvider (+18 more)
 
 ### Community 556 - "Community 556"
 Cohesion: 0.18
@@ -2760,12 +2720,8 @@ Cohesion: 0.22
 Nodes (9): 18. EXTRA CREATIVITY & IMPLEMENTATION EDGE, Composition variety check, Conversion focus, Cross-section contrast, CTA specificity, Cultural / tonal alignment, Data-viz restraint, Image variety inside one comp (+1 more)
 
 ### Community 578 - "Community 578"
-Cohesion: 0.22
-Nodes (7): dart:html, return, blob, downloadFile, true, url, replaceUrl
-
-### Community 579 - "Community 579"
-Cohesion: 0.25
-Nodes (7): _client, createPaymentLink, deleteGatewayConfig, getGatewayConfig, _orgId, PaymentGatewayService, saveGatewayConfig
+Cohesion: 0.12
+Nodes (12): dart:html, outbox, return, ../services/sms_outbox_service.dart, SmsOutboxService, downloadFile, false, blob (+4 more)
 
 ### Community 580 - "Community 580"
 Cohesion: 0.22
@@ -2778,10 +2734,6 @@ Nodes (9): Blog, Components and Interfaces, Demo Booking, Forms, Layout & Chrome
 ### Community 582 - "Community 582"
 Cohesion: 0.22
 Nodes (8): 1. Replace the `SliverList` with a compact scrollable container (lines 1036-1053), 2. Add "View All" button below the compact list, 3. Loading & error states remain as-is (lines 1000-1019), Changes, Context, File to Modify, Plan: Compact Deposit History with Internal Scroll + View All, Verification
-
-### Community 583 - "Community 583"
-Cohesion: 0.33
-Nodes (4): main, package:microflow_pro/features/savings/data/models/savings_installment_model.dart, package:microflow_pro/features/savings/data/models/savings_model.dart, main
 
 ### Community 584 - "Community 584"
 Cohesion: 0.25
@@ -2830,10 +2782,6 @@ Nodes (7): [1.2.0](https://github.com/supabase/agent-skills/compare/v1.1.1...v1.
 ### Community 595 - "Community 595"
 Cohesion: 0.25
 Nodes (7): Core Principles, Making and Committing Schema Changes, Reference Guides, Supabase, Supabase CLI, Supabase Documentation, Supabase MCP Server
-
-### Community 596 - "Community 596"
-Cohesion: 0.47
-Nodes (6): _loadMetadata, _onCompareTap, _SelectiveRestoreDialog, _SelectiveRestoreDialogState, driveConnectionProvider, restoreBackupServiceProvider
 
 ### Community 597 - "Community 597"
 Cohesion: 0.09
@@ -2984,8 +2932,8 @@ Cohesion: 0.33
 Nodes (6): 👑👑 3.1 SUPER ADMIN PORTAL  *(Platform Owner)*, 🏢 3.2 EXECUTIVE ADMIN PORTAL  *(Organization Boss)*, 🏗️ 3.3 BRANCH MANAGER PORTAL  *(Branch Leader)*, 📱 3.4 STAFF / COLLECTION AGENT PORTAL  *(Field Hero)*, 👤 3.5 CUSTOMER PORTAL  *(Self-Service)*, 👑 3. THE 5 PORTALS — *Every Single Page*
 
 ### Community 638 - "Community 638"
-Cohesion: 0.08
-Nodes (25): ../../../../core/utils/formatters.dart, ../../data/models/wallet_model.dart, package:url_launcher/url_launcher.dart, BranchMemberDetailPage, build, _buildContactActions, _buildContent, _buildError (+17 more)
+Cohesion: 0.04
+Nodes (64): ActivityLogModel, ../../../../core/widgets/aurora_background.dart, ../../../../core/widgets/shimmer_card.dart, ../../data/providers/activity_logs_provider.dart, ../../data/providers/branch_manager_providers.dart, ../../data/providers/branch_scoped_providers.dart, package:flutter_animate/flutter_animate.dart, ActivityLogsPage (+56 more)
 
 ### Community 639 - "Community 639"
 Cohesion: 0.40
@@ -3024,8 +2972,8 @@ Cohesion: 0.40
 Nodes (5): Architecture, Component Architecture, High-Level Architecture, MDX Choice: `@next/mdx`, Rendering Strategy
 
 ### Community 650 - "Community 650"
-Cohesion: 0.29
-Nodes (11): build, CustomerSavingsDetailPage, _CustomerSavingsDetailPageState, build, SavingDetailPage, _SavingDetailPageState, realtimeSavingsTransactionsProvider, customerSavingsTransactionsProvider (+3 more)
+Cohesion: 0.06
+Nodes (32): ../models/customer_savings_model.dart, ../models/customer_transaction_model.dart, client, customerHomeRepositoryProvider, customerRecentTransactionsProvider, getDashboardData, getRecentTransactions, memberId (+24 more)
 
 ### Community 651 - "Community 651"
 Cohesion: 0.40
@@ -3132,8 +3080,8 @@ Cohesion: 0.50
 Nodes (4): Contact Form Data Flow, Sequence, Server Action, Supabase Schema and RLS
 
 ### Community 678 - "Community 678"
-Cohesion: 0.07
-Nodes (23): package:supabase_flutter/supabase_flutter.dart, _client, CustomerProfileRepository, getMemberProfile, _orgId, updateMemberProfile, autoCollectEmi, AutoCollectionService (+15 more)
+Cohesion: 0.20
+Nodes (9): _client, getSecurityPolicies, _orgId, _readSettings, saveAuditRetention, savePasswordRules, saveSessionConfig, saveTwoFactorConfig (+1 more)
 
 ### Community 679 - "Community 679"
 Cohesion: 0.50
@@ -3163,6 +3111,10 @@ Nodes (3): Expanding the ESLint configuration, React Compiler, React + Vite
 Cohesion: 0.50
 Nodes (3): 2026-07-10 — Beta customer validated, strategy set, 2026-07-11 — Super admin portal cleanup, Session Log — MicroFlow Pro
 
+### Community 691 - "Community 691"
+Cohesion: 0.12
+Nodes (15): _loadWhatsAppConfig, _saveWhatsApp, _sendWaTest, client, emailCommunicationsProvider, getCommunications, getTemplates, getWhatsAppConfig (+7 more)
+
 ### Community 694 - "Community 694"
 Cohesion: 0.67
 Nodes (3): 📱 13. OFFLINE MODE  *(Works in the middle of nowhere)*, Data stored OFFLINE on the device, Offline Services
@@ -3175,25 +3127,37 @@ Nodes (3): 📱 16 TRAI-Compliant SMS Templates, 💬 9. SMS ENGINE, SMS Service
 Cohesion: 0.67
 Nodes (3): ⏱️ 8. SCHEDULED JOBS & DATABASE VIEWS, Cron Jobs *(run automatically)*, Database Views *(pre-computed queries)*
 
+### Community 803 - "Community 803"
+Cohesion: 0.20
+Nodes (9): _client, createProduct, deleteProduct, getProduct, getProducts, _orgId, SavingsProductsService, toggleActive (+1 more)
+
+### Community 804 - "Community 804"
+Cohesion: 0.22
+Nodes (8): Matcher, isIso8601Date, isNonNegative, isPositive, isValidAmount, isValidEmail, isValidPhone, isValidUUID
+
+### Community 805 - "Community 805"
+Cohesion: 0.22
+Nodes (8): ../features/auth/presentation/providers/auth_provider.dart, provider, client, kDevFallbackOrgId, orgId, response, user, watch
+
 ## Knowledge Gaps
-- **10304 isolated node(s):** `fs`, `content`, `normalizedContent`, `supabase`, `@mimo-ai/plugin` (+10299 more)
+- **10324 isolated node(s):** `fs`, `content`, `normalizedContent`, `supabase`, `@mimo-ai/plugin` (+10319 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **193 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **192 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `FormState` connect `Community 146` to `Community 325`, `Community 261`, `Staff Collection Sheet`, `Community 74`, `Web Portal Components`, `Community 81`, `Community 83`, `Community 180`, `Community 217`, `Customer Feedback System`, `Billing & Subscriptions`, `Community 95`?**
+- **Why does `FormState` connect `Community 146` to `Staff Collection Sheet`, `Community 74`, `Web Portal Components`, `Community 81`, `Community 83`, `Community 180`, `Community 308`, `Community 217`, `Customer Feedback System`, `Community 156`, `Billing & Subscriptions`, `Community 95`?**
   _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `BrandNotifier` connect `Community 424` to `Community 235`?**
+- **Why does `map` connect `Community 134` to `Location & Geofencing`, `Community 132`, `UPI Payments & Installments`, `Staff Dashboard Core`, `Community 139`, `Supabase Client Config`, `Community 142`, `Push Notifications & FCM`, `Analytics & Reports`, `Community 147`, `Community 293`, `Community 166`, `Branch Savings Page`, `Community 307`, `Admin Audit Trail`, `Branch Settings Page`, `Branch Member Detail`, `Branch Users List`, `Community 192`, `Community 67`, `Community 69`, `Community 70`, `Community 74`, `Community 81`, `Community 225`, `Community 103`, `Community 359`, `Community 110`, `Community 241`, `Community 119`, `Community 123`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **What connects `fs`, `content`, `normalizedContent` to the rest of the system?**
-  _10308 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _10328 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SMS & Admin Core` be split into smaller, more focused modules?**
   _Cohesion score 0.016129032258064516 - nodes in this community are weakly interconnected._
 - **Should `Payments & Collection` be split into smaller, more focused modules?**
-  _Cohesion score 0.02095947834187238 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.021701884637350087 - nodes in this community are weakly interconnected._
 - **Should `Member & Org Management` be split into smaller, more focused modules?**
-  _Cohesion score 0.019991308126901346 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.018033490768570203 - nodes in this community are weakly interconnected._
 - **Should `Branch Users & Tabs` be split into smaller, more focused modules?**
-  _Cohesion score 0.017811704834605598 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.021557271557271558 - nodes in this community are weakly interconnected._

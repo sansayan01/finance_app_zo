@@ -425,8 +425,8 @@
     "semantic_hash": "d769ca2afa6ae64a3fb5e0447c5587a2"
   },
   "lib/features/admin/presentation/pages/admin_org_detail_page.dart": {
-    "mtime": 1783763500.4605474,
-    "ast_hash": "58cb6ea5595c70735fb4376dacb0a0bb",
+    "mtime": 1783765241.3066077,
+    "ast_hash": "6db9150077bb9cd94789a1309d6c6540",
     "semantic_hash": ""
   },
   "lib/features/admin/presentation/pages/admin_org_settings_page.dart": {
@@ -1175,13 +1175,13 @@
     "semantic_hash": "3ba9286569d5cb77f37f0cc39da856ce"
   },
   "lib/features/super_admin/data/providers/super_admin_providers.dart": {
-    "mtime": 1783760427.5682654,
-    "ast_hash": "475f4920351843e95d02e17bcbbbae09",
+    "mtime": 1783765131.6639278,
+    "ast_hash": "a65de06f4503576b7b7530939b665fd3",
     "semantic_hash": ""
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {
-    "mtime": 1783763349.6231046,
-    "ast_hash": "b0cb234343bbc3f45fe8c0bb29cd734a",
+    "mtime": 1783765113.7253525,
+    "ast_hash": "bea8a9e518cf88146eccc6f6f5c9dd8e",
     "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/organizations_management_page.dart": {

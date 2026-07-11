@@ -63,6 +63,15 @@ final organizationDetailsProvider =
   return repository.getOrganizationById(orgId);
 });
 
+/// Organization Full Detail Provider
+/// Rich join: org + profiles + branches + activity logs + member count.
+/// Fires three queries in parallel on the backend side.
+final orgDetailFullProvider =
+    FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, orgId) async {
+  final repository = ref.watch(superAdminRepositoryProvider);
+  return repository.getOrganizationFullDetail(orgId);
+});
+
 /// Organization Health Provider
 final organizationHealthProvider =
     FutureProvider.autoDispose.family<OrganizationHealthScore?, String>((ref, orgId) async {

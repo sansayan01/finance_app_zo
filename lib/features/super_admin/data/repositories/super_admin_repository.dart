@@ -112,6 +112,39 @@ class SuperAdminRepository {
     }
   }
 
+  /// Full organization detail: org + profiles + branches + activity (parallel)
+  Future<Map<String, dynamic>?> getOrganizationFullDetail(String orgId) async {
+    try {
+      // Fire all three queries in parallel — no blocking.
+      final results = await Future.wait([
+        // 1. Org with joined profiles + branches (no deleted_at columns)
+        _client.from('organizations').select('''
+              id, name, slug, status, plan, created_at, updated_at,
+              display_name, address, city, state, pincode,
+              max_branches, max_staff, max_members,
+              profiles:profiles(id, user_id, full_name, email, role, created_at, branch_id),
+              branches:branches(id, name, code, status, manager_id, created_at)
+            ''').eq('id', orgId).maybeSingle(),
+        // 2. Activity logs for this org (last 20)
+        _client.from('activity_logs').select('''
+              id, action, details, type, created_at, user_name
+            ''').eq('org_id', orgId).order('created_at', ascending: false).limit(20),
+        // 3. Members count for this org
+        _client.from('members').select('id').eq('org_id', orgId),
+      ]);
+
+      if (results[0] == null) return null;
+
+      final org = Map<String, dynamic>.from(results[0] as Map);
+      org['activity_logs'] = results[1];
+      org['member_count'] = (results[2] as List).length;
+
+      return org;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Create organization
   Future<bool> createOrganization({
     required String name,

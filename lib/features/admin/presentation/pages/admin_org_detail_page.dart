@@ -45,6 +45,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: AuroraBackground(
         child: detailAsync.when(

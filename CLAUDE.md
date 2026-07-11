@@ -1,7 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
-- **2026-07-11:** Org detail page rebuilt as full command center — OrgDetailData typed model, 6 parallel queries (org+profiles+branches, activity_logs, members, loans, collections, pending_approvals), 9 scrollable sections (hero header, quick actions, metrics, contact, plan limits with usage bars, team members, branches, activity, danger zone). Status/plan toggles via direct Supabase update (broken RPCs bypassed). SDK ^3.10.0 for dot-shorthands. SUPER ADMIN on staging: msayan9733@gmail.com.
+- **2026-07-11:** Org detail rebuilt as command center — OrgDetailData typed model, 7 queries with per-query error handling, 9 sections, status/plan toggles via direct update. Fixed: results[7] out-of-bounds, is_setup_complete column missing, single-query failure killing entire page. SDK ^3.10.0. SUPER ADMIN on staging: msayan9733@gmail.com.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
 
 ## graphify

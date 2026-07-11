@@ -20,12 +20,13 @@ final allOrganizationsProvider =
     FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
         (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
-  return repository.getAllOrganizations(
+  final result = await repository.getAllOrganizations(
     limit: params['limit'] ?? 50,
     offset: params['offset'] ?? 0,
     search: params['search'],
     status: params['status'],
   );
+  return result;
 });
 
 /// Organization Details Provider

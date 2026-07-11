@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../services/haptic_service.dart';
 
 /// A premium iOS-style floating top navigation bar for desktop.
-class HUDNavigation extends StatelessWidget {
+class HUDNavigation extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final List<HUDNavItem> items;
@@ -17,11 +17,36 @@ class HUDNavigation extends StatelessWidget {
   });
 
   @override
+  State<HUDNavigation> createState() => _HUDNavigationState();
+}
+
+class _HUDNavigationState extends State<HUDNavigation>
+    with SingleTickerProviderStateMixin {
+  // Created once in initState. The shell rebuilds this widget on every route
+  // change, but the element (and thus this state) is preserved — so the
+  // entrance animation plays exactly once instead of replaying on each tap.
+  late final AnimationController _enterController;
+
+  @override
+  void initState() {
+    super.initState();
+    _enterController =
+        AnimationController(vsync: this, duration: 400.ms)
+          ..forward();
+  }
+
+  @override
+  void dispose() {
+    _enterController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Container(
+    final nav = Container(
       margin: const EdgeInsets.only(top: 12),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -59,25 +84,38 @@ class HUDNavigation extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(
-                items.length,
+                widget.items.length,
                 (index) => _buildHUDItem(context, index, primary),
               ),
             ),
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0);
+    );
+
+    return Animate(
+      controller: _enterController,
+      effects: const [
+        FadeEffect(duration: Duration(milliseconds: 400)),
+        SlideEffect(
+          begin: Offset(0, -0.2),
+          end: Offset.zero,
+          curve: Curves.easeOut,
+        ),
+      ],
+      child: nav,
+    );
   }
 
   Widget _buildHUDItem(BuildContext context, int index, Color primary) {
-    final item = items[index];
-    final isSelected = currentIndex == index;
+    final item = widget.items[index];
+    final isSelected = widget.currentIndex == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () {
         HapticService.selection();
-        onTap(index);
+        widget.onTap(index);
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(

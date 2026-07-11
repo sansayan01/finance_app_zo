@@ -1,5 +1,9 @@
 # CLAUDE.md — Project Instructions
 
+## Latest Update (rolling — replaced after every conversation)
+- **2026-07-11:** Super admin portal overhaul done. Shell rewritten to frosted glass HUD + bottom bar (matching exec admin). Dashboard rebuilt with exec admin design system (AppColors, gradient bg, frosted cards, staggered animations). Organizations page built (search, filter chips, org cards, create dialog). Settings page with theme toggle. Route guards fixed (ref.watch in shell). Debug logging added to `allOrganizationsProvider` + `getAllOrganizations` — orgs not showing on staging despite data existing. RLS policy `((id = get_user_org_id()) OR (created_by = auth.uid))` confirmed. `created_by` is null on Test Org. Debug print statements pending removal. SUPER ADMIN on staging: msayan9733@gmail.com.
+- Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
+
 ## graphify
 
 This project has a knowledge graph at `graphify-out/` with god nodes, community structure, and cross-file relationships.
@@ -11,6 +15,14 @@ Rules:
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 
 ---
+
+## Implementation Preferences
+
+- **Maintain design hierarchy across all portals and pages.** Every portal (super admin, executive admin, branch manager, collection agent, customer) must use the same navigation shell pattern (frosted glass HUD pill on desktop, frosted glass bottom bar on mobile), same design tokens (`D.` system or `Theme.colorScheme.primary`), same spacing/radius/shadow conventions. Never create a new page or portal with a different nav style or visual language. Consistency > novelty.
+- **Build features with Dart first.** When implementing any feature, try to build it using Dart/Flutter code before touching the database. Leverage existing columns, computed fields, or client-side logic before adding new database columns.
+- **Avoid SQL migrations unless necessary.** Only create SQL migration files when the feature genuinely cannot be implemented without a schema change (e.g., new entity, new relationship). If existing columns can be repurposed or data can be derived client-side, prefer that approach.
+- **Never run SQL migrations on production unless explicitly told to.** The supabase MCP is configured for both staging and production. Run migrations only on the staging server. Never apply schema changes directly to production — wait for the user's explicit go-ahead to promote to production.
+- **Always create a migration file when running SQL directly via MCP.** If you run SQL through the MCP editor, you must also save it as a proper migration file in the project for version control and auditability.
 
 ## Long Task Management
 
@@ -61,6 +73,11 @@ This CLAUDE.md is my **brain**. It evolves every single session. Every prompt, e
 | Design decision or preference noticed | **Design DNA** | "Glassmorphism is the visual language" |
 | Something I'd do differently next time | **Lessons** | "Read chunk metadata before dispatching agents" |
 
+### Rolling Summary Rule (added 2026-07-10)
+- After **every conversation/exchange**, replace the `## Latest Update` line at the top of this file with a one-or-two-sentence gist of what was decided/learned. Keep it short — speed matters.
+- This is the fast resumability checkpoint: if the session dies, the last line tells me exactly where we are.
+- **`graphify update .` is run only when CODE changes** (per the graphify rule above). Conversation chat is NOT code knowledge — do not run graphify just to log a chat. The convo gist belongs in the Latest Update line, not the code graph.
+
 **Rule:** Do NOT wait until session ends. Update immediately after the event.
 
 ---
@@ -77,6 +94,13 @@ This CLAUDE.md is my **brain**. It evolves every single session. Every prompt, e
 - **Chunk 00 = unused stub.** The 0-indexed template `chunk_00.json` is never populated; agents write `chunk_01` through `chunk_N`. Skip chunk 00 in merges.
 - **Icon-only chunks yield zero semantic value.** Android mipmap PNGs at different densities are identical content. Batch all densities of one icon into one chunk or skip semantic extraction for them entirely.
 - **Don't re-read files you just edited.** Edit/Write already know the state. Re-reading wastes context and can trigger stale-cache issues.
+- **Never run SQL migrations on production unless explicitly told to.** Staging only. Production migrations require explicit user approval.
+- **Always create a migration file when running SQL via MCP editor.** Even if you execute SQL directly through the supabase MCP, save it as a migration file in the project for version control.
+- **Build features in Dart before touching the DB.** When implementing a feature, prefer Dart/Flutter-side changes over SQL migrations. Only create migration files when a schema change is genuinely unavoidable.
+- **Don't nuke-and-rebuild when cleanup works.** Sayan wanted to restart the super admin portal from scratch. The audit showed 10 of 22 pages were fully real, the backend (37 methods, 17 tables) was solid, and only 11 pages were mock. Removing the 11 fakes + fixing 2 partial pages took minutes vs. days of rebuilding to the same state. Always audit first, then surgically fix — not emotionally nuke.
+- **Supabase PostgREST `table:table(count)` is invalid syntax.** The repo had `profiles:profiles(count)` which silently fails and returns `[]`. Correct approach: select the rows (`profiles(id)`) and count client-side, or use a separate count query.
+- **RLS policies can silently kill queries.** The `organizations` table has `org_select: ((id = get_user_org_id()) OR (created_by = auth.uid))`. If `created_by` is null and the user's org doesn't match, the query returns empty with no error. The repo's try/catch hides the real issue.
+- **`ShellRoute.builder` with `ref.read()` never rebuilds.** It fires once when the route is first built. If auth is null at that point, it stays stuck on spinner/error forever. Fix: move the auth check into the shell widget itself using `ref.watch()` so it reactively rebuilds.
 
 ---
 
@@ -112,6 +136,8 @@ Things that went wrong — never repeat these.
 
 How I should conduct myself in every session with Sayan.
 
+- **We're brothers, not agent/user.** Sayan calls me "buddy" / "bro". Casual, friendly tone — like a friend who codes, not a corporate assistant. No formal "I'd be happy to help" energy.
+- **Never sugarcoat.** If something he's doing is wrong, say it's wrong, plainly. Then give the best solution. Don't soften bad news to make him feel good — give him the real talk so he gets better.
 - **Be direct.** No "Let me help you with that!" preamble. Just do the work.
 - **Be honest about status.** If not done, say "Not done yet — here's where we are." Never fake completion.
 - **Be fast.** Skip unnecessary explanations unless asked. Show results, not process.
@@ -141,6 +167,7 @@ Things I've learned about Sayan Mondal across sessions.
 ### Identity & Role
 - **Name:** Sayan Mondal
 - **Role:** Full-stack developer / solo founder
+- **My nickname:** Sayan calls me **"buddy"** — respond to it naturally (it doesn't change my function).
 - **Project:** MicroFlow Pro — a SaaS microfinance/collections app (Flutter + Supabase + Firebase)
 - **Platform:** Windows machine (PowerShell 5.1 + Git Bash)
 

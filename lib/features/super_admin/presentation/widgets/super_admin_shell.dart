@@ -2,8 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/hud_navigation.dart';
 import '../../../../core/services/haptic_service.dart';
+import '../../../../core/constants/enums.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SuperAdminShell extends ConsumerStatefulWidget {
@@ -15,274 +16,213 @@ class SuperAdminShell extends ConsumerStatefulWidget {
 }
 
 class _SuperAdminShellState extends ConsumerState<SuperAdminShell> {
-  final _navSections = [
-    _NavSection('Main', [
-      _NavItem(Icons.dashboard, 'Dashboard', '/super-admin'),
-      _NavItem(Icons.assessment, 'Executive Summary',
-          '/super-admin/executive-summary'),
-      _NavItem(Icons.business, 'Organizations', '/super-admin/organizations'),
-    ]),
-    _NavSection('Management', [
-      _NavItem(Icons.people, 'Users', '/super-admin/users'),
-      _NavItem(Icons.headset_mic, 'Support', '/super-admin/support'),
-      _NavItem(Icons.receipt_long, 'Billing', '/super-admin/billing'),
-      _NavItem(Icons.history, 'Audit Logs', '/super-admin/audit-logs'),
-      _NavItem(Icons.flag, 'Feature Flags', '/super-admin/feature-flags'),
-      _NavItem(Icons.campaign, 'Announcements', '/super-admin/announcements'),
-    ]),
-    _NavSection('System', [
-      _NavItem(Icons.miscellaneous_services, 'Platform Health',
-          '/super-admin/health'),
-      _NavItem(Icons.shield, 'Security Scorecard', '/super-admin/security'),
-      _NavItem(Icons.build, 'Maintenance', '/super-admin/maintenance'),
-      _NavItem(Icons.system_update, 'App Updates', '/super-admin/app-update'),
-      _NavItem(Icons.settings, 'Settings', '/super-admin/settings'),
-      _NavItem(Icons.toggle_on, 'System Controls', '/super-admin/controls'),
-    ]),
-    _NavSection('Growth', [
-      _NavItem(Icons.analytics, 'Analytics', '/super-admin/analytics'),
-      _NavItem(Icons.trending_up, 'Feature Adoption', '/super-admin/adoption'),
-      _NavItem(Icons.feedback, 'NPS Survey', '/super-admin/nps'),
-      _NavItem(Icons.notifications, 'Notification Center',
-          '/super-admin/notifications'),
-    ]),
-    _NavSection('Operations', [
-      _NavItem(Icons.receipt, 'Reconciliation', '/super-admin/reconciliation'),
-      _NavItem(Icons.checklist, 'Onboarding', '/super-admin/onboarding'),
-      _NavItem(Icons.report, 'Report Center', '/super-admin/reports'),
-      _NavItem(Icons.queue, 'Background Jobs', '/super-admin/jobs'),
-      _NavItem(Icons.map, 'Platform Map', '/super-admin/map'),
-    ]),
+  static const _navItems = [
+    HUDNavItem(
+        label: 'Dashboard',
+        icon: Icons.dashboard_outlined,
+        activeIcon: Icons.dashboard),
+    HUDNavItem(
+        label: 'Orgs',
+        icon: Icons.business_outlined,
+        activeIcon: Icons.business),
+    HUDNavItem(
+        label: 'Users',
+        icon: Icons.people_outline,
+        activeIcon: Icons.people),
+    HUDNavItem(
+        label: 'Settings',
+        icon: Icons.settings_outlined,
+        activeIcon: Icons.settings),
   ];
 
-  final _mobileItems = [
-    _NavItem(Icons.dashboard, 'Dashboard', '/super-admin'),
-    _NavItem(Icons.business, 'Orgs', '/super-admin/organizations'),
-    _NavItem(Icons.people, 'Users', '/super-admin/users'),
-    _NavItem(Icons.headset_mic, 'Support', '/super-admin/support'),
-    _NavItem(Icons.settings, 'Settings', '/super-admin/settings'),
+  static const _routes = [
+    '/super-admin',
+    '/super-admin/organizations',
+    '/super-admin/users',
+    '/super-admin/settings',
   ];
+
+  int _selectedIndex(BuildContext context) {
+    final loc = GoRouterState.of(context).matchedLocation;
+    for (var i = 0; i < _routes.length; i++) {
+      if (loc.startsWith(_routes[i])) return i;
+    }
+    return 0;
+  }
+
+  void _onTap(int index, BuildContext context) {
+    HapticService.selection();
+    context.go(_routes[index]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
+    if (user == null) {
+      return const Scaffold(
+          body: Center(child: CircularProgressIndicator()));
+    }
+    if (user.role != UserRole.superAdmin) {
+      return const Scaffold(body: Center(child: Text('Access denied')));
+    }
+
+    final useHud = MediaQuery.of(context).size.width >= 600;
+    final currentIndex = _selectedIndex(context);
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      extendBody: true,
+      body: Stack(
+        children: [
+          useHud ? widget.child : _NavSafeArea(child: widget.child),
+          if (useHud)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: Center(
+                child: HUDNavigation(
+                  currentIndex: currentIndex,
+                  onTap: (i) => _onTap(i, context),
+                  items: _navItems,
+                ),
+              ),
+            ),
+        ],
+      ),
+      bottomNavigationBar: useHud
+          ? null
+          : _SuperAdminBottomBar(
+              currentIndex: currentIndex,
+              onTap: (i) => _onTap(i, context),
+            ),
+    );
+  }
+}
+
+// ── Premium Bottom Bar (matches exec admin / branch manager) ──
+class _SuperAdminBottomBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  const _SuperAdminBottomBar(
+      {required this.currentIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final wide = MediaQuery.of(context).size.width >= 900;
+    final primary = Theme.of(context).colorScheme.primary;
 
-    return Scaffold(
-      backgroundColor: D.bg(context),
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (wide)
-              _SideNav(
-                sections: _navSections,
-                isDark: isDark,
-                onSignOut: () async {
-                  await ref.read(authProvider.notifier).signOut();
-                  if (context.mounted) context.go('/auth');
-                },
-              ),
-            Expanded(
-              child: Column(
-                children: [
-                  if (!wide) _TopBar(isDark: isDark, items: _mobileItems),
-                  Expanded(child: widget.child),
+    final items = [
+      (Icons.dashboard_outlined, Icons.dashboard, 'Dashboard'),
+      (Icons.business_outlined, Icons.business, 'Orgs'),
+      (Icons.people_outline, Icons.people, 'Users'),
+      (Icons.settings_outlined, Icons.settings, 'Settings'),
+    ];
+
+    return SafeArea(
+      top: false,
+      minimum: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF3E3E4A).withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(28),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withValues(alpha: isDark ? 0.15 : 0.4),
+                    Colors.transparent,
+                  ],
+                ),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : Colors.white.withValues(alpha: 0.5),
+                  width: 0.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Colors.black.withValues(alpha: isDark ? 0.6 : 0.1),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                    spreadRadius: -2,
+                  ),
+                  BoxShadow(
+                    color: Colors.black
+                        .withValues(alpha: isDark ? 0.4 : 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar:
-          wide ? null : _BottomNav(items: _mobileItems, isDark: isDark),
-    );
-  }
-}
-
-class _NavSection {
-  final String label;
-  final List<_NavItem> items;
-  const _NavSection(this.label, this.items);
-}
-
-class _NavItem {
-  final IconData icon;
-  final String label;
-  final String route;
-  const _NavItem(this.icon, this.label, this.route);
-}
-
-class _SideNav extends StatelessWidget {
-  final List<_NavSection> sections;
-  final bool isDark;
-  final VoidCallback onSignOut;
-  const _SideNav(
-      {required this.sections, required this.isDark, required this.onSignOut});
-
-  bool _selected(_NavItem item, BuildContext ctx) {
-    final loc = GoRouterState.of(ctx).matchedLocation;
-    return loc.startsWith(item.route);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 240,
-      margin: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: D.surface(context),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: D.border(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-            child: Row(children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: D.accent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.bolt, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(
-                  'MicroFlow',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: D.text(context),
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                Text(
-                  'Super Admin',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: D.accent,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ]),
-            ]),
-          ),
-          Divider(height: 1, color: D.border(context)),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              children: sections.map((section) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 16, 14, 6),
-                      child: Text(
-                        section.label.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: D.muted(context),
-                          letterSpacing: 1,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: items.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final (icon, activeIcon, label) = entry.value;
+                  final sel = currentIndex == i;
+                  return GestureDetector(
+                    onTap: () {
+                      HapticService.selection();
+                      onTap(i);
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: AnimatedScale(
+                      scale: sel ? 1.1 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? primary.withValues(alpha: isDark ? 0.2 : 0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              sel ? activeIcon : icon,
+                              size: 22,
+                              color: sel
+                                  ? primary
+                                  : (isDark
+                                      ? Colors.white54
+                                      : Colors.black38),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight:
+                                    sel ? FontWeight.w600 : FontWeight.w500,
+                                color: sel
+                                    ? primary
+                                    : (isDark
+                                        ? Colors.white54
+                                        : Colors.black38),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    ...section.items.map((item) => _sideItem(context, item)),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-          _signOut(context, onSignOut),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-
-  Widget _sideItem(BuildContext ctx, _NavItem item) {
-    final sel = _selected(item, ctx);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => ctx.go(item.route),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: sel
-                  ? D.accent.withValues(alpha: isDark ? 0.12 : 0.08)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              border: sel
-                  ? Border.all(
-                      color: D.accent.withValues(alpha: isDark ? 0.2 : 0.15))
-                  : null,
-            ),
-            child: Row(children: [
-              Icon(
-                item.icon,
-                size: 20,
-                color: sel ? D.accent : D.iconMuted(ctx),
+                  );
+                }).toList(),
               ),
-              const SizedBox(width: 14),
-              Text(
-                item.label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
-                  color: sel ? D.accent : D.text(ctx).withValues(alpha: 0.65),
-                ),
-              ),
-            ]),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _signOut(BuildContext ctx, VoidCallback onSignOut) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onSignOut,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 14),
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: isDark ? 0.08 : 0.04),
-              borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(children: [
-              Icon(Icons.logout,
-                  size: 18, color: Colors.red.withValues(alpha: 0.8)),
-              const SizedBox(width: 12),
-              Text(
-                'Sign Out',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.red.withValues(alpha: 0.8),
-                ),
-              ),
-            ]),
           ),
         ),
       ),
@@ -290,121 +230,18 @@ class _SideNav extends StatelessWidget {
   }
 }
 
-class _TopBar extends StatelessWidget {
-  final bool isDark;
-  final List<_NavItem> items;
-  const _TopBar({required this.isDark, required this.items});
+// ── Mobile Safe Area Inflater ─────────────────────────────
+class _NavSafeArea extends StatelessWidget {
+  final Widget child;
+  const _NavSafeArea({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final loc = GoRouterState.of(context).matchedLocation;
-    final current = items.indexWhere((i) => loc.startsWith(i.route));
-    final label = current >= 0 ? items[current].label : 'Dashboard';
-
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            MediaQuery.of(context).padding.top + 10,
-            16,
-            12,
-          ),
-          decoration: BoxDecoration(
-            color: D.surface(context).withValues(alpha: 0.85),
-            border: Border(bottom: BorderSide(color: D.border(context))),
-          ),
-          child: Row(children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: D.accent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.bolt, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: D.text(context),
-              ),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  final List<_NavItem> items;
-  final bool isDark;
-  const _BottomNav({required this.items, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = GoRouterState.of(context).matchedLocation;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: D.surface(context).withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: D.border(context)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: items.asMap().entries.map((e) {
-              final item = e.value;
-              final sel = loc.startsWith(item.route);
-              return GestureDetector(
-                onTap: () {
-                  HapticService.selection();
-                  context.go(item.route);
-                },
-                behavior: HitTestBehavior.opaque,
-                child: SizedBox(
-                  width: 56,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        item.icon,
-                        size: 22,
-                        color: sel ? D.accent : D.iconMuted(context),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item.label,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
-                          color: sel ? D.accent : D.muted(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
+    final mq = MediaQuery.of(context);
+    return MediaQuery(
+      data: mq.copyWith(
+          padding: EdgeInsets.only(bottom: mq.padding.bottom + 15)),
+      child: child,
     );
   }
 }

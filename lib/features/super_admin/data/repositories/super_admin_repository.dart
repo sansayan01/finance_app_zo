@@ -60,10 +60,7 @@ class SuperAdminRepository {
             slug,
             status,
             plan,
-            created_at,
-            profiles:profiles(count),
-            branches:branches(count),
-            members:members(count)
+            created_at
           ''');
 
       if (search != null && search.isNotEmpty) {

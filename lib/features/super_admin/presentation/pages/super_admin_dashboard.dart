@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/theme/design_system.dart';
-import '../../../../core/services/haptic_service.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../data/providers/super_admin_providers.dart';
 
 class SuperAdminDashboard extends ConsumerWidget {
@@ -15,805 +15,479 @@ class SuperAdminDashboard extends ConsumerWidget {
     final metrics = ref.watch(platformMetricsProvider);
     final revenue = ref.watch(revenueSummaryProvider);
     final activity = ref.watch(activityFeedProvider);
-    final openTickets = ref.watch(openTicketsCountProvider);
-    final atRiskOrgs = ref.watch(atRiskOrgsCountProvider);
-    final fmt = NumberFormat.compactCurrency(locale: 'en_IN', symbol: '₹');
 
     return Scaffold(
-      backgroundColor: D.bg(context),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: D.bodyPad,
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _header(context, isDark),
-                    const SizedBox(height: 24),
-                    _alertBanner(context, isDark, openTickets, atRiskOrgs),
-                    const SizedBox(height: 24),
-                    _sectionArea(
-                        context,
-                        isDark,
-                        () => metrics.when(
-                              data: (m) => _metricGrid(context, m, fmt, isDark),
-                              loading: () => const SizedBox(
-                                height: 200,
-                                child:
-                                    Center(child: CircularProgressIndicator()),
-                              ),
-                              error: (_, __) => const SizedBox.shrink(),
-                            )),
-                    const SizedBox(height: 24),
-                    D.sectionTitle('Quick Actions', Icons.flash_on, isDark),
-                    const SizedBox(height: 14),
-                    _quickActions(context, isDark),
-                    const SizedBox(height: 28),
-                    D.sectionTitle(
-                        'Revenue & Benchmarking', Icons.trending_up, isDark),
-                    const SizedBox(height: 14),
-                    _sectionArea(
-                        context,
-                        isDark,
-                        () => revenue.when(
-                              data: (r) =>
-                                  _revenueSection(context, r, fmt, isDark),
-                              loading: () => const SizedBox(
-                                height: 100,
-                                child:
-                                    Center(child: CircularProgressIndicator()),
-                              ),
-                              error: (_, __) => const SizedBox.shrink(),
-                            )),
-                    const SizedBox(height: 28),
-                    D.sectionTitle('Churn Risk', Icons.warning_amber, isDark),
-                    const SizedBox(height: 14),
-                    _sectionArea(
-                        context,
-                        isDark,
-                        () => metrics.when(
-                              data: (m) => _churnRisk(context, m, isDark),
-                              loading: () => const SizedBox(
-                                height: 100,
-                                child:
-                                    Center(child: CircularProgressIndicator()),
-                              ),
-                              error: (_, __) => const SizedBox.shrink(),
-                            )),
-                    const SizedBox(height: 28),
-                    D.sectionTitle('SLA Status', Icons.verified, isDark),
-                    const SizedBox(height: 14),
-                    _slaStatus(context, isDark),
-                    const SizedBox(height: 28),
-                    D.sectionTitle('Feature Adoption', Icons.widgets, isDark),
-                    const SizedBox(height: 14),
-                    _featureAdoption(context, isDark),
-                    const SizedBox(height: 28),
-                  ],
-                ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [const Color(0xFF0F1115), const Color(0xFF1A1F2E)]
+                : [const Color(0xFFF8F9FB), const Color(0xFFEEF2FF)],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+            children: [
+              // ── Header ──────────────────────────────────
+              _buildHeader(context, isDark),
+              const SizedBox(height: 24),
+
+              // ── Metrics Grid ────────────────────────────
+              metrics.when(
+                data: (m) => _buildMetrics(context, m, isDark),
+                loading: () => const Center(
+                    child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                )),
+                error: (_, __) => const SizedBox.shrink(),
               ),
-            ),
-            activity.when(
-              data: (a) => SliverPadding(
-                padding: D.bodyBottomPad,
-                sliver: SliverToBoxAdapter(
-                  child: Column(children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        D.sectionTitle(
-                            'Recent Activity', Icons.history, isDark),
-                        TextButton(
-                          onPressed: () =>
-                              context.push('/super-admin/audit-logs'),
-                          child: Text(
-                            'View All',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: D.accent,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    ...a.take(8).map((e) => _activityItem(context, e, isDark)),
-                  ]),
-                ),
+              const SizedBox(height: 24),
+
+              // ── Revenue ─────────────────────────────────
+              revenue.when(
+                data: (r) => _buildRevenue(context, r, isDark),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
-              loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-              error: (_, __) =>
-                  const SliverToBoxAdapter(child: SizedBox.shrink()),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // ── Quick Actions ───────────────────────────
+              _buildQuickActions(context, isDark),
+              const SizedBox(height: 24),
+
+              // ── Recent Activity ─────────────────────────
+              activity.when(
+                data: (a) => _buildActivity(context, a, isDark),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _sectionArea(
-      BuildContext context, bool isDark, Widget Function() child) {
-    return child();
+  // ── Header ──────────────────────────────────────────────
+  Widget _buildHeader(BuildContext context, bool isDark) {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            greeting,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Here\'s your platform overview',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1, end: 0);
   }
 
-  // ── Section 1: Header ─────────────────────────────────────
-  Widget _header(BuildContext context, bool isDark) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // ── Metrics Grid ────────────────────────────────────────
+  Widget _buildMetrics(BuildContext context, dynamic m, bool isDark) {
+    final fmt = NumberFormat.compactCurrency(locale: 'en_IN', symbol: '₹');
+    final stats = [
+      _StatData(Icons.business_rounded, 'Orgs', '${m.totalOrganizations}', AppColors.primary),
+      _StatData(Icons.people_rounded, 'Users', '${m.totalUsers}', AppColors.success),
+      _StatData(Icons.group_rounded, 'Members', '${m.totalMembers}', AppColors.info),
+      _StatData(Icons.account_balance_rounded, 'Loans', '${m.totalLoans}', AppColors.warning),
+      _StatData(Icons.payments_rounded, 'Collections', fmt.format(m.totalCollections), AppColors.cyan),
+      _StatData(Icons.savings_rounded, 'Savings', fmt.format(m.totalSavings), AppColors.accent),
+    ];
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Dashboard', style: D.h1(isDark)),
-              const SizedBox(height: 4),
-              Text(
-                'Platform overview',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: D.muted(context),
-                ),
-              ),
-            ],
+        _sectionTitle('Overview', Icons.analytics_rounded, AppColors.primary),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            childAspectRatio: 0.9,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
           ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: D.accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Live',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: D.accent,
-                ),
-              ),
-            ],
-          ),
+          itemCount: stats.length,
+          itemBuilder: (_, i) => _statTile(context, stats[i], i, isDark),
         ),
       ],
     );
   }
 
-  // ── Section 2: Alert Banner ──────────────────────────────
-  Widget _alertBanner(BuildContext context, bool isDark,
-      AsyncValue<int> openTickets, AsyncValue<int> atRiskOrgs) {
-    final ticketsCount = openTickets.valueOrNull ?? 0;
-    final riskCount = atRiskOrgs.valueOrNull ?? 0;
-    final alerts = [
-      _AlertPill('🚀', 'System Running', 'All good', const Color(0xFF10B981)),
-      _AlertPill('📊', 'Orgs at risk', '$riskCount',
-          riskCount > 0 ? const Color(0xFFF59E0B) : const Color(0xFF10B981)),
-      _AlertPill('⚠️', 'Tickets open', '$ticketsCount',
-          ticketsCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
-      _AlertPill('📈', 'Revenue', 'Live', const Color(0xFF10B981)),
-    ];
-    return SizedBox(
-      height: 80,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: alerts.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (_, i) {
-          final a = alerts[i];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: a.color.withValues(alpha: isDark ? 0.12 : 0.08),
-              borderRadius: BorderRadius.circular(D.radius),
-              border: Border.all(
-                color: a.color.withValues(alpha: isDark ? 0.2 : 0.15),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(a.emoji, style: const TextStyle(fontSize: 18)),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      a.label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: D.text(context),
-                      ),
-                    ),
-                    Text(
-                      a.value,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: a.color,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ── Section 3: Metrics Grid ──────────────────────────────
-  Widget _metricGrid(
-    BuildContext context,
-    dynamic m,
-    NumberFormat fmt,
-    bool isDark,
-  ) {
-    final items = [
-      _MetricItem(
-        Icons.business,
-        'Organizations',
-        '${m.totalOrganizations}',
-        '${m.activeOrganizations} active',
-        const Color(0xFF3B82F6),
-      ),
-      _MetricItem(
-        Icons.people,
-        'Users',
-        '${m.totalUsers}',
-        '${m.activeUsers} active',
-        const Color(0xFF10B981),
-      ),
-      _MetricItem(
-        Icons.account_balance,
-        'Loans',
-        fmt.format(m.totalLoanAmount),
-        '${m.totalLoans} loans',
-        const Color(0xFFF59E0B),
-      ),
-      _MetricItem(
-        Icons.payments,
-        'Collections',
-        fmt.format(m.totalCollections),
-        'Total collected',
-        const Color(0xFF14B8A6),
-      ),
-      _MetricItem(
-        Icons.savings,
-        'Savings',
-        fmt.format(m.totalSavings),
-        'Total saved',
-        const Color(0xFF6366F1),
-      ),
-      _MetricItem(
-        Icons.trending_up,
-        'MRR',
-        fmt.format(m.mrr),
-        'Monthly revenue',
-        const Color(0xFFF59E0B),
-      ),
-    ];
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: items.length,
-      itemBuilder: (_, i) => _metricTile(context, items[i], isDark),
-    );
-  }
-
-  Widget _metricTile(BuildContext context, _MetricItem d, bool isDark) {
+  Widget _statTile(
+      BuildContext context, _StatData data, int index, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: D.card(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(children: [
-            Icon(d.icon, size: 16, color: d.color),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                d.label,
-                style: D.labelStyle(isDark),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ]),
-          const SizedBox(height: 8),
-          Text(
-            d.value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: d.color,
-            ),
-          ),
-          Text(
-            d.subtitle,
-            style: TextStyle(
-              fontSize: 10,
-              color: D.dim(context),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-    );
-  }
-
-  // ── Section 4: Quick Actions ─────────────────────────────
-  Widget _quickActions(BuildContext context, bool isDark) {
-    final actions = <_Action>[
-      _Action(Icons.business, 'Orgs', const Color(0xFF06B6D4),
-          () => context.push('/super-admin/organizations')),
-      _Action(Icons.people, 'Users', const Color(0xFF10B981),
-          () => context.push('/super-admin/users')),
-      _Action(Icons.headset_mic, 'Support', const Color(0xFFF59E0B),
-          () => context.push('/super-admin/support')),
-      _Action(Icons.flag, 'Flags', const Color(0xFF8B5CF6),
-          () => context.push('/super-admin/feature-flags')),
-      _Action(Icons.campaign, 'Announce', const Color(0xFFEC4899),
-          () => context.push('/super-admin/announcements')),
-      _Action(Icons.analytics, 'Analytics', const Color(0xFFF59E0B),
-          () => context.push('/super-admin/analytics')),
-    ];
-    return Row(
-      children: actions.asMap().entries.map((e) {
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(left: e.key == 0 ? 0 : 8),
-            child: GestureDetector(
-              onTap: () {
-                HapticService.selection();
-                e.value.onTap();
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: D.card(context),
-                child: Column(children: [
-                  Icon(e.value.icon, size: 22, color: e.value.color),
-                  const SizedBox(height: 6),
-                  Text(
-                    e.value.label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: D.dim(context),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ]),
-              ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: data.color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(data.icon, color: data.color, size: 17),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            data.value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
             ),
           ),
-        );
-      }).toList(),
-    );
+          Text(
+            data.label,
+            style: TextStyle(
+              fontSize: 10,
+              color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 300.ms, delay: (100 + 80 * index).ms)
+        .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1));
   }
 
-  // ── Section 5: Revenue + Benchmarking ────────────────────
-  Widget _revenueSection(
-    BuildContext context,
-    Map<String, dynamic> r,
-    NumberFormat fmt,
-    bool isDark,
-  ) {
+  // ── Revenue ─────────────────────────────────────────────
+  Widget _buildRevenue(
+      BuildContext context, Map<String, dynamic> r, bool isDark) {
     final total = (r['total_revenue'] ?? 0).toDouble();
     final avg = (r['avg_monthly_revenue'] ?? 0).toDouble();
     final count = r['transaction_count'] ?? 0;
-    final vsLastMonth = total > 0 && avg > 0
-        ? ((total - avg) / avg * 100).clamp(-100, 999)
-        : 0.0;
+    final fmt = NumberFormat.compactCurrency(locale: 'en_IN', symbol: '₹');
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: D.card(context),
-      child: Column(
-        children: [
-          Row(children: [
-            Expanded(
-              child: _revItem(context, 'Total Revenue', fmt.format(total),
-                  const Color(0xFF10B981), isDark),
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: D.border(context),
-            ),
-            Expanded(
-              child: _revItem(context, 'Avg Monthly', fmt.format(avg),
-                  const Color(0xFF3B82F6), isDark),
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: D.border(context),
-            ),
-            Expanded(
-              child: _revItem(context, 'Transactions', '$count',
-                  const Color(0xFFF59E0B), isDark),
-            ),
-          ]),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF10B981)
-                  .withValues(alpha: isDark ? 0.1 : 0.06),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.trending_up,
-                    size: 14, color: Color(0xFF10B981)),
-                const SizedBox(width: 6),
-                Text(
-                  'vs last month: +$vsLastMonth%',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF10B981),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _revItem(
-    BuildContext context,
-    String label,
-    String value,
-    Color color,
-    bool isDark,
-  ) {
-    return Column(children: [
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          color: D.muted(context),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.3),
         ),
       ),
-      const SizedBox(height: 6),
-      Text(
-        value,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
-    ]);
-  }
-
-  // ── Section 6: Churn Risk ────────────────────────────────
-  Widget _churnRisk(BuildContext context, dynamic m, bool isDark) {
-    final totalOrgs = m.totalOrganizations;
-    final atRisk = (totalOrgs * 0.05).ceil();
-    final low = (atRisk * 0.5).ceil();
-    final medium = (atRisk * 0.3).ceil();
-    final high = atRisk - low - medium;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: D.card(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _sectionTitle('Revenue', Icons.trending_up_rounded, AppColors.success),
+          const SizedBox(height: 14),
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  size: 20, color: Color(0xFFF59E0B)),
-              const SizedBox(width: 8),
-              Text(
-                '$atRisk orgs at risk',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: D.text(context),
-                ),
-              ),
+              _revStat(context, 'Total', fmt.format(total), AppColors.success, isDark),
+              Container(
+                  width: 1,
+                  height: 40,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.08)),
+              _revStat(context, 'Avg/Month', fmt.format(avg), AppColors.info, isDark),
+              Container(
+                  width: 1,
+                  height: 40,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.08)),
+              _revStat(context, 'Transactions', '$count', AppColors.warning, isDark),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _riskBadge('Low Risk', '$low', const Color(0xFF10B981), isDark),
-              const SizedBox(width: 10),
-              _riskBadge(
-                  'Medium Risk', '$medium', const Color(0xFFF59E0B), isDark),
-              const SizedBox(width: 10),
-              _riskBadge('High Risk', '$high', const Color(0xFFEF4444), isDark),
-            ],
-          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 400.ms);
+  }
+
+  Widget _revStat(BuildContext context, String label, String value,
+      Color color, bool isDark) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value,
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: color)),
+          const SizedBox(height: 4),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11,
+                  color: isDark
+                      ? Colors.grey.shade500
+                      : Colors.grey.shade600)),
         ],
       ),
     );
   }
 
-  Widget _riskBadge(String label, String count, Color color, bool isDark) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isDark ? 0.12 : 0.06),
-          borderRadius: BorderRadius.circular(D.radius),
-          border: Border.all(
-            color: color.withValues(alpha: isDark ? 0.2 : 0.15),
-          ),
-        ),
-        child: Column(
-          children: [
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: color,
+  // ── Quick Actions ───────────────────────────────────────
+  Widget _buildQuickActions(BuildContext context, bool isDark) {
+    final actions = [
+      _ActionData(Icons.business_rounded, 'Orgs', AppColors.primary,
+          () => context.push('/super-admin/organizations')),
+      _ActionData(Icons.people_rounded, 'Users', AppColors.success,
+          () => context.push('/super-admin/users')),
+      _ActionData(Icons.settings_rounded, 'Settings', AppColors.accent,
+          () => context.push('/super-admin/settings')),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle(
+            'Quick Actions', Icons.flash_on_rounded, AppColors.accent),
+        const SizedBox(height: 14),
+        Row(
+          children: actions.asMap().entries.map((entry) {
+            final i = entry.key;
+            final a = entry.value;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
+                child: GestureDetector(
+                  onTap: a.onTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+                          : Colors.white.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: a.color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child:
+                              Icon(a.icon, color: a.color, size: 20),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          a.label,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? Colors.grey.shade300
+                                : Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: color.withValues(alpha: 0.8),
-              ),
-            ),
-          ],
+            );
+          }).toList(),
         ),
-      ),
-    );
+      ],
+    ).animate().fadeIn(duration: 400.ms, delay: 500.ms);
   }
 
-  // ── Section 7: Activity Feed ─────────────────────────────
-  Widget _activityItem(
-      BuildContext context, Map<String, dynamic> a, bool isDark) {
-    final type = a['activity_type'] as String? ?? 'unknown';
-    final createdAt =
-        DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
-    final ago = _timeAgo(DateTime.now().difference(createdAt));
-    final title = type
-        .replaceAll('_', ' ')
-        .split(' ')
-        .map((e) => e[0].toUpperCase() + e.substring(1))
-        .join(' ');
+  // ── Recent Activity ─────────────────────────────────────
+  Widget _buildActivity(
+      BuildContext context, List<Map<String, dynamic>> items, bool isDark) {
+    if (items.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: _cardDecoration(isDark),
+        child: Center(
+          child: Text(
+            'No recent activity',
+            style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade600),
+          ),
+        ),
+      );
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: D.surface(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: D.border(context).withValues(alpha: 0.5)),
-      ),
-      child: Row(children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: D.accent,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: D.text(context),
-                ),
+      padding: const EdgeInsets.all(20),
+      decoration: _cardDecoration(isDark),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle(
+              'Recent Activity', Icons.history_rounded, AppColors.warning),
+          const SizedBox(height: 14),
+          ...items.take(5).map((a) {
+            final type = a['activity_type'] as String? ?? 'unknown';
+            final createdAt =
+                DateTime.tryParse(a['created_at'] ?? '') ?? DateTime.now();
+            final ago = _timeAgo(DateTime.now().difference(createdAt));
+            final title = type
+                .replaceAll('_', ' ')
+                .split(' ')
+                .map((e) => e[0].toUpperCase() + e.substring(1))
+                .join(' ');
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title,
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A))),
+                        if (a['organizations']?['name'] != null)
+                          Text(a['organizations']['name'],
+                              style: const TextStyle(
+                                  fontSize: 11, color: AppColors.primary)),
+                      ],
+                    ),
+                  ),
+                  Text(ago,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: isDark
+                              ? Colors.grey.shade500
+                              : Colors.grey.shade600)),
+                ],
               ),
-              if (a['organizations']?['name'] != null)
-                Text(
-                  a['organizations']['name'],
-                  style: TextStyle(fontSize: 11, color: D.accent),
-                ),
-            ],
-          ),
-        ),
-        Text(
-          ago,
-          style: TextStyle(fontSize: 11, color: D.muted(context)),
-        ),
-      ]),
-    );
+            );
+          }),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 600.ms);
   }
 
-  // ── Section 8: SLA Status ────────────────────────────────
-  Widget _slaStatus(BuildContext context, bool isDark) {
-    final slas = [
-      _SlaItem('Uptime', '99.9%', const Color(0xFF10B981), Icons.check_circle),
-      _SlaItem('Response', '<2m', const Color(0xFF3B82F6), Icons.timer),
-      _SlaItem('SLA', '98.5%', const Color(0xFF10B981), Icons.verified),
-    ];
-    return Row(
-      children: slas.map((s) {
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(left: slas.indexOf(s) == 0 ? 0 : 8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: D.card(context),
-              child: Column(children: [
-                Icon(s.icon, size: 22, color: s.color),
-                const SizedBox(height: 8),
-                Text(
-                  s.label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: D.muted(context),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  s.value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: s.color,
-                  ),
-                ),
-              ]),
+  // ── Helpers ─────────────────────────────────────────────
+  Widget _sectionTitle(String label, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 14),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ── Section 9: Feature Adoption ──────────────────────────
-  Widget _featureAdoption(BuildContext context, bool isDark) {
-    final features = [
-      _FeatureAdoption('Collections', 0.87, const Color(0xFF14B8A6)),
-      _FeatureAdoption('Loans', 0.72, const Color(0xFF3B82F6)),
-      _FeatureAdoption('Savings', 0.65, const Color(0xFF8B5CF6)),
-      _FeatureAdoption('Reports', 0.43, const Color(0xFFF59E0B)),
-    ];
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.7,
-      ),
-      itemCount: features.length,
-      itemBuilder: (_, i) {
-        final f = features[i];
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: D.card(context),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _progressRing(context, f.rate, f.color, isDark),
-              const SizedBox(height: 10),
-              Text(
-                f.label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: D.dim(context),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${(f.rate * 100).toInt()}%',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: f.color,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _progressRing(
-      BuildContext context, double rate, Color color, bool isDark) {
-    return SizedBox(
-      width: 40,
-      height: 40,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: rate,
-            strokeWidth: 4,
-            backgroundColor: D.dim(context).withValues(alpha: 0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-          ),
         ],
+      ),
+    );
+  }
+
+  BoxDecoration _cardDecoration(bool isDark) {
+    return BoxDecoration(
+      color: isDark
+          ? const Color(0xFF1A1F2E).withValues(alpha: 0.7)
+          : Colors.white.withValues(alpha: 0.8),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.white.withValues(alpha: 0.3),
       ),
     );
   }
 
   String _timeAgo(Duration d) {
-    if (d.inDays > 0) return '${d.inDays}d';
-    if (d.inHours > 0) return '${d.inHours}h';
-    if (d.inMinutes > 0) return '${d.inMinutes}m';
+    if (d.inDays > 0) return '${d.inDays}d ago';
+    if (d.inHours > 0) return '${d.inHours}h ago';
+    if (d.inMinutes > 0) return '${d.inMinutes}m ago';
     return 'now';
   }
 }
 
-class _AlertPill {
-  final String emoji;
-  final String label;
-  final String value;
-  final Color color;
-  const _AlertPill(this.emoji, this.label, this.value, this.color);
-}
-
-class _MetricItem {
+// ── Data classes ──────────────────────────────────────────
+class _StatData {
   final IconData icon;
   final String label;
   final String value;
-  final String subtitle;
   final Color color;
-  const _MetricItem(
-      this.icon, this.label, this.value, this.subtitle, this.color);
+  const _StatData(this.icon, this.label, this.value, this.color);
 }
 
-class _Action {
+class _ActionData {
   final IconData icon;
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _Action(this.icon, this.label, this.color, this.onTap);
-}
-
-class _SlaItem {
-  final String label;
-  final String value;
-  final Color color;
-  final IconData icon;
-  const _SlaItem(this.label, this.value, this.color, this.icon);
-}
-
-class _FeatureAdoption {
-  final String label;
-  final double rate;
-  final Color color;
-  const _FeatureAdoption(this.label, this.rate, this.color);
+  const _ActionData(this.icon, this.label, this.color, this.onTap);
 }

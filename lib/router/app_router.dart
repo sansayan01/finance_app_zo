@@ -38,7 +38,6 @@ import '../features/settings/presentation/pages/settings_page_v2.dart';
 import '../features/settings/presentation/pages/organization_settings_page.dart';
 import '../features/settings/presentation/pages/profile_page.dart';
 import '../features/settings/presentation/pages/activity_logs_page.dart';
-import '../features/settings/presentation/pages/app_update_page.dart';
 import '../features/settings/presentation/pages/available_update_page.dart';
 import '../features/settings/presentation/pages/integrations_settings_page.dart';
 import '../features/settings/presentation/pages/security_compliance_page.dart';
@@ -99,28 +98,7 @@ import '../features/super_admin/presentation/widgets/super_admin_shell.dart';
 import '../features/super_admin/presentation/pages/super_admin_dashboard.dart';
 import '../features/super_admin/presentation/pages/organizations_management_page.dart';
 import '../features/super_admin/presentation/pages/users_management_page.dart';
-import '../features/super_admin/presentation/pages/audit_logs_page.dart';
-import '../features/super_admin/presentation/pages/support_tickets_page.dart';
-import '../features/super_admin/presentation/pages/feature_flags_page.dart';
-import '../features/super_admin/presentation/pages/announcements_page.dart';
-import '../features/super_admin/presentation/pages/maintenance_page.dart';
-import '../features/super_admin/presentation/pages/platform_analytics_page.dart';
-import '../features/super_admin/presentation/pages/platform_settings_page.dart';
-import '../features/super_admin/presentation/pages/platform_map_page.dart';
-import '../features/super_admin/presentation/pages/security_scorecard_page.dart';
-import '../features/super_admin/presentation/pages/nps_survey_page.dart';
-import '../features/super_admin/presentation/pages/notification_center_page.dart';
-import '../features/super_admin/presentation/pages/background_jobs_page.dart';
-import '../features/super_admin/presentation/pages/onboarding_management_page.dart';
-import '../features/super_admin/presentation/pages/report_center_page.dart';
-import '../features/super_admin/presentation/pages/platform_health_page.dart';
-import '../features/super_admin/presentation/pages/system_controls_page.dart';
-import '../features/super_admin/presentation/pages/feature_adoption_page.dart';
-import '../features/super_admin/presentation/pages/revenue_reconciliation_page.dart';
-import '../features/super_admin/presentation/pages/executive_summary_page.dart';
-import '../features/billing/presentation/pages/billing_page.dart';
-import '../features/billing/presentation/pages/invoices_page.dart';
-import '../features/billing/presentation/pages/usage_limits_page.dart';
+import '../features/super_admin/presentation/pages/super_admin_settings_page.dart';
 
 // Branch Manager Portal
 import '../features/branch_manager/presentation/pages/branch_manager_dashboard.dart';
@@ -332,10 +310,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Super Admin Panel
       ShellRoute(
         builder: (context, state, child) {
-          final user = ref.read(currentUserProvider);
-          if (user?.role != UserRole.superAdmin) {
-            return const Scaffold(body: Center(child: Text('Access denied')));
-          }
           return SuperAdminShell(child: child);
         },
         routes: [
@@ -367,98 +341,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const UsersManagementPage(),
           ),
           GoRoute(
-            path: '/super-admin/support',
-            builder: (context, state) => const SupportTicketsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/billing',
-            builder: (context, state) => const BillingPage(),
-            routes: [
-              GoRoute(
-                path: 'invoices',
-                builder: (context, state) => const InvoicesPage(),
-              ),
-              GoRoute(
-                path: 'usage-limits',
-                builder: (context, state) => const UsageLimitsPage(),
-              ),
-            ],
-          ),
-          GoRoute(
-            path: '/super-admin/audit-logs',
-            builder: (context, state) => const AuditLogsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/feature-flags',
-            builder: (context, state) => const FeatureFlagsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/announcements',
-            builder: (context, state) => const AnnouncementsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/maintenance',
-            builder: (context, state) => const MaintenancePage(),
-          ),
-          GoRoute(
-            path: '/super-admin/app-update',
-            builder: (context, state) => const AppUpdatePage(),
-          ),
-          GoRoute(
             path: '/super-admin/settings',
-            builder: (context, state) => const PlatformSettingsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/analytics',
-            builder: (context, state) => const PlatformAnalyticsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/map',
-            builder: (context, state) => const PlatformMapPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/security',
-            builder: (context, state) => const SecurityScorecardPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/nps',
-            builder: (context, state) => const NPSSurveyPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/notifications',
-            builder: (context, state) => const NotificationCenterPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/jobs',
-            builder: (context, state) => const BackgroundJobsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/onboarding',
-            builder: (context, state) => const OnboardingManagementPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/reports',
-            builder: (context, state) => const ReportCenterPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/health',
-            builder: (context, state) => const PlatformHealthPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/controls',
-            builder: (context, state) => const SystemControlsPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/adoption',
-            builder: (context, state) => const FeatureAdoptionPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/reconciliation',
-            builder: (context, state) => const RevenueReconciliationPage(),
-          ),
-          GoRoute(
-            path: '/super-admin/executive-summary',
-            builder: (context, state) => const ExecutiveSummaryPage(),
+            builder: (context, state) => const SuperAdminSettingsPage(),
           ),
         ],
       ),
@@ -698,7 +582,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) {
           final user = ref.read(currentUserProvider);
-          if (user?.role != UserRole.manager) {
+          if (user == null) {
+            return const Scaffold(
+                body: Center(child: CircularProgressIndicator()));
+          }
+          if (user.role != UserRole.manager) {
             return const Scaffold(body: Center(child: Text('Access denied')));
           }
           return BranchManagerShell(child: child);
@@ -794,7 +682,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) {
           final user = ref.read(currentUserProvider);
-          if (user?.role != UserRole.customer) {
+          if (user == null) {
+            return const Scaffold(
+                body: Center(child: CircularProgressIndicator()));
+          }
+          if (user.role != UserRole.customer) {
             return const Scaffold(body: Center(child: Text('Access denied')));
           }
           return CustomerShell(child: child);

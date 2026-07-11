@@ -30,9 +30,9 @@
     "semantic_hash": "507306fd2cd04bba4fe9be915657942a"
   },
   ".claude/settings.json": {
-    "mtime": 1783605917.8923182,
-    "ast_hash": "d47bc136f028cd978c44defcc39c26cb",
-    "semantic_hash": "d47bc136f028cd978c44defcc39c26cb"
+    "mtime": 1783626798.6880639,
+    "ast_hash": "59c3475dcd492bea93342833ff5971ac",
+    "semantic_hash": ""
   },
   ".claude/settings.local.json": {
     "mtime": 1782310026.5804844,
@@ -360,9 +360,9 @@
     "semantic_hash": "df1fecf990bbcd3c903770e8e4ccdce4"
   },
   "lib/core/widgets/hud_navigation.dart": {
-    "mtime": 1782453010.4944513,
-    "ast_hash": "76975b7c50ceacb5a910d55af8f4e9aa",
-    "semantic_hash": "76975b7c50ceacb5a910d55af8f4e9aa"
+    "mtime": 1783758419.9966536,
+    "ast_hash": "5c6659c96bdef02c02ef0b396d9f10fe",
+    "semantic_hash": ""
   },
   "lib/core/widgets/luma_bar.dart": {
     "mtime": 1782453010.495457,
@@ -1175,129 +1175,34 @@
     "semantic_hash": "3ba9286569d5cb77f37f0cc39da856ce"
   },
   "lib/features/super_admin/data/providers/super_admin_providers.dart": {
-    "mtime": 1783587882.3056757,
-    "ast_hash": "a3b76fe10a735a15098c1116fd7e2806",
-    "semantic_hash": "a3b76fe10a735a15098c1116fd7e2806"
+    "mtime": 1783758061.983027,
+    "ast_hash": "9b55908d9116773c1e9702c5b18cd184",
+    "semantic_hash": ""
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {
-    "mtime": 1782453010.6512725,
-    "ast_hash": "9154d3d53faf7c23f3a475ebc692de34",
-    "semantic_hash": "9154d3d53faf7c23f3a475ebc692de34"
-  },
-  "lib/features/super_admin/presentation/pages/announcements_page.dart": {
-    "mtime": 1782453010.6512725,
-    "ast_hash": "bcc9f38bb7a24ea95047202c5b7ab57f",
-    "semantic_hash": "bcc9f38bb7a24ea95047202c5b7ab57f"
-  },
-  "lib/features/super_admin/presentation/pages/audit_logs_page.dart": {
-    "mtime": 1782453010.652272,
-    "ast_hash": "35fa8650b2179b9010563f6274fe85fa",
-    "semantic_hash": "35fa8650b2179b9010563f6274fe85fa"
-  },
-  "lib/features/super_admin/presentation/pages/background_jobs_page.dart": {
-    "mtime": 1782453010.652272,
-    "ast_hash": "54fe7d66eda4b090981693d1658dc9a2",
-    "semantic_hash": "54fe7d66eda4b090981693d1658dc9a2"
-  },
-  "lib/features/super_admin/presentation/pages/executive_summary_page.dart": {
-    "mtime": 1782453010.6532733,
-    "ast_hash": "322a3e523f228b078a1d144c4d5750ee",
-    "semantic_hash": "322a3e523f228b078a1d144c4d5750ee"
-  },
-  "lib/features/super_admin/presentation/pages/feature_adoption_page.dart": {
-    "mtime": 1782453010.6532733,
-    "ast_hash": "0440bec8159bcbc90f8d6d4cc0a8e21b",
-    "semantic_hash": "0440bec8159bcbc90f8d6d4cc0a8e21b"
-  },
-  "lib/features/super_admin/presentation/pages/feature_flags_page.dart": {
-    "mtime": 1782453010.6532733,
-    "ast_hash": "3509a11be528f31903dd6a7e12569217",
-    "semantic_hash": "3509a11be528f31903dd6a7e12569217"
-  },
-  "lib/features/super_admin/presentation/pages/maintenance_page.dart": {
-    "mtime": 1782453010.6542726,
-    "ast_hash": "478783a4a189b89096ee9ed7553161b9",
-    "semantic_hash": "478783a4a189b89096ee9ed7553161b9"
-  },
-  "lib/features/super_admin/presentation/pages/notification_center_page.dart": {
-    "mtime": 1782453010.6542726,
-    "ast_hash": "53a9cd4d7f567d48656addfcaf84f30f",
-    "semantic_hash": "53a9cd4d7f567d48656addfcaf84f30f"
-  },
-  "lib/features/super_admin/presentation/pages/nps_survey_page.dart": {
-    "mtime": 1782453010.655273,
-    "ast_hash": "9fb67cb72958c3e5f8799930af385d4a",
-    "semantic_hash": "9fb67cb72958c3e5f8799930af385d4a"
-  },
-  "lib/features/super_admin/presentation/pages/onboarding_management_page.dart": {
-    "mtime": 1782453010.655273,
-    "ast_hash": "77678df8736df6d010975fd53b60ec88",
-    "semantic_hash": "77678df8736df6d010975fd53b60ec88"
+    "mtime": 1783758074.2217634,
+    "ast_hash": "b1775f82a3605da9ed105871c5bb93b6",
+    "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/organizations_management_page.dart": {
-    "mtime": 1782453010.655273,
-    "ast_hash": "5bc5c87ccb83fd64ba79be6eee5fe07e",
-    "semantic_hash": "5bc5c87ccb83fd64ba79be6eee5fe07e"
-  },
-  "lib/features/super_admin/presentation/pages/platform_analytics_page.dart": {
-    "mtime": 1782453010.6562715,
-    "ast_hash": "3c003526b614cb8b17ce3b8ccc6c97d9",
-    "semantic_hash": "3c003526b614cb8b17ce3b8ccc6c97d9"
-  },
-  "lib/features/super_admin/presentation/pages/platform_health_page.dart": {
-    "mtime": 1782453010.6562715,
-    "ast_hash": "5c6ce24be27ee391f40febf657bb5de1",
-    "semantic_hash": "5c6ce24be27ee391f40febf657bb5de1"
-  },
-  "lib/features/super_admin/presentation/pages/platform_map_page.dart": {
-    "mtime": 1783587882.3056757,
-    "ast_hash": "8d3b99db88a346f5f26eccd19fc3ccde",
-    "semantic_hash": "8d3b99db88a346f5f26eccd19fc3ccde"
-  },
-  "lib/features/super_admin/presentation/pages/platform_settings_page.dart": {
-    "mtime": 1782453010.6572711,
-    "ast_hash": "feb650fa79cd2216d1d8c2018756786d",
-    "semantic_hash": "feb650fa79cd2216d1d8c2018756786d"
-  },
-  "lib/features/super_admin/presentation/pages/report_center_page.dart": {
-    "mtime": 1782453010.6572711,
-    "ast_hash": "76794e8b8e6477c5650989f322b49d02",
-    "semantic_hash": "76794e8b8e6477c5650989f322b49d02"
-  },
-  "lib/features/super_admin/presentation/pages/revenue_reconciliation_page.dart": {
-    "mtime": 1782453010.65827,
-    "ast_hash": "71c2943b4c9dbd7ac20e49d706bf7977",
-    "semantic_hash": "71c2943b4c9dbd7ac20e49d706bf7977"
-  },
-  "lib/features/super_admin/presentation/pages/security_scorecard_page.dart": {
-    "mtime": 1782453010.65827,
-    "ast_hash": "5874fc394c0553e76ce8459f4691edeb",
-    "semantic_hash": "5874fc394c0553e76ce8459f4691edeb"
+    "mtime": 1783731072.6192307,
+    "ast_hash": "4ac9e5d6a5345972539b57a0a73925c2",
+    "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/super_admin_dashboard.dart": {
-    "mtime": 1782453010.6592753,
-    "ast_hash": "fceff025d7e703d3e9066c204179b0fb",
-    "semantic_hash": "fceff025d7e703d3e9066c204179b0fb"
-  },
-  "lib/features/super_admin/presentation/pages/support_tickets_page.dart": {
-    "mtime": 1782453010.6595657,
-    "ast_hash": "7c07fced5ed33e07d98608c68d6f493d",
-    "semantic_hash": "7c07fced5ed33e07d98608c68d6f493d"
-  },
-  "lib/features/super_admin/presentation/pages/system_controls_page.dart": {
-    "mtime": 1782453010.6605685,
-    "ast_hash": "1b8031be04cadc1bd55a5b5ecc199a7a",
-    "semantic_hash": "1b8031be04cadc1bd55a5b5ecc199a7a"
+    "mtime": 1783730016.4786687,
+    "ast_hash": "d3aae7e8d4d87adac0ae87b4c6d73ef4",
+    "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/users_management_page.dart": {
-    "mtime": 1782453010.6605685,
-    "ast_hash": "2c8d0f799289a9857fab3a46445efafa",
-    "semantic_hash": "2c8d0f799289a9857fab3a46445efafa"
+    "mtime": 1783725858.1286287,
+    "ast_hash": "44127bf0d8cf06b578a68734172c9ba9",
+    "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/widgets/super_admin_shell.dart": {
-    "mtime": 1782453010.6615705,
-    "ast_hash": "5ca7b48df8195e917dfc60585653697d",
-    "semantic_hash": "5ca7b48df8195e917dfc60585653697d"
+    "mtime": 1783729073.5613816,
+    "ast_hash": "b613fa71461ff3b0b059ed4c80c4e806",
+    "semantic_hash": ""
   },
   "lib/features/transactions/data/models/transaction_model.dart": {
     "mtime": 1782453010.662568,
@@ -1380,9 +1285,9 @@
     "semantic_hash": "b2f2caeb6f3d53e8b1799029a71f2b36"
   },
   "lib/router/app_router.dart": {
-    "mtime": 1783587882.3132007,
-    "ast_hash": "57a100282d60e203c425c4b18edfc4a8",
-    "semantic_hash": "57a100282d60e203c425c4b18edfc4a8"
+    "mtime": 1783712962.6193144,
+    "ast_hash": "1e655b314ca034bcd9843314cb13ad1e",
+    "semantic_hash": ""
   },
   "linux/flutter/generated_plugin_registrant.cc": {
     "mtime": 1782453293.126418,
@@ -5140,9 +5045,9 @@
     "semantic_hash": "41559f5fc3eee3c0e967aaf7ebc431b3"
   },
   "CLAUDE.md": {
-    "mtime": 1783606175.2683744,
-    "ast_hash": "6a149356960a9fb02e7778887e22c844",
-    "semantic_hash": "6a149356960a9fb02e7778887e22c844"
+    "mtime": 1783731924.9914265,
+    "ast_hash": "0f85d9d19c6dd0b4d056ec7728d590e3",
+    "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {
     "mtime": 1783368960.7000887,
@@ -5173,5 +5078,15 @@
     "mtime": 1783368960.7984097,
     "ast_hash": "a153226e648d10d7e1239299f26d7f3d",
     "semantic_hash": "a153226e648d10d7e1239299f26d7f3d"
+  },
+  "docs/session-log.md": {
+    "mtime": 1783731863.7660887,
+    "ast_hash": "7a418ae4c98ba9a4abbb0584175a4da5",
+    "semantic_hash": ""
+  },
+  "lib/features/super_admin/presentation/pages/super_admin_settings_page.dart": {
+    "mtime": 1783728700.6039042,
+    "ast_hash": "c896e5d5b65bec30d823e71084f0091b",
+    "semantic_hash": ""
   }
 }

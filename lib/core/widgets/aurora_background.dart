@@ -166,7 +166,7 @@ class _AuroraBackgroundState extends State<AuroraBackground>
             ),
 
             // ── Child content ──
-            widget.child,
+            Positioned.fill(child: widget.child),
           ],
         );
       },

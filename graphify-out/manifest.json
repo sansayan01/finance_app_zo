@@ -130,9 +130,9 @@
     "semantic_hash": "2f6c2b1fb8b726721f62779046552e75"
   },
   "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
-    "mtime": 1783539449.1648953,
+    "mtime": 1783791982.2421367,
     "ast_hash": "b74ee934eb0b7fd15a3630079be93408",
-    "semantic_hash": "b74ee934eb0b7fd15a3630079be93408"
+    "semantic_hash": ""
   },
   "integration_test/app_test.dart": {
     "mtime": 1782453010.4535165,
@@ -335,9 +335,9 @@
     "semantic_hash": "7363855deb22f585ecb1bf51cd640af2"
   },
   "lib/core/widgets/aurora_background.dart": {
-    "mtime": 1783368960.716853,
-    "ast_hash": "2c440161115b8631cbdf495fe32a5d30",
-    "semantic_hash": "2c440161115b8631cbdf495fe32a5d30"
+    "mtime": 1783773818.7659688,
+    "ast_hash": "e579e204c813a71a7610c3412cce2f78",
+    "semantic_hash": ""
   },
   "lib/core/widgets/branded_loading.dart": {
     "mtime": 1782453010.4914482,
@@ -425,8 +425,8 @@
     "semantic_hash": "d769ca2afa6ae64a3fb5e0447c5587a2"
   },
   "lib/features/admin/presentation/pages/admin_org_detail_page.dart": {
-    "mtime": 1783770343.0424743,
-    "ast_hash": "630bb57a0118c7fec6c1d4e9358a14a7",
+    "mtime": 1783791886.940163,
+    "ast_hash": "ca4e56d03dbba9b4cc4f61e4a7270c9c",
     "semantic_hash": ""
   },
   "lib/features/admin/presentation/pages/admin_org_settings_page.dart": {
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "lib/features/super_admin/data/providers/super_admin_providers.dart": {
-    "mtime": 1783767225.7624521,
-    "ast_hash": "7918de762f8a1251594e7f3de6d1eb6d",
+    "mtime": 1783790362.6005158,
+    "ast_hash": "a38c22c1fe8560999556f635946070a8",
     "semantic_hash": ""
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {
@@ -1190,8 +1190,8 @@
     "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/super_admin_dashboard.dart": {
-    "mtime": 1783730016.4786687,
-    "ast_hash": "d3aae7e8d4d87adac0ae87b4c6d73ef4",
+    "mtime": 1783788883.443105,
+    "ast_hash": "cb675e7a695b16955d0a9bdda85aa8b0",
     "semantic_hash": ""
   },
   "lib/features/super_admin/presentation/pages/users_management_page.dart": {
@@ -4429,11 +4429,6 @@
     "ast_hash": "ac86c7351b6b857d3b7eace8caf6a7c6",
     "semantic_hash": "ac86c7351b6b857d3b7eace8caf6a7c6"
   },
-  "fix_card_strip.py": {
-    "mtime": 1783368960.7043946,
-    "ast_hash": "552f90b3d5111b47aa26c96cce8d1f3a",
-    "semantic_hash": "552f90b3d5111b47aa26c96cce8d1f3a"
-  },
   "lib/core/config/firebase_options.dart": {
     "mtime": 1783587882.211861,
     "ast_hash": "b301be6c435ad43255fe2c1a8905330e",
@@ -5045,8 +5040,8 @@
     "semantic_hash": "41559f5fc3eee3c0e967aaf7ebc431b3"
   },
   "CLAUDE.md": {
-    "mtime": 1783772714.8189716,
-    "ast_hash": "fc090ec9a32789cf823cf74fbb358f5a",
+    "mtime": 1783792215.5808988,
+    "ast_hash": "b32da44fb0eb70d48fe5f0d3a371365e",
     "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {
@@ -5087,6 +5082,11 @@
   "lib/features/super_admin/presentation/pages/super_admin_settings_page.dart": {
     "mtime": 1783728700.6039042,
     "ast_hash": "c896e5d5b65bec30d823e71084f0091b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260711000000_org_select_superadmin_bypass.sql": {
+    "mtime": 1783792215.388893,
+    "ast_hash": "3421295e7383c2e01aaaa9e4816500d3",
     "semantic_hash": ""
   }
 }

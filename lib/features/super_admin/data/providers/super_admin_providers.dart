@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../models/super_admin_models.dart';
@@ -12,7 +13,9 @@ final superAdminRepositoryProvider = Provider.autoDispose<SuperAdminRepository>(
 /// Platform Metrics Provider
 final platformMetricsProvider = FutureProvider.autoDispose<PlatformMetrics>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
-  return repository.getPlatformMetrics();
+  final result = await repository.getPlatformMetrics();
+  debugPrint('🔵 platformMetricsProvider: $result');
+  return result;
 });
 
 /// All Organizations Provider
@@ -68,7 +71,10 @@ final organizationDetailsProvider =
 final orgDetailFullProvider =
     FutureProvider.autoDispose.family<OrgDetailData?, String>((ref, orgId) async {
   final repository = ref.watch(superAdminRepositoryProvider);
-  return repository.getOrganizationFullDetail(orgId);
+  debugPrint('🔵 orgDetailFullProvider called for orgId: $orgId');
+  final result = await repository.getOrganizationFullDetail(orgId);
+  debugPrint('🔵 orgDetailFullProvider result: ${result != null ? "OrgDetailData(${result.memberCount} members, ${result.branches.length} branches)" : "NULL"}');
+  return result;
 });
 
 /// Organization Health Provider
@@ -155,7 +161,9 @@ final platformRevenueProvider =
 final revenueSummaryProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
-  return repository.getRevenueSummary();
+  final result = await repository.getRevenueSummary();
+      debugPrint('🔵 revenueSummaryProvider: $result');
+      return result;
 });
 
 /// Platform Settings Provider
@@ -182,7 +190,9 @@ final errorLogsProvider =
 final activityFeedProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final repository = ref.watch(superAdminRepositoryProvider);
-  return repository.getActivityFeed();
+  final result = await repository.getActivityFeed();
+      debugPrint('🔵 activityFeedProvider: ${result.length} items');
+      return result;
 });
 
 /// Open Tickets Count Provider

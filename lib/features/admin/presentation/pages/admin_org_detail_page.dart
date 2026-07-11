@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,14 +6,13 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../../../../core/widgets/aurora_background.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/shimmer_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../features/super_admin/data/models/super_admin_models.dart';
 import '../../../../features/super_admin/data/providers/super_admin_providers.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/utils/error_formatter.dart';
 
-/// Legacy alias — any file importing adminOrgDetailProvider won't break.
+/// Legacy alias � any file importing adminOrgDetailProvider won't break.
 final adminOrgDetailProvider = orgDetailFullProvider;
 
 final adminOrgListProvider =
@@ -27,7 +26,7 @@ final adminOrgListProvider =
 });
 
 // =====================================================
-// PREMIUM ORGANIZATION DETAIL PAGE — CLEAN SUMMARY VIEW
+// PREMIUM ORGANIZATION DETAIL PAGE � CLEAN SUMMARY VIEW
 // =====================================================
 
 class AdminOrgDetailPage extends ConsumerStatefulWidget {
@@ -45,12 +44,11 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      extendBody: true,
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: AuroraBackground(
         child: detailAsync.when(
-          loading: () => _buildLoading(theme, isDark),
-          error: (e, _) => _buildError(e, theme, isDark),
+          loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.error))),
           data: (data) {
             if (data == null) return const Center(child: Text('Organization not found'));
             return _buildContent(context, ref, data, theme, isDark);
@@ -60,101 +58,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     );
   }
 
-  // ── Loading State ──────────────────────────────────
-
-  Widget _buildLoading(ThemeData theme, bool isDark) {
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          elevation: 0,
-          backgroundColor: isDark
-              ? AppColors.backgroundDark.withValues(alpha: 0.85)
-              : AppColors.backgroundLight.withValues(alpha: 0.85),
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            'Organization Details',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-            ),
-          ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          sliver: SliverList.builder(
-            itemCount: 4,
-            itemBuilder: (_, __) => const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: ShimmerCard(height: 100),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Error State ────────────────────────────────────
-
-  Widget _buildError(Object e, ThemeData theme, bool isDark) {
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        SliverAppBar(
-          pinned: true,
-          elevation: 0,
-          backgroundColor: isDark
-              ? AppColors.backgroundDark.withValues(alpha: 0.85)
-              : AppColors.backgroundLight.withValues(alpha: 0.85),
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: const Text('Organization Details'),
-        ),
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Failed to load organization',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$e',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Main Content ───────────────────────────────────
+  // -- Main Content -----------------------------------
 
   Widget _buildContent(BuildContext context, WidgetRef ref, OrgDetailData data, ThemeData theme, bool isDark) {
     return RefreshIndicator(
@@ -167,10 +71,10 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
         slivers: [
-          // ── Sliver AppBar ──
+          // -- Sliver AppBar --
           _buildSliverAppBar(context, ref, data, theme, isDark),
 
-          // ── Profile Header ──
+          // -- Profile Header --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -178,7 +82,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Quick Actions ──
+          // -- Quick Actions --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -186,7 +90,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Stats Grid ──
+          // -- Stats Grid --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -194,7 +98,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Contact & Location ──
+          // -- Contact & Location --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -202,7 +106,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Plan & Limits ──
+          // -- Plan & Limits --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -210,7 +114,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Quick Access Tiles ──
+          // -- Quick Access Tiles --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -218,7 +122,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Team Members Tile ──
+          // -- Team Members Tile --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -226,7 +130,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Branches Tile ──
+          // -- Branches Tile --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -234,7 +138,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Activity Tile ──
+          // -- Activity Tile --
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -242,10 +146,15 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
             ),
           ),
 
-          // ── Danger Zone ──
+
+  // ── Bottom spacer for HUD nav clearance ──
+  const SliverToBoxAdapter(
+    child: SizedBox(height: 90),
+  ),
+          // -- Danger Zone --
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 150),
               child: _buildDangerZone(context, ref, data, theme, isDark),
             ),
           ),
@@ -254,7 +163,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     ).animate().fadeIn(duration: 400.ms);
   }
 
-  // ── Sliver App Bar ─────────────────────────────────
+  // -- Sliver App Bar ---------------------------------
 
   Widget _buildSliverAppBar(BuildContext context, WidgetRef ref, OrgDetailData data, ThemeData theme, bool isDark) {
     return SliverAppBar(
@@ -350,7 +259,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     );
   }
 
-  // ── Profile Header ─────────────────────────────────
+  // -- Profile Header ---------------------------------
 
   Widget _buildProfileHeader(OrgDetailData data, ThemeData theme, bool isDark) {
     final initial = data.displayName.isNotEmpty ? data.displayName[0].toUpperCase() : '?';
@@ -460,7 +369,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
   }
 
-  // ── Quick Actions ──────────────────────────────────
+  // -- Quick Actions ----------------------------------
 
   Widget _buildQuickActions(BuildContext context, WidgetRef ref, OrgDetailData data, ThemeData theme, bool isDark) {
     return Row(
@@ -512,53 +421,68 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     ).animate().fadeIn(duration: 400.ms, delay: 100.ms);
   }
 
-  // ── Stats Grid ─────────────────────────────────────
+  // -- Stats Grid -------------------------------------
 
   Widget _buildStatsGrid(OrgDetailData data, ThemeData theme, bool isDark) {
-    return GridView.count(
-      crossAxisCount: 4,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 0.9,
-      children: [
-        _buildStatCard(Icons.people_rounded, '${data.memberCount}', 'Members', AppColors.primary, theme, isDark),
-        _buildStatCard(Icons.groups_rounded, '${data.staffCount}', 'Staff', AppColors.success, theme, isDark),
-        _buildStatCard(Icons.account_balance_rounded, '${data.branches.length}', 'Branches', AppColors.accent, theme, isDark),
-        _buildStatCard(Icons.account_balance_wallet_rounded, '${data.activeLoanCount}', 'Active Loans', AppColors.warning, theme, isDark),
-      ],
-    ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
+    final stats = <Map<String, dynamic>>[
+      {'icon': Icons.people_rounded, 'value': '${data.memberCount}', 'label': 'Members', 'color': AppColors.primary},
+      {'icon': Icons.groups_rounded, 'value': '${data.staffCount}', 'label': 'Staff', 'color': AppColors.success},
+      {'icon': Icons.account_balance_rounded, 'value': '${data.branches.length}', 'label': 'Branches', 'color': AppColors.accent},
+      {'icon': Icons.account_balance_wallet_rounded, 'value': '${data.activeLoanCount}', 'label': 'Active Loans', 'color': AppColors.warning},
+    ];
+  return Wrap(
+    spacing: 10,
+    runSpacing: 10,
+    children: [
+      for (int i = 0; i < stats.length; i++)
+        _buildStatCard(
+          stats[i]['icon'] as IconData,
+          stats[i]['value'] as String,
+          stats[i]['label'] as String,
+          stats[i]['color'] as Color,
+          theme,
+          isDark,
+        ),
+    ],
+  ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
   }
 
   Widget _buildStatCard(IconData icon, String value, String label, Color color, ThemeData theme, bool isDark) {
     return GlassCard(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 18, color: color),
+            child: Icon(icon, size: 16, color: color),
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
-              color: isDark ? Colors.white54 : Colors.black45,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
             ),
           ),
         ],
@@ -566,7 +490,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     );
   }
 
-  // ── Contact Section ────────────────────────────────
+  // -- Contact Section --------------------------------
 
   Widget _buildContactSection(OrgDetailData data, ThemeData theme, bool isDark) {
     if (!data.hasContactInfo) {
@@ -616,7 +540,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     ).animate().fadeIn(duration: 400.ms, delay: 250.ms);
   }
 
-  // ── Plan & Limits ──────────────────────────────────
+  // -- Plan & Limits ----------------------------------
 
   Widget _buildPlanLimitsSection(OrgDetailData data, ThemeData theme, bool isDark) {
     return GlassCard(
@@ -735,7 +659,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     );
   }
 
-  // ── Quick Access Tiles ─────────────────────────────
+  // -- Quick Access Tiles -----------------------------
 
   Widget _buildTeamMembersTile(BuildContext context, OrgDetailData data, ThemeData theme, bool isDark) {
     final previewAvatars = data.profiles.take(5).toList();
@@ -822,7 +746,10 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      (previewAvatars[i]['full_name'] as String? ?? '?')[0].toUpperCase(),
+                                      ((previewAvatars[i]['full_name'] as String? ?? '').isNotEmpty
+                                          ? (previewAvatars[i]['full_name'] as String? ?? '?')[0]
+                                          : '?')
+                                          .toUpperCase(),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w600,
@@ -1062,7 +989,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     ).animate().fadeIn(duration: 400.ms, delay: 450.ms);
   }
 
-  // ── Navigation Methods ─────────────────────────────
+  // -- Navigation Methods -----------------------------
 
   void _navigateToTeamMembers(BuildContext context, OrgDetailData data) {
     Navigator.push(
@@ -1091,7 +1018,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     );
   }
 
-  // ── Danger Zone ────────────────────────────────────
+  // -- Danger Zone ------------------------------------
 
   Widget _buildDangerZone(BuildContext context, WidgetRef ref, OrgDetailData data, ThemeData theme, bool isDark) {
     return Container(
@@ -1137,7 +1064,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     ).animate().fadeIn(duration: 400.ms, delay: 500.ms);
   }
 
-  // ── Shared: Section Headers ────────────────────────
+  // -- Shared: Section Headers ------------------------
 
   Widget _buildSectionTitle(ThemeData theme, String title, IconData icon) {
     return Row(
@@ -1188,7 +1115,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     );
   }
 
-  // ── Helpers ────────────────────────────────────────
+  // -- Helpers ----------------------------------------
 
   String _month(int m) => ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m];
@@ -1236,7 +1163,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     _ => StatusType.standard,
   };
 
-  // ── Status Change Dialog ───────────────────────────
+  // -- Status Change Dialog ---------------------------
 
   Future<void> _showStatusDialog(BuildContext context, WidgetRef ref, OrgDetailData data) async {
     final current = data.status;
@@ -1310,7 +1237,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     }
   }
 
-  // ── Plan Change Dialog ─────────────────────────────
+  // -- Plan Change Dialog -----------------------------
 
   Future<void> _showPlanDialog(BuildContext context, WidgetRef ref, OrgDetailData data) async {
     final plans = ['free', 'basic', 'pro', 'enterprise'];
@@ -1388,7 +1315,7 @@ class _AdminOrgDetailPageState extends ConsumerState<AdminOrgDetailPage> {
     }
   }
 
-  // ── Delete Confirmation ────────────────────────────
+  // -- Delete Confirmation ----------------------------
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, OrgDetailData data) async {
     final confirmed = await showDialog<bool>(
@@ -1743,7 +1670,7 @@ class _OrgBranchesPage extends StatelessWidget {
             Text(code, style: theme.textTheme.bodySmall?.copyWith(color: isDark ? Colors.white54 : Colors.black45, fontSize: 11)),
           const SizedBox(width: 10),
           StatusBadge(
-            label: status[0].toUpperCase() + status.substring(1),
+            label: status.isNotEmpty ? status[0].toUpperCase() + status.substring(1) : 'Unknown',
             type: status == 'active' ? StatusType.active : StatusType.pending,
           ),
         ],
@@ -1847,7 +1774,7 @@ class _OrgActivityPage extends StatelessWidget {
                   Text(details, maxLines: 2, overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(color: isDark ? Colors.white54 : Colors.black45, fontSize: 12)),
                 const SizedBox(height: 4),
-                Text('$user • $dateStr', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10, color: isDark ? Colors.white38 : Colors.black38)),
+                Text('$user � $dateStr', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10, color: isDark ? Colors.white38 : Colors.black38)),
               ],
             ),
           ),

@@ -47,7 +47,14 @@ class SuperAdminDashboard extends ConsumerWidget {
                   padding: EdgeInsets.all(40),
                   child: CircularProgressIndicator(),
                 )),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (e, _) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  decoration: BoxDecoration(
+    color: Colors.red.withValues(alpha: 0.15),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Text('Error: $e', style: const TextStyle(color: Colors.red, fontSize: 12)),
+),
               ),
               const SizedBox(height: 24),
 
@@ -55,7 +62,14 @@ class SuperAdminDashboard extends ConsumerWidget {
               revenue.when(
                 data: (r) => _buildRevenue(context, r, isDark),
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (e, _) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  decoration: BoxDecoration(
+    color: Colors.red.withValues(alpha: 0.15),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Text('Error: $e', style: const TextStyle(color: Colors.red, fontSize: 12)),
+),
               ),
               const SizedBox(height: 24),
 
@@ -67,7 +81,14 @@ class SuperAdminDashboard extends ConsumerWidget {
               activity.when(
                 data: (a) => _buildActivity(context, a, isDark),
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (e, _) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  decoration: BoxDecoration(
+    color: Colors.red.withValues(alpha: 0.15),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Text('Error: $e', style: const TextStyle(color: Colors.red, fontSize: 12)),
+),
               ),
             ],
           ),

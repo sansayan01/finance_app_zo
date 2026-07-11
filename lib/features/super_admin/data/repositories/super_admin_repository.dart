@@ -117,7 +117,8 @@ class SuperAdminRepository {
   Future<OrgDetailData?> getOrganizationFullDetail(String orgId) async {
     try {
       final now = DateTime.now();
-      final thirtyDaysAgo = now.subtract(const Duration(days: 30)).toIso8601String();
+      final thirtyDaysAgo = DateTime(now.year, now.month, now.day - 30);
+      final thirtyDaysAgoStr = '${thirtyDaysAgo.year}-${thirtyDaysAgo.month.toString().padLeft(2, '0')}-${thirtyDaysAgo.day.toString().padLeft(2, '0')}';
 
       final results = await Future.wait([
         // 1. Org + profiles + branches (27 org cols + joins)
@@ -142,7 +143,7 @@ class SuperAdminRepository {
         _client.from('collections')
             .select('id, amount_collected')
             .eq('org_id', orgId)
-            .gte('collection_date', thirtyDaysAgo),
+            .gte('collection_date', thirtyDaysAgoStr),
         // 6. Pending approvals
         _client.from('pending_approvals')
             .select('id')
@@ -181,6 +182,7 @@ class SuperAdminRepository {
         pendingApprovalCount: pendingList.length,
       );
     } catch (e) {
+      debugPrint('❌ getOrganizationFullDetail: $e');
       return null;
     }
   }

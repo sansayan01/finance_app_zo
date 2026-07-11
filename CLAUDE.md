@@ -1,7 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
-- **2026-07-11:** Super admin overhaul committed. Two root causes fixed: (1) Organizations page infinite rebuild loop — Map family key → OrgsQuery value class; (2) Org detail page 400 error — `select('*', ...)` expanded to non-existent `deleted_at` column → explicit column list. Orgs page and detail page now both working on staging. SUPER ADMIN on staging: msayan9733@gmail.com.
+- **2026-07-11:** Super admin overhaul committed. Three root causes fixed: (1) Orgs page infinite rebuild loop — Map family key → OrgsQuery value class; (2) Org detail page 400 error — `select('*', ...)` expanded to non-existent `deleted_at` column; (3) admin_org_detail_page.dart had `.isFilter('deleted_at', null)` on two providers — table has no deleted_at column. All replaced with explicit column selects. SUPER ADMIN on staging: msayan9733@gmail.com.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
 
 ## graphify

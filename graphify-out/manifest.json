@@ -1175,8 +1175,8 @@
     "semantic_hash": "3ba9286569d5cb77f37f0cc39da856ce"
   },
   "lib/features/super_admin/data/providers/super_admin_providers.dart": {
-    "mtime": 1783758061.983027,
-    "ast_hash": "9b55908d9116773c1e9702c5b18cd184",
+    "mtime": 1783759424.535082,
+    "ast_hash": "e187a20e768906eab125d47071570ee0",
     "semantic_hash": ""
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {

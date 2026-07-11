@@ -44,12 +44,12 @@ class _OrganizationsManagementPageState
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final orgs = ref.watch(allOrganizationsProvider({
-      'limit': 50,
-      'offset': 0,
-      'search': _search.isEmpty ? null : _search,
-      'status': _statusFilter.isEmpty ? null : _statusFilter,
-    }));
+    final orgs = ref.watch(allOrganizationsProvider(OrgsQuery(
+      limit: 50,
+      offset: 0,
+      search: _search.isEmpty ? null : _search,
+      status: _statusFilter.isEmpty ? null : _statusFilter,
+    )));
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -68,7 +68,12 @@ class _OrganizationsManagementPageState
         child: SafeArea(
           bottom: false,
           child: RefreshIndicator(
-            onRefresh: () async => ref.invalidate(allOrganizationsProvider),
+            onRefresh: () async => ref.invalidate(allOrganizationsProvider(
+              OrgsQuery(
+                search: _search.isEmpty ? null : _search,
+                status: _statusFilter.isEmpty ? null : _statusFilter,
+              ),
+            )),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               children: [

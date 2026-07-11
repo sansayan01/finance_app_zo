@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../models/super_admin_models.dart';
@@ -17,20 +16,45 @@ final platformMetricsProvider = FutureProvider.autoDispose<PlatformMetrics>((ref
 });
 
 /// All Organizations Provider
+/// NOTE: family arg is a record (structural value equality). A plain Map would
+/// create a new cache key on every build → infinite rebuild loop on the page.
 final allOrganizationsProvider =
-    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
-        (ref, params) async {
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, OrgsQuery>(
+        (ref, q) async {
   final repository = ref.watch(superAdminRepositoryProvider);
-  debugPrint('📋 allOrganizationsProvider PARAMS: $params');
-  final result = await repository.getAllOrganizations(
-    limit: params['limit'] ?? 50,
-    offset: params['offset'] ?? 0,
-    search: params['search'],
-    status: params['status'],
+  return repository.getAllOrganizations(
+    limit: q.limit,
+    offset: q.offset,
+    search: q.search,
+    status: q.status,
   );
-  debugPrint('📋 allOrganizationsProvider RESULT: ${result.length} items');
-  return result;
 });
+
+/// Value-equal query record for [allOrganizationsProvider].
+class OrgsQuery {
+  final int limit;
+  final int offset;
+  final String? search;
+  final String? status;
+  const OrgsQuery({
+    this.limit = 50,
+    this.offset = 0,
+    this.search,
+    this.status,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is OrgsQuery &&
+      other.limit == limit &&
+      other.offset == offset &&
+      other.search == search &&
+      other.status == status;
+
+  @override
+  int get hashCode =>
+      Object.hash(limit, offset, search, status);
+}
 
 /// Organization Details Provider
 final organizationDetailsProvider =

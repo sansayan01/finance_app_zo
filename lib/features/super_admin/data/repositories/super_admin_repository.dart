@@ -112,55 +112,70 @@ class SuperAdminRepository {
     }
   }
 
-  /// Full organization detail: 6 parallel queries → OrgDetailData.
+  /// Full organization detail: 7 parallel queries → OrgDetailData.
   /// No migrations needed — uses existing columns only.
+  /// Each query is individually try/caught so one failure doesn't kill the whole page.
   Future<OrgDetailData?> getOrganizationFullDetail(String orgId) async {
     try {
       final now = DateTime.now();
       final thirtyDaysAgo = DateTime(now.year, now.month, now.day - 30);
-      final thirtyDaysAgoStr = '${thirtyDaysAgo.year}-${thirtyDaysAgo.month.toString().padLeft(2, '0')}-${thirtyDaysAgo.day.toString().padLeft(2, '0')}';
+      final thirtyDaysAgoStr =
+          '${thirtyDaysAgo.year}-${thirtyDaysAgo.month.toString().padLeft(2, '0')}-${thirtyDaysAgo.day.toString().padLeft(2, '0')}';
 
-      final results = await Future.wait([
-        // 1. Org + profiles + branches (27 org cols + joins)
-        _client.from('organizations').select('''
-              id, name, slug, status, plan, created_at, updated_at,
-              display_name, phone, email, address, city, state, pincode,
-              gst_number, logo_url, primary_color, brand_color, icon_preset,
-              max_branches, max_staff, max_members,
-              trial_ends_at, created_by, is_setup_complete,
-              profiles:profiles(id, user_id, full_name, email, role, phone, branch_id, created_at, avatar_url, is_active, last_login),
-              branches:branches(id, name, code, status, zone, district, city, state, manager_id, created_at)
-            ''').eq('id', orgId).maybeSingle(),
-        // 2. Activity logs (last 15)
-        _client.from('activity_logs').select('''
-              id, action, details, type, created_at, user_name
-            ''').eq('org_id', orgId).order('created_at', ascending: false).limit(15),
-        // 3. Members — count + breakdown
-        _client.from('members').select('id, kyc_status, status').eq('org_id', orgId),
-        // 4. Loans — count + total amount + active count
-        _client.from('loans').select('id, amount, status').eq('org_id', orgId),
-        // 5. Collections — total + count (last 30 days)
-        _client.from('collections')
-            .select('id, amount_collected')
-            .eq('org_id', orgId)
-            .gte('collection_date', thirtyDaysAgoStr),
-        // 6. Pending approvals
-        _client.from('pending_approvals')
-            .select('id')
-            .eq('org_id', orgId)
-            .eq('status', 'pending'),
-      ]);
+      // Query 1 is critical — if org doesn't exist, bail.
+      final orgRaw = await _client.from('organizations').select('''
+            id, name, slug, status, plan, created_at, updated_at,
+            display_name, phone, email, address, city, state, pincode,
+            gst_number, logo_url, primary_color, brand_color, icon_preset,
+            max_branches, max_staff, max_members,
+            trial_ends_at, created_by,
+            profiles:profiles(id, user_id, full_name, email, role, phone, branch_id, created_at, avatar_url, is_active, last_login),
+            branches:branches(id, name, code, status, zone, district, city, state, manager_id, created_at)
+          ''').eq('id', orgId).maybeSingle();
 
-      if (results[0] == null) return null;
+      if (orgRaw == null) return null;
+      final org = Map<String, dynamic>.from(orgRaw);
+      final rawProfiles = (org['profiles'] as List? ?? []).cast<dynamic>();
+      final rawBranches = (org['branches'] as List? ?? []).cast<dynamic>();
+      org.remove('profiles');
+      org.remove('branches');
 
-      final org = Map<String, dynamic>.from(results[0] as Map);
-      final profiles = (results[1] as List).cast<Map<String, dynamic>>();
-      final branches = (results[2] as List).cast<Map<String, dynamic>>();
-      final activityLogs = (results[3] as List).cast<Map<String, dynamic>>();
-      final membersList = (results[4] as List).cast<Map<String, dynamic>>();
-      final loansList = (results[5] as List).cast<Map<String, dynamic>>();
-      final collectionsList = (results[6] as List).cast<Map<String, dynamic>>();
-      final pendingList = (results[7] as List).cast<Map<String, dynamic>>();
+      // Queries 2–6 are non-critical — failures return empty lists.
+      List<Map<String, dynamic>> safeProfiles = rawProfiles.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      List<Map<String, dynamic>> safeBranches = rawBranches.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+
+      List<Map<String, dynamic>> activityLogs = [];
+      try {
+        final r = await _client.from('activity_logs').select('id, action, details, type, created_at, user_name')
+            .eq('org_id', orgId).order('created_at', ascending: false).limit(15);
+        activityLogs = (r as List).cast<Map<String, dynamic>>();
+      } catch (e) { debugPrint('⚠️ activity_logs: $e'); }
+
+      List<Map<String, dynamic>> membersList = [];
+      try {
+        final r = await _client.from('members').select('id, kyc_status, status').eq('org_id', orgId);
+        membersList = (r as List).cast<Map<String, dynamic>>();
+      } catch (e) { debugPrint('⚠️ members: $e'); }
+
+      List<Map<String, dynamic>> loansList = [];
+      try {
+        final r = await _client.from('loans').select('id, amount, status').eq('org_id', orgId);
+        loansList = (r as List).cast<Map<String, dynamic>>();
+      } catch (e) { debugPrint('⚠️ loans: $e'); }
+
+      List<Map<String, dynamic>> collectionsList = [];
+      try {
+        final r = await _client.from('collections').select('id, amount_collected')
+            .eq('org_id', orgId).gte('collection_date', thirtyDaysAgoStr);
+        collectionsList = (r as List).cast<Map<String, dynamic>>();
+      } catch (e) { debugPrint('⚠️ collections: $e'); }
+
+      List<Map<String, dynamic>> pendingList = [];
+      try {
+        final r = await _client.from('pending_approvals').select('id')
+            .eq('org_id', orgId).eq('status', 'pending');
+        pendingList = (r as List).cast<Map<String, dynamic>>();
+      } catch (e) { debugPrint('⚠️ pending_approvals: $e'); }
 
       final totalLoanAmount = loansList.fold<double>(
           0, (sum, l) => sum + ((l['amount'] as num?)?.toDouble() ?? 0));
@@ -170,8 +185,8 @@ class SuperAdminRepository {
 
       return OrgDetailData(
         org: org,
-        profiles: profiles,
-        branches: branches,
+        profiles: safeProfiles,
+        branches: safeBranches,
         activityLogs: activityLogs,
         memberCount: membersList.length,
         loanCount: loansList.length,
@@ -182,7 +197,7 @@ class SuperAdminRepository {
         pendingApprovalCount: pendingList.length,
       );
     } catch (e) {
-      debugPrint('❌ getOrganizationFullDetail: $e');
+      debugPrint('❌ getOrganizationFullDetail FATAL: $e');
       return null;
     }
   }

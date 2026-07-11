@@ -20,12 +20,14 @@ final allOrganizationsProvider =
     FutureProvider.autoDispose.family<List<Map<String, dynamic>>, Map<String, dynamic>>(
         (ref, params) async {
   final repository = ref.watch(superAdminRepositoryProvider);
+  debugPrint('📋 allOrganizationsProvider PARAMS: $params');
   final result = await repository.getAllOrganizations(
     limit: params['limit'] ?? 50,
     offset: params['offset'] ?? 0,
     search: params['search'],
     status: params['status'],
   );
+  debugPrint('📋 allOrganizationsProvider RESULT: ${result.length} items');
   return result;
 });
 

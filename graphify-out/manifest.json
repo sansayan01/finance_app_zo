@@ -130,8 +130,8 @@
     "semantic_hash": "2f6c2b1fb8b726721f62779046552e75"
   },
   "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
-    "mtime": 1783886333.7185264,
-    "ast_hash": "b74b94d1088e602d0531c1deeb395f1e",
+    "mtime": 1783893410.741574,
+    "ast_hash": "b74ee934eb0b7fd15a3630079be93408",
     "semantic_hash": ""
   },
   "integration_test/app_test.dart": {
@@ -1695,7 +1695,7 @@
     "semantic_hash": "8569ba84f2590681b47f27c66db77309"
   },
   "pubspec.yaml": {
-    "mtime": 1783864242.64428,
+    "mtime": 1783893400.7352877,
     "ast_hash": "ac22726ecaf32a220efd0fd0ea34d32b",
     "semantic_hash": ""
   },
@@ -4975,8 +4975,8 @@
     "semantic_hash": "00366eb3d650dec145aaf818d5d23dd4"
   },
   ".github/workflows/release.yml": {
-    "mtime": 1783892634.5799057,
-    "ast_hash": "4146769beb3388a8756be8d1c066be3e",
+    "mtime": 1783893828.0370233,
+    "ast_hash": "2e041df4755fac49f16828176444f66c",
     "semantic_hash": ""
   },
   ".github/workflows/staging.yml": {

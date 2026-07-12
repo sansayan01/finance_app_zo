@@ -254,8 +254,14 @@ Future<void> main(List<String> args) async {
     // Fetch latest
     await _run('git fetch origin', workingDirectory: projectDir, showOutput: false);
 
-    // Switch to main and merge
+    // Switch to main and reset graphify-out to avoid merge conflicts
+    // (graphify files are regenerated artifacts, not source of truth)
     await _run('git checkout main', workingDirectory: projectDir, showOutput: false);
+    await _run(
+      'git checkout -- graphify-out/',
+      workingDirectory: projectDir,
+      showOutput: false,
+    );
     final mergeResult = await _run(
       'git merge origin/development --no-edit -m "chore: merge development into main for release v$newVersion"',
       workingDirectory: projectDir,

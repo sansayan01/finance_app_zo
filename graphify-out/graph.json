@@ -2564,7 +2564,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "static_const",
-      "community": 334,
+      "community": 328,
       "norm_label": "static const"
     },
     {
@@ -5404,7 +5404,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_equatable_equatable_dart",
-      "community": 328,
+      "community": 229,
       "norm_label": "package:equatable/equatable.dart"
     },
     {
@@ -5514,7 +5514,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release",
-      "community": 328,
+      "community": 229,
       "norm_label": "github_release.dart"
     },
     {
@@ -5524,7 +5524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_githubreleaseasset",
-      "community": 328,
+      "community": 229,
       "norm_label": "githubreleaseasset"
     },
     {
@@ -5534,7 +5534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_githubrelease",
-      "community": 328,
+      "community": 229,
       "norm_label": "githubrelease"
     },
     {
@@ -5544,7 +5544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_name",
-      "community": 328,
+      "community": 229,
       "norm_label": "name"
     },
     {
@@ -5554,7 +5554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_browserdownloadurl",
-      "community": 328,
+      "community": 229,
       "norm_label": "browserdownloadurl"
     },
     {
@@ -5564,7 +5564,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_size",
-      "community": 328,
+      "community": 229,
       "norm_label": "size"
     },
     {
@@ -5574,7 +5574,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_contenttype",
-      "community": 328,
+      "community": 229,
       "norm_label": "contenttype"
     },
     {
@@ -5584,7 +5584,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_isuniversalapk",
-      "community": 328,
+      "community": 229,
       "norm_label": "isuniversalapk"
     },
     {
@@ -5594,7 +5594,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_props",
-      "community": 328,
+      "community": 229,
       "norm_label": "props"
     },
     {
@@ -5604,7 +5604,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_tagname",
-      "community": 328,
+      "community": 229,
       "norm_label": "tagname"
     },
     {
@@ -5614,7 +5614,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_body",
-      "community": 328,
+      "community": 229,
       "norm_label": "body"
     },
     {
@@ -5624,7 +5624,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_assets",
-      "community": 328,
+      "community": 229,
       "norm_label": "assets"
     },
     {
@@ -5634,7 +5634,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_publishedat",
-      "community": 328,
+      "community": 229,
       "norm_label": "publishedat"
     },
     {
@@ -5644,7 +5644,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_version",
-      "community": 328,
+      "community": 229,
       "norm_label": "version"
     },
     {
@@ -5664,7 +5664,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_github_release_fromjson",
-      "community": 328,
+      "community": 229,
       "norm_label": "fromjson"
     },
     {
@@ -5864,7 +5864,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_core_models_system_config_dart",
-      "community": 328,
+      "community": 229,
       "norm_label": "system_config.dart"
     },
     {
@@ -5874,7 +5874,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_systemconfig",
-      "community": 328,
+      "community": 229,
       "norm_label": "systemconfig"
     },
     {
@@ -5884,7 +5884,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_id",
-      "community": 328,
+      "community": 229,
       "norm_label": "id"
     },
     {
@@ -5894,7 +5894,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_currentversionandroid",
-      "community": 328,
+      "community": 229,
       "norm_label": "currentversionandroid"
     },
     {
@@ -5904,7 +5904,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_minversionandroid",
-      "community": 328,
+      "community": 229,
       "norm_label": "minversionandroid"
     },
     {
@@ -5914,7 +5914,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_currentversionios",
-      "community": 328,
+      "community": 229,
       "norm_label": "currentversionios"
     },
     {
@@ -5924,7 +5924,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_minversionios",
-      "community": 328,
+      "community": 229,
       "norm_label": "minversionios"
     },
     {
@@ -5934,7 +5934,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_updateurlandroid",
-      "community": 328,
+      "community": 229,
       "norm_label": "updateurlandroid"
     },
     {
@@ -5944,7 +5944,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_updateurlios",
-      "community": 328,
+      "community": 229,
       "norm_label": "updateurlios"
     },
     {
@@ -5954,7 +5954,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_updatemessage",
-      "community": 328,
+      "community": 229,
       "norm_label": "updatemessage"
     },
     {
@@ -5964,7 +5964,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_isundermaintenance",
-      "community": 328,
+      "community": 229,
       "norm_label": "isundermaintenance"
     },
     {
@@ -5974,7 +5974,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_maintenancemessage",
-      "community": 328,
+      "community": 229,
       "norm_label": "maintenancemessage"
     },
     {
@@ -5984,7 +5984,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_props",
-      "community": 328,
+      "community": 229,
       "norm_label": "props"
     },
     {
@@ -5994,7 +5994,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_system_config_fromjson",
-      "community": 328,
+      "community": 229,
       "norm_label": "fromjson"
     },
     {
@@ -6274,7 +6274,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_go_router_go_router_dart",
-      "community": 311,
+      "community": 267,
       "norm_label": "package:go_router/go_router.dart"
     },
     {
@@ -13594,7 +13594,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_flutter_animate_flutter_animate_dart",
-      "community": 311,
+      "community": 267,
       "norm_label": "package:flutter_animate/flutter_animate.dart"
     },
     {
@@ -13684,7 +13684,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "icondata",
-      "community": 282,
+      "community": 359,
       "norm_label": "icondata"
     },
     {
@@ -14344,7 +14344,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation",
-      "community": 229,
+      "community": 186,
       "norm_label": "hud_navigation.dart"
     },
     {
@@ -14354,7 +14354,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_hudnavigation",
-      "community": 229,
+      "community": 186,
       "norm_label": "hudnavigation"
     },
     {
@@ -14364,7 +14364,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_hudnavigationstate",
-      "community": 229,
+      "community": 186,
       "norm_label": "_hudnavigationstate"
     },
     {
@@ -14374,7 +14374,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_hudnavitem",
-      "community": 229,
+      "community": 186,
       "norm_label": "hudnavitem"
     },
     {
@@ -14384,7 +14384,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_floatinghud",
-      "community": 229,
+      "community": 186,
       "norm_label": "floatinghud"
     },
     {
@@ -14394,7 +14394,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_currentindex",
-      "community": 229,
+      "community": 186,
       "norm_label": "currentindex"
     },
     {
@@ -14404,7 +14404,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_ontap",
-      "community": 229,
+      "community": 186,
       "norm_label": "ontap"
     },
     {
@@ -14414,7 +14414,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_items",
-      "community": 229,
+      "community": 186,
       "norm_label": "items"
     },
     {
@@ -14424,7 +14424,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_entercontroller",
-      "community": 229,
+      "community": 186,
       "norm_label": "_entercontroller"
     },
     {
@@ -14434,7 +14434,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_label",
-      "community": 229,
+      "community": 186,
       "norm_label": "label"
     },
     {
@@ -14444,7 +14444,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_icon",
-      "community": 229,
+      "community": 186,
       "norm_label": "icon"
     },
     {
@@ -14454,7 +14454,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_activeicon",
-      "community": 229,
+      "community": 186,
       "norm_label": "activeicon"
     },
     {
@@ -14464,7 +14464,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_child",
-      "community": 229,
+      "community": 186,
       "norm_label": "child"
     },
     {
@@ -14474,7 +14474,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_shownav",
-      "community": 229,
+      "community": 186,
       "norm_label": "shownav"
     },
     {
@@ -14484,7 +14484,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_onnavtap",
-      "community": 229,
+      "community": 186,
       "norm_label": "onnavtap"
     },
     {
@@ -14494,7 +14494,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_navitems",
-      "community": 229,
+      "community": 186,
       "norm_label": "navitems"
     },
     {
@@ -14504,7 +14504,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_createstate",
-      "community": 229,
+      "community": 186,
       "norm_label": "createstate"
     },
     {
@@ -14514,7 +14514,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_initstate",
-      "community": 229,
+      "community": 186,
       "norm_label": "initstate"
     },
     {
@@ -14524,7 +14524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_dispose",
-      "community": 229,
+      "community": 186,
       "norm_label": "dispose"
     },
     {
@@ -14534,7 +14534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_build",
-      "community": 229,
+      "community": 186,
       "norm_label": "build"
     },
     {
@@ -14544,7 +14544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_hud_navigation_buildhuditem",
-      "community": 229,
+      "community": 186,
       "norm_label": "_buildhuditem"
     },
     {
@@ -14554,7 +14554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_haptic_service_dart",
-      "community": 229,
+      "community": 186,
       "norm_label": "../services/haptic_service.dart"
     },
     {
@@ -15684,7 +15684,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge",
-      "community": 186,
+      "community": 368,
       "norm_label": "progress_gauge.dart"
     },
     {
@@ -15694,7 +15694,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_progressgauge",
-      "community": 186,
+      "community": 368,
       "norm_label": "progressgauge"
     },
     {
@@ -15704,7 +15704,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_progressgaugestate",
-      "community": 186,
+      "community": 368,
       "norm_label": "_progressgaugestate"
     },
     {
@@ -15734,7 +15734,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_linearprogressbar",
-      "community": 186,
+      "community": 368,
       "norm_label": "linearprogressbar"
     },
     {
@@ -15744,7 +15744,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_linearprogressbarstate",
-      "community": 186,
+      "community": 368,
       "norm_label": "_linearprogressbarstate"
     },
     {
@@ -15754,7 +15754,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_value",
-      "community": 186,
+      "community": 368,
       "norm_label": "value"
     },
     {
@@ -15764,7 +15764,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_size",
-      "community": 186,
+      "community": 368,
       "norm_label": "size"
     },
     {
@@ -15774,7 +15774,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_strokewidth",
-      "community": 186,
+      "community": 368,
       "norm_label": "strokewidth"
     },
     {
@@ -15784,7 +15784,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_progresscolor",
-      "community": 186,
+      "community": 368,
       "norm_label": "progresscolor"
     },
     {
@@ -15794,7 +15794,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_backgroundcolor",
-      "community": 186,
+      "community": 368,
       "norm_label": "backgroundcolor"
     },
     {
@@ -15804,7 +15804,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_center",
-      "community": 186,
+      "community": 368,
       "norm_label": "center"
     },
     {
@@ -15814,7 +15814,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_animate",
-      "community": 186,
+      "community": 368,
       "norm_label": "animate"
     },
     {
@@ -15824,7 +15824,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_animationduration",
-      "community": 186,
+      "community": 368,
       "norm_label": "animationduration"
     },
     {
@@ -15834,7 +15834,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "duration",
-      "community": 186,
+      "community": 368,
       "norm_label": "duration"
     },
     {
@@ -15844,7 +15844,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_controller",
-      "community": 186,
+      "community": 368,
       "norm_label": "_controller"
     },
     {
@@ -15854,7 +15854,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_animation",
-      "community": 186,
+      "community": 368,
       "norm_label": "_animation"
     },
     {
@@ -15864,7 +15864,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_oldvalue",
-      "community": 186,
+      "community": 368,
       "norm_label": "_oldvalue"
     },
     {
@@ -15874,7 +15874,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_height",
-      "community": 186,
+      "community": 368,
       "norm_label": "height"
     },
     {
@@ -15884,7 +15884,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_borderradius",
-      "community": 186,
+      "community": 368,
       "norm_label": "borderradius"
     },
     {
@@ -15904,7 +15904,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_createstate",
-      "community": 186,
+      "community": 368,
       "norm_label": "createstate"
     },
     {
@@ -15914,7 +15914,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_initstate",
-      "community": 186,
+      "community": 368,
       "norm_label": "initstate"
     },
     {
@@ -15924,7 +15924,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_didupdatewidget",
-      "community": 186,
+      "community": 368,
       "norm_label": "didupdatewidget"
     },
     {
@@ -15934,7 +15934,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_dispose",
-      "community": 186,
+      "community": 368,
       "norm_label": "dispose"
     },
     {
@@ -15944,7 +15944,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_build",
-      "community": 186,
+      "community": 368,
       "norm_label": "build"
     },
     {
@@ -15954,7 +15954,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_paint",
-      "community": 186,
+      "community": 368,
       "norm_label": "paint"
     },
     {
@@ -15964,7 +15964,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_progress_gauge_shouldrepaint",
-      "community": 186,
+      "community": 368,
       "norm_label": "shouldrepaint"
     },
     {
@@ -17484,7 +17484,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "core_utils_formatters_dart",
-      "community": 514,
+      "community": 311,
       "norm_label": "../../../../core/utils/formatters.dart"
     },
     {
@@ -18064,7 +18064,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "core_widgets_status_badge_dart",
-      "community": 203,
+      "community": 514,
       "norm_label": "../../../../core/widgets/status_badge.dart"
     },
     {
@@ -19964,7 +19964,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "savings_data_models_savings_model_dart",
-      "community": 0,
+      "community": 203,
       "norm_label": "../../../savings/data/models/savings_model.dart"
     },
     {
@@ -22524,7 +22524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_local_auth_local_auth_dart",
-      "community": 175,
+      "community": 328,
       "norm_label": "package:local_auth/local_auth.dart"
     },
     {
@@ -22984,7 +22984,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model",
-      "community": 365,
+      "community": 233,
       "norm_label": "subscription_plan_model.dart"
     },
     {
@@ -22994,7 +22994,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_subscriptionplanmodel",
-      "community": 365,
+      "community": 233,
       "norm_label": "subscriptionplanmodel"
     },
     {
@@ -23004,7 +23004,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_id",
-      "community": 365,
+      "community": 233,
       "norm_label": "id"
     },
     {
@@ -23014,7 +23014,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_name",
-      "community": 365,
+      "community": 233,
       "norm_label": "name"
     },
     {
@@ -23024,7 +23024,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_description",
-      "community": 365,
+      "community": 233,
       "norm_label": "description"
     },
     {
@@ -23034,7 +23034,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_monthlyprice",
-      "community": 365,
+      "community": 233,
       "norm_label": "monthlyprice"
     },
     {
@@ -23044,7 +23044,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_yearlyprice",
-      "community": 365,
+      "community": 233,
       "norm_label": "yearlyprice"
     },
     {
@@ -23054,7 +23054,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_limits",
-      "community": 365,
+      "community": 233,
       "norm_label": "limits"
     },
     {
@@ -23064,7 +23064,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_features",
-      "community": 365,
+      "community": 233,
       "norm_label": "features"
     },
     {
@@ -23074,7 +23074,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_isactive",
-      "community": 365,
+      "community": 233,
       "norm_label": "isactive"
     },
     {
@@ -23084,7 +23084,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_sortorder",
-      "community": 365,
+      "community": 233,
       "norm_label": "sortorder"
     },
     {
@@ -23094,7 +23094,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_isenterprise",
-      "community": 365,
+      "community": 233,
       "norm_label": "isenterprise"
     },
     {
@@ -23104,7 +23104,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_ispopular",
-      "community": 365,
+      "community": 233,
       "norm_label": "ispopular"
     },
     {
@@ -23114,7 +23114,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_formattedmonthly",
-      "community": 365,
+      "community": 233,
       "norm_label": "formattedmonthly"
     },
     {
@@ -23124,7 +23124,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_formattedyearly",
-      "community": 365,
+      "community": 233,
       "norm_label": "formattedyearly"
     },
     {
@@ -23134,7 +23134,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_subscription_plan_model_fromjson",
-      "community": 365,
+      "community": 233,
       "norm_label": "fromjson"
     },
     {
@@ -25084,7 +25084,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_branch_manager_data_providers_branch_scoped_providers_dart",
-      "community": 0,
+      "community": 203,
       "norm_label": "branch_scoped_providers.dart"
     },
     {
@@ -25104,7 +25104,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_client",
-      "community": 0,
+      "community": 203,
       "norm_label": "client"
     },
     {
@@ -25114,7 +25114,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_orgid",
-      "community": 0,
+      "community": 203,
       "norm_label": "orgid"
     },
     {
@@ -25144,7 +25144,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_branchsavingssummaryprovider",
-      "community": 0,
+      "community": 203,
       "norm_label": "branchsavingssummaryprovider"
     },
     {
@@ -25154,7 +25154,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_branchmembersprovider",
-      "community": 0,
+      "community": 203,
       "norm_label": "branchmembersprovider"
     },
     {
@@ -25204,7 +25204,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_branchdashboardaggregateprovider",
-      "community": 0,
+      "community": 203,
       "norm_label": "branchdashboardaggregateprovider"
     },
     {
@@ -25224,7 +25224,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_repository",
-      "community": 0,
+      "community": 203,
       "norm_label": "repository"
     },
     {
@@ -25264,7 +25264,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_getmemberdetail",
-      "community": 0,
+      "community": 203,
       "norm_label": "getmemberdetail"
     },
     {
@@ -25274,7 +25274,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_branch_scoped_providers_getbranchinfo",
-      "community": 0,
+      "community": 203,
       "norm_label": "getbranchinfo"
     },
     {
@@ -25284,7 +25284,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "loans_data_models_loan_model_dart",
-      "community": 0,
+      "community": 203,
       "norm_label": "../../../loans/data/models/loan_model.dart"
     },
     {
@@ -25294,7 +25294,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "branch_manager_providers_dart",
-      "community": 0,
+      "community": 203,
       "norm_label": "branch_manager_providers.dart"
     },
     {
@@ -26414,7 +26414,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_branch_manager_dashboard_buildsavingssection",
-      "community": 0,
+      "community": 203,
       "norm_label": "_buildsavingssection"
     },
     {
@@ -26424,7 +26424,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_branch_savings",
-      "community": 0,
+      "community": 203,
       "norm_label": "route /branch/savings"
     },
     {
@@ -33524,7 +33524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_chatbot_presentation_providers_chat_config_provider_dart",
-      "community": 334,
+      "community": 328,
       "norm_label": "chat_config_provider.dart"
     },
     {
@@ -33534,7 +33534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_chat_config_provider_chatconfig",
-      "community": 334,
+      "community": 328,
       "norm_label": "chatconfig"
     },
     {
@@ -33544,7 +33544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_chat_config_provider_chatconfignotifier",
-      "community": 334,
+      "community": 328,
       "norm_label": "chatconfignotifier"
     },
     {
@@ -33554,7 +33554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_chat_config_provider_chatbotenabled",
-      "community": 334,
+      "community": 328,
       "norm_label": "chatbotenabled"
     },
     {
@@ -33564,7 +33564,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_chat_config_provider_enabledkey",
-      "community": 334,
+      "community": 328,
       "norm_label": "_enabledkey"
     },
     {
@@ -33584,7 +33584,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_chat_config_provider_copywith",
-      "community": 334,
+      "community": 328,
       "norm_label": "copywith"
     },
     {
@@ -33594,7 +33594,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_chat_config_provider_loadconfig",
-      "community": 334,
+      "community": 328,
       "norm_label": "_loadconfig"
     },
     {
@@ -33604,7 +33604,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_chat_config_provider_togglechatbot",
-      "community": 334,
+      "community": 328,
       "norm_label": "togglechatbot"
     },
     {
@@ -35114,7 +35114,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_data_models_customer_notification_model_dart",
-      "community": 365,
+      "community": 233,
       "norm_label": "customer_notification_model.dart"
     },
     {
@@ -35124,7 +35124,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_customernotificationmodel",
-      "community": 365,
+      "community": 233,
       "norm_label": "customernotificationmodel"
     },
     {
@@ -35134,7 +35134,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_id",
-      "community": 365,
+      "community": 233,
       "norm_label": "id"
     },
     {
@@ -35144,7 +35144,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_title",
-      "community": 365,
+      "community": 233,
       "norm_label": "title"
     },
     {
@@ -35154,7 +35154,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_message",
-      "community": 365,
+      "community": 233,
       "norm_label": "message"
     },
     {
@@ -35164,7 +35164,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_type",
-      "community": 365,
+      "community": 233,
       "norm_label": "type"
     },
     {
@@ -35174,7 +35174,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_isread",
-      "community": 365,
+      "community": 233,
       "norm_label": "isread"
     },
     {
@@ -35184,7 +35184,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_createdat",
-      "community": 365,
+      "community": 233,
       "norm_label": "createdat"
     },
     {
@@ -35194,7 +35194,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_readat",
-      "community": 365,
+      "community": 233,
       "norm_label": "readat"
     },
     {
@@ -35204,7 +35204,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_data",
-      "community": 365,
+      "community": 233,
       "norm_label": "data"
     },
     {
@@ -35214,7 +35214,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_notification_model_fromjson",
-      "community": 365,
+      "community": 233,
       "norm_label": "fromjson"
     },
     {
@@ -35444,7 +35444,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_data_models_customer_profile_model_dart",
-      "community": 368,
+      "community": 282,
       "norm_label": "customer_profile_model.dart"
     },
     {
@@ -35454,7 +35454,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_customerprofilemodel",
-      "community": 368,
+      "community": 282,
       "norm_label": "customerprofilemodel"
     },
     {
@@ -35464,7 +35464,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_memberid",
-      "community": 368,
+      "community": 282,
       "norm_label": "memberid"
     },
     {
@@ -35474,7 +35474,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_fullname",
-      "community": 368,
+      "community": 282,
       "norm_label": "fullname"
     },
     {
@@ -35484,7 +35484,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_fathername",
-      "community": 368,
+      "community": 282,
       "norm_label": "fathername"
     },
     {
@@ -35494,7 +35494,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_phone",
-      "community": 368,
+      "community": 282,
       "norm_label": "phone"
     },
     {
@@ -35504,7 +35504,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_email",
-      "community": 368,
+      "community": 282,
       "norm_label": "email"
     },
     {
@@ -35514,7 +35514,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_kycstatus",
-      "community": 368,
+      "community": 282,
       "norm_label": "kycstatus"
     },
     {
@@ -35524,7 +35524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_area",
-      "community": 368,
+      "community": 282,
       "norm_label": "area"
     },
     {
@@ -35534,7 +35534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_village",
-      "community": 368,
+      "community": 282,
       "norm_label": "village"
     },
     {
@@ -35544,7 +35544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_address",
-      "community": 368,
+      "community": 282,
       "norm_label": "address"
     },
     {
@@ -35554,7 +35554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_aadharnumber",
-      "community": 368,
+      "community": 282,
       "norm_label": "aadharnumber"
     },
     {
@@ -35564,7 +35564,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_pannumber",
-      "community": 368,
+      "community": 282,
       "norm_label": "pannumber"
     },
     {
@@ -35574,7 +35574,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_dateofbirth",
-      "community": 368,
+      "community": 282,
       "norm_label": "dateofbirth"
     },
     {
@@ -35584,7 +35584,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_gender",
-      "community": 368,
+      "community": 282,
       "norm_label": "gender"
     },
     {
@@ -35594,7 +35594,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_occupation",
-      "community": 368,
+      "community": 282,
       "norm_label": "occupation"
     },
     {
@@ -35604,7 +35604,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_monthlyincome",
-      "community": 368,
+      "community": 282,
       "norm_label": "monthlyincome"
     },
     {
@@ -35614,7 +35614,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_profileid",
-      "community": 368,
+      "community": 282,
       "norm_label": "profileid"
     },
     {
@@ -35624,7 +35624,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_joineddate",
-      "community": 368,
+      "community": 282,
       "norm_label": "joineddate"
     },
     {
@@ -35634,7 +35634,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_totalloans",
-      "community": 368,
+      "community": 282,
       "norm_label": "totalloans"
     },
     {
@@ -35644,7 +35644,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_totalsavings",
-      "community": 368,
+      "community": 282,
       "norm_label": "totalsavings"
     },
     {
@@ -35654,7 +35654,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_fromjson",
-      "community": 368,
+      "community": 282,
       "norm_label": "fromjson"
     },
     {
@@ -35664,7 +35664,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_tojson",
-      "community": 368,
+      "community": 282,
       "norm_label": "tojson"
     },
     {
@@ -35674,7 +35674,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_profile_model_copywith",
-      "community": 368,
+      "community": 282,
       "norm_label": "copywith"
     },
     {
@@ -35834,7 +35834,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_data_models_customer_ticket_model_dart",
-      "community": 426,
+      "community": 550,
       "norm_label": "customer_ticket_model.dart"
     },
     {
@@ -35854,7 +35854,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_customerticketmessagemodel",
-      "community": 426,
+      "community": 550,
       "norm_label": "customerticketmessagemodel"
     },
     {
@@ -35864,7 +35864,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_id",
-      "community": 426,
+      "community": 550,
       "norm_label": "id"
     },
     {
@@ -35874,7 +35874,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_subject",
-      "community": 426,
+      "community": 550,
       "norm_label": "subject"
     },
     {
@@ -35884,7 +35884,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_message",
-      "community": 426,
+      "community": 550,
       "norm_label": "message"
     },
     {
@@ -35894,7 +35894,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_status",
-      "community": 426,
+      "community": 550,
       "norm_label": "status"
     },
     {
@@ -35904,7 +35904,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_priority",
-      "community": 426,
+      "community": 550,
       "norm_label": "priority"
     },
     {
@@ -35914,7 +35914,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_assignedto",
-      "community": 426,
+      "community": 550,
       "norm_label": "assignedto"
     },
     {
@@ -35924,7 +35924,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_createdat",
-      "community": 426,
+      "community": 550,
       "norm_label": "createdat"
     },
     {
@@ -35934,7 +35934,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_updatedat",
-      "community": 426,
+      "community": 550,
       "norm_label": "updatedat"
     },
     {
@@ -35944,7 +35944,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_resolvedat",
-      "community": 426,
+      "community": 550,
       "norm_label": "resolvedat"
     },
     {
@@ -35954,7 +35954,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_isopen",
-      "community": 426,
+      "community": 550,
       "norm_label": "isopen"
     },
     {
@@ -35964,7 +35964,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_isresolved",
-      "community": 426,
+      "community": 550,
       "norm_label": "isresolved"
     },
     {
@@ -35974,7 +35974,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_ticketid",
-      "community": 426,
+      "community": 550,
       "norm_label": "ticketid"
     },
     {
@@ -35984,7 +35984,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_senderid",
-      "community": 426,
+      "community": 550,
       "norm_label": "senderid"
     },
     {
@@ -35994,7 +35994,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_ticket_model_fromjson",
-      "community": 426,
+      "community": 550,
       "norm_label": "fromjson"
     },
     {
@@ -36634,7 +36634,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_customer_feedback_model_dart",
-      "community": 550,
+      "community": 575,
       "norm_label": "../models/customer_feedback_model.dart"
     },
     {
@@ -38084,7 +38084,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_data_repositories_customer_feedback_repository_dart",
-      "community": 550,
+      "community": 575,
       "norm_label": "customer_feedback_repository.dart"
     },
     {
@@ -38094,7 +38094,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "repositories_customer_feedback_repository_customerfeedbackrepository",
-      "community": 550,
+      "community": 575,
       "norm_label": "customerfeedbackrepository"
     },
     {
@@ -38104,7 +38104,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "repositories_customer_feedback_repository_client",
-      "community": 550,
+      "community": 575,
       "norm_label": "_client"
     },
     {
@@ -38114,7 +38114,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "repositories_customer_feedback_repository_orgid",
-      "community": 550,
+      "community": 575,
       "norm_label": "_orgid"
     },
     {
@@ -38124,7 +38124,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "repositories_customer_feedback_repository_getfeedbacks",
-      "community": 550,
+      "community": 575,
       "norm_label": "getfeedbacks"
     },
     {
@@ -38134,7 +38134,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "repositories_customer_feedback_repository_submitfeedback",
-      "community": 550,
+      "community": 575,
       "norm_label": "submitfeedback"
     },
     {
@@ -38664,7 +38664,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service",
-      "community": 175,
+      "community": 328,
       "norm_label": "customer_biometric_service.dart"
     },
     {
@@ -38684,7 +38684,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_prefkey",
-      "community": 175,
+      "community": 328,
       "norm_label": "_prefkey"
     },
     {
@@ -38694,7 +38694,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_localauth",
-      "community": 175,
+      "community": 328,
       "norm_label": "_localauth"
     },
     {
@@ -38704,7 +38704,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "localauthentication",
-      "community": 175,
+      "community": 328,
       "norm_label": "localauthentication"
     },
     {
@@ -38714,7 +38714,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_false",
-      "community": 175,
+      "community": 328,
       "norm_label": "false"
     },
     {
@@ -38724,7 +38724,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_isbiometricavailable",
-      "community": 175,
+      "community": 328,
       "norm_label": "isbiometricavailable"
     },
     {
@@ -38734,7 +38734,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_getavailablebiometrics",
-      "community": 175,
+      "community": 328,
       "norm_label": "getavailablebiometrics"
     },
     {
@@ -38744,7 +38744,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_getbiometriclabel",
-      "community": 175,
+      "community": 328,
       "norm_label": "getbiometriclabel"
     },
     {
@@ -38754,7 +38754,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_authenticate",
-      "community": 175,
+      "community": 328,
       "norm_label": "authenticate"
     },
     {
@@ -38764,7 +38764,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_isbiometricenabled",
-      "community": 175,
+      "community": 328,
       "norm_label": "isbiometricenabled"
     },
     {
@@ -38774,7 +38774,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_customer_biometric_service_setbiometricenabled",
-      "community": 175,
+      "community": 328,
       "norm_label": "setbiometricenabled"
     },
     {
@@ -40674,7 +40674,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_models_customer_emi_model_dart",
-      "community": 203,
+      "community": 514,
       "norm_label": "../../data/models/customer_emi_model.dart"
     },
     {
@@ -41894,7 +41894,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_models_customer_transaction_model_dart",
-      "community": 514,
+      "community": 311,
       "norm_label": "../../data/models/customer_transaction_model.dart"
     },
     {
@@ -47014,7 +47014,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_presentation_widgets_customer_emi_tile_dart",
-      "community": 203,
+      "community": 514,
       "norm_label": "customer_emi_tile.dart"
     },
     {
@@ -47024,7 +47024,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_emi_tile_customeremitile",
-      "community": 203,
+      "community": 514,
       "norm_label": "customeremitile"
     },
     {
@@ -47034,7 +47034,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_emi_tile_emi",
-      "community": 203,
+      "community": 514,
       "norm_label": "emi"
     },
     {
@@ -47044,7 +47044,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_emi_tile_build",
-      "community": 203,
+      "community": 514,
       "norm_label": "build"
     },
     {
@@ -47054,7 +47054,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_emi_tile_buildeminumber",
-      "community": 203,
+      "community": 514,
       "norm_label": "_buildeminumber"
     },
     {
@@ -47064,7 +47064,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_emi_tile_buildstatusbadge",
-      "community": 203,
+      "community": 514,
       "norm_label": "_buildstatusbadge"
     },
     {
@@ -47074,7 +47074,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_emi_tile_formatmonth",
-      "community": 203,
+      "community": 514,
       "norm_label": "_formatmonth"
     },
     {
@@ -47084,7 +47084,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_emi_tile_formatpaiddate",
-      "community": 203,
+      "community": 514,
       "norm_label": "_formatpaiddate"
     },
     {
@@ -47834,7 +47834,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_presentation_widgets_customer_savings_achievement_badge_dart",
-      "community": 242,
+      "community": 15,
       "norm_label": "customer_savings_achievement_badge.dart"
     },
     {
@@ -47844,7 +47844,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_customersavingsachievementbadge",
-      "community": 242,
+      "community": 15,
       "norm_label": "customersavingsachievementbadge"
     },
     {
@@ -47854,7 +47854,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_customersavingsachievementbadgestate",
-      "community": 242,
+      "community": 15,
       "norm_label": "_customersavingsachievementbadgestate"
     },
     {
@@ -47864,7 +47864,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_title",
-      "community": 242,
+      "community": 15,
       "norm_label": "title"
     },
     {
@@ -47874,7 +47874,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_subtitle",
-      "community": 242,
+      "community": 15,
       "norm_label": "subtitle"
     },
     {
@@ -47884,7 +47884,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_icon",
-      "community": 242,
+      "community": 15,
       "norm_label": "icon"
     },
     {
@@ -47894,7 +47894,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_color",
-      "community": 242,
+      "community": 15,
       "norm_label": "color"
     },
     {
@@ -47904,7 +47904,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_isunlocked",
-      "community": 242,
+      "community": 15,
       "norm_label": "isunlocked"
     },
     {
@@ -47914,7 +47914,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_scalecontroller",
-      "community": 242,
+      "community": 15,
       "norm_label": "_scalecontroller"
     },
     {
@@ -47924,7 +47924,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_scaleanimation",
-      "community": 242,
+      "community": 15,
       "norm_label": "_scaleanimation"
     },
     {
@@ -47934,7 +47934,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_createstate",
-      "community": 242,
+      "community": 15,
       "norm_label": "createstate"
     },
     {
@@ -47944,7 +47944,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_initstate",
-      "community": 242,
+      "community": 15,
       "norm_label": "initstate"
     },
     {
@@ -47954,7 +47954,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_dispose",
-      "community": 242,
+      "community": 15,
       "norm_label": "dispose"
     },
     {
@@ -47964,7 +47964,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_savings_achievement_badge_build",
-      "community": 242,
+      "community": 15,
       "norm_label": "build"
     },
     {
@@ -48734,7 +48734,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_presentation_widgets_customer_stats_card_dart",
-      "community": 282,
+      "community": 242,
       "norm_label": "customer_stats_card.dart"
     },
     {
@@ -48744,7 +48744,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_customerstatscard",
-      "community": 282,
+      "community": 242,
       "norm_label": "customerstatscard"
     },
     {
@@ -48754,7 +48754,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_customerstatscardstate",
-      "community": 282,
+      "community": 242,
       "norm_label": "_customerstatscardstate"
     },
     {
@@ -48764,7 +48764,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_icon",
-      "community": 282,
+      "community": 242,
       "norm_label": "icon"
     },
     {
@@ -48774,7 +48774,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_label",
-      "community": 282,
+      "community": 242,
       "norm_label": "label"
     },
     {
@@ -48784,7 +48784,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_value",
-      "community": 282,
+      "community": 242,
       "norm_label": "value"
     },
     {
@@ -48794,7 +48794,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_color",
-      "community": 282,
+      "community": 242,
       "norm_label": "color"
     },
     {
@@ -48804,7 +48804,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_ontap",
-      "community": 282,
+      "community": 242,
       "norm_label": "ontap"
     },
     {
@@ -48814,7 +48814,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_controller",
-      "community": 282,
+      "community": 242,
       "norm_label": "_controller"
     },
     {
@@ -48824,7 +48824,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_scaleanimation",
-      "community": 282,
+      "community": 242,
       "norm_label": "_scaleanimation"
     },
     {
@@ -48834,7 +48834,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_createstate",
-      "community": 282,
+      "community": 242,
       "norm_label": "createstate"
     },
     {
@@ -48844,7 +48844,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_initstate",
-      "community": 282,
+      "community": 242,
       "norm_label": "initstate"
     },
     {
@@ -48854,7 +48854,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_dispose",
-      "community": 282,
+      "community": 242,
       "norm_label": "dispose"
     },
     {
@@ -48864,7 +48864,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_stats_card_build",
-      "community": 282,
+      "community": 242,
       "norm_label": "build"
     },
     {
@@ -49494,7 +49494,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_customer_portal_presentation_widgets_customer_transaction_tile_dart",
-      "community": 514,
+      "community": 311,
       "norm_label": "customer_transaction_tile.dart"
     },
     {
@@ -49504,7 +49504,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_transaction_tile_customertransactiontile",
-      "community": 514,
+      "community": 311,
       "norm_label": "customertransactiontile"
     },
     {
@@ -49514,7 +49514,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_transaction_tile_transaction",
-      "community": 514,
+      "community": 311,
       "norm_label": "transaction"
     },
     {
@@ -49524,7 +49524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_transaction_tile_build",
-      "community": 514,
+      "community": 311,
       "norm_label": "build"
     },
     {
@@ -49534,7 +49534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_customer_receipt",
-      "community": 514,
+      "community": 311,
       "norm_label": "route /customer/receipt"
     },
     {
@@ -49544,7 +49544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_transaction_tile_geticon",
-      "community": 514,
+      "community": 311,
       "norm_label": "_geticon"
     },
     {
@@ -49554,7 +49554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_customer_transaction_tile_gettitle",
-      "community": 514,
+      "community": 311,
       "norm_label": "_gettitle"
     },
     {
@@ -61234,7 +61234,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_statement_generation_overlay",
-      "community": 311,
+      "community": 426,
       "norm_label": "statement_generation_overlay.dart"
     },
     {
@@ -61244,7 +61244,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_statement_generation_overlay_statementgenerationoverlay",
-      "community": 311,
+      "community": 426,
       "norm_label": "statementgenerationoverlay"
     },
     {
@@ -61254,7 +61254,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_statement_generation_overlay_statementgenerationoverlaywidget",
-      "community": 311,
+      "community": 426,
       "norm_label": "_statementgenerationoverlaywidget"
     },
     {
@@ -61264,7 +61264,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_statement_generation_overlay_entry",
-      "community": 311,
+      "community": 426,
       "norm_label": "_entry"
     },
     {
@@ -61274,7 +61274,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "static_overlayentry",
-      "community": 311,
+      "community": 426,
       "norm_label": "static overlayentry?"
     },
     {
@@ -61284,7 +61284,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_statement_generation_overlay_show",
-      "community": 311,
+      "community": 426,
       "norm_label": "show"
     },
     {
@@ -61294,7 +61294,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_statement_generation_overlay_dismiss",
-      "community": 311,
+      "community": 426,
       "norm_label": "dismiss"
     },
     {
@@ -61304,7 +61304,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_statement_generation_overlay_build",
-      "community": 311,
+      "community": 426,
       "norm_label": "build"
     },
     {
@@ -67774,7 +67774,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog",
-      "community": 233,
+      "community": 186,
       "norm_label": "upi_confirm_dialog.dart"
     },
     {
@@ -67784,7 +67784,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_upiconfirmdialog",
-      "community": 233,
+      "community": 186,
       "norm_label": "upiconfirmdialog"
     },
     {
@@ -67794,7 +67794,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_upiconfirmdialogstate",
-      "community": 233,
+      "community": 186,
       "norm_label": "_upiconfirmdialogstate"
     },
     {
@@ -67804,7 +67804,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_premiumsheetbutton",
-      "community": 233,
+      "community": 186,
       "norm_label": "_premiumsheetbutton"
     },
     {
@@ -67814,7 +67814,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_premiumsheetbuttonstate",
-      "community": 233,
+      "community": 186,
       "norm_label": "_premiumsheetbuttonstate"
     },
     {
@@ -67824,7 +67824,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_title",
-      "community": 233,
+      "community": 186,
       "norm_label": "title"
     },
     {
@@ -67834,7 +67834,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_initialreason",
-      "community": 233,
+      "community": 186,
       "norm_label": "initialreason"
     },
     {
@@ -67844,7 +67844,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_controller",
-      "community": 233,
+      "community": 186,
       "norm_label": "_controller"
     },
     {
@@ -67854,7 +67854,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_focusnode",
-      "community": 233,
+      "community": 186,
       "norm_label": "_focusnode"
     },
     {
@@ -67864,7 +67864,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_submitted",
-      "community": 233,
+      "community": 186,
       "norm_label": "_submitted"
     },
     {
@@ -67874,7 +67874,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_label",
-      "community": 233,
+      "community": 186,
       "norm_label": "label"
     },
     {
@@ -67884,7 +67884,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_isprimary",
-      "community": 233,
+      "community": 186,
       "norm_label": "isprimary"
     },
     {
@@ -67894,7 +67894,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_isdestructive",
-      "community": 233,
+      "community": 186,
       "norm_label": "isdestructive"
     },
     {
@@ -67904,7 +67904,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_ontap",
-      "community": 233,
+      "community": 186,
       "norm_label": "ontap"
     },
     {
@@ -67914,7 +67914,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_pressed",
-      "community": 233,
+      "community": 186,
       "norm_label": "_pressed"
     },
     {
@@ -67924,7 +67924,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_createstate",
-      "community": 233,
+      "community": 186,
       "norm_label": "createstate"
     },
     {
@@ -67934,7 +67934,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_initstate",
-      "community": 233,
+      "community": 186,
       "norm_label": "initstate"
     },
     {
@@ -67944,7 +67944,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_dispose",
-      "community": 233,
+      "community": 186,
       "norm_label": "dispose"
     },
     {
@@ -67954,7 +67954,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_handlesubmit",
-      "community": 233,
+      "community": 186,
       "norm_label": "_handlesubmit"
     },
     {
@@ -67964,7 +67964,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_upi_confirm_dialog_build",
-      "community": 233,
+      "community": 186,
       "norm_label": "build"
     },
     {
@@ -68424,7 +68424,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_microflow_pro_features_savings_data_models_savings_model_dart",
-      "community": 189,
+      "community": 279,
       "norm_label": "package:microflow_pro/features/savings/data/models/savings_model.dart"
     },
     {
@@ -74514,7 +74514,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content",
-      "community": 282,
+      "community": 359,
       "norm_label": "legal_content.dart"
     },
     {
@@ -74524,7 +74524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_legalsection",
-      "community": 282,
+      "community": 359,
       "norm_label": "legalsection"
     },
     {
@@ -74534,7 +74534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_klegallastupdated",
-      "community": 282,
+      "community": 359,
       "norm_label": "klegallastupdated"
     },
     {
@@ -74544,7 +74544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_title",
-      "community": 282,
+      "community": 359,
       "norm_label": "title"
     },
     {
@@ -74554,7 +74554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_icon",
-      "community": 282,
+      "community": 359,
       "norm_label": "icon"
     },
     {
@@ -74564,7 +74564,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_content",
-      "community": 282,
+      "community": 359,
       "norm_label": "content"
     },
     {
@@ -74574,7 +74574,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_kprivacypolicysections",
-      "community": 282,
+      "community": 359,
       "norm_label": "kprivacypolicysections"
     },
     {
@@ -74584,7 +74584,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_ktermsofservicesections",
-      "community": 282,
+      "community": 359,
       "norm_label": "ktermsofservicesections"
     },
     {
@@ -74594,7 +74594,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_kdataprocessingsections",
-      "community": 282,
+      "community": 359,
       "norm_label": "kdataprocessingsections"
     },
     {
@@ -74604,7 +74604,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "constants_legal_content_krefundpolicysections",
-      "community": 282,
+      "community": 359,
       "norm_label": "krefundpolicysections"
     },
     {
@@ -75444,7 +75444,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_backup_export_provider_map",
-      "community": 365,
+      "community": 233,
       "norm_label": "map"
     },
     {
@@ -77504,7 +77504,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_email_settings_service",
-      "community": 575,
+      "community": 584,
       "norm_label": "email_settings_service.dart"
     },
     {
@@ -77514,7 +77514,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_email_settings_service_emailsettingsservice",
-      "community": 575,
+      "community": 584,
       "norm_label": "emailsettingsservice"
     },
     {
@@ -77524,7 +77524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_email_settings_service_client",
-      "community": 575,
+      "community": 584,
       "norm_label": "_client"
     },
     {
@@ -77534,7 +77534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_email_settings_service_orgid",
-      "community": 575,
+      "community": 584,
       "norm_label": "_orgid"
     },
     {
@@ -77544,7 +77544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_email_settings_service_getcommunications",
-      "community": 575,
+      "community": 584,
       "norm_label": "getcommunications"
     },
     {
@@ -77554,7 +77554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_email_settings_service_savecommunications",
-      "community": 575,
+      "community": 584,
       "norm_label": "savecommunications"
     },
     {
@@ -77564,7 +77564,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "services_email_settings_service_sendtestemail",
-      "community": 575,
+      "community": 584,
       "norm_label": "sendtestemail"
     },
     {
@@ -78864,7 +78864,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page",
-      "community": 311,
+      "community": 267,
       "norm_label": "audit_retention_page.dart"
     },
     {
@@ -78894,7 +78894,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_saving",
-      "community": 311,
+      "community": 267,
       "norm_label": "_saving"
     },
     {
@@ -78904,7 +78904,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_initialized",
-      "community": 311,
+      "community": 267,
       "norm_label": "_initialized"
     },
     {
@@ -78914,7 +78914,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_retentiondays",
-      "community": 311,
+      "community": 267,
       "norm_label": "_retentiondays"
     },
     {
@@ -78924,7 +78924,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_autoarchive",
-      "community": 311,
+      "community": 267,
       "norm_label": "_autoarchive"
     },
     {
@@ -78934,7 +78934,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_createstate",
-      "community": 311,
+      "community": 267,
       "norm_label": "createstate"
     },
     {
@@ -78954,7 +78954,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_hydrate",
-      "community": 311,
+      "community": 267,
       "norm_label": "_hydrate"
     },
     {
@@ -78964,7 +78964,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_parseint",
-      "community": 311,
+      "community": 267,
       "norm_label": "_parseint"
     },
     {
@@ -78974,7 +78974,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_buildsavebutton",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildsavebutton"
     },
     {
@@ -78994,7 +78994,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_audit_retention_page_buildtoggletile",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildtoggletile"
     },
     {
@@ -79004,7 +79004,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_providers_security_policies_providers_dart",
-      "community": 311,
+      "community": 267,
       "norm_label": "../../data/providers/security_policies_providers.dart"
     },
     {
@@ -81194,7 +81194,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_legal_policies_page",
-      "community": 311,
+      "community": 267,
       "norm_label": "legal_policies_page.dart"
     },
     {
@@ -81204,7 +81204,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_legal_policies_page_legalpoliciespage",
-      "community": 311,
+      "community": 267,
       "norm_label": "legalpoliciespage"
     },
     {
@@ -81214,7 +81214,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_legal_policies_page_build",
-      "community": 311,
+      "community": 267,
       "norm_label": "build"
     },
     {
@@ -81224,7 +81224,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_legal_policies_page_buildpolicysection",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildpolicysection"
     },
     {
@@ -81234,7 +81234,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_constants_legal_content_dart",
-      "community": 311,
+      "community": 267,
       "norm_label": "../../data/constants/legal_content.dart"
     },
     {
@@ -82544,7 +82544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page",
-      "community": 311,
+      "community": 267,
       "norm_label": "password_rules_page.dart"
     },
     {
@@ -82574,7 +82574,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_saving",
-      "community": 311,
+      "community": 267,
       "norm_label": "_saving"
     },
     {
@@ -82584,7 +82584,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_initialized",
-      "community": 311,
+      "community": 267,
       "norm_label": "_initialized"
     },
     {
@@ -82594,7 +82594,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_minlength",
-      "community": 311,
+      "community": 267,
       "norm_label": "_minlength"
     },
     {
@@ -82604,7 +82604,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_requireuppercase",
-      "community": 311,
+      "community": 267,
       "norm_label": "_requireuppercase"
     },
     {
@@ -82614,7 +82614,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_requirelowercase",
-      "community": 311,
+      "community": 267,
       "norm_label": "_requirelowercase"
     },
     {
@@ -82624,7 +82624,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_requirenumbers",
-      "community": 311,
+      "community": 267,
       "norm_label": "_requirenumbers"
     },
     {
@@ -82634,7 +82634,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_requirespecial",
-      "community": 311,
+      "community": 267,
       "norm_label": "_requirespecial"
     },
     {
@@ -82644,7 +82644,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_maxagedays",
-      "community": 311,
+      "community": 267,
       "norm_label": "_maxagedays"
     },
     {
@@ -82654,7 +82654,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_recyclebuffer",
-      "community": 311,
+      "community": 267,
       "norm_label": "_recyclebuffer"
     },
     {
@@ -82664,7 +82664,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_maxloginretries",
-      "community": 311,
+      "community": 267,
       "norm_label": "_maxloginretries"
     },
     {
@@ -82674,7 +82674,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_createstate",
-      "community": 311,
+      "community": 267,
       "norm_label": "createstate"
     },
     {
@@ -82694,7 +82694,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_hydrate",
-      "community": 311,
+      "community": 267,
       "norm_label": "_hydrate"
     },
     {
@@ -82704,7 +82704,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_parseint",
-      "community": 311,
+      "community": 267,
       "norm_label": "_parseint"
     },
     {
@@ -82714,7 +82714,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_buildsavebutton",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildsavebutton"
     },
     {
@@ -82734,7 +82734,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_buildtoggletile",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildtoggletile"
     },
     {
@@ -82744,7 +82744,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_password_rules_page_buildslidertile",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildslidertile"
     },
     {
@@ -84194,7 +84194,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_security_compliance_page_build",
-      "community": 311,
+      "community": 549,
       "norm_label": "build"
     },
     {
@@ -84204,7 +84204,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_settings_data_backup",
-      "community": 311,
+      "community": 549,
       "norm_label": "route /settings/data-backup"
     },
     {
@@ -84214,7 +84214,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_settings_password_rules",
-      "community": 311,
+      "community": 549,
       "norm_label": "route /settings/password-rules"
     },
     {
@@ -84224,7 +84224,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_settings_session_locks",
-      "community": 311,
+      "community": 549,
       "norm_label": "route /settings/session-locks"
     },
     {
@@ -84234,7 +84234,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_settings_two_factor_auth",
-      "community": 311,
+      "community": 549,
       "norm_label": "route /settings/two-factor-auth"
     },
     {
@@ -84244,7 +84244,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "route_settings_audit_retention",
-      "community": 311,
+      "community": 549,
       "norm_label": "route /settings/audit-retention"
     },
     {
@@ -84284,7 +84284,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page",
-      "community": 311,
+      "community": 267,
       "norm_label": "session_locks_page.dart"
     },
     {
@@ -84314,7 +84314,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_saving",
-      "community": 311,
+      "community": 267,
       "norm_label": "_saving"
     },
     {
@@ -84324,7 +84324,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_initialized",
-      "community": 311,
+      "community": 267,
       "norm_label": "_initialized"
     },
     {
@@ -84334,7 +84334,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_autologoutminutes",
-      "community": 311,
+      "community": 267,
       "norm_label": "_autologoutminutes"
     },
     {
@@ -84344,7 +84344,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_maxloginretries",
-      "community": 311,
+      "community": 267,
       "norm_label": "_maxloginretries"
     },
     {
@@ -84354,7 +84354,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_lockoutdurationminutes",
-      "community": 311,
+      "community": 267,
       "norm_label": "_lockoutdurationminutes"
     },
     {
@@ -84364,7 +84364,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_createstate",
-      "community": 311,
+      "community": 267,
       "norm_label": "createstate"
     },
     {
@@ -84384,7 +84384,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_hydrate",
-      "community": 311,
+      "community": 267,
       "norm_label": "_hydrate"
     },
     {
@@ -84394,7 +84394,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_parseint",
-      "community": 311,
+      "community": 267,
       "norm_label": "_parseint"
     },
     {
@@ -84404,7 +84404,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_buildsavebutton",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildsavebutton"
     },
     {
@@ -84424,7 +84424,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "pages_session_locks_page_buildslidertile",
-      "community": 311,
+      "community": 267,
       "norm_label": "_buildslidertile"
     },
     {
@@ -85474,7 +85474,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_staff_data_models_achievement_model_dart",
-      "community": 418,
+      "community": 365,
       "norm_label": "achievement_model.dart"
     },
     {
@@ -85484,7 +85484,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_achievements",
-      "community": 418,
+      "community": 365,
       "norm_label": "achievements"
     },
     {
@@ -85494,7 +85494,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_achievementmodel",
-      "community": 418,
+      "community": 365,
       "norm_label": "achievementmodel"
     },
     {
@@ -85504,7 +85504,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_props",
-      "community": 418,
+      "community": 365,
       "norm_label": "props"
     },
     {
@@ -85514,7 +85514,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_id",
-      "community": 418,
+      "community": 365,
       "norm_label": "id"
     },
     {
@@ -85524,7 +85524,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_title",
-      "community": 418,
+      "community": 365,
       "norm_label": "title"
     },
     {
@@ -85534,7 +85534,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_description",
-      "community": 418,
+      "community": 365,
       "norm_label": "description"
     },
     {
@@ -85544,7 +85544,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_icon",
-      "community": 418,
+      "community": 365,
       "norm_label": "icon"
     },
     {
@@ -85554,7 +85554,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_points",
-      "community": 418,
+      "community": 365,
       "norm_label": "points"
     },
     {
@@ -85564,7 +85564,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_category",
-      "community": 418,
+      "community": 365,
       "norm_label": "category"
     },
     {
@@ -85574,7 +85574,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_isunlocked",
-      "community": 418,
+      "community": 365,
       "norm_label": "isunlocked"
     },
     {
@@ -85584,7 +85584,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_unlockedat",
-      "community": 418,
+      "community": 365,
       "norm_label": "unlockedat"
     },
     {
@@ -85594,7 +85594,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_progress",
-      "community": 418,
+      "community": 365,
       "norm_label": "progress"
     },
     {
@@ -85604,7 +85604,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_target",
-      "community": 418,
+      "community": 365,
       "norm_label": "target"
     },
     {
@@ -85614,7 +85614,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_fromjson",
-      "community": 418,
+      "community": 365,
       "norm_label": "fromjson"
     },
     {
@@ -85624,7 +85624,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_tojson",
-      "community": 418,
+      "community": 365,
       "norm_label": "tojson"
     },
     {
@@ -85634,7 +85634,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_achievement_model_copywith",
-      "community": 418,
+      "community": 365,
       "norm_label": "copywith"
     },
     {
@@ -88614,7 +88614,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_wallet_model_walletmodel",
-      "community": 514,
+      "community": 311,
       "norm_label": "walletmodel"
     },
     {
@@ -89684,7 +89684,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "providers_live_tracking_providers_liveagentlocationsnotifier",
-      "community": 365,
+      "community": 233,
       "norm_label": "liveagentlocationsnotifier"
     },
     {
@@ -94344,7 +94344,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "data_models_wallet_model_dart",
-      "community": 514,
+      "community": 311,
       "norm_label": "../../data/models/wallet_model.dart"
     },
     {
@@ -99624,7 +99624,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_lib_features_staff_presentation_widgets_premium_helpers_dart",
-      "community": 311,
+      "community": 267,
       "norm_label": "premium_helpers.dart"
     },
     {
@@ -99634,7 +99634,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_premium_helpers_premiumhelpers",
-      "community": 311,
+      "community": 267,
       "norm_label": "premiumhelpers"
     },
     {
@@ -99644,7 +99644,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_premium_helpers_sectionheader",
-      "community": 311,
+      "community": 267,
       "norm_label": "sectionheader"
     },
     {
@@ -99654,7 +99654,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_premium_helpers_gradienticoncontainer",
-      "community": 311,
+      "community": 267,
       "norm_label": "gradienticoncontainer"
     },
     {
@@ -99664,7 +99664,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_premium_helpers_staggeredanimation",
-      "community": 311,
+      "community": 267,
       "norm_label": "staggeredanimation"
     },
     {
@@ -100404,7 +100404,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card",
-      "community": 514,
+      "community": 311,
       "norm_label": "wallet_card.dart"
     },
     {
@@ -100414,7 +100414,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card_walletcard",
-      "community": 514,
+      "community": 311,
       "norm_label": "walletcard"
     },
     {
@@ -100424,7 +100424,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card_wallet",
-      "community": 514,
+      "community": 311,
       "norm_label": "wallet"
     },
     {
@@ -100434,7 +100434,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card_ondeposit",
-      "community": 514,
+      "community": 311,
       "norm_label": "ondeposit"
     },
     {
@@ -100444,7 +100444,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card_isloading",
-      "community": 514,
+      "community": 311,
       "norm_label": "isloading"
     },
     {
@@ -100454,7 +100454,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card_build",
-      "community": 514,
+      "community": 311,
       "norm_label": "build"
     },
     {
@@ -100464,7 +100464,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card_buildlimitindicator",
-      "community": 514,
+      "community": 311,
       "norm_label": "_buildlimitindicator"
     },
     {
@@ -100474,7 +100474,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "widgets_wallet_card_buildstatitem",
-      "community": 514,
+      "community": 311,
       "norm_label": "_buildstatitem"
     },
     {
@@ -118391,7 +118391,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_test_unit_models_savings_model_test_dart",
-      "community": 189,
+      "community": 279,
       "norm_label": "savings_model_test.dart"
     },
     {
@@ -118401,7 +118401,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "models_savings_model_test_main",
-      "community": 189,
+      "community": 279,
       "norm_label": "main"
     },
     {
@@ -118441,7 +118441,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "unit_savings_freeze_test",
-      "community": 189,
+      "community": 279,
       "norm_label": "savings_freeze_test.dart"
     },
     {
@@ -118451,7 +118451,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "unit_savings_freeze_test_main",
-      "community": 189,
+      "community": 279,
       "norm_label": "main"
     },
     {
@@ -118461,7 +118461,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_microflow_pro_features_savings_data_models_savings_installment_model_dart",
-      "community": 189,
+      "community": 279,
       "norm_label": "package:microflow_pro/features/savings/data/models/savings_installment_model.dart"
     },
     {
@@ -119731,7 +119731,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_windows_runner_flutter_window_h",
-      "community": 242,
+      "community": 15,
       "norm_label": "flutter_window.h"
     },
     {
@@ -119741,7 +119741,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "windows_runner_flutter_window_h_runner_flutter_window_flutterwindow",
-      "community": 242,
+      "community": 15,
       "norm_label": "flutterwindow()"
     },
     {
@@ -119751,7 +119751,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "class",
-      "community": 242,
+      "community": 15,
       "norm_label": "class"
     },
     {
@@ -120181,7 +120181,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "d_projects_finance_app_zo_windows_runner_win32_window_h",
-      "community": 242,
+      "community": 15,
       "norm_label": "win32_window.h"
     },
     {
@@ -132221,7 +132221,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_data_batch_inserts_md_references_data_batch_inserts",
-      "community": 549,
+      "community": 218,
       "norm_label": "data-batch-inserts.md"
     },
     {
@@ -132231,7 +132231,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_data_batch_inserts_md_references_data_batch_inserts_batch_insert_statements_for_bulk_data",
-      "community": 549,
+      "community": 218,
       "norm_label": "batch insert statements for bulk data"
     },
     {
@@ -132241,7 +132241,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_data_n_plus_one_md_references_data_n_plus_one",
-      "community": 549,
+      "community": 218,
       "norm_label": "data-n-plus-one.md"
     },
     {
@@ -132251,7 +132251,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_data_n_plus_one_md_references_data_n_plus_one_eliminate_n_1_queries_with_batch_loading",
-      "community": 549,
+      "community": 218,
       "norm_label": "eliminate n+1 queries with batch loading"
     },
     {
@@ -132261,7 +132261,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_data_pagination_md_references_data_pagination",
-      "community": 549,
+      "community": 218,
       "norm_label": "data-pagination.md"
     },
     {
@@ -132271,7 +132271,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_data_pagination_md_references_data_pagination_use_cursor_based_pagination_instead_of_offset",
-      "community": 549,
+      "community": 218,
       "norm_label": "use cursor-based pagination instead of offset"
     },
     {
@@ -132381,7 +132381,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_monitor_explain_analyze_md_references_monitor_explain_analyze",
-      "community": 218,
+      "community": 418,
       "norm_label": "monitor-explain-analyze.md"
     },
     {
@@ -132391,7 +132391,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_monitor_explain_analyze_md_references_monitor_explain_analyze_use_explain_analyze_to_diagnose_slow_queries",
-      "community": 218,
+      "community": 418,
       "norm_label": "use explain analyze to diagnose slow queries"
     },
     {
@@ -132401,7 +132401,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_monitor_pg_stat_statements_md_references_monitor_pg_stat_statements",
-      "community": 218,
+      "community": 418,
       "norm_label": "monitor-pg-stat-statements.md"
     },
     {
@@ -132411,7 +132411,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_monitor_pg_stat_statements_md_references_monitor_pg_stat_statements_enable_pg_stat_statements_for_query_analysis",
-      "community": 218,
+      "community": 418,
       "norm_label": "enable pg_stat_statements for query analysis"
     },
     {
@@ -132421,7 +132421,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_monitor_vacuum_analyze_md_references_monitor_vacuum_analyze",
-      "community": 218,
+      "community": 418,
       "norm_label": "monitor-vacuum-analyze.md"
     },
     {
@@ -132431,7 +132431,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "claude_skills_supabase_postgres_best_practices_references_monitor_vacuum_analyze_md_references_monitor_vacuum_analyze_maintain_table_statistics_with_vacuum_and_analyze",
-      "community": 218,
+      "community": 418,
       "norm_label": "maintain table statistics with vacuum and analyze"
     },
     {
@@ -144388,7 +144388,7 @@
       "description": "Multi-row INSERT (~1000/batch) and COPY for bulk loads are 10-50x faster than per-row inserts by eliminating round trips.",
       "source_file": ".claude/skills/supabase-postgres-best-practices/references/data-batch-inserts.md",
       "impact": "MEDIUM",
-      "community": 549,
+      "community": 218,
       "norm_label": "batch insert statements for bulk data",
       "community_name": "Community 218",
       "id": "references_data-batch-inserts_batch_insert"
@@ -144400,7 +144400,7 @@
       "description": "Replace per-item loop queries with WHERE user_id = ANY($1::bigint[]) or JOINs; 10-100x fewer round trips.",
       "source_file": ".claude/skills/supabase-postgres-best-practices/references/data-n-plus-one.md",
       "impact": "MEDIUM-HIGH",
-      "community": 549,
+      "community": 218,
       "norm_label": "eliminate n+1 queries with batch loading",
       "community_name": "Community 218",
       "id": "references_data-n-plus-one_nplusone"
@@ -144412,7 +144412,7 @@
       "description": "Keyset/cursor pagination (WHERE id > :last_id) is O(1); OFFSET scans all skipped rows and degrades with page depth. Include all sort columns in the cursor.",
       "source_file": ".claude/skills/supabase-postgres-best-practices/references/data-pagination.md",
       "impact": "MEDIUM-HIGH",
-      "community": 549,
+      "community": 218,
       "norm_label": "use cursor-based pagination instead of offset",
       "community_name": "Community 218",
       "id": "references_data-pagination_cursor_pagination"
@@ -144472,7 +144472,7 @@
       "description": "EXPLAIN (ANALYZE, BUFFERS) reveals true bottlenecks: Seq Scan on large tables = missing index, Rows Removed by Filter = poor selectivity, read>>hit = uncached, external merge sort = low work_mem.",
       "source_file": ".claude/skills/supabase-postgres-best-practices/references/monitor-explain-analyze.md",
       "impact": "LOW-MEDIUM",
-      "community": 218,
+      "community": 418,
       "norm_label": "use explain analyze to diagnose slow queries",
       "community_name": "Community 218",
       "id": "references_monitor-explain-analyze_explain_analyze"
@@ -144484,7 +144484,7 @@
       "description": "Extension tracking per-query exec stats; find slowest by total_exec_time, most frequent by calls, high mean_exec_time candidates; pg_stat_statements_reset() after tuning.",
       "source_file": ".claude/skills/supabase-postgres-best-practices/references/monitor-pg-stat-statements.md",
       "impact": "LOW-MEDIUM",
-      "community": 218,
+      "community": 418,
       "norm_label": "enable pg_stat_statements for query analysis",
       "community_name": "Community 218",
       "id": "references_monitor-pg-stat-statements_pg_stat_statements"
@@ -144496,7 +144496,7 @@
       "description": "ANALYZE updates planner statistics (2-10x better plans); VACUUM reclaims space; tune autovacuum scale factors for high-churn tables; check pg_stat_progress_vacuum.",
       "source_file": ".claude/skills/supabase-postgres-best-practices/references/monitor-vacuum-analyze.md",
       "impact": "MEDIUM",
-      "community": 218,
+      "community": 418,
       "norm_label": "maintain table statistics with vacuum and analyze",
       "community_name": "Community 218",
       "id": "references_monitor-vacuum-analyze_vacuum_analyze"

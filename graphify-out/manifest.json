@@ -1695,8 +1695,8 @@
     "semantic_hash": "8569ba84f2590681b47f27c66db77309"
   },
   "pubspec.yaml": {
-    "mtime": 1783893400.7352877,
-    "ast_hash": "ac22726ecaf32a220efd0fd0ea34d32b",
+    "mtime": 1783894506.1245992,
+    "ast_hash": "61e535c01c80687d690cf450f7f44aed",
     "semantic_hash": ""
   },
   "README.md": {
@@ -4965,9 +4965,9 @@
     "semantic_hash": "54f5fc228465cea73d00bfe278f5670e"
   },
   "tool/release.dart": {
-    "mtime": 1783369480.798347,
-    "ast_hash": "fbfe0e5c2885217b23408941a6d59469",
-    "semantic_hash": "fbfe0e5c2885217b23408941a6d59469"
+    "mtime": 1783894645.6075332,
+    "ast_hash": "c3cd9c49c74d59e3140e1c384d726573",
+    "semantic_hash": ""
   },
   ".github/workflows/ci.yml": {
     "mtime": 1783372720.1699278,
@@ -4975,8 +4975,8 @@
     "semantic_hash": "00366eb3d650dec145aaf818d5d23dd4"
   },
   ".github/workflows/release.yml": {
-    "mtime": 1783893828.0370233,
-    "ast_hash": "2e041df4755fac49f16828176444f66c",
+    "mtime": 1783893919.0839171,
+    "ast_hash": "f1fc8e17fb4bb9b3111637cf87299721",
     "semantic_hash": ""
   },
   ".github/workflows/staging.yml": {

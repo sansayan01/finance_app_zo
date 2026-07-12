@@ -1,22 +1,18 @@
 import { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { CheckCircle2, AlertCircle, ExternalLink, Smartphone, Download, ArrowRight } from "lucide-react";
+import { motion } from "motion/react";
+import { CheckCircle2, AlertCircle, Smartphone, Download, ArrowRight, Mail, Sparkles } from "lucide-react";
 
-/* ── Deep link & store config ── */
+/* ── Config ── */
 const DEEP_LINK = "com.microflow.pro://";
 const PLAY_STORE = "https://play.google.com/store/apps/details?id=com.microflow.pro";
-const APP_STORE = "https://apps.apple.com/app/microflow-pro/id6474879480"; // placeholder — update with real ID
+const APP_STORE = "https://apps.apple.com/app/microflow-pro/id6474879480";
 
 /* ── Helpers ── */
 function getTokensFromHash() {
-  const hash = window.location.hash.slice(1); // strip '#'
+  const hash = window.location.hash.slice(1);
   if (!hash) return {};
   const params = new URLSearchParams(hash);
-  return {
-    accessToken: params.get("access_token"),
-    refreshToken: params.get("refresh_token"),
-    type: params.get("type"),
-  };
+  return { accessToken: params.get("access_token"), refreshToken: params.get("refresh_token"), type: params.get("type") };
 }
 
 function getQueryParams() {
@@ -24,32 +20,25 @@ function getQueryParams() {
 }
 
 function isMobile() {
-  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
+  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function openApp() {
-  window.location.href = DEEP_LINK;
-}
+function openApp() { window.location.href = DEEP_LINK; }
 
 /* ── Animations ── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 20, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24, filter: "blur(8px)" },
   visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.6, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] },
+    opacity: 1, y: 0, filter: "blur(0px)",
+    transition: { duration: 0.7, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.6 },
+const scaleBounce = {
+  hidden: { opacity: 0, scale: 0.5 },
   visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+    opacity: 1, scale: 1,
+    transition: { duration: 0.6, type: "spring", stiffness: 200, damping: 15 },
   },
 };
 
@@ -57,248 +46,215 @@ export default function ConfirmPage() {
   const tokens = useMemo(() => getTokensFromHash(), []);
   const query = useMemo(() => getQueryParams(), []);
 
-  /* ── Determine state ── */
   const hasTokens = Boolean(tokens.accessToken && tokens.refreshToken);
   const hasError = Boolean(query.error);
-  const isSignup = tokens.type === "signup" || query.type === "signup";
   const orgName = query.org_name || null;
 
   const [countdown, setCountdown] = useState(8);
 
-  /* ── Auto-open on mobile after countdown ── */
+  /* ── Auto-open on mobile ── */
   useEffect(() => {
     if (!hasTokens || hasError || !isMobile()) return;
-    if (countdown <= 0) {
-      openApp();
-      return;
-    }
+    if (countdown <= 0) { openApp(); return; }
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown, hasTokens, hasError]);
 
-  /* ════════════════════════════════════════════ */
-  /* ERROR STATE */
-  /* ════════════════════════════════════════════ */
-  if (hasError) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-6">
-        <BackgroundEffects />
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          className="relative z-10 text-center max-w-md mx-auto"
-        >
-          <motion.div variants={scaleIn} custom={0} className="mb-6 inline-flex">
-            <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-              <AlertCircle className="w-10 h-10 text-red-400" />
-            </div>
-          </motion.div>
-
-          <motion.h1
-            variants={fadeUp}
-            custom={1}
-            style={{ fontFamily: "'Instrument Serif', serif" }}
-            className="text-3xl md:text-4xl font-medium text-white mb-4"
-          >
-            Verification Failed
-          </motion.h1>
-
-          <motion.p variants={fadeUp} custom={2} className="text-white/50 text-sm leading-relaxed mb-8">
-            {query.error_description
-              ? decodeURIComponent(query.error_description).replace(/\+/g, " ")
-              : "The verification link has expired or is invalid. Please try signing up again."}
-          </motion.p>
-
-          <motion.a
-            variants={fadeUp}
-            custom={3}
-            href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:border-white/[0.15] transition-all duration-300 text-sm font-medium"
-          >
-            Back to Home
-            <ArrowRight className="w-3.5 h-3.5" />
-          </motion.a>
-        </motion.div>
-      </div>
-    );
-  }
-
-  /* ════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════ */
   /* SUCCESS STATE */
-  /* ════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════ */
   if (hasTokens) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-6">
-        <BackgroundEffects />
+      <div className="min-h-screen bg-black flex items-center justify-center px-5 relative overflow-hidden">
+        {/* ── Background layers ── */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute inset-0" style={{
+            background: "radial-gradient(ellipse 70% 50% at 50% 20%, hsla(160,80%,50%,0.07), transparent 60%), radial-gradient(ellipse 60% 40% at 20% 80%, hsla(263,90%,65%,0.05), transparent 50%), radial-gradient(ellipse 50% 35% at 85% 70%, hsla(187,90%,45%,0.04), transparent 50%)"
+          }} />
+          <div className="floating-orb" style={{ width: 400, height: 400, top: "-5%", left: "-5%", background: "hsl(160,80%,50%)", opacity: 0.03, animationDuration: "28s" }} />
+          <div className="floating-orb" style={{ width: 300, height: 300, bottom: "-8%", right: "-5%", background: "hsl(263,90%,65%)", opacity: 0.025, animationDuration: "24s", animationDelay: "-8s" }} />
+        </div>
+
+        <div className="noise-overlay" />
+
+        {/* ── Card ── */}
         <motion.div
-          initial="hidden"
-          animate="visible"
-          className="relative z-10 text-center max-w-lg mx-auto"
+          initial="hidden" animate="visible"
+          className="relative z-10 w-full max-w-[420px]"
         >
-          {/* ── Checkmark ── */}
-          <motion.div variants={scaleIn} custom={0} className="mb-6 inline-flex">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-500/10 border border-emerald-500/25 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-              <motion.div
-                initial={{ scale: 0, rotate: -45 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200 }}
-              >
-                <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-              </motion.div>
-            </div>
-          </motion.div>
+          <div className="liquid-glass rounded-3xl p-8 md:p-10 text-center relative overflow-hidden">
+            {/* Glow accent behind icon */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full"
+              style={{ background: "radial-gradient(circle, hsla(160,80%,50%,0.15), transparent 70%)" }} />
 
-          {/* ── Heading ── */}
-          <motion.h1
-            variants={fadeUp}
-            custom={1}
-            style={{ fontFamily: "'Instrument Serif', serif" }}
-            className="text-4xl md:text-5xl font-medium text-white mb-3"
-          >
-            Email Verified!
-          </motion.h1>
+            {/* ── Success icon ── */}
+            <motion.div variants={scaleBounce} custom={0} className="relative mx-auto mb-6 w-20 h-20">
+              <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-xl" />
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/25 flex items-center justify-center">
+                <motion.div
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5, type: "spring", stiffness: 200 }}
+                >
+                  <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                </motion.div>
+              </div>
+            </motion.div>
 
-          <motion.p variants={fadeUp} custom={2} className="text-white/50 text-sm leading-relaxed mb-2">
-            Your email has been confirmed successfully.
-          </motion.p>
-
-          {orgName && (
-            <motion.p variants={fadeUp} custom={2.5} className="text-indigo-400/80 text-sm font-medium mb-8">
-              Welcome to {orgName}
-            </motion.p>
-          )}
-
-          {!orgName && <div className="mb-8" />}
-
-          {/* ── Open App Button ── */}
-          <motion.div variants={fadeUp} custom={3} className="flex flex-col items-center gap-4">
-            <button
-              onClick={openApp}
-              className="btn-shimmer group relative w-full max-w-xs py-4 text-[15px] font-semibold rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-400 text-white hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-[1.02] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2.5"
+            {/* ── Headline ── */}
+            <motion.h1
+              variants={fadeUp} custom={1}
+              style={{ fontFamily: "'Instrument Serif', serif" }}
+              className="text-[32px] md:text-[38px] font-medium leading-tight mb-2"
             >
-              <Smartphone className="w-4.5 h-4.5" />
-              Open MicroFlow Pro
-              {isMobile() && countdown > 0 && (
-                <span className="text-white/50 text-xs font-normal ml-1">
-                  ({countdown}s)
-                </span>
-              )}
-            </button>
+              <span className="bg-gradient-to-b from-white via-white/95 to-white/70 bg-clip-text text-transparent">
+                Email Verified!
+              </span>
+            </motion.h1>
+
+            <motion.p variants={fadeUp} custom={2} className="text-white/45 text-[14px] leading-relaxed mb-1">
+              Your account has been confirmed successfully.
+            </motion.p>
+
+            {orgName && (
+              <motion.p variants={fadeUp} custom={2.5} className="text-emerald-400/70 text-[13px] font-medium flex items-center justify-center gap-1.5 mb-6">
+                <Sparkles className="w-3.5 h-3.5" />
+                Welcome to {orgName}
+              </motion.p>
+            )}
+            {!orgName && <div className="mb-6" />}
+
+            {/* ── Open App Button ── */}
+            <motion.div variants={fadeUp} custom={3}>
+              <button
+                onClick={openApp}
+                className="btn-shimmer w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-indigo-400 text-white text-[15px] font-semibold hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-[1.02] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2.5"
+              >
+                <Smartphone className="w-4 h-4" />
+                Open MicroFlow Pro
+                {isMobile() && countdown > 0 && (
+                  <span className="text-white/50 text-xs font-normal">({countdown}s)</span>
+                )}
+              </button>
+            </motion.div>
 
             {/* ── Store links ── */}
-            <div className="flex items-center gap-3">
-              <a
-                href={PLAY_STORE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-white/[0.12] transition-all duration-300 text-xs font-medium"
-              >
-                <Download className="w-3 h-3" />
-                Play Store
+            <motion.div variants={fadeUp} custom={4} className="flex items-center justify-center gap-3 mt-4">
+              <a href={PLAY_STORE} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/35 hover:text-white/70 hover:border-white/[0.12] transition-all duration-300 text-[12px] font-medium">
+                <Download className="w-3 h-3" /> Play Store
               </a>
-              <a
-                href={APP_STORE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-white/[0.12] transition-all duration-300 text-xs font-medium"
-              >
-                <Download className="w-3 h-3" />
-                App Store
+              <a href={APP_STORE} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/35 hover:text-white/70 hover:border-white/[0.12] transition-all duration-300 text-[12px] font-medium">
+                <Download className="w-3 h-3" /> App Store
               </a>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* ── Desktop hint ── */}
-          {!isMobile() && (
-            <motion.p
-              variants={fadeUp}
-              custom={4}
-              className="mt-8 text-white/25 text-xs leading-relaxed max-w-xs mx-auto"
-            >
-              Open the link on your phone to continue in the app, or download it from the stores above.
-            </motion.p>
-          )}
+            {/* ── Desktop hint ── */}
+            {!isMobile() && (
+              <motion.p variants={fadeUp} custom={5} className="mt-6 text-white/20 text-[11px] leading-relaxed">
+                Open the link on your phone to continue in the app.
+              </motion.p>
+            )}
+          </div>
 
-          {/* ── Footer link ── */}
-          <motion.div variants={fadeUp} custom={5} className="mt-10">
-            <a
-              href="/"
-              className="text-white/20 hover:text-white/40 transition-colors text-xs font-medium"
-            >
+          {/* ── Footer ── */}
+          <motion.p variants={fadeUp} custom={6} className="text-center mt-6">
+            <a href="/" className="text-white/15 hover:text-white/35 transition-colors text-[11px] font-medium tracking-wide">
               microflow-pro.vercel.app
             </a>
-          </motion.div>
+          </motion.p>
         </motion.div>
       </div>
     );
   }
 
-  /* ════════════════════════════════════════════ */
-  /* NEUTRAL STATE (direct visit, no tokens) */
-  /* ════════════════════════════════════════════ */
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-6">
-      <BackgroundEffects />
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        className="relative z-10 text-center max-w-md mx-auto"
-      >
-        <motion.div variants={scaleIn} custom={0} className="mb-6 inline-flex">
-          <div className="w-20 h-20 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-            <Smartphone className="w-10 h-10 text-indigo-400" />
+  /* ═══════════════════════════════════════════ */
+  /* ERROR STATE */
+  /* ═══════════════════════════════════════════ */
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-5 relative overflow-hidden">
+        <BackgroundEffects />
+        <motion.div initial="hidden" animate="visible" className="relative z-10 w-full max-w-[420px]">
+          <div className="liquid-glass rounded-3xl p-8 md:p-10 text-center">
+            <motion.div variants={scaleBounce} custom={0} className="mx-auto mb-6 w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-red-400" />
+            </motion.div>
+
+            <motion.h1 variants={fadeUp} custom={1} style={{ fontFamily: "'Instrument Serif', serif" }}
+              className="text-[32px] font-medium leading-tight mb-3">
+              <span className="bg-gradient-to-b from-white via-white/95 to-white/70 bg-clip-text text-transparent">
+                Verification Failed
+              </span>
+            </motion.h1>
+
+            <motion.p variants={fadeUp} custom={2} className="text-white/45 text-[14px] leading-relaxed mb-8">
+              {query.error_description
+                ? decodeURIComponent(query.error_description).replace(/\+/g, " ")
+                : "The verification link has expired or is invalid."}
+            </motion.p>
+
+            <motion.a variants={fadeUp} custom={3} href="/"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/60 hover:text-white hover:border-white/[0.15] transition-all duration-300 text-[13px] font-medium">
+              Back to Home <ArrowRight className="w-3.5 h-3.5" />
+            </motion.a>
           </div>
         </motion.div>
+      </div>
+    );
+  }
 
-        <motion.h1
-          variants={fadeUp}
-          custom={1}
-          style={{ fontFamily: "'Instrument Serif', serif" }}
-          className="text-3xl md:text-4xl font-medium text-white mb-4"
-        >
-          Check Your Email
-        </motion.h1>
+  /* ═══════════════════════════════════════════ */
+  /* NEUTRAL STATE (direct visit) */
+  /* ═══════════════════════════════════════════ */
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center px-5 relative overflow-hidden">
+      <BackgroundEffects />
+      <motion.div initial="hidden" animate="visible" className="relative z-10 w-full max-w-[420px]">
+        <div className="liquid-glass rounded-3xl p-8 md:p-10 text-center">
+          <motion.div variants={scaleBounce} custom={0} className="mx-auto mb-6 w-20 h-20 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+            <Mail className="w-10 h-10 text-indigo-400" />
+          </motion.div>
 
-        <motion.p variants={fadeUp} custom={2} className="text-white/50 text-sm leading-relaxed mb-8">
-          Please check your inbox and click the verification link to confirm your account.
+          <motion.h1 variants={fadeUp} custom={1} style={{ fontFamily: "'Instrument Serif', serif" }}
+            className="text-[32px] font-medium leading-tight mb-3">
+            <span className="bg-gradient-to-b from-white via-white/95 to-white/70 bg-clip-text text-transparent">
+              Check Your Email
+            </span>
+          </motion.h1>
+
+          <motion.p variants={fadeUp} custom={2} className="text-white/45 text-[14px] leading-relaxed mb-8">
+            We've sent a verification link to your email.<br />Click it to confirm your account.
+          </motion.p>
+
+          <motion.a variants={fadeUp} custom={3} href="/"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/60 hover:text-white hover:border-white/[0.15] transition-all duration-300 text-[13px] font-medium">
+            Back to Home <ArrowRight className="w-3.5 h-3.5" />
+          </motion.a>
+        </div>
+
+        <motion.p variants={fadeUp} custom={4} className="text-center mt-6">
+          <a href="/" className="text-white/15 hover:text-white/35 transition-colors text-[11px] font-medium tracking-wide">
+            microflow-pro.vercel.app
+          </a>
         </motion.p>
-
-        <motion.a
-          variants={fadeUp}
-          custom={3}
-          href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/70 hover:text-white hover:border-white/[0.15] transition-all duration-300 text-sm font-medium"
-        >
-          Back to Home
-          <ArrowRight className="w-3.5 h-3.5" />
-        </motion.a>
       </motion.div>
     </div>
   );
 }
 
-/* ── Shared background (matches landing page) ── */
+/* ── Shared background ── */
 function BackgroundEffects() {
   return (
     <>
-      {/* Gradient mesh */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 60% 50% at 50% 0%, hsla(263,90%,65%,0.06), transparent 60%), radial-gradient(ellipse 50% 40% at 80% 100%, hsla(187,90%,45%,0.04), transparent 60%)",
-          }}
-        />
-      </div>
-
-      {/* Floating orbs */}
-      <div className="fixed inset-0 pointer-events-none z-0">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0" style={{
+          background: "radial-gradient(ellipse 60% 50% at 50% 0%, hsla(263,90%,65%,0.06), transparent 60%), radial-gradient(ellipse 50% 40% at 80% 100%, hsla(187,90%,45%,0.04), transparent 60%)"
+        }} />
         <div className="floating-orb" />
         <div className="floating-orb" />
       </div>
-
-      {/* Noise */}
       <div className="noise-overlay" />
     </>
   );

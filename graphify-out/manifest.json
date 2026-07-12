@@ -1695,9 +1695,9 @@
     "semantic_hash": "8569ba84f2590681b47f27c66db77309"
   },
   "pubspec.yaml": {
-    "mtime": 1783861671.527874,
-    "ast_hash": "a0eb771b8c471826b2d1a84e65667a5b",
-    "semantic_hash": "a0eb771b8c471826b2d1a84e65667a5b"
+    "mtime": 1783864242.64428,
+    "ast_hash": "ac22726ecaf32a220efd0fd0ea34d32b",
+    "semantic_hash": ""
   },
   "README.md": {
     "mtime": 1782453010.1038387,
@@ -5040,8 +5040,8 @@
     "semantic_hash": "41559f5fc3eee3c0e967aaf7ebc431b3"
   },
   "CLAUDE.md": {
-    "mtime": 1783861671.3605113,
-    "ast_hash": "29f8159f9fef94ceca92abb76d59eea2",
+    "mtime": 1783884595.108291,
+    "ast_hash": "0fb607b6220dcc6c1effb4c18faf9e0b",
     "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {
@@ -5097,6 +5097,16 @@
   "asme-landing/vercel.json": {
     "mtime": 1783861671.376077,
     "ast_hash": "7708fbf29b99cd92c2a778d60001c5ba",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260713000000_expand_loan_product_numeric_precision.sql": {
+    "mtime": 1783884301.2729452,
+    "ast_hash": "5849dfba3a09e1dafbb636ee86810934",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260713010000_expand_interest_rate_for_amount_mode.sql": {
+    "mtime": 1783884967.7724404,
+    "ast_hash": "6e16dbcebf4886c0a4f160c52a28625b",
     "semantic_hash": ""
   }
 }

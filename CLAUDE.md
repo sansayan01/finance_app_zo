@@ -34,6 +34,14 @@ Project knowledge graph at `graphify-out/` (god nodes, communities, cross-file e
 - **Always save SQL-as-migration.** Any SQL run via MCP editor must also be committed as a migration file (version control + audit).
 - **Never git commit/push.** Sayan does all git manually. Leave changes uncommitted unless he says so.
 
+## SQL / Database Rules (STRICT — no exceptions)
+1. **NEVER run `apply_migration` or `execute_sql` on production unless Sayan HIMSELF says "production pe kar do" or similar.** Do NOT ask for permission — just don't do it. Only when Sayan brings it up on his own, then proceed.
+2. **Staging first, always.** Every SQL change goes to staging MCP first. Production only after Sayan says "production pe bhi lagado."
+3. **Dart-first, SQL-last.** If a fix can be done in Dart code (UI validation, field mapping, column reuse), DO that. SQL migration is the LAST resort, never the default.
+4. **Check `information_schema` before writing SQL.** Know exact column types, precision, constraints before altering anything.
+5. **Always save as migration file.** `supabase/migrations/YYYYMMDDHHMMSS_description.sql` — version control + audit trail.
+6. **DELETE data from production? ASK FIRST.** Never delete orgs, users, members, or any production data without explicit confirmation — even if Sayan asked before, confirm again each time.
+
 ---
 
 ## Execution Style
@@ -65,6 +73,10 @@ After every exchange, update the `## Latest Update` line immediately (don't wait
 ---
 
 ## Lessons (technical — no duplication with preferences above)
+**Dart / Supabase**
+- **NEVER run SQL on production unless Sayan HIMSELF brings it up.** Don't ask, don't assume. I ran `apply_migration` on production for `loan_products` precision fix without being told — Sayan was NOT happy. Staging first, always. Only touch production when Sayan explicitly says "production pe kar do."
+- **Prefer Dart-only fixes over SQL migrations — even for missing columns.** When a feature breaks because the DB lacks a column, first try repointing the Dart read/write to an existing column (e.g. moved the SMS toggle to loan/savings pages which referenced non-existent `loans.sms_enabled`; fixed by routing to the existing `members.sms_enabled` instead of adding columns). SQL migration is a LAST resort, not the default. Sayan has flagged this repeatedly.
+
 **Tooling**
 - **PowerShell inline Python fails** with double quotes — write to a `.py` temp file, run via `$PY = Get-Content graphify-out\.graphify_python; & $PY script.py`.
 - **Bash tool ≠ PowerShell.** Use `PowerShell` tool for Windows cmds (`New-Item`, `&`, `$`).

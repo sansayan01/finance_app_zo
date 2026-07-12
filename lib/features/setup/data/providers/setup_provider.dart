@@ -45,13 +45,8 @@ final setupCompleteProvider = FutureProvider<bool>((ref) async {
     final isComplete = org['is_setup_complete'] == true;
     if (isComplete) return true;
 
-    // Last-resort heuristic for orgs that haven't been marked complete yet
-    // but already satisfy the historical conditions (so existing data
-    // doesn't get bounced back into the wizard).
-    final hasAddress = org['address'] is String &&
-        (org['address'] as String).trim().isNotEmpty;
-    if (!hasAddress) return false;
-
+    // Last-resort heuristic: if is_setup_complete isn't set yet but the org
+    // already has a branch (wizard always creates one), consider it done.
     final branches = await client
         .from('branches')
         .select('id')

@@ -25,11 +25,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     _maybeRedirectIfAlreadyDone();
   }
 
-  /// If the org is already marked complete in the database, never show
-  /// the wizard — go straight to the admin home. This is the defensive
-  /// layer that closes the "wizard shows again after completion" loop.
   Future<void> _maybeRedirectIfAlreadyDone() async {
-    // Wait one frame so providers are wired up.
     await Future<void>.delayed(const Duration(milliseconds: 50));
     if (!mounted) return;
     final isComplete = ref.read(setupCompleteProvider).valueOrNull ?? true;
@@ -38,70 +34,45 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     }
   }
 
-  // Step 1: Organization Details
+  // Step 1: Organization (3 fields)
   final _orgFormKey = GlobalKey<FormState>();
-  final _orgAddressController = TextEditingController();
+  final _orgNameController = TextEditingController();
   final _orgCityController = TextEditingController();
-  final _orgStateController = TextEditingController();
-  final _orgPincodeController = TextEditingController();
   final _orgPhoneController = TextEditingController();
-  final _orgEmailController = TextEditingController();
-  final _orgGstController = TextEditingController();
 
-  // Step 2: Owner Details
-  final _ownerFormKey = GlobalKey<FormState>();
-  final _ownerPhoneController = TextEditingController();
-  final _ownerAddressController = TextEditingController();
-  final _ownerCityController = TextEditingController();
-  final _ownerStateController = TextEditingController();
-  final _ownerPincodeController = TextEditingController();
-  final _ownerAadharController = TextEditingController();
-  final _ownerPanController = TextEditingController();
-
-  // Step 3: First Branch
+  // Step 2: First Branch (2 fields)
   final _branchFormKey = GlobalKey<FormState>();
   final _branchNameController = TextEditingController();
   final _branchCodeController = TextEditingController();
-  final _branchAddressController = TextEditingController();
-  final _branchCityController = TextEditingController();
-  final _branchStateController = TextEditingController();
-  final _branchPincodeController = TextEditingController();
-  final _branchPhoneController = TextEditingController();
-  final _branchEmailController = TextEditingController();
 
-  void _prefillFromProfile() {
+  void _prefillFromProfile() async {
     final user = ref.read(currentUserProvider);
     if (user != null) {
-      _ownerPhoneController.text = user.phone ?? '';
-      _orgEmailController.text = user.email;
       _orgPhoneController.text = user.phone ?? '';
+
+      // Fetch org name + city from organizations table
+      if (user.orgId != null) {
+        try {
+          final res = await Supabase.instance.client
+              .from('organizations')
+              .select('name, city')
+              .eq('id', user.orgId!)
+              .single();
+          _orgNameController.text = res['name'] ?? '';
+          _orgCityController.text = res['city'] ?? '';
+          if (mounted) setState(() {});
+        } catch (_) {}
+      }
     }
   }
 
   @override
   void dispose() {
-    _orgAddressController.dispose();
+    _orgNameController.dispose();
     _orgCityController.dispose();
-    _orgStateController.dispose();
-    _orgPincodeController.dispose();
     _orgPhoneController.dispose();
-    _orgEmailController.dispose();
-    _orgGstController.dispose();
-    _ownerPhoneController.dispose();
-    _ownerAddressController.dispose();
-    _ownerCityController.dispose();
-    _ownerStateController.dispose();
-    _ownerPincodeController.dispose();
-    _ownerAadharController.dispose();
-    _ownerPanController.dispose();
     _branchNameController.dispose();
     _branchCodeController.dispose();
-    _branchAddressController.dispose();
-    _branchCityController.dispose();
-    _branchStateController.dispose();
-    _branchPincodeController.dispose();
-    _branchPhoneController.dispose();
-    _branchEmailController.dispose();
     super.dispose();
   }
 
@@ -112,15 +83,12 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         isValid = _orgFormKey.currentState?.validate() ?? false;
         break;
       case 1:
-        isValid = _ownerFormKey.currentState?.validate() ?? false;
-        break;
-      case 2:
         isValid = _branchFormKey.currentState?.validate() ?? false;
         break;
     }
 
     if (isValid) {
-      if (_currentStep < 2) {
+      if (_currentStep < 1) {
         setState(() => _currentStep++);
         _pageController.animateToPage(
           _currentStep,
@@ -155,71 +123,44 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
 
       final client = Supabase.instance.client;
       final orgId = user.orgId!;
-      final userId = user.id;
 
-      // Step 1: Update organization details
-      // Use COALESCE-friendly update so a partial save never blanks existing values.
+      // Step 1: Update organization (name, city, phone only)
       final orgUpdates = <String, dynamic>{
-        if (_orgAddressController.text.trim().isNotEmpty)
-          'address': _orgAddressController.text.trim(),
-        'city': _orgCityController.text.trim(),
-        'state': _orgStateController.text.trim(),
-        'pincode': _orgPincodeController.text.trim(),
-        'phone': _orgPhoneController.text.trim(),
-        'email': _orgEmailController.text.trim(),
-        'gst_number': _orgGstController.text.trim().isEmpty
-            ? null
-            : _orgGstController.text.trim(),
+        if (_orgNameController.text.trim().isNotEmpty)
+          'name': _orgNameController.text.trim(),
+        if (_orgCityController.text.trim().isNotEmpty)
+          'city': _orgCityController.text.trim(),
+        if (_orgPhoneController.text.trim().isNotEmpty)
+          'phone': _orgPhoneController.text.trim(),
         'updated_at': DateTime.now().toIso8601String(),
       };
-      if (orgUpdates.isNotEmpty) {
+      if (orgUpdates.length > 1) {
+        // More than just updated_at
         await client.from('organizations').update(orgUpdates).eq('id', orgId);
       }
 
-      // Step 2: Update owner profile
-      await client.from('profiles').update({
-        'phone': _ownerPhoneController.text.trim(),
-        'address': _ownerAddressController.text.trim(),
-        'city': _ownerCityController.text.trim(),
-        'state': _ownerStateController.text.trim(),
-        'pincode': _ownerPincodeController.text.trim(),
-        'aadhar': _ownerAadharController.text.trim().isEmpty
-            ? null
-            : _ownerAadharController.text.trim(),
-        'pan': _ownerPanController.text.trim().isEmpty
-            ? null
-            : _ownerPanController.text.trim(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('user_id', userId);
-
-      // Step 3: Create first branch — IDEMPOTENT.
-      // We call the upsert_default_branch RPC which uses ON CONFLICT on
-      // (org_id, code). A retry of the wizard can no longer fail with
-      // "duplicate key value violates unique constraint branches_org_id_code_key".
+      // Step 2: Create first branch (idempotent via RPC)
       await client.rpc('upsert_default_branch', params: {
         'p_org_id': orgId,
         'p_name': _branchNameController.text.trim(),
         'p_code': _branchCodeController.text.trim(),
-        'p_address': _branchAddressController.text.trim(),
-        'p_city': _branchCityController.text.trim(),
-        'p_state': _branchStateController.text.trim(),
-        'p_pincode': _branchPincodeController.text.trim(),
-        'p_phone': _branchPhoneController.text.trim(),
-        'p_email': _branchEmailController.text.trim().isEmpty
-            ? null
-            : _branchEmailController.text.trim(),
+        'p_address': '',
+        'p_city': '',
+        'p_state': '',
+        'p_pincode': '',
+        'p_phone': '',
+        'p_email': null,
       });
 
-      // Step 4: Mark the org setup complete atomically.
-      // This is the single source of truth that the router checks before
-      // forcing the user back into the wizard.
+      // Step 3: Mark org setup complete
       await client.rpc('complete_org_setup', params: {'p_org_id': orgId});
 
-      // Refresh user data
+      // Refresh user data + invalidate setup provider so router sees true
       await ref.read(authProvider.notifier).refreshCurrentUser();
+      ref.invalidate(setupCompleteProvider);
+      await ref.read(setupCompleteProvider.future);
 
       if (mounted) {
-        // Show success and navigate
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Organization setup complete!'),
@@ -254,7 +195,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
-    final orgName = 'Your Organization';
+    final orgName = _orgNameController.text.isNotEmpty
+        ? _orgNameController.text
+        : 'Your Organization';
 
     return Scaffold(
       backgroundColor:
@@ -262,26 +205,18 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             _buildHeader(theme, isDark, primary, orgName),
-
-            // Progress indicator
             _buildProgressIndicator(primary, isDark),
-
-            // Page content
             Expanded(
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildOrgDetailsStep(theme, isDark, primary),
-                  _buildOwnerDetailsStep(theme, isDark, primary),
                   _buildBranchStep(theme, isDark, primary),
                 ],
               ),
             ),
-
-            // Navigation buttons
             _buildNavigationButtons(primary, isDark),
           ],
         ),
@@ -295,7 +230,6 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
       child: Column(
         children: [
-          // Logo
           Container(
             width: 56,
             height: 56,
@@ -325,7 +259,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Complete the setup to get started',
+            'Quick setup — just 2 steps!',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: isDark ? Colors.white54 : Colors.black54,
             ),
@@ -339,14 +273,13 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
-        children: List.generate(3, (index) {
+        children: List.generate(2, (index) {
           final isActive = index <= _currentStep;
           final isCurrent = index == _currentStep;
 
           return Expanded(
             child: Row(
               children: [
-                // Circle
                 Container(
                   width: 28,
                   height: 28,
@@ -374,8 +307,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                           ),
                   ),
                 ),
-                // Line
-                if (index < 2)
+                if (index < 1)
                   Expanded(
                     child: Container(
                       height: 2,
@@ -456,6 +388,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     );
   }
 
+  // ── Step 1: Organization (Name + City + Phone) ──
+
   Widget _buildOrgDetailsStep(ThemeData theme, bool isDark, Color primary) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -466,119 +400,22 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           children: [
             _buildStepTitle(
               theme,
-              'Organization Details',
-              'Tell us about your organization',
+              'Organization',
+              'Basic details about your organization',
             ),
             _buildInputField(
-              controller: _orgAddressController,
-              label: 'Address',
-              icon: Icons.location_on_outlined,
-              autofillHints: const [AutofillHints.streetAddressLine1],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInputField(
-                    controller: _orgCityController,
-                    label: 'City',
-                    icon: Icons.location_city_outlined,
-                    autofillHints: const [AutofillHints.addressCity],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInputField(
-                    controller: _orgStateController,
-                    label: 'State',
-                    icon: Icons.map_outlined,
-                    autofillHints: const [AutofillHints.addressState],
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInputField(
-                    controller: _orgPincodeController,
-                    label: 'Pincode',
-                    icon: Icons.pin_outlined,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    autofillHints: const [AutofillHints.postalCode],
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Pincode is required';
-                      }
-                      if (value.length != 6) return 'Enter valid 6-digit pincode';
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInputField(
-                    controller: _orgPhoneController,
-                    label: 'Phone',
-                    icon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                    maxLength: 10,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    autofillHints: const [AutofillHints.telephoneNumber],
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Phone is required';
-                      }
-                      if (value.length != 10) return 'Enter valid 10-digit phone';
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+              controller: _orgNameController,
+              label: 'Organization Name',
+              icon: Icons.business_outlined,
             ),
             _buildInputField(
-              controller: _orgEmailController,
-              label: 'Organization Email',
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Email is required';
-                }
-                if (!value.contains('@')) return 'Enter a valid email';
-                return null;
-              },
+              controller: _orgCityController,
+              label: 'City',
+              icon: Icons.location_city_outlined,
+              autofillHints: const [AutofillHints.addressCity],
             ),
             _buildInputField(
-              controller: _orgGstController,
-              label: 'GST Number (Optional)',
-              icon: Icons.receipt_long_outlined,
-              required: false,
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOwnerDetailsStep(ThemeData theme, bool isDark, Color primary) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Form(
-        key: _ownerFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStepTitle(
-              theme,
-              'Your Details',
-              'Complete your personal information',
-            ),
-            _buildInputField(
-              controller: _ownerPhoneController,
+              controller: _orgPhoneController,
               label: 'Phone',
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
@@ -593,71 +430,14 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                 return null;
               },
             ),
-            _buildInputField(
-              controller: _ownerAddressController,
-              label: 'Address',
-              icon: Icons.home_outlined,
-              autofillHints: const [AutofillHints.streetAddressLine1],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInputField(
-                    controller: _ownerCityController,
-                    label: 'City',
-                    icon: Icons.location_city_outlined,
-                    autofillHints: const [AutofillHints.addressCity],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInputField(
-                    controller: _ownerStateController,
-                    label: 'State',
-                    icon: Icons.map_outlined,
-                    autofillHints: const [AutofillHints.addressState],
-                  ),
-                ),
-              ],
-            ),
-            _buildInputField(
-              controller: _ownerPincodeController,
-              label: 'Pincode',
-              icon: Icons.pin_outlined,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              autofillHints: const [AutofillHints.postalCode],
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Pincode is required';
-                }
-                if (value.length != 6) return 'Enter valid 6-digit pincode';
-                return null;
-              },
-            ),
-            _buildInputField(
-              controller: _ownerAadharController,
-              label: 'Aadhar Number (Optional)',
-              icon: Icons.badge_outlined,
-              keyboardType: TextInputType.number,
-              maxLength: 12,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              required: false,
-            ),
-            _buildInputField(
-              controller: _ownerPanController,
-              label: 'PAN Number (Optional)',
-              icon: Icons.credit_card_outlined,
-              maxLength: 10,
-              required: false,
-            ),
             const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
+
+  // ── Step 2: First Branch (Name + Code) ──
 
   Widget _buildBranchStep(ThemeData theme, bool isDark, Color primary) {
     return SingleChildScrollView(
@@ -691,7 +471,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                     maxLength: 10,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Code is required';
+                        return 'Required';
                       }
                       if (value.trim().length < 2) return 'Min 2 chars';
                       return null;
@@ -700,82 +480,6 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                 ),
               ],
             ),
-            _buildInputField(
-              controller: _branchAddressController,
-              label: 'Branch Address',
-              icon: Icons.location_on_outlined,
-              autofillHints: const [AutofillHints.streetAddressLine1],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInputField(
-                    controller: _branchCityController,
-                    label: 'City',
-                    icon: Icons.location_city_outlined,
-                    autofillHints: const [AutofillHints.addressCity],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInputField(
-                    controller: _branchStateController,
-                    label: 'State',
-                    icon: Icons.map_outlined,
-                    autofillHints: const [AutofillHints.addressState],
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInputField(
-                    controller: _branchPincodeController,
-                    label: 'Pincode',
-                    icon: Icons.pin_outlined,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    autofillHints: const [AutofillHints.postalCode],
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Pincode is required';
-                      }
-                      if (value.length != 6) return 'Enter valid 6-digit pincode';
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInputField(
-                    controller: _branchPhoneController,
-                    label: 'Phone',
-                    icon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                    maxLength: 10,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    autofillHints: const [AutofillHints.telephoneNumber],
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Phone is required';
-                      }
-                      if (value.length != 10) return 'Enter valid 10-digit phone';
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            _buildInputField(
-              controller: _branchEmailController,
-              label: 'Branch Email (Optional)',
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-              required: false,
-            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -783,7 +487,11 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     );
   }
 
+  // ── Navigation buttons ──
+
   Widget _buildNavigationButtons(Color primary, bool isDark) {
+    final isLastStep = _currentStep == 1;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
       decoration: BoxDecoration(
@@ -798,7 +506,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       ),
       child: Row(
         children: [
-          if (_currentStep > 0)
+          if (_currentStep > 0) ...[
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _isSubmitting ? null : _prevStep,
@@ -812,9 +520,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                 ),
               ),
             ),
-          if (_currentStep > 0) const SizedBox(width: 12),
+            const SizedBox(width: 12),
+          ],
           Expanded(
-            flex: _currentStep == 0 ? 1 : 1,
             child: ElevatedButton.icon(
               onPressed: _isSubmitting ? null : _nextStep,
               icon: _isSubmitting
@@ -825,7 +533,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                           strokeWidth: 2, color: Colors.white),
                     )
                   : Icon(
-                      _currentStep == 2
+                      isLastStep
                           ? Icons.check_circle_rounded
                           : Icons.arrow_forward_rounded,
                       size: 18,
@@ -833,7 +541,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
               label: Text(
                 _isSubmitting
                     ? 'Setting up...'
-                    : (_currentStep == 2 ? 'Complete Setup' : 'Continue'),
+                    : (isLastStep ? 'Complete Setup' : 'Continue'),
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 15,

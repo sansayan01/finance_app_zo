@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronUp } from "lucide-react";
 import BackgroundVideo from "./components/BackgroundVideo";
@@ -13,6 +14,7 @@ import Pricing from "./components/Pricing";
 import FAQ from "./components/FAQ";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
+import ConfirmPage from "./pages/ConfirmPage";
 
 export default function App() {
   const [backTop, setBackTop] = useState(false);
@@ -32,6 +34,9 @@ export default function App() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
+    <Routes>
+      <Route path="/confirm" element={<ConfirmPage />} />
+      <Route path="*" element={
     <main className="relative bg-black min-h-screen w-screen flex flex-col selection:bg-indigo-500/30 selection:text-white overflow-x-hidden">
       {/* Full-page fixed video background — same as hero, visible across all sections */}
       <BackgroundVideo />
@@ -92,5 +97,7 @@ export default function App() {
         )}
       </AnimatePresence>
     </main>
+      } />
+    </Routes>
   );
 }

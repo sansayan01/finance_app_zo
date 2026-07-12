@@ -150,6 +150,7 @@ class AuthRepository {
       email: email,
       password: password,
       data: metadata,
+      emailRedirectTo: 'https://microflow-pro.vercel.app/confirm',
     );
 
     final user = response.user;
@@ -332,10 +333,14 @@ class AuthRepository {
         }
       }
 
-      // Auto-create org + profile for users who signed up with email verification
-      if (profile == null) {
-        final orgName = user.userMetadata?['org_name'] as String?;
-        if (orgName != null && orgName.isNotEmpty) {
+      // Auto-create org + profile for users who signed up with email verification.
+      // The DB trigger (trg_auth_user_creates_profile) may have created a stub
+      // profile with role='customer' and org_id=null before we get here, so we
+      // also handle the case where the profile exists but has no linked org.
+      final orgName = user.userMetadata?['org_name'] as String?;
+      if (orgName != null && orgName.isNotEmpty) {
+        final needsOrgSetup = profile == null || profile['org_id'] == null;
+        if (needsOrgSetup) {
           final created = await _createOrgAndProfile(
             user,
             user.userMetadata?['full_name'] as String? ?? '',

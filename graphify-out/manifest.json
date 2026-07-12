@@ -32,7 +32,7 @@
   ".claude/settings.json": {
     "mtime": 1783626798.6880639,
     "ast_hash": "59c3475dcd492bea93342833ff5971ac",
-    "semantic_hash": ""
+    "semantic_hash": "59c3475dcd492bea93342833ff5971ac"
   },
   ".claude/settings.local.json": {
     "mtime": 1782310026.5804844,
@@ -130,7 +130,7 @@
     "semantic_hash": "2f6c2b1fb8b726721f62779046552e75"
   },
   "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
-    "mtime": 1783791982.2421367,
+    "mtime": 1783836156.6399674,
     "ast_hash": "b74ee934eb0b7fd15a3630079be93408",
     "semantic_hash": ""
   },
@@ -337,7 +337,7 @@
   "lib/core/widgets/aurora_background.dart": {
     "mtime": 1783773818.7659688,
     "ast_hash": "e579e204c813a71a7610c3412cce2f78",
-    "semantic_hash": ""
+    "semantic_hash": "e579e204c813a71a7610c3412cce2f78"
   },
   "lib/core/widgets/branded_loading.dart": {
     "mtime": 1782453010.4914482,
@@ -362,7 +362,7 @@
   "lib/core/widgets/hud_navigation.dart": {
     "mtime": 1783758419.9966536,
     "ast_hash": "5c6659c96bdef02c02ef0b396d9f10fe",
-    "semantic_hash": ""
+    "semantic_hash": "5c6659c96bdef02c02ef0b396d9f10fe"
   },
   "lib/core/widgets/luma_bar.dart": {
     "mtime": 1782453010.495457,
@@ -427,7 +427,7 @@
   "lib/features/admin/presentation/pages/admin_org_detail_page.dart": {
     "mtime": 1783791886.940163,
     "ast_hash": "ca4e56d03dbba9b4cc4f61e4a7270c9c",
-    "semantic_hash": ""
+    "semantic_hash": "ca4e56d03dbba9b4cc4f61e4a7270c9c"
   },
   "lib/features/admin/presentation/pages/admin_org_settings_page.dart": {
     "mtime": 1782453010.5068069,
@@ -475,9 +475,9 @@
     "semantic_hash": "b2491270314f9cfdea35e464966c8d2d"
   },
   "lib/features/auth/data/repositories/auth_repository.dart": {
-    "mtime": 1783587882.227698,
-    "ast_hash": "be27a0adeaad58f25564b0da2c6484c7",
-    "semantic_hash": "be27a0adeaad58f25564b0da2c6484c7"
+    "mtime": 1783860212.0476213,
+    "ast_hash": "7f63d36494ddadad162256ea4ac6c8a2",
+    "semantic_hash": ""
   },
   "lib/features/auth/presentation/pages/login_page.dart": {
     "mtime": 1782453010.5141895,
@@ -745,9 +745,9 @@
     "semantic_hash": "16d8247831d868702d74b1a852e42159"
   },
   "lib/features/loans/presentation/pages/loan_detail_page.dart": {
-    "mtime": 1783587882.2384303,
-    "ast_hash": "2b58bc2093ab5f7aca1529f07a101dd4",
-    "semantic_hash": "2b58bc2093ab5f7aca1529f07a101dd4"
+    "mtime": 1783797480.0272496,
+    "ast_hash": "3916413d4b81e91f308b8da815ccfcb1",
+    "semantic_hash": "3916413d4b81e91f308b8da815ccfcb1"
   },
   "lib/features/loans/presentation/pages/new_loan_page.dart": {
     "mtime": 1783587882.2394888,
@@ -765,9 +765,9 @@
     "semantic_hash": "4fd7b47823cc355da549db63fe7fc787"
   },
   "lib/features/loans/presentation/widgets/collection_sheet.dart": {
-    "mtime": 1783587882.2433538,
-    "ast_hash": "e3e2133efaa5f62c8340addc36ed74e5",
-    "semantic_hash": "e3e2133efaa5f62c8340addc36ed74e5"
+    "mtime": 1783797193.2483263,
+    "ast_hash": "ec313f57eaabca2092b4ddb5241c2423",
+    "semantic_hash": "ec313f57eaabca2092b4ddb5241c2423"
   },
   "lib/features/members/data/models/member_model.dart": {
     "mtime": 1782453010.5885785,
@@ -830,9 +830,9 @@
     "semantic_hash": "1d2bed37e2a25ac76da3c1ede0277166"
   },
   "lib/features/savings/presentation/pages/saving_detail_page.dart": {
-    "mtime": 1783587882.259311,
-    "ast_hash": "1561c8fd64f44b03893112029a847bbc",
-    "semantic_hash": "1561c8fd64f44b03893112029a847bbc"
+    "mtime": 1783797352.2097583,
+    "ast_hash": "3223a2c23bcd783fc7dd792375d0f389",
+    "semantic_hash": "3223a2c23bcd783fc7dd792375d0f389"
   },
   "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart": {
     "mtime": 1783587882.261092,
@@ -920,9 +920,9 @@
     "semantic_hash": "fe7743b96e06f1260bef2b744d1d7824"
   },
   "lib/features/setup/presentation/pages/setup_wizard_page.dart": {
-    "mtime": 1783368960.775807,
-    "ast_hash": "df2d5e0abbcb1429a43164f1fe58da37",
-    "semantic_hash": "df2d5e0abbcb1429a43164f1fe58da37"
+    "mtime": 1783840892.404233,
+    "ast_hash": "87f7da8d9206926470ffa020a04dc63f",
+    "semantic_hash": ""
   },
   "lib/features/staff/data/models/achievement_model.dart": {
     "mtime": 1782453010.6224003,
@@ -980,9 +980,9 @@
     "semantic_hash": "d47856f5d61949422de57d45baf826b0"
   },
   "lib/features/staff/data/providers/collection_providers.dart": {
-    "mtime": 1783587882.2986753,
-    "ast_hash": "cd65b2640dd0f572938627e6b797db8f",
-    "semantic_hash": "cd65b2640dd0f572938627e6b797db8f"
+    "mtime": 1783797200.2493906,
+    "ast_hash": "ccd706d368431453f889739d1c2ce50e",
+    "semantic_hash": "ccd706d368431453f889739d1c2ce50e"
   },
   "lib/features/staff/data/providers/gamification_providers.dart": {
     "mtime": 1782453010.6300125,
@@ -1172,37 +1172,37 @@
   "lib/features/super_admin/data/models/super_admin_models.dart": {
     "mtime": 1783766988.4080753,
     "ast_hash": "9168abf4ea655ea8a1f3528972fd4740",
-    "semantic_hash": ""
+    "semantic_hash": "9168abf4ea655ea8a1f3528972fd4740"
   },
   "lib/features/super_admin/data/providers/super_admin_providers.dart": {
     "mtime": 1783790362.6005158,
     "ast_hash": "a38c22c1fe8560999556f635946070a8",
-    "semantic_hash": ""
+    "semantic_hash": "a38c22c1fe8560999556f635946070a8"
   },
   "lib/features/super_admin/data/repositories/super_admin_repository.dart": {
     "mtime": 1783768096.8650472,
     "ast_hash": "79cd04147890dbcc54d6c84613170b82",
-    "semantic_hash": ""
+    "semantic_hash": "79cd04147890dbcc54d6c84613170b82"
   },
   "lib/features/super_admin/presentation/pages/organizations_management_page.dart": {
     "mtime": 1783760921.0415683,
     "ast_hash": "0a1f5de18b6d3b1902064fda02127288",
-    "semantic_hash": ""
+    "semantic_hash": "0a1f5de18b6d3b1902064fda02127288"
   },
   "lib/features/super_admin/presentation/pages/super_admin_dashboard.dart": {
     "mtime": 1783788883.443105,
     "ast_hash": "cb675e7a695b16955d0a9bdda85aa8b0",
-    "semantic_hash": ""
+    "semantic_hash": "cb675e7a695b16955d0a9bdda85aa8b0"
   },
   "lib/features/super_admin/presentation/pages/users_management_page.dart": {
     "mtime": 1783725858.1286287,
     "ast_hash": "44127bf0d8cf06b578a68734172c9ba9",
-    "semantic_hash": ""
+    "semantic_hash": "44127bf0d8cf06b578a68734172c9ba9"
   },
   "lib/features/super_admin/presentation/widgets/super_admin_shell.dart": {
     "mtime": 1783729073.5613816,
     "ast_hash": "b613fa71461ff3b0b059ed4c80c4e806",
-    "semantic_hash": ""
+    "semantic_hash": "b613fa71461ff3b0b059ed4c80c4e806"
   },
   "lib/features/transactions/data/models/transaction_model.dart": {
     "mtime": 1782453010.662568,
@@ -1287,7 +1287,7 @@
   "lib/router/app_router.dart": {
     "mtime": 1783712962.6193144,
     "ast_hash": "1e655b314ca034bcd9843314cb13ad1e",
-    "semantic_hash": ""
+    "semantic_hash": "1e655b314ca034bcd9843314cb13ad1e"
   },
   "linux/flutter/generated_plugin_registrant.cc": {
     "mtime": 1782453293.126418,
@@ -1697,7 +1697,7 @@
   "pubspec.yaml": {
     "mtime": 1783767634.8012307,
     "ast_hash": "a0eb771b8c471826b2d1a84e65667a5b",
-    "semantic_hash": ""
+    "semantic_hash": "a0eb771b8c471826b2d1a84e65667a5b"
   },
   "README.md": {
     "mtime": 1782453010.1038387,
@@ -2570,9 +2570,9 @@
     "semantic_hash": "7c4f2044cd43e92d8cad557db6abcd6b"
   },
   "lib/features/setup/data/providers/setup_provider.dart": {
-    "mtime": 1783368960.775807,
-    "ast_hash": "c4bb0bfc1124addb56a98dccd51f40a8",
-    "semantic_hash": "c4bb0bfc1124addb56a98dccd51f40a8"
+    "mtime": 1783840959.8786707,
+    "ast_hash": "71966bfa15cd1439fecdfd11f196131f",
+    "semantic_hash": ""
   },
   "marketing_site/middleware.ts": {
     "mtime": 1782453010.7148318,
@@ -3315,9 +3315,9 @@
     "semantic_hash": "fa91453358b56681481f75f81d1bfccd"
   },
   "asme-landing/package.json": {
-    "mtime": 1782453010.146006,
-    "ast_hash": "90a6cbdb94464346dc04d79dab890137",
-    "semantic_hash": "90a6cbdb94464346dc04d79dab890137"
+    "mtime": 1783860211.3283465,
+    "ast_hash": "956db59955fffca1675e6ed76af9dbc5",
+    "semantic_hash": ""
   },
   "asme-landing/vite.config.js": {
     "mtime": 1782453010.1540077,
@@ -3325,14 +3325,14 @@
     "semantic_hash": "3d3e00502cf219c7200ec740cb8e1cbc"
   },
   "asme-landing/src/App.jsx": {
-    "mtime": 1782453010.147006,
-    "ast_hash": "53dd87bf78c2e622e45bd19be22e46ee",
-    "semantic_hash": "53dd87bf78c2e622e45bd19be22e46ee"
+    "mtime": 1783860245.1246705,
+    "ast_hash": "8689bbecc25a5192549dad591811d605",
+    "semantic_hash": ""
   },
   "asme-landing/src/main.jsx": {
-    "mtime": 1782453010.1530082,
-    "ast_hash": "51fd21c378330142b61bf8d1ef3795ef",
-    "semantic_hash": "51fd21c378330142b61bf8d1ef3795ef"
+    "mtime": 1783860232.089099,
+    "ast_hash": "6e28b9dd8fbdb32c4c370bbe0323e626",
+    "semantic_hash": ""
   },
   "asme-landing/src/components/BackgroundVideo.jsx": {
     "mtime": 1782453010.149009,
@@ -4425,9 +4425,9 @@
     "semantic_hash": "ff6df12a2290f99c0d6cab6a1b4e98e9"
   },
   "android/app/src/main/kotlin/com/microflow/pro/SmsSenderPlugin.kt": {
-    "mtime": 1782550395.8188384,
-    "ast_hash": "ac86c7351b6b857d3b7eace8caf6a7c6",
-    "semantic_hash": "ac86c7351b6b857d3b7eace8caf6a7c6"
+    "mtime": 1783800421.960042,
+    "ast_hash": "1d59b2b9c67b9369a86595ad4d4b2ae7",
+    "semantic_hash": "1d59b2b9c67b9369a86595ad4d4b2ae7"
   },
   "lib/core/config/firebase_options.dart": {
     "mtime": 1783587882.211861,
@@ -5040,8 +5040,8 @@
     "semantic_hash": "41559f5fc3eee3c0e967aaf7ebc431b3"
   },
   "CLAUDE.md": {
-    "mtime": 1783792215.5808988,
-    "ast_hash": "b32da44fb0eb70d48fe5f0d3a371365e",
+    "mtime": 1783806501.2022636,
+    "ast_hash": "9b0f9747c56d5e671947ad72ad43df0d",
     "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {
@@ -5077,16 +5077,26 @@
   "docs/session-log.md": {
     "mtime": 1783731863.7660887,
     "ast_hash": "7a418ae4c98ba9a4abbb0584175a4da5",
-    "semantic_hash": ""
+    "semantic_hash": "7a418ae4c98ba9a4abbb0584175a4da5"
   },
   "lib/features/super_admin/presentation/pages/super_admin_settings_page.dart": {
     "mtime": 1783728700.6039042,
     "ast_hash": "c896e5d5b65bec30d823e71084f0091b",
-    "semantic_hash": ""
+    "semantic_hash": "c896e5d5b65bec30d823e71084f0091b"
   },
   "supabase/migrations/20260711000000_org_select_superadmin_bypass.sql": {
     "mtime": 1783792215.388893,
     "ast_hash": "3421295e7383c2e01aaaa9e4816500d3",
+    "semantic_hash": "3421295e7383c2e01aaaa9e4816500d3"
+  },
+  "asme-landing/src/pages/ConfirmPage.jsx": {
+    "mtime": 1783860211.718865,
+    "ast_hash": "54433d30729c8a74d424d9c36c7ffb9a",
+    "semantic_hash": ""
+  },
+  "asme-landing/vercel.json": {
+    "mtime": 1783860336.237154,
+    "ast_hash": "6411d2fbb5f0e00aaff0ca0ded84e0b6",
     "semantic_hash": ""
   }
 }

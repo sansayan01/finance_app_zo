@@ -58,6 +58,18 @@ fi
 # "$GH" secret set IOS_CERTIFICATE_PASSWORD --body "cert-password" -R "$REPO"
 # "$GH" secret set IOS_PROVISIONING_PROFILE_BASE64 --body "base64-of-your-profile.mobileprovision" -R "$REPO"
 
+# 8. Firebase Hosting deploy token (prod web deploy in release.yml)
+# Generate ONCE on your machine:  firebase login:ci
+# Then paste the printed token below (or export FIREBASE_TOKEN before running this script).
+FIREBASE_TOKEN_VAL="${FIREBASE_TOKEN:-}"
+if [ -n "$FIREBASE_TOKEN_VAL" ]; then
+  "$GH" secret set FIREBASE_TOKEN --body "$FIREBASE_TOKEN_VAL" -R "$REPO"
+  echo "Set FIREBASE_TOKEN"
+else
+  echo "WARNING: FIREBASE_TOKEN env var not set — set it manually in GitHub"
+  echo "  Generate with: firebase login:ci   (then paste the token)"
+fi
+
 echo ""
 echo "Android signing secrets are set!"
 echo "Please also add staging and other secrets manually in GitHub:"
@@ -74,6 +86,7 @@ echo " SENTRY_DSN                  = (optional, your Sentry DSN)"
 echo " POSTHOG_API_KEY             = (optional, your PostHog key)"
 echo " POSTHOG_HOST                = https://app.posthog.com"
 echo " MAPBOX_ACCESS_TOKEN         = (optional, your Mapbox token)"
+echo " FIREBASE_TOKEN              = (from: firebase login:ci)"
 echo " IOS_CERTIFICATE_P12_BASE64  = (optional, for iOS builds)"
 echo " IOS_CERTIFICATE_PASSWORD    = (optional, for iOS builds)"
 echo " IOS_PROVISIONING_PROFILE_BASE64 = (optional, for iOS builds)"

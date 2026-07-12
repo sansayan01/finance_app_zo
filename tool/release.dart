@@ -10,9 +10,9 @@ const _bold = '\x1B[1m';
 const _reset = '\x1B[0m';
 
 void _ok(String msg) => stdout.writeln('$_green✅ $msg$_reset');
-void _warn(String msg) => stdout.writeln('$_yellow⚠️  $msg$_reset');
+void _warn(String msg) => stdout.writeln('$_yellow⚠️ $msg$_reset');
 void _fail(String msg) => stdout.writeln('$_red❌ $msg$_reset');
-void _info(String msg) => stdout.writeln('$_cyanℹ️  $msg$_reset');
+void _info(String msg) => stdout.writeln('$_cyanℹ️ $msg$_reset');
 
 bool get _isWindows => Platform.isWindows;
 
@@ -51,7 +51,7 @@ Future<void> main(List<String> args) async {
 
   stdout.writeln();
   stdout.writeln('$_bold$_cyan┌─────────────────────────────────┐$_reset');
-  stdout.writeln('$_bold$_cyan│      microflow release          │$_reset');
+  stdout.writeln('$_bold$_cyan│ microflow release                   │$_reset');
   stdout.writeln('$_bold$_cyan└─────────────────────────────────┘$_reset');
   stdout.writeln();
 
@@ -164,8 +164,8 @@ Future<void> main(List<String> args) async {
   final currentSemver = parts[0];
   final currentBuildNum = parts.length > 1 ? int.tryParse(parts[1]) ?? 1 : 1;
 
-  stdout.writeln('  Current version: $_bold$currentVersion$_reset');
-  stdout.write('  New version: ');
+  stdout.writeln(' Current version: $_bold$currentVersion$_reset');
+  stdout.write(' New version: ');
 
   String newVersion;
 
@@ -262,17 +262,58 @@ Future<void> main(List<String> args) async {
       workingDirectory: projectDir,
       showOutput: false,
     );
+
     final mergeResult = await _run(
       'git merge origin/development --no-edit -m "chore: merge development into main for release v$newVersion"',
       workingDirectory: projectDir,
     );
 
     if (mergeResult.exitCode != 0) {
-      _warn('Merge conflict detected. Aborting merge...');
-      await _run('git merge --abort', workingDirectory: projectDir, showOutput: false);
-      await _run('git checkout development', workingDirectory: projectDir, showOutput: false);
-      _fail('Could not merge. Fix conflicts manually and try again.');
-      exit(1);
+      _warn('Merge conflict detected. Attempting auto-resolve...');
+
+      // Prefer development version for regenerated artifacts and
+      // pubspec.yaml (dev always has the latest build number).
+      final targets = ['graphify-out/', 'pubspec.yaml'];
+      var resolved = true;
+      for (final t in targets) {
+        final r = await _run(
+          'git checkout --theirs "$t"',
+          workingDirectory: projectDir,
+          showOutput: false,
+        );
+        if (r.exitCode == 0) {
+          await _run(
+            'git add "$t"',
+            workingDirectory: projectDir,
+            showOutput: false,
+          );
+        } else {
+          resolved = false;
+          _warn('Could not auto-resolve: $t');
+        }
+      }
+
+      if (!resolved) {
+        _warn('Partial auto-resolve failed. Aborting merge...');
+        await _run('git merge --abort', workingDirectory: projectDir, showOutput: false);
+        await _run('git checkout development', workingDirectory: projectDir, showOutput: false);
+        _fail('Could not merge. Fix conflicts manually and try again.');
+        exit(1);
+      }
+
+      final amendResult = await _run(
+        'git commit --no-edit',
+        workingDirectory: projectDir,
+        showOutput: false,
+      );
+      if (amendResult.exitCode != 0) {
+        _warn('Auto-resolve commit failed. Aborting...');
+        await _run('git merge --abort', workingDirectory: projectDir, showOutput: false);
+        await _run('git checkout development', workingDirectory: projectDir, showOutput: false);
+        _fail('Could not commit resolved merge. Fix manually.');
+        exit(1);
+      }
+      _ok('Merge auto-resolved (dev version preferred for regenerated files)');
     }
 
     // Push main
@@ -306,11 +347,7 @@ Future<void> main(List<String> args) async {
       final stderr = tagResult.stderr.toString();
       if (stderr.contains('already exists') || stderr.contains('fatal: tag')) {
         _warn('Tag $tagName already exists. Updating...');
-        await _run(
-          'git tag -d $tagName',
-          workingDirectory: projectDir,
-          showOutput: false,
-        );
+        await _run('git tag -d $tagName', workingDirectory: projectDir, showOutput: false);
         await _run(
           'git push origin :refs/tags/$tagName',
           workingDirectory: projectDir,
@@ -341,12 +378,12 @@ Future<void> main(List<String> args) async {
   // ── Done ─────────────────────────────────────────────────────────────────
   if (isDryRun) {
     stdout.writeln('$_bold$_yellow╔═══════════════════════════════════════════════╗$_reset');
-    stdout.writeln('$_bold$_yellow║  DRY RUN COMPLETE — Nothing was executed     ║$_reset');
+    stdout.writeln('$_bold$_yellow║ DRY RUN COMPLETE — Nothing was executed ║$_reset');
     stdout.writeln('$_bold$_yellow╚═══════════════════════════════════════════════╝$_reset');
   } else {
     stdout.writeln('$_bold$_green╔═══════════════════════════════════════════════╗$_reset');
-    stdout.writeln('$_bold$_green║  🚀 Release $tagName started!                  ║$_reset');
-    stdout.writeln('$_bold$_green║  Check GitHub Actions for build progress.     ║$_reset');
+    stdout.writeln('$_bold$_green║ 🚀 Release $tagName started! ║$_reset');
+    stdout.writeln('$_bold$_green║ Check GitHub Actions for build progress. ║$_reset');
     stdout.writeln('$_bold$_green╚═══════════════════════════════════════════════╝$_reset');
   }
 

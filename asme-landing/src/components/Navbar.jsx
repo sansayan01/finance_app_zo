@@ -1,6 +1,9 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Building2, Menu, X } from "lucide-react";
+
+const APP_SCHEME = "com.microflow.pro://";
+const WEB_FALLBACK = "https://microflow-442f8.web.app";
 
 const links = [
   { href: "#features", label: "Features" },
@@ -28,15 +31,38 @@ export default function Navbar() {
     window.scrollTo({ top, behavior: "smooth" });
   };
 
+  // Deep-link to the installed app; fall back to web login if it's not there.
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (mobileOpen) setMobileOpen(false);
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = APP_SCHEME;
+    document.body.appendChild(iframe);
+    const fallback = window.setTimeout(
+      () => { window.location.href = WEB_FALLBACK; },
+      1200
+    );
+    window.setTimeout(() => {
+      window.clearTimeout(fallback);
+      if (iframe.parentNode) document.body.removeChild(iframe);
+    }, 2000);
+  };
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       className="fixed top-0 left-0 right-0 z-50 px-4 md:px-6 py-4"
     >
-      <div className={"liquid-glass rounded-full px-5 md:px-6 py-2.5 md:py-3 flex items-center justify-between max-w-5xl mx-auto transition-all duration-500 " + (scrolled ? "shadow-lg shadow-indigo-500/5" : "")}>
+      <div
+        className={
+          "liquid-glass rounded-full px-5 md:px-6 py-2.5 md:py-3 flex items-center justify-between max-w-5xl mx-auto transition-all duration-500 " +
+          (scrolled ? "shadow-lg shadow-indigo-500/5" : "")
+        }
+      >
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2 group">
+        <a href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center group-hover:border-indigo-400/40 transition-all duration-300">
             <Building2 className="w-4 h-4 text-indigo-300" />
           </div>
@@ -48,7 +74,9 @@ export default function Navbar() {
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-1">
           {links.map((l) => (
-            <button key={l.href} onClick={() => scrollTo(l.href.slice(1))}
+            <button
+              key={l.href}
+              onClick={() => scrollTo(l.href.slice(1))}
               className="px-3.5 py-1.5 text-white/60 hover:text-white text-sm font-medium rounded-full hover:bg-white/[0.04] transition-all duration-300 cursor-pointer"
             >
               {l.label}
@@ -58,16 +86,21 @@ export default function Navbar() {
 
         {/* Desktop right */}
         <div className="hidden md:flex items-center gap-3">
-          <button className="text-white/60 hover:text-white/90 transition-colors text-sm font-medium cursor-pointer px-3 py-1.5">
-            Sign Up
-          </button>
-          <button className="bg-white/[0.04] backdrop-blur-sm rounded-full px-5 py-1.5 text-sm font-medium text-white/85 hover:text-white border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 cursor-pointer">
+          <a
+            href={WEB_FALLBACK}
+            onClick={handleLogin}
+            className="bg-white/[0.04] backdrop-blur-sm rounded-full px-5 py-1.5 text-sm font-medium text-white/85 hover:text-white border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 cursor-pointer"
+          >
             Login
-          </button>
+          </a>
         </div>
 
         {/* Mobile menu button */}
-        <button className="md:hidden text-white/70 hover:text-white transition-colors cursor-pointer p-1" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">
+        <button
+          className="md:hidden text-white/70 hover:text-white transition-colors cursor-pointer p-1"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Menu"
+        >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
@@ -81,15 +114,22 @@ export default function Navbar() {
         >
           <div className="flex flex-col gap-1">
             {links.map((l) => (
-              <button key={l.href} onClick={() => scrollTo(l.href.slice(1))}
+              <button
+                key={l.href}
+                onClick={() => scrollTo(l.href.slice(1))}
                 className="w-full text-left px-4 py-2.5 text-white/70 hover:text-white text-sm rounded-xl hover:bg-white/[0.03] transition-all duration-300 cursor-pointer"
               >
                 {l.label}
               </button>
             ))}
             <div className="h-px bg-white/[0.04] my-2" />
-            <a href="#" className="px-4 py-2.5 text-white/70 hover:text-white text-sm rounded-xl hover:bg-white/[0.03] transition-all duration-300">Sign Up</a>
-            <a href="#" className="px-4 py-2.5 text-white text-sm rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-center mt-1">Login</a>
+            <a
+              href={WEB_FALLBACK}
+              onClick={handleLogin}
+              className="w-full text-left px-4 py-2.5 text-white text-sm rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-center mt-1"
+            >
+              Login
+            </a>
           </div>
         </motion.div>
       )}

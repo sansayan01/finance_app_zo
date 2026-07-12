@@ -191,6 +191,45 @@ jobs:
           path: build-artifacts/
           retention-days: 30
 
+  deploy-web:
+    name: Deploy Web (Production)
+    needs: [validate-tag, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool/
+          key: pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-
+      - run: flutter pub get
+      - name: Build Web (Production)
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            --dart-define=POSTHOG_HOST="${{ secrets.POSTHOG_HOST || 'https://app.posthog.com' }}" \
+            --dart-define=MAPBOX_ACCESS_TOKEN="${{ secrets.MAPBOX_ACCESS_TOKEN }}" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="${{ secrets.GOOGLE_WEB_CLIENT_ID }}"
+      - name: Deploy to Firebase Hosting (live)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseToken: ${{ secrets.FIREBASE_TOKEN }}
+          projectId: microflow-442f8
+          channelId: live
+          entryPoint: ./
+
   db-migration:
     name: Database Migration Check
     needs: validate-tag
@@ -218,7 +257,7 @@ jobs:
         with:
           name: production-release-${{ github.ref_name }}
           path: release-artifacts
-          merge-multiple: true
+        merge-multiple: true
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:

@@ -31,10 +31,18 @@ class RestoreBackupService {
 
   RestoreBackupService(this._client, this._driveService);
 
-  // ── Table order (foreign key dependencies) ────────────────────────────
+  // -- Table order (foreign key dependencies) --
   //
-  // Tables must be restored in dependency order: parents before children.
-  // This list determines the upsert sequence.
+  // Tables restored in dependency order: parents before children.
+  //
+  // NOTE: 4 tables EXCLUDED from client-side restore:
+  //   activity_logs, visit_logs, staff_streaks, offline_sync_queue
+  // Reason: their RLS INSERT policies require user_id/staff_id to match
+  // the currently authenticated user. Since a backup contains records
+  // from ALL users, these policies block bulk restore entirely.
+  // These are operational/log tables - core financial data is safe.
+  // A proper fix would move restore to a server-side Edge Function
+  // using service_role to bypass RLS.
 
   static const _restoreOrder = [
     'branches',
@@ -51,14 +59,18 @@ class RestoreBackupService {
     'cash_deposits',
     'wallet_transactions',
     'staff_profiles',
+    'achievements',
+  ];
+
+  // Tables skipped from client-side restore due to RLS user-binding.
+  static const _rlsSkippedTables = [
     'activity_logs',
     'visit_logs',
     'staff_streaks',
-    'achievements',
-    'offline_queue',
+    'offline_sync_queue',
   ];
 
-  // ── Download backup from Drive ────────────────────────────────────────
+  // -- Download backup from Drive --
 
   /// Download and parse a backup JSON from Google Drive.
   Future<Map<String, dynamic>> downloadBackup({
@@ -68,10 +80,7 @@ class RestoreBackupService {
     final accessToken = await _driveService.getAccessToken(connection);
 
     final resp = await http.get(
-      Uri.parse(
-        'https://www.googleapis.com/drive/v3/files/$fileId'
-        '?alt=media',
-      ),
+      Uri.parse('https://www.googleapis.com/drive/v3/files/$fileId?alt=media'),
       headers: {'Authorization': 'Bearer $accessToken'},
     );
 
@@ -82,7 +91,7 @@ class RestoreBackupService {
     return jsonDecode(resp.body) as Map<String, dynamic>;
   }
 
-  // ── Validate backup structure ─────────────────────────────────────────
+  // -- Validate backup structure --
 
   /// Validate the backup JSON has the expected structure.
   /// Returns a summary of what's in the backup.
@@ -114,7 +123,7 @@ class RestoreBackupService {
     };
   }
 
-  // ── Compare two backups ──────────────────────────────────────────────
+  // -- Compare two backups --
 
   /// Compare two backup JSONs and return a diff summary.
   Map<String, dynamic> compareBackups(Map<String, dynamic> backupA, Map<String, dynamic> backupB) {
@@ -131,12 +140,13 @@ class RestoreBackupService {
       final countA = (catsA[key] as int?) ?? 0;
       final countB = (catsB[key] as int?) ?? 0;
       final change = countB - countA;
+      final isSkipped = _rlsSkippedTables.contains(key);
       diffs.add({
         'category': key,
         'count_a': countA,
         'count_b': countB,
         'change': change,
-        'status': change == 0 ? 'unchanged' : (change > 0 ? 'added' : 'removed'),
+        'status': isSkipped ? 'skipped_rls' : (change == 0 ? 'unchanged' : (change > 0 ? 'added' : 'removed')),
       });
     }
 
@@ -159,7 +169,7 @@ class RestoreBackupService {
     };
   }
 
-  // ── Restore (upsert all tables) ──────────────────────────────────────
+  // -- Restore (upsert all tables) --
 
   /// Restore data from a parsed backup JSON into the database.
   ///
@@ -167,6 +177,9 @@ class RestoreBackupService {
   /// - Existing records (matching `id`) are updated
   /// - New records are inserted
   /// - No data is deleted
+  ///
+  /// RLS-blocked tables (activity_logs, visit_logs, staff_streaks,
+  /// offline_sync_queue) are automatically skipped with a note.
   Future<RestoreResult> restoreBackup({
     required String orgId,
     required Map<String, dynamic> backup,
@@ -175,14 +188,18 @@ class RestoreBackupService {
   }) async {
     final data = backup['data'] as Map<String, dynamic>? ?? {};
     final errors = <String>[];
+    final skippedTables = <String>[];
     var totalRecords = 0;
     var tablesRestored = 0;
     var tablesFailed = 0;
 
-    // If specific categories selected, filter to only those
+    // Build the restore order, excluding RLS-blocked tables
+    final filteredOrder = _restoreOrder.where((t) => !_rlsSkippedTables.contains(t)).toList();
+
+    // If specific categories selected, further filter
     final effectiveOrder = selectedCategories != null
-        ? _restoreOrder.where((t) => selectedCategories.contains(t)).toList()
-        : _restoreOrder;
+        ? filteredOrder.where((t) => selectedCategories.contains(t)).toList()
+        : filteredOrder;
 
     // Get only the tables that exist in both the backup and our restore order
     final tablesToRestore = effectiveOrder
@@ -190,11 +207,19 @@ class RestoreBackupService {
         .toList();
 
     // Also include any tables in the backup that aren't in our order
-    // (forward compatibility with newer backup versions)
     for (final key in data.keys) {
-      if (!tablesToRestore.contains(key)) {
+      if (!tablesToRestore.contains(key) && !_rlsSkippedTables.contains(key)) {
         final rows = data[key] as List? ?? [];
         if (rows.isNotEmpty) tablesToRestore.add(key);
+      }
+    }
+
+    // Warn about skipped tables that have data
+    for (final skipped in _rlsSkippedTables) {
+      final rows = data[skipped] as List? ?? [];
+      if (rows.isNotEmpty) {
+        skippedTables.add(skipped);
+        errors.add('$skipped: skipped (RLS user-binding — requires server-side restore)');
       }
     }
 
@@ -217,7 +242,7 @@ class RestoreBackupService {
         final filteredRows = await _filterToValidColumns(tableName, rows);
 
         if (filteredRows.isEmpty) {
-          debugPrint('restore: $tableName — no valid rows after filtering');
+          debugPrint('restore: $tableName - no valid rows after filtering');
           continue;
         }
 
@@ -228,21 +253,21 @@ class RestoreBackupService {
           final chunk = filteredRows.sublist(batch, end);
 
           await _client.from(tableName).upsert(
-                chunk,
-                onConflict: 'id',
-              );
+            chunk,
+            onConflict: 'id',
+          );
 
           totalRecords += chunk.length;
         }
 
         tablesRestored++;
-        debugPrint('restore: $tableName — ${filteredRows.length} rows restored');
+        debugPrint('restore: $tableName - ${filteredRows.length} rows restored');
       } catch (e) {
         tablesFailed++;
         final msg = '$tableName: $e';
         errors.add(msg);
-        debugPrint('restore: FAILED — $msg');
-        // Continue with next table — don't abort the entire restore
+        debugPrint('restore: FAILED - $msg');
+        // Continue with next table - don't abort the entire restore
       }
     }
 
@@ -251,12 +276,12 @@ class RestoreBackupService {
     return RestoreResult(
       totalRecords: totalRecords,
       tablesRestored: tablesRestored,
-      tablesFailed: tablesFailed,
+      tablesFailed: tablesFailed + skippedTables.length,
       errors: errors,
     );
   }
 
-  // ── Column filtering ──────────────────────────────────────────────────
+  // -- Column filtering --
 
   /// Filter backup rows to only include columns that exist in the target table.
   /// Prevents Postgrest errors from schema drift.
@@ -274,7 +299,7 @@ class RestoreBackupService {
           .limit(1);
 
       if (sample.isEmpty) {
-        // Table is empty — use the backup's column names as-is
+        // Table is empty - use the backup's column names as-is
         // (they'll be validated by Supabase on insert)
         return rows;
       }

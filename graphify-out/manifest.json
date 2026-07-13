@@ -130,7 +130,7 @@
     "semantic_hash": "2f6c2b1fb8b726721f62779046552e75"
   },
   "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
-    "mtime": 1783893410.741574,
+    "mtime": 1783927661.3746655,
     "ast_hash": "b74ee934eb0b7fd15a3630079be93408",
     "semantic_hash": ""
   },
@@ -1695,8 +1695,8 @@
     "semantic_hash": "8569ba84f2590681b47f27c66db77309"
   },
   "pubspec.yaml": {
-    "mtime": 1783894506.1245992,
-    "ast_hash": "61e535c01c80687d690cf450f7f44aed",
+    "mtime": 1783895247.9996903,
+    "ast_hash": "9dc40a2b4188ccc4b3f129766d596d9a",
     "semantic_hash": ""
   },
   "README.md": {
@@ -4690,9 +4690,9 @@
     "semantic_hash": "f17457df8820ac98e744633e0d92b8aa"
   },
   "lib/features/settings/data/services/restore_backup_service.dart": {
-    "mtime": 1783587882.2707975,
-    "ast_hash": "81837d122760272be737a6838468103d",
-    "semantic_hash": "81837d122760272be737a6838468103d"
+    "mtime": 1783927636.7201295,
+    "ast_hash": "fc163bed7aa694ac7bb3d4a8dc9f70c4",
+    "semantic_hash": ""
   },
   "lib/features/settings/data/services/savings_products_service.dart": {
     "mtime": 1783587882.2718115,
@@ -4965,8 +4965,8 @@
     "semantic_hash": "54f5fc228465cea73d00bfe278f5670e"
   },
   "tool/release.dart": {
-    "mtime": 1783894645.6075332,
-    "ast_hash": "c3cd9c49c74d59e3140e1c384d726573",
+    "mtime": 1783894677.1518729,
+    "ast_hash": "17e91fcffa39a6181c9423d9ed8a1007",
     "semantic_hash": ""
   },
   ".github/workflows/ci.yml": {
@@ -4975,8 +4975,8 @@
     "semantic_hash": "00366eb3d650dec145aaf818d5d23dd4"
   },
   ".github/workflows/release.yml": {
-    "mtime": 1783893919.0839171,
-    "ast_hash": "f1fc8e17fb4bb9b3111637cf87299721",
+    "mtime": 1783924891.8037386,
+    "ast_hash": "f4dd13ffd8602758f51175eb462d236c",
     "semantic_hash": ""
   },
   ".github/workflows/staging.yml": {

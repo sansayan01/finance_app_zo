@@ -130,7 +130,7 @@
     "semantic_hash": "2f6c2b1fb8b726721f62779046552e75"
   },
   "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
-    "mtime": 1783927661.3746655,
+    "mtime": 1783929188.581937,
     "ast_hash": "b74ee934eb0b7fd15a3630079be93408",
     "semantic_hash": ""
   },
@@ -4720,9 +4720,9 @@
     "semantic_hash": "f3d76fc3e1fc84a2294f3d8b649c5a4c"
   },
   "lib/features/settings/presentation/pages/data_backup_export_page.dart": {
-    "mtime": 1783594291.3071706,
-    "ast_hash": "39a4ea61d73f95330fe88cb879adf776",
-    "semantic_hash": "39a4ea61d73f95330fe88cb879adf776"
+    "mtime": 1783931254.1549895,
+    "ast_hash": "0339d7f01cddb56f60a1c7cf624820af",
+    "semantic_hash": ""
   },
   "lib/features/settings/presentation/pages/help_center_page.dart": {
     "mtime": 1783587882.277879,
@@ -5040,8 +5040,8 @@
     "semantic_hash": "41559f5fc3eee3c0e967aaf7ebc431b3"
   },
   "CLAUDE.md": {
-    "mtime": 1783891534.8045883,
-    "ast_hash": "0fb607b6220dcc6c1effb4c18faf9e0b",
+    "mtime": 1783931691.9846077,
+    "ast_hash": "9101537434e5198c77908a8eedc9668e",
     "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {

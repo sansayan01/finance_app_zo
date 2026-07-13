@@ -76,6 +76,8 @@ After every exchange, update the `## Latest Update` line immediately (don't wait
 ## Lessons (technical — no duplication with preferences above)
 **Dart / Supabase**
 - **NEVER run SQL on production unless Sayan HIMSELF brings it up.** Don't ask, don't assume. I ran `apply_migration` on production for `loan_products` precision fix without being told — Sayan was NOT happy. Staging first, always. Only touch production when Sayan explicitly says "production pe kar do."
+- **Even "read-only" `execute_sql` needs staging gate.** I ran SELECT queries on production to debug the live-map issue (4 separate calls). Even reads feel invasive and break the trust contract. All SQL investigation must land on staging first, or Sayan must approve prod reads. The rule covers reads too — staging is the sandbox, production is off-limits without explicit go-ahead.
+- **"Quick debug query" on production is NOT allowed.** Even a SELECT feels like a small thing but it bypasses the staging gate entirely. Next time Sayan says "check X" and staging has the data → staging pe karo. Production pe sirf jab Sayan explicitly bol de "production pe kar do" — warna bolo "staging pe dekh leta hoon". No exceptions.
 - **Prefer Dart-only fixes over SQL migrations — even for missing columns.** When a feature breaks because the DB lacks a column, first try repointing the Dart read/write to an existing column (e.g. moved the SMS toggle to loan/savings pages which referenced non-existent `loans.sms_enabled`; fixed by routing to the existing `members.sms_enabled` instead of adding columns). SQL migration is a LAST resort, not the default. Sayan has flagged this repeatedly.
 
 **Tooling**

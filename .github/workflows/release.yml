@@ -210,6 +210,10 @@ jobs:
             .dart_tool/
           key: pub-${{ hashFiles('pubspec.lock') }}
           restore-keys: pub-
+      - name: Prepare .env files
+        run: |
+          cp .env.example .env
+          cp .env.example assets/.env
       - run: flutter pub get
       - name: Build Web (Production)
         run: |

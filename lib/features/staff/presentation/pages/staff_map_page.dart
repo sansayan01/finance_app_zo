@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' as geo;
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart'
+    hide MapOptions;
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/location_permission_helper.dart';
 import '../../data/providers/duty_providers.dart';
@@ -24,6 +28,8 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
     with SingleTickerProviderStateMixin {
   MapboxMap? _mapboxMap;
   geo.Position? _currentPosition;
+  // Web fallback (flutter_map) — Mapbox plugin has no web implementation.
+  final MapController _webMapController = MapController();
   bool _loadingLocation = true;
   String? _locationError;
   int _styleIndex = 0; // 0=streets, 1=dark, 2=satellite-streets
@@ -66,6 +72,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
     _pulseCtrl.dispose();
     _breadcrumbRefreshTimer?.cancel();
     _mapboxMap = null; // Release reference
+    _webMapController.dispose();
     super.dispose();
   }
 
@@ -298,7 +305,75 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
 
             // ── Loading overlay ──
             if (_loadingLocation) _buildLoadingOverlay(isDark),
+
+            // ── Web empty-state hint (no GPS fix + no customers) ──
+            if (kIsWeb &&
+                !_loadingLocation &&
+                _locationError == null &&
+                _currentPosition == null &&
+                customerCount == 0)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 120,
+                left: 20,
+                right: 20,
+                child: _buildWebEmptyHint(isDark),
+              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWebEmptyHint(bool isDark) {
+    final bg = (isDark ? Colors.black : Colors.white).withValues(alpha: 0.82);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.18),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.explore_off_rounded,
+                  color: AppColors.primary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Enable location & start duty to drop your pin. '
+                  'Today\u2019s due customers will appear here.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _initLocation(),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text('Retry',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -309,6 +384,7 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildMap() {
+    if (kIsWeb) return _buildWebMap();
     return MapWidget(
       key: const ValueKey('staff_mapbox_premium'),
       viewport: CameraViewportState(
@@ -337,6 +413,96 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
           _drawCustomerPins();
         });
       },
+    );
+  }
+
+  /// Web-compatible map built with flutter_map (Mapbox SDK is mobile-only).
+  Widget _buildWebMap() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final center = _currentPosition != null
+        ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+        : const LatLng(28.6139, 77.2090);
+
+    final customerAsync = ref.watch(todayDueCustomerLocationsProvider);
+    final customers = customerAsync.valueOrNull ?? [];
+    final profile = ref.watch(staffProfileProvider).valueOrNull;
+    final breadcrumbs =
+        profile != null ? ref.watch(agentBreadcrumbsProvider(profile.id)).valueOrNull : null;
+
+    final markers = <Marker>[
+      if (_currentPosition != null)
+        Marker(
+          point: center,
+          width: 36,
+          height: 36,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.25),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primary, width: 2),
+            ),
+            child: const Icon(Icons.person_pin_circle_rounded,
+                color: Colors.white, size: 22),
+          ),
+        ),
+      for (final c in customers)
+        if (c['latitude'] != null && c['longitude'] != null)
+          Marker(
+            point: LatLng(
+              (c['latitude'] as num).toDouble(),
+              (c['longitude'] as num).toDouble(),
+            ),
+            width: 30,
+            height: 30,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF4F46E5).withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.person_rounded,
+                  color: Colors.white, size: 16),
+            ),
+          ),
+    ];
+
+    final polyline = (breadcrumbs != null && breadcrumbs.length >= 2)
+        ? <Polyline>[
+            Polyline(
+              points: breadcrumbs
+                  .where((p) => p['latitude'] != null && p['longitude'] != null)
+                  .map((p) => LatLng(
+                        (p['latitude'] as num).toDouble(),
+                        (p['longitude'] as num).toDouble(),
+                      ))
+                  .toList(),
+              color: AppColors.primary,
+              strokeWidth: 4.0,
+            ),
+          ]
+        : <Polyline>[];
+
+    return FlutterMap(
+      mapController: _webMapController,
+      options: MapOptions(
+        initialCenter: center,
+        initialZoom: 15.0,
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.all,
+        ),
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: isDark
+              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+          subdomains: const ['a', 'b', 'c', 'd'],
+          userAgentPackageName: 'com.microflow.pro',
+        ),
+        PolylineLayer(polylines: polyline),
+        MarkerLayer(markers: markers),
+      ],
     );
   }
 
@@ -864,7 +1030,16 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
 
   void _goToMyLocation() {
     HapticFeedback.lightImpact();
-    if (_currentPosition != null) {
+    if (_currentPosition == null) {
+      _initLocation();
+      return;
+    }
+    if (kIsWeb) {
+      _webMapController.move(
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        17.0,
+      );
+    } else {
       _mapboxMap?.flyTo(
         CameraOptions(
           center: Point(
@@ -879,8 +1054,6 @@ class _StaffMapPageState extends ConsumerState<StaffMapPage>
         ),
         MapAnimationOptions(duration: 1200),
       );
-    } else {
-      _initLocation();
     }
   }
 }

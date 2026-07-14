@@ -21,25 +21,24 @@ class LiveAgentsMapCard extends ConsumerStatefulWidget {
   ConsumerState<LiveAgentsMapCard> createState() => _LiveAgentsMapCardState();
 }
 
-class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard> {
+class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard>
+    with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   RealtimeChannel? _channel;
   Timer? _refreshTimer;
+  Timer? _ageOutTimer;
   bool _mapReady = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
 
-  Future<void> _init() async {
-    if (!mounted) return;
+  void _subscribeRealtime() {
+    _channel?.unsubscribe();
     final repo = ref.read(liveTrackingRepositoryProvider);
-    final snapshot = await repo.getLatestAgentLocations();
-    if (!mounted) return;
-    ref.read(liveAgentLocationsProvider.notifier).seedFromSnapshot(snapshot);
-
     _channel = repo.subscribeToAgentLocations(
       onUpdate: (payload) {
         if (!mounted) return;
@@ -58,6 +57,16 @@ class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard> {
         }
       },
     );
+  }
+
+  Future<void> _init() async {
+    if (!mounted) return;
+    final repo = ref.read(liveTrackingRepositoryProvider);
+    final snapshot = await repo.getLatestAgentLocations();
+    if (!mounted) return;
+    ref.read(liveAgentLocationsProvider.notifier).seedFromSnapshot(snapshot);
+
+    _subscribeRealtime();
 
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
       if (!mounted) return;
@@ -66,7 +75,44 @@ class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard> {
       ref.read(liveAgentLocationsProvider.notifier).seedFromSnapshot(fresh);
     });
 
+    _ageOutTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        setState(() {}); // Dynamic age-out local rebuild trigger
+      }
+    });
+
     if (_mapReady) _fitToAgents();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _handleResume();
+    }
+  }
+
+  Future<void> _handleResume() async {
+    debugPrint('[LiveMapCard] App resumed. Refreshing locations snapshot...');
+    if (!mounted) return;
+    final repo = ref.read(liveTrackingRepositoryProvider);
+    final fresh = await repo.getLatestAgentLocations();
+    if (!mounted) return;
+    ref.read(liveAgentLocationsProvider.notifier).seedFromSnapshot(fresh);
+
+    _subscribeRealtime();
+
+    if (_mapReady) _fitToAgents();
+  }
+
+  bool _isAgentOffline(Map<String, dynamic> agent) {
+    final isActive = agent['is_active'] == true;
+    if (!isActive) return true;
+    final recordedAtStr = agent['recorded_at'] as String?;
+    if (recordedAtStr == null) return true;
+    final recordedAt = DateTime.tryParse(recordedAtStr);
+    if (recordedAt == null) return true;
+    final diff = DateTime.now().difference(recordedAt);
+    return diff.inMinutes >= 15;
   }
 
   void _fitToAgents() {
@@ -99,7 +145,9 @@ class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _refreshTimer?.cancel();
+    _ageOutTimer?.cancel();
     _channel?.unsubscribe();
     _mapController.dispose();
     super.dispose();
@@ -110,7 +158,7 @@ class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final agents = ref.watch(liveAgentLocationsProvider).values.toList();
-    final active = agents.where((a) => a['is_active'] == true).length;
+    final active = agents.where((a) => !_isAgentOffline(a)).length;
 
     final markers = agents
         .where((a) => a['latitude'] != null && a['longitude'] != null)
@@ -270,8 +318,8 @@ class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard> {
     final lat = (agent['latitude'] as num).toDouble();
     final lng = (agent['longitude'] as num).toDouble();
     final name = (agent['full_name'] as String?) ?? 'A';
-    final isActive = agent['is_active'] == true;
-    final color = isActive ? AppColors.success : Colors.grey;
+    final isOffline = _isAgentOffline(agent);
+    final color = !isOffline ? AppColors.success : Colors.grey;
 
     return Marker(
       point: LatLng(lat, lng),

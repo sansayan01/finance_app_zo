@@ -24,7 +24,7 @@ class DataBackupExportPage extends ConsumerStatefulWidget {
 }
 
 class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
-  // ─── Schedule state ────────────────────────────────────────────────
+  // â”€â”€â”€ Schedule state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bool _scheduleLoaded = false;
   bool _scheduleEnabled = false;
   String _scheduleFrequency = 'weekly';
@@ -38,7 +38,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
   bool _scheduleSaving = false;
   final _numberController = TextEditingController(text: '10');
 
-  // ─── Comparison state ──────────────────────────────────────────────
+  // â”€â”€â”€ Comparison state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   final List<Map<String, dynamic>> _compareSelected = [];
   Map<String, dynamic>? _comparisonResult;
 
@@ -56,7 +56,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     super.dispose();
   }
 
-  // ─── Schedule helpers ──────────────────────────────────────────────
+  // â”€â”€â”€ Schedule helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   void _loadScheduleFromProvider(Map<String, dynamic> data) {
     if (_scheduleLoaded) return;
@@ -111,7 +111,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     }
   }
 
-  // ─── OAuth redirect check ─────────────────────────────────────────
+  // â”€â”€â”€ OAuth redirect check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> _checkForRedirect() async {
     final orgId = ref.read(currentOrgIdProvider);
@@ -126,9 +126,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     } catch (_) {}
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // BUILD
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   @override
   Widget build(BuildContext context) {
@@ -181,38 +181,38 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // ─── HEADER ──────────────────────────────────
+                  // â”€â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   _buildHeader(theme),
                   const SizedBox(height: 24),
 
-                  // ─── HERO STATS ──────────────────────────────
+                  // â”€â”€â”€ HERO STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   _buildHeroStats(theme, counts, totalRecords),
                   const SizedBox(height: 24),
 
-                  // ─── BACKUP PROGRESS ─────────────────────────
+                  // â”€â”€â”€ BACKUP PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (isBackingUp) ...[
                     _buildBackupProgressCard(theme, backupProgress),
                     const SizedBox(height: 24),
                   ],
 
-                  // ─── RESTORE PROGRESS ────────────────────────
+                  // â”€â”€â”€ RESTORE PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (isRestoring) ...[
                     _buildRestoreProgressCard(theme, restoreProgress),
                     const SizedBox(height: 24),
                   ],
 
-                  // ─── RESTORE RESULT ──────────────────────────
+                  // â”€â”€â”€ RESTORE RESULT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (restoreProgress.status == RestoreProgress.done &&
                       restoreProgress.result != null) ...[
                     _buildRestoreResultCard(theme, restoreProgress),
                     const SizedBox(height: 24),
                   ],
 
-                  // ─── HEALTH STATUS ───────────────────────────
+                  // â”€â”€â”€ HEALTH STATUS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   _buildHealthStatusCard(theme, health),
                   const SizedBox(height: 24),
 
-                  // ─── CONNECTION + BACKUP CARD ────────────────
+                  // â”€â”€â”€ CONNECTION + BACKUP CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   _buildConnectionCard(
                     theme,
                     connection,
@@ -223,32 +223,32 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                     isRestoring,
                   ),
 
-                  // ─── SCHEDULE SECTION ────────────────────────
+                  // â”€â”€â”€ SCHEDULE SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (isConnected) ...[
                     const SizedBox(height: 24),
                     _buildScheduleSection(theme, orgId),
                   ],
 
-                  // ─── ANALYTICS ──────────────────────────────
+                  // â”€â”€â”€ ANALYTICS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (isConnected) ...[
                     const SizedBox(height: 24),
                     _buildAnalyticsSection(theme, analytics),
                   ],
 
-                  // ─── DRIVE BACKUPS LIST ─────────────────────
+                  // â”€â”€â”€ DRIVE BACKUPS LIST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (isConnected) ...[
                     const SizedBox(height: 28),
                     _buildDriveBackupsSection(theme, orgId),
                   ],
 
-                  // ─── COMPARISON VIEW ────────────────────────
+                  // â”€â”€â”€ COMPARISON VIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (_comparisonResult != null) ...[
                     const SizedBox(height: 24),
                     _buildComparisonView(theme),
                     const SizedBox(height: 24),
                   ],
 
-                  // ─── LOCAL EXPORT HISTORY ────────────────────
+                  // â”€â”€â”€ LOCAL EXPORT HISTORY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   _buildLocalHistorySection(theme),
                 ]),
               ),
@@ -259,9 +259,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 1. HEADER
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildHeader(ThemeData theme) {
     return Row(
@@ -313,9 +313,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     ).animate().fadeIn().slideY(begin: 0.03, end: 0);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 2. HERO STATS
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildHeroStats(
     ThemeData theme,
@@ -416,9 +416,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 3. BACKUP PROGRESS
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildBackupProgressCard(
     ThemeData theme,
@@ -512,9 +512,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     ).animate().fadeIn().slideY(begin: 0.05, end: 0);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 4. RESTORE PROGRESS
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildRestoreProgressCard(
     ThemeData theme,
@@ -581,9 +581,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     ).animate().fadeIn().slideY(begin: 0.05, end: 0);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 5. RESTORE RESULT
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildRestoreResultCard(
     ThemeData theme,
@@ -659,7 +659,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                     .take(5)
                     .map(
                       (e) => Text(
-                        '• $e',
+                        'â€¢ $e',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.red.shade700,
@@ -675,9 +675,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     ).animate().fadeIn().slideY(begin: 0.05, end: 0);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 6. HEALTH STATUS (NEW)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildHealthStatusCard(ThemeData theme, BackupHealth health) {
     final (color, bgColor, icon) = switch (health.status) {
@@ -771,9 +771,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.05, end: 0);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 7. CONNECTION CARD
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildConnectionCard(
     ThemeData theme,
@@ -1003,9 +1003,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 8. SCHEDULE SECTION (NEW)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildScheduleSection(ThemeData theme, String? orgId) {
     return Column(
@@ -1025,7 +1025,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Enable toggle ─────────────────────────────
+              // â”€â”€ Enable toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Row(
                 children: [
                   Icon(
@@ -1076,7 +1076,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                 const Divider(),
                 const SizedBox(height: 16),
 
-                // ── Frequency ───────────────────────────────
+                // â”€â”€ Frequency â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Text(
                   'Frequency',
                   style: TextStyle(
@@ -1125,7 +1125,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                   ],
                 ),
 
-                // ── Day of week (weekly only) ───────────────
+                // â”€â”€ Day of week (weekly only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 if (_scheduleFrequency == 'weekly') ...[
                   const SizedBox(height: 18),
                   Text(
@@ -1142,7 +1142,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                   _buildDayChips(theme),
                 ],
 
-                // ── Time picker ─────────────────────────────
+                // â”€â”€ Time picker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 const SizedBox(height: 18),
                 Text(
                   'Time',
@@ -1224,7 +1224,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                 ),
               ],
 
-              // ── Retention sub-section ──────────────────────
+              // â”€â”€ Retention sub-section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               if (_scheduleEnabled) ...[
                 const SizedBox(height: 22),
                 const Divider(),
@@ -1386,7 +1386,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                 ],
               ],
 
-              // ── Saving indicator ───────────────────────────
+              // â”€â”€ Saving indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               if (_scheduleSaving) ...[
                 const SizedBox(height: 14),
                 Row(
@@ -1561,9 +1561,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 10. ANALYTICS SECTION (NEW)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildAnalyticsSection(ThemeData theme, BackupAnalytics analytics) {
     return Column(
@@ -1717,9 +1717,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 11. DRIVE BACKUPS LIST (with Compare)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildDriveBackupsSection(ThemeData theme, String? orgId) {
     final driveBackups = ref.watch(driveBackupsProvider);
@@ -1945,7 +1945,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                         ),
                       if (sizeBytes > 0)
                         Text(
-                          ' · ${_formatBytes(sizeBytes)}',
+                          ' Â· ${_formatBytes(sizeBytes)}',
                           style: TextStyle(
                             fontSize: 11,
                             color: theme.textTheme.bodySmall?.color?.withValues(
@@ -2000,9 +2000,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 12. COMPARISON VIEW (NEW)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildComparisonView(ThemeData theme) {
     final result = _comparisonResult!;
@@ -2054,7 +2054,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Header row ────────────────────────────────
+              // â”€â”€ Header row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Row(
                 children: [
                   Expanded(
@@ -2158,7 +2158,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
               ),
               const SizedBox(height: 14),
 
-              // ── Diff table ────────────────────────────────
+              // â”€â”€ Diff table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               Row(
                 children: [
                   Expanded(
@@ -2317,13 +2317,13 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
       final date = DateTime.parse(isoDate);
       return DateFormat('dd MMM, HH:mm').format(date);
     } catch (_) {
-      return isoDate.isNotEmpty ? isoDate : '—';
+      return isoDate.isNotEmpty ? isoDate : 'â€”';
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 13. SELECTIVE RESTORE DIALOG (NEW)
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   void _showSelectiveRestoreDialog(Map<String, dynamic> file, String? orgId) {
     final fileId = file['id'] as String?;
@@ -2336,6 +2336,12 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
         fileId: fileId,
         fileName: fileName,
         orgId: orgId,
+        onRestore: (selected) => _triggerRestore(
+          orgId,
+          fileId,
+          fileName,
+          selectedCategories: selected,
+        ),
       ),
     );
   }
@@ -2374,9 +2380,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // COMPARE HANDLER
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Future<void> _onCompareTap(Map<String, dynamic> file) async {
     final fileId = file['id'] as String?;
@@ -2453,9 +2459,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // 14. LOCAL EXPORT HISTORY
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildLocalHistorySection(ThemeData theme) {
     final history = ref.watch(exportHistoryProvider);
@@ -2620,7 +2626,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
                     ),
                     if (createdAt != null)
                       Text(
-                        ' · ${_relativeDate(createdAt)}',
+                        ' Â· ${_relativeDate(createdAt)}',
                         style: TextStyle(
                           fontSize: 11,
                           color: theme.textTheme.bodySmall?.color?.withValues(
@@ -2638,9 +2644,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // DRIVE ACTIONS
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Future<void> _connectDrive(String? orgId) async {
     if (orgId == null) return;
@@ -2688,7 +2694,7 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
       ref.invalidate(driveBackupsProvider);
       showSuccessSnackBar(
         context,
-        'Backup complete! ${result.totalRecords} records → ${result.fileSize}',
+        'Backup complete! ${result.totalRecords} records â†’ ${result.fileSize}',
       );
     } else {
       final error = ref.read(driveBackupTriggerProvider).error;
@@ -2696,9 +2702,9 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // HELPERS
-  // ═══════════════════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   String _relativeDate(String isoDate) {
     try {
@@ -2736,19 +2742,21 @@ class _DataBackupExportPageState extends ConsumerState<DataBackupExportPage> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SELECTIVE RESTORE DIALOG (separate StatefulWidget for multi-step state)
-// ═══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 class _SelectiveRestoreDialog extends ConsumerStatefulWidget {
   final String fileId;
   final String fileName;
   final String orgId;
+  final void Function(Set<String> selected)? onRestore;
 
   const _SelectiveRestoreDialog({
     required this.fileId,
     required this.fileName,
     required this.orgId,
+    this.onRestore,
   });
 
   @override
@@ -2821,20 +2829,11 @@ class _SelectiveRestoreDialogState
 
   Future<void> _executeRestore() async {
     setState(() => _step = 4); // showing progress
+    final selected = _selected;
     Navigator.of(context).pop(); // Close dialog
-    // Trigger restore from the parent page context
-    // We use a post-frame callback to ensure the dialog is closed first
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Access the page state through the parent context
-      final pageState = context
-          .findAncestorStateOfType<_DataBackupExportPageState>();
-      pageState?._triggerRestore(
-        widget.orgId,
-        widget.fileId,
-        widget.fileName,
-        selectedCategories: _selected,
-      );
-    });
+    // Hand off to the page via callback — the dialog's own context is
+    // unmounted after pop(), so we cannot look up ancestor state here.
+    widget.onRestore?.call(selected);
   }
 
   @override
@@ -2852,7 +2851,7 @@ class _SelectiveRestoreDialogState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── Dialog header ────────────────────────────
+            // â”€â”€ Dialog header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 16, 0),
               child: Row(
@@ -2910,7 +2909,7 @@ class _SelectiveRestoreDialogState
             ),
             const Divider(height: 1),
 
-            // ── Content ──────────────────────────────────
+            // â”€â”€ Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Flexible(
               child: _error != null
                   ? _buildErrorView(theme)
@@ -2923,7 +2922,7 @@ class _SelectiveRestoreDialogState
                               : _buildConfirmView(theme),
             ),
 
-            // ── Actions ──────────────────────────────────
+            // â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             if (_step >= 1 && _step <= 3)
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),

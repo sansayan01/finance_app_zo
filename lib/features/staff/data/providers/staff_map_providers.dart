@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/providers/org_provider.dart';
+import '../../../../core/utils/json_normalize.dart';
 import 'staff_providers.dart';
 
 /// Provider that fetches today's due customers with their locations
@@ -52,7 +53,7 @@ final todayDueCustomerLocationsProvider =
         .eq('loans.staff_id', profile.id)
         .eq('loans.org_id', orgId);
 
-    final emiList = List<Map<String, dynamic>>.from(response as List);
+    final emiList = normalizeRows(response);
 
     // Build customer location list
     final List<Map<String, dynamic>> customerLocations = [];
@@ -118,7 +119,7 @@ Future<Map<String, double>?> _getLastVisitLocation(
         .order('created_at', ascending: false)
         .limit(1);
 
-    final list = List<Map<String, dynamic>>.from(response as List);
+    final list = normalizeRows(response);
     if (list.isEmpty) return null;
 
     final lat = (list.first['check_in_lat'] as num?)?.toDouble();
@@ -156,7 +157,7 @@ Future<List<Map<String, dynamic>>> _fallbackCustomerLocations(
       .eq('org_id', orgId)
       .eq('status', 'active');
 
-  final loans = List<Map<String, dynamic>>.from(response as List);
+  final loans = normalizeRows(response);
   final List<Map<String, dynamic>> results = [];
   final seenMembers = <String>{};
 

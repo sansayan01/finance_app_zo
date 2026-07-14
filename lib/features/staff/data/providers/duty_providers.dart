@@ -27,16 +27,20 @@ class OnDutyNotifier extends StateNotifier<AsyncValue<bool>> {
 
   Future<void> _loadInitialState() async {
     try {
-      final profile = await _ref.read(staffProfileProvider.future);
+      final profile = await _ref.read(staffProfileProvider.future)
+          .timeout(const Duration(seconds: 10));
       if (profile == null) {
         state = const AsyncValue.data(false);
         return;
       }
       final repo = _ref.read(dutyRepositoryProvider);
-      final isOnDuty = await repo.isOnDuty(profile.id);
+      final isOnDuty = await repo.isOnDuty(profile.id)
+          .timeout(const Duration(seconds: 10));
       state = AsyncValue.data(isOnDuty);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      debugPrint('[Duty] _loadInitialState error: $e');
+      // On any error, default to off-duty so the UI is usable
+      state = const AsyncValue.data(false);
     }
   }
 
@@ -54,26 +58,30 @@ class OnDutyNotifier extends StateNotifier<AsyncValue<bool>> {
       final repo = _ref.read(dutyRepositoryProvider);
 
       // Try to get current position for duty start/end location
+      // Use a hard timeout so GPS issues never block the toggle
       Position? position;
       try {
         position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 5),
-        );
+          timeLimit: const Duration(seconds: 3),
+        ).timeout(const Duration(seconds: 5));
       } catch (_) {
         // Position is optional, continue without it
       }
 
       // Geofence check (non-blocking — warn but allow)
       if (position != null) {
-        final zones = _ref.read(geofenceZonesProvider).valueOrNull ?? [];
-        final geofenceService = _ref.read(geofenceServiceProvider);
-        final containing = geofenceService.findContainingZones(
-          position.latitude, position.longitude, zones,
-        );
-        if (containing.isEmpty && zones.isNotEmpty) {
-          debugPrint('[Duty] Warning: Agent is outside all geofence zones');
-          // Could show a dialog here — for now just log
+        try {
+          final zones = _ref.read(geofenceZonesProvider).valueOrNull ?? [];
+          final geofenceService = _ref.read(geofenceServiceProvider);
+          final containing = geofenceService.findContainingZones(
+            position.latitude, position.longitude, zones,
+          );
+          if (containing.isEmpty && zones.isNotEmpty) {
+            debugPrint('[Duty] Warning: Agent is outside all geofence zones');
+          }
+        } catch (_) {
+          // Geofence check is non-critical
         }
       }
 
@@ -86,9 +94,13 @@ class OnDutyNotifier extends StateNotifier<AsyncValue<bool>> {
           lng: position?.longitude,
         );
 
-        // Start location tracking
-        final startTracking = _ref.read(startTrackingProvider);
-        await startTracking();
+        // Start location tracking (non-blocking — fire-and-forget, heartbeat retries)
+        try {
+          final startTracking = _ref.read(startTrackingProvider);
+          startTracking(); // don't await — location upload is fire-and-forget
+        } catch (_) {
+          debugPrint('[Duty] Warning: Location tracking start failed');
+        }
 
         state = const AsyncValue.data(true);
       } else {
@@ -99,9 +111,13 @@ class OnDutyNotifier extends StateNotifier<AsyncValue<bool>> {
           lng: position?.longitude,
         );
 
-        // Stop location tracking
-        final stopTracking = _ref.read(stopTrackingProvider);
-        await stopTracking();
+        // Stop location tracking (non-blocking)
+        try {
+          final stopTracking = _ref.read(stopTrackingProvider);
+          await stopTracking().timeout(const Duration(seconds: 5));
+        } catch (_) {
+          debugPrint('[Duty] Warning: Location tracking stop failed');
+        }
 
         state = const AsyncValue.data(false);
       }

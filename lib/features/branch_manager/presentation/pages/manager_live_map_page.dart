@@ -97,8 +97,7 @@ _MarkerFreshness _getMarkerFreshness(DateTime? recordedAt) {
   if (recordedAt == null) return _MarkerFreshness.offline;
   final diff = DateTime.now().difference(recordedAt);
   if (diff.inMinutes < 1) return _MarkerFreshness.fresh;
-  if (diff.inMinutes < 5) return _MarkerFreshness.recent;
-  if (diff.inMinutes < 30) return _MarkerFreshness.stale;
+  if (diff.inMinutes < 15) return _MarkerFreshness.recent;
   return _MarkerFreshness.offline;
 }
 
@@ -217,7 +216,7 @@ class ManagerLiveMapPage extends ConsumerStatefulWidget {
 }
 
 class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   // ─── Controllers ────────────────────────────────────────────────────────
   late AnimationController _pulseCtrl;
   late AnimationController _rippleCtrl;
@@ -230,6 +229,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
   // ─── State ──────────────────────────────────────────────────────────────
   RealtimeChannel? _channel;
   Timer? _refreshTimer;
+  Timer? _ageOutTimer;
   String? _selectedStaffId;
   bool _showList = true;
   bool _isMapReady = false;
@@ -280,8 +280,16 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
     );
 
     _initRealtime();
+    WidgetsBinding.instance.addObserver(this);
+
     _refreshTimer =
         Timer.periodic(const Duration(seconds: 30), (_) => _refreshSnapshot());
+
+    _ageOutTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        setState(() {}); // Dynamic age-out local rebuild trigger
+      }
+    });
 
     _cameraAnimCtrl.addListener(_onCameraAnimate);
     _markerMoveCtrl.addListener(_onMarkerMove);
@@ -310,19 +318,8 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
 
   // ─── Realtime Init ──────────────────────────────────────────────────────
 
-  Future<void> _initRealtime() async {
-    final snapshot = await ref
-        .read(liveTrackingRepositoryProvider)
-        .getLatestAgentLocations();
-    if (!mounted) return;
-    ref.read(liveAgentLocationsProvider.notifier).seedFromSnapshot(snapshot);
-
-    setState(() => _isLoading = false);
-
-    if (snapshot.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapToAgents());
-    }
-
+  void _subscribeRealtime() {
+    _channel?.unsubscribe();
     final channel =
         ref.read(liveTrackingRepositoryProvider).subscribeToAgentLocations(
       onUpdate: (payload) {
@@ -367,6 +364,35 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
     );
     ref.read(liveAgentLocationsProvider.notifier).setChannel(channel);
     _channel = channel;
+  }
+
+  Future<void> _initRealtime() async {
+    final snapshot = await ref
+        .read(liveTrackingRepositoryProvider)
+        .getLatestAgentLocations();
+    if (!mounted) return;
+    ref.read(liveAgentLocationsProvider.notifier).seedFromSnapshot(snapshot);
+
+    setState(() => _isLoading = false);
+
+    if (snapshot.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapToAgents());
+    }
+
+    _subscribeRealtime();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _handleResume();
+    }
+  }
+
+  Future<void> _handleResume() async {
+    debugPrint('[LiveMap] App resumed. Refreshing live map...');
+    await _refreshSnapshot();
+    _subscribeRealtime();
   }
 
   Future<void> _refreshSnapshot() async {
@@ -506,6 +532,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pulseCtrl.dispose();
     _rippleCtrl.dispose();
     _radarCtrl.dispose();
@@ -514,6 +541,7 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
     _mapController.dispose();
     _searchCtrl.dispose();
     _refreshTimer?.cancel();
+    _ageOutTimer?.cancel();
     _channel?.unsubscribe();
     super.dispose();
   }
@@ -540,7 +568,13 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
           return false;
         })
         .toList();
-    final activeCount = agentList.where((a) => a['is_active'] == true).length;
+    final activeCount = agentList.where((a) {
+      final recordedAt = a['recorded_at'] != null
+          ? DateTime.tryParse(a['recorded_at'] as String)
+          : null;
+      return a['is_active'] == true &&
+          _getMarkerFreshness(recordedAt) != _MarkerFreshness.offline;
+    }).length;
     final geofenceZonesAsync = ref.watch(managerGeofenceZonesProvider);
     final geofenceZones = geofenceZonesAsync.valueOrNull ?? [];
 
@@ -1255,20 +1289,35 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
 
   Widget _buildFrostedStatsBar(
       ThemeData theme, bool isDark, List<Map<String, dynamic>> agents) {
-    final active = agents.where((a) => a['is_active'] == true).length;
-    final traveling = agents
-        .where((a) =>
-            a['is_active'] == true && a['activity_type'] == 'traveling')
-        .length;
-    final collecting = agents
-        .where((a) =>
-            a['is_active'] == true && a['activity_type'] == 'collecting')
-        .length;
+    final active = agents.where((a) {
+      final recordedAt = a['recorded_at'] != null
+          ? DateTime.tryParse(a['recorded_at'] as String)
+          : null;
+      return a['is_active'] == true &&
+          _getMarkerFreshness(recordedAt) != _MarkerFreshness.offline;
+    }).length;
+    final traveling = agents.where((a) {
+      final recordedAt = a['recorded_at'] != null
+          ? DateTime.tryParse(a['recorded_at'] as String)
+          : null;
+      return a['is_active'] == true &&
+          _getMarkerFreshness(recordedAt) != _MarkerFreshness.offline &&
+          a['activity_type'] == 'traveling';
+    }).length;
+    final collecting = agents.where((a) {
+      final recordedAt = a['recorded_at'] != null
+          ? DateTime.tryParse(a['recorded_at'] as String)
+          : null;
+      return a['is_active'] == true &&
+          _getMarkerFreshness(recordedAt) != _MarkerFreshness.offline &&
+          a['activity_type'] == 'collecting';
+    }).length;
     final offline = agents.where((a) {
       final recordedAt = a['recorded_at'] != null
           ? DateTime.tryParse(a['recorded_at'] as String)
           : null;
-      return _getMarkerFreshness(recordedAt) == _MarkerFreshness.offline;
+      return a['is_active'] != true ||
+          _getMarkerFreshness(recordedAt) == _MarkerFreshness.offline;
     }).length;
 
     return ClipRRect(
@@ -1532,12 +1581,42 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
             Expanded(
               child: filteredList.isEmpty
                   ? Center(
-                      child: Text('No agents match filter',
-                          style: TextStyle(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.3),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500)))
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            agentList.isEmpty
+                                ? Icons.location_off_rounded
+                                : Icons.search_off_rounded,
+                            size: 34,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.25),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            agentList.isEmpty
+                                ? 'No agents reporting location'
+                                : 'No agents match filter',
+                            style: TextStyle(
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.3),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
+                          ),
+                          if (agentList.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                'Ask staff to start duty to appear here',
+                                style: TextStyle(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.2),
+                                    fontSize: 11),
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
                       itemCount: filteredList.length,
@@ -1625,12 +1704,42 @@ class _ManagerLiveMapPageState extends ConsumerState<ManagerLiveMapPage>
           Expanded(
             child: filteredList.isEmpty
                 ? Center(
-                    child: Text('No agents match filter',
-                        style: TextStyle(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.3),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500)))
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          agentList.isEmpty
+                              ? Icons.location_off_rounded
+                              : Icons.search_off_rounded,
+                          size: 34,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.25),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          agentList.isEmpty
+                              ? 'No agents reporting location'
+                              : 'No agents match filter',
+                          style: TextStyle(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.3),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600),
+                        ),
+                        if (agentList.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              'Ask staff to start duty to appear here',
+                              style: TextStyle(
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.2),
+                                  fontSize: 11),
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                     scrollDirection: Axis.horizontal,

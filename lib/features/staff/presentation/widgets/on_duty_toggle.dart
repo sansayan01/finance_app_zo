@@ -71,8 +71,13 @@ class _OnDutyToggleState extends ConsumerState<OnDutyToggle>
       final sessionAsync = ref.watch(activeDutySessionProvider);
       sessionAsync.whenData((session) {
         if (session != null && _elapsedSeconds == 0) {
-          final startTime = DateTime.parse(session['start_time'] as String);
-          _elapsedSeconds = DateTime.now().difference(startTime).inSeconds;
+          final startTimeStr = session['start_time'];
+          if (startTimeStr is String) {
+            final startTime = DateTime.tryParse(startTimeStr);
+            if (startTime != null) {
+              _elapsedSeconds = DateTime.now().difference(startTime).inSeconds;
+            }
+          }
         }
       });
       _startTimer();

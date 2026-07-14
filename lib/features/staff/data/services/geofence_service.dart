@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/utils/geofence_utils.dart';
+import '../../../../core/utils/json_normalize.dart';
 
 /// Represents a geofence zone (typically a branch location).
 class GeofenceZone {
@@ -77,7 +78,8 @@ class GeofenceService {
           .not('location_lat', 'is', null)
           .not('location_lng', 'is', null);
 
-      return data.map<GeofenceZone>((row) {
+      final rows = normalizeRows(data);
+      return rows.map<GeofenceZone>((row) {
         return GeofenceZone(
           id: row['id'] as String,
           name: row['name'] as String? ?? 'Unknown',

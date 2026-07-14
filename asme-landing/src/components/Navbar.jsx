@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Building2, Menu, X } from "lucide-react";
+import { Building2, Menu, X, BookOpen } from "lucide-react";
 
 const APP_SCHEME = "com.microflow.pro://";
 const WEB_FALLBACK = "https://microflow-442f8.web.app";
@@ -57,8 +57,9 @@ export default function Navbar() {
     >
       <div
         className={
-          "liquid-glass rounded-full px-5 md:px-6 py-2.5 md:py-3 flex items-center justify-between max-w-5xl mx-auto transition-all duration-500 " +
-          (scrolled ? "shadow-lg shadow-indigo-500/5" : "")
+          "rounded-full px-5 md:px-6 py-2.5 md:py-3 flex items-center justify-between max-w-5xl mx-auto transition-all duration-500 " +
+          "bg-black/50 backdrop-blur-2xl border border-white/[0.08] shadow-lg shadow-black/20 " +
+          (scrolled ? "bg-black/60 border-white/[0.10] shadow-xl shadow-black/30" : "")
         }
       >
         {/* Logo */}
@@ -87,6 +88,13 @@ export default function Navbar() {
         {/* Desktop right */}
         <div className="hidden md:flex items-center gap-3">
           <a
+            href="/docs"
+            className="px-3.5 py-1.5 text-white/60 hover:text-white text-sm font-medium rounded-full hover:bg-white/[0.04] transition-all duration-300 flex items-center gap-1.5"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Docs
+          </a>
+          <a
             href={WEB_FALLBACK}
             onClick={handleLogin}
             className="bg-white/[0.04] backdrop-blur-sm rounded-full px-5 py-1.5 text-sm font-medium text-white/85 hover:text-white border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 cursor-pointer"
@@ -110,7 +118,7 @@ export default function Navbar() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="md:hidden mt-2 liquid-glass rounded-2xl p-4 max-w-5xl mx-auto"
+          className="md:hidden mt-2 rounded-2xl p-4 max-w-5xl mx-auto bg-black/60 backdrop-blur-2xl border border-white/[0.08]"
         >
           <div className="flex flex-col gap-1">
             {links.map((l) => (
@@ -122,6 +130,13 @@ export default function Navbar() {
                 {l.label}
               </button>
             ))}
+            <a
+              href="/docs"
+              className="w-full text-left px-4 py-2.5 text-white/70 hover:text-white text-sm rounded-xl hover:bg-white/[0.03] transition-all duration-300 flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" />
+              Docs
+            </a>
             <div className="h-px bg-white/[0.04] my-2" />
             <a
               href={WEB_FALLBACK}

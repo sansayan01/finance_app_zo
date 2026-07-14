@@ -1,6 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
+- **2026-07-14:** Fixed "Signal lost" showing falsely for active collection agents on exec admin/manager portals. Root cause: `LiveLocationService.startTracking()` blocked on `_uploadCurrentLocation()` (await GPS) while `toggleDuty()` wrapped it in a 5-second timeout — on desktop Chrome GPS can be slow, so the upload silently failed and duty state became "ON" without any location in DB. Also the age-out threshold (5 min) matched the heartbeat interval (5 min) causing stationary agents to constantly appear offline. Fixes: (1) Made `_uploadCurrentLocation()` fire-and-forget (no await) so duty toggle is instant; (2) Removed await+timeout on `startTracking()` in `toggleDuty()`; (3) Increased age-out threshold from 5→15 minutes (3x heartbeat margin); (4) Changed `recorded_at` and `createdAt` to UTC (`DateTime.now().toUtc()`) to eliminate timezone drift. `flutter analyze` clean on all 4 files.
 - **2026-07-12:** Fixed SMS-not-sent on loan/savings collection (root cause was NOT the toggle). Real cause: native `SmsSenderPlugin` sent on `subscriptionId: -1` (no default SMS SIM on device; real SIMs are sub 4/5) → `4/4 parts failed`. Also `READ_PHONE_STATE` was never granted/requested, so the plugin couldn't enumerate SIMs. Fixes: (1) `findWorkingSubscriptionId()` now picks the **first active** subscription instead of -1; (2) plugin auto-requests `READ_PHONE_STATE` at send time and retries. Verified staging `sms_notifications`: 8 `sent` rows, native log `Auto-selected working SIM subscription: 4`. Env fix: `JAVA_HOME` pointed at a non-existent Adoptium JDK → repointed to Android Studio JBR (`C:\Program Files\Android\Android Studio\jbr`) and persisted via setx. Super-admin portal work still deferred. Dart: guarded two unguarded `string[0]` accesses (empty `full_name` on team avatars, empty branch `status`) that crashed. RLS: `org_select` lacked the super-admin role bypass that `org_update_admin`/`org_delete_admin` already had → super-admin viewing any org they didn't create got silent NULL → "Organization not found". Added role bypass (staging + migration file `20260711000000`). Page compiles clean, no known error paths remain.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
 
@@ -75,6 +76,8 @@ After every exchange, update the `## Latest Update` line immediately (don't wait
 ## Lessons (technical — no duplication with preferences above)
 **Dart / Supabase**
 - **NEVER run SQL on production unless Sayan HIMSELF brings it up.** Don't ask, don't assume. I ran `apply_migration` on production for `loan_products` precision fix without being told — Sayan was NOT happy. Staging first, always. Only touch production when Sayan explicitly says "production pe kar do."
+- **Even "read-only" `execute_sql` needs staging gate.** I ran SELECT queries on production to debug the live-map issue (4 separate calls). Even reads feel invasive and break the trust contract. All SQL investigation must land on staging first, or Sayan must approve prod reads. The rule covers reads too — staging is the sandbox, production is off-limits without explicit go-ahead.
+- **"Quick debug query" on production is NOT allowed.** Even a SELECT feels like a small thing but it bypasses the staging gate entirely. Next time Sayan says "check X" and staging has the data → staging pe karo. Production pe sirf jab Sayan explicitly bol de "production pe kar do" — warna bolo "staging pe dekh leta hoon". No exceptions.
 - **Prefer Dart-only fixes over SQL migrations — even for missing columns.** When a feature breaks because the DB lacks a column, first try repointing the Dart read/write to an existing column (e.g. moved the SMS toggle to loan/savings pages which referenced non-existent `loans.sms_enabled`; fixed by routing to the existing `members.sms_enabled` instead of adding columns). SQL migration is a LAST resort, not the default. Sayan has flagged this repeatedly.
 
 **Tooling**
@@ -101,6 +104,7 @@ After every exchange, update the `## Latest Update` line immediately (don't wait
 - **No `select('*', ...)` with FK joins** — wildcard pulls non-existent cols (`deleted_at`) → 400. Select explicit columns.
 - **`.gte()` on `date` columns needs `YYYY-MM-DD`**, not ISO timestamptz — else type mismatch kills `Future.wait` silently. Check column types in `information_schema.columns` first.
 - **AuroraBackground child must be `Positioned.fill`** or it gets zero height (blobs show, content doesn't).
+- **Never `findAncestorStateOfType` after `Navigator.pop()`.** Dialog context is unmounted on pop → lookup returns null → callback never fires. Pass an `onX` callback into the dialog instead (used for restore-from-Drive fix). Same trap applies to `context.read`/`ref.read` of a Widget-built ancestor after pop.
 
 ---
 

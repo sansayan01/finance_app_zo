@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/utils/json_normalize.dart';
 import '../models/system_config.dart';
 import '../models/github_release.dart';
 import '../services/github_release_service.dart';
@@ -22,7 +23,7 @@ final systemConfigProvider = StreamProvider<SystemConfig>((ref) {
       final response =
           await client.from('system_config').select().limit(1).maybeSingle();
       if (response != null) {
-        controller.add(SystemConfig.fromJson(response));
+        controller.add(SystemConfig.fromJson(normalizeMap(response)));
       } else {
         controller.add(_defaultConfig);
       }
@@ -43,7 +44,9 @@ final systemConfigProvider = StreamProvider<SystemConfig>((ref) {
         table: 'system_config',
         callback: (payload) {
           debugPrint('🔔 system_config updated via Realtime');
-          final newData = payload.newRecord;
+          // Supabase JS returns LinkedMap<dynamic, dynamic>; normalize
+          // recursively before handing to the typed fromJson parser.
+          final newData = normalizeMap(payload.newRecord);
           if (newData.isNotEmpty) {
             controller.add(SystemConfig.fromJson(newData));
           }

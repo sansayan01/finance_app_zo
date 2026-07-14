@@ -4,15 +4,18 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/org_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 
+import '../../../../core/utils/json_normalize.dart';
+
 final trialInfoProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final client = ref.read(supabaseClientProvider);
   final orgId = ref.read(currentOrgIdOrThrowProvider);
   try {
-    return client
+    final response = await client
         .from('organizations')
         .select('status, trial_ends_at, created_at')
         .eq('id', orgId)
         .single();
+    return normalizeMap(response);
   } catch (_) {
     return null;
   }

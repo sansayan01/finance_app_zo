@@ -8,6 +8,7 @@ import '../../../../core/providers/org_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../branches/presentation/pages/branch_management_page.dart';
+import '../../../../core/utils/json_normalize.dart';
 
 final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final client = ref.read(supabaseClientProvider);
@@ -16,7 +17,7 @@ final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   // Fetch org data with error handling
   Map<String, dynamic> org;
   try {
-    org = await client.from('organizations').select().eq('id', orgId).single();
+    org = normalizeMap(await client.from('organizations').select().eq('id', orgId).single());
   } catch (e) {
     throw Exception('Failed to load organization data: $e');
   }
@@ -66,7 +67,7 @@ final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
         .eq('org_id', orgId)
         .order('created_at', ascending: false)
         .limit(5);
-    recentCollections = List<Map<String, dynamic>>.from(collectionsData);
+    recentCollections = normalizeRows(collectionsData);
   } catch (_) {}
 
   try {
@@ -75,7 +76,7 @@ final adminMyOrgProvider = FutureProvider<Map<String, dynamic>>((ref) async {
         .select('id, full_name, role, status, branch_id')
         .eq('org_id', orgId)
         .limit(10);
-    staffList = List<Map<String, dynamic>>.from(staffData);
+    staffList = normalizeRows(staffData);
   } catch (_) {}
 
   return {

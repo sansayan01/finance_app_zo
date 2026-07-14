@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/json_normalize.dart';
 import '../../models/branch_model.dart';
 
 class BranchRepository {
@@ -15,7 +16,7 @@ class BranchRepository {
         .eq('org_id', _orgId)
         .order('created_at', ascending: false);
 
-    return (response as List)
+    return normalizeRows(response)
         .map((json) => BranchModel.fromJson(json))
         .toList();
   }
@@ -29,7 +30,7 @@ class BranchRepository {
         .eq('status', 'active')
         .order('name');
 
-    return (response as List)
+    return normalizeRows(response)
         .map((json) => BranchModel.fromJson(json))
         .toList();
   }
@@ -44,7 +45,7 @@ class BranchRepository {
         .maybeSingle();
 
     if (response == null) return null;
-    return BranchModel.fromJson(response);
+    return BranchModel.fromJson(normalizeMap(response));
   }
 
   /// Get branch by code
@@ -57,7 +58,7 @@ class BranchRepository {
         .maybeSingle();
 
     if (response == null) return null;
-    return BranchModel.fromJson(response);
+    return BranchModel.fromJson(normalizeMap(response));
   }
 
   /// Create a new branch
@@ -99,7 +100,7 @@ class BranchRepository {
         .select()
         .single();
 
-    return BranchModel.fromJson(response);
+    return BranchModel.fromJson(normalizeMap(response));
   }
 
   /// Update a branch
@@ -117,7 +118,7 @@ class BranchRepository {
         .select()
         .single();
 
-    return BranchModel.fromJson(response);
+    return BranchModel.fromJson(normalizeMap(response));
   }
 
   /// Delete a branch
@@ -142,7 +143,7 @@ class BranchRepository {
         params: {'p_branch_id': branchId}).maybeSingle();
 
     if (response == null) return const BranchStats();
-    return BranchStats.fromJson(response);
+    return BranchStats.fromJson(normalizeMap(response));
   }
 
   /// Get branch count
@@ -171,7 +172,7 @@ class BranchRepository {
         .eq('role', 'manager')
         .order('full_name');
 
-    return List<Map<String, dynamic>>.from(response);
+    return normalizeRows(response);
   }
 
   /// Get staff for a branch
@@ -183,7 +184,7 @@ class BranchRepository {
         .order('full_name')
         .limit(100);
 
-    return List<Map<String, dynamic>>.from(response);
+    return normalizeRows(response);
   }
 
   /// Get members for a branch
@@ -198,12 +199,13 @@ class BranchRepository {
         .order('full_name')
         .limit(200);
 
-    final List<Map<String, dynamic>> members = List<Map<String, dynamic>>.from(response);
+    final List<Map<String, dynamic>> members = normalizeRows(response);
 
     for (final member in members) {
-      final profile = member['profile'] as Map<String, dynamic>?;
-      if (profile != null) {
-        member['avatar_url'] = profile['avatar_url'] as String?;
+      final profile = member['profile'];
+      if (profile is Map) {
+        final profileMap = Map<String, dynamic>.from(profile);
+        member['avatar_url'] = profileMap['avatar_url'] as String?;
       } else {
         member['avatar_url'] = null;
       }

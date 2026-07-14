@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
+import '../utils/json_normalize.dart';
 
 /// Sentinel UUID used by the platform only for *opt-in* development flows.
 /// IMPORTANT: never feed this into a Supabase query as an `org_id` filter on
@@ -37,5 +38,5 @@ final currentOrgProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final response =
       await client.from('organizations').select().eq('id', orgId).maybeSingle();
-  return response;
+  return response != null ? normalizeMap(response) : null;
 });

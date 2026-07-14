@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/utils/formatters.dart' show AppFormatters;
+import '../../../../core/utils/json_normalize.dart';
 import '../models/transaction_model.dart';
 
 class TransactionsRepository {
@@ -19,12 +20,11 @@ class TransactionsRepository {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      final list = response as List;
+      final list = normalizeRows(response);
       if (list.isEmpty) return [];
 
       final txns = list
-          .map((json) =>
-              TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .map((json) => TransactionModel.fromJson(json))
           .toList();
 
       return _resolveMemberNames(txns);
@@ -93,12 +93,11 @@ class TransactionsRepository {
 
       final response = await transform.range(offset, offset + limit - 1);
 
-      final list = response as List;
+      final list = normalizeRows(response);
       if (list.isEmpty) return [];
 
       final txns = list
-          .map((json) =>
-              TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .map((json) => TransactionModel.fromJson(json))
           .toList();
 
       return _resolveMemberNames(txns);
@@ -168,12 +167,11 @@ class TransactionsRepository {
 
       final response = await transform.limit(limit);
 
-      final list = response as List;
+      final list = normalizeRows(response);
       if (list.isEmpty) return [];
 
       final txns = list
-          .map((json) =>
-              TransactionModel.fromJson(Map<String, dynamic>.from(json as Map)))
+          .map((json) => TransactionModel.fromJson(json))
           .toList();
 
       return _resolveMemberNames(txns);
@@ -282,7 +280,7 @@ class TransactionsRepository {
           .filter('created_at', 'lt', periodEnd.toIso8601String())
           .order('created_at', ascending: true);
 
-      return (response as List)
+      return normalizeRows(response)
           .map((json) => TransactionModel.fromJson(json))
           .toList();
     } catch (e) {
@@ -304,7 +302,7 @@ class TransactionsRepository {
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
-      return (response as List)
+      return normalizeRows(response)
           .map((json) => TransactionModel.fromJson(json))
           .toList();
     } catch (e) {

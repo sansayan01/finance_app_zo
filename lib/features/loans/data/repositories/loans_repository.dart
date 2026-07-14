@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/json_normalize.dart';
 import '../../../settings/data/repositories/activity_log_repository.dart';
 import '../../../settings/data/models/activity_log_model.dart';
 import '../models/loan_model.dart';
@@ -24,7 +25,7 @@ class LoansRepository {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      final loans = (response as List)
+      final loans = normalizeRows(response)
           .map((json) => LoanModel.fromJson(json))
           .toList();
 
@@ -47,7 +48,7 @@ class LoansRepository {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      final loans = (response as List)
+      final loans = normalizeRows(response)
           .map((json) => LoanModel.fromJson(json))
           .toList();
 
@@ -185,7 +186,7 @@ class LoansRepository {
           .maybeSingle();
 
       if (response == null) return null;
-      return LoanModel.fromJson(response);
+      return LoanModel.fromJson(normalizeMap(response));
     } catch (e, st) {
       debugPrint('⚠️ getLoanById error: $e');
       debugPrint('   stack: $st');

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/json_normalize.dart';
 import '../../../../core/utils/polyline_utils.dart';
 
 /// Data access for the live field agent tracking feature.
@@ -22,7 +23,7 @@ class LiveTrackingRepository {
         'get_latest_staff_locations',
         params: {'p_org_id': orgId},
       );
-      return List<Map<String, dynamic>>.from(response as List);
+      return normalizeRows(response);
     } catch (e) {
       debugPrint('[LiveTracking] Error fetching latest locations: $e');
       return [];
@@ -49,7 +50,9 @@ class LiveTrackingRepository {
           callback: (payload) {
             final newRecord = payload.newRecord;
             if (newRecord.isNotEmpty) {
-              onUpdate(newRecord);
+              // Supabase JS returns LinkedMap<dynamic, dynamic>; normalize
+              // recursively before handing to typed consumers.
+              onUpdate(normalizeMap(newRecord));
             }
           },
         )
@@ -65,13 +68,14 @@ class LiveTrackingRepository {
           callback: (payload) {
             final record = payload.newRecord;
             if (record.isNotEmpty) {
-              if (record['is_active'] == false) {
-                onDeactivate?.call(record);
+              final normalized = normalizeMap(record);
+              if (normalized['is_active'] == false) {
+                onDeactivate?.call(normalized);
               } else {
-                onUpdate(record);
+                onUpdate(normalized);
               }
             }
-          },
+          }
         )
         .subscribe();
 
@@ -96,7 +100,7 @@ class LiveTrackingRepository {
           .order('recorded_at', ascending: true)
           .limit(500);
 
-      return List<Map<String, dynamic>>.from(response as List);
+      return normalizeRows(response);
     } catch (e) {
       debugPrint('[LiveTracking] Error fetching breadcrumbs: $e');
       return [];
@@ -121,11 +125,13 @@ class LiveTrackingRepository {
           .lte('recorded_at', end.toIso8601String())
           .order('recorded_at', ascending: true);
 
-      if (data.isEmpty) return data;
+      if (data.isEmpty) return const [];
+
+      final normalized = normalizeRows(data);
 
       // If we have more points than maxPoints, apply downsampling
-      if (data.length > maxPoints) {
-        final points = data.map((r) => LatLng(
+      if (normalized.length > maxPoints) {
+        final points = normalized.map((r) => LatLng(
           (r['latitude'] as num).toDouble(),
           (r['longitude'] as num).toDouble(),
         )).toList();
@@ -142,7 +148,7 @@ class LiveTrackingRepository {
           // Find the closest original point
           Map<String, dynamic>? closest;
           double minDist = double.infinity;
-          for (final original in data) {
+          for (final original in normalized) {
             final lat = (original['latitude'] as num).toDouble();
             final lng = (original['longitude'] as num).toDouble();
             final dist = _quickDistance(sPoint.latitude, sPoint.longitude, lat, lng);
@@ -158,7 +164,7 @@ class LiveTrackingRepository {
         return result;
       }
 
-      return data;
+      return normalized;
     } catch (e) {
       debugPrint('[LiveTracking] Error fetching date range breadcrumbs: $e');
       return [];
@@ -187,7 +193,7 @@ class LiveTrackingRepository {
           .eq('staff_id', staffProfileId)
           .gte('created_at', startOfDay);
 
-      final collectionList = List<Map<String, dynamic>>.from(collections as List);
+      final collectionList = normalizeRows(collections);
       final totalCollected = collectionList.fold<double>(
           0, (sum, c) => sum + ((c['amount_collected'] as num?)?.toDouble() ?? 0));
 
@@ -219,7 +225,7 @@ class LiveTrackingRepository {
           .eq('org_id', orgId)
           .eq('status', 'active');
 
-      return List<Map<String, dynamic>>.from(response as List);
+      return normalizeRows(response);
     } catch (e) {
       debugPrint('[LiveTracking] Error fetching on-duty agents: $e');
       return [];

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/utils/json_normalize.dart';
 
 /// Repository for managing duty sessions (on-duty/off-duty state).
 class DutyRepository {
@@ -41,7 +42,7 @@ class DutyRepository {
         .update({'is_on_duty': true})
         .eq('id', staffId);
 
-    return response;
+    return normalizeMap(response);
   }
 
   /// End the current duty session
@@ -63,7 +64,8 @@ class DutyRepository {
         .maybeSingle();
 
     if (activeSession != null) {
-      final startTime = DateTime.parse(activeSession['start_time'] as String);
+      final normalized = normalizeMap(activeSession);
+      final startTime = DateTime.parse(normalized['start_time'] as String);
       final durationMinutes = now.difference(startTime).inMinutes;
 
       await _client.from('duty_sessions').update({
@@ -72,7 +74,7 @@ class DutyRepository {
         'end_lng': lng,
         'duration_minutes': durationMinutes,
         'status': 'completed',
-      }).eq('id', activeSession['id']);
+      }).eq('id', normalized['id']);
     }
 
     // Update profile duty status
@@ -85,7 +87,7 @@ class DutyRepository {
   /// Get the current active duty session for a staff member
   Future<Map<String, dynamic>?> getActiveDutySession(String staffId) async {
     try {
-      return await _client
+      final raw = await _client
           .from('duty_sessions')
           .select()
           .eq('staff_id', staffId)
@@ -93,6 +95,7 @@ class DutyRepository {
           .order('start_time', ascending: false)
           .limit(1)
           .maybeSingle();
+      return raw != null ? normalizeMap(raw) : null;
     } catch (e) {
       debugPrint('[DutyRepository] Error getting active session: $e');
       return null;
@@ -114,7 +117,7 @@ class DutyRepository {
           .gte('start_time', startOfDay)
           .order('start_time', ascending: false);
 
-      return List<Map<String, dynamic>>.from(response as List);
+      return normalizeRows(response);
     } catch (e) {
       debugPrint('[DutyRepository] Error getting today sessions: $e');
       return [];

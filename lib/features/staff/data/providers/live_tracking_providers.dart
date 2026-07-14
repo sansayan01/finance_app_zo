@@ -86,14 +86,17 @@ class LiveAgentLocationsNotifier
 
   /// Get previous position for an agent (used for animation).
   /// Kept for backward compatibility — returns the 'prev' render state.
-  Map<String, dynamic>? getPreviousPosition(String staffId) =>
-      _renderState[staffId]?['prev'] as Map<String, dynamic>?;
+  Map<String, dynamic>? getPreviousPosition(String staffId) {
+    final prev = _renderState[staffId]?['prev'];
+    return prev is Map ? Map<String, dynamic>.from(prev) : null;
+  }
 
   /// Timestamp (ms) of the previous target fix, used to derive the animation
   /// duration so movement matches the real elapsed time between GPS fixes.
   int? getPreviousTargetTs(String staffId) {
-    final target = _renderState[staffId]?['target'] as Map<String, dynamic>?;
-    return target?['_ts'] as int?;
+    final target = _renderState[staffId]?['target'];
+    final map = target is Map ? Map<String, dynamic>.from(target) : null;
+    return map?['_ts'] as int?;
   }
 
   void seedFromSnapshot(List<Map<String, dynamic>> locations) {
@@ -109,7 +112,7 @@ class LiveAgentLocationsNotifier
     for (final entry in map.entries) {
       final pos = Map<String, dynamic>.from(entry.value);
       pos['_ts'] = now;
-      _renderState[entry.key] = {'prev': Map.from(pos), 'target': pos};
+      _renderState[entry.key] = <String, dynamic>{'prev': Map<String, dynamic>.from(pos), 'target': pos};
     }
   }
 
@@ -142,13 +145,12 @@ class LiveAgentLocationsNotifier
     // previous target if we have no render state yet (e.g. first fix).
     final render = _renderState[staffId];
     final prev = (render != null
-        ? Map<String, dynamic>.from(render['target'] as Map<String, dynamic>)
+        ? Map<String, dynamic>.from(render['target'] is Map ? render['target'] as Map : {})
         : Map<String, dynamic>.from(merged))
-      ..['_ts'] = (render?['target'] as Map<String, dynamic>?)?['_ts']
-              as int? ??
+      ..['_ts'] = ((render?['target'] is Map ? Map<String, dynamic>.from(render!['target'] as Map) : null)?['_ts'] as int?) ??
           target['_ts'];
 
-    _renderState[staffId] = {'prev': prev, 'target': target};
+    _renderState[staffId] = <String, dynamic>{'prev': prev, 'target': target};
     state = {...state, staffId: merged};
   }
 
@@ -159,9 +161,9 @@ class LiveAgentLocationsNotifier
     final render = _renderState[staffId];
     if (render == null) return 1000;
     final prevTs =
-        (render['prev'] as Map<String, dynamic>)['_ts'] as int? ?? 0;
+        (render['prev'] is Map ? (render['prev'] as Map)['_ts'] : null) as int? ?? 0;
     final targetTs =
-        (render['target'] as Map<String, dynamic>)['_ts'] as int? ?? 0;
+        (render['target'] is Map ? (render['target'] as Map)['_ts'] : null) as int? ?? 0;
     final delta = targetTs - prevTs;
     if (delta <= 0) return 1000;
     return delta.clamp(400, 1500);
@@ -184,8 +186,8 @@ class LiveAgentLocationsNotifier
       };
     }
 
-    final prev = render['prev'] as Map<String, dynamic>;
-    final target = render['target'] as Map<String, dynamic>;
+    final prev = render['prev'] is Map ? Map<String, dynamic>.from(render['prev'] as Map) : <String, dynamic>{};
+    final target = render['target'] is Map ? Map<String, dynamic>.from(render['target'] as Map) : <String, dynamic>{};
 
     final prevLat = _toDouble(prev['latitude']);
     final prevLng = _toDouble(prev['longitude']);
@@ -217,7 +219,8 @@ class LiveAgentLocationsNotifier
       Map<String, dynamic> fix, double lng, double lat) {
     final deviceHeading = _toDouble(fix['heading']);
     if (deviceHeading > 0) return deviceHeading;
-    final prev = _renderState[staffId]?['prev'] as Map<String, dynamic>?;
+    final rawPrev = _renderState[staffId]?['prev'];
+    final prev = rawPrev is Map ? Map<String, dynamic>.from(rawPrev) : null;
     final prevLng = prev != null ? _toDouble(prev['longitude']) : 0.0;
     final prevLat = prev != null ? _toDouble(prev['latitude']) : 0.0;
     final dLat = lat - prevLat;

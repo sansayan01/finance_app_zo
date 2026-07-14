@@ -11,6 +11,7 @@ import '../../../../features/super_admin/data/models/super_admin_models.dart';
 import '../../../../features/super_admin/data/providers/super_admin_providers.dart';
 import 'package:microflow_pro/providers/supabase_provider.dart';
 import '../../../../core/utils/error_formatter.dart';
+import '../../../../core/utils/json_normalize.dart';
 
 /// Legacy alias � any file importing adminOrgDetailProvider won't break.
 final adminOrgDetailProvider = orgDetailFullProvider;
@@ -22,7 +23,7 @@ final adminOrgListProvider =
       .from('organizations')
       .select('id, name, slug, status, plan, created_at')
       .order('created_at', ascending: false);
-  return (response as List).cast<Map<String, dynamic>>();
+  return normalizeRows(response);
 });
 
 // =====================================================

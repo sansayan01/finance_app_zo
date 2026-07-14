@@ -195,8 +195,8 @@
     "semantic_hash": "d3ba194141a221fe4fbc93158756a496"
   },
   "lib/main.dart": {
-    "mtime": 1784056715.0649176,
-    "ast_hash": "2558ed4c77d237a7dad6543e8018edde",
+    "mtime": 1784068288.1810403,
+    "ast_hash": "0c83ff3b8aabb9d91afb1533b295f524",
     "semantic_hash": ""
   },
   "lib/core/config/env_config.dart": {
@@ -555,8 +555,8 @@
     "semantic_hash": "3bd8045841715831180263e1afdef80c"
   },
   "lib/features/branches/presentation/pages/branch_management_page.dart": {
-    "mtime": 1784062343.7074027,
-    "ast_hash": "a4a5e0f6f266688000cae9227f51b10e",
+    "mtime": 1784067906.7578669,
+    "ast_hash": "6967b708ffd59fcd8fdd8025bd1e4fe8",
     "semantic_hash": ""
   },
   "lib/features/branch_manager/data/models/branch_stats_model.dart": {
@@ -585,8 +585,8 @@
     "semantic_hash": "3739c21f6a2b0c5f93220aefa46fef16"
   },
   "lib/features/branch_manager/presentation/pages/manager_live_map_page.dart": {
-    "mtime": 1784063227.1245239,
-    "ast_hash": "551ddd00d8b0f05c6fdd09bf3934015f",
+    "mtime": 1784067906.755873,
+    "ast_hash": "61bc54b1511a3304fff388a20f6e8681",
     "semantic_hash": ""
   },
   "lib/features/branding/data/providers/branding_providers.dart": {
@@ -660,8 +660,8 @@
     "semantic_hash": "106f60bb79f53aa6a72a4e5466dd0d66"
   },
   "lib/features/home/presentation/pages/home_page.dart": {
-    "mtime": 1784058444.1489153,
-    "ast_hash": "9cf3bc0be08a9990b5f1c0dafb4fbab1",
+    "mtime": 1784067906.764898,
+    "ast_hash": "edd37bf4f2f0daf26f486f92718e48a9",
     "semantic_hash": ""
   },
   "lib/features/home/presentation/pages/notifications_page.dart": {
@@ -740,8 +740,8 @@
     "semantic_hash": "5261b93e2f3627dc841bb15cb46a3595"
   },
   "lib/features/loans/presentation/pages/loans_page.dart": {
-    "mtime": 1784062834.4923828,
-    "ast_hash": "5d102e445fcdaaf56a69a0ca73dc59ac",
+    "mtime": 1784067906.766912,
+    "ast_hash": "16d8247831d868702d74b1a852e42159",
     "semantic_hash": ""
   },
   "lib/features/loans/presentation/pages/loan_detail_page.dart": {
@@ -825,8 +825,8 @@
     "semantic_hash": "2658870ef205afdb75cbf31c3bb5b135"
   },
   "lib/features/savings/presentation/pages/savings_page.dart": {
-    "mtime": 1784063115.5840764,
-    "ast_hash": "b9e370243e0015045e0e39691f097049",
+    "mtime": 1784067906.77191,
+    "ast_hash": "1d2bed37e2a25ac76da3c1ede0277166",
     "semantic_hash": ""
   },
   "lib/features/savings/presentation/pages/saving_detail_page.dart": {
@@ -1215,8 +1215,8 @@
     "semantic_hash": ""
   },
   "lib/features/transactions/presentation/pages/transactions_page.dart": {
-    "mtime": 1784059196.6216912,
-    "ast_hash": "aba04fdc6d7ab3ada8b6ffb689b56736",
+    "mtime": 1784067906.7729113,
+    "ast_hash": "4236e8968c9efe03f783bf38c4c1eae6",
     "semantic_hash": ""
   },
   "lib/features/users/data/csv_utils.dart": {
@@ -1245,8 +1245,8 @@
     "semantic_hash": "c89a8589d5dad41ed66d7d0effe18c76"
   },
   "lib/features/users/presentation/pages/users_page.dart": {
-    "mtime": 1784062178.2066493,
-    "ast_hash": "ebc47620462a479c9d3df70cd9b84dba",
+    "mtime": 1784067906.774912,
+    "ast_hash": "fa6cc0187692eb26a08eb0805d8bc358",
     "semantic_hash": ""
   },
   "lib/features/users/presentation/pages/user_audit_page.dart": {
@@ -1695,8 +1695,8 @@
     "semantic_hash": "8569ba84f2590681b47f27c66db77309"
   },
   "pubspec.yaml": {
-    "mtime": 1784056537.8437352,
-    "ast_hash": "2f289171f4c8fa2fedd6dc3f2eb38806",
+    "mtime": 1784067906.7779162,
+    "ast_hash": "9dc40a2b4188ccc4b3f129766d596d9a",
     "semantic_hash": ""
   },
   "README.md": {
@@ -2565,8 +2565,8 @@
     "semantic_hash": "fac6c6cf7eaf5cbda8067c3d73958ae8"
   },
   "lib/features/payments/presentation/pages/today_payments_page.dart": {
-    "mtime": 1784061930.57414,
-    "ast_hash": "e6ef0c14362cb7d205a6f5eb8a980664",
+    "mtime": 1784067906.76991,
+    "ast_hash": "7c4f2044cd43e92d8cad557db6abcd6b",
     "semantic_hash": ""
   },
   "lib/features/setup/data/providers/setup_provider.dart": {
@@ -16407,36 +16407,6 @@
   ".kiro/skills/website-to-video/assets/sfx/whoosh.mp3": {
     "mtime": 1784018604.1586185,
     "ast_hash": "e7e7597bde6612d2ac1a24d5b5590b18",
-    "semantic_hash": ""
-  },
-  "docs/exec-admin-onboarding-tour-plan.md": {
-    "mtime": 1784056118.6409986,
-    "ast_hash": "343bbffc0a10be53b3085ff09bca6b17",
-    "semantic_hash": ""
-  },
-  "lib/features/onboarding/providers/tour_state_provider.dart": {
-    "mtime": 1784056570.3116412,
-    "ast_hash": "cfb7f7a8a1e46a3266ec677c6bf4cced",
-    "semantic_hash": ""
-  },
-  "lib/features/onboarding/services/tour_storage_service.dart": {
-    "mtime": 1784056570.047114,
-    "ast_hash": "89f941b42dee13f0ae8c71b82d86a42b",
-    "semantic_hash": ""
-  },
-  "lib/features/onboarding/data/tour_definitions.dart": {
-    "mtime": 1784056642.7147002,
-    "ast_hash": "20a57a2fcf99c8b512e0b823e6b2d780",
-    "semantic_hash": ""
-  },
-  "lib/features/onboarding/onboarding.dart": {
-    "mtime": 1784057037.1827185,
-    "ast_hash": "a0c5ac7adefb3db9667f97c89e721d0f",
-    "semantic_hash": ""
-  },
-  "lib/features/onboarding/widgets/glass_tour_overlay.dart": {
-    "mtime": 1784057022.0008037,
-    "ast_hash": "19729816ac8a0857b8feb2f69e87b59b",
     "semantic_hash": ""
   }
 }

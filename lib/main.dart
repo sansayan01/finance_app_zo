@@ -19,7 +19,6 @@ import 'core/services/sms_outbox_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/background_handler.dart';
 import 'app.dart';
-import 'features/onboarding/onboarding.dart';
 
 Future<void> main() async {
   try {
@@ -189,12 +188,10 @@ Future<void> main() async {
 }
 
 void _runMicroFlowApp(SharedPreferences prefs) {
-  final tourStorage = TourStorageService(prefs);
   runApp(
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        tourStorageProvider.overrideWithValue(tourStorage),
       ],
       child: const MicroFlowApp(),
     ),

@@ -172,7 +172,7 @@ export default function DocsHome() {
             </p>
           </div>
           <a
-            href="https://youtube.com/@microflowpro"
+            href="https://www.youtube.com/@Microflow_Pro"
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-sm font-medium"

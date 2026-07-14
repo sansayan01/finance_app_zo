@@ -630,9 +630,9 @@
     "semantic_hash": "ebc7c46e89d2669b539f3a848b3c92a4"
   },
   "lib/features/chatbot/presentation/widgets/floating_chatbot.dart": {
-    "mtime": 1782775879.5517366,
-    "ast_hash": "f3bbd6fd598294b8f61d7156bf914568",
-    "semantic_hash": "f3bbd6fd598294b8f61d7156bf914568"
+    "mtime": 1784012458.2426002,
+    "ast_hash": "db98ebec630da8e95cf52a80faf37496",
+    "semantic_hash": ""
   },
   "lib/features/customer_portal/presentation/pages/customer_loans_page.dart": {
     "mtime": 1783368960.734378,
@@ -3325,8 +3325,8 @@
     "semantic_hash": "3d3e00502cf219c7200ec740cb8e1cbc"
   },
   "asme-landing/src/App.jsx": {
-    "mtime": 1783861671.370541,
-    "ast_hash": "8689bbecc25a5192549dad591811d605",
+    "mtime": 1784011445.0882123,
+    "ast_hash": "bdf8cd1fbc3465e4a0045cbdf892cd70",
     "semantic_hash": ""
   },
   "asme-landing/src/main.jsx": {
@@ -3360,9 +3360,9 @@
     "semantic_hash": "d5d9474f5d6796a5675cb83ff308096a"
   },
   "asme-landing/src/components/Hero.jsx": {
-    "mtime": 1782453010.1510086,
-    "ast_hash": "4bb6caa9650e6c621651773e591ccfc0",
-    "semantic_hash": "4bb6caa9650e6c621651773e591ccfc0"
+    "mtime": 1784014159.4103682,
+    "ast_hash": "63d8097f49bcb35da37f54f333b6b68b",
+    "semantic_hash": ""
   },
   "asme-landing/src/components/HowItWorks.jsx": {
     "mtime": 1782453010.1510086,
@@ -3370,8 +3370,8 @@
     "semantic_hash": "eaeef34582786b496f81c05ef01deb14"
   },
   "asme-landing/src/components/Navbar.jsx": {
-    "mtime": 1783891534.8057358,
-    "ast_hash": "9fb41cfc888c2730954ac2947ac2df83",
+    "mtime": 1784014052.93375,
+    "ast_hash": "652d5d91342faffbf6b937b1212ddd3a",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Pricing.jsx": {
@@ -5122,6 +5122,56 @@
   "lib/core/utils/json_normalize.dart": {
     "mtime": 1783962731.4025273,
     "ast_hash": "5e083c40199a4a1fb2d8827fe045f059",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/DocsLayout.jsx": {
+    "mtime": 1784012836.5940409,
+    "ast_hash": "6e69efbaa725958336c6ae690326a6b4",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/DocsHome.jsx": {
+    "mtime": 1784012843.2909973,
+    "ast_hash": "e9da193dca97ec12af38555583de808b",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/components/LessonCard.jsx": {
+    "mtime": 1784011859.8247104,
+    "ast_hash": "9653049679cbcf4cc7bccd9fdbeea7df",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/guides/ExecutiveAdminGuide.jsx": {
+    "mtime": 1784012848.377658,
+    "ast_hash": "8d683a12dd2d6f3dc39a63dd439f9776",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/guides/BranchManagerGuide.jsx": {
+    "mtime": 1784012854.4716773,
+    "ast_hash": "0938e8c4c8010832a42ab254b7262bef",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/guides/CollectionAgentGuide.jsx": {
+    "mtime": 1784012860.602708,
+    "ast_hash": "9e7e259b1022f414baed0a0d942e3956",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/guides/CustomerGuide.jsx": {
+    "mtime": 1784012866.4133303,
+    "ast_hash": "2cba28c6739ff69870fe27160897f34e",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/components/DocsBackground.jsx": {
+    "mtime": 1784012599.6426814,
+    "ast_hash": "15df91889e5ec87221198b4c9240e3a6",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/pages/docs/data/docsContent.js": {
+    "mtime": 1784012826.8855376,
+    "ast_hash": "707ec8791e8652c0f14bc26e4e03f31e",
+    "semantic_hash": ""
+  },
+  "asme-landing/src/components/AppDownloadButton.jsx": {
+    "mtime": 1784013569.2213383,
+    "ast_hash": "35e2bc96c16630ea48a7d12c102ca76c",
     "semantic_hash": ""
   }
 }

@@ -15,6 +15,12 @@ import FAQ from "./components/FAQ";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
 import ConfirmPage from "./pages/ConfirmPage";
+import DocsLayout from "./pages/docs/DocsLayout";
+import DocsHome from "./pages/docs/DocsHome";
+import ExecutiveAdminGuide from "./pages/docs/guides/ExecutiveAdminGuide";
+import BranchManagerGuide from "./pages/docs/guides/BranchManagerGuide";
+import CollectionAgentGuide from "./pages/docs/guides/CollectionAgentGuide";
+import CustomerGuide from "./pages/docs/guides/CustomerGuide";
 
 export default function App() {
   const [backTop, setBackTop] = useState(false);
@@ -36,6 +42,16 @@ export default function App() {
   return (
     <Routes>
       <Route path="/confirm" element={<ConfirmPage />} />
+
+      {/* Docs section — clean layout with sidebar */}
+      <Route path="/docs" element={<DocsLayout />}>
+        <Route index element={<DocsHome />} />
+        <Route path="executive-admin" element={<ExecutiveAdminGuide />} />
+        <Route path="branch-manager" element={<BranchManagerGuide />} />
+        <Route path="collection-agent" element={<CollectionAgentGuide />} />
+        <Route path="customer" element={<CustomerGuide />} />
+      </Route>
+
       <Route path="*" element={
     <main className="relative bg-black min-h-screen w-screen flex flex-col selection:bg-indigo-500/30 selection:text-white overflow-x-hidden">
       {/* Full-page fixed video background — same as hero, visible across all sections */}

@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Check, ChevronDown, User, Building2, Sparkles } from "lucide-react";
+import AppDownloadButton from "./AppDownloadButton";
+
+const WEB_FALLBACK = "https://microflow-442f8.web.app";
 
 /* ── Persona content ── */
 var CONTENT = {
@@ -227,7 +230,7 @@ export default function Hero() {
     }
   }, [step]);
 
-  var handleGetStarted = useCallback(function () { setStep("email"); }, []);
+  var handleGetStarted = useCallback(function () { window.location.href = WEB_FALLBACK; }, []);
   var handleSubmit = useCallback(function (e) { e.preventDefault(); setStep("submitted"); }, []);
 
   var switchPersona = function (p) {
@@ -521,55 +524,24 @@ export default function Hero() {
           </motion.p>
         </AnimatePresence>
 
-        {/* ── CTA ── */}
+        {/* ── CTA — redirects to web app login ── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="min-h-[50px] mt-1 w-full max-w-[380px] mx-auto"
         >
-          <AnimatePresence mode="wait">
-            {step === "button" && (
-              <motion.button
-                key="btn"
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                onClick={handleGetStarted}
-                className="btn-shimmer w-full py-3.5 text-[14px] font-medium rounded-full bg-gradient-to-r from-indigo-500 to-indigo-400 text-white hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-[1.03] transition-all duration-300 cursor-pointer"
-              >
-                {current.cta}
-              </motion.button>
-            )}
-            {(step === "email" || step === "submitted") && (
-              <motion.form
-                key="form"
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                onSubmit={handleSubmit}
-                className="flex items-center gap-2 pl-4 md:pl-5 pr-1.5 py-1.5 text-[14px] font-medium border border-white/20 rounded-full bg-white/[0.02] backdrop-blur-sm w-full focus-within:border-indigo-400/40 transition-all duration-300"
-              >
-                <input
-                  ref={inputRef}
-                  type="email"
-                  required
-                  disabled={step === "submitted"}
-                  placeholder={placeholder}
-                  className="bg-transparent text-white placeholder-white/40 outline-none flex-1 min-w-0 text-[16px]"
-                />
-                <button
-                  type="submit"
-                  disabled={step === "submitted"}
-                  className="w-9 h-9 md:w-8 md:h-8 rounded-full bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-white/70 hover:text-white hover:bg-indigo-500/25 transition-all duration-300 cursor-pointer disabled:cursor-default shrink-0"
-                >
-                  {showSuccess ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                </button>
-              </motion.form>
-            )}
-          </AnimatePresence>
+          <motion.a
+            href={WEB_FALLBACK}
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="block btn-shimmer w-full py-3.5 text-[14px] font-medium rounded-full bg-gradient-to-r from-indigo-500 to-indigo-400 text-white hover:shadow-2xl hover:shadow-indigo-500/25 hover:scale-[1.03] transition-all duration-300 text-center"
+          >
+            {current.cta}
+          </motion.a>
         </motion.div>
 
         {/* ── Video link ── */}
@@ -579,13 +551,16 @@ export default function Hero() {
           transition={{ delay: 0.7 }}
         >
           <a
-            href="#"
+            href="/docs"
             className="inline-flex items-center gap-1.5 text-white/30 md:text-white/40 hover:text-white/70 transition-all duration-300 text-[12px] md:text-[13px] font-medium tracking-wide py-2"
           >
             Watch How It Works
             <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
           </a>
         </motion.div>
+
+        {/* ── App Download Button (auto-fetches latest version from GitHub) ── */}
+        <AppDownloadButton />
       </div>
 
       {/* ── Scroll indicator ── */}

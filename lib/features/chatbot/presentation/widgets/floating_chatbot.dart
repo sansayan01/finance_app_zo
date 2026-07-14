@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../data/models/chat_message.dart';
 import '../providers/chat_provider.dart';
 import '../providers/chat_config_provider.dart';
@@ -666,7 +667,24 @@ class _FloatingChatbotState extends ConsumerState<FloatingChatbot>
     final maxWidth = min(screenWidth * 0.65, 250.0);
 
     final hasLoanSummaryTag = message.text.contains('[UI:LOAN_SUMMARY]');
-    final cleanText = message.text.replaceAll('[UI:LOAN_SUMMARY]', '').trim();
+    String cleanText = message.text.replaceAll('[UI:LOAN_SUMMARY]', '').trim();
+
+    // Parse Markdown links e.g. [Watch Video Guide](https://...)
+    final mdLinkRegExp = RegExp(r'\[([^\]]+)\]\((https?://[^\)]+)\)');
+    final matches = mdLinkRegExp.allMatches(cleanText).toList();
+
+    // Extract links data
+    final List<Map<String, String>> links = [];
+    for (final match in matches) {
+      links.add({
+        'label': match.group(1) ?? 'Link',
+        'url': match.group(2) ?? '',
+      });
+    }
+
+    // Clean text by replacing [Text](URL) with just Text
+    String displayText = cleanText;
+    displayText = displayText.replaceAllMapped(mdLinkRegExp, (match) => match.group(1) ?? '');
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -697,9 +715,9 @@ class _FloatingChatbotState extends ConsumerState<FloatingChatbot>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (cleanText.isNotEmpty)
+            if (displayText.isNotEmpty)
               Text(
-                cleanText,
+                displayText,
                 style: TextStyle(
                   color: isUser
                       ? Colors.white
@@ -711,8 +729,65 @@ class _FloatingChatbotState extends ConsumerState<FloatingChatbot>
                   height: 1.4,
                 ),
               ),
+            if (links.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: links.map((link) {
+                  final label = link['label']!;
+                  final url = link['url']!;
+                  final isYoutube = url.contains('youtube.com') ||
+                      url.contains('youtu.be') ||
+                      label.toLowerCase().contains('video');
+                  return GestureDetector(
+                    onTap: () async {
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isUser
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isUser
+                              ? Colors.white.withValues(alpha: 0.3)
+                              : primary.withValues(alpha: 0.15),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isYoutube
+                                ? Icons.play_circle_fill_rounded
+                                : Icons.open_in_new_rounded,
+                            size: 13,
+                            color: isUser ? Colors.white : primary,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              color: isUser ? Colors.white : primary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
             if (hasLoanSummaryTag && !isUser) ...[
-              if (cleanText.isNotEmpty) const SizedBox(height: 8),
+              if (displayText.isNotEmpty || links.isNotEmpty) const SizedBox(height: 8),
               _buildRichLoanSummaryCard(isDark, primary),
             ],
           ],

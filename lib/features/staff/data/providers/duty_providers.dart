@@ -94,10 +94,10 @@ class OnDutyNotifier extends StateNotifier<AsyncValue<bool>> {
           lng: position?.longitude,
         );
 
-        // Start location tracking (non-blocking — don't let tracking failure block duty)
+        // Start location tracking (non-blocking — fire-and-forget, heartbeat retries)
         try {
           final startTracking = _ref.read(startTrackingProvider);
-          await startTracking().timeout(const Duration(seconds: 5));
+          startTracking(); // don't await — location upload is fire-and-forget
         } catch (_) {
           debugPrint('[Duty] Warning: Location tracking start failed');
         }

@@ -97,7 +97,7 @@ _MarkerFreshness _getMarkerFreshness(DateTime? recordedAt) {
   if (recordedAt == null) return _MarkerFreshness.offline;
   final diff = DateTime.now().difference(recordedAt);
   if (diff.inMinutes < 1) return _MarkerFreshness.fresh;
-  if (diff.inMinutes < 5) return _MarkerFreshness.recent;
+  if (diff.inMinutes < 15) return _MarkerFreshness.recent;
   return _MarkerFreshness.offline;
 }
 

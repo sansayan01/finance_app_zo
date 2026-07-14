@@ -56,8 +56,8 @@ class LiveLocationService {
 
     debugPrint('[LiveLocation] Started tracking. Session: $_sessionId');
 
-    // Upload immediately on start
-    await _uploadCurrentLocation();
+    // Upload immediately on start (fire-and-forget so duty toggle isn't blocked by GPS)
+    _uploadCurrentLocation();
 
     // Stream-based tracking: only emit when device moves 50m
     _positionSub = Geolocator.getPositionStream(
@@ -245,10 +245,10 @@ class LiveLocationService {
       speed: position.speed,
       heading: position.heading,
       activityType: _detectActivityType(position.speed),
-      createdAt: DateTime.now(),
+      createdAt: DateTime.now().toUtc(),
       batteryLevel: batteryLevel,
       isCharging: isCharging,
-      recordedAt: DateTime.now(),
+      recordedAt: DateTime.now().toUtc(),
       orgId: _currentOrgId,
       sessionId: _sessionId,
       isActive: true,

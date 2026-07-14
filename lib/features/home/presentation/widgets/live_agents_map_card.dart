@@ -112,7 +112,7 @@ class _LiveAgentsMapCardState extends ConsumerState<LiveAgentsMapCard>
     final recordedAt = DateTime.tryParse(recordedAtStr);
     if (recordedAt == null) return true;
     final diff = DateTime.now().difference(recordedAt);
-    return diff.inMinutes >= 5;
+    return diff.inMinutes >= 15;
   }
 
   void _fitToAgents() {

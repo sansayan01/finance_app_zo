@@ -97,7 +97,7 @@ export default function DocsLayout() {
             </div>
 
             <a
-              href="https://youtube.com/@microflowpro"
+              href="https://www.youtube.com/@Microflow_Pro"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-xs px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all font-medium"

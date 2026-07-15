@@ -65,7 +65,7 @@ export const docsContent = {
         { label: "👤 Add A Member", path: "/docs/collection-agent" },
         { label: "💰 Daily Collection Process", path: "/docs/collection-agent" },
         { label: "📊 Loan Statement PDF", path: "/docs/customer" },
-        { label: "📈 View Analytics & Reports", path: "/docs/executive-admin" },
+        { label: "🛡️ Team, Activity & Audit Log", path: "/docs/executive-admin" },
         { label: "📨 Configure SMS Alerts", path: "/docs/executive-admin" },
         { label: "📍 Agent Live Tracking", path: "/docs/branch-manager" },
         { label: "🔐 Force Password Reset", path: "/docs/executive-admin" }
@@ -73,78 +73,152 @@ export const docsContent = {
     },
     executiveAdmin: {
       title: "Executive Admin Guide",
-      desc: "As an Executive Admin, you hold full organization-level control. Access branch registries, add staff, manage loan products, configure system settings, and inspect organization-wide reports.",
+      desc: "As an Executive Admin you own your organization end-to-end — register it, brand it, set plans and limits, add staff and members, run loans and savings, and configure SMS. This guide walks through every feature.",
       lessons: [
         {
           icon: "🚀",
-          title: "Getting Started — First Login",
+          title: "Organization Registration",
           steps: [
-            { label: "Open the URL sent in your Welcome Email.", desc: "Use a secure browser like Chrome or Safari." },
-            { label: "Enter your registered Email Address and password.", desc: "If you forgot your password, click 'Forgot Password' directly below the input." },
-            { label: "Access the Home Dashboard to view organization summaries." }
+            { label: "On the Sign In screen, tap 'Create Organization'.", desc: "The Create Account form opens — 'Set up your organization in minutes'." },
+            { label: "Fill the 6 required fields.", desc: "Organization Name, your Full Name, Email, 10-digit Phone, Password (min 8 chars) and Confirm Password." },
+            { label: "Accept the Terms and tap 'Create Organization'.", desc: "A checkbox confirms you agree to the Terms of Service and Privacy Policy." },
+            { label: "Verify your email, then sign in.", desc: "We send a verification link to your email. Click it, then sign in — your organization is created automatically with a 14-day free trial." }
           ],
-          note: "Always update your profile details under settings immediately after your first login."
+          note: "Your account is created as the Executive Admin. No plan is chosen at signup — you start on a 14-day trial (up to 10 branches, 5 staff, 100 members)."
         },
         {
-          icon: "🏢",
-          title: "Setup Organization Preferences",
+          icon: "🏠",
+          title: "First Login & My Org Dashboard",
           steps: [
-            { label: "Select 'Settings' from the left navigation panel.", desc: "Then choose 'Organization Settings'." },
-            { label: "Enter legal name, billing details (GST/PAN), and official address.", desc: "Set locale settings to match your regional timezone." },
-            { label: "Scroll down to 'Branding Settings' and upload your logo to sync visual theme across all staff portals." }
+            { label: "Sign in to land on your My Org dashboard.", desc: "This is your organization's home — a snapshot of everything happening." },
+            { label: "Review the Overview stats.", desc: "Members, Staff, Active Loans, Total Disbursed, Outstanding, and Total Loans at a glance." },
+            { label: "Use Quick Actions to jump in.", desc: "Collect Payment, UPI Verify, Add Staff, New Member, New Loan, New Savings, and Branches." }
           ],
-          note: "Logo updates can take up to 2 minutes to sync across all portals."
+          note: "Tap 'My Org' (top-right) any time to return here. Pull down to refresh the latest numbers."
         },
         {
-          icon: "👥",
-          title: "Add and Manage Branches",
+          icon: "🎨",
+          title: "Organization Profile & Branding",
           steps: [
-            { label: "Navigate to the 'Branches' module via the side menu.", desc: "This lists all currently active offices." },
-            { label: "Click 'Add Branch' in the top right corner.", desc: "A modal registry form will appear." },
-            { label: "Enter Branch Name, Branch Code, geography/location details.", desc: "Assign an active Branch Manager from the list." },
-            { label: "Save to create. The code will serve as a system filter." }
+            { label: "Open Organization Settings.", desc: "From the dashboard tap 'Edit Organization Settings', or go to Settings → Organization Settings." },
+            { label: "Update your profile.", desc: "Change the Organization Name and Slug (used in URLs, e.g. my-mfi). Only the slug must be unique." },
+            { label: "Upload your logo.", desc: "Tap the logo box and pick a 512×512 image. It uploads to your org assets and shows across all staff portals." },
+            { label: "Set your brand colors.", desc: "Enter a Primary and Accent color (hex, e.g. #6366F1). The theme syncs across every portal for your org." }
           ],
-          note: "Each branch must have a unique code. Example: BM-SWAR-01"
-        },
-        {
-          icon: "👤",
-          title: "Invite and Register Staff",
-          steps: [
-            { label: "Open the 'Staff' section in the database overlay.", desc: "This displays current agents, managers, and admins." },
-            { label: "Tap 'Add Staff Member' to open registration.", desc: "Fill in name, phone number, and official email." },
-            { label: "Define user role (Branch Manager or Collection Agent).", desc: "Select their assigned physical branch." },
-            { label: "Click 'Send Invitation' to email registration link to the user." }
-          ],
-          note: "Staff will need to set their primary password by clicking the verification link in their email."
-        },
-        {
-          icon: "📊",
-          title: "Generate and Export Reports",
-          steps: [
-            { label: "Select the 'Reports' page under settings.", desc: "Choose your target category: collections, savings, or disbursals." },
-            { label: "Apply Filters (Branch context, Staff context, Date range).", desc: "Select daily, weekly, or monthly aggregations." },
-            { label: "Review charts for visual progress indicators.", desc: "Check parameters like Portfolio at Risk (PAR) and active collections." },
-            { label: "Click 'Export' to download PDF/Excel reports instantly." }
-          ]
-        },
-        {
-          icon: "📨",
-          title: "Manage SMS Alerts",
-          steps: [
-            { label: "Go to Settings > SMS Settings to configure notifications.", desc: "Verify active status under outbox providers." },
-            { label: "Customize message content for receipts and reminders.", desc: "You can write placeholders like {name} and {amount}." },
-            { label: "Toggle auto-send rules for collections and loan signups.", desc: "Click Save to apply." }
-          ],
-          note: "Automatic SMS delivery uses the custom SIM setup of the agent or the central gateway config."
+          note: "Logo and brand colors can take a couple of minutes to sync across all portals."
         },
         {
           icon: "💳",
-          title: "Billing and Plan Management",
+          title: "Plan, Status & Limits",
           steps: [
-            { label: "Go to Settings > Billing.", desc: "Check your current usage status." },
-            { label: "To edit billing metadata, tap 'Modify billing instructions'.", desc: "You can configure payment cycles." },
-            { label: "Provide new billing details or update payment options to ensure service." }
-          ]
+            { label: "Open your org's detail or settings page.", desc: "From the dashboard tap the org card, or 'Edit Organization Settings'." },
+            { label: "Switch the plan.", desc: "Tap the plan badge (Free / Basic / Pro / Enterprise) and pick a plan from the sheet." },
+            { label: "Change the status.", desc: "Tap the status chip to Activate, Suspend, or set to Trial. A suspended org is hidden from active use." },
+            { label: "Set your plan limits.", desc: "Under Plan Limits, set Max Branches, Max Staff, and Max Members. Usage bars show how close you are to each limit." }
+          ],
+          note: "During your 14-day trial you get 10 branches / 5 staff / 100 members. Upgrading raises these caps."
+        },
+        {
+          icon: "⚙️",
+          title: "Settings Overview",
+          steps: [
+            { label: "Open Settings from the menu.", desc: "Five sections appear: Account & Preferences, Organization Controls, System Connectivity, Security & Compliance, Utilities & Support." },
+            { label: "Account & Preferences.", desc: "Profile (name, phone, email, password), Dark Mode, Biometric login, Push Alerts, and the AI Assistant toggle." },
+            { label: "Organization Controls (admin only).", desc: "Organization Settings (branding, legal, address) and Loan & Savings Products (schemes, rates, limits)." },
+            { label: "System Connectivity (admin only).", desc: "Integrations — connect SMS, UPI, WhatsApp, SMTP, Razorpay, and PhonePe." },
+            { label: "Security & Compliance.", desc: "Security Shield & Activity Logs, 2FA, password policy, auto-logout, and Google Drive backup." }
+          ],
+          note: "Branding and plan limits also live under Organization Settings reached from the dashboard."
+        },
+        {
+          icon: "👥",
+          title: "Add Staff & Manage Users",
+          steps: [
+            { label: "Open Users.", desc: "From Quick Actions tap 'Add Staff', or go to the Users page." },
+            { label: "Create a new user.", desc: "Go to /users/new and enter their name, email, phone, and role (Manager or Collection Agent)." },
+            { label: "Review the user list.", desc: "The Users page lists everyone with role filters (Admin, Manager, Agent) and search by name or email." },
+            { label: "Enforce two-factor auth.", desc: "In Security & Compliance → Two-Factor Authentication, enforce 2FA and choose the method (Authenticator app or SMS) per role." }
+          ],
+          note: "Staff sign in with the email you register — they set their own password on first login."
+        },
+        {
+          icon: "🧑‍🤝‍🧑",
+          title: "Onboard Members (Customers)",
+          steps: [
+            { label: "Start member onboarding.", desc: "From Quick Actions tap 'New Member', or go to the Members page → Onboard Member." },
+            { label: "Enter member details.", desc: "Full name, verified mobile, address, and a primary document ID (Aadhaar / Voter)." },
+            { label: "Collect KYC documents.", desc: "Upload the KYC document photos. KYC should be verified before any loan is disbursed." },
+            { label: "Submit the profile.", desc: "The system creates the member with a unique Member ID linked to your org." }
+          ],
+          note: "Each member has an SMS Notifications toggle on their loan and savings pages — this is their only SMS opt-out."
+        },
+        {
+          icon: "🏢",
+          title: "Manage Branches",
+          steps: [
+            { label: "Open Branches.", desc: "From Quick Actions tap 'Branches', or open it from Organization Settings." },
+            { label: "Add a branch.", desc: "Tap to create a branch and enter its Name, Code, and location (zone / district)." },
+            { label: "Review the branch list.", desc: "Your org detail page lists all branches with their code and active/suspended status." },
+            { label: "Assign a manager.", desc: "Each branch is tied to a Branch Manager you invited under Users." }
+          ],
+          note: "Branch codes are unique within your org and are used to filter reports and collections."
+        },
+        {
+          icon: "💰",
+          title: "Loans — Create & Track",
+          steps: [
+            { label: "Open New Loan.", desc: "From Quick Actions tap 'New Loan' (the 'Deploy Capital' page)." },
+            { label: "Enter loan details.", desc: "Pick the Borrower (member), Principal (₹1K–₹10L), Interest (APR % or fixed amount, per day/week/month/year), Interest Logic (flat or reducing), First Installment Date, Tenure, and Collection Type (Daily/Weekly/Monthly/Yearly)." },
+            { label: "Review the live summary.", desc: "The Financial Summary shows estimated installment, total interest, and a full amortization (EMI) preview before you save." },
+            { label: "Track the active loan.", desc: "Loans are created live (active) — no approval gate. The loan detail shows outstanding balance, due alerts (OVERDUE / DUE TODAY), EMI timeline, and Loan Intelligence." },
+            { label: "Manage the loan.", desc: "From the '…' menu: Edit, Mark Defaulted, Reactivate, Restructure, Freeze Skipped EMIs, or Delete." }
+          ],
+          note: "EMI statuses include PAID, DUE, OVERDUE, WAIVED, PENDING, and FROZEN. Collect / Settle / Reminder actions appear for open loans."
+        },
+        {
+          icon: "🏦",
+          title: "Savings — Manage Plans",
+          steps: [
+            { label: "Open New Savings Plan.", desc: "From Quick Actions tap 'New Savings'." },
+            { label: "Enter plan details.", desc: "Pick the Member, Collection Cycle (Daily/Weekly/Monthly/Yearly), Installment Amount (₹10–₹50K), Start Date, Tenure, Maturity Amount, and Premature Penalty %." },
+            { label: "Review the Wealth Forecast.", desc: "Live preview shows guaranteed maturity, total installments, total capital, and estimated yield." },
+            { label: "Deposit & withdraw.", desc: "Deposit any time from the collection sheet. Withdrawals go to a Withdrawal Requests queue (Pending/Approved/Rejected) where a manager approves or rejects with a reason." },
+            { label: "Manage the vault.", desc: "Pause/Resume the vault, Close the account, or (admin only) Delete permanently. Balances and a yield-projection chart are shown." }
+          ],
+          note: "Savings are Principal Protected. Premature withdrawal applies the penalty % you set at creation."
+        },
+        {
+          icon: "📨",
+          title: "SMS & Notifications",
+          steps: [
+            { label: "Open SMS Settings.", desc: "Settings → Integrations → Communications tab → Local SMS. This opens the SMS Settings page (admin only)." },
+            { label: "Turn on auto-receipts.", desc: "'SMS on Collection' and 'SMS on Savings Deposit' are ON by default — customers get a receipt after every transaction." },
+            { label: "Enable EMI reminders.", desc: "Toggle 'Due EMI Reminders' (OFF by default) and set a daily Reminder Time. Templates use {name}, {amount}, {loan_id}, {balance}." },
+            { label: "Pick the SIM slot.", desc: "Under SIM & Outbox, choose which device SIM sends SMS, send a test SMS, and view Sent SMS history (last 200)." },
+            { label: "Per-member opt-out.", desc: "On any loan or savings detail page, toggle 'SMS Notifications' to enable/disable reminders for that member." }
+          ],
+          note: "SMS is sent from the device's SIM (native Android plugin) — there is no external SMS gateway. WhatsApp and Email are configured separately under Integrations."
+        },
+        {
+          icon: "💸",
+          title: "Collect Payments & UPI Verify",
+          steps: [
+            { label: "Open Collect Payment.", desc: "From Quick Actions tap 'Collect Payment' to start a collection." },
+            { label: "Log the collection.", desc: "Pick the member/loan, enter the amount, choose the mode (Cash, UPI, or Bank), and submit. A receipt SMS is sent automatically if enabled." },
+            { label: "Verify UPI payments.", desc: "From Quick Actions tap 'UPI Verify' to confirm a customer's UPI reference against the expected payment." }
+          ],
+          note: "Collections appear instantly on the dashboard's Recent Collections and sync to the cloud."
+        },
+        {
+          icon: "🛡️",
+          title: "Team, Activity & Audit Log",
+          steps: [
+            { label: "Open your org detail page.", desc: "Tap any org card on the dashboard to see the full summary." },
+            { label: "View Team Members.", desc: "The Team tile lists all staff with role-coloured avatars and a name/email search and role filter." },
+            { label: "Check Recent Activity.", desc: "The Activity tile shows a log of actions (auth, loan, payment, savings, member) with who did what and when." },
+            { label: "Open Security & Activity Logs.", desc: "In Settings → Security & Compliance, open System Activity Logs and configure audit retention, password policy, and Google Drive backup." }
+          ],
+          note: "Audit logs help you trace every change — useful during reviews or disputes."
         }
       ]
     },
@@ -332,7 +406,7 @@ export const docsContent = {
         { label: "👤 नया सदस्य कैसे जोड़ें", path: "/docs/collection-agent" },
         { label: "💰 दैनिक संग्रह की प्रक्रिया", path: "/docs/collection-agent" },
         { label: "📊 लोन स्टेटमेंट PDF निकालना", path: "/docs/customer" },
-        { label: "📈 रिपोर्ट और चार्ट देखना", path: "/docs/executive-admin" },
+        { label: "🛡️ टीम, गतिविधि और ऑडिट लॉग", path: "/docs/executive-admin" },
         { label: "📨 एसएमएस अलर्ट सेट करना", path: "/docs/executive-admin" },
         { label: "📍 एजेंट लाइव ट्रैकिंग", path: "/docs/branch-manager" },
         { label: "🔐 पासवर्ड रीसेट करना", path: "/docs/executive-admin" }
@@ -340,69 +414,152 @@ export const docsContent = {
     },
     executiveAdmin: {
       title: "मुख्य एडमिन गाइड (Executive Admin)",
-      desc: "मुख्य एडमिन के रूप में, आपके पास पूरे संगठन का डेटा और नियंत्रण होता है। शाखाएं बनाना, स्टाफ जोड़ना, ब्याज दरें बदलना, और पूरे संगठन की विस्तृत रिपोर्ट देखना यहाँ सीखें।",
+      desc: "मुख्य एडमिन (Executive Admin) के रूप में आप अपने संगठन का पूरा मालिक होते हैं — इसे रजिस्टर करना, ब्रांडिंग करना, प्लान और सीमा तय करना, स्टाफ और सदस्य जोड़ना, लोन और बचत चलाना, और एसएमएस सेट करना। यह गाइड हर फीचर को कवर करता है।",
       lessons: [
         {
           icon: "🚀",
-          title: "शुरुआत करना — पहला लॉगिन",
+          title: "संगठन रजिस्ट्रेशन (Organization Registration)",
           steps: [
-            { label: "अपने स्वागत ईमेल (Welcome Email) में दिए गए लिंक को खोलें।", desc: "क्रोम (Chrome) या सफारी जैसे सुरक्षित ब्राउज़र का उपयोग करें।" },
-            { label: "अपना पंजीकृत ईमेल एड्रेस और पासवर्ड दर्ज करें।", desc: "यदि आप पासवर्ड भूल गए हैं, तो नीचे 'Forgot Password' पर क्लिक करें।" },
-            { label: "एकीकृत डैशबोर्ड पर जाएं और संगठन की कुल स्थिति का जायजा लें।" }
+            { label: "साइन इन स्क्रीन पर 'Create Organization' पर टैप करें।", desc: "Create Account फॉर्म खुलेगा — 'Set up your organization in minutes'।" },
+            { label: "6 अनिवार्य फ़ील्ड्स भरें।", desc: "संगठन का नाम, अपना पूरा नाम, ईमेल, 10 अंकों का फ़ोन, पासवर्ड (कम से कम 8 अक्षर) और पासवर्ड कन्फर्म करें।" },
+            { label: "नियम स्वीकार करें और 'Create Organization' दबाएं।", desc: "एक चेकबॉक्स से आप Terms of Service और Privacy Policy स्वीकार करते हैं।" },
+            { label: "अपना ईमेल वेरीफाई करें, फिर साइन इन करें।", desc: "हम आपके ईमेल पर एक वेरिफिकेशन लिंक भेजते हैं। उस पर क्लिक करें, फिर साइन इन करें — आपका संगठन अपने आप 14 दिन के फ्री ट्रायल के साथ बन जाता है।" }
           ],
-          note: "लॉगिन करने के बाद सबसे पहले अपनी प्रोफाइल सेटिंग्स में जाकर जानकारियों को अपडेट कर लें।"
+          note: "आपका अकाउंट मुख्य एडमिन (Executive Admin) के रूप में बनता है। साइनअप पर कोई प्लान नहीं चुना जाता — आप 14 दिन के ट्रायल पर शुरू होते हैं (10 ब्रांच, 5 स्टाफ, 100 सदस्य तक)।"
         },
         {
-          icon: "🏢",
-          title: "संगठन की सेटिंग्स करना",
+          icon: "🏠",
+          title: "पहला लॉगिन और My Org डैशबोर्ड",
           steps: [
-            { label: "बाएं मेनू से 'Settings' (सेटिंग्स) का चयन करें।", desc: "फिर 'Organization Settings' (संगठन सेटिंग्स) चुनें।" },
-            { label: "संस्था का कानूनी नाम, टैक्स विवरण (GST/PAN) और पता दर्ज करें।", desc: "अपने क्षेत्र की भाषा और समय क्षेत्र (Timezone) का चयन करें।" },
-            { label: "Branding Settings में जाकर अपना लोगो लोड करें ताकि सभी स्टाफ ऐप्स का रंग-रूप बदल सके।" }
+            { label: "साइन इन करें तो आपका My Org डैशबोर्ड खुलेगा।", desc: "यह आपके संगठन का होम है — यहाँ सब कुछ का एक झलक मिलता है।" },
+            { label: "Overview के आँकड़े देखें।", desc: "सदस्य (Members), स्टाफ, एक्टिव लोन, कुल वितरित (Disbursed), बकाया (Outstanding), और कुल लोन एक नज़र में।" },
+            { label: "Quick Actions का उपयोग करें।", desc: "भुगतान लें (Collect Payment), UPI वेरीफाई, स्टाफ जोड़ें, नया सदस्य, नया लोन, नई बचत, और शाखाएं।" }
           ],
-          note: "लोगो अपडेट होने में और सभी डिवाइस पर दिखने में 2 मिनट का समय लग सकता है।"
+          note: "कभी भी वापस आने के लिए ऊपर दाईं ओर 'My Org' पर टैप करें। नए आँकड़ों के लिए नीचे से ऊपर खींचें (refresh)।"
+        },
+        {
+          icon: "🎨",
+          title: "संगठन प्रोफाइल और ब्रांडिंग",
+          steps: [
+            { label: "Organization Settings खोलें।", desc: "डैशबोर्ड से 'Edit Organization Settings' पर टैप करें, या Settings → Organization Settings पर जाएं।" },
+            { label: "अपनी प्रोफाइल अपडेट करें।", desc: "संगठन का नाम और Slug (URL में उपयोग होता है, जैसे my-mfi) बदलें। केवल slug अनूठा (unique) होना चाहिए।" },
+            { label: "अपना लोगो अपलोड करें।", desc: "लोगो बॉक्स पर टैप करें और 512×512 इमेज चुनें। यह आपके संगठन के असेट्स में अपलोड होता है और सभी स्टाफ पोर्टल्स पर दिखता है।" },
+            { label: "अपने ब्रांड कलर सेट करें।", desc: "Primary और Accent कलर (hex, जैसे #6366F1) डालें। थीम आपके संगठन के हर पोर्टल पर सिंक हो जाती है।" }
+          ],
+          note: "लोगो और ब्रांड कलर सभी पोर्टल्स पर सिंक होने में कुछ मिनट ले सकते हैं।"
+        },
+        {
+          icon: "💳",
+          title: "प्लान, स्थिति और सीमा (Plan, Status & Limits)",
+          steps: [
+            { label: "अपने संगठन का विवरण या सेटिंग पेज खोलें।", desc: "डैशबोर्ड से ऑर्ग कार्ड पर टैप करें, या 'Edit Organization Settings'।" },
+            { label: "प्लान बदलें।", desc: "प्लान बैज (Free / Basic / Pro / Enterprise) पर टैप करें और शीट से प्लान चुनें।" },
+            { label: "स्थिति (Status) बदलें।", desc: "स्टेटस चिप पर टैप करके Activate, Suspend, या Trial सेट करें। Suspended ऑर्ग एक्टिव उपयोग से छिप जाता है।" },
+            { label: "अपनी प्लान सीमा सेट करें।", desc: "Plan Limits के अंतर्गत Max Branches, Max Staff, और Max Members सेट करें। यूज़ेज बार दिखाते हैं कि आप हर सीमा के कितना पास हैं।" }
+          ],
+          note: "अपने 14 दिन के ट्रायल में आपको 10 ब्रांच / 5 स्टाफ / 100 सदस्य मिलते हैं। अपग्रेड करने पर ये कैप बढ़ जाते हैं।"
+        },
+        {
+          icon: "⚙️",
+          title: "सेटिंग्स अवलोकन (Settings Overview)",
+          steps: [
+            { label: "मेनू से Settings खोलें।", desc: "पाँच सेक्शन दिखते हैं: Account & Preferences, Organization Controls, System Connectivity, Security & Compliance, Utilities & Support।" },
+            { label: "Account & Preferences।", desc: "प्रोफाइल (नाम, फ़ोन, ईमेल, पासवर्ड), डार्क मोड, बायोमेट्रिक लॉगिन, पुश अलर्ट, और AI असिस्टेंट टॉगल।" },
+            { label: "Organization Controls (केवल एडमिन)।", desc: "Organization Settings (ब्रांडिंग, कानूनी, पता) और Loan & Savings Products (योजनाएं, दरें, सीमा)।" },
+            { label: "System Connectivity (केवल एडमिन)।", desc: "Integrations — SMS, UPI, WhatsApp, SMTP, Razorpay, और PhonePe कनेक्ट करें।" },
+            { label: "Security & Compliance।", desc: "Security Shield & Activity Logs, 2FA, पासवर्ड पॉलिसी, ऑटो-लॉगआउट, और Google Drive बैकअप।" }
+          ],
+          note: "ब्रांडिंग और प्लान लिमिट डैशबोर्ड से खुले Organization Settings के अंतर्गत भी मिलते हैं।"
         },
         {
           icon: "👥",
-          title: "शाखा (Branch) जोड़ना और संभालना",
+          title: "स्टाफ जोड़ें और यूज़र्स प्रबंधित करें",
           steps: [
-            { label: "साइड मेनू से 'Branches' (शाखाएं) विकल्प पर जाएं।", desc: "यहाँ आपकी सभी शाखाओं की सूची दिखेगी।" },
-            { label: "ऊपर दाईं ओर 'Add Branch' (शाखा जोड़ें) पर क्लिक करें।", desc: "एक नया फॉर्म खुलेगा।" },
-            { label: "शाखा का नाम, ब्रांच कोड और उसकी जगह का विवरण लिखें।", desc: "सूची में से किसी एक स्टाफ को वहां का मैनेजर (प्रबंधक) नियुक्त करें।" },
-            { label: "सुरक्षित (Save) करें। कोड का उपयोग बाद में रिपोर्ट फ़िल्टर करने के लिए किया जाएगा।" }
+            { label: "Users खोलें।", desc: "Quick Actions से 'Add Staff' पर टैप करें, या Users पेज पर जाएं।" },
+            { label: "नया यूज़र बनाएं।", desc: "/users/new पर जाएं और नाम, ईमेल, फ़ोन, और भूमिका (Manager या Collection Agent) डालें।" },
+            { label: "यूज़र सूची देखें।", desc: "Users पेज में सबकी सूची है जिसमें रोल फ़िल्टर (Admin, Manager, Agent) और नाम/ईमेल से खोज है।" },
+            { label: "टू-फैक्टर ऑथ (2FA) लागू करें।", desc: "Security & Compliance → Two-Factor Authentication में 2FA लागू करें और विधि (Authenticator ऐप या SMS) रोल के हिसाब से चुनें।" }
           ],
-          note: "हर शाखा का कोड अलग (Unique) होना चाहिए। जैसे: BM-SWAR-01"
+          note: "स्टाफ उसी ईमेल से साइन इन करते हैं जो आप रजिस्टर करते हैं — पहली लॉगिन पर वे अपना पासवर्ड सेट करते हैं।"
         },
         {
-          icon: "👤",
-          title: "नया स्टाफ सदस्य पंजीकृत करना",
+          icon: "🧑‍🤝‍🧑",
+          title: "सदस्य ऑनबोर्डिंग (Members / Customers)",
           steps: [
-            { label: "स्टाफ (Staff) सेक्शन खोलें और सूची देखें।", desc: "यहाँ सभी सक्रिय फील्ड एजेंट और मैनेजर दिखेंगे।" },
-            { label: "'Add Staff Member' पर क्लिक करें।", desc: "उसका नाम, मोबाइल नंबर और ईमेल लिखें।" },
-            { label: "स्टाफ की भूमिका चुनें (Branch Manager या Collection Agent)।", desc: "उनकी पोस्टिंग की शाखा का चयन करें।" },
-            { label: "'Send Invitation' पर क्लिक करें। उन्हें ईमेल पर लॉगिन पासवर्ड सेट करने का लिंक मिलेगा।" }
+            { label: "सदस्य ऑनबोर्डिंग शुरू करें।", desc: "Quick Actions से 'New Member' पर टैप करें, या Members पेज → Onboard Member।" },
+            { label: "सदस्य का विवरण डालें।", desc: "पूरा नाम, सत्यापित मोबाइल, पता, और प्राथमिक दस्तावेज़ ID (आधार / वोटर)।" },
+            { label: "KYC दस्तावेज़ अपलोड करें।", desc: "KYC दस्तावेज़ की फोटो अपलोड करें। कोई लोन देने से पहले KYC वेरीफाई होना चाहिए।" },
+            { label: "प्रोफाइल सबमिट करें।", desc: "सिस्टम सदस्य को एक यूनिक Member ID के साथ बनाती है जो आपके ऑर्ग से जुड़ता है।" }
           ],
-          note: "स्टाफ मेंबर को अपने ईमेल पर आए लिंक पर क्लिक करके अपना पहला पासवर्ड बनाना होगा।"
+          note: "हर सदस्य के लोन और बचत पेज पर एक SMS Notifications टॉगल होता है — यही उनका एकमात्र SMS ऑप्ट-आउट है।"
         },
         {
-          icon: "📊",
-          title: "रिपोर्ट्स और चार्ट्स देखना",
+          icon: "🏢",
+          title: "शाखाएं प्रबंधित करें (Manage Branches)",
           steps: [
-            { label: "बाएं पैनल से 'Reports' विकल्प चुनें।", desc: "संग्रह (Collections), ऋण वितरण (Disbursals) या बचत का चयन करें।" },
-            { label: "फ़िल्टर लागू करें (तारीख, शाखा, या किसी विशिष्ट एजेंट की रिपोर्ट)।" },
-            { label: "व्यापारिक ग्राफ़ और जोखिम वाले ऋण (PAR) का विश्लेषण करें।" },
-            { label: "Excel या PDF डाउनलोड करने के लिए 'Export' बटन पर क्लिक करें।" }
-          ]
+            { label: "Branches खोलें।", desc: "Quick Actions से 'Branches' पर टैप करें, या Organization Settings से खोलें।" },
+            { label: "शाखा जोड़ें।", desc: "शाखा बनाने के लिए टैप करें और उसका Name, Code, और स्थान (zone / district) डालें।" },
+            { label: "शाखा सूची देखें।", desc: "आपके ऑर्ग विवरण पेज में सभी शाखाएं उनके कोड और active/suspended स्थिति के साथ दिखती हैं।" },
+            { label: "एक मैनेजर नियुक्त करें।", desc: "हर शाखा Users में आपके द्वारा आमंत्रित किसी Branch Manager से जुड़ी होती है।" }
+          ],
+          note: "ब्रांच कोड आपके ऑर्ग के भीतर यूनिक होते हैं और रिपोर्ट व कलेक्शन फ़िल्टर करने में उपयोग होते हैं।"
+        },
+        {
+          icon: "💰",
+          title: "लोन — बनाएं और ट्रैक करें",
+          steps: [
+            { label: "New Loan खोलें।", desc: "Quick Actions से 'New Loan' पर टैप करें ('Deploy Capital' पेज)।" },
+            { label: "लोन का विवरण डालें।", desc: "Borrower (सदस्य) चुनें, Principal (₹1K–₹10L), ब्याज (APR % या निश्चित राशि, प्रति day/week/month/year), Interest Logic (flat या reducing), पहली किस्त की तारीख, Tenure, और Collection Type (Daily/Weekly/Monthly/Yearly)।" },
+            { label: "लाइव सारांश देखें।", desc: "Financial Summary अनुमानित किस्त, कुल ब्याज, और पूरा amortization (EMI) प्रीव्यू सेव करने से पहले दिखाता है।" },
+            { label: "एक्टिव लोन ट्रैक करें।", desc: "लोन सीधे (active) बनते हैं — कोई अनुमोदन गेट नहीं। लोन विवरण में बकाया, देय अलर्ट (OVERDUE / DUE TODAY), EMI टाइमलाइन, और Loan Intelligence दिखता है।" },
+            { label: "लोन प्रबंधित करें।", desc: "'…' मेनू से: Edit, Mark Defaulted, Reactivate, Restructure, Freeze Skipped EMIs, या Delete।" }
+          ],
+          note: "EMI की स्थिति में PAID, DUE, OVERDUE, WAIVED, PENDING, और FROZEN शामिल हैं। खुले लोन पर Collect / Settle / Reminder एक्शन दिखते हैं।"
+        },
+        {
+          icon: "🏦",
+          title: "बचत — योजनाएं प्रबंधित करें (Savings)",
+          steps: [
+            { label: "New Savings Plan खोलें।", desc: "Quick Actions से 'New Savings' पर टैप करें।" },
+            { label: "योजना का विवरण डालें।", desc: "सदस्य चुनें, Collection Cycle (Daily/Weekly/Monthly/Yearly), Installment Amount (₹10–₹50K), Start Date, Tenure, Maturity Amount, और Premature Penalty %।" },
+            { label: "Wealth Forecast देखें।", desc: "लाइव प्रीव्यू गारंटीड मैच्योरिटी, कुल किस्तें, कुल कैपिटल, और अनुमानित यील्ड दिखाता है।" },
+            { label: "जमा (Deposit) और निकासी (Withdraw)।", desc: "कलेक्शन शीट से कभी भी जमा करें। निकासी एक Withdrawal Requests कतार (Pending/Approved/Rejected) में जाती है जहाँ मैनेजर कारण के साथ स्वीकृत या अस्वीकृत करता है।" },
+            { label: "वॉल्ट प्रबंधित करें।", desc: "Pause/Resume वॉल्ट, खाता बंद (Close), या (केवल एडमिन) स्थायी रूप से डिलीट करें। बैलेंस और यील्ड-प्रोजेक्शन चार्ट दिखते हैं।" }
+          ],
+          note: "बचत Principal Protected होती है। समय से पहले निकासी पर वह Penalty % लगता है जो आपने बनाने के समय सेट किया था।"
         },
         {
           icon: "📨",
-          title: "एसएमएस (SMS) रसीद सेटिंग्स",
+          title: "एसएमएस और सूचनाएं (SMS & Notifications)",
           steps: [
-            { label: "Settings > SMS Settings पर जाएं।", desc: "चेक करें की रसीद भेजने की सुविधा एक्टिव है या नहीं।" },
-            { label: "एसएमएस मैसेज का प्रारूप (Template) बदलें।", desc: "आप {name} और {amount} जैसे कोड का उपयोग कर सकते हैं।" },
-            { label: "भुगतान प्राप्त होते ही ऑटो-एसएमएस भेजने का नियम चालू (Toggle ON) करें।" }
+            { label: "SMS Settings खोलें।", desc: "Settings → Integrations → Communications टैब → Local SMS। यह SMS Settings पेज खोलता है (केवल एडमिन)।" },
+            { label: "ऑटो-रसीद चालू करें।", desc: "'SMS on Collection' और 'SMS on Savings Deposit' डिफ़ॉल्ट ON हैं — हर लेन-देन के बाद ग्राहक को रसीद मिलती है।" },
+            { label: "EMI रिमाइंडर चालू करें।", desc: "'Due EMI Reminders' (डिफ़ॉल्ट OFF) टॉगल करें और दैनिक Reminder Time सेट करें। टेम्पलेट {name}, {amount}, {loan_id}, {balance} का उपयोग करते हैं।" },
+            { label: "SIM स्लॉट चुनें।", desc: "SIM & Outbox के अंतर्गत चुनें कि SMS कौन सा डिवाइस SIM भेजे, टेस्ट SMS भेजें, और भेजे गए SMS इतिहास (आखिरी 200) देखें।" },
+            { label: "सदस्य-वार ऑप्ट-आउट।", desc: "किसी भी लोन या बचत विवरण पेज पर 'SMS Notifications' टॉगल कर उस सदस्य के लिए रिमाइंडर चालू/बंद करें।" }
           ],
-          note: "स्वचालित एसएमएस एजेंट के मोबाइल सिम या प्लेटफॉर्म के सेंट्रलाइज्ड गेटवे से भेजे जाते हैं।"
+          note: "SMS डिवाइस के SIM (native Android plugin) से जाता है — कोई बाहरी SMS गेटवे नहीं। WhatsApp और Email अलग से Integrations में सेट होते हैं।"
+        },
+        {
+          icon: "💸",
+          title: "भुगतान लें और UPI वेरीफाई करें",
+          steps: [
+            { label: "Collect Payment खोलें।", desc: "Quick Actions से 'Collect Payment' पर टैप करके कलेक्शन शुरू करें।" },
+            { label: "कलेक्शन दर्ज करें।", desc: "सदस्य/लोन चुनें, राशि डालें, मोड (Cash, UPI, या Bank) चुनें, और सबमिट करें। सक्षम होने पर रसीद SMS अपने आप जाती है।" },
+            { label: "UPI भुगतान वेरीफाई करें।", desc: "Quick Actions से 'UPI Verify' पर टैप करके ग्राहक के UPI रेफरेंस को अपेक्षित भुगतान से मिलाएं।" }
+          ],
+          note: "कलेक्शन डैशबोर्ड की Recent Collections में तुरंत दिखते हैं और क्लाउड में सिंक होते हैं।"
+        },
+        {
+          icon: "🛡️",
+          title: "टीम, गतिविधि और ऑडिट लॉग",
+          steps: [
+            { label: "अपना ऑर्ग विवरण पेज खोलें।", desc: "डैशबोर्ड पर किसी भी ऑर्ग कार्ड पर टैप करें ताकि पूरा सारांश दिखे।" },
+            { label: "Team Members देखें।", desc: "Team टाइल सभी स्टाफ को रोल-रंगीन अवतार के साथ दिखाती है, नाम/ईमेल खोज और रोल फ़िल्टर के साथ।" },
+            { label: "Recent Activity जांचें।", desc: "Activity टाइल क्रियाओं (auth, loan, payment, savings, member) का लॉग दिखाती है — किसने क्या और कब किया।" },
+            { label: "Security & Activity Logs खोलें।", desc: "Settings → Security & Compliance में System Activity Logs खोलें और ऑडिट रिटेंशन, पासवर्ड पॉलिसी, और Google Drive बैकअप सेट करें।" }
+          ],
+          note: "ऑडिट लॉग हर बदलाव का पता लगाने में मदद करते हैं — समीक्षा या विवाद के समय उपयोगी।"
         }
       ]
     },
@@ -561,7 +718,7 @@ export const docsContent = {
       portals: {
         admin: {
           title: "এক্সিকিউটিভ অ্যাডমিন (মূল অ্যাডমিন)",
-          desc: "অর্গানাইজেশন সেটআপ, ব্রাঞ্চ পরিচালনা, স্টাফদের তদারকি এবং বিস্তারিত রিপোর্ট ও অ্যানালিটিক্সের নিয়ন্ত্রণ।"
+          desc: "অর্গানাইজেশন সেটআপ, ব্রাঞ্চ পরিচালনা, স্টাফদের তদারকি, ঋণ ও সঞ্চয় পরিচালনা এবং এসএমএস সেটিংসের সম্পূর্ণ নিয়ন্ত্রণ।"
         },
         manager: {
           title: "শাখা ব্যবস্থাপক (Branch Manager)",
@@ -581,7 +738,7 @@ export const docsContent = {
         { label: "👤 নতুন মেম্বার কীভাবে যুক্ত করবেন", path: "/docs/collection-agent" },
         { label: "💰 দৈনিক কালেকশন প্রক্রিয়া", path: "/docs/collection-agent" },
         { label: "📊 লোন স্টেটমেন্ট PDF বের করা", path: "/docs/customer" },
-        { label: "📈 রিপোর্ট এবং চার্ট দেখা", path: "/docs/executive-admin" },
+        { label: "🛡️ টিম, কার্যকলাপ ও অডিট লগ", path: "/docs/executive-admin" },
         { label: "📨 এসএমএস অ্যালার্ট সেট করা", path: "/docs/executive-admin" },
         { label: "📍 এজেন্টের লাইভ লোকেশন ট্র্যাকিং", path: "/docs/branch-manager" },
         { label: "🔐 পাসওয়ার্ড রিসেট করা", path: "/docs/executive-admin" }
@@ -589,69 +746,152 @@ export const docsContent = {
     },
     executiveAdmin: {
       title: "মূল অ্যাডমিন গাইড (Executive Admin)",
-      desc: "এক্সিকিউটিভ অ্যাডমিন হিসেবে আপনার কাছে পুরো অর্গানাইজেশনের সম্পূর্ণ নিয়ন্ত্রণ থাকে। নতুন ব্রাঞ্চ তৈরি করা, স্টাফদের আমন্ত্রন পাঠানো, সুদের হার নির্ধারণ এবং আর্থিক বিবরণী দেখা এখান থেকে জানুন।",
+      desc: "এক্সিকিউটিভ অ্যাডমিন (Executive Admin) হিসেবে আপনি আপনার সংস্থার সম্পূর্ণ মালিক — এটি নিবন্ধন করা, ব্র্যান্ডিং করা, প্ল্যান ও সীমা ঠিক করা, স্টাফ ও সদস্য যোগ করা, ঋণ ও সঞ্চয় পরিচালনা এবং এসএমএস সেট করা। এই গাইডটি প্রতিটি বৈশিষ্ট্য কভার করে।",
       lessons: [
         {
           icon: "🚀",
-          title: "শুরু করা — প্রথম লগইন",
+          title: "সংস্থা নিবন্ধন (Organization Registration)",
           steps: [
-            { label: "স্বাগতম ইমেলে (Welcome Email) দেওয়া লিঙ্কটি ব্রাউজারে খুলুন।", desc: "Chrome বা Safari-র মতো সুরক্ষিত ব্রাউজার ব্যবহার করুন।" },
-            { label: "আপনার রেজিস্টার্ড ইমেল এবং পাসওয়ার্ড লিখুন।", desc: "পাসওয়ার্ড ভুলে গেলে নিচে 'Forgot Password' অপশনে ক্লিক করুন।" },
-            { label: "হোম ড্যাশবোর্ডে গিয়ে পুরো অর্গানাইজেশনের একটা সংক্ষিপ্ত খতিয়ান দেখে নিন।" }
+            { label: "সাইন ইন স্ক্রিনে 'Create Organization'-এ ট্যাপ করুন।", desc: "Create Account ফর্মটি খুলবে — 'Set up your organization in minutes'।" },
+            { label: "৬টি বাধ্যতামূলক ক্ষেত্র পূরণ করুন।", desc: "সংস্থার নাম, আপনার পুরো নাম, ইমেল, ১০-সংখ্যার ফোন, পাসওয়ার্ড (সর্বনিম্ন ৮ অক্ষর) এবং পাসওয়ার্ড নিশ্চিত করুন।" },
+            { label: "শর্তাবলী গ্রহণ করে 'Create Organization' চাপুন।", desc: "একটি চেকবক্সের মাধ্যমে আপনি Terms of Service এবং Privacy Policy গ্রহণ করেন।" },
+            { label: "আপনার ইমেল যাচাই করুন, তারপর সাইন ইন করুন।", desc: "আমরা আপনার ইমেলে একটি যাচাইকরণ লিঙ্ক পাঠাই। সেটিতে ক্লিক করুন, তারপর সাইন ইন করুন — আপনার সংস্থা স্বয়ংক্রিয়ভাবে ১৪ দিনের ফ্রি ট্রায়াল সহ তৈরি হয়।" }
           ],
-          note: "প্রথমবার লগইন করার পর অবশ্যই সেটিংসের প্রোফাইল পেজে গিয়ে আপনার বিস্তারিত তথ্য আপডেট করে নিন।"
+          note: "আপনার অ্যাকাউন্টটি এক্সিকিউটিভ অ্যাডমিন হিসেবে তৈরি হয়। সাইনআপে কোনো প্ল্যান বাছাই হয় না — আপনি ১৪ দিনের ট্রায়ালে শুরু করেন (সর্বোচ্চ ১০ ব্রাঞ্চ, ৫ স্টাফ, ১০০ সদস্য)।"
         },
         {
-          icon: "🏢",
-          title: "অর্গানাইজেশনের সেটিংস তৈরি",
+          icon: "🏠",
+          title: "প্রথম লগইন এবং My Org ড্যাশবোর্ড",
           steps: [
-            { label: "বাঁদিকের নেভিগেশন প্যানেল থেকে 'Settings' নির্বাচন করুন।", desc: "তারপর 'Organization Settings' অপশনে যান।" },
-            { label: "সংস্থার আইনি নাম, করের বিবরণ (GST/PAN) এবং ঠিকানা লিখুন।", desc: "আপনার স্থানীয় ভাষা এবং সময় নির্ধারণ (Timezone) করুন।" },
-            { label: "Branding Settings-এ গিয়ে সংস্থার লোগো আপলোড করুন, যা দিয়ে সমস্ত স্টাফ অ্যাপের থিম কালার বদলে যাবে।" }
+            { label: "সাইন ইন করলে আপনার My Org ড্যাশবোর্ড খুলবে।", desc: "এটি আপনার সংস্থার হোম — এখানে সবকিছুর একটি ঝলক পাওয়া যায়।" },
+            { label: "Overview-এর পরিসংখ্যান দেখুন।", desc: "সদস্য (Members), স্টাফ, সক্রিয় ঋণ (Active Loans), মোট বিতরণ (Disbursed), বকেয়া (Outstanding), এবং মোট ঋণ এক নজরে।" },
+            { label: "Quick Actions ব্যবহার করুন।", desc: "ভুগতান নিন (Collect Payment), UPI যাচাই, স্টাফ যোগ করুন, নতুন সদস্য, নতুন ঋণ, নতুন সঞ্চয়, এবং শাখাসমূহ।" }
           ],
-          note: "লোগো আপডেট হওয়ার পর সমস্ত ব্রাঞ্চ ও স্টাফ পোর্টালে সিঙ্ক হতে ২ মিনিট পর্যন্ত সময় লাগতে পারে।"
+          note: "যেকোনো সময় ফিরে আসতে উপরে ডানদিকে 'My Org'-এ ট্যাপ করুন। নতুন সংখ্যার জন্য নিচ থেকে উপরে টানুন (refresh)।"
+        },
+        {
+          icon: "🎨",
+          title: "সংস্থার প্রোফাইল ও ব্র্যান্ডিং",
+          steps: [
+            { label: "Organization Settings খুলুন।", desc: "ড্যাশবোর্ড থেকে 'Edit Organization Settings'-এ ট্যাপ করুন, অথবা Settings → Organization Settings-এ যান।" },
+            { label: "আপনার প্রোফাইল আপডেট করুন।", desc: "সংস্থার নাম এবং Slug (URL-এ ব্যবহৃত হয়, যেমন my-mfi) বদলান। কেবল slug অনন্য (unique) হতে হবে।" },
+            { label: "আপনার লোগো আপলোড করুন।", desc: "লোগো বাক্সে ট্যাপ করে ৫১২×৫১২ ছবি বাছুন। এটি আপনার সংস্থার অ্যাসেটে আপলোড হয় এবং সব স্টাফ পোর্টালে দেখা যায়।" },
+            { label: "আপনার ব্র্যান্ড কালার সেট করুন।", desc: "Primary এবং Accent কালার (hex, যেমন #6366F1) লিখুন। থিম আপনার সংস্থার প্রতিটি পোর্টালে সিঙ্ক হয়ে যায়।" }
+          ],
+          note: "লোগো এবং ব্র্যান্ড কালার সব পোর্টালে সিঙ্ক হতে কয়েক মিনিট সময় নিতে পারে।"
+        },
+        {
+          icon: "💳",
+          title: "প্ল্যান, স্থিতি ও সীমা (Plan, Status & Limits)",
+          steps: [
+            { label: "আপনার সংস্থার বিবরণ বা সেটিংস পেজ খুলুন।", desc: "ড্যাশবোর্ড থেকে অর্গ কার্ডে ট্যাপ করুন, অথবা 'Edit Organization Settings'।" },
+            { label: "প্ল্যান বদলান।", desc: "প্ল্যান ব্যাজ (Free / Basic / Pro / Enterprise) এ ট্যাপ করে শিট থেকে প্ল্যান বাছুন।" },
+            { label: "স্থিতি (Status) বদলান।", desc: "স্ট্যাটাস চিপে ট্যাপ করে Activate, Suspend, বা Trial সেট করুন। Suspended অর্গ সক্রিয় ব্যবহার থেকে লুকিয়ে যায়।" },
+            { label: "আপনার প্ল্যান সীমা সেট করুন।", desc: "Plan Limits-এর অধীনে Max Branches, Max Staff, এবং Max Members সেট করুন। ব্যবহার বারগুলি দেখায় আপনি প্রতিটি সীমার কত কাছাকাছি।" }
+          ],
+          note: "আপনার ১৪ দিনের ট্রায়ালে আপনি ১০ ব্রাঞ্চ / ৫ স্টাফ / ১০০ সদস্য পান। আপগ্রেড করলে এই ক্যাপ বাড়ে।"
+        },
+        {
+          icon: "⚙️",
+          title: "সেটিংস অবলোকন (Settings Overview)",
+          steps: [
+            { label: "মেনু থেকে Settings খুলুন।", desc: "পাঁচটি বিভাগ দেখা যায়: Account & Preferences, Organization Controls, System Connectivity, Security & Compliance, Utilities & Support।" },
+            { label: "Account & Preferences।", desc: "প্রোফাইল (নাম, ফোন, ইমেল, পাসওয়ার্ড), ডার্ক মোড, বায়োমেট্রিক লগইন, পুশ অ্যালার্ট, এবং AI অ্যাসিস্ট্যান্ট টগল।" },
+            { label: "Organization Controls (কেবল অ্যাডমিন)।", desc: "Organization Settings (ব্র্যান্ডিং, আইনি, ঠিকানা) এবং Loan & Savings Products (স্কিম, হার, সীমা)।" },
+            { label: "System Connectivity (কেবল অ্যাডমিন)।", desc: "Integrations — এসএমএস, UPI, WhatsApp, SMTP, Razorpay, এবং PhonePe সংযুক্ত করুন।" },
+            { label: "Security & Compliance।", desc: "Security Shield & Activity Logs, 2FA, পাসওয়ার্ড নীতি, অটো-লগআউট, এবং Google Drive ব্যাকআপ।" }
+          ],
+          note: "ব্র্যান্ডিং এবং প্ল্যান লিমিট ড্যাশবোর্ড থেকে খোলা Organization Settings-এর অধীনেও পাওয়া যায়।"
         },
         {
           icon: "👥",
-          title: "শাখা (Branch) যুক্ত ও পরিচালনা করা",
+          title: "স্টাফ যোগ করুন ও ইউজার পরিচালনা করুন",
           steps: [
-            { label: "বাঁদিকের মেনু থেকে 'Branches' অপশনে যান।", desc: "এখানে আপনার সমস্ত সক্রিয় শাখার তালিকা দেখাবে।" },
-            { label: "ওপরে ডানদিকের কোণায় 'Add Branch'-এ ক্লিক করুন।", desc: "একটি নতুন ফর্ম চালু হবে।" },
-            { label: "শাখার নাম, ব্রাঞ্চের একক কোড এবং জায়গার বিবরণ লিখুন।", desc: "তালিকা থেকে একজন ব্রাঞ্চ ম্যানেজার নিয়োগ করুন।" },
-            { label: "সংরক্ষণ (Save) করুন। নির্দিষ্ট ব্রাঞ্চ কোড দিয়ে পরবর্তীতে রিপোর্ট ফিল্টার করা যাবে।" }
+            { label: "Users খুলুন।", desc: "Quick Actions থেকে 'Add Staff'-এ ট্যাপ করুন, অথবা Users পেজে যান।" },
+            { label: "নতুন ইউজার তৈরি করুন।", desc: "/users/new-এ যান এবং নাম, ইমেল, ফোন, এবং ভূমিকা (Manager বা Collection Agent) লিখুন।" },
+            { label: "ইউজার তালিকা দেখুন।", desc: "Users পেজে সবার তালিকা থাকে যাতে রোল ফিল্টার (Admin, Manager, Agent) এবং নাম/ইমেল অনুসন্ধান থাকে।" },
+            { label: "টু-ফ্যাক্টর অথ (2FA) প্রয়োগ করুন।", desc: "Security & Compliance → Two-Factor Authentication-এ 2FA প্রয়োগ করুন এবং পদ্ধতি (Authenticator অ্যাপ বা SMS) রোল অনুযায়ী বাছুন।" }
           ],
-          note: "প্রতিটি শাখার কোড আলাদা হওয়া বাধ্যতামূলক। উদাহরণ: BM-SWAR-01"
+          note: "স্টাফ সেই ইমেল দিয়ে সাইন ইন করে যা আপনি নিবন্ধন করেন — প্রথম লগইনে তারা নিজের পাসওয়ার্ড সেট করে।"
         },
         {
-          icon: "👤",
-          title: "স্টাফ সদস্য যুক্ত করা",
+          icon: "🧑‍🤝‍🧑",
+          title: "সদস্য অনবোর্ডিং (Members / Customers)",
           steps: [
-            { label: "ড্যাশবোর্ড থেকে 'Staff' বিভাগটি খুলুন।", desc: "এখানে সমস্ত ম্যানেজার ও কালেকশন কর্মকর্তাদের তালিকা দেখাবে।" },
-            { label: "'Add Staff Member'-এ ক্লিক করে নাম, মোবাইল নম্বর এবং ইমেল লিখুন।" },
-            { label: "স্টাফের ভূমিকা সিলেক্ট করুন (Branch Manager নাকি Collection Agent)।", desc: "তাঁর জন্য নির্দিষ্ট শাখাটি নির্বাচন করুন।" },
-            { label: "'Send Invitation'-এ ক্লিক করুন। তাঁর ইমেলে পাসওয়ার্ড সেট করার লিঙ্ক পাঠানো হবে।" }
+            { label: "সদস্য অনবোর্ডিং শুরু করুন।", desc: "Quick Actions থেকে 'New Member'-এ ট্যাপ করুন, অথবা Members পেজ → Onboard Member।" },
+            { label: "সদস্যের বিবরণ লিখুন।", desc: "পুরো নাম, যাচাইকৃত মোবাইল, ঠিকানা, এবং প্রাথমিক নথি ID (আধার / ভোটার)।" },
+            { label: "KYC নথি আপলোড করুন।", desc: "KYC নথির ছবি আপলোড করুন। কোনো ঋণ দেওয়ার আগে KYC যাচাই হওয়া আবশ্যক।" },
+            { label: "প্রোফাইল জমা দিন।", desc: "সিস্টেম সদস্যকে একটি অনন্য Member ID-সহ তৈরি করে যা আপনার অর্গের সাথে যুক্ত থাকে।" }
           ],
-          note: "স্টাফ মেম্বারকে ইমেলে পাঠানো লিঙ্কটিতে ক্লিক করে নিজের প্রথম পাসওয়ার্ড তৈরি করে নিতে হবে।"
+          note: "প্রতিটি সদস্যের ঋণ ও সঞ্চয় পেজে একটি SMS Notifications টগল থাকে — এটিই তাদের একমাত্র এসএমএস অপ্ট-আউট।"
         },
         {
-          icon: "📊",
-          title: "রিপোর্ট জেনারেট ও এক্সপোর্ট",
+          icon: "🏢",
+          title: "শাখা পরিচালনা (Manage Branches)",
           steps: [
-            { label: "বাঁদিকের প্যানেল থেকে 'Reports' পৃষ্ঠায় যান।", desc: "আপনার লক্ষ্য বিভাগ বাছুন: কালেকশন, লোন বা সেভিংস।" },
-            { label: "ফিল্টার প্রয়োগ করুন (তারিখ, ব্রাঞ্চ বা কোনো নির্দিষ্ট কালেকশন এজেন্টের নাম)।" },
-            { label: "চার্ট এবং লোন ঝুঁকির হার (PAR Ratio) বিশ্লেষণ করুন।" },
-            { label: "Excel বা PDF ফাইল ডাউনলোড করতে 'Export' বোতামে ক্লিক করুন।" }
-          ]
+            { label: "Branches খুলুন।", desc: "Quick Actions থেকে 'Branches'-এ ট্যাপ করুন, অথবা Organization Settings থেকে খুলুন।" },
+            { label: "শাখা যোগ করুন।", desc: "শাখা তৈরি করতে ট্যাপ করে তার Name, Code, এবং অবস্থান (zone / district) লিখুন।" },
+            { label: "শাখা তালিকা দেখুন।", desc: "আপনার অর্গ বিবরণ পেজে সব শাখা তাদের কোড এবং active/suspended স্থিতি সহ দেখা যায়।" },
+            { label: "একজন ম্যানেজার নিয়োগ করুন।", desc: "প্রতিটি শাখা Users-এ আপনার আমন্ত্রিত কোনো Branch Manager-এর সাথে যুক্ত থাকে।" }
+          ],
+          note: "ব্রাঞ্চ কোড আপনার অর্গের মধ্যে অনন্য হয় এবং রিপোর্ট ও কালেকশন ফিল্টার করতে ব্যবহৃত হয়।"
+        },
+        {
+          icon: "💰",
+          title: "ঋণ — তৈরি ও ট্র্যাক করুন",
+          steps: [
+            { label: "New Loan খুলুন।", desc: "Quick Actions থেকে 'New Loan'-এ ট্যাপ করুন ('Deploy Capital' পেজ)।" },
+            { label: "ঋণের বিবরণ লিখুন।", desc: "Borrower (সদস্য) বাছুন, Principal (₹1K–₹10L), সুদ (APR % বা নির্দিষ্ট অঙ্ক, প্রতি day/week/month/year), Interest Logic (flat বা reducing), প্রথম কিস্তির তারিখ, Tenure, এবং Collection Type (Daily/Weekly/Monthly/Yearly)।" },
+            { label: "লাইভ সারাংশ দেখুন।", desc: "Financial Summary অনুমিত কিস্তি, মোট সুদ, এবং সম্পূর্ণ amortization (EMI) প্রিভিউ সংরক্ষণের আগে দেখায়।" },
+            { label: "সক্রিয় ঋণ ট্র্যাক করুন।", desc: "ঋণ সরাসরি (active) তৈরি হয় — কোনো অনুমোদন গেট নেই। ঋণের বিবরণে বকেয়া, বিলম্ব/আজ-বকেয়া অ্যালার্ট (OVERDUE / DUE TODAY), EMI টাইমলাইন, এবং Loan Intelligence দেখায়।" },
+            { label: "ঋণ পরিচালনা করুন।", desc: "'…' মেনু থেকে: Edit, Mark Defaulted, Reactivate, Restructure, Freeze Skipped EMIs, অথবা Delete।" }
+          ],
+          note: "EMI-এর স্থিতির মধ্যে PAID, DUE, OVERDUE, WAIVED, PENDING, এবং FROZEN অন্তর্ভুক্ত। খোলা ঋণে Collect / Settle / Reminder অ্যাকশন দেখা যায়।"
+        },
+        {
+          icon: "🏦",
+          title: "সঞ্চয় — পরিকল্পনা পরিচালনা (Savings)",
+          steps: [
+            { label: "New Savings Plan খুলুন।", desc: "Quick Actions থেকে 'New Savings'-এ ট্যাপ করুন।" },
+            { label: "পরিকল্পনার বিবরণ লিখুন।", desc: "সদস্য বাছুন, Collection Cycle (Daily/Weekly/Monthly/Yearly), Installment Amount (₹10–₹50K), Start Date, Tenure, Maturity Amount, এবং Premature Penalty %।" },
+            { label: "Wealth Forecast দেখুন।", desc: "লাইভ প্রিভিউ গ্যারান্টিড ম্যাচুরিটি, মোট কিস্তি, মোট ক্যাপিটাল, এবং অনুমিত ইল্ড দেখায়।" },
+            { label: "জমা (Deposit) ও উত্তোলন (Withdraw)।", desc: "কালেকশন শিট থেকে যেকোনো সময় জমা করুন। উত্তোলন একটি Withdrawal Requests কিউ (Pending/Approved/Rejected) তে যায় যেখানে একজন ম্যানেজার কারণসহ অনুমোদন বা প্রত্যাখ্যান করেন।" },
+            { label: "ভল্ট পরিচালনা করুন।", desc: "Pause/Resume ভল্ট, অ্যাকাউন্ট বন্ধ (Close), অথবা (কেবল অ্যাডমিন) স্থায়ীভাবে মুছে ফেলুন (Delete)। ব্যালেন্স ও ইল্ড-প্রোজেকশন চার্ট দেখা যায়।" }
+          ],
+          note: "সঞ্চয় Principal Protected। সময়ের আগে উত্তোলনে সেই Penalty % প্রযোজ্য হয় যা তৈরির সময় সেট করেছিলেন।"
         },
         {
           icon: "📨",
-          title: "স্বয়ংক্রিয় এসএমএস (SMS) রসিদ",
+          title: "এসএমএস ও বিজ্ঞপ্তি (SMS & Notifications)",
           steps: [
-            { label: "Settings > SMS Settings অপশনে যান।", desc: "চেক করুন এসএমএস পাঠানোর সুবিধা চালু আছে কিনা।" },
-            { label: "গ্রাহকদের কাছে পাঠানো রসিদ ও রিমাইন্ডারের এসএমএস লেখা এডিট করুন।", desc: "আপনি {name} বা {amount}-এর মতো কোড ব্যবহার করতে পারেন।" },
-            { label: "কিস্তি কালেকশন হওয়ার সাথে সাথে অটো-এসএমএস পাঠানোর অপশনটি অন করুন।" }
+            { label: "SMS Settings খুলুন।", desc: "Settings → Integrations → Communications ট্যাব → Local SMS। এটি SMS Settings পেজ খোলে (কেবল অ্যাডমিন)।" },
+            { label: "অটো-রসিদ চালু করুন।", desc: "'SMS on Collection' এবং 'SMS on Savings Deposit' ডিফল্ট ON — প্রতিটি লেনদেনের পর গ্রাহক রসিদ পান।" },
+            { label: "EMI রিমাইন্ডার চালু করুন।", desc: "'Due EMI Reminders' (ডিফল্ট OFF) টগল করুন এবং দৈনিক Reminder Time সেট করুন। টেমপ্লেট {name}, {amount}, {loan_id}, {balance} ব্যবহার করে।" },
+            { label: "SIM স্লট বাছুন।", desc: "SIM & Outbox-এর অধীনে বাছুন কোন ডিভাইস SIM এসএমএস পাঠাবে, টেস্ট SMS পাঠান, এবং পাঠানো এসএমএস ইতিহাস (শেষ ২০০) দেখুন।" },
+            { label: "সদস্য-ভিত্তিক অপ্ট-আউট।", desc: "যেকোনো ঋণ বা সঞ্চয় বিবরণ পেজে 'SMS Notifications' টগল করে ওই সদস্যের জন্য রিমাইন্ডার চালু/বন্ধ করুন।" }
           ],
-          note: "এসএমএসগুলি মূলত এজেন্টের মোবাইল সিম বা ক্লাউড গেটওয়ের মাধ্যমে পাঠানো হয়।"
+          note: "এসএমএস ডিভাইসের SIM (native Android plugin) থেকে যায় — কোনো বাহ্যিক এসএমএস গেটওয়ে নেই। WhatsApp এবং Email আলাদাভাবে Integrations-এ সেট হয়।"
+        },
+        {
+          icon: "💸",
+          title: "ভুগতান নিন ও UPI যাচাই করুন",
+          steps: [
+            { label: "Collect Payment খুলুন।", desc: "Quick Actions থেকে 'Collect Payment'-এ ট্যাপ করে কালেকশন শুরু করুন।" },
+            { label: "কালেকশন লিখুন।", desc: "সদস্য/ঋণ বাছুন, অঙ্ক লিখুন, মোড (Cash, UPI, বা Bank) বাছুন, এবং জমা দিন। সক্রিয় থাকলে রসিদ এসএমএস স্বয়ংক্রিয় যায়।" },
+            { label: "UPI ভুগতান যাচাই করুন।", desc: "Quick Actions থেকে 'UPI Verify'-এ ট্যাপ করে গ্রাহকের UPI রেফারেন্স প্রত্যাশিত ভুগতানের সাথে মেলান।" }
+          ],
+          note: "কালেকশন ড্যাশবোর্ডের Recent Collections-এ সাথে সাথে দেখা যায় এবং ক্লাউডে সিঙ্ক হয়।"
+        },
+        {
+          icon: "🛡️",
+          title: "টিম, কার্যকলাপ ও অডিট লগ",
+          steps: [
+            { label: "আপনার অর্গ বিবরণ পেজ খুলুন।", desc: "ড্যাশবোর্ডে যেকোনো অর্গ কার্ডে ট্যাপ করে সম্পূর্ণ সারাংশ দেখুন।" },
+            { label: "Team Members দেখুন।", desc: "Team টাইল সব স্টাফকে রোল-রঙিন অবতারসহ দেখায়, নাম/ইমেল অনুসন্ধান ও রোল ফিল্টারসহ।" },
+            { label: "Recent Activity পরীক্ষা করুন।", desc: "Activity টাইল কার্যকলাপের (auth, loan, payment, savings, member) লগ দেখায় — কে কী এবং কখন করেছে।" },
+            { label: "Security & Activity Logs খুলুন।", desc: "Settings → Security & Compliance-এ System Activity Logs খুলুন এবং অডিট রিটেনশন, পাসওয়ার্ড নীতি, এবং Google Drive ব্যাকআপ সেট করুন।" }
+          ],
+          note: "অডিট লগ প্রতিটি পরিবর্তন খুঁজে বের করতে সাহায্য করে — পর্যালোচনা বা বিরোধের সময় উপযোগী।"
         }
       ]
     },

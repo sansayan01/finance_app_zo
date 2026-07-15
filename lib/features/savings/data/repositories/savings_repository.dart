@@ -356,9 +356,12 @@ class SavingsRepository {
     final double targetAmount =
         openingBalance + (installmentAmount * totalInstallments);
 
-    // Compute current_amount = opening + (installmentsPaid * installmentAmount)
-    final double currentAmount =
-        openingBalance + (installmentsPaid * installmentAmount);
+    // NOTE: Don't pre-compute current_amount from installmentsPaid here.
+    // The DB trigger `trg_update_savings_plan_on_collection` auto-adds each
+    // backdated savings_collections row's amount_collected to current_amount.
+    // If we set current_amount = openingBalance + (paid × installment) here,
+    // the trigger adds it again → double-counting.
+    final double currentAmount = openingBalance;
 
     // Compute next_due_date based on how many installments are already paid
     final DateTime nextDueDate = _computeNextDueDate(

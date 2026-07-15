@@ -120,7 +120,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
   /// Member-level SMS opt-out state, sourced from members.sms_enabled (the
   /// only SMS opt-out column that exists). The loan/savings detail toggles
   /// drive this member flag.
-  final ValueNotifier<bool> _memberSmsEnabled = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _memberSmsEnabled = ValueNotifier<bool>(false);
 
   /// Returns a short, display-friendly label for an [EMIStatus].
   /// Always pass [EMIScheduleModel.effectiveStatus] (not the raw `status`)
@@ -154,7 +154,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
           .select('sms_enabled')
           .eq('id', memberId)
           .maybeSingle();
-      _memberSmsEnabled.value = memberInfo?['sms_enabled'] as bool? ?? true;
+      _memberSmsEnabled.value = memberInfo?['sms_enabled'] as bool? ?? false;
     } catch (_) {}
   }
 
@@ -169,6 +169,13 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Re-load SMS state when loan data arrives (provider null at initState).
+    ref.listen<AsyncValue<LoanModel?>>(
+      loanDetailProvider(widget.loanId),
+      (_, next) {
+        if (next.hasValue && next.value != null) _loadMemberSmsEnabled();
+      },
+    );
     final loanAsync = ref.watch(loanDetailProvider(widget.loanId));
     final scheduleAsync = ref.watch(emiScheduleProvider(widget.loanId));
     final paymentHistoryAsync = ref.watch(paymentHistoryProvider(widget.loanId));

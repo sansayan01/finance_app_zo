@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../loans/presentation/widgets/collection_sheet.dart';
 import '../../../../core/constants/enums.dart';
@@ -62,7 +63,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   /// Member-level SMS opt-out state, sourced from members.sms_enabled (the
   /// only SMS opt-out column that exists). The savings detail toggle drives
   /// this member flag.
-  final ValueNotifier<bool> _memberSmsEnabled = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> _memberSmsEnabled = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -74,17 +75,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Future<void> _loadMemberSmsEnabled() async {
-    final saving = ref.read(savingDetailProvider(widget.savingId)).value;
-    if (saving == null) return;
-    try {
-      final client = ref.read(supabaseClientProvider);
-      final memberInfo = await client
-          .from('members')
-          .select('sms_enabled')
-          .eq('id', saving.memberId)
-          .maybeSingle();
-      _memberSmsEnabled.value = memberInfo?['sms_enabled'] as bool? ?? true;
-    } catch (_) {}
+    // Savings SMS preference stored locally (independent from member-level loan SMS).
+    final prefs = await SharedPreferences.getInstance();
+    _memberSmsEnabled.value = prefs.getBool('savings_sms_${widget.savingId}') ?? true;
   }
 
   @override
@@ -98,6 +91,13 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Re-load SMS state when saving data arrives (provider null at initState).
+    ref.listen<AsyncValue<SavingsModel?>>(
+      savingDetailProvider(widget.savingId),
+      (_, next) {
+        if (next.hasValue && next.value != null) _loadMemberSmsEnabled();
+      },
+    );
     final savingAsync = ref.watch(savingDetailProvider(widget.savingId));
     final collectionDatesAsync = ref.watch(savingsCollectionDatesProvider(widget.savingId));
     final collectorNamesAsync = ref.watch(savingsCollectorNamesProvider(widget.savingId));
@@ -2062,12 +2062,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
   Future<void> _toggleSms(SavingsModel saving, bool enabled) async {
     HapticFeedback.lightImpact();
-    final client = ref.read(supabaseClientProvider);
-    // Persist on the member row — members.sms_enabled is the only SMS opt-out
-    // column that exists. The savings detail toggle drives member SMS.
-    await client.from('members').update({
-      'sms_enabled': enabled,
-    }).eq('id', saving.memberId);
+    // Savings SMS stored locally — independent from member-level loan SMS.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('savings_sms_${widget.savingId}', enabled);
     _memberSmsEnabled.value = enabled;
     ref.invalidate(savingDetailProvider(widget.savingId));
     ref.invalidate(allSavingsProvider);

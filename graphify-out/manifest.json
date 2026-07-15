@@ -745,9 +745,9 @@
     "semantic_hash": ""
   },
   "lib/features/loans/presentation/pages/loan_detail_page.dart": {
-    "mtime": 1783861671.5108638,
-    "ast_hash": "3916413d4b81e91f308b8da815ccfcb1",
-    "semantic_hash": "3916413d4b81e91f308b8da815ccfcb1"
+    "mtime": 1784154629.3577888,
+    "ast_hash": "9bb8c555dab8f4673489c38fee38bcb5",
+    "semantic_hash": ""
   },
   "lib/features/loans/presentation/pages/new_loan_page.dart": {
     "mtime": 1783587882.2394888,
@@ -830,9 +830,9 @@
     "semantic_hash": ""
   },
   "lib/features/savings/presentation/pages/saving_detail_page.dart": {
-    "mtime": 1783861671.5138657,
-    "ast_hash": "3223a2c23bcd783fc7dd792375d0f389",
-    "semantic_hash": "3223a2c23bcd783fc7dd792375d0f389"
+    "mtime": 1784155359.7773483,
+    "ast_hash": "4208a2896f1904ccad993867d0851c55",
+    "semantic_hash": ""
   },
   "lib/features/savings/presentation/providers/new_recurring_saving_provider.dart": {
     "mtime": 1783587882.261092,

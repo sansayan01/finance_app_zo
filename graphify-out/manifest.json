@@ -1330,7 +1330,7 @@
     "semantic_hash": ""
   },
   ".claude/settings.json": {
-    "mtime": 1784829200.831743,
+    "mtime": 1785063389.902022,
     "ast_hash": "7335bf91c24af58b91e68607747afabb",
     "semantic_hash": ""
   },
@@ -4065,8 +4065,8 @@
     "semantic_hash": ""
   },
   "asme-landing/src/App.jsx": {
-    "mtime": 1784476891.6379068,
-    "ast_hash": "994f3bc0d4747544ced31c2febb72304",
+    "mtime": 1785063389.9085789,
+    "ast_hash": "7ea48fe757f135e7e81f0784ba144909",
     "semantic_hash": ""
   },
   "asme-landing/src/components/AppDownloadButton.jsx": {
@@ -4080,67 +4080,67 @@
     "semantic_hash": ""
   },
   "asme-landing/src/components/CTA.jsx": {
-    "mtime": 1784464226.2779796,
+    "mtime": 1785063389.9095707,
     "ast_hash": "19fa8ee9f305e14143c8f57dd8a66351",
     "semantic_hash": ""
   },
   "asme-landing/src/components/DocsBackground.jsx": {
-    "mtime": 1784486247.1784966,
+    "mtime": 1785063389.9095707,
     "ast_hash": "23b70e45a990b3bb50cc3a50602275ee",
     "semantic_hash": ""
   },
   "asme-landing/src/components/FAQ.jsx": {
-    "mtime": 1784464225.9137268,
+    "mtime": 1785063389.9110882,
     "ast_hash": "b4676246b46d4df01124f1cfea39890e",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Features.jsx": {
-    "mtime": 1784464234.087329,
+    "mtime": 1785063389.9110882,
     "ast_hash": "938cde051e57010a3c8a4182b4151191",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Footer.jsx": {
-    "mtime": 1784479049.1193569,
+    "mtime": 1785063389.9121084,
     "ast_hash": "f15b97125ae84ba11ef3d4bf13d07d30",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Hero.jsx": {
-    "mtime": 1784477718.431612,
+    "mtime": 1785063389.9131255,
     "ast_hash": "4d5f4d82229c1b83a9af198310742574",
     "semantic_hash": ""
   },
   "asme-landing/src/components/HowItWorks.jsx": {
-    "mtime": 1784464289.1721928,
+    "mtime": 1785063389.9141252,
     "ast_hash": "879556ba8fdc2f65db8e1637070263fe",
     "semantic_hash": ""
   },
   "asme-landing/src/components/LegalPage.jsx": {
-    "mtime": 1784462393.444901,
-    "ast_hash": "189828fe313b1b6760bd701867c9f934",
+    "mtime": 1785063389.9151297,
+    "ast_hash": "c47341d53670ec0dbdf705ec17aeac21",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Navbar.jsx": {
-    "mtime": 1784477659.8436494,
+    "mtime": 1785063389.9166458,
     "ast_hash": "2700e0890ae7ea1a7577ca95b3a32d03",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Pricing.jsx": {
-    "mtime": 1784464228.4791503,
+    "mtime": 1785063389.9176621,
     "ast_hash": "aeea9484123f28d772790f5579c671d6",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Stats.jsx": {
-    "mtime": 1784464229.9045784,
+    "mtime": 1785063389.921223,
     "ast_hash": "359612f91c7c56d58e8c27e56b197ba4",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Testimonials.jsx": {
-    "mtime": 1784464316.3803875,
+    "mtime": 1785063389.9232545,
     "ast_hash": "d93e194c5cb548d8cde5a886d58fcff7",
     "semantic_hash": ""
   },
   "asme-landing/src/components/TrustMarquee.jsx": {
-    "mtime": 1784464227.3969016,
+    "mtime": 1785063389.9242182,
     "ast_hash": "0f4d151af60f0b3738b8b5b95f9a5bba",
     "semantic_hash": ""
   },
@@ -4150,98 +4150,98 @@
     "semantic_hash": ""
   },
   "asme-landing/src/pages/AboutPage.jsx": {
-    "mtime": 1784476905.1027613,
-    "ast_hash": "6a0ebc93acbc4386ca805223d71a1440",
+    "mtime": 1785063389.9252481,
+    "ast_hash": "46012eba32e0f266a066b3702b9bdd9a",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/BlogPage.jsx": {
-    "mtime": 1784477064.2502117,
-    "ast_hash": "9825f716d1e165f6922eb1aac82f8061",
+    "mtime": 1785063389.9267583,
+    "ast_hash": "c144a86601e47372745a22af257ae000",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/ConfirmPage.jsx": {
-    "mtime": 1784477705.1481009,
+    "mtime": 1785063389.927773,
     "ast_hash": "6d16feb2c212e48b5f4e95736c6c2725",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/ContactPage.jsx": {
-    "mtime": 1784476907.216619,
-    "ast_hash": "0fed580d0fda81b3946e3db67835cfcf",
+    "mtime": 1785063389.927773,
+    "ast_hash": "1ed9dda4ac4a96cc02af3882f7872937",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/HelpCenterPage.jsx": {
-    "mtime": 1784477124.184369,
-    "ast_hash": "35d09b60ea3e798fda371a0d4fac6501",
+    "mtime": 1785063389.9287763,
+    "ast_hash": "2cbe3693e3935d998c3b63bed33bfa1c",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/PrivacyPage.jsx": {
-    "mtime": 1784462409.2205887,
-    "ast_hash": "26d89844cb0d48a0b4c1f84ea8726f06",
+    "mtime": 1785063389.9287763,
+    "ast_hash": "6e95f168c0e2aa61a8955476aa3b33de",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/SecurityPage.jsx": {
-    "mtime": 1784476906.1669648,
-    "ast_hash": "ddd930e3cd0d4de5cf85dbde9a77836c",
+    "mtime": 1785063389.9297729,
+    "ast_hash": "5dda05d4a3d02a3fa57f9daaca933a38",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/StatusPage.jsx": {
-    "mtime": 1784476999.826406,
-    "ast_hash": "a6e97a33d03b8495fcb2cf958d387e30",
+    "mtime": 1785063389.9297729,
+    "ast_hash": "5c4b4d06eb06792129ca71e050ef7d4b",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/TermsPage.jsx": {
-    "mtime": 1784462441.9246442,
-    "ast_hash": "e09172e9ac4079ab36663ec8f2e7ae72",
+    "mtime": 1785063389.9307723,
+    "ast_hash": "9353d9d1a4a881d2394065d257bb2a42",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/DocsHome.jsx": {
-    "mtime": 1784486349.8681717,
-    "ast_hash": "c508d10a9d8cb70005b908ed23c9e163",
+    "mtime": 1785063389.9312873,
+    "ast_hash": "936ed81419f391424786c3d3fa73f92c",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/DocsLayout.jsx": {
-    "mtime": 1784486281.3422418,
+    "mtime": 1785063389.9323049,
     "ast_hash": "a0f954f910b7e6727a0da92d9e361d8e",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/components/LessonCard.jsx": {
-    "mtime": 1784486156.185719,
+    "mtime": 1785063389.933319,
     "ast_hash": "6d5413c851eabb069f45cc9bb206865c",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/data/docsContent.js": {
-    "mtime": 1784467577.334665,
-    "ast_hash": "8e20237b8b837a7487716c75d362dacc",
+    "mtime": 1785063389.9353228,
+    "ast_hash": "7c129633d6f11d4a5b9438fffb139e9d",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/guides/BorrowersGuide.jsx": {
-    "mtime": 1784486114.1596398,
-    "ast_hash": "7c87b9403f68d36a869f7c8661dc4f7d",
+    "mtime": 1785063389.9368672,
+    "ast_hash": "08b8bca07f6001efa90de50a4d447f8d",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/guides/GettingStartedGuide.jsx": {
-    "mtime": 1784486112.1365762,
-    "ast_hash": "eb96a7ead05973025bb1d70ac46c9c73",
+    "mtime": 1785063389.9389007,
+    "ast_hash": "0ed6aecc904ceb516a2882e398250253",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/guides/LoansGuide.jsx": {
-    "mtime": 1784486116.5286736,
-    "ast_hash": "4c1ec003a362f078222eb854e39800c1",
+    "mtime": 1785063389.9399,
+    "ast_hash": "cca47391a0523797c4b93988c7435720",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/guides/PortfolioInsightsGuide.jsx": {
-    "mtime": 1784486122.2770174,
-    "ast_hash": "8aaf66a4617fc8e0f7432cce21347365",
+    "mtime": 1785063389.9399,
+    "ast_hash": "a8c01b5413ace4a27e38665cd0217482",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/guides/RepaymentsGuide.jsx": {
-    "mtime": 1784486118.606924,
-    "ast_hash": "180001121fb257c9ce1c6d0b98e97e6d",
+    "mtime": 1785063389.9414122,
+    "ast_hash": "048806cd4fd3ce4e8a174392813f7ebe",
     "semantic_hash": ""
   },
   "asme-landing/src/pages/docs/guides/SMSRemindersGuide.jsx": {
-    "mtime": 1784486120.0150497,
-    "ast_hash": "d299ab939527f04a3699dc258f38d589",
+    "mtime": 1785063389.9414122,
+    "ast_hash": "041b9789e79b59a55a1e2c7bd120d07d",
     "semantic_hash": ""
   },
   "asme-landing/vercel.json": {
@@ -4395,13 +4395,13 @@
     "semantic_hash": ""
   },
   "lib/core/providers/analytics_engine_provider.dart": {
-    "mtime": 1784450618.821653,
-    "ast_hash": "5a5030ab22be664b4e1ef9a5af7fa2d4",
+    "mtime": 1785063390.2390957,
+    "ast_hash": "d6b7dc6dc081ee5b0a14ab979908686e",
     "semantic_hash": ""
   },
   "lib/core/providers/analytics_provider.dart": {
-    "mtime": 1784447287.2356825,
-    "ast_hash": "f0ca717c43f20fda7ad69105d5bddc48",
+    "mtime": 1785063390.2400932,
+    "ast_hash": "c3618af7a0e7432525771fbf355b99a3",
     "semantic_hash": ""
   },
   "lib/core/providers/branding_provider.dart": {
@@ -4445,13 +4445,13 @@
     "semantic_hash": ""
   },
   "lib/core/services/analytics_engine.dart": {
-    "mtime": 1784450482.4901116,
-    "ast_hash": "ddea86f14c0de31c84723d930f742b71",
+    "mtime": 1785063390.2410903,
+    "ast_hash": "e426bca4a01038772a2addde506af49c",
     "semantic_hash": ""
   },
   "lib/core/services/analytics_service.dart": {
-    "mtime": 1784447674.6634982,
-    "ast_hash": "585bbfbe2cfc49094a761db5a51cc8af",
+    "mtime": 1785063390.2416053,
+    "ast_hash": "c52419d0d443f719bee462db10fd2652",
     "semantic_hash": ""
   },
   "lib/core/services/app_icon_service.dart": {
@@ -4790,8 +4790,8 @@
     "semantic_hash": ""
   },
   "lib/features/analytics/data/models/analytics_engine_models.dart": {
-    "mtime": 1784450160.1116488,
-    "ast_hash": "7835b9521ed271c70577e14b0441fd18",
+    "mtime": 1785063390.2436476,
+    "ast_hash": "e717cb76c10eef4233e333c0f516e3c7",
     "semantic_hash": ""
   },
   "lib/features/analytics/models/analytics_models.dart": {
@@ -4800,8 +4800,8 @@
     "semantic_hash": ""
   },
   "lib/features/analytics/presentation/pages/advanced_analytics_page.dart": {
-    "mtime": 1784450712.3320541,
-    "ast_hash": "7c5e3539c4de84f859e93639cfdc72ad",
+    "mtime": 1785063390.2446415,
+    "ast_hash": "71c36039834c8be0b94a8f2e9ebf395c",
     "semantic_hash": ""
   },
   "lib/features/analytics/presentation/pages/analytics_page.dart": {
@@ -4845,7 +4845,7 @@
     "semantic_hash": ""
   },
   "lib/features/auth/presentation/pages/signup_page.dart": {
-    "mtime": 1784475948.973394,
+    "mtime": 1785063390.2471502,
     "ast_hash": "0cccaee4e480a255ad048508c7b4880f",
     "semantic_hash": ""
   },
@@ -4860,7 +4860,7 @@
     "semantic_hash": ""
   },
   "lib/features/auth/presentation/providers/auth_provider.dart": {
-    "mtime": 1784447814.407616,
+    "mtime": 1785063390.2481654,
     "ast_hash": "650f9219ae67de6887fdc09a76d07c5a",
     "semantic_hash": ""
   },
@@ -5800,8 +5800,8 @@
     "semantic_hash": ""
   },
   "lib/features/settings/data/constants/legal_content.dart": {
-    "mtime": 1784462302.687193,
-    "ast_hash": "953893aa884442d2dab799691708df8e",
+    "mtime": 1785063390.2491698,
+    "ast_hash": "203a3ca40225c4eff2ea20a2157258c2",
     "semantic_hash": ""
   },
   "lib/features/settings/data/datasources/app_update_api.dart": {
@@ -6540,7 +6540,7 @@
     "semantic_hash": ""
   },
   "lib/main.dart": {
-    "mtime": 1784447777.1789265,
+    "mtime": 1785063390.2517877,
     "ast_hash": "48f180ceb2c3c17f9e519b2f92d4a3a3",
     "semantic_hash": ""
   },
@@ -6550,7 +6550,7 @@
     "semantic_hash": ""
   },
   "lib/router/app_router.dart": {
-    "mtime": 1784475949.0009782,
+    "mtime": 1785063390.2548575,
     "ast_hash": "80bc314b51a88bfa4fc233276c2bbcd0",
     "semantic_hash": ""
   },
@@ -14115,8 +14115,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1784458987.1124744,
-    "ast_hash": "b14680938e615bc45aa094729be618b3",
+    "mtime": 1785068299.7599568,
+    "ast_hash": "ca24773909c2d889f6c26402b1f7ce1d",
     "semantic_hash": ""
   },
   "FIREBASE_APP_DISTRIBUTION_SETUP.md": {
@@ -14140,8 +14140,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1784840352.6858509,
-    "ast_hash": "b11c4dfe23520e0c897c2191614f24a3",
+    "mtime": 1785063389.9075775,
+    "ast_hash": "5b3c75416dd6c0e7fec6242b434865fd",
     "semantic_hash": ""
   },
   "ROADMAP.md": {
@@ -14280,38 +14280,38 @@
     "semantic_hash": ""
   },
   "memory/MEMORY.md": {
-    "mtime": 1784562126.0451548,
-    "ast_hash": "10f297037b3dd85b9940e1956b02e109",
+    "mtime": 1785077565.149675,
+    "ast_hash": "322f1270b874de191994834fe544685a",
     "semantic_hash": ""
   },
   "memory/app_compliance_gaps.md": {
-    "mtime": 1784457849.3249202,
-    "ast_hash": "a0abbff380f63339cc0518df7e009794",
+    "mtime": 1785063390.2574131,
+    "ast_hash": "9a69d7902d566e17f26f642ed664cad3",
     "semantic_hash": ""
   },
   "memory/app_legal_review.md": {
-    "mtime": 1784457741.0357852,
-    "ast_hash": "44958acea5deb11d682d34b1d4d21c12",
+    "mtime": 1785063390.2594132,
+    "ast_hash": "1c6e8fa12a0a25990313a9144d82b10b",
     "semantic_hash": ""
   },
   "memory/app_legal_review_v2_lender_model.md": {
-    "mtime": 1784458867.0932052,
-    "ast_hash": "9613e64a910326723f1c3c16b599c101",
+    "mtime": 1785063390.26093,
+    "ast_hash": "76bf2b3ff562f672c06d339ae92226eb",
     "semantic_hash": ""
   },
   "memory/india_moneylender_compliance_brief.md": {
-    "mtime": 1784460734.4545653,
-    "ast_hash": "eafca3d0f2497acaf8c578cbf6dda56d",
+    "mtime": 1785063390.2619476,
+    "ast_hash": "a5b69dbe1cc0c597fc0fb72471362839",
     "semantic_hash": ""
   },
   "memory/marketing_legal_review.md": {
-    "mtime": 1784457762.9709277,
-    "ast_hash": "24c288acf53613b5fb2de61f984f1445",
+    "mtime": 1785063390.262966,
+    "ast_hash": "2068a88d1eabb40f63eea3e0266c9af7",
     "semantic_hash": ""
   },
   "memory/marketing_legal_review_v2_lender_model.md": {
-    "mtime": 1784458880.632558,
-    "ast_hash": "667b7cbc596fbaed9c0b49f9d599c4e9",
+    "mtime": 1785063390.2639682,
+    "ast_hash": "3b0d8b0942829cac0ae297eb8d2752b5",
     "semantic_hash": ""
   },
   "pubspec.yaml": {
@@ -16365,63 +16365,148 @@
     "semantic_hash": ""
   },
   "videos/microflow-product/hyperframes.json": {
-    "mtime": 1784526602.252905,
-    "ast_hash": "9aba7af72c9a867a940b5ea847eb18da",
+    "mtime": 1785063390.2751217,
+    "ast_hash": "a0e69cfb294656347a5d02f82b80dc16",
     "semantic_hash": ""
   },
   "videos/microflow-product/meta.json": {
-    "mtime": 1784526602.2519052,
-    "ast_hash": "d2e64ebdd23890321e44b089bcb265bd",
+    "mtime": 1785063390.2766378,
+    "ast_hash": "d34ea42e4047d04bf58b2f8a9a9c708d",
     "semantic_hash": ""
   },
   "videos/microflow-product/package.json": {
-    "mtime": 1784526602.252905,
-    "ast_hash": "f425f39dca976192010311133a1e6a79",
+    "mtime": 1785063390.277658,
+    "ast_hash": "31af85d7e702de04762924371e867f19",
     "semantic_hash": ""
   },
   "videos/microflow-product/AGENTS.md": {
-    "mtime": 1784407187.5107465,
-    "ast_hash": "26fefe4a43c292a5faa1de2a18042ce7",
+    "mtime": 1785063390.2675009,
+    "ast_hash": "d761d63665c381e9770d708dc699095d",
     "semantic_hash": ""
   },
   "videos/microflow-product/BRIEF.md": {
-    "mtime": 1784526621.845081,
-    "ast_hash": "0927f69bc9d9a155f15506be406e7986",
+    "mtime": 1785063390.2685008,
+    "ast_hash": "1bcc739a7a977dc818d07473b6e1c586",
     "semantic_hash": ""
   },
   "videos/microflow-product/CLAUDE.md": {
-    "mtime": 1784407187.5672913,
-    "ast_hash": "26fefe4a43c292a5faa1de2a18042ce7",
+    "mtime": 1785063390.269501,
+    "ast_hash": "d761d63665c381e9770d708dc699095d",
     "semantic_hash": ""
   },
   "videos/microflow-product/capture/extracted/asset-descriptions.md": {
-    "mtime": 1784526662.148487,
-    "ast_hash": "189e38f79994193c890a66771dc21fbe",
+    "mtime": 1785063390.2731254,
+    "ast_hash": "bcbbc81203878658429a1264e299f17e",
     "semantic_hash": ""
   },
   "videos/microflow-product/capture/extracted/visible-text.txt": {
-    "mtime": 1784526661.94103,
-    "ast_hash": "83bee2308d5a4798d68411f16a9780ac",
+    "mtime": 1785063390.2751217,
+    "ast_hash": "c5db688003fdfc8aa7af9fc9448e42b6",
     "semantic_hash": ""
   },
   "videos/microflow-product/index.html": {
-    "mtime": 1784526602.2519052,
-    "ast_hash": "afa2556406a3c23a4dfea2afea449219",
+    "mtime": 1785063390.2766378,
+    "ast_hash": "77c782d2b8684a2a36a8ee21c186b4ba",
     "semantic_hash": ""
   },
   "videos/microflow-product/BENGALI_SCRIPT.md": {
-    "mtime": 1784535737.7488022,
-    "ast_hash": "4a3d12bfa96b47ad952580e4cda5910b",
+    "mtime": 1785063390.2685008,
+    "ast_hash": "365e7ba25b473c6879ecd8bbcaad21ca",
     "semantic_hash": ""
   },
   "n8n/chatbot-workflow.json": {
-    "mtime": 1784829510.1122656,
-    "ast_hash": "d5b97772bfab2c60802b86b655752573",
+    "mtime": 1785063390.2649677,
+    "ast_hash": "302a612e035acb5c691a5ede635711af",
     "semantic_hash": ""
   },
   "audience.md": {
-    "mtime": 1784886144.468521,
-    "ast_hash": "e90b4a2a80e21ec2c669d64e33ff87dd",
+    "mtime": 1785063389.9424226,
+    "ast_hash": "af71791559e8ac5fa706f966433f83de",
+    "semantic_hash": ""
+  },
+  "videos/microflow-product/HINDI_VEO_SCRIPT.md": {
+    "mtime": 1785063390.2721076,
+    "ast_hash": "b586ae17b60b802899eb58a0fb560026",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-26-bengali-facebook-organic-strategy-design.md": {
+    "mtime": 1785069710.0412703,
+    "ast_hash": "b8725722ee095d50162716279991aec9",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-26-bengali-facebook-content-creation.md": {
+    "mtime": 1785070688.27754,
+    "ast_hash": "4dddd890e639aa684f400aa20dff56e5",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/day-01-reel-script.md": {
+    "mtime": 1785078887.1359742,
+    "ast_hash": "a2c43b8774199a930e1f6faf6f938f2a",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/reel-scripts-20.md": {
+    "mtime": 1785070999.5487938,
+    "ast_hash": "9a8e28eb6a00ba881edd53ba1d0134de",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/captions-cta-dm-templates.md": {
+    "mtime": 1785070990.9852412,
+    "ast_hash": "a017814c10c8c70a1c77006a689710d6",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/posting-rules-and-metrics.md": {
+    "mtime": 1785071032.3498106,
+    "ast_hash": "4d16a385762d0b371ca7bd0f590fdd5d",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/content-calendar-30-days.md": {
+    "mtime": 1785071060.2201824,
+    "ast_hash": "81c005fc1c0ab442f5875bfbc7184498",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/master_ugc_scripts_10s.md": {
+    "mtime": 1785075521.4774742,
+    "ast_hash": "b79d2cd5f676240c8864cda8ee56dd63",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/00_MONTH_MASTER_INDEX.md": {
+    "mtime": 1785076838.3247519,
+    "ast_hash": "0e98306e3c998d75dc7aade2992d50e8",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/week_1_scripts_day_01_to_07.md": {
+    "mtime": 1785077067.9104104,
+    "ast_hash": "a5446e4063b615adf6dbc3f7a9aedb4d",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/week_2_scripts_day_08_to_14.md": {
+    "mtime": 1785077125.551454,
+    "ast_hash": "ce7357f758582d6054640a3d6d9dc0d6",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/week_3_scripts_day_15_to_21.md": {
+    "mtime": 1785080469.5479918,
+    "ast_hash": "e87737d11b786c1e76c7f4a6586c2530",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/week_4_scripts_day_22_to_30.md": {
+    "mtime": 1785077511.9933374,
+    "ast_hash": "55f8e0818ca8ff853f8038ce9e929ade",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/week_1_part1_day_01_to_04.md": {
+    "mtime": 1785080469.9504166,
+    "ast_hash": "2882af80bfa4863ca9daa4668dd0f7b5",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/week_2_part1_day_08_to_11.md": {
+    "mtime": 1785080470.8262105,
+    "ast_hash": "aa39950e121f7036f46269836b500fe8",
+    "semantic_hash": ""
+  },
+  "marketing/bengali-facebook/30_day_master_plan/week_4_part1_day_22_to_25.md": {
+    "mtime": 1785080471.0773916,
+    "ast_hash": "06c8ad6613d968c5c35ebb34b23e5789",
     "semantic_hash": ""
   }
 }

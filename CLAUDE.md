@@ -95,6 +95,7 @@ Format: append a dated section under `## YYYY-MM-DD HH:MM — <title>`. This is 
 - **Windows multiprocessing needs `if __name__ == '__main__':`** guard (incl. graphify `extract()`).
 - **Subagent auto-mode classifier is intermittent.** Retry `Agent` calls on "auto mode could not evaluate this action" — usually works second try.
 - **Don't re-read files you just edited.** Edit/Write already know state; re-read wastes context / risks stale cache.
+- **Read tool `pages` param sirf PDFs ke liye.** Markdown/code files read karte waqt `pages` field omit karo; blank string ya fake page value mat bhejo.
 
 **graphify**
 - Subagents must NOT run `graphify update .` mid-build — one corrupted graph.json (18,841 nodes, 0 edges). Their prompt: "only write your chunk JSON, no build commands."

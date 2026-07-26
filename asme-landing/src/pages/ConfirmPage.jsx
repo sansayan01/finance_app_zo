@@ -89,7 +89,7 @@ export default function ConfirmPage() {
             </motion.div>
 
             <motion.p variants={fadeUp} custom={3} className="text-slate-400 text-[13px] leading-relaxed max-w-[330px] mx-auto">
-              You can now sign in to the app to manage your organization, track collections, and monitor your portfolio.
+              You can now sign in to the app to manage your loan ledger, track repayments, and stay on top of your money-lending business.
             </motion.p>
 
             {orgName && (
@@ -117,7 +117,7 @@ export default function ConfirmPage() {
           {/* Footer */}
           <motion.p variants={fadeUp} custom={6} className="text-center mt-5">
             <a href="/" className="text-slate-400 hover:text-slate-600 transition-colors text-[11px] font-medium">
-              microflow-pro.vercel.app
+              microflow.pro
             </a>
           </motion.p>
         </motion.div>

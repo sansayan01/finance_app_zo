@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 const proofs = [
-  "Join 10,000+ active members",
-  "500+ MFI partners trust us",
-  "4.9★ average user rating",
-  "99.2% on-time repayment",
+  "Join 10,000+ money-lenders",
+  "Replaces notebooks & spreadsheets",
+  "4.9 average user rating",
+  "Auto interest calculation",
 ];
 
 export default function CTA() {
@@ -60,11 +60,11 @@ export default function CTA() {
               style={{ fontFamily: "\u0027Instrument Serif\u0027, serif" }}
               className="text-[28px] md:text-[44px] font-medium tracking-[-0.01em] leading-[1.15] mb-4"
             >
-              Ready to Transform Your{
-              } <span className="gradient-brand">Micro-Finance Operations</span>?
+              Ready to Start Your{
+              } <span className="gradient-brand">Digital Ledger</span>?
             </h2>
             <p className="text-white/70 text-sm md:text-base max-w-md mx-auto mb-6 leading-relaxed">
-              Start your 14-day free trial — no credit card required.
+              Join thousands of money-lenders who've replaced their notebooks with MicroFlow Pro. No credit card required.
             </p>
             <div className="h-5 mb-8 flex items-center justify-center">
               <AnimatePresence mode="wait">

@@ -18,6 +18,7 @@ import 'core/config/env_config.dart';
 import 'core/services/sms_outbox_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/background_handler.dart';
+import 'core/services/analytics_service.dart';
 import 'app.dart';
 
 Future<void> main() async {
@@ -153,6 +154,18 @@ Future<void> main() async {
         ),
       );
     };
+
+    // 4b. Initialize PostHog analytics (gated on key; no-op if missing)
+    if (EnvConfig.posthogApiKey.isNotEmpty) {
+      debugPrint('📊 Initializing PostHog...');
+      await AnalyticsService.init(
+        apiKey: EnvConfig.posthogApiKey,
+        host: EnvConfig.posthogHost,
+        debug: true,
+      );
+    } else {
+      debugPrint('⚠️ PostHog key missing, analytics disabled');
+    }
 
     // 5. Initialize Sentry & Run App
     if (EnvConfig.sentryDsn.isNotEmpty) {

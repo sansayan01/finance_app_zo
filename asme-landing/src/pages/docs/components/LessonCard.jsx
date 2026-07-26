@@ -16,15 +16,13 @@ import { motion, AnimatePresence } from "motion/react";
 export default function LessonCard({ title, videoId, steps, note, icon, accent }) {
   const [expanded, setExpanded] = useState(false);
 
-  const borderAccent = accent || "border-indigo-500/20";
-  const bgAccent = accent?.replace("border-", "bg-").replace("/20", "/10") || "bg-indigo-500/10";
+  const borderAccent = accent || "border-indigo-500/15";
+  const bgAccent = accent?.replace("border-", "bg-").replace("/15", "/8") || "bg-indigo-500/8";
 
   return (
     <div
-      className={`relative rounded-2xl border ${borderAccent} transition-all duration-300 overflow-hidden ${
-        expanded
-          ? "bg-white/[0.02] shadow-[0_0_40px_rgba(139,92,246,0.03)]"
-          : "bg-white/[0.01] hover:bg-white/[0.015]"
+      className={`lesson-card relative border ${borderAccent} transition-all duration-300 overflow-hidden ${
+        expanded ? "lesson-card-expanded" : ""
       }`}
     >
       {/* Left accent bar — visible when expanded */}
@@ -41,7 +39,7 @@ export default function LessonCard({ title, videoId, steps, note, icon, accent }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-400/30 to-transparent pointer-events-none"
+            className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-400/25 to-transparent pointer-events-none"
           />
         )}
       </AnimatePresence>
@@ -57,14 +55,14 @@ export default function LessonCard({ title, videoId, steps, note, icon, accent }
               {icon}
             </span>
           )}
-          <h3 className="text-white/90 font-semibold text-sm sm:text-base leading-snug">{title}</h3>
+          <h3 className="text-primary font-semibold text-sm sm:text-base leading-snug">{title}</h3>
         </div>
         <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
-          expanded ? "bg-indigo-500/15" : "bg-white/[0.03]"
+          expanded ? "bg-indigo-500/12" : "bg-white/[0.03]"
         }`}>
           <ChevronDown
             className={`w-3.5 h-3.5 transition-all duration-300 ${
-              expanded ? "text-indigo-300 rotate-180" : "text-white/30"
+              expanded ? "text-indigo-300 rotate-180" : "text-tertiary"
             }`}
           />
         </div>
@@ -97,18 +95,18 @@ export default function LessonCard({ title, videoId, steps, note, icon, accent }
               {/* Steps */}
               {steps && steps.length > 0 && (
                 <div className="space-y-2.5">
-                  <div className="text-[10px] font-semibold text-white/20 uppercase tracking-[0.15em]">
+                  <div className="text-[10px] font-semibold text-tertiary uppercase tracking-[0.15em]">
                     Step-by-Step Guide
                   </div>
                   {steps.map((step, i) => (
                     <div key={i} className="flex gap-3 p-3 rounded-xl bg-white/[0.015] border border-white/[0.03]">
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500/15 to-indigo-500/5 border border-indigo-500/15 flex items-center justify-center text-[11px] font-semibold text-indigo-300">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500/12 to-indigo-500/5 border border-indigo-500/10 flex items-center justify-center text-[11px] font-semibold text-indigo-300">
                         {i + 1}
                       </span>
                       <div className="pt-0.5 min-w-0">
-                        <span className="text-white/80 text-sm">{step.label}</span>
+                        <span className="text-primary text-sm">{step.label}</span>
                         {step.desc && (
-                          <p className="text-white/35 text-xs mt-1 leading-relaxed">{step.desc}</p>
+                          <p className="text-secondary text-xs mt-1 leading-relaxed">{step.desc}</p>
                         )}
                       </div>
                     </div>
@@ -120,7 +118,7 @@ export default function LessonCard({ title, videoId, steps, note, icon, accent }
               {note && (
                 <div className="flex gap-2.5 p-3.5 rounded-xl bg-gradient-to-br from-amber-500/5 to-amber-500/[0.02] border border-amber-500/10">
                   <span className="shrink-0 text-sm mt-0.5">💡</span>
-                  <span className="text-amber-300/70 text-xs leading-relaxed">{note}</span>
+                  <span className="text-amber-200/70 text-xs leading-relaxed">{note}</span>
                 </div>
               )}
             </div>

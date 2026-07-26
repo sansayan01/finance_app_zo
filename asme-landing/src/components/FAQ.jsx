@@ -16,12 +16,12 @@ const ansLineColors = [
 ];
 
 const faqs = [
-  { q: "What is MicroFlow Pro?", a: "MicroFlow Pro is a comprehensive SaaS platform designed for MFIs and Savings Groups. It enables field staff to manage collections, track members, and sync data \u2014 even without internet." },
-  { q: "Can I try before buying?", a: "Absolutely! We offer a 14-day free trial with full access to all Professional plan features. No credit card required." },
-  { q: "Does it work without internet?", a: "Yes! Our Offline-First Engine lets staff record collections, log visits, and capture GPS data entirely offline. Everything syncs automatically when connectivity is restored." },
-  { q: "How does GPS tracking work?", a: "Every collection and visit is tagged with precise GPS coordinates. Branch managers can verify staff presence via the dashboard, ensuring accountability." },
-  { q: "Is my data secure?", a: "Security is our top priority. We use enterprise-grade Row Level Security, end-to-end encryption, and branch-level data isolation to protect your information." },
-  { q: "What support options are available?", a: "All plans include email support. Professional and Enterprise plans include priority support with dedicated account management and SLA guarantees." },
+  { q: "Is this app for individuals or organizations?", a: "MicroFlow Pro is built for individual money-lenders. Whether you lend to family, friends, neighbours, or small business owners \u2014 one person, one ledger, zero hassle." },
+  { q: "Do I need to register as an NBFC or bank?", a: "No. MicroFlow Pro is a personal book-keeping tool. It helps you track your own loans and interest calculations. You remain a private lender \u2014 we don't require any NBFC or financial institution registration." },
+  { q: "How do I calculate interest on my loans?", a: "Set your interest rate (simple or compound) when creating a loan. The app auto-calculates accrued interest daily, weekly, or monthly \u2014 no manual math needed." },
+  { q: "Is my borrower data safe?", a: "Yes. All data is encrypted and securely stored. Your borrower records, loan details, and financial information are private to your account only." },
+  { q: "Can I use it without internet?", a: "Absolutely. MicroFlow Pro works fully offline. Record loans, log repayments, and calculate interest anywhere. Everything syncs automatically once you're back online." },
+  { q: "What if I lend on trust without formal documents?", a: "That's exactly what MicroFlow Pro is for. The app lets you set up loans with minimal paperwork \u2014 just the borrower's name, amount, and your agreed terms. No PAN, Aadhaar, or legal documents required to get started." },
 ];
 
 export default function FAQ() {

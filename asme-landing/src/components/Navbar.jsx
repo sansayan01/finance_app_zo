@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Building2, Menu, X, BookOpen } from "lucide-react";
+import { Building2, Menu, X, BookOpen, Wallet } from "lucide-react";
 
 const APP_SCHEME = "com.microflow.pro://";
-const WEB_FALLBACK = "https://microflow-442f8.web.app";
+const WEB_FALLBACK = "#pricing";
 
 const links = [
   { href: "#features", label: "Features" },
@@ -65,10 +65,13 @@ export default function Navbar() {
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center group-hover:border-indigo-400/40 transition-all duration-300">
-            <Building2 className="w-4 h-4 text-indigo-300" />
+            <Wallet className="w-4 h-4 text-indigo-300" />
           </div>
           <span className="text-white font-semibold text-lg tracking-[-0.02em]">
-            Micro<span className="text-indigo-400">Flow</span>
+            Micro<span className="text-indigo-400">Flow</span>{' '}
+          <span className="text-white/30 text-xs font-normal hidden md:inline">
+            for individual money-lenders
+          </span>
           </span>
         </a>
 

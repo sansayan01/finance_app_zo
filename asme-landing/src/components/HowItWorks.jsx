@@ -1,22 +1,27 @@
 ﻿import { Fragment, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Building2, Users, MapPin, ArrowRight, Check } from "lucide-react";
+import { Building2, Users, IndianRupee, MapPin, ArrowRight, Check } from "lucide-react";
 
 const steps = [
   {
     icon: Building2,
-    title: "Create Your Organization",
-    desc: "Sign up in under 2 minutes. Configure branches, assign staff roles, and set up loan products with flexible interest models.",
+    title: "Sign Up Free",
+    desc: "Create your account in under 2 minutes. No organization setup, no branches — just your personal lending dashboard ready to go.",
   },
   {
     icon: Users,
-    title: "Add Members & Disburse",
-    desc: "Register members, create savings accounts, and disburse loans with automated EMI schedules. All data syncs to the cloud instantly.",
+    title: "Add Your Borrowers",
+    desc: "Register borrowers with their details, set interest rates per person, and organize them the way you prefer. Simple and fast.",
+  },
+  {
+    icon: IndianRupee,
+    title: "Record Loans & Interest",
+    desc: "Log every loan with principal, interest rate, and tenure. Set custom rates per borrower. Everything calculates automatically.",
   },
   {
     icon: MapPin,
-    title: "Go to the Field",
-    desc: "Staff collect payments with GPS verification. Offline mode queues transactions. Data syncs automatically when connectivity returns.",
+    title: "Track Repayments",
+    desc: "Record repayments as they come in. Get SMS reminders for due dates. Offline mode keeps working without internet.",
   },
 ];
 
@@ -51,6 +56,16 @@ const stepStyles = [
     textAccent: "text-amber-400",
     cardBg: "from-amber-500/[0.06]",
     code: "03",
+  },
+  {
+    accent: "from-emerald-500 to-emerald-400",
+    border: "border-emerald-500/20",
+    iconBg: "bg-emerald-500/10",
+    iconBorder: "border-emerald-500/25",
+    iconColor: "text-emerald-300",
+    textAccent: "text-emerald-400",
+    cardBg: "from-emerald-500/[0.06]",
+    code: "04",
   },
 ];
 
@@ -88,7 +103,7 @@ export default function HowItWorks() {
   const [direction, setDirection] = useState(1);
 
   const next = () => {
-    if (step >= 3) return;
+    if (step >= 4) return;
     setDirection(1);
     setStep((s) => s + 1);
   };
@@ -129,7 +144,7 @@ export default function HowItWorks() {
             transition={{ delay: 0.05 }}
             className="inline-block text-indigo-400/80 text-[10px] font-medium tracking-[0.25em] uppercase mb-5"
           >
-            Three Simple Steps
+            Four Simple Steps
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 16 }}
@@ -139,7 +154,7 @@ export default function HowItWorks() {
             style={{ fontFamily: "'Instrument Serif', serif" }}
             className="text-[28px] md:text-[44px] font-medium tracking-[-0.01em] leading-[1.15]"
           >
-            Get Started in <span className="gradient-brand">Three Steps</span>
+            Get Started in <span className="gradient-brand">Four Steps</span>
           </motion.h2>
         </div>
 
@@ -148,8 +163,8 @@ export default function HowItWorks() {
         {/* ════════════════════════════════════ */}
         <div className="md:hidden">
           {/* ── Progress Stepper ── */}
-          <div className="flex items-center justify-center mb-8 px-4">
-            {[1, 2, 3].map((sNum, i) => (
+          <div className="flex items-center justify-center mb-8 px-2">
+            {[1, 2, 3, 4].map((sNum, i) => (
               <Fragment key={sNum}>
                 {i > 0 && (
                   <motion.div
@@ -314,7 +329,7 @@ export default function HowItWorks() {
                       " text-white text-[12px] font-semibold shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.03] active:scale-[0.97]"
                     }
                   >
-                    {step < 3 ? (
+                    {step < 4 ? (
                       <>
                         Next
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -335,9 +350,9 @@ export default function HowItWorks() {
         {/* ════════════════════════════════════ */}
         {/* DESKTOP — Enhanced 3-Column Grid     */}
         {/* ════════════════════════════════════ */}
-        <div className="hidden md:grid md:grid-cols-3 gap-8 md:gap-14 relative">
+        <div className="hidden md:grid md:grid-cols-4 gap-8 md:gap-10 relative">
           {/* Animated connecting line */}
-          <div className="absolute top-[54px] left-[16.66%] right-[16.66%] h-[1.5px] overflow-hidden">
+          <div className="absolute top-[54px] left-[12.5%] right-[12.5%] h-[1.5px] overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-indigo-400/25 to-indigo-500/10" />
             <motion.div
               initial={{ x: "-100%" }}

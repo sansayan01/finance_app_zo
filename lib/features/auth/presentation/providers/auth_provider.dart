@@ -8,6 +8,7 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../../settings/data/providers/activity_log_repository_provider.dart';
 import '../../../../core/services/push_notification_provider.dart';
+import '../../../../core/services/analytics_service.dart';
 
 final Provider<AuthRepository?> authRepositoryProvider =
     Provider<AuthRepository?>((ref) {
@@ -149,6 +150,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Register FCM token after successful login
       _registerFcmToken();
 
+      // Identify the user in PostHog for product + marketing analytics
+      analytics.identify(
+        user.id,
+        {
+          'email': user.email,
+          'name': user.fullName,
+          'role': user.role?.name ?? 'unknown',
+          if (user.orgId != null) 'org_id': user.orgId!,
+          if (user.branchId != null) 'branch_id': user.branchId!,
+        },
+      );
+      analytics.track('user_login', {
+        'role': user.role?.name ?? 'unknown',
+      });
+
       return true;
     } catch (e) {
       final errorInfo = _getErrorMessage(e);
@@ -196,6 +212,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return true;
       }
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      analytics.identify(
+        user.id,
+        {
+          'email': user.email,
+          'name': user.fullName,
+          'role': user.role?.name ?? 'unknown',
+          if (user.orgId != null) 'org_id': user.orgId!,
+        },
+      );
+      analytics.track('user_signup', {
+        'role': user.role?.name ?? 'unknown',
+      });
       return true;
     } catch (e) {
       final errorInfo = _getErrorMessage(e);
@@ -221,6 +249,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     await _repository.signOut();
     state = const AuthState(status: AuthStatus.unauthenticated);
+
+    // Clear the identified user in PostHog
+    analytics.reset();
+    analytics.track('user_logout');
   }
 
   // Exposed for setup wizard to refresh user after org creation

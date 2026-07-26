@@ -12,33 +12,33 @@ import {
 const features = [
   {
     icon: MapPin,
-    title: "GPS Field Operations",
-    desc: "Every collection and visit automatically tagged with GPS coordinates. Geofencing and real-time location audits ensure field staff accountability and transparency.",
+    title: "Complete Loan Records",
+    desc: "Keep a full record of every loan you've given: borrower details, amount, interest rate, and term. Everything searchable in one place.",
   },
   {
     icon: WifiOff,
-    title: "Offline-First Engine",
-    desc: "No internet? No problem. Record collections offline and auto-sync when back online. Zero data loss with conflict resolution and queue management.",
+    title: "Works Offline, Syncs Later",
+    desc: "Record loans and repayments even without internet. Everything syncs safely when you're back online.",
   },
   {
     icon: Calendar,
-    title: "Automated EMI Scheduling",
-    desc: "Generate complex EMI schedules in seconds. Flat, reducing balance, and custom interest rates with grace period handling and prepayment support.",
+    title: "Interest & Repayment Tracker",
+    desc: "Automatically calculate interest accrued and track repayments. Know exactly what's owed at any moment.",
   },
   {
     icon: Shield,
-    title: "Role-Based Security",
-    desc: "Enterprise-grade Row Level Security with branch-level data isolation. Staff see only what they need. SOC2-aligned audit trails on every action.",
+    title: "Your Data, Private & Secure",
+    desc: "Your ledger is yours alone. Encrypted storage, PIN/biometric lock, and no one else can access your records.",
   },
   {
     icon: BarChart3,
-    title: "Dynamic Analytics",
-    desc: "Track collection efficiency, staff performance, and portfolio health with real-time dashboards. Drill down from org level to individual collections.",
+    title: "Simple Portfolio Insights",
+    desc: "See your total lent amount, outstanding balance, interest earned, and repayment rate — all updated in real time.",
   },
   {
     icon: Trophy,
-    title: "Staff Gamification",
-    desc: "Drive productivity with streaks, achievement badges, and branch leaderboards. Turn collection targets into engaging weekly missions.",
+    title: "Smart Reminders",
+    desc: "Set optional SMS reminders for borrowers. They get a gentle nudge; you get paid on time.",
   },
 ];
 
@@ -207,7 +207,7 @@ export default function Features() {
             style={{ fontFamily: "'Instrument Serif', serif" }}
             className="text-[28px] md:text-[44px] font-medium tracking-[-0.01em] leading-[1.15]"
           >
-            Everything an MFI Needs,{" "}
+            Everything a Money-Lender Needs,{" "}
             <span className="gradient-brand">All in One Place</span>
           </motion.h2>
           <motion.p
@@ -217,7 +217,7 @@ export default function Features() {
             transition={{ delay: 0.15, duration: 0.5 }}
             className="text-white/60 text-sm max-w-lg mx-auto mt-4 leading-relaxed"
           >
-            Purpose-built for micro-finance institutions -- from field collections to portfolio analytics.
+            Purpose-built for individual money-lenders -- track loans, interest, and repayments without the paperwork.
           </motion.p>
         </div>
 

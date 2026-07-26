@@ -1,11 +1,12 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Building2, Banknote, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Wallet, Banknote, ArrowUpRight, ShieldCheck } from "lucide-react";
 
 var sections = [
-  { title: "Product", links: ["Features", "Staff Portal", "Admin Dashboard", "Offline Sync", "API Reference"] },
-  { title: "Company", links: ["About Us", "Security", "Privacy", "Terms", "Careers"] },
-  { title: "Support", links: ["Help Center", "API Docs", "System Status", "Contact"] },
+  { title: "Product", links: [{ label: "Features", href: "/#features" }, { label: "How It Works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }, { label: "FAQ", href: "/#faq" }, { label: "Docs", href: "/docs" }] },
+  { title: "Company", links: [{ label: "About Us", href: "/about" }, { label: "Security", href: "/security" }, { label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }, { label: "Contact", href: "/contact" }] },
+  { title: "Resources", links: [{ label: "Help Center", href: "/help" }, { label: "Guides", href: "/docs" }, { label: "Blog", href: "/blog" }, { label: "Status", href: "/status" }] },
 ];
 
 var socials = [
@@ -108,8 +109,23 @@ function CountUp({ end, prefix, suffix, divisor, decimals }) {
   );
 }
 
+/* ── Smart link: page routes via Link, hash anchors via scroll ── */
+function FooterNavLink({ href, navigate, children, className }) {
+  if (href.startsWith("/")) {
+    return <Link to={href} className={className}>{children}</Link>;
+  }
+  return (
+    <a href={href} onClick={function (e) {
+      e.preventDefault();
+      var id = href.replace("#", "");
+      var el = document.getElementById(id);
+      if (el) { el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    }} className={className}>{children}</a>
+  );
+}
+
 /* ── Mobile accordion ── */
-function AccordionSection({ title, links }) {
+function AccordionSection({ title, links, navigate }) {
   var [open, setOpen] = useState(false);
   return (
     <motion.div layout className="border-b border-white/[0.04] last:border-b-0">
@@ -135,12 +151,14 @@ function AccordionSection({ title, links }) {
           >
             <ul className="space-y-2 pb-3.5">
               {links.map(function (l, i) {
+                var href = typeof l === "object" ? l.href : "#";
+                var label = typeof l === "object" ? l.label : l;
                 return (
-                  <motion.li key={l} initial={{ opacity: 0, x: -8 }}
+                  <motion.li key={label} initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <a href="#" className="text-white/35 hover:text-white/80 transition-all duration-200 text-[13px] inline-block py-1">{l}</a>
+                    <FooterNavLink href={href} navigate={navigate}>{label}</FooterNavLink>
                   </motion.li>
                 );
               })}
@@ -153,6 +171,7 @@ function AccordionSection({ title, links }) {
 }
 
 export default function Footer() {
+  var navigate = useNavigate();
   var stats = [
     { end: 24, prefix: "\u20b9", suffix: "M+", label: "collected daily", divisor: 1, decimals: 1, icon: Banknote },
     { end: 1847, prefix: "", suffix: "+", label: "transactions / day", divisor: 0, decimals: 0, icon: ArrowUpRight },
@@ -171,18 +190,18 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto relative z-[1]">
         {/* brand */}
         <div className="text-center mb-10">
-          <a href="#" className="inline-flex items-center gap-2.5 mb-3">
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/25 to-indigo-400/10 border border-indigo-500/30 flex items-center justify-center shadow-lg shadow-indigo-500/10">
-              <Building2 className="w-4 h-4 text-indigo-300" />
+              <Wallet className="w-4 h-4 text-indigo-300" />
             </div>
             <span className="text-white font-semibold text-lg tracking-[-0.02em]">
               Micro<span className="text-indigo-400">Flow</span>
             </span>
-          </a>
+          </Link>
           <p style={{ fontFamily: "'Instrument Serif', serif" }}
             className="text-white/30 text-sm leading-relaxed max-w-xs mx-auto italic"
           >
-            The intelligent platform for micro-finance institutions.
+            The intelligent book-keeping tool for individual money-lenders.
           </p>
         </div>
 
@@ -210,7 +229,7 @@ export default function Footer() {
 
         {/* mobile accordion */}
         <div className="md:hidden mb-10">
-          {sections.map(function (s) { return <AccordionSection key={s.title} title={s.title} links={s.links} />; })}
+          {sections.map(function (s) { return <AccordionSection key={s.title} title={s.title} links={s.links} navigate={navigate} />; })}
         </div>
 
         {/* desktop grid */}
@@ -224,10 +243,12 @@ export default function Footer() {
                 <h4 className="text-indigo-400/60 text-[10px] font-semibold uppercase tracking-[0.15em] mb-5">{s.title}</h4>
                 <ul className="space-y-3.5">
                   {s.links.map(function (l) {
+                    var href = typeof l === "object" ? l.href : "#";
+                    var label = typeof l === "object" ? l.label : l;
                     return (
-                      <li key={l}>
-                        <motion.a whileHover={{ x: 3 }} href="#"
-                          className="text-white/35 hover:text-white/80 transition-all duration-200 text-[13px] inline-block">{l}</motion.a>
+                      <li key={label}>
+                        <FooterNavLink href={href} navigate={navigate}
+                          className="text-white/35 hover:text-white/80 transition-all duration-200 text-[13px] inline-block">{label}</FooterNavLink>
                       </li>
                     );
                   })}

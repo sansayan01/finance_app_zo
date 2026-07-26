@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 
 // Chatbot
 import '../features/chatbot/presentation/widgets/floating_chatbot.dart';
@@ -65,6 +66,7 @@ import '../features/users/presentation/pages/user_audit_page.dart';
 import '../features/users/presentation/pages/org_chart_page.dart';
 import '../features/users/presentation/pages/bulk_import_members_page.dart';
 import '../features/analytics/presentation/pages/analytics_page.dart';
+import '../features/analytics/presentation/pages/advanced_analytics_page.dart';
 import '../features/home/presentation/pages/search_page.dart';
 import '../features/home/presentation/pages/notifications_page.dart';
 import '../features/transactions/presentation/pages/transactions_page.dart';
@@ -159,6 +161,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: authListener,
+    observers: [PosthogObserver()],
     redirect: (context, state) {
       // 1. Allow splash screen to display without redirection
       final isSplashPath = state.matchedLocation == '/splash';
@@ -537,6 +540,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/analytics',
             builder: (context, state) => const AnalyticsPage(),
+          ),
+          GoRoute(
+            path: '/analytics/advanced',
+            builder: (context, state) => const AdvancedAnalyticsPage(),
           ),
           GoRoute(
             path: '/transactions',

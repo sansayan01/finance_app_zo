@@ -58,6 +58,7 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "supabase"
+    "supabase",
+    "n8n-mcp"
   ]
 }

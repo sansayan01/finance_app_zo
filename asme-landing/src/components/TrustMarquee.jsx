@@ -1,9 +1,10 @@
 import { motion } from "motion/react";
 
 const partners = [
-  "Gramin Financial", "SEWA Bank", "Janalakshmi Finance", "Sa-Dhan",
-  "Bandhan Conclave", "Arohan Financial", "Village Financial", "Ujjivan SFB",
-  "Fincare SFB", "Annapurna Finance",
+  "Delhi Lenders Network", "Mumbai Sahukars", "Bangalore Local Finance",
+  "Pune Money Lenders", "Chennai Traders Circle", "Kolkata Sahukar Sangh",
+  "Hyderabad Local Credit", "Ahmedabad Business Fund", "Jaipur Sahukars",
+  "Lucknow Lenders Group",
 ];
 
 export default function TrustMarquee() {
@@ -16,7 +17,7 @@ export default function TrustMarquee() {
           viewport={{ once: true }}
           className="text-center text-white/25 text-[10px] font-medium tracking-[0.2em] uppercase mb-5"
         >
-          Trusted by Leading Micro-Finance Institutions
+          Trusted by 10,000+ Money-Lenders Across India
         </motion.p>
         <div className="md:hidden -mx-6 px-6 overflow-x-auto scrollbar-none snap-x snap-mandatory">
           <div className="flex gap-3 w-max pb-2">

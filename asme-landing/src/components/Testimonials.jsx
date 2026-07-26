@@ -5,23 +5,23 @@ import { Star, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 const testimonials = [
   {
     quote:
-      "MicroFlow Pro transformed our field operations. Offline sync is a game-changer — our agents in remote villages can now record collections seamlessly. We have seen a 40% increase in daily collection efficiency.",
-    author: "Rajesh Patel",
-    role: "CEO, Gramin Financial Services",
+      "I used to track 40+ borrowers in a dusty notebook — interest calculations were a nightmare. MicroFlow Pro replaced all of it. I can see who owes what, how much interest has accrued, and when payments are due, all in one place.",
+    author: "Ramesh Kumar",
+    role: "Local Lender, Delhi",
     initials: "RP",
   },
   {
     quote:
-      "GPS verification and analytics gave us unprecedented visibility into field operations. PAR reduced by 23% in the first quarter. The dashboard alone saves my team 10+ hours of reconciliation every week.",
-    author: "Sunita Kumari",
-    role: "Branch Manager, SEWA Bank",
+      "Before this app, I was juggling WhatsApp messages, paper receipts, and mental math. Now every loan, interest rate, and repayment is organized automatically. My borrowers even trust me more because I can show them exact balances instantly.",
+    author: "Sunita Devi",
+    role: "Small-Scale Lender, Mumbai",
     initials: "SK",
   },
   {
     quote:
-      "EMI scheduling used to take hours of manual calculation. Now it\u2019s seconds. Gamification has our staff genuinely excited to hit collection targets. The energy in the branches is night and day.",
-    author: "Arun Mehta",
-    role: "Operations Head, Janalakshmi Finance",
+      "I lend to 25+ people in my community \u2014 friends, neighbours, small shop owners. Managing interest and repayments used to take hours every weekend. Now it takes minutes. The offline mode is a lifesaver since my area has spotty connectivity.",
+    author: "Amit Sharma",
+    role: "Part-Time Lender, Bangalore",
     initials: "AM",
   },
 ];
@@ -121,7 +121,7 @@ export default function Testimonials() {
             transition={{ delay: 0.05 }}
             className="inline-block text-indigo-400/80 text-[10px] font-medium tracking-[0.25em] uppercase mb-5"
           >
-            Trusted by Leaders
+            Trusted by Lenders
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 16 }}
@@ -131,7 +131,7 @@ export default function Testimonials() {
             style={{ fontFamily: "'Instrument Serif', serif" }}
             className="text-[28px] md:text-[44px] font-medium tracking-[-0.01em] leading-[1.15]"
           >
-            Trusted by <span className="gradient-brand">Financial Leaders</span>
+            Trusted by <span className="gradient-brand">Money-Lenders</span>
           </motion.h2>
         </div>
 

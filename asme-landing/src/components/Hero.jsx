@@ -3,34 +3,34 @@ import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Check, ChevronDown, User, Building2, Sparkles } from "lucide-react";
 import AppDownloadButton from "./AppDownloadButton";
 
-const WEB_FALLBACK = "https://microflow-442f8.web.app";
+const WEB_FALLBACK = "#pricing";
 
 /* ── Persona content ── */
 var CONTENT = {
   agent: {
-    label: "Field Agent",
+    label: "Lender",
     icon: User,
-    wordList: ["collect payments", "track members", "record visits", "earn rewards", "work offline"],
-    subtitle: "Field-first tools for collection agents. GPS check-ins, offline sync, and daily targets\u2014all in one app.",
+    wordList: ["track loans", "calculate interest", "manage borrowers", "record repayments", "work offline"],
+    subtitle: "A simple digital ledger for individual money-lenders. Record who you lent to, the interest, and what's been repaid\u2014all in one place.",
     cta: "Get Early Access",
     pairs: [
-      { problem: "Drowning in paperwork?", solution: "Collect digitally in seconds", stat: "92% faster collections" },
-      { problem: "Wasting hours traveling?", solution: "GPS-verified field visits", stat: "40% fewer trips" },
-      { problem: "Losing paper receipts?", solution: "Auto-generated digital receipts", stat: "100% receipt accuracy" },
-      { problem: "Working without internet?", solution: "Offline-first sync engine", stat: "Works reliably on 2G" },
+      { problem: "Drowning in notebooks?", solution: "All loans in one clean ledger", stat: "92% less paperwork" },
+      { problem: "Confusing interest maths?", solution: "Auto-calculated interest & balances", stat: "Zero calculation errors" },
+      { problem: "Losing paper receipts?", solution: "Every repayment digitally logged", stat: "100% accurate records" },
+      { problem: "Working without internet?", solution: "Works offline, syncs later", stat: "Reliable on any network" },
     ],
   },
   org: {
-    label: "Organization",
+    label: "Professional",
     icon: Building2,
-    wordList: ["manage micro-finance", "analyze portfolios", "oversee branches", "track disbursements", "monitor repayments"],
-    subtitle: "Enterprise oversight for MFI leaders. Real-time analytics, role-based controls, and multi-branch dashboards.",
+    wordList: ["track loans", "analyze portfolio", "send reminders", "view insights", "manage borrowers"],
+    subtitle: "Advanced tools for serious money-lenders. Portfolio analytics, custom interest rates, and automated repayment reminders.",
     cta: "Start Free Trial",
     pairs: [
-      { problem: "Scattered across spreadsheets?", solution: "Unified real-time dashboard", stat: "All metrics in one view" },
-      { problem: "No visibility into branches?", solution: "Multi-branch oversight hub", stat: "Monitor 50+ branches live" },
-      { problem: "Manual reporting delays?", solution: "Automated analytics engine", stat: "Reports in under 2 clicks" },
-      { problem: "Risk of fraud or errors?", solution: "Role-based security & audit", stat: "Enterprise-grade data RLS" },
+      { problem: "Too many borrowers to track?", solution: "Searchable borrower database", stat: "Manage 500+ borrowers" },
+      { problem: "Manual interest calculations?", solution: "Flat, reducing, or custom rates", stat: "Auto-calculated interest" },
+      { problem: "Forgetting repayment dates?", solution: "SMS reminders to borrowers", stat: "95% on-time repayments" },
+      { problem: "No clarity on profits?", solution: "Real-time P&L dashboard", stat: "See earnings at a glance" },
     ],
   },
 };
@@ -266,7 +266,7 @@ export default function Hero() {
           className="text-white/60 text-[10px] md:text-[11px] font-medium tracking-[0.25em] uppercase"
         >
           <span className="inline-block px-3 py-1 rounded-full border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-            The All-in-One Platform for MFIs &amp; Savings Groups
+            The Intelligent Book-Keeping Tool for Money-Lenders
           </span>
         </motion.p>
 
@@ -524,7 +524,7 @@ export default function Hero() {
           </motion.p>
         </AnimatePresence>
 
-        {/* ── CTA — redirects to web app login ── */}
+        {/* ── CTA — scrolls to pricing ── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

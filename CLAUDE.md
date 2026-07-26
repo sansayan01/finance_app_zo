@@ -1,6 +1,7 @@
 # CLAUDE.md — Project Instructions
 
 ## Latest Update (rolling — replaced after every conversation)
+- **2026-07-18:** Set up Remotion-based org setup tutorial video in `videos/exec-admin-org-setup/`. Single source of truth: `storyboard_and_direction.md`. Built 9-scene React/TypeScript composition (`src/OrgSetupVideo.tsx`) matching exact Flutter app design: Pixel 7 portrait mockup, aurora background, glassmorphic cards, sequential typing animations, pointer/tap guides, confetti/sparkle effects. Fixed React hooks error #310 by removing `useMemo` after early returns. Fixed negative `durationInFrames` crash with `Math.max(1, ...)`. Fixed landscape phone to proper 380×760 portrait. Verified composition renders in Remotion Studio at `localhost:3000`. Full MP4 render still pending due to harness timeout; use detached render for final output.
 - **2026-07-14:** Fixed "Signal lost" showing falsely for active collection agents on exec admin/manager portals. Root cause: `LiveLocationService.startTracking()` blocked on `_uploadCurrentLocation()` (await GPS) while `toggleDuty()` wrapped it in a 5-second timeout — on desktop Chrome GPS can be slow, so the upload silently failed and duty state became "ON" without any location in DB. Also the age-out threshold (5 min) matched the heartbeat interval (5 min) causing stationary agents to constantly appear offline. Fixes: (1) Made `_uploadCurrentLocation()` fire-and-forget (no await) so duty toggle is instant; (2) Removed await+timeout on `startTracking()` in `toggleDuty()`; (3) Increased age-out threshold from 5→15 minutes (3x heartbeat margin); (4) Changed `recorded_at` and `createdAt` to UTC (`DateTime.now().toUtc()`) to eliminate timezone drift. `flutter analyze` clean on all 4 files.
 - **2026-07-12:** Fixed SMS-not-sent on loan/savings collection (root cause was NOT the toggle). Real cause: native `SmsSenderPlugin` sent on `subscriptionId: -1` (no default SMS SIM on device; real SIMs are sub 4/5) → `4/4 parts failed`. Also `READ_PHONE_STATE` was never granted/requested, so the plugin couldn't enumerate SIMs. Fixes: (1) `findWorkingSubscriptionId()` now picks the **first active** subscription instead of -1; (2) plugin auto-requests `READ_PHONE_STATE` at send time and retries. Verified staging `sms_notifications`: 8 `sent` rows, native log `Auto-selected working SIM subscription: 4`. Env fix: `JAVA_HOME` pointed at a non-existent Adoptium JDK → repointed to Android Studio JBR (`C:\Program Files\Android\Android Studio\jbr`) and persisted via setx. Super-admin portal work still deferred. Dart: guarded two unguarded `string[0]` accesses (empty `full_name` on team avatars, empty branch `status`) that crashed. RLS: `org_select` lacked the super-admin role bypass that `org_update_admin`/`org_delete_admin` already had → super-admin viewing any org they didn't create got silent NULL → "Organization not found". Added role bypass (staging + migration file `20260711000000`). Page compiles clean, no known error paths remain.
 - Full session history → `docs/session-log.md`. Durable facts (customers, decisions) → `memory/`.
@@ -70,6 +71,14 @@ Project knowledge graph at `graphify-out/` (god nodes, communities, cross-file e
 | Design decision | **Design DNA** |
 
 After every exchange, update the `## Latest Update` line immediately (don't wait for session end).
+
+## Auto-Pilot Memory (STRICT — no exceptions)
+After EVERY response, update `memory/MEMORY.md` with:
+- **Date + timestamp** of the response
+- **Summary** of what was done/discussed/decided (1-2 sentences)
+- **Files created/modified** (if any)
+- **Next steps** (if any)
+Format: append a dated section under `## YYYY-MM-DD HH:MM — <title>`. This is for marketing + future reference — we need to memorize everything we did, do, and done. Graphify only captures code edits; this rule captures EVERYTHING else (discussions, decisions, video production, design work, etc.).
 
 ---
 

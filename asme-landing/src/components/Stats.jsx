@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Users, Building2, IndianRupee, Star } from "lucide-react";
+import { Users, ClipboardList, IndianRupee, Star } from "lucide-react";
 
-const icons = [Users, Building2, IndianRupee, Star];
+const icons = [Users, ClipboardList, IndianRupee, Star];
 
 function Burst({ active, accent }) {
   if (!active) return null;
@@ -75,11 +75,11 @@ function Counter({ end, suffix, label, icon: Icon, accent, delay }) {
   };
 
   const detailTexts = {
-    "Active Members Served": "Growing 15% MoM across 40+ districts",
-    "MFI Partners": "Including top 10 MFIs in India",
-    "Collections Managed": "99.2% on-time repayment rate",
-    "Average User Rating": "Based on 2,400+ verified reviews",
-  };
+  "Borrowers Managed": "Trusted by 10,000+ lenders across India",
+  "Loans Tracked": "Every loan, interest & repayment in one place",
+  "Data Uptime": "Bank-grade reliability for your records",
+  "Average User Rating": "Based on 2,400+ verified reviews",
+};
 
   return (
     <motion.div
@@ -142,10 +142,10 @@ function Counter({ end, suffix, label, icon: Icon, accent, delay }) {
 }
 
 const stats = [
-  { end: 10000, suffix: "+", label: "Active Members Served", accent: "#a78bfa" },
-  { end: 500, suffix: "+", label: "MFI Partners", accent: "#22d3ee" },
-  { end: 50, suffix: "Cr+", label: "Collections Managed", accent: "#34d399" },
-  { end: 49, suffix: "\u2605", label: "Average User Rating", accent: "#fbbf24" },
+  { end: 10000, suffix: "+", label: "Borrowers Managed", accent: "#a78bfa" },
+  { end: 50000, suffix: "+", label: "Loans Tracked", accent: "#22d3ee" },
+  { end: 99.9, suffix: "%", label: "Data Uptime", accent: "#34d399" },
+  { end: 4.9, suffix: "\u2605", label: "Average User Rating", accent: "#fbbf24" },
 ];
 
 export default function Stats() {
@@ -171,7 +171,7 @@ export default function Stats() {
             style={{ fontFamily: "\u0027Instrument Serif\u0027, serif" }}
             className="text-[28px] md:text-[40px] font-medium tracking-[-0.01em]"
           >
-            Trusted at <span className="gradient-brand">Scale</span>
+            Trusted by <span className="gradient-brand">Lenders</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}

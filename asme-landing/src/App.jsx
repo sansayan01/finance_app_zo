@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronUp } from "lucide-react";
@@ -15,12 +15,22 @@ import FAQ from "./components/FAQ";
 import CTA from "./components/CTA";
 import Footer from "./components/Footer";
 import ConfirmPage from "./pages/ConfirmPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
+import AboutPage from "./pages/AboutPage";
+import SecurityPage from "./pages/SecurityPage";
+import ContactPage from "./pages/ContactPage";
+import HelpCenterPage from "./pages/HelpCenterPage";
+import BlogPage from "./pages/BlogPage";
+import StatusPage from "./pages/StatusPage";
 import DocsLayout from "./pages/docs/DocsLayout";
 import DocsHome from "./pages/docs/DocsHome";
-import ExecutiveAdminGuide from "./pages/docs/guides/ExecutiveAdminGuide";
-import BranchManagerGuide from "./pages/docs/guides/BranchManagerGuide";
-import CollectionAgentGuide from "./pages/docs/guides/CollectionAgentGuide";
-import CustomerGuide from "./pages/docs/guides/CustomerGuide";
+import GettingStartedGuide from "./pages/docs/guides/GettingStartedGuide";
+import BorrowersGuide from "./pages/docs/guides/BorrowersGuide";
+import RepaymentsGuide from "./pages/docs/guides/RepaymentsGuide";
+import LoansGuide from "./pages/docs/guides/LoansGuide";
+import SMSRemindersGuide from "./pages/docs/guides/SMSRemindersGuide";
+import PortfolioInsightsGuide from "./pages/docs/guides/PortfolioInsightsGuide";
 
 export default function App() {
   const [backTop, setBackTop] = useState(false);
@@ -42,14 +52,24 @@ export default function App() {
   return (
     <Routes>
       <Route path="/confirm" element={<ConfirmPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/security" element={<SecurityPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/help" element={<HelpCenterPage />} />
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/status" element={<StatusPage />} />
 
       {/* Docs section — clean layout with sidebar */}
       <Route path="/docs" element={<DocsLayout />}>
         <Route index element={<DocsHome />} />
-        <Route path="executive-admin" element={<ExecutiveAdminGuide />} />
-        <Route path="branch-manager" element={<BranchManagerGuide />} />
-        <Route path="collection-agent" element={<CollectionAgentGuide />} />
-        <Route path="customer" element={<CustomerGuide />} />
+        <Route path="getting-started" element={<GettingStartedGuide />} />
+        <Route path="managing-borrowers" element={<BorrowersGuide />} />
+        <Route path="recording-loans" element={<LoansGuide />} />
+        <Route path="tracking-repayments" element={<RepaymentsGuide />} />
+        <Route path="sms-reminders" element={<SMSRemindersGuide />} />
+        <Route path="portfolio-insights" element={<PortfolioInsightsGuide />} />
       </Route>
 
       <Route path="*" element={

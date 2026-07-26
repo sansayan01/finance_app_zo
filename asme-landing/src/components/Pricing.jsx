@@ -8,12 +8,12 @@ const tiers = [
     monthly: "\u20b9999",
     annual: "\u20b97,999",
     period: "/mo",
-    desc: "For small groups and emerging MFIs.",
+    desc: "For new lenders starting out.",
     features: [
-      "Up to 100 Members",
-      "Single Branch",
-      "3 Staff Accounts",
-      "Basic EMI Scheduling",
+      "Up to 50 Borrowers",
+      "Single Ledger",
+      "Basic Interest Calculator",
+      "SMS Reminders",
       "Email Support",
     ],
     popular: false,
@@ -24,30 +24,27 @@ const tiers = [
     monthly: "\u20b92,999",
     annual: "\u20b923,999",
     period: "/mo",
-    desc: "For growing institutions with multiple branches.",
+    desc: "For active lenders with growing books.",
     features: [
-      "Up to 1,000 Members",
-      "Up to 5 Branches",
-      "20 Staff Accounts",
-      "GPS & Offline Sync",
+      "Up to 500 Borrowers",
       "Advanced Analytics",
+      "Offline Mode",
       "Priority Support",
+      "Custom Interest Rates",
     ],
     popular: true,
-    cta: "Start 14-Day Trial",
+    cta: "Start Free Trial",
   },
   {
     name: "Enterprise",
     monthly: "Custom",
     annual: "Custom",
     period: "",
-    desc: "For large-scale institutions with custom requirements.",
+    desc: "For established lenders managing large books.",
     features: [
-      "Unlimited Members",
-      "Unlimited Branches",
-      "White-label & API",
-      "Dedicated Account Manager",
-      "SLA Guarantees",
+      "Unlimited Borrowers",
+      "Dedicated Support",
+      "Custom Integrations",
       "On-Premise Option",
     ],
     popular: false,
@@ -114,6 +111,15 @@ export default function Pricing() {
           >
             Transparent <span className="gradient-brand">Pricing</span>
           </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="text-white/50 text-sm mt-3 max-w-md mx-auto"
+          >
+            Affordable plans for every money-lender. Start free, upgrade when you need more.
+          </motion.p>
 
           {/* ── Annual/Monthly Toggle ── */}
           <motion.div
@@ -142,9 +148,6 @@ export default function Pricing() {
             </button>
             <span className={"transition-colors duration-300 " + (annual ? "text-white/85" : "text-white/40")}>
               Annual
-              <span className="ml-1.5 px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-400/20 text-[10px] font-medium text-indigo-300">
-                Save 20%
-              </span>
             </span>
           </motion.div>
         </div>

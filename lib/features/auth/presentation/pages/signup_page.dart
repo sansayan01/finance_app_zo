@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_provider.dart' as auth;
 import '../../../settings/data/providers/brand_provider.dart';
+import '../../../settings/presentation/pages/legal_policies_page.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   final VoidCallback onSignInTap;
@@ -308,34 +309,60 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 
   Widget _buildTermsCheckbox(ThemeData theme, Color primary) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
-          child: AnimatedContainer(
-            duration: AppSpacing.animationFast,
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: _agreedToTerms ? primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _agreedToTerms
-                    ? primary
-                    : (theme.textTheme.bodySmall?.color ?? Colors.grey),
-                width: 1.5,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
+              child: AnimatedContainer(
+                duration: AppSpacing.animationFast,
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: _agreedToTerms ? primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _agreedToTerms
+                        ? primary
+                        : (theme.textTheme.bodySmall?.color ?? Colors.grey),
+                    width: 1.5,
+                  ),
+                ),
+                child: _agreedToTerms
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
               ),
             ),
-            child: _agreedToTerms
-                ? const Icon(Icons.check, size: 16, color: Colors.white)
-                : null,
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'I agree to the Terms of Service and Privacy Policy',
+                style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            'I agree to the Terms of Service and Privacy Policy',
-            style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 36),
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const LegalPoliciesPage(),
+              ),
+            ),
+            child: Text(
+              'Read Terms of Service & Privacy Policy',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 13,
+                color: primary,
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.underline,
+              ),
+            ),
           ),
         ),
       ],

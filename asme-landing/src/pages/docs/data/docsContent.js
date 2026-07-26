@@ -15,1008 +15,1264 @@ export const languages = [
 ];
 
 export const docsContent = {
-  // ──────────────────────────────────────────────────────────────────────────
-  // ENGLISH
-  // ──────────────────────────────────────────────────────────────────────────
   en: {
     common: {
-      allGuides: "All Guides",
-      backToHome: "Home",
-      documentation: "Documentation",
-      quickLinks: "Quick Links",
-      portalGuides: "Portal Guides",
-      watchVideo: "Watch Video",
-      openGuide: "Open Guide",
-      stepsTitle: "Step-by-Step Guide",
-      lessons: "lessons",
-      portals: "portals",
-      youtube: "YouTube",
-      selectPortal: "Select Your Portal",
-      openGuideAction: "Open guide",
-      subscribe: "Subscribe",
-      popularGuides: "Popular Guides",
+      allGuides: "All Guides", backToHome: "Home", documentation: "Documentation",
+      quickLinks: "Quick Links", portalGuides: "Guides", watchVideo: "Watch Video",
+      openGuide: "Open Guide", stepsTitle: "Step-by-Step Guide", lessons: "lessons",
+      portals: "guides", youtube: "YouTube", selectPortal: "Select a Guide",
+      openGuideAction: "Open guide", subscribe: "Subscribe", popularGuides: "Popular Guides",
       youtubeCtaTitle: "Video Tutorials Available",
       youtubeCtaDesc: "Detailed video tutorials for every topic. Explained in simple, easy-to-follow steps. Subscribe to our YouTube channel to get updates on new videos.",
     },
     home: {
       title: "Documentation",
-      subtitle: "Portal-wise guides with video tutorials",
-      desc: "MicroFlow Pro — Complete guide for every portal. Watch video walkthroughs and follow simple instructions to manage your microfinance operations.",
+      subtitle: "Step-by-step guides with video tutorials",
+      desc: "MicroFlow Pro — the simple book-keeping tool for individual money-lenders. Track loans, collect repayments, and stay on top of your interest earnings. These guides walk you through every feature.",
       portals: {
-        admin: {
-          title: "Executive Admin",
-          desc: "Full organization setup, branch management, staff oversight, and deep reports/analytics."
-        },
-        manager: {
-          title: "Branch Manager",
-          desc: "Manage your specific branch collections, loan approvals, savings deposits, and monitor branch staff."
-        },
-        agent: {
-          title: "Collection Agent",
-          desc: "Field operations guide including daily collection tracking, duty toggle, live location, and SMS alerts."
-        },
-        customer: {
-          title: "Customer App",
-          desc: "A guide for customers to check outstanding loans, savings balance, recent payment history, and download statements."
-        }
+        admin: { title: "Getting Started", desc: "Sign up, set up your profile, and add your first borrower." },
+        manager: { title: "Managing Borrowers", desc: "Add and edit borrower details, contact info, and loan history." },
+        agent: { title: "Recording Loans", desc: "Create loans, set interest rates, terms, and amounts for your borrowers." },
+        customer: { title: "Tracking Repayments", desc: "Log repayments, view outstanding balances, and track your interest earnings." },
       },
       topics: [
-        { label: "📱 App Download & Login", path: "/docs/customer" },
-        { label: "👤 Add A Member", path: "/docs/collection-agent" },
-        { label: "💰 Daily Collection Process", path: "/docs/collection-agent" },
-        { label: "📊 Loan Statement PDF", path: "/docs/customer" },
-        { label: "🛡️ Team, Activity & Audit Log", path: "/docs/executive-admin" },
-        { label: "📨 Configure SMS Alerts", path: "/docs/executive-admin" },
-        { label: "📍 Agent Live Tracking", path: "/docs/branch-manager" },
-        { label: "🔐 Force Password Reset", path: "/docs/executive-admin" }
+        { label: "📱 App Download & Login", path: "/docs/getting-started" },
+        { label: "👤 Add Your First Borrower", path: "/docs/managing-borrowers" },
+        { label: "💰 Create Your First Loan", path: "/docs/recording-loans" },
+        { label: "📊 Record a Repayment", path: "/docs/tracking-repayments" },
+        { label: "📨 Set Up SMS Reminders", path: "/docs/sms-reminders" },
+        { label: "📈 Understand Your Portfolio", path: "/docs/portfolio-insights" },
       ]
     },
-    executiveAdmin: {
-      title: "Executive Admin Guide",
-      desc: "As an Executive Admin you own your organization end-to-end — register it, brand it, set plans and limits, add staff and members, run loans and savings, and configure SMS. This guide walks through every feature.",
+    gettingStarted: {
+      title: "Getting Started",
+      desc: "New to MicroFlow Pro? This guide covers everything you need to set up your account, create your lender profile, and add your first borrower. It takes about 5 minutes.",
       lessons: [
         {
-          icon: "🚀",
-          title: "Organization Registration",
+          icon: "📲", title: "Download & Install the App",
           steps: [
-            { label: "On the Sign In screen, tap 'Create Organization'.", desc: "The Create Account form opens — 'Set up your organization in minutes'." },
-            { label: "Fill the 6 required fields.", desc: "Organization Name, your Full Name, Email, 10-digit Phone, Password (min 8 chars) and Confirm Password." },
-            { label: "Accept the Terms and tap 'Create Organization'.", desc: "A checkbox confirms you agree to the Terms of Service and Privacy Policy." },
-            { label: "Verify your email, then sign in.", desc: "We send a verification link to your email. Click it, then sign in — your organization is created automatically with a 14-day free trial." }
-          ],
-          note: "Your account is created as the Executive Admin. No plan is chosen at signup — you start on a 14-day trial (up to 10 branches, 5 staff, 100 members)."
+            { label: "Open your phone's app store.", desc: "Search for 'MicroFlow Pro' on Google Play Store (Android) or App Store (iOS)." },
+            { label: "Tap 'Install' and wait for the download to complete.", desc: "The app is about 45 MB." },
+            { label: "Open the app once installed.", desc: "You'll see the welcome screen with Sign In and Create Account options." },
+          ]
         },
         {
-          icon: "🏠",
-          title: "First Login & My Org Dashboard",
+          icon: "✍️", title: "Create Your Account",
           steps: [
-            { label: "Sign in to land on your My Org dashboard.", desc: "This is your organization's home — a snapshot of everything happening." },
-            { label: "Review the Overview stats.", desc: "Members, Staff, Active Loans, Total Disbursed, Outstanding, and Total Loans at a glance." },
-            { label: "Use Quick Actions to jump in.", desc: "Collect Payment, UPI Verify, Add Staff, New Member, New Loan, New Savings, and Branches." }
+            { label: "Tap 'Create Account' on the welcome screen.", desc: "A simple form opens with fields for your name, phone number, email, and password." },
+            { label: "Fill in your details.", desc: "Enter your full name, a 10-digit mobile number, a valid email address, and a password (minimum 8 characters). Confirm your password." },
+            { label: "Accept the terms.", desc: "Check the box to agree to the Terms of Service and Privacy Policy." },
+            { label: "Tap 'Create Account'.", desc: "You'll receive a verification email. Tap the link to verify, then return to the app and sign in." },
           ],
-          note: "Tap 'My Org' (top-right) any time to return here. Pull down to refresh the latest numbers."
+          note: "Your account is ready immediately after email verification. No organization setup or trial period — start lending right away."
         },
         {
-          icon: "🎨",
-          title: "Organization Profile & Branding",
+          icon: "👤", title: "Set Up Your Profile",
           steps: [
-            { label: "Open Organization Settings.", desc: "From the dashboard tap 'Edit Organization Settings', or go to Settings → Organization Settings." },
-            { label: "Update your profile.", desc: "Change the Organization Name and Slug (used in URLs, e.g. my-mfi). Only the slug must be unique." },
-            { label: "Upload your logo.", desc: "Tap the logo box and pick a 512×512 image. It uploads to your org assets and shows across all staff portals." },
-            { label: "Set your brand colors.", desc: "Enter a Primary and Accent color (hex, e.g. #6366F1). The theme syncs across every portal for your org." }
+            { label: "Go to Settings after signing in.", desc: "Tap the menu icon (top right) and select Settings." },
+            { label: "Fill in your personal details.", desc: "Add your full name, phone number, email, and a profile photo if you'd like." },
+            { label: "Set your preferences.", desc: "Choose your preferred language, enable dark mode, and turn on biometric login for faster access." },
           ],
-          note: "Logo and brand colors can take a couple of minutes to sync across all portals."
+          note: "You can update these details anytime from Settings. Your profile is private — only you can see it."
         },
         {
-          icon: "💳",
-          title: "Plan, Status & Limits",
+          icon: "🧑", title: "Add Your First Borrower",
           steps: [
-            { label: "Open your org's detail or settings page.", desc: "From the dashboard tap the org card, or 'Edit Organization Settings'." },
-            { label: "Switch the plan.", desc: "Tap the plan badge (Free / Basic / Pro / Enterprise) and pick a plan from the sheet." },
-            { label: "Change the status.", desc: "Tap the status chip to Activate, Suspend, or set to Trial. A suspended org is hidden from active use." },
-            { label: "Set your plan limits.", desc: "Under Plan Limits, set Max Branches, Max Staff, and Max Members. Usage bars show how close you are to each limit." }
+            { label: "From the home screen, tap the 'Borrowers' tab.", desc: "This shows your borrower list. When new, it will be empty." },
+            { label: "Tap the '+' button (top right).", desc: "The 'Add Borrower' form opens." },
+            { label: "Enter the borrower's details.", desc: "Full name, mobile number, address, and an optional note." },
+            { label: "Tap 'Save Borrower'.", desc: "The borrower is added. You can now create a loan for them." },
           ],
-          note: "During your 14-day trial you get 10 branches / 5 staff / 100 members. Upgrading raises these caps."
+          note: "No plan limits — add as many borrowers as you need. Make sure the mobile number is correct — it's used for SMS repayment reminders."
         },
         {
-          icon: "⚙️",
-          title: "Settings Overview",
+          icon: "🔔", title: "Enable SMS Reminders (Optional)",
           steps: [
-            { label: "Open Settings from the menu.", desc: "Five sections appear: Account & Preferences, Organization Controls, System Connectivity, Security & Compliance, Utilities & Support." },
-            { label: "Account & Preferences.", desc: "Profile (name, phone, email, password), Dark Mode, Biometric login, Push Alerts, and the AI Assistant toggle." },
-            { label: "Organization Controls (admin only).", desc: "Organization Settings (branding, legal, address) and Loan & Savings Products (schemes, rates, limits)." },
-            { label: "System Connectivity (admin only).", desc: "Integrations — connect SMS, UPI, WhatsApp, SMTP, Razorpay, and PhonePe." },
-            { label: "Security & Compliance.", desc: "Security Shield & Activity Logs, 2FA, password policy, auto-logout, and Google Drive backup." }
+            { label: "Go to Settings → SMS Settings.", desc: "Scroll down to the Communications section." },
+            { label: "Turn on 'Due EMI Reminders'.", desc: "This sends automatic SMS reminders to borrowers before their EMI is due." },
+            { label: "Set a reminder time.", desc: "Pick a time of day when reminders should be sent — e.g., 9:00 AM every morning." },
           ],
-          note: "Branding and plan limits also live under Organization Settings reached from the dashboard."
+          note: "SMS is sent from your phone's SIM card. No external SMS service or extra cost required. Make sure your SIM has sufficient balance."
         },
-        {
-          icon: "👥",
-          title: "Add Staff & Manage Users",
-          steps: [
-            { label: "Open Users.", desc: "From Quick Actions tap 'Add Staff', or go to the Users page." },
-            { label: "Create a new user.", desc: "Go to /users/new and enter their name, email, phone, and role (Manager or Collection Agent)." },
-            { label: "Review the user list.", desc: "The Users page lists everyone with role filters (Admin, Manager, Agent) and search by name or email." },
-            { label: "Enforce two-factor auth.", desc: "In Security & Compliance → Two-Factor Authentication, enforce 2FA and choose the method (Authenticator app or SMS) per role." }
-          ],
-          note: "Staff sign in with the email you register — they set their own password on first login."
-        },
-        {
-          icon: "🧑‍🤝‍🧑",
-          title: "Onboard Members (Customers)",
-          steps: [
-            { label: "Start member onboarding.", desc: "From Quick Actions tap 'New Member', or go to the Members page → Onboard Member." },
-            { label: "Enter member details.", desc: "Full name, verified mobile, address, and a primary document ID (Aadhaar / Voter)." },
-            { label: "Collect KYC documents.", desc: "Upload the KYC document photos. KYC should be verified before any loan is disbursed." },
-            { label: "Submit the profile.", desc: "The system creates the member with a unique Member ID linked to your org." }
-          ],
-          note: "Each member has an SMS Notifications toggle on their loan and savings pages — this is their only SMS opt-out."
-        },
-        {
-          icon: "🏢",
-          title: "Manage Branches",
-          steps: [
-            { label: "Open Branches.", desc: "From Quick Actions tap 'Branches', or open it from Organization Settings." },
-            { label: "Add a branch.", desc: "Tap to create a branch and enter its Name, Code, and location (zone / district)." },
-            { label: "Review the branch list.", desc: "Your org detail page lists all branches with their code and active/suspended status." },
-            { label: "Assign a manager.", desc: "Each branch is tied to a Branch Manager you invited under Users." }
-          ],
-          note: "Branch codes are unique within your org and are used to filter reports and collections."
-        },
-        {
-          icon: "💰",
-          title: "Loans — Create & Track",
-          steps: [
-            { label: "Open New Loan.", desc: "From Quick Actions tap 'New Loan' (the 'Deploy Capital' page)." },
-            { label: "Enter loan details.", desc: "Pick the Borrower (member), Principal (₹1K–₹10L), Interest (APR % or fixed amount, per day/week/month/year), Interest Logic (flat or reducing), First Installment Date, Tenure, and Collection Type (Daily/Weekly/Monthly/Yearly)." },
-            { label: "Review the live summary.", desc: "The Financial Summary shows estimated installment, total interest, and a full amortization (EMI) preview before you save." },
-            { label: "Track the active loan.", desc: "Loans are created live (active) — no approval gate. The loan detail shows outstanding balance, due alerts (OVERDUE / DUE TODAY), EMI timeline, and Loan Intelligence." },
-            { label: "Manage the loan.", desc: "From the '…' menu: Edit, Mark Defaulted, Reactivate, Restructure, Freeze Skipped EMIs, or Delete." }
-          ],
-          note: "EMI statuses include PAID, DUE, OVERDUE, WAIVED, PENDING, and FROZEN. Collect / Settle / Reminder actions appear for open loans."
-        },
-        {
-          icon: "🏦",
-          title: "Savings — Manage Plans",
-          steps: [
-            { label: "Open New Savings Plan.", desc: "From Quick Actions tap 'New Savings'." },
-            { label: "Enter plan details.", desc: "Pick the Member, Collection Cycle (Daily/Weekly/Monthly/Yearly), Installment Amount (₹10–₹50K), Start Date, Tenure, Maturity Amount, and Premature Penalty %." },
-            { label: "Review the Wealth Forecast.", desc: "Live preview shows guaranteed maturity, total installments, total capital, and estimated yield." },
-            { label: "Deposit & withdraw.", desc: "Deposit any time from the collection sheet. Withdrawals go to a Withdrawal Requests queue (Pending/Approved/Rejected) where a manager approves or rejects with a reason." },
-            { label: "Manage the vault.", desc: "Pause/Resume the vault, Close the account, or (admin only) Delete permanently. Balances and a yield-projection chart are shown." }
-          ],
-          note: "Savings are Principal Protected. Premature withdrawal applies the penalty % you set at creation."
-        },
-        {
-          icon: "📨",
-          title: "SMS & Notifications",
-          steps: [
-            { label: "Open SMS Settings.", desc: "Settings → Integrations → Communications tab → Local SMS. This opens the SMS Settings page (admin only)." },
-            { label: "Turn on auto-receipts.", desc: "'SMS on Collection' and 'SMS on Savings Deposit' are ON by default — customers get a receipt after every transaction." },
-            { label: "Enable EMI reminders.", desc: "Toggle 'Due EMI Reminders' (OFF by default) and set a daily Reminder Time. Templates use {name}, {amount}, {loan_id}, {balance}." },
-            { label: "Pick the SIM slot.", desc: "Under SIM & Outbox, choose which device SIM sends SMS, send a test SMS, and view Sent SMS history (last 200)." },
-            { label: "Per-member opt-out.", desc: "On any loan or savings detail page, toggle 'SMS Notifications' to enable/disable reminders for that member." }
-          ],
-          note: "SMS is sent from the device's SIM (native Android plugin) — there is no external SMS gateway. WhatsApp and Email are configured separately under Integrations."
-        },
-        {
-          icon: "💸",
-          title: "Collect Payments & UPI Verify",
-          steps: [
-            { label: "Open Collect Payment.", desc: "From Quick Actions tap 'Collect Payment' to start a collection." },
-            { label: "Log the collection.", desc: "Pick the member/loan, enter the amount, choose the mode (Cash, UPI, or Bank), and submit. A receipt SMS is sent automatically if enabled." },
-            { label: "Verify UPI payments.", desc: "From Quick Actions tap 'UPI Verify' to confirm a customer's UPI reference against the expected payment." }
-          ],
-          note: "Collections appear instantly on the dashboard's Recent Collections and sync to the cloud."
-        },
-        {
-          icon: "🛡️",
-          title: "Team, Activity & Audit Log",
-          steps: [
-            { label: "Open your org detail page.", desc: "Tap any org card on the dashboard to see the full summary." },
-            { label: "View Team Members.", desc: "The Team tile lists all staff with role-coloured avatars and a name/email search and role filter." },
-            { label: "Check Recent Activity.", desc: "The Activity tile shows a log of actions (auth, loan, payment, savings, member) with who did what and when." },
-            { label: "Open Security & Activity Logs.", desc: "In Settings → Security & Compliance, open System Activity Logs and configure audit retention, password policy, and Google Drive backup." }
-          ],
-          note: "Audit logs help you trace every change — useful during reviews or disputes."
-        }
       ]
     },
-    branchManager: {
-      title: "Branch Manager Guide",
-      desc: "As a Branch Manager, you control branch operations. Onboard new members (customers), monitor agent locations, manage daily cash inflows, and audit local registries.",
+    managingBorrowers: {
+      title: "Managing Borrowers",
+      desc: "Your borrowers are the people you lend money to. This guide shows you how to add, edit, and manage borrower profiles — including contact details, loan history, and repayment records.",
       lessons: [
         {
-          icon: "🚀",
-          title: "Getting Started — Manager Dashboard",
+          icon: "➕", title: "Add a New Borrower",
           steps: [
-            { label: "Open email invite from Executive Admin.", desc: "Access default registry setup link." },
-            { label: "Set up login password and authenticate your account.", desc: "Save profile with correct phone credentials." },
-            { label: "Inspect the Branch Dashboard to view daily targets and collections." }
-          ]
-        },
-        {
-          icon: "👥",
-          title: "Customer Onboarding (Members)",
-          steps: [
-            { label: "Go to Members > Onboard Member.", desc: "Ensure you have physical KYC sheets ready." },
-            { label: "Enter full name, verified mobile, address, and primary document ID (Aadhaar/Voter).", desc: "Upload KYC documents." },
-            { label: "Submit profile. System automatically links profile ID with database." }
+            { label: "Go to the Borrowers tab.", desc: "From the home screen, tap 'Borrowers'." },
+            { label: "Tap the '+' button.", desc: "The Add Borrower form opens." },
+            { label: "Enter the borrower's full name.", desc: "This name appears on all loan documents and receipts." },
+            { label: "Enter their mobile number.", desc: "Required — used for SMS reminders and receipts." },
+            { label: "Enter their address (optional).", desc: "Useful for your records and field visits." },
+            { label: "Add a note (optional).", desc: "Note how you know them, their occupation, or other details." },
+            { label: "Tap 'Save'.", desc: "The borrower is added to your list." },
           ],
-          note: "KYC verification is required before disbursing any loan."
+          note: "A borrower's mobile number is the only field required for SMS reminders. Make sure it's accurate."
         },
         {
-          icon: "💰",
-          title: "Approve Loan Request",
+          icon: "✏️", title: "Edit Borrower Details",
           steps: [
-            { label: "Go to Loans > Pending Approvals.", desc: "Click request to inspect details." },
-            { label: "Verify member loan eligibility and repayment score.", desc: "Cross-check savings balance and current outstandings." },
-            { label: "Click 'Approve' to proceed to disbursal phase." }
+            { label: "Go to the Borrowers tab.", desc: "Find the borrower you want to edit." },
+            { label: "Tap on the borrower's name.", desc: "This opens their profile page." },
+            { label: "Tap the 'Edit' button (top right).", desc: "Change name, mobile number, address, and notes." },
+            { label: "Tap 'Save' when done.", desc: "Changes are saved immediately." },
           ],
-          note: "Maturity details and EMI schedules are auto-generated upon approval."
+          note: "Changing a borrower's mobile number also updates it for all their active loans and SMS reminders."
         },
         {
-          icon: "📍",
-          title: "Agent Live Location Tracking",
+          icon: "📋", title: "View Borrower's Loan History",
           steps: [
-            { label: "Select 'Live Map' from the side panel.", desc: "This renders a real-time tracking interface." },
-            { label: "Observe indicators for field staff status.", desc: "Active agents show as green; offline as grey." },
-            { label: "Hover over indicators to see current collections and last contact." }
+            { label: "Go to the Borrowers tab.", desc: "Find and tap on the borrower." },
+            { label: "Scroll down to see their loan history.", desc: "All loans (active, completed, defaulted) are listed with current status." },
+            { label: "Tap on any loan for full details.", desc: "See the EMI schedule, payments made, outstanding balance, and interest earned." },
           ],
-          note: "Agents must toggle their status to 'On Duty' in their mobile app to broadcast location."
+          note: "Check loan history before giving a new loan — it shows how reliable the borrower is."
         },
         {
-          icon: "📨",
-          title: "Send Portal Alerts",
+          icon: "🗑️", title: "Remove a Borrower",
           steps: [
-            { label: "Open the 'Members' page and search customer.", desc: "You can filter by loan status or past dues." },
-            { label: "Select member profile to inspect communication panel.", desc: "Select 'Send Reminder SMS'." },
-            { label: "Choose reminder template and tap compile. SMS will fire from agent outbox." }
-          ]
-        }
+            { label: "Go to the borrower's profile page.", desc: "Find the borrower and tap their name." },
+            { label: "Tap the 'More' menu (three dots, top right).", desc: "Select 'Remove Borrower'." },
+            { label: "Confirm the removal.", desc: "Tap 'Remove' in the confirmation dialog." },
+          ],
+          note: "Removing a borrower does not delete their loan history — all loan records are preserved."
+        },
       ]
     },
-    collectionAgent: {
-      title: "Collection Agent Guide",
-      desc: "For field collection agents. Learn how to navigate your daily route, log payments, deposit collected cash, toggle online duty status, and handle offline synchronization.",
+    recordingLoans: {
+      title: "Recording Loans",
+      desc: "Creating a loan is the core of MicroFlow Pro. This guide covers how to set up a new loan, configure interest rates and terms, and start tracking repayments.",
       lessons: [
         {
-          icon: "🚀",
-          title: "Mobile App Access",
+          icon: "💰", title: "Create a New Loan",
           steps: [
-            { label: "Download MicroFlow Pro from your manager's shared link.", desc: "Ensure location permissions are allowed." },
-            { label: "Enter your registered credentials.", desc: "Allow automatic SMS/phone access." },
-            { label: "Access your dashboard to check today's collection targets." }
-          ]
-        },
-        {
-          icon: "🔘",
-          title: "Toggle Shift Duty Status",
-          steps: [
-            { label: "Locate 'Duty Toggle' on the dashboard header.", desc: "Slide or tap to switch state." },
-            { label: "Confirm 'Duty ON' to initiate tracking session.", desc: "Confirm GPS state is active." },
-            { label: "When completing your shift, toggle 'Duty OFF' to stop tracking." }
+            { label: "From the home screen, tap 'Loans'.", desc: "This shows all your loans — active, pending, and completed." },
+            { label: "Tap the '+' button.", desc: "The 'New Loan' form opens." },
+            { label: "Select the borrower.", desc: "Choose from your borrower list. If not there yet, tap 'Add New Borrower' first." },
+            { label: "Enter the loan amount.", desc: "Type the principal amount (e.g., ₹10,000)." },
+            { label: "Set the interest rate.", desc: "Enter the annual interest rate as a percentage (e.g., 12% per year)." },
+            { label: "Choose the interest type.", desc: "Flat: same interest every month. Reducing: interest on remaining balance (lower total interest)." },
+            { label: "Set the loan term.", desc: "Choose how many months the loan will run (e.g., 12 months)." },
+            { label: "Pick the collection frequency.", desc: "Daily, weekly, or monthly — how often the borrower repays." },
+            { label: "Set the first EMI date.", desc: "Pick when the first repayment is due." },
+            { label: "Review and tap 'Create Loan'.", desc: "The EMI schedule is generated automatically — you'll see each installment amount and due date." },
           ],
-          note: "Your live route data is broadcasted to the manager portal only while Duty is ON."
+          note: "The EMI schedule shows every installment with its due date and amount. View it anytime from the loan detail page."
         },
         {
-          icon: "💰",
-          title: "Collect Weekly/Daily EMIs",
+          icon: "🧮", title: "Understanding Interest Calculation",
           steps: [
-            { label: "Go to 'Today's Collection' tab.", desc: "This lists active collections for your route." },
-            { label: "Select customer invoice to open details.", desc: "Select payment mode: Cash, UPI, or Bank." },
-            { label: "Enter collection amount and click 'Submit Payment'.", desc: "A receipt SMS is automatically sent to the customer." }
-          ]
-        },
-        {
-          icon: "⚡",
-          title: "Offline Synced Collection",
-          steps: [
-            { label: "Proceed with collection as usual, even without network.", desc: "App secures credentials locally." },
-            { label: "Check the local database queue badge.", desc: "Badge indicates number of offline entries." },
-            { label: "Reconnect to network. Queue will sync automatically to cloud database." }
+            { label: "Open any active loan.", desc: "Go to Loans → tap on the loan." },
+            { label: "Look at the EMI schedule.", desc: "Each row shows installment number, due date, EMI amount, principal, interest, and remaining balance." },
+            { label: "Compare flat vs reducing.", desc: "Flat: same total interest every month. Reducing: interest decreases over time as principal is paid down." },
+            { label: "Check the total interest.", desc: "At the bottom of the schedule, see the total interest earned over the loan term." },
           ],
-          note: "Never log out of the application while there are pending unsynced payments."
-        }
+          note: "Reducing balance is usually better for borrowers (lower total interest) and shows you how much interest you've earned at any point."
+        },
+        {
+          icon: "✏️", title: "Edit an Active Loan",
+          steps: [
+            { label: "Open the loan you want to edit.", desc: "Go to Loans → tap on the loan." },
+            { label: "Tap the 'Edit' button.", desc: "Change the interest rate, term, or collection frequency." },
+            { label: "Tap 'Save'.", desc: "The EMI schedule is recalculated automatically." },
+          ],
+          note: "Be careful when changing interest rate or term — it recalculates all future EMIs. Past payments are not affected."
+        },
+        {
+          icon: "⏸️", title: "Pause or Close a Loan",
+          steps: [
+            { label: "Open the loan you want to manage.", desc: "Go to Loans → tap on the loan." },
+            { label: "Tap the 'More' menu (three dots).", desc: "You'll see options to Pause, Resume, or Close the loan." },
+            { label: "Choose 'Close Loan' when fully repaid.", desc: "This marks the loan as completed and moves it to your loan history." },
+          ],
+          note: "Closing a loan is permanent. Make sure all outstanding EMIs are settled before closing."
+        },
       ]
     },
-    customer: {
-      title: "Customer App Guide",
-      desc: "For customers (members). Learn how to check your loan schedule, inspect outstanding savings balance, download statement PDFs, and make secure UPI payments.",
+    trackingRepayments: {
+      title: "Tracking Repayments",
+      desc: "Recording repayments keeps your books accurate. This guide shows you how to log payments, view outstanding balances, and track your interest earnings.",
       lessons: [
         {
-          icon: "📱",
-          title: "Sign In via OTP",
+          icon: "💵", title: "Record a Repayment",
           steps: [
-            { label: "Open the Customer App on your mobile device.", desc: "Enter your registered phone number." },
-            { label: "Wait for the SMS OTP verification code.", desc: "OTP arrives within 30 seconds." },
-            { label: "Submit OTP to verify profile." }
-          ]
-        },
-        {
-          icon: "📋",
-          title: "Download Loan Statement PDF",
-          steps: [
-            { label: "Navigate to the 'Active Loans' tab.", desc: "A list of your current loans will appear." },
-            { label: "Select your active loan to open details.", desc: "Tap 'Download Statement'." },
-            { label: "The statement PDF downloads to your device storage." }
+            { label: "Go to the Loans tab.", desc: "Find the active loan you want to record a payment for." },
+            { label: "Tap on the loan.", desc: "This opens the loan detail page with the EMI schedule." },
+            { label: "Tap 'Record Payment'.", desc: "A form opens to enter payment details." },
+            { label: "Enter the payment amount.", desc: "You can enter the full EMI amount or a partial payment." },
+            { label: "Select the payment mode.", desc: "Cash, UPI, or Bank Transfer." },
+            { label: "Add a note (optional).", desc: "E.g., 'Paid late by 2 days' or 'Part payment'." },
+            { label: "Tap 'Save'.", desc: "The payment is recorded and the outstanding balance updates automatically." },
           ],
-          note: "The statement shows paid EMIs, interest rate, outstanding amount, and next due date."
+          note: "An SMS receipt is sent to the borrower automatically if SMS is enabled. The EMI schedule updates to reflect the payment."
         },
         {
-          icon: "💰",
-          title: "Check Savings Ledger",
+          icon: "📊", title: "Check Outstanding Balance",
           steps: [
-            { label: "Select the 'My Savings' page from bottom menu.", desc: "This shows total accumulated deposits." },
-            { label: "Verify interest yield rates and maturity date.", desc: "Scroll down to see transaction log." },
-            { label: "Compare agent receipts with listed deposits." }
-          ]
-        }
+            { label: "Go to the Loans tab.", desc: "All active loans are listed here." },
+            { label: "Look at the 'Outstanding' column.", desc: "This shows how much the borrower still owes you." },
+            { label: "Tap on any loan for full details.", desc: "See the full amortization schedule, payments made, and remaining balance." },
+          ],
+          note: "The outstanding balance updates automatically after every repayment. No manual calculations needed."
+        },
+        {
+          icon: "📈", title: "Track Interest Earned",
+          steps: [
+            { label: "Open any active loan.", desc: "Go to Loans → tap on the loan." },
+            { label: "Check the EMI schedule.", desc: "Each installment shows the interest portion — your earnings for that period." },
+            { label: "View total interest earned.", desc: "At the bottom of the schedule, see total interest collected so far and projected total." },
+          ],
+          note: "Interest is calculated automatically based on your chosen rate and type (flat or reducing). No manual calculation needed."
+        },
+        {
+          icon: "⏰", title: "Handle Late or Missed Payments",
+          steps: [
+            { label: "Check the EMI schedule for overdue installments.", desc: "Overdue EMIs are highlighted in red." },
+            { label: "Contact the borrower.", desc: "Use the borrower's mobile number to follow up." },
+            { label: "Record the payment when received.", desc: "Even if late, record it as normal — the app tracks the delay." },
+            { label: "Consider restructuring if needed.", desc: "For borrowers who consistently miss payments, extend the term or reduce the EMI." },
+          ],
+          note: "Late payments don't automatically incur penalties in the app. If you charge a late fee, record it as a separate transaction."
+        },
       ]
-    }
+    },
+    smsReminders: {
+      title: "SMS Reminders",
+      desc: "Set up automatic SMS reminders to nudge borrowers before EMI due dates. Reduce manual follow-up and improve repayment rates.",
+      lessons: [
+        {
+          icon: "⚙️", title: "Set Up SMS Reminders",
+          steps: [
+            { label: "Go to Settings → SMS Settings.", desc: "Scroll to the Communications section." },
+            { label: "Turn on 'Due EMI Reminders'.", desc: "Enables automatic reminders for all active loans." },
+            { label: "Set the reminder time.", desc: "Choose when reminders should be sent — e.g., 9:00 AM." },
+            { label: "Choose how many days before due.", desc: "Send reminders 1, 2, or 3 days before the EMI is due." },
+            { label: "Tap 'Save Settings'.", desc: "Reminders will now be sent automatically." },
+          ],
+          note: "SMS is sent from your phone's SIM card. Make sure your SIM has sufficient balance. No external SMS service — completely free."
+        },
+        {
+          icon: "📝", title: "Customize Reminder Messages",
+          steps: [
+            { label: "Go to Settings → SMS Settings.", desc: "Scroll to the Reminder Templates section." },
+            { label: "Edit the reminder message.", desc: "Customize the text. Use placeholders like {name}, {amount}, {due_date}, and {loan_id}." },
+            { label: "Preview the message.", desc: "See how the message will look when sent to a borrower." },
+            { label: "Tap 'Save Template'.", desc: "Your custom message will be used for all future reminders." },
+          ],
+          note: "Keep messages short and friendly. Default: 'Namaste {name}, your EMI of ₹{amount} is due on {due_date}. Please pay to avoid late fees.'"
+        },
+        {
+          icon: "📱", title: "Send a Manual Reminder",
+          steps: [
+            { label: "Go to the Borrowers tab.", desc: "Find the borrower you want to remind." },
+            { label: "Tap on the borrower's name.", desc: "This opens their profile page." },
+            { label: "Tap 'Send Reminder'.", desc: "An SMS is sent immediately with the default or custom message." },
+          ],
+          note: "Use manual reminders for one-off follow-ups, like when a borrower has missed a payment."
+        },
+        {
+          icon: "🔕", title: "Opt-Out for Specific Borrowers",
+          steps: [
+            { label: "Open the borrower's profile.", desc: "Go to Borrowers → tap on the borrower." },
+            { label: "Tap 'SMS Settings'.", desc: "You'll see a toggle for SMS reminders." },
+            { label: "Turn off SMS for this borrower.", desc: "They won't receive automated reminders, but you can still send manual ones." },
+          ],
+          note: "Respect your borrowers' preferences. If someone asks not to receive reminders, toggle SMS off for them."
+        },
+      ]
+    },
+    portfolioInsights: {
+      title: "Understanding Your Portfolio",
+      desc: "Your portfolio is the complete picture of all your lending activity. This guide helps you understand total lent, outstanding, interest earned, and repayment rate.",
+      lessons: [
+        {
+          icon: "🏦", title: "View Your Portfolio Summary",
+          steps: [
+            { label: "Go to the Portfolio tab from the home screen.", desc: "This gives you a complete overview of your lending business." },
+            { label: "Check the key numbers.", desc: "Total Lent, Outstanding Amount, Total Interest Earned, and Active Loans are shown at the top." },
+            { label: "Scroll down for more details.", desc: "You'll see repayment rates, borrower breakdown, and monthly trends." },
+          ],
+          note: "These numbers update in real-time as you record repayments. No manual calculation needed."
+        },
+        {
+          icon: "📊", title: "Understanding the Numbers",
+          steps: [
+            { label: "Total Lent.", desc: "Sum of all loan amounts you've ever given out — active, completed, and defaulted loans." },
+            { label: "Outstanding Amount.", desc: "How much is currently owed to you across all active loans. Goes down as borrowers repay." },
+            { label: "Interest Earned.", desc: "Total interest collected so far. This is your earnings from lending." },
+            { label: "Repayment Rate.", desc: "Percentage of EMIs paid on time. A high rate means reliable borrowers." },
+          ],
+          note: "Track your repayment rate monthly — it's the best indicator of your lending portfolio's health."
+        },
+        {
+          icon: "📈", title: "Monthly Trends & Reports",
+          steps: [
+            { label: "Go to the Portfolio tab.", desc: "Scroll to the Trends section." },
+            { label: "View the monthly chart.", desc: "See how your lending, repayments, and interest earnings have changed over time." },
+            { label: "Filter by date range.", desc: "Choose a specific month or quarter for detailed numbers." },
+          ],
+          note: "Use monthly trends to plan your lending — see which months have high repayment rates and which borrowers are most reliable."
+        },
+        {
+          icon: "🎯", title: "Improve Your Repayment Rate",
+          steps: [
+            { label: "Identify slow payers.", desc: "Check the Portfolio tab for borrowers with overdue EMIs." },
+            { label: "Follow up early.", desc: "Use SMS reminders to nudge borrowers before their due date." },
+            { label: "Review loan terms.", desc: "If borrowers struggle, consider reducing the EMI or extending the loan term." },
+            { label: "Build relationships.", desc: "Best repayment rates come from knowing your borrowers well — keep contact details updated and check in regularly." },
+          ],
+          note: "A good repayment rate (above 85%) means your lending business is healthy. Below 70% may indicate issues with borrower selection or loan terms."
+        },
+      ]
+    },
   },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // HINDI / हिंदी
-  // ──────────────────────────────────────────────────────────────────────────
   hi: {
     common: {
-      allGuides: "सभी मार्गदर्शिकाएँ",
-      backToHome: "होम",
-      documentation: "दस्तावेज़ (Docs)",
-      quickLinks: "त्वरित लिंक्स",
-      portalGuides: "पोर्टल गाइड",
-      watchVideo: "वीडियो देखें",
-      openGuide: "गाइड खोलें",
-      stepsTitle: "चरण-दर-चरण मार्गदर्शिका",
-      lessons: "पाठ",
-      portals: "पोर्टल्स",
-      youtube: "यूट्यूब",
-      selectPortal: "अपना पोर्टल चुनें",
-      openGuideAction: "गाइड खोलें",
-      subscribe: "सब्सक्राइब",
-      popularGuides: "लोकप्रिय गाइड्स",
+      allGuides: "सभी मार्गदर्शिकाएँ", backToHome: "होम", documentation: "दस्तावेज़ (Docs)",
+      quickLinks: "त्वरित लिंक्स", portalGuides: "मार्गदर्शिकाएँ", watchVideo: "वीडियो देखें",
+      openGuide: "गाइड खोलें", stepsTitle: "चरण-दर-चरण मार्गदर्शिका", lessons: "पाठ",
+      portals: "गाइड", youtube: "यूट्यूब", selectPortal: "एक मार्गदर्शिका चुनें",
+      openGuideAction: "गाइड खोलें", subscribe: "सब्सक्राइब", popularGuides: "लोकप्रिय गाइड्स",
       youtubeCtaTitle: "वीडियो ट्यूटोरियल उपलब्ध हैं",
       youtubeCtaDesc: "हर विषय के लिए विस्तृत वीडियो ट्यूटोरियल। सरल, आसान चरणों में समझाया गया है। नए वीडियो की जानकारी पाने के लिए हमारे यूट्यूब चैनल को सब्सक्राइब करें।",
     },
     home: {
-      title: "दस्तावेज़",
-      subtitle: "वीडियो ट्यूटोरियल के साथ पोर्टल-वार गाइड",
-      desc: "माइक्रोफ्लो प्रो — प्रत्येक पोर्टल के लिए पूर्ण मार्गदर्शिका। अपने सुक्ष्म वित्त (माइक्रोफाइनेंस) संचालन को प्रबंधित करने के लिए वीडियो देखें और निर्देशों का पालन करें।",
+      title: "दस्तावेज़", subtitle: "वीडियो ट्यूटोरियल के साथ चरण-दर-चरण गाइड",
+      desc: "माइक्रोफ्लो प्रो — व्यक्तिगत पैसे उधार देने वालों के लिए सरल बही-खाता टूल। ऋण देना, किस्तें लेना, और ब्याज कमाना ट्रैक करें। ये गाइड हर फीचर को कवर करते हैं।",
       portals: {
-        admin: {
-          title: "एग्जीक्यूटिव एडमिन (मुख्य एडमिन)",
-          desc: "संगठन सेटअप, शाखा प्रबंधन, स्टाफ की देखरेख, और विस्तृत रिपोर्ट/एनालिटिक्स का नियंत्रण।"
-        },
-        manager: {
-          title: "शाखा प्रबंधक (Branch Manager)",
-          desc: "अपनी विशिष्ट शाखा के संग्रह (Collection), ऋण स्वीकृतियों (Loan Approvals) और बचत का प्रबंधन करें।"
-        },
-        agent: {
-          title: "संग्रह एजेंट (Field Agent)",
-          desc: "दैनिक संग्रह ट्रैकिंग, ड्यूटी चालू/बंद, लाइव लोकेशन और एसएमएस अलर्ट के लिए मार्गदर्शिका।"
-        },
-        customer: {
-          title: "ग्राहक एप (Customer App)",
-          desc: "ग्राहकों के लिए अपने ऋण (Loans), बचत, हालिया भुगतान इतिहास देखने और स्टेटमेंट डाउनलोड करने की गाइड।"
-        }
+        admin: { title: "शुरुआत करें", desc: "अकाउंट बनाएं, प्रोफाइल सेट करें, और अपना पहला उधारी जोड़ें।" },
+        manager: { title: "उधारियों का प्रबंधन", desc: "उधारियों की जानकारी जोड़ें, संपर्क विवरण, और ऋण इतिहास देखें।" },
+        agent: { title: "ऋण दर्ज करना", desc: "उधारियों के लिए ऋण बनाएं, ब्याज दर, अवधि और राशि सेट करें।" },
+        customer: { title: "किस्तें ट्रैक करना", desc: "भुगतान दर्ज करें, बकाया देखें, और अपने ब्याज कमाई का हिसाब रखें।" },
       },
       topics: [
-        { label: "📱 ऐप डाउनलोड और लॉगिन", path: "/docs/customer" },
-        { label: "👤 नया सदस्य कैसे जोड़ें", path: "/docs/collection-agent" },
-        { label: "💰 दैनिक संग्रह की प्रक्रिया", path: "/docs/collection-agent" },
-        { label: "📊 लोन स्टेटमेंट PDF निकालना", path: "/docs/customer" },
-        { label: "🛡️ टीम, गतिविधि और ऑडिट लॉग", path: "/docs/executive-admin" },
-        { label: "📨 एसएमएस अलर्ट सेट करना", path: "/docs/executive-admin" },
-        { label: "📍 एजेंट लाइव ट्रैकिंग", path: "/docs/branch-manager" },
-        { label: "🔐 पासवर्ड रीसेट करना", path: "/docs/executive-admin" }
+        { label: "📱 ऐप डाउनलोड और लॉगिन", path: "/docs/getting-started" },
+        { label: "👤 अपना पहला उधारी जोड़ें", path: "/docs/managing-borrowers" },
+        { label: "💰 अपना पहला ऋण बनाएं", path: "/docs/recording-loans" },
+        { label: "📊 किस्त भुगतान दर्ज करें", path: "/docs/tracking-repayments" },
+        { label: "📨 एसएमएस रिमाइंडर सेट करें", path: "/docs/sms-reminders" },
+        { label: "📈 अपने पोर्टफोलियो को समझें", path: "/docs/portfolio-insights" },
       ]
     },
-    executiveAdmin: {
-      title: "मुख्य एडमिन गाइड (Executive Admin)",
-      desc: "मुख्य एडमिन (Executive Admin) के रूप में आप अपने संगठन का पूरा मालिक होते हैं — इसे रजिस्टर करना, ब्रांडिंग करना, प्लान और सीमा तय करना, स्टाफ और सदस्य जोड़ना, लोन और बचत चलाना, और एसएमएस सेट करना। यह गाइड हर फीचर को कवर करता है।",
+    gettingStarted: {
+      title: "शुरुआत करें",
+      desc: "माइक्रोफ्लो प्रो में नया हैं? यह गाइड आपके अकाउंट सेटअप, लेंडर प्रोफाइल बनाने और पहले उधारी को जोड़ने के बारे में हर चीज बताती है। इसमें लगभग 5 मिनट लगेंगे।",
       lessons: [
         {
-          icon: "🚀",
-          title: "संगठन रजिस्ट्रेशन (Organization Registration)",
+          icon: "📲", title: "ऐप डाउनलोड करें",
           steps: [
-            { label: "साइन इन स्क्रीन पर 'Create Organization' पर टैप करें।", desc: "Create Account फॉर्म खुलेगा — 'Set up your organization in minutes'।" },
-            { label: "6 अनिवार्य फ़ील्ड्स भरें।", desc: "संगठन का नाम, अपना पूरा नाम, ईमेल, 10 अंकों का फ़ोन, पासवर्ड (कम से कम 8 अक्षर) और पासवर्ड कन्फर्म करें।" },
-            { label: "नियम स्वीकार करें और 'Create Organization' दबाएं।", desc: "एक चेकबॉक्स से आप Terms of Service और Privacy Policy स्वीकार करते हैं।" },
-            { label: "अपना ईमेल वेरीफाई करें, फिर साइन इन करें।", desc: "हम आपके ईमेल पर एक वेरिफिकेशन लिंक भेजते हैं। उस पर क्लिक करें, फिर साइन इन करें — आपका संगठन अपने आप 14 दिन के फ्री ट्रायल के साथ बन जाता है।" }
-          ],
-          note: "आपका अकाउंट मुख्य एडमिन (Executive Admin) के रूप में बनता है। साइनअप पर कोई प्लान नहीं चुना जाता — आप 14 दिन के ट्रायल पर शुरू होते हैं (10 ब्रांच, 5 स्टाफ, 100 सदस्य तक)।"
+            { label: "अपने फोन के ऐप स्टोर खोलें।", desc: "Google Play Store (Android) या App Store (iOS) पर 'MicroFlow Pro' सर्च करें।" },
+            { label: "'Install' पर टैप करें और डाउनलोड होने का इंतज़ार करें।", desc: "ऐप लगभग 45 MB का है।" },
+            { label: "डाउनलोड होने पर ऐप खोलें।", desc: "आपको वेलकम स्क्रीन दिखेगी जिसमें 'Sign In' और 'Create Account' दो विकल्प होंगे।" },
+          ]
         },
         {
-          icon: "🏠",
-          title: "पहला लॉगिन और My Org डैशबोर्ड",
+          icon: "✍️", title: "अकाउंट बनाएं",
           steps: [
-            { label: "साइन इन करें तो आपका My Org डैशबोर्ड खुलेगा।", desc: "यह आपके संगठन का होम है — यहाँ सब कुछ का एक झलक मिलता है।" },
-            { label: "Overview के आँकड़े देखें।", desc: "सदस्य (Members), स्टाफ, एक्टिव लोन, कुल वितरित (Disbursed), बकाया (Outstanding), और कुल लोन एक नज़र में।" },
-            { label: "Quick Actions का उपयोग करें।", desc: "भुगतान लें (Collect Payment), UPI वेरीफाई, स्टाफ जोड़ें, नया सदस्य, नया लोन, नई बचत, और शाखाएं।" }
+            { label: "वेलकम स्क्रीन पर 'Create Account' पर टैप करें।", desc: "एक सरल फॉर्म खुलेगा जिसमें आपका नाम, फोन नंबर, ईमेल और पासवर्ड मांगा जाएगा।" },
+            { label: "अपना विवरण भरें।", desc: "पूरा नाम, 10 अंकों का मोबाइल नंबर, वैध ईमेल पता, और पासवर्ड (कम से कम 8 अक्षर) डालें। पासवर्ड को कन्फर्म करें।" },
+            { label: "नियम स्वीकार करें।", desc: "Terms of Service और Privacy Policy स्वीकार करने के लिए चेकबॉक्स पर टैप करें।" },
+            { label: "'Create Account' दबाएं।", desc: "आपको एक वेरिफिकेशन ईमेल मिलेगा। लिंक पर क्लिक करें, फिर ऐप में साइन इन करें।" },
           ],
-          note: "कभी भी वापस आने के लिए ऊपर दाईं ओर 'My Org' पर टैप करें। नए आँकड़ों के लिए नीचे से ऊपर खींचें (refresh)।"
+          note: "ईमेल वेरीफाई होने के बाद आपका अकाउंट तुरंत तैयार हो जाता है। कोई संगठन सेटअप या ट्रायल अवधि नहीं — आप सीधे उधार देना शुरू कर सकते हैं।"
         },
         {
-          icon: "🎨",
-          title: "संगठन प्रोफाइल और ब्रांडिंग",
+          icon: "👤", title: "अपना प्रोफाइल सेट करें",
           steps: [
-            { label: "Organization Settings खोलें।", desc: "डैशबोर्ड से 'Edit Organization Settings' पर टैप करें, या Settings → Organization Settings पर जाएं।" },
-            { label: "अपनी प्रोफाइल अपडेट करें।", desc: "संगठन का नाम और Slug (URL में उपयोग होता है, जैसे my-mfi) बदलें। केवल slug अनूठा (unique) होना चाहिए।" },
-            { label: "अपना लोगो अपलोड करें।", desc: "लोगो बॉक्स पर टैप करें और 512×512 इमेज चुनें। यह आपके संगठन के असेट्स में अपलोड होता है और सभी स्टाफ पोर्टल्स पर दिखता है।" },
-            { label: "अपने ब्रांड कलर सेट करें।", desc: "Primary और Accent कलर (hex, जैसे #6366F1) डालें। थीम आपके संगठन के हर पोर्टल पर सिंक हो जाती है।" }
+            { label: "साइन इन करने के बाद Settings पर जाएं।", desc: "मेनू आइकन (ऊपर दाईं ओर) पर टैप करें और Settings चुनें।" },
+            { label: "अपना विवरण भरें।", desc: "पूरा नाम, फोन नंबर, ईमेल और यदि चाहें तो प्रोफाइल फोटो जोड़ें।" },
+            { label: "अपनी पसंद सेट करें।", desc: "पसंदीदा भाषा चुनें, डार्क मोड चालू करें, और बायोमेट्रिक लॉगिन सक्षम करें।" },
           ],
-          note: "लोगो और ब्रांड कलर सभी पोर्टल्स पर सिंक होने में कुछ मिनट ले सकते हैं।"
+          note: "आप Settings से कभी भी अपडेट कर सकते हैं। आपका प्रोफाइल निजी है — केवल आप ही इसे देख सकते हैं।"
         },
         {
-          icon: "💳",
-          title: "प्लान, स्थिति और सीमा (Plan, Status & Limits)",
+          icon: "🧑", title: "अपना पहला उधारी जोड़ें",
           steps: [
-            { label: "अपने संगठन का विवरण या सेटिंग पेज खोलें।", desc: "डैशबोर्ड से ऑर्ग कार्ड पर टैप करें, या 'Edit Organization Settings'।" },
-            { label: "प्लान बदलें।", desc: "प्लान बैज (Free / Basic / Pro / Enterprise) पर टैप करें और शीट से प्लान चुनें।" },
-            { label: "स्थिति (Status) बदलें।", desc: "स्टेटस चिप पर टैप करके Activate, Suspend, या Trial सेट करें। Suspended ऑर्ग एक्टिव उपयोग से छिप जाता है।" },
-            { label: "अपनी प्लान सीमा सेट करें।", desc: "Plan Limits के अंतर्गत Max Branches, Max Staff, और Max Members सेट करें। यूज़ेज बार दिखाते हैं कि आप हर सीमा के कितना पास हैं।" }
+            { label: "होम स्क्रीन से 'Borrowers' टैब पर जाएं।", desc: "यह आपके सभी उधारियों की सूची दिखाता है। नए होने पर यह खाली होगा।" },
+            { label: "ऊपर दाईं ओर '+' बटन पर टैप करें।", desc: "'Add Borrower' फॉर्म खुलेगा।" },
+            { label: "उधारी का विवरण डालें।", desc: "पूरा नाम, मोबाइल नंबर, पता, और एक वैकल्पिक नोट।" },
+            { label: "'Save Borrower' पर टैप करें।", desc: "उधारी आपकी सूची में जुड़ जाता है। अब आप उसके लिए ऋण बना सकते हैं।" },
           ],
-          note: "अपने 14 दिन के ट्रायल में आपको 10 ब्रांच / 5 स्टाफ / 100 सदस्य मिलते हैं। अपग्रेड करने पर ये कैप बढ़ जाते हैं।"
+          note: "आप जितने चाहें उतने उधारी जोड़ सकते हैं — कोई प्लान सीमा नहीं। मोबाइल नंबर सही हो — इससे एसएमएस रिमाइंडर भेजे जाते हैं।"
         },
         {
-          icon: "⚙️",
-          title: "सेटिंग्स अवलोकन (Settings Overview)",
+          icon: "🔔", title: "एसएमएस रिमाइंडर चालू करें (वैकल्पिक)",
           steps: [
-            { label: "मेनू से Settings खोलें।", desc: "पाँच सेक्शन दिखते हैं: Account & Preferences, Organization Controls, System Connectivity, Security & Compliance, Utilities & Support।" },
-            { label: "Account & Preferences।", desc: "प्रोफाइल (नाम, फ़ोन, ईमेल, पासवर्ड), डार्क मोड, बायोमेट्रिक लॉगिन, पुश अलर्ट, और AI असिस्टेंट टॉगल।" },
-            { label: "Organization Controls (केवल एडमिन)।", desc: "Organization Settings (ब्रांडिंग, कानूनी, पता) और Loan & Savings Products (योजनाएं, दरें, सीमा)।" },
-            { label: "System Connectivity (केवल एडमिन)।", desc: "Integrations — SMS, UPI, WhatsApp, SMTP, Razorpay, और PhonePe कनेक्ट करें।" },
-            { label: "Security & Compliance।", desc: "Security Shield & Activity Logs, 2FA, पासवर्ड पॉलिसी, ऑटो-लॉगआउट, और Google Drive बैकअप।" }
+            { label: "Settings → SMS Settings पर जाएं।", desc: "Communications सेक्शन तक स्क्रॉल करें।" },
+            { label: "'Due EMI Reminders' चालू करें।", desc: "यह उधारियों को EMI देय होने से पहले स्वचालित रिमाइंडर भेजता है।" },
+            { label: "रिमाइंडर का समय सेट करें।", desc: "उस समय चुनें जब रिमाइंडर भेजना है — उदाहरण: सुबह 9:00 बजे।" },
           ],
-          note: "ब्रांडिंग और प्लान लिमिट डैशबोर्ड से खुले Organization Settings के अंतर्गत भी मिलते हैं।"
+          note: "एसएमएस आपके फोन की SIM कार्ड से भेजा जाता है। कोई बाहरी SMS सर्विस या अतिरिक्त लागत नहीं। अपनी SIM में पर्याप्त बैलेंस रखें।"
         },
-        {
-          icon: "👥",
-          title: "स्टाफ जोड़ें और यूज़र्स प्रबंधित करें",
-          steps: [
-            { label: "Users खोलें।", desc: "Quick Actions से 'Add Staff' पर टैप करें, या Users पेज पर जाएं।" },
-            { label: "नया यूज़र बनाएं।", desc: "/users/new पर जाएं और नाम, ईमेल, फ़ोन, और भूमिका (Manager या Collection Agent) डालें।" },
-            { label: "यूज़र सूची देखें।", desc: "Users पेज में सबकी सूची है जिसमें रोल फ़िल्टर (Admin, Manager, Agent) और नाम/ईमेल से खोज है।" },
-            { label: "टू-फैक्टर ऑथ (2FA) लागू करें।", desc: "Security & Compliance → Two-Factor Authentication में 2FA लागू करें और विधि (Authenticator ऐप या SMS) रोल के हिसाब से चुनें।" }
-          ],
-          note: "स्टाफ उसी ईमेल से साइन इन करते हैं जो आप रजिस्टर करते हैं — पहली लॉगिन पर वे अपना पासवर्ड सेट करते हैं।"
-        },
-        {
-          icon: "🧑‍🤝‍🧑",
-          title: "सदस्य ऑनबोर्डिंग (Members / Customers)",
-          steps: [
-            { label: "सदस्य ऑनबोर्डिंग शुरू करें।", desc: "Quick Actions से 'New Member' पर टैप करें, या Members पेज → Onboard Member।" },
-            { label: "सदस्य का विवरण डालें।", desc: "पूरा नाम, सत्यापित मोबाइल, पता, और प्राथमिक दस्तावेज़ ID (आधार / वोटर)।" },
-            { label: "KYC दस्तावेज़ अपलोड करें।", desc: "KYC दस्तावेज़ की फोटो अपलोड करें। कोई लोन देने से पहले KYC वेरीफाई होना चाहिए।" },
-            { label: "प्रोफाइल सबमिट करें।", desc: "सिस्टम सदस्य को एक यूनिक Member ID के साथ बनाती है जो आपके ऑर्ग से जुड़ता है।" }
-          ],
-          note: "हर सदस्य के लोन और बचत पेज पर एक SMS Notifications टॉगल होता है — यही उनका एकमात्र SMS ऑप्ट-आउट है।"
-        },
-        {
-          icon: "🏢",
-          title: "शाखाएं प्रबंधित करें (Manage Branches)",
-          steps: [
-            { label: "Branches खोलें।", desc: "Quick Actions से 'Branches' पर टैप करें, या Organization Settings से खोलें।" },
-            { label: "शाखा जोड़ें।", desc: "शाखा बनाने के लिए टैप करें और उसका Name, Code, और स्थान (zone / district) डालें।" },
-            { label: "शाखा सूची देखें।", desc: "आपके ऑर्ग विवरण पेज में सभी शाखाएं उनके कोड और active/suspended स्थिति के साथ दिखती हैं।" },
-            { label: "एक मैनेजर नियुक्त करें।", desc: "हर शाखा Users में आपके द्वारा आमंत्रित किसी Branch Manager से जुड़ी होती है।" }
-          ],
-          note: "ब्रांच कोड आपके ऑर्ग के भीतर यूनिक होते हैं और रिपोर्ट व कलेक्शन फ़िल्टर करने में उपयोग होते हैं।"
-        },
-        {
-          icon: "💰",
-          title: "लोन — बनाएं और ट्रैक करें",
-          steps: [
-            { label: "New Loan खोलें।", desc: "Quick Actions से 'New Loan' पर टैप करें ('Deploy Capital' पेज)।" },
-            { label: "लोन का विवरण डालें।", desc: "Borrower (सदस्य) चुनें, Principal (₹1K–₹10L), ब्याज (APR % या निश्चित राशि, प्रति day/week/month/year), Interest Logic (flat या reducing), पहली किस्त की तारीख, Tenure, और Collection Type (Daily/Weekly/Monthly/Yearly)।" },
-            { label: "लाइव सारांश देखें।", desc: "Financial Summary अनुमानित किस्त, कुल ब्याज, और पूरा amortization (EMI) प्रीव्यू सेव करने से पहले दिखाता है।" },
-            { label: "एक्टिव लोन ट्रैक करें।", desc: "लोन सीधे (active) बनते हैं — कोई अनुमोदन गेट नहीं। लोन विवरण में बकाया, देय अलर्ट (OVERDUE / DUE TODAY), EMI टाइमलाइन, और Loan Intelligence दिखता है।" },
-            { label: "लोन प्रबंधित करें।", desc: "'…' मेनू से: Edit, Mark Defaulted, Reactivate, Restructure, Freeze Skipped EMIs, या Delete।" }
-          ],
-          note: "EMI की स्थिति में PAID, DUE, OVERDUE, WAIVED, PENDING, और FROZEN शामिल हैं। खुले लोन पर Collect / Settle / Reminder एक्शन दिखते हैं।"
-        },
-        {
-          icon: "🏦",
-          title: "बचत — योजनाएं प्रबंधित करें (Savings)",
-          steps: [
-            { label: "New Savings Plan खोलें।", desc: "Quick Actions से 'New Savings' पर टैप करें।" },
-            { label: "योजना का विवरण डालें।", desc: "सदस्य चुनें, Collection Cycle (Daily/Weekly/Monthly/Yearly), Installment Amount (₹10–₹50K), Start Date, Tenure, Maturity Amount, और Premature Penalty %।" },
-            { label: "Wealth Forecast देखें।", desc: "लाइव प्रीव्यू गारंटीड मैच्योरिटी, कुल किस्तें, कुल कैपिटल, और अनुमानित यील्ड दिखाता है।" },
-            { label: "जमा (Deposit) और निकासी (Withdraw)।", desc: "कलेक्शन शीट से कभी भी जमा करें। निकासी एक Withdrawal Requests कतार (Pending/Approved/Rejected) में जाती है जहाँ मैनेजर कारण के साथ स्वीकृत या अस्वीकृत करता है।" },
-            { label: "वॉल्ट प्रबंधित करें।", desc: "Pause/Resume वॉल्ट, खाता बंद (Close), या (केवल एडमिन) स्थायी रूप से डिलीट करें। बैलेंस और यील्ड-प्रोजेक्शन चार्ट दिखते हैं।" }
-          ],
-          note: "बचत Principal Protected होती है। समय से पहले निकासी पर वह Penalty % लगता है जो आपने बनाने के समय सेट किया था।"
-        },
-        {
-          icon: "📨",
-          title: "एसएमएस और सूचनाएं (SMS & Notifications)",
-          steps: [
-            { label: "SMS Settings खोलें।", desc: "Settings → Integrations → Communications टैब → Local SMS। यह SMS Settings पेज खोलता है (केवल एडमिन)।" },
-            { label: "ऑटो-रसीद चालू करें।", desc: "'SMS on Collection' और 'SMS on Savings Deposit' डिफ़ॉल्ट ON हैं — हर लेन-देन के बाद ग्राहक को रसीद मिलती है।" },
-            { label: "EMI रिमाइंडर चालू करें।", desc: "'Due EMI Reminders' (डिफ़ॉल्ट OFF) टॉगल करें और दैनिक Reminder Time सेट करें। टेम्पलेट {name}, {amount}, {loan_id}, {balance} का उपयोग करते हैं।" },
-            { label: "SIM स्लॉट चुनें।", desc: "SIM & Outbox के अंतर्गत चुनें कि SMS कौन सा डिवाइस SIM भेजे, टेस्ट SMS भेजें, और भेजे गए SMS इतिहास (आखिरी 200) देखें।" },
-            { label: "सदस्य-वार ऑप्ट-आउट।", desc: "किसी भी लोन या बचत विवरण पेज पर 'SMS Notifications' टॉगल कर उस सदस्य के लिए रिमाइंडर चालू/बंद करें।" }
-          ],
-          note: "SMS डिवाइस के SIM (native Android plugin) से जाता है — कोई बाहरी SMS गेटवे नहीं। WhatsApp और Email अलग से Integrations में सेट होते हैं।"
-        },
-        {
-          icon: "💸",
-          title: "भुगतान लें और UPI वेरीफाई करें",
-          steps: [
-            { label: "Collect Payment खोलें।", desc: "Quick Actions से 'Collect Payment' पर टैप करके कलेक्शन शुरू करें।" },
-            { label: "कलेक्शन दर्ज करें।", desc: "सदस्य/लोन चुनें, राशि डालें, मोड (Cash, UPI, या Bank) चुनें, और सबमिट करें। सक्षम होने पर रसीद SMS अपने आप जाती है।" },
-            { label: "UPI भुगतान वेरीफाई करें।", desc: "Quick Actions से 'UPI Verify' पर टैप करके ग्राहक के UPI रेफरेंस को अपेक्षित भुगतान से मिलाएं।" }
-          ],
-          note: "कलेक्शन डैशबोर्ड की Recent Collections में तुरंत दिखते हैं और क्लाउड में सिंक होते हैं।"
-        },
-        {
-          icon: "🛡️",
-          title: "टीम, गतिविधि और ऑडिट लॉग",
-          steps: [
-            { label: "अपना ऑर्ग विवरण पेज खोलें।", desc: "डैशबोर्ड पर किसी भी ऑर्ग कार्ड पर टैप करें ताकि पूरा सारांश दिखे।" },
-            { label: "Team Members देखें।", desc: "Team टाइल सभी स्टाफ को रोल-रंगीन अवतार के साथ दिखाती है, नाम/ईमेल खोज और रोल फ़िल्टर के साथ।" },
-            { label: "Recent Activity जांचें।", desc: "Activity टाइल क्रियाओं (auth, loan, payment, savings, member) का लॉग दिखाती है — किसने क्या और कब किया।" },
-            { label: "Security & Activity Logs खोलें।", desc: "Settings → Security & Compliance में System Activity Logs खोलें और ऑडिट रिटेंशन, पासवर्ड पॉलिसी, और Google Drive बैकअप सेट करें।" }
-          ],
-          note: "ऑडिट लॉग हर बदलाव का पता लगाने में मदद करते हैं — समीक्षा या विवाद के समय उपयोगी।"
-        }
       ]
     },
-    branchManager: {
-      title: "शाखा प्रबंधक गाइड (Branch Manager)",
-      desc: "शाखा प्रबंधक के रूप में, आप स्थानीय शाखा के इंचार्ज हैं। नए ग्राहकों को जोड़ना, एजेंटों के काम की निगरानी करना, कैश कलेक्शन को ऑडिट करना, और लोन पास करना आपकी मुख्य जिम्मेदारी है।",
+    managingBorrowers: {
+      title: "उधारियों का प्रबंधन",
+      desc: "उधारी वे लोग हैं जिनसे आप पैसा उधार देते हैं। यह गाइड आपको बताती है कि उधारी प्रोफाइल कैसे जोड़ें, संपादित करें और प्रबंधित करें — संपर्क विवरण, ऋण इतिहास और भुगतान रिकॉर्ड सहित।",
       lessons: [
         {
-          icon: "🚀",
-          title: "शुरुआत करना — मैनेजर लॉगिन",
+          icon: "➕", title: "नया उधारी जोड़ें",
           steps: [
-            { label: "मुख्य एडमिन द्वारा भेजे गए निमंत्रण (Invite) ईमेल को खोलें।" },
-            { label: "पासवर्ड सेट करें और अपने खाते में साइन इन करें।" },
-            { label: "शाखा डैशबोर्ड देखें - यहाँ दैनिक संग्रह और लक्ष्यों की प्रगति दिखती है।" }
-          ]
+            { label: "Borrowers टैब पर जाएं।", desc: "होम स्क्रीन से नीचे 'Borrowers' पर टैप करें।" },
+            { label: "'+' बटन पर टैप करें।", desc: "'Add Borrower' फॉर्म खुलेगा।" },
+            { label: "उधारी का पूरा नाम डालें।", desc: "यह नाम सभी ऋण दस्तावेजों और रसीदों पर दिखेगा।" },
+            { label: "मोबाइल नंबर डालें।", desc: "यह आवश्यक है — एसएमएस रिमाइंडर और रसीदों के लिए उपयोग होता है।" },
+            { label: "पता डालें (वैकल्पिक)।", desc: "अपने रिकॉर्ड के लिए उपयोगी।" },
+            { label: "नोट जोड़ें (वैकल्पिक)।", desc: "उदाहरण: रिश्ता, पेशा, या कोई अन्य विवरण।" },
+            { label: "'Save' पर टैप करें।", desc: "उधारी आपकी सूची में जुड़ जाता है।" },
+          ],
+          note: "एसएमएस रिमाइंडर भेजने के लिए केवल उधारी का मोबाइल नंबर आवश्यक है। सही नंबर डालें।"
         },
         {
-          icon: "👥",
-          title: "नया ग्राहक जोड़ना (Member Onboarding)",
+          icon: "✏️", title: "उधारी के विवरण को संपादित करें",
           steps: [
-            { label: "Members > Onboard Member विकल्प पर जाएं।", desc: "सत्यापन के लिए ग्राहक के दस्तावेज़ साथ रखें।" },
-            { label: "ग्राहक का नाम, पता, मोबाइल नंबर और आधार/वोटर आईडी दर्ज करें।", desc: "KYC दस्तावेज़ों की फोटो अपलोड करें।" },
-            { label: "सुरक्षित (Submit) करें। सिस्टम सदस्य को स्वचालित रूप से एक खाता संख्या (Member ID) अलॉट कर देगा।" }
+            { label: "Borrowers टैब पर जाएं।", desc: "जिस उधारी को संपादित करना है, उसे ढूंढें।" },
+            { label: "उधारी के नाम पर टैप करें।", desc: "यह उनकी प्रोफाइल पेज खोलेगा।" },
+            { label: "'Edit' बटन पर टैप करें।", desc: "अब आप नाम, मोबाइल नंबर, पता और नोट बदल सकते हैं।" },
+            { label: "'Save' पर टैप करें।", desc: "बदलाव तुरंत सेव हो जाते हैं।" },
           ],
-          note: "लोन देने से पहले ग्राहक का केवाईसी (KYC) सत्यापन होना आवश्यक है।"
+          note: "उधारी के मोबाइल नंबर बदलने से उनके सभी एक्टिव लोन और एसएमएस रिमाइंडर भी अपडेट हो जाएंगे।"
         },
         {
-          icon: "💰",
-          title: "लोन अनुरोध स्वीकृत करना (Approve Loan)",
+          icon: "📋", title: "उधारी के ऋण इतिहास देखें",
           steps: [
-            { label: "Loans > Pending Approvals पर जाएं।", desc: "ग्राहक की लोन फाइल और उसके दस्तावेज़ देखें।" },
-            { label: "ग्राहक की पिछली किस्त चुकाने का इतिहास और बचत का स्तर जांचें।" },
-            { label: "सब ठीक होने पर 'Approve' (स्वीकार) बटन दबाएं ताकि पैसे बांटे जा सकें।" }
+            { label: "Borrowers टैब पर जाएं।", desc: "जिस उधारी की जांच करना है, उसे ढूंढें और नाम पर टैप करें।" },
+            { label: "नीचे स्क्रॉल करके उनके ऋण इतिहास देखें।", desc: "सभी लोन (एक्टिव, पूरे हुए, डिफॉल्टेड) यहां सूचीबद्ध हैं।" },
+            { label: "किसी भी लोन पर टैप करें।", desc: "आप पूरी EMI शेड्यूल, किए गए भुगतान, बकाया बैलेंस और ब्याज देख सकते हैं।" },
           ],
-          note: "लोन पास होते ही किस्त चुकाने की तारीखें (EMI Schedule) सिस्टम द्वारा स्वचालित रूप से तैयार हो जाती हैं।"
+          note: "नया ऋण देने से पहले उधारी के ऋण इतिहास देखना एक अच्छा अभ्यास है — यह आपको बताता है कि वे कितने विश्वसनीय हैं।"
         },
         {
-          icon: "📍",
-          title: "एजेंटों की लाइव लोकेशन देखना",
+          icon: "🗑️", title: "उधारी को हटाएं",
           steps: [
-            { label: "साइड पैनल से 'Live Map' खोलें।", desc: "यह मानचित्र पर लाइव ट्रैकिंग दिखाता है।" },
-            { label: "मैप पर अपने फील्ड एजेंटों की स्थिति देखें।", desc: "हरे रंग का चिन्ह मतलब एक्टिव ड्यूटी, ग्रे का मतलब ऑफ-ड्यूटी।" },
-            { label: "चिन्ह पर क्लिक करके देखें कि एजेंट ने आज कितना कलेक्शन किया है।" }
+            { label: "उधारी की प्रोफाइल पेज पर जाएं।", desc: "Borrowers में उसे ढूंढें और नाम पर टैप करें।" },
+            { label: "'More' मेनू (तीन बिंदु) पर टैप करें।", desc: "'Remove Borrower' चुनें।" },
+            { label: "हटाने की पुष्टि करें।", desc: "कन्फर्मेशन डायलॉग में 'Remove' पर टैप करें।" },
           ],
-          note: "एजेंट का लोकेशन तभी दिखेगा जब उसने अपने मोबाइल ऐप में 'Duty ON' किया हो और उनका जीपीएस चालू हो।"
-        }
+          note: "उधारी को हटाने से उनका ऋण इतिहास मिटता नहीं — यह केवल सक्रिय सूची से हटा देता है। सभी रिकॉर्ड सुरक्षित रहते हैं।"
+        },
       ]
     },
-    collectionAgent: {
-      title: "संग्रह एजेंट गाइड (Field Agent)",
-      desc: "फील्ड एजेंटों के लिए विस्तृत गाइड। किस्तें कैसे कलेक्ट करें, बिना इंटरनेट के काम कैसे करें, रसीद कैसे भेजें और क्षेत्र में मैप का उपयोग कर ग्राहकों तक कैसे पहुंचें।",
+    recordingLoans: {
+      title: "ऋण दर्ज करना",
+      desc: "ऋण बनाना माइक्रोफ्लो प्रो का मूल है। यह गाइड आपको बताती है कि नया ऋण कैसे सेट करें, ब्याज दर और अवधि कैसे कॉन्फ़िगर करें, और भुगतान ट्रैकिंग कैसे शुरू करें।",
       lessons: [
         {
-          icon: "🚀",
-          title: "मोबाइल ऐप में लॉगिन",
+          icon: "💰", title: "नया ऋण बनाएं",
           steps: [
-            { label: "अपने मैनेजर द्वारा शेयर किए गए लिंक से ऐप डाउनलोड करें।", desc: "ऐप को जीपीएस और एसएमएस की अनुमति दें।" },
-            { label: "अपना रजिस्टर्ड आईडी (ईमेल) और पासवर्ड डालें।" },
-            { label: "डैशबोर्ड पर जाकर आज की कलेक्शन सूची और रूट देखें।" }
-          ]
-        },
-        {
-          icon: "🔘",
-          title: "ड्यूटी चालू/बंद करना (Duty ON/OFF)",
-          steps: [
-            { label: "डैशबोर्ड के ऊपर दिए गए 'Duty Toggle' बटन को ढूंढें।" },
-            { label: "क्षेत्र में काम शुरू करने से पहले Duty ON करें।", desc: "चेक करें की जीपीएस की लाइट चालू है।" },
-            { label: "काम खत्म होने पर 'Duty OFF' कर दें ताकि बैटरी बचे और लोकेशन ट्रैक होना बंद हो।" }
+            { label: "होम स्क्रीन से 'Loans' पर टैप करें।", desc: "यह आपके सभी लोन दिखाता है — एक्टिव, पेंडिंग और पूरे हुए।" },
+            { label: "'+' बटन पर टैप करें।", desc: "'New Loan' फॉर्म खुलेगा।" },
+            { label: "उधारी चुनें।", desc: "अपनी उधारी सूची से चुनें। यदि नहीं है, तो पहले 'Add New Borrower' पर टैप करके प्रोफाइल बनाएं।" },
+            { label: "ऋण की राशि डालें।", desc: "जितना पैसा आप उधार दे रहे हैं (उदाहरण: ₹10,000)।" },
+            { label: "ब्याज दर सेट करें।", desc: "वार्षिक ब्याज दर प्रतिशत में (उदाहरण: 12% प्रति वर्ष)।" },
+            { label: "ब्याज का प्रकार चुनें।", desc: "फ्लैट: हर महीने समान ब्याज। रिड्यूसिंग: बची हुई राशि पर ब्याज (कुल ब्याज कम)।" },
+            { label: "ऋण की अवधि सेट करें।", desc: "ऋण कितने महीने चलता है (उदाहरण: 12 महीने)।" },
+            { label: "कलेक्शन की आवृत्ति चुनें।", desc: "रोजावर, हफ्तावर, या मासिक — उधारी कितनी बार भुगतान करेगा।" },
+            { label: "पहली EMI की तारीख सेट करें।", desc: "वो तारीख चुनें जब पहला भुगतान देय होगा।" },
+            { label: "समीक्षा करें और 'Create Loan' दबाएं।", desc: "EMI शेड्यूल अपने आप बन जाती है — आप हर किस्त की राशि और तारीख देखेंगे।" },
           ],
-          note: "ड्यूटी ऑन होने पर ही आपकी कलेक्शन लोकेशन मैनेजर को दिखेगी।"
+          note: "The EMI schedule shows every installment with its due date and amount. View it anytime from the loan detail page."
         },
         {
-          icon: "💰",
-          title: "दैनिक किस्तें (EMI) वसूलना",
+          icon: "🧮", title: "ब्याज गणना को समझें",
           steps: [
-            { label: "'Today's Collection' (आज का कलेक्शन) टैब पर जाएं।", desc: "यहाँ उन सदस्यों की सूची है जिनसे आज पैसे लेने हैं।" },
-            { label: "ग्राहक के नाम पर क्लिक करें और लोन की राशि जांचें।" },
-            { label: "वसूल की गई राशि लिखें, कलेक्शन मोड चुनें (नकद/UPI) और 'Collect' बटन दबाएं।", desc: "भुगतान पूरा होते ही रसीद का एसएमएस ग्राहक को तुरंत मिल जाएगा।" }
-          ]
-        },
-        {
-          icon: "⚡",
-          title: "ऑफलाइन काम करना (Offline Mode)",
-          steps: [
-            { label: "इंटरनेट न होने पर भी सामान्य रूप से कलेक्शन जारी रखें।" },
-            { label: "डैशबोर्ड पर 'Offline Queue' का सिंक बैज देखें।", desc: "यह बिना सिंक हुए भुगतानों की संख्या दिखाता है।" },
-            { label: "जैसे ही मोबाइल में इंटरनेट वापस आए, सिंक बैज दबाएं। सारा डाटा सर्वर पर सुरक्षित चला जाएगा।" }
+            { label: "किसी भी एक्टिव लोन को खोलें।", desc: "Loans → जिस लोन को समझना है, उस पर टैप करें।" },
+            { label: "EMI शेड्यूल देखें।", desc: "हर पंक्ति में किस्त संख्या, देय तारीख, EMI राशि, मूलधन भाग, ब्याज भाग और बची हुई राशि दिखती है।" },
+            { label: "फ्लैट बनाम रिड्यूसिंग की तुलना करें।", desc: "फ्लैट ब्याज: हर महीने समान कुल ब्याज। रिड्यूसिंग: ब्याज समय के साथ कम होता है क्योंकि मूलधन चुका जा रहा है।" },
+            { label: "कुल ब्याज जांचें।", desc: "शेड्यूल के नीचे पूरे ऋण अवधि के लिए कुल ब्याज दिखेगा।" },
           ],
-          note: "जब तक आपका ऑफलाइन डाटा पूरी तरह सिंक (Sync) न हो जाए, ऐप से लॉग आउट न करें।"
-        }
+          note: "रिड्यूसिंग बैलेंस आमतौर पर उधारियों के लिए बेहतर होता है (कुल ब्याज कम) और आपको दिखाता है कि किसी भी बिंदु पर आपने कितना ब्याज कमाया है।"
+        },
+        {
+          icon: "✏️", title: "एक्टिव लोन को संपादित करें",
+          steps: [
+            { label: "जिस लोन को संपादित करना है, उसे खोलें।", desc: "Loans → लोन पर टैप करें।" },
+            { label: "'Edit' बटन पर टैप करें।", desc: "आप ब्याज दर, अवधि या कलेक्शन आवृत्ति बदल सकते हैं।" },
+            { label: "'Save' पर टैप करें।", desc: "EMI शेड्यूल अपने आप पुनर्गणना हो जाती है।" },
+          ],
+          note: "ब्याज दर या अवधि बदलते समेत सावधान रहें — यह भविष्य की सभी EMIs को पुनर्गणना कर देगा। पुराने भुगतान प्रभावित नहीं होंगे।"
+        },
+        {
+          icon: "⏸️", title: "लोन को रोकें या बंद करें",
+          steps: [
+            { label: "जिस लोन को प्रबंधित करना है, उसे खोलें।", desc: "Loans → लोन पर टैप करें।" },
+            { label: "'More' मेनू (तीन बिंदु) पर टैप करें।", desc: "आपको Pause, Resume, या Close लोन के विकल्प दिखेंगे।" },
+            { label: "जब पूरी भुगतान हो जाए तो 'Close Loan' चुनें।", desc: "यह लोन को पूर्ण के रूप में मार्क करता है और इसे आपके लोन इतिहास में स्थानांतरित करता है।" },
+          ],
+          note: "लोन को बंद करना स्थायी है। बंद करने से पहले यह सुनिश्चित करें कि सभी बकाया EMIs का भुगतान हो चुका है।"
+        },
       ]
     },
-    customer: {
-      title: "ग्राहक गाइड (Customer App)",
-      desc: "ग्राहकों के लिए गाइड। अपने मोबाइल पर अपनी जमा पूंजी देखना, चुकाई गई किस्तों की लिस्ट देखना और लोन स्टेटमेंट का पीडीएफ डाउनलोड करना सीखें।",
+    trackingRepayments: {
+      title: "किस्तें ट्रैक करना",
+      desc: "भुगतान दर्ज करने से ही आपके बही-खाते सटीक रहते हैं। यह गाइड आपको बताती है कि भुगतान कैसे दर्ज करें, बकाया बैलेंस कैसे देखें और ब्याज कमाई का हिसाब कैसे रखें।",
       lessons: [
         {
-          icon: "📱",
-          title: "ओटीपी (OTP) से लॉगिन करना",
+          icon: "💵", title: "भुगतान दर्ज करें",
           steps: [
-            { label: "अपने मोबाइल पर 'MicroFlow Pro' ग्राहक ऐप खोलें।" },
-            { label: "अपना पंजीकृत मोबाइल नंबर दर्ज करें और सबमिट करें।" },
-            { label: "मोबाइल पर प्राप्त 6 अंकों का ओटीपी कोड लिखें और लॉगिन करें।" }
-          ]
-        },
-        {
-          icon: "📋",
-          title: "लोन स्टेटमेंट डाउनलोड करना",
-          steps: [
-            { label: "ऐप में 'My Loans' (मेरे लोन) विकल्प पर जाएं।" },
-            { label: "अपने एक्टिव लोन का चयन करें।" },
-            { label: "'Download Statement' (स्टेटमेंट डाउनलोड करें) बटन पर क्लिक करें।", desc: "पीडीएफ फ़ाइल आपके फोन की स्टोरेज में सुरक्षित हो जाएगी।" }
+            { label: "Loans टैब पर जाएं।", desc: "जिस एक्टिव लोन के लिए भुगतान दर्ज करना है, उसे ढूंढें।" },
+            { label: "लोन पर टैप करें।", desc: "यह EMI शेड्यूल के साथ लोन विवरण पेज खोलेगा।" },
+            { label: "'Record Payment' पर टैप करें।", desc: "भुगतान विवरण डालने के लिए फॉर्म खुलेगा।" },
+            { label: "भुगतान की राशि डालें।", desc: "पूरी EMI राशि या आंशिक भुगतान डाल सकते हैं।" },
+            { label: "भुगतान का मोड चुनें।", desc: "नकद, UPI, या बैंक ट्रांसफर।" },
+            { label: "नोट जोड़ें (वैकल्पिक)।", desc: "उदाहरण: '2 दिन देर से भुगतान' या 'आंशिक भुगतान'।" },
+            { label: "'Save' पर टैप करें।", desc: "भुगतान दर्ज हो जाता है और बकाया बैलेंस अपने आप अपडेट हो जाता है।" },
           ],
-          note: "स्टेटमेंट पीडीएफ में चुकाई गई रसीदें, बकाया राशि, ब्याज और अगली तारीख आदि की पूरी जानकारी होती है।"
+          note: "एसएमएस रसीद उधारी को अपने आप भेजी जाती है यदि SMS सक्षम हो। EMI शेड्यूल भुगतान को दर्शाते हुए अपडेट हो जाता है।"
         },
         {
-          icon: "💰",
-          title: "अपनी बचत (Savings) का बैलेंस जांचना",
+          icon: "📊", title: "बकाया बैलेंस की जांच करें",
           steps: [
-            { label: "बचत सूची देखने के लिए 'My Savings' टैब पर जाएं।" },
-            { label: "कुल जमा राशि, ब्याज की दर और मैच्योरिटी की तारीख देखें।" },
-            { label: "एजेंट को दिए गए पैसों और रसीदों का मिलान करें।" }
-          ]
-        }
+            { label: "Loans टैब पर जाएं।", desc: "सभी एक्टिव लोन यहां सूचीबद्ध हैं।" },
+            { label: "'Outstanding' कॉलम देखें।", desc: "यह दिखाता है कि उधारी को आपसे कितना पैसा बाकी है।" },
+            { label: "किसी भी लोन पर टैप करें।", desc: "आप पूरी किस्त शेड्यूल, किए गए भुगतान और बची हुई राशि देखेंगे।" },
+          ],
+          note: "बकाया बैलेंस हर भुगतान के बाद अपने आप अपडेट होता है। कोई मैन्युअल गणना की जरूरत नहीं।"
+        },
+        {
+          icon: "📈", title: "ब्याज कमाई का हिसाब रखें",
+          steps: [
+            { label: "किसी भी एक्टिव लोन को खोलें।", desc: "Loans → लोन पर टैप करें।" },
+            { label: "EMI शेड्यूल की जांच करें।", desc: "हर किस्त में ब्याज का भाग दिखता है — यह उस अवधि की आपकी कमाई है।" },
+            { label: "कुल ब्याज कमाई देखें।", desc: "शेड्यूल के नीचे अब तक कुल ब्याज और पूरे लोन टर्म के लिए पूर्वानुमानित कुल ब्याज दिखेगा।" },
+          ],
+          note: "ब्याज आपकी चुनी हुई दर और प्रकार (फ्लैट या रिड्यूसिंग) के आधार पर अपने आप गणना की जाती है। मैन्युअल गणना की जरूरत नहीं।"
+        },
+        {
+          icon: "⏰", title: "देरी या चूक के भुगतान का सामना करें",
+          steps: [
+            { label: "EMI शेड्यूल में देरी वाली किस्तों की जांच करें।", desc: "बकाया EMIs लाल रंग में हाइलाइट की जाती हैं।" },
+            { label: "उधारी से संपर्क करें।", desc: "उनकी प्रोफाइल से मोबाइल नंबर लेकर फॉलो-अप करें।" },
+            { label: "जब भुगतान मिले तो इसे दर्ज करें।", desc: "चाहे वह देर से क्यों न हो, इसे नियमित रूप से दर्ज करें — ऐप देरी को ट्रैक करता है।" },
+            { label: "यदि आवश्यक हो तो रिस्ट्रक्चरिंग पर विचार करें।", desc: "उन उधारियों के लिए जो लगातार भुगतान चूकाते हैं, EMI राशि कम कर सकते हैं या लोन टर्म बढ़ा सकते हैं।" },
+          ],
+          note: "ऐप में देरी से भुगतान पर स्वचालित पेनल्टी नहीं होती। यदि आप लेट फी लेते हैं, तो इसे एक अलग लेनदेन के रूप में दर्ज करें।"
+        },
       ]
-    }
+    },
+    smsReminders: {
+      title: "एसएमएस रिमाइंडर",
+      desc: "उधारियों को EMI देय होने से पहले स्वचालित एसएमएस रिमाइंडर भेजने के लिए सेट अप करें। मैन्युअल फॉलो-अप कम करें और भुगतान दर सुधारें।",
+      lessons: [
+        {
+          icon: "⚙️", title: "एसएमएस रिमाइंडर सेट करें",
+          steps: [
+            { label: "Settings → SMS Settings पर जाएं।", desc: "Communications सेक्शन तक स्क्रॉल करें।" },
+            { label: "'Due EMI Reminders' चालू करें।", desc: "यह सभी एक्टिव लोन के लिए स्वचालित रिमाइंडर भेजता है।" },
+            { label: "रिमाइंडर का समय सेट करें।", desc: "उस समय चुनें जब रिमाइंडर भेजना है — उदाहरण: सुबह 9:00 बजे।" },
+            { label: "कितने दिन पहले भेजें, चुनें।", desc: "देय होने से 1, 2, या 3 दिन पहले।" },
+            { label: "'Save Settings' पर टैप करें।", desc: "अब रिमाइंडर अपने आप भेजे जाएंगे।" },
+          ],
+          note: "एसएमएस आपके फोन की SIM कार्ड से भेजा जाता है। अपनी SIM में पर्याप्त बैलेंस रखें। कोई बाहरी SMS सर्विस नहीं — यह पूरी तरह से फ्री है।"
+        },
+        {
+          icon: "📝", title: "रिमाइंडर संदेश कस्टमाइज करें",
+          steps: [
+            { label: "Settings → SMS Settings पर जाएं।", desc: "Reminder Templates सेक्शन तक स्क्रॉल करें।" },
+            { label: "रिमाइंडर संदेश संपादित करें।", desc: "{name}, {amount}, {due_date}, और {loan_id} जैसे प्लेसहोल्डर का उपयोग करें।" },
+            { label: "संदेश पूर्वावलोकन करें।", desc: "देखें कि संदेश उधारी को भेजने पर कैसा दिखेगा।" },
+            { label: "'Save Template' पर टैप करें।", desc: "आपका कस्टम संदेश भविष्य के सभी रिमाइंडर के लिए उपयोग किया जाएगा।" },
+          ],
+          note: "संदेश छोटे और फ्रेंडली रखें। डिफ़ॉल्ट: 'नमस्ते {name}, आपकी EMI ₹{amount} {due_date} को देय है। कृपया भुगतान करें।'"
+        },
+        {
+          icon: "📱", title: "मैन्युअल रिमाइंडर भेजें",
+          steps: [
+            { label: "Borrowers टैब पर जाएं।", desc: "जिस उधारी को रिमाइंडर भेजना है, उसे ढूंढें।" },
+            { label: "उधारी के नाम पर टैप करें।", desc: "यह उनकी प्रोफाइल पेज खोलेगा।" },
+            { label: "'Send Reminder' पर टैप करें।", desc: "एक SMS तुरंत भेज दी जाती है डिफ़ॉल्ट या कस्टम रिमाइंडर संदेश के साथ।" },
+          ],
+          note: "वन-ऑफ फॉलो-अप के लिए मैन्युअल रिमाइंडर का उपयोग करें, जैसे किसी उधारी ने भुगतान चूका है।"
+        },
+        {
+          icon: "🔕", title: "विशिष्ट उधारियों के लिए ऑप्ट-आउट",
+          steps: [
+            { label: "उधारी की प्रोफाइल खोलें।", desc: "Borrowers → उधारी पर टैप करें।" },
+            { label: "'SMS Settings' पर टैप करें।", desc: "आपको SMS रिमाइंडर के लिए एक टॉगल दिखेगा।" },
+            { label: "इस उधारी के लिए SMS बंद करें।", desc: "वे स्वचालित रिमाइंडर प्राप्त नहीं करेंगे, लेकिन मैन्युअल भेज सकते हैं।" },
+          ],
+          note: "अपने उधारियों की पसंद का सम्मान करें। यदि कोई रिमाइंडर नहीं पाना चाहता है, तो उसके लिए SMS टॉगल बंद कर दें।"
+        },
+      ]
+    },
+    portfolioInsights: {
+      title: "अपने पोर्टफोलियो को समझें",
+      desc: "आपका पोर्टफोलियो आपकी पूरी उधारिक गतिविधि का पूरा चित्र है। यह गाइड आपको मुख्य संख्याओं को समझने में मदद करती है — कुल दिया गया, बकाया, ब्याज कमाई और भुगतान दर।",
+      lessons: [
+        {
+          icon: "🏦", title: "अपना पोर्टफोलियो सारांश देखें",
+          steps: [
+            { label: "होम स्क्रीन से Portfolio टैब पर जाएं।", desc: "यह आपके उधारिक व्यवसाय का पूर्ण अवलोकन देता है।" },
+            { label: "मुख्य संख्याएं जांचें।", desc: "कुल दिया गया (Total Lent), बकाया (Outstanding), कुल ब्याज कमाई (Interest Earned) और एक्टिव लोन ऊपर दिखाए गए हैं।" },
+            { label: "अधिक विवरण के लिए नीचे स्क्रॉल करें।", desc: "आपको भुगतान दर, उधारी वर्गीकरण और मासिक रुझान दिखेंगे।" },
+          ],
+          note: "ये संख्याएं भुगतान दर्ज करने के साथ रीयल-टाइम अपडेट होती हैं। कोई मैन्युअल गणना की जरूरत नहीं।"
+        },
+        {
+          icon: "📊", title: "संख्याओं को समझें",
+          steps: [
+            { label: "कुल दिया गया (Total Lent)।", desc: "आपने जितना कुल पैसा उधार दिया है — एक्टिव, पूरे हुए और डिफॉल्टेड लोन सभी शामिल।" },
+            { label: "बकाया राशि (Outstanding)।", desc: "सभी एक्टिव लोन में आपको कितना पैसा अभी बाकी है। भुगतान होने के साथ यह कम होता जाता है।" },
+            { label: "ब्याज कमाई (Interest Earned)।", desc: "आपने अब तक कुल कितना ब्याज कमाया है। यह आपकी उधारिक से कमाई है।" },
+            { label: "भुगतान दर (Repayment Rate)।", desc: "उन EMIs का प्रतिशत जो समय पर चुकाए गए हैं। उच्च दर मतलब आपके उधारी विश्वसनीय हैं।" },
+          ],
+          note: "अपनी भुगतान दर को महीने के आधार पर ट्रैक करें — यह आपके उधारिक पोर्टफोलियो के स्वास्थ का सबसे अच्छा संकेतक है।"
+        },
+        {
+          icon: "📈", title: "मासिक रुझान और रिपोर्ट",
+          steps: [
+            { label: "Portfolio टैब पर जाएं।", desc: "Trends सेक्शन तक स्क्रॉल करें।" },
+            { label: "मासिक चार्ट देखें।", desc: "देखें कि आपकी उधारिक, भुगतान और ब्याज कमाई समय के साथ कैसे बदल रही है।" },
+            { label: "तारीख की सीमा द्वारा फिल्टर करें।", desc: "किसी विशेष महीने या तिमाही के लिए विस्तृत संख्याएं देखने के लिए चुनें।" },
+          ],
+          note: "अपनी उधारिक की योजना बनाने के लिए मासिक रुझान का उपयोग करें।"
+        },
+        {
+          icon: "🎯", title: "अपनी भुगतान दर सुधारें",
+          steps: [
+            { label: "स्लो पेयर्स की पहचान करें।", desc: "Portfolio टैब में बकाया EMI वाले उधारियों के लिए जांच करें।" },
+            { label: "जल्दी फॉलो-अप करें।", desc: "उधारियों को देय तारीख से पहले एसएमएस रिमाइंडर भेजकर प्रेरित करें।" },
+            { label: "ऋण की शर्तों की समीक्षा करें।", desc: "यदि उधारी लगातार कठिनाई का सामना करते हैं, तो EMI राशि कम करने या लोन टर्म बढ़ाने पर विचार करें।" },
+            { label: "रिश्ते बनाएं।", desc: "सबसे अच्छी भुगतान दर आपके उधारियों को अच्छी तरह से जानने से आती है।" },
+          ],
+          note: "अच्छी भुगतान दर (85% से ऊपर) मतलब आपका उधारिक व्यवसाय स्वस्थ है। 70% से कम होने पर समीक्षा की जरूरत हो सकती है।"
+        },
+      ]
+    },
   },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // BENGALI / বাংলা
-  // ──────────────────────────────────────────────────────────────────────────
-  bn: {
+  hi: {
     common: {
-      allGuides: "সব নির্দেশিকা",
-      backToHome: "হোম",
-      documentation: "নথিপত্র (Docs)",
-      quickLinks: "দ্রুত লিঙ্কসমূহ",
-      portalGuides: "পোর্টাল গাইড",
-      watchVideo: "ভিডিও দেখুন",
-      openGuide: "গাইড খুলুন",
-      stepsTitle: "ধাপে ধাপে নির্দেশিকা",
-      lessons: "অধ্যায়",
-      portals: "পোর্টাল",
-      youtube: "ইউটিউব",
-      selectPortal: "আপনার পোর্টাল নির্বাচন করুন",
-      openGuideAction: "গাইড খুলুন",
-      subscribe: "সাবস্ক্রাইব",
-      popularGuides: "জনপ্রিয় গাইডসমূহ",
-      youtubeCtaTitle: "ভিডিও টিউটোরিয়াল উপলব্ধ",
-      youtubeCtaDesc: "প্রতিটি বিষয়ের জন্য বিস্তারিত ভিডিও টিউটোরিয়াল। সহজ ও সরল ধাপে ব্যাখ্যা করা হয়েছে। নতুন ভিডিওর আপডেট পেতে আমাদের ইউটিউব চ্যানেলটি সাবস্ক্রাইব করুন।",
+      allGuides: "सभी मार्गदर्शिकाएँ", backToHome: "होम", documentation: "दस्तावेज़ (Docs)",
+      quickLinks: "त्वरित लिंक्स", portalGuides: "मार्गदर्शिकाएँ", watchVideo: "वीडियो देखें",
+      openGuide: "गाइड खोलें", stepsTitle: "चरण-दर-चरण मार्गदर्शिका", lessons: "पाठ",
+      portals: "गाइड", youtube: "यूट्यूब", selectPortal: "एक मार्गदर्शिका चुनें",
+      openGuideAction: "गाइड खोलें", subscribe: "सब्सक्राइब", popularGuides: "लोकप्रिय गाइड्स",
+      youtubeCtaTitle: "वीडियो ट्यूटोरियल उपलब्ध हैं",
+      youtubeCtaDesc: "हर विषय के लिए विस्तृत वीडियो ट्यूटोरियल। सरल, आसान चरणों में समझाया गया है। नए वीडियो की जानकारी पाने के लिए हमारे यूट्यूब चैनल को सब्सक्राइब करें।",
     },
     home: {
-      title: "নথিপত্র",
-      subtitle: "ভিডিও টিউটোরিয়াল সহ পোর্টাল-ভিত্তিক গাইড",
-      desc: "মাইক্রোফ্লো প্রো — প্রতিটি পোর্টালের জন্য সম্পূর্ণ নির্দেশিকা। আপনার ক্ষুদ্র ঋণ (মাইক্রোফাইন্যান্স) পরিচালনা করতে ভিডিও দেখুন এবং নির্দেশাবলী অনুসরণ করুন।",
+      title: "दस्तावेज़", subtitle: "वीडियो ट्यूटोरियल के साथ चरण-दर-चरण गाइड",
+      desc: "माइक्रोफ्लो प्रो — व्यक्तिगत पैसे उधार देने वालों के लिए सरल बही-खाता टूल। ऋण देना, किस्तें लेना, और ब्याज कमाना ट्रैक करें। ये गाइड हर फीचर को कवर करते हैं।",
       portals: {
-        admin: {
-          title: "এক্সিকিউটিভ অ্যাডমিন (মূল অ্যাডমিন)",
-          desc: "অর্গানাইজেশন সেটআপ, ব্রাঞ্চ পরিচালনা, স্টাফদের তদারকি, ঋণ ও সঞ্চয় পরিচালনা এবং এসএমএস সেটিংসের সম্পূর্ণ নিয়ন্ত্রণ।"
-        },
-        manager: {
-          title: "শাখা ব্যবস্থাপক (Branch Manager)",
-          desc: "আপনার নির্দিষ্ট শাখার কালেকশন, লোন অনুমোদন, সঞ্চয় বা ডিপোজিট পরিচালনা এবং স্টাফ ট্র্যাকিং।"
-        },
-        agent: {
-          title: "কালেকশন এজেন্ট (Field Agent)",
-          desc: "দৈনিক কিস্তি আদায় (Collection), ডিউটি অন/অফ, লাইভ লোকেশন এবং গ্রাহকের মোবাইলে এসএমএস অ্যালার্টের গাইড।"
-        },
-        customer: {
-          title: "গ্রাহক অ্যাপ (Customer App)",
-          desc: "গ্রাহকদের জন্য কিস্তির খতিয়ান, সঞ্চয়ের ব্যালেন্স, সাম্প্রতিক লেনদেন দেখা এবং স্টেটমেন্ট ডাউনলোডের গাইড।"
-        }
+        admin: { title: "शुरुआत करें", desc: "अकाउंट बनाएं, प्रोफाइल सेट करें, और अपना पहला उधारी जोड़ें।" },
+        manager: { title: "उधारियों का प्रबंधन", desc: "उधारियों की जानकारी जोड़ें, संपर्क विवरण, और ऋण इतिहास देखें।" },
+        agent: { title: "ऋण दर्ज करना", desc: "उधारियों के लिए ऋण बनाएं, ब्याज दर, अवधि और राशि सेट करें।" },
+        customer: { title: "किस्तें ट्रैक करना", desc: "भुगतान दर्ज करें, बकाया देखें, और अपने ब्याज कमाई का हिसाब रखें।" },
       },
       topics: [
-        { label: "📱 অ্যাপ ডাউনলোড ও লগইন", path: "/docs/customer" },
-        { label: "👤 নতুন মেম্বার কীভাবে যুক্ত করবেন", path: "/docs/collection-agent" },
-        { label: "💰 দৈনিক কালেকশন প্রক্রিয়া", path: "/docs/collection-agent" },
-        { label: "📊 লোন স্টেটমেন্ট PDF বের করা", path: "/docs/customer" },
-        { label: "🛡️ টিম, কার্যকলাপ ও অডিট লগ", path: "/docs/executive-admin" },
-        { label: "📨 এসএমএস অ্যালার্ট সেট করা", path: "/docs/executive-admin" },
-        { label: "📍 এজেন্টের লাইভ লোকেশন ট্র্যাকিং", path: "/docs/branch-manager" },
-        { label: "🔐 পাসওয়ার্ড রিসেট করা", path: "/docs/executive-admin" }
+        { label: "📱 ऐप डाउनलोड और लॉगिन", path: "/docs/getting-started" },
+        { label: "👤 अपना पहला उधारी जोड़ें", path: "/docs/managing-borrowers" },
+        { label: "💰 अपना पहला ऋण बनाएं", path: "/docs/recording-loans" },
+        { label: "📊 किस्त भुगतान दर्ज करें", path: "/docs/tracking-repayments" },
+        { label: "📨 एसएमएस रिमाइंडर सेट करें", path: "/docs/sms-reminders" },
+        { label: "📈 अपने पोर्टफोलियो को समझें", path: "/docs/portfolio-insights" },
       ]
     },
-    executiveAdmin: {
-      title: "মূল অ্যাডমিন গাইড (Executive Admin)",
-      desc: "এক্সিকিউটিভ অ্যাডমিন (Executive Admin) হিসেবে আপনি আপনার সংস্থার সম্পূর্ণ মালিক — এটি নিবন্ধন করা, ব্র্যান্ডিং করা, প্ল্যান ও সীমা ঠিক করা, স্টাফ ও সদস্য যোগ করা, ঋণ ও সঞ্চয় পরিচালনা এবং এসএমএস সেট করা। এই গাইডটি প্রতিটি বৈশিষ্ট্য কভার করে।",
+    gettingStarted: {
+      title: "शुरुआत करें",
+      desc: "माइक्रोफ्लो प्रो में नया हैं? यह गाइड आपके अकाउंट सेटअप, लेंडर प्रोफाइल बनाने और पहले उधारी को जोड़ने के बारे में हर चीज बताती है। इसमें लगभग 5 मिनट लगेंगे।",
       lessons: [
         {
-          icon: "🚀",
-          title: "সংস্থা নিবন্ধন (Organization Registration)",
+          icon: "📲", title: "ऐप डाउनलोड करें",
           steps: [
-            { label: "সাইন ইন স্ক্রিনে 'Create Organization'-এ ট্যাপ করুন।", desc: "Create Account ফর্মটি খুলবে — 'Set up your organization in minutes'।" },
-            { label: "৬টি বাধ্যতামূলক ক্ষেত্র পূরণ করুন।", desc: "সংস্থার নাম, আপনার পুরো নাম, ইমেল, ১০-সংখ্যার ফোন, পাসওয়ার্ড (সর্বনিম্ন ৮ অক্ষর) এবং পাসওয়ার্ড নিশ্চিত করুন।" },
-            { label: "শর্তাবলী গ্রহণ করে 'Create Organization' চাপুন।", desc: "একটি চেকবক্সের মাধ্যমে আপনি Terms of Service এবং Privacy Policy গ্রহণ করেন।" },
-            { label: "আপনার ইমেল যাচাই করুন, তারপর সাইন ইন করুন।", desc: "আমরা আপনার ইমেলে একটি যাচাইকরণ লিঙ্ক পাঠাই। সেটিতে ক্লিক করুন, তারপর সাইন ইন করুন — আপনার সংস্থা স্বয়ংক্রিয়ভাবে ১৪ দিনের ফ্রি ট্রায়াল সহ তৈরি হয়।" }
-          ],
-          note: "আপনার অ্যাকাউন্টটি এক্সিকিউটিভ অ্যাডমিন হিসেবে তৈরি হয়। সাইনআপে কোনো প্ল্যান বাছাই হয় না — আপনি ১৪ দিনের ট্রায়ালে শুরু করেন (সর্বোচ্চ ১০ ব্রাঞ্চ, ৫ স্টাফ, ১০০ সদস্য)।"
+            { label: "अपने फोन के ऐप स्टोर खोलें।", desc: "Google Play Store (Android) या App Store (iOS) पर 'MicroFlow Pro' सर्च करें।" },
+            { label: "'Install' पर टैप करें।", desc: "ऐप लगभग 45 MB का है।" },
+            { label: "डाउनलोड होने पर ऐप खोलें।", desc: "वेलकम स्क्रीन में 'Sign In' और 'Create Account' दिखेंगे।" },
+          ]
         },
         {
-          icon: "🏠",
-          title: "প্রথম লগইন এবং My Org ড্যাশবোর্ড",
+          icon: "✍️", title: "अकाउंट बनाएं",
           steps: [
-            { label: "সাইন ইন করলে আপনার My Org ড্যাশবোর্ড খুলবে।", desc: "এটি আপনার সংস্থার হোম — এখানে সবকিছুর একটি ঝলক পাওয়া যায়।" },
-            { label: "Overview-এর পরিসংখ্যান দেখুন।", desc: "সদস্য (Members), স্টাফ, সক্রিয় ঋণ (Active Loans), মোট বিতরণ (Disbursed), বকেয়া (Outstanding), এবং মোট ঋণ এক নজরে।" },
-            { label: "Quick Actions ব্যবহার করুন।", desc: "ভুগতান নিন (Collect Payment), UPI যাচাই, স্টাফ যোগ করুন, নতুন সদস্য, নতুন ঋণ, নতুন সঞ্চয়, এবং শাখাসমূহ।" }
+            { label: "'Create Account' पर टैप करें।", desc: "फॉर्म में नाम, फोन, ईमेल, पासवर्ड मांगा जाएगा।" },
+            { label: "अपना विवरण भरें।", desc: "पूरा नाम, 10 अंकों का मोबाइल, ईमेल, पासवर्ड (8+ अक्षर) डालें।" },
+            { label: "नियम स्वीकार करें।", desc: "Terms of Service और Privacy Policy स्वीकार करें।" },
+            { label: "'Create Account' दबाएं।", desc: "वेरिफिकेशन ईमेल का लिंक क्लिक करें, फिर साइन इन करें।" },
           ],
-          note: "যেকোনো সময় ফিরে আসতে উপরে ডানদিকে 'My Org'-এ ট্যাপ করুন। নতুন সংখ্যার জন্য নিচ থেকে উপরে টানুন (refresh)।"
+          note: "ईमेल वेरीफाई होने के बाद अकाउंट तुरंत तैयार। कोई ट्रायल नहीं — सीधे उधार देना शुरू करें।"
         },
         {
-          icon: "🎨",
-          title: "সংস্থার প্রোফাইল ও ব্র্যান্ডিং",
+          icon: "👤", title: "अपना प्रोफाइल सेट करें",
           steps: [
-            { label: "Organization Settings খুলুন।", desc: "ড্যাশবোর্ড থেকে 'Edit Organization Settings'-এ ট্যাপ করুন, অথবা Settings → Organization Settings-এ যান।" },
-            { label: "আপনার প্রোফাইল আপডেট করুন।", desc: "সংস্থার নাম এবং Slug (URL-এ ব্যবহৃত হয়, যেমন my-mfi) বদলান। কেবল slug অনন্য (unique) হতে হবে।" },
-            { label: "আপনার লোগো আপলোড করুন।", desc: "লোগো বাক্সে ট্যাপ করে ৫১২×৫১২ ছবি বাছুন। এটি আপনার সংস্থার অ্যাসেটে আপলোড হয় এবং সব স্টাফ পোর্টালে দেখা যায়।" },
-            { label: "আপনার ব্র্যান্ড কালার সেট করুন।", desc: "Primary এবং Accent কালার (hex, যেমন #6366F1) লিখুন। থিম আপনার সংস্থার প্রতিটি পোর্টালে সিঙ্ক হয়ে যায়।" }
+            { label: "Settings पर जाएं।", desc: "मेनू आइकन (ऊपर दाईं ओर) पर टैप करें।" },
+            { label: "अपना विवरण भरें।", desc: "नाम, फोन, ईमेल और प्रोफाइल फोटो जोड़ें।" },
+            { label: "अपनी पसंद सेट करें।", desc: "भाषा, डार्क मोड, बायोमेट्रिक लॉगिन।" },
           ],
-          note: "লোগো এবং ব্র্যান্ড কালার সব পোর্টালে সিঙ্ক হতে কয়েক মিনিট সময় নিতে পারে।"
+          note: "Settings से कभी भी अपडेट करें। प्रोफाइल निजी है — केवल आप ही देख सकते हैं।"
         },
         {
-          icon: "💳",
-          title: "প্ল্যান, স্থিতি ও সীমা (Plan, Status & Limits)",
+          icon: "🧑", title: "अपना पहला उधारी जोड़ें",
           steps: [
-            { label: "আপনার সংস্থার বিবরণ বা সেটিংস পেজ খুলুন।", desc: "ড্যাশবোর্ড থেকে অর্গ কার্ডে ট্যাপ করুন, অথবা 'Edit Organization Settings'।" },
-            { label: "প্ল্যান বদলান।", desc: "প্ল্যান ব্যাজ (Free / Basic / Pro / Enterprise) এ ট্যাপ করে শিট থেকে প্ল্যান বাছুন।" },
-            { label: "স্থিতি (Status) বদলান।", desc: "স্ট্যাটাস চিপে ট্যাপ করে Activate, Suspend, বা Trial সেট করুন। Suspended অর্গ সক্রিয় ব্যবহার থেকে লুকিয়ে যায়।" },
-            { label: "আপনার প্ল্যান সীমা সেট করুন।", desc: "Plan Limits-এর অধীনে Max Branches, Max Staff, এবং Max Members সেট করুন। ব্যবহার বারগুলি দেখায় আপনি প্রতিটি সীমার কত কাছাকাছি।" }
+            { label: "'Borrowers' टैब पर जाएं।", desc: "होम स्क्रीन से नीचे 'Borrowers' पर टैप करें।" },
+            { label: "'+' बटन पर टैप करें।", desc: "'Add Borrower' फॉर्म खुलेगा।" },
+            { label: "उधारी का विवरण डालें।", desc: "पूरा नाम, मोबाइल नंबर, पता, वैकल्पिक नोट।" },
+            { label: "'Save Borrower' पर टैप करें।", desc: "उधारी जुड़ जाता है। अब ऋण बना सकते हैं।" },
           ],
-          note: "আপনার ১৪ দিনের ট্রায়ালে আপনি ১০ ব্রাঞ্চ / ৫ স্টাফ / ১০০ সদস্য পান। আপগ্রেড করলে এই ক্যাপ বাড়ে।"
+          note: "जितने चाहें उतने उधारी जोड़ें — कोई प्लान सीमा नहीं। मोबाइल नंबर सही हो — SMS रिमाइंडर के लिए उपयोग होता है।"
         },
         {
-          icon: "⚙️",
-          title: "সেটিংস অবলোকন (Settings Overview)",
+          icon: "🔔", title: "एसएमएस रिमाइंडर चालू करें (वैकल्पिक)",
           steps: [
-            { label: "মেনু থেকে Settings খুলুন।", desc: "পাঁচটি বিভাগ দেখা যায়: Account & Preferences, Organization Controls, System Connectivity, Security & Compliance, Utilities & Support।" },
-            { label: "Account & Preferences।", desc: "প্রোফাইল (নাম, ফোন, ইমেল, পাসওয়ার্ড), ডার্ক মোড, বায়োমেট্রিক লগইন, পুশ অ্যালার্ট, এবং AI অ্যাসিস্ট্যান্ট টগল।" },
-            { label: "Organization Controls (কেবল অ্যাডমিন)।", desc: "Organization Settings (ব্র্যান্ডিং, আইনি, ঠিকানা) এবং Loan & Savings Products (স্কিম, হার, সীমা)।" },
-            { label: "System Connectivity (কেবল অ্যাডমিন)।", desc: "Integrations — এসএমএস, UPI, WhatsApp, SMTP, Razorpay, এবং PhonePe সংযুক্ত করুন।" },
-            { label: "Security & Compliance।", desc: "Security Shield & Activity Logs, 2FA, পাসওয়ার্ড নীতি, অটো-লগআউট, এবং Google Drive ব্যাকআপ।" }
+            { label: "Settings → SMS Settings पर जाएं।", desc: "Communications सेक्शन तक स्क्रॉल करें।" },
+            { label: "'Due EMI Reminders' चालू करें।", desc: "उधारियों को EMI देय होने से पहले स्वचालित रिमाइंडर भेजता है।" },
+            { label: "रिमाइंडर का समय सेट करें।", desc: "उदाहरण: सुबह 9:00 बजे।" },
           ],
-          note: "ব্র্যান্ডিং এবং প্ল্যান লিমিট ড্যাশবোর্ড থেকে খোলা Organization Settings-এর অধীনেও পাওয়া যায়।"
+          note: "एसएमएस आपके फोन की SIM से भेजा जाता है। कोई बाहरी SMS सर्विस या लागत नहीं। अपनी SIM में पर्याप्त बैलेंस रखें।"
         },
-        {
-          icon: "👥",
-          title: "স্টাফ যোগ করুন ও ইউজার পরিচালনা করুন",
-          steps: [
-            { label: "Users খুলুন।", desc: "Quick Actions থেকে 'Add Staff'-এ ট্যাপ করুন, অথবা Users পেজে যান।" },
-            { label: "নতুন ইউজার তৈরি করুন।", desc: "/users/new-এ যান এবং নাম, ইমেল, ফোন, এবং ভূমিকা (Manager বা Collection Agent) লিখুন।" },
-            { label: "ইউজার তালিকা দেখুন।", desc: "Users পেজে সবার তালিকা থাকে যাতে রোল ফিল্টার (Admin, Manager, Agent) এবং নাম/ইমেল অনুসন্ধান থাকে।" },
-            { label: "টু-ফ্যাক্টর অথ (2FA) প্রয়োগ করুন।", desc: "Security & Compliance → Two-Factor Authentication-এ 2FA প্রয়োগ করুন এবং পদ্ধতি (Authenticator অ্যাপ বা SMS) রোল অনুযায়ী বাছুন।" }
-          ],
-          note: "স্টাফ সেই ইমেল দিয়ে সাইন ইন করে যা আপনি নিবন্ধন করেন — প্রথম লগইনে তারা নিজের পাসওয়ার্ড সেট করে।"
-        },
-        {
-          icon: "🧑‍🤝‍🧑",
-          title: "সদস্য অনবোর্ডিং (Members / Customers)",
-          steps: [
-            { label: "সদস্য অনবোর্ডিং শুরু করুন।", desc: "Quick Actions থেকে 'New Member'-এ ট্যাপ করুন, অথবা Members পেজ → Onboard Member।" },
-            { label: "সদস্যের বিবরণ লিখুন।", desc: "পুরো নাম, যাচাইকৃত মোবাইল, ঠিকানা, এবং প্রাথমিক নথি ID (আধার / ভোটার)।" },
-            { label: "KYC নথি আপলোড করুন।", desc: "KYC নথির ছবি আপলোড করুন। কোনো ঋণ দেওয়ার আগে KYC যাচাই হওয়া আবশ্যক।" },
-            { label: "প্রোফাইল জমা দিন।", desc: "সিস্টেম সদস্যকে একটি অনন্য Member ID-সহ তৈরি করে যা আপনার অর্গের সাথে যুক্ত থাকে।" }
-          ],
-          note: "প্রতিটি সদস্যের ঋণ ও সঞ্চয় পেজে একটি SMS Notifications টগল থাকে — এটিই তাদের একমাত্র এসএমএস অপ্ট-আউট।"
-        },
-        {
-          icon: "🏢",
-          title: "শাখা পরিচালনা (Manage Branches)",
-          steps: [
-            { label: "Branches খুলুন।", desc: "Quick Actions থেকে 'Branches'-এ ট্যাপ করুন, অথবা Organization Settings থেকে খুলুন।" },
-            { label: "শাখা যোগ করুন।", desc: "শাখা তৈরি করতে ট্যাপ করে তার Name, Code, এবং অবস্থান (zone / district) লিখুন।" },
-            { label: "শাখা তালিকা দেখুন।", desc: "আপনার অর্গ বিবরণ পেজে সব শাখা তাদের কোড এবং active/suspended স্থিতি সহ দেখা যায়।" },
-            { label: "একজন ম্যানেজার নিয়োগ করুন।", desc: "প্রতিটি শাখা Users-এ আপনার আমন্ত্রিত কোনো Branch Manager-এর সাথে যুক্ত থাকে।" }
-          ],
-          note: "ব্রাঞ্চ কোড আপনার অর্গের মধ্যে অনন্য হয় এবং রিপোর্ট ও কালেকশন ফিল্টার করতে ব্যবহৃত হয়।"
-        },
-        {
-          icon: "💰",
-          title: "ঋণ — তৈরি ও ট্র্যাক করুন",
-          steps: [
-            { label: "New Loan খুলুন।", desc: "Quick Actions থেকে 'New Loan'-এ ট্যাপ করুন ('Deploy Capital' পেজ)।" },
-            { label: "ঋণের বিবরণ লিখুন।", desc: "Borrower (সদস্য) বাছুন, Principal (₹1K–₹10L), সুদ (APR % বা নির্দিষ্ট অঙ্ক, প্রতি day/week/month/year), Interest Logic (flat বা reducing), প্রথম কিস্তির তারিখ, Tenure, এবং Collection Type (Daily/Weekly/Monthly/Yearly)।" },
-            { label: "লাইভ সারাংশ দেখুন।", desc: "Financial Summary অনুমিত কিস্তি, মোট সুদ, এবং সম্পূর্ণ amortization (EMI) প্রিভিউ সংরক্ষণের আগে দেখায়।" },
-            { label: "সক্রিয় ঋণ ট্র্যাক করুন।", desc: "ঋণ সরাসরি (active) তৈরি হয় — কোনো অনুমোদন গেট নেই। ঋণের বিবরণে বকেয়া, বিলম্ব/আজ-বকেয়া অ্যালার্ট (OVERDUE / DUE TODAY), EMI টাইমলাইন, এবং Loan Intelligence দেখায়।" },
-            { label: "ঋণ পরিচালনা করুন।", desc: "'…' মেনু থেকে: Edit, Mark Defaulted, Reactivate, Restructure, Freeze Skipped EMIs, অথবা Delete।" }
-          ],
-          note: "EMI-এর স্থিতির মধ্যে PAID, DUE, OVERDUE, WAIVED, PENDING, এবং FROZEN অন্তর্ভুক্ত। খোলা ঋণে Collect / Settle / Reminder অ্যাকশন দেখা যায়।"
-        },
-        {
-          icon: "🏦",
-          title: "সঞ্চয় — পরিকল্পনা পরিচালনা (Savings)",
-          steps: [
-            { label: "New Savings Plan খুলুন।", desc: "Quick Actions থেকে 'New Savings'-এ ট্যাপ করুন।" },
-            { label: "পরিকল্পনার বিবরণ লিখুন।", desc: "সদস্য বাছুন, Collection Cycle (Daily/Weekly/Monthly/Yearly), Installment Amount (₹10–₹50K), Start Date, Tenure, Maturity Amount, এবং Premature Penalty %।" },
-            { label: "Wealth Forecast দেখুন।", desc: "লাইভ প্রিভিউ গ্যারান্টিড ম্যাচুরিটি, মোট কিস্তি, মোট ক্যাপিটাল, এবং অনুমিত ইল্ড দেখায়।" },
-            { label: "জমা (Deposit) ও উত্তোলন (Withdraw)।", desc: "কালেকশন শিট থেকে যেকোনো সময় জমা করুন। উত্তোলন একটি Withdrawal Requests কিউ (Pending/Approved/Rejected) তে যায় যেখানে একজন ম্যানেজার কারণসহ অনুমোদন বা প্রত্যাখ্যান করেন।" },
-            { label: "ভল্ট পরিচালনা করুন।", desc: "Pause/Resume ভল্ট, অ্যাকাউন্ট বন্ধ (Close), অথবা (কেবল অ্যাডমিন) স্থায়ীভাবে মুছে ফেলুন (Delete)। ব্যালেন্স ও ইল্ড-প্রোজেকশন চার্ট দেখা যায়।" }
-          ],
-          note: "সঞ্চয় Principal Protected। সময়ের আগে উত্তোলনে সেই Penalty % প্রযোজ্য হয় যা তৈরির সময় সেট করেছিলেন।"
-        },
-        {
-          icon: "📨",
-          title: "এসএমএস ও বিজ্ঞপ্তি (SMS & Notifications)",
-          steps: [
-            { label: "SMS Settings খুলুন।", desc: "Settings → Integrations → Communications ট্যাব → Local SMS। এটি SMS Settings পেজ খোলে (কেবল অ্যাডমিন)।" },
-            { label: "অটো-রসিদ চালু করুন।", desc: "'SMS on Collection' এবং 'SMS on Savings Deposit' ডিফল্ট ON — প্রতিটি লেনদেনের পর গ্রাহক রসিদ পান।" },
-            { label: "EMI রিমাইন্ডার চালু করুন।", desc: "'Due EMI Reminders' (ডিফল্ট OFF) টগল করুন এবং দৈনিক Reminder Time সেট করুন। টেমপ্লেট {name}, {amount}, {loan_id}, {balance} ব্যবহার করে।" },
-            { label: "SIM স্লট বাছুন।", desc: "SIM & Outbox-এর অধীনে বাছুন কোন ডিভাইস SIM এসএমএস পাঠাবে, টেস্ট SMS পাঠান, এবং পাঠানো এসএমএস ইতিহাস (শেষ ২০০) দেখুন।" },
-            { label: "সদস্য-ভিত্তিক অপ্ট-আউট।", desc: "যেকোনো ঋণ বা সঞ্চয় বিবরণ পেজে 'SMS Notifications' টগল করে ওই সদস্যের জন্য রিমাইন্ডার চালু/বন্ধ করুন।" }
-          ],
-          note: "এসএমএস ডিভাইসের SIM (native Android plugin) থেকে যায় — কোনো বাহ্যিক এসএমএস গেটওয়ে নেই। WhatsApp এবং Email আলাদাভাবে Integrations-এ সেট হয়।"
-        },
-        {
-          icon: "💸",
-          title: "ভুগতান নিন ও UPI যাচাই করুন",
-          steps: [
-            { label: "Collect Payment খুলুন।", desc: "Quick Actions থেকে 'Collect Payment'-এ ট্যাপ করে কালেকশন শুরু করুন।" },
-            { label: "কালেকশন লিখুন।", desc: "সদস্য/ঋণ বাছুন, অঙ্ক লিখুন, মোড (Cash, UPI, বা Bank) বাছুন, এবং জমা দিন। সক্রিয় থাকলে রসিদ এসএমএস স্বয়ংক্রিয় যায়।" },
-            { label: "UPI ভুগতান যাচাই করুন।", desc: "Quick Actions থেকে 'UPI Verify'-এ ট্যাপ করে গ্রাহকের UPI রেফারেন্স প্রত্যাশিত ভুগতানের সাথে মেলান।" }
-          ],
-          note: "কালেকশন ড্যাশবোর্ডের Recent Collections-এ সাথে সাথে দেখা যায় এবং ক্লাউডে সিঙ্ক হয়।"
-        },
-        {
-          icon: "🛡️",
-          title: "টিম, কার্যকলাপ ও অডিট লগ",
-          steps: [
-            { label: "আপনার অর্গ বিবরণ পেজ খুলুন।", desc: "ড্যাশবোর্ডে যেকোনো অর্গ কার্ডে ট্যাপ করে সম্পূর্ণ সারাংশ দেখুন।" },
-            { label: "Team Members দেখুন।", desc: "Team টাইল সব স্টাফকে রোল-রঙিন অবতারসহ দেখায়, নাম/ইমেল অনুসন্ধান ও রোল ফিল্টারসহ।" },
-            { label: "Recent Activity পরীক্ষা করুন।", desc: "Activity টাইল কার্যকলাপের (auth, loan, payment, savings, member) লগ দেখায় — কে কী এবং কখন করেছে।" },
-            { label: "Security & Activity Logs খুলুন।", desc: "Settings → Security & Compliance-এ System Activity Logs খুলুন এবং অডিট রিটেনশন, পাসওয়ার্ড নীতি, এবং Google Drive ব্যাকআপ সেট করুন।" }
-          ],
-          note: "অডিট লগ প্রতিটি পরিবর্তন খুঁজে বের করতে সাহায্য করে — পর্যালোচনা বা বিরোধের সময় উপযোগী।"
-        }
       ]
     },
-    branchManager: {
-      title: "শাখা ব্যবস্থাপক গাইড (Branch Manager)",
-      desc: "শাখা ব্যবস্থাপক হিসেবে আপনি আপনার শাখার প্রধান। নতুন গ্রাহক নথিভুক্ত করা, ফিল্ড এজেন্টের তদারকি করা, লোনের আবেদন যাচাই করে অনুমোদন করা এবং ব্রাঞ্চের কালেকশন মেলাবেন কীভাবে তা জানুন।",
+    managingBorrowers: {
+      title: "उधारियों का प्रबंधन",
+      desc: "उधारी वे लोग हैं जिनसे आप पैसा उधार देते हैं। यह गाइड आपको बताती है कि उधारी प्रोफाइल कैसे जोड़ें, संपादित करें और प्रबंधित करें — संपर्क विवरण, ऋण इतिहास और भुगतान रिकॉर्ड सहित।",
       lessons: [
         {
-          icon: "🚀",
-          title: "শুরু করা — ম্যানেজার লগইন",
+          icon: "➕", title: "नया उधारी जोड़ें",
           steps: [
-            { label: "মূল অ্যাডমিন প্রেরিত ইনভাইট ইমেলটি ওপেন করুন।" },
-            { label: "পাসওয়ার্ড সেট করুন এবং আপনার অ্যাকাউন্টে সাইন ইন করুন।" },
-            { label: "ব্রাঞ্চ ড্যাশবোর্ড দেখুন - এখানে প্রতিদিনের কালেকশন ও কালেকশন লক্ষ্যমাত্রা দেখতে পাবেন।" }
-          ]
+            { label: "Borrowers टैब पर जाएं।", desc: "होम स्क्रीन से 'Borrowers' पर टैप करें।" },
+            { label: "'+' बटन पर टैप करें।", desc: "'Add Borrower' फॉर्म खुलेगा।" },
+            { label: "उधारी का पूरा नाम डालें।", desc: "यह नाम सभी दस्तावेजों और रसीदों पर दिखेगा।" },
+            { label: "मोबाइल नंबर डालें।", desc: "एसएमएस रिमाइंडर के लिए उपयोग होता है।" },
+            { label: "पता (वैकल्पिक)।", desc: "अपने रिकॉर्ड के लिए उपयोगी।" },
+            { label: "नोट (वैकल्पिक)।", desc: "उदाहरण: रिश्ता, पेशा।" },
+            { label: "'Save' पर टैप करें।", desc: "उधारी सूची में जुड़ जाता है।" },
+          ],
+          note: "एसएमएस भेजने के लिए केवल मोबाइल नंबर आवश्यक है। सही नंबर डालें।"
         },
         {
-          icon: "👥",
-          title: "নতুন মেম্বার যুক্ত করা (Member Onboarding)",
+          icon: "✏️", title: "उधारी के विवरण संपादित करें",
           steps: [
-            { label: "Members > Onboard Member অপশনে যান।", desc: "গ্রাহকের পরিচয়পত্র (আধার বা ভোটার কার্ড) সঙ্গে রাখুন।" },
-            { label: "গ্রাহকের নাম, ঠিকানা, মোবাইল নম্বর এবং পরিচয়পত্রের নম্বর লিখুন।", desc: " পরিচয়পত্রের ছবি আপলোড করুন।" },
-            { label: "সাবমিট করুন। মেম্বার প্রোফাইল তৈরি হয়ে এবং তাঁর মেম্বার আইডি তৈরি হয়ে যাবে।" }
+            { label: "Borrowers टैब पर जाएं।", desc: "जिस उधारी को बदलना है, उसे ढूंढें।" },
+            { label: "उधारी के नाम पर टैप करें।", desc: "प्रोफाइल पेज खुलेगा।" },
+            { label: "'Edit' बटन पर टैप करें।", desc: "नाम, मोबाइल, पता और नोट बदलें।" },
+            { label: "'Save' पर टैप करें।", desc: "बदलाव तुरंत सेव हो जाते हैं।" },
           ],
-          note: "লোন মঞ্জুর করার আগে মেম্বারের কেওয়াইসি (KYC) যাচাই করা আবশ্যক।"
+          note: "मोबाइल नंबर बदलने से उनके सभी एक्टिव लोन और रिमाइंडर भी अपडेट हो जाएंगे।"
         },
         {
-          icon: "💰",
-          title: "লোনের আবেদন অনুমোদন (Approve Loan)",
+          icon: "📋", title: "उधारी के ऋण इतिहास देखें",
           steps: [
-            { label: "Loans > Pending Approvals অপশনে যান।", desc: "গ্রাহকের পুরো লোনের ফাইল ও তথ্যাদি খতিয়ে দেখুন।" },
-            { label: "মেম্বারের ঋণ যোগ্যতা এবং বিগত সঞ্চয়ের পরিমাণ যাচাই করুন।" },
-            { label: "সব ঠিক থাকলে 'Approve' ক্লিক করুন লোন ডিস্ট্রিবিউট করার জন্য।" }
+            { label: "Borrowers टैब पर जाएं।", desc: "जिस उधारी की जांच करना है, नाम पर टैप करें।" },
+            { label: "नीचे स्क्रॉल करके ऋण इतिहास देखें।", desc: "सभी लोन (एक्टिव, पूरे हुए, डिफॉल्टेड) सूचीबद्ध हैं।" },
+            { label: "किसी भी लोन पर टैप करें।", desc: "EMI शेड्यूल, भुगतान, बकाया बैलेंस और ब्याज देखें।" },
           ],
-          note: "লোন পাস হওয়ার সাথে সাথে কিস্তি জমার তারিখের তালিকা (EMI Schedule) তৈরি হয়ে যাবে।"
+          note: "नया ऋण देने से पहले इतिहास देखना अच्छा अभ्यास है — यह बताता है कि वे कितने विश्वसनीय हैं।"
         },
         {
-          icon: "📍",
-          title: "ফিল্ড স্টাফ লাইভ ট্র্যাকিং",
+          icon: "🗑️", title: "उधारी को हटाएं",
           steps: [
-            { label: "মেনু প্যানেল থেকে 'Live Map' অপশনটি খুলুন।", desc: "এটি ম্যাপের মাধ্যমে ট্র্যাকিং উইন্ডো নিয়ে আসবে।" },
-            { label: "আপনার ব্রাঞ্চের ফিল্ড এজেন্টদের অবস্থান ম্যাপে দেখুন।", desc: "সবুজ মানে ডিউটি করছেন এবং ধূসর বা গ্রে মানে অফ-ডিউটি।" },
-            { label: "এজেন্টের নামের ওপর ক্লিক করে দেখুন আজ তিনি কটি কিস্তি এবং কত কালেকশন করেছেন।" }
+            { label: "उधारी की प्रोफाइल पेज पर जाएं।", desc: "Borrowers में उसे ढूंढें और नाम पर टैप करें।" },
+            { label: "'More' मेनू (तीन बिंदु) पर टैप करें।", desc: "'Remove Borrower' चुनें।" },
+            { label: "पुष्टि करें।", desc: "डायलॉग में 'Remove' पर टैप करें।" },
           ],
-          note: "লোকেশন দেখতে হলে এজেন্টের মোবাইলের জিপিএস এবং অ্যাপে 'Duty ON' বাটন অন থাকতে হবে।"
-        }
+          note: "हटाने से ऋण इतिहास मिटता नहीं — सभी रिकॉर्ड सुरक्षित रहते हैं।"
+        },
       ]
     },
-    collectionAgent: {
-      title: "কালেকশন এজেন্ট গাইড (Field Agent)",
-      desc: "ফিল্ড বা মাঠ পর্যায়ের কিস্তি সংগ্রহকারী এজেন্টদের জন্য গাইড। কীভাবে আপনার কালেকশন রুট ম্যাপে দেখবেন, কিস্তি তুলবেন, ইন্টারনেট ছাড়াই কালেকশন ডেটা সিঙ্ক করবেন তা জানুন।",
+    recordingLoans: {
+      title: "ऋण दर्ज करना",
+      desc: "ऋण बनाना माइक्रोफ्लो प्रो का मूल है। यह गाइड आपको बताती है कि नया ऋण कैसे सेट करें, ब्याज दर और अवधि कैसे कॉन्फ़िगर करें।",
       lessons: [
         {
-          icon: "🚀",
-          title: "মোবাইল অ্যাপ ব্যবহার ও লগইন",
+          icon: "💰", title: "नया ऋण बनाएं",
           steps: [
-            { label: "ম্যানেজারের পাঠানো লিঙ্ক থেকে MicroFlow Pro অ্যাপটি ডাউনলোড করুন।", desc: "জিপিএস এবং এসএমএস পারমিশন চালু করুন।" },
-            { label: "আপনার রেজিস্টার্ড ইমেল এবং পাসওয়ার্ড দিয়ে লগইন করুন।" },
-            { label: "ড্যাশবোর্ডে গিয়ে আজকের কালেকশনের তালিকা দেখে নিন।" }
-          ]
-        },
-        {
-          icon: "🔘",
-          title: "ডিউটি অন বা অফ করা (Duty ON/OFF)",
-          steps: [
-            { label: "ড্যাশবোর্ডের একদম ওপরে 'Duty Toggle' অপশনটি দেখুন।" },
-            { label: "মাঠে কিস্তি তুলতে বেরোনোর আগে অবশ্যই 'Duty ON' করে নেবেন।" },
-            { label: "দিনের কাজ শেষ হওয়ার পর 'Duty OFF' করুণ যাতে লোকেশন ট্র্যাকিং বন্ধ হয় এবং মোবাইলের ব্যাটারি বাঁচে।" }
+            { label: "होम स्क्रीन से 'Loans' पर टैप करें।", desc: "सभी लोन दिखते हैं — एक्टिव, पेंडिंग, पूरे हुए।" },
+            { label: "'+' बटन पर टैप करें।", desc: "'New Loan' फॉर्म खुलेगा।" },
+            { label: "उधारी चुनें।", desc: "सूची से चुनें। यदि नहीं है, तो पहले 'Add New Borrower' से प्रोफाइल बनाएं।" },
+            { label: "ऋण की राशि डालें।", desc: "जितना पैसा उधार दे रहे हैं (उदाहरण: ₹10,000)।" },
+            { label: "ब्याज दर सेट करें।", desc: "वार्षिक ब्याज दर प्रतिशत में (उदाहरण: 12% प्रति वर्ष)।" },
+            { label: "ब्याज का प्रकार चुनें।", desc: "फ्लैट: हर महीने समान ब्याज। रिड्यूसिंग: बची हुई राशि पर ब्याज (कुल ब्याज कम)।" },
+            { label: "ऋण की अवधि सेट करें।", desc: "ऋण कितने महीने चलता है (उदाहरण: 12 महीने)।" },
+            { label: "कलेक्शन की आवृत्ति चुनें।", desc: "रोजावर, हफ्तावर, या मासिक।" },
+            { label: "पहली EMI की तारीख सेट करें।", desc: "वो तारीख जब पहला भुगतान देय होगा।" },
+            { label: "'Create Loan' दबाएं।", desc: "EMI शेड्यूल अपने आप बन जाती है।" },
           ],
-          note: "ডিউটি অন না করা থাকলে আপনার লোকেশন ম্যানেজার ম্যাপে দেখতে পাবেন না।"
+          note: "EMI शेड्यूल हर किस्त के साथ देय तारीख और राशि दिखाती है। लोन विवरण पेज से कभी भी देखें।"
         },
         {
-          icon: "💰",
-          title: "দৈনিক কিস্তি (EMI) সংগ্রহ করা",
+          icon: "🧮", title: "ब्याज गणना को समझें",
           steps: [
-            { label: "'Today's Collection' ট্যাবে যান।", desc: "আজকে রুট ভিত্তিক গ্রাহকদের তালিকা এখানে দেখতে পাবেন।" },
-            { label: "গ্রাহকের নামের ওপর ট্যাপ করে লোনের তথ্য দেখে নিন।" },
-            { label: " সংগৃহীত কিস্তির টাকা ও কালেকশন মোড বাছুন (Cash বা UPI) এবং 'Collect' চাপুন।", desc: "জমা হওয়ার তাৎক্ষণিক কনফার্মেশন এসএমএস গ্রাহকের মোবাইলে চলে যাবে।" }
-          ]
-        },
-        {
-          icon: "⚡",
-          title: "ইন্টারনেট ছাড়া কালেকশন (Offline Sync)",
-          steps: [
-            { label: "নেটওয়ার্ক না থাকলেও কিস্তি আদায় জারি রাখুন।" },
-            { label: "ড্যাশবোর্ডের নিচে 'Offline Queue' ব্যাজটি দেখুন।", desc: "এটি সিঙ্ক না হওয়া কালেকশনের সংখ্যা দেখায়।" },
-            { label: "ফোনে ইন্টারনেট আসা মাত্রই সিঙ্ক ব্যাজটিতে ক্লিক করুন। সমস্ত ডাটা ক্লাউডে সুরক্ষিতভাবে চলে যাবে।" }
+            { label: "किसी भी एक्टिव लोन को खोलें।", desc: "Loans → जिस लोन पर टैप करें।" },
+            { label: "EMI शेड्यूल देखें।", desc: "हर पंक्ति में किस्त संख्या, देय तारीख, EMI राशि, मूलधन, ब्याज और बची हुई राशि दिखती है।" },
+            { label: "फ्लैट बनाम रिड्यूसिंग की तुलना करें।", desc: "फ्लैट: हर महीने समान कुल ब्याज। रिड्यूसिंग: ब्याज समय के साथ कम होता है।" },
+            { label: "कुल ब्याज जांचें।", desc: "शेड्यूल के नीचे पूरे ऋण के लिए कुल ब्याज दिखेगा।" },
           ],
-          note: "যতক্ষণ না আপনার অফলাইন কালেকশন সম্পূর্ণ সিঙ্ক (Sync) হচ্ছে, অ্যাপ থেকে লগ আউট করবেন না।"
-        }
+          note: "रिड्यूसिंग बैलेंस आमतौर पर उधारियों के लिए बेहतर होता है।"
+        },
+        {
+          icon: "✏️", title: "एक्टिव लोन को संपादित करें",
+          steps: [
+            { label: "लोन को खोलें।", desc: "Loans → लोन पर टैप करें।" },
+            { label: "'Edit' पर टैप करें।", desc: "ब्याज दर, अवधि या कलेक्शन आवृत्ति बदलें।" },
+            { label: "'Save' पर टैप करें।", desc: "EMI शेड्यूल अपने आप पुनर्गणना हो जाती है।" },
+          ],
+          note: "ब्याज दर/अवधि बदलने से भविष्य की EMIs पुनर्गणना होती है। पुराने भुगतान प्रभावित नहीं।"
+        },
+        {
+          icon: "⏸️", title: "लोन को रोकें या बंद करें",
+          steps: [
+            { label: "लोन को खोलें।", desc: "Loans → लोन पर टैप करें।" },
+            { label: "'More' मेनू पर टैप करें।", desc: "Pause, Resume, या Close विकल्प दिखेंगे।" },
+            { label: "पूरी भुगतान होने पर 'Close Loan' चुनें।", desc: "लोन पूर्ण के रूप में मार्क हो जाता है।" },
+          ],
+          note: "लोन बंद करना स्थायी है। सभी बकाया EMIs का भुगतान होने से पहले बंद न करें।"
+        },
       ]
     },
-    customer: {
-      title: "গ্রাহক নির্দেশিকা (Customer App)",
-      desc: "গ্রাহকদের জন্য সহজ নির্দেশিকা। নিজের মোবাইলের মাধ্যমে কত টাকা লোন নেওয়া হয়েছে, কত জমা পড়েছে, কত বাকি আছে এবং লোনের পিডিএফ স্টেটমেন্ট ডাউনলোড করার সহজ তথ্য।",
+    trackingRepayments: {
+      title: "किस्तें ट्रैक करना",
+      desc: "भुगतान दर्ज करने से आपके बही-खाते सटीक रहते हैं। यह गाइड आपको बताती है कि भुगतान कैसे दर्ज करें, बकाया बैलेंस कैसे देखें और ब्याज कमाई का हिसाब कैसे रखें।",
       lessons: [
         {
-          icon: "📱",
-          title: "ওটিপি (OTP) দিয়ে সহজ লগইন",
+          icon: "💵", title: "भुगतान दर्ज करें",
           steps: [
-            { label: "আপনার মোবাইলে 'MicroFlow Pro' কাস্টমার অ্যাপটি খুলুন।" },
-            { label: "আপনার রেজিস্টার্ড মোবাইল নম্বরটি লিখে জমা দিন।" },
-            { label: "মোবাইলে আসা ৬ অক্ষরের ওটিপি নম্বরটি লিখুন এবং ভেরিফাই করুন।" }
-          ]
-        },
-        {
-          icon: "📋",
-          title: "লোন স্টেটমেন্ট ডাউনলোড",
-          steps: [
-            { label: "অ্যাপের 'My Loans' (আমার লোন) অপশনে যান।" },
-            { label: "আপনার চলতি লোন অ্যাকাউন্টটি ক্লিক করুন।" },
-            { label: "'Download Statement'-এ ক্লিক করুন।", desc: "স্টেটমেন্ট পিডিএফ আপনার মোবাইলের মেমরিতে ডাউনলোড হবে।" }
+            { label: "Loans टैब पर जाएं।", desc: "जिस एक्टिव लोन के लिए भुगतान दर्ज करना है, उसे खोलें।" },
+            { label: "लोन पर टैप करें।", desc: "EMI शेड्यूल के साथ विवरण पेज खुलेगा।" },
+            { label: "'Record Payment' पर टैप करें।", desc: "भुगतान विवरण डालने का फॉर्म खुलेगा।" },
+            { label: "भुगतान की राशि डालें।", desc: "पूरी EMI या आंशिक भुगतान डालें।" },
+            { label: "भुगतान का मोड चुनें।", desc: "नकद, UPI, या बैंक ट्रांसफर।" },
+            { label: "नोट जोड़ें (वैकल्पिक)।", desc: "उदाहरण: '2 दिन देर से भुगतान'।" },
+            { label: "'Save' पर टैप करें।", desc: "भुगतान दर्ज हो जाता है और बकाया अपने आप अपडेट होता है।" },
           ],
-          note: "স্টেটমেন্ট পিডিএফ ফাইলে জমার তারিখ, সুদের হার, মোট বকেয়া ও কত কিস্তি দিলেন সব কিছু বিস্তারিত থাকে।"
+          note: "एसएमएस रसीद उधारी को अपने आप भेजी जाती है। EMI शेड्यूल भुगतान को दर्शाते हुए अपडेट हो जाता है।"
         },
         {
-          icon: "💰",
-          title: "সঞ্চয় হিসাবের ব্যালেন্স দেখা",
+          icon: "📊", title: "बकाया बैलेंस की जांच करें",
           steps: [
-            { label: "ড্যাশবোর্ড থেকে 'My Savings' (আমার ডিপিএস/সঞ্চয়) অপশনে যান।" },
-            { label: "মোট কত টাকা সঞ্চয় জমা পড়েছে এবং ও সুদের হার দেখে নিন।" },
-            { label: "এজেন্টকে দেওয়া টাকা এবং অ্যাপের রিফ্লেকশন মিলিয়ে নিন।" }
-          ]
-        }
+            { label: "Loans टैब पर जाएं।", desc: "सभी एक्टिव लोन सूचीबद्ध हैं।" },
+            { label: "'Outstanding' कॉलम देखें।", desc: "उधारी को आपसे कितना पैसा बाकी है, यह दिखाता है।" },
+            { label: "किसी भी लोन पर टैप करें।", desc: "EMI शेड्यूल, भुगतान और बची हुई राशि देखें।" },
+          ],
+          note: "बकाया बैलेंस हर भुगतान के बाद अपने आप अपडेट होता है। कोई मैन्युअल गणना नहीं।"
+        },
+        {
+          icon: "📈", title: "ब्याज कमाई का हिसाब रखें",
+          steps: [
+            { label: "किसी भी एक्टिव लोन को खोलें।", desc: "Loans → लोन पर टैप करें।" },
+            { label: "EMI शेड्यूल की जांच करें।", desc: "हर किस्त में ब्याज का भाग — यह आपकी कमाई है।" },
+            { label: "कुल ब्याज कमाई देखें।", desc: "शेड्यूल के नीचे अब तक कुल ब्याज और पूर्वानुमानित कुल दिखेगा।" },
+          ],
+          note: "ब्याज आपकी चुनी हुई दर के आधार पर अपने आप गणना की जाती है। मैन्युअल गणना की जरूरत नहीं।"
+        },
+        {
+          icon: "⏰", title: "देरी या चूक के भुगतान का सामना करें",
+          steps: [
+            { label: "EMI शेड्यूल में देरी वाली किस्तों की जांच करें।", desc: "बकाया EMIs लाल रंग में हाइलाइट की जाती हैं।" },
+            { label: "उधारी से संपर्क करें।", desc: "मोबाइल नंबर लेकर फॉलो-अप करें।" },
+            { label: "जब भुगतान मिले तो दर्ज करें।", desc: "देर से हो तो भी दर्ज करें — ऐप देरी ट्रैक करता है।" },
+            { label: "यदि आवश्यक हो तो रिस्ट्रक्चरिंग पर विचार करें।", desc: "लगातार चूकने पर EMI कम या टर्म बढ़ा सकते हैं।" },
+          ],
+          note: "ऐप में देरी पर स्वचालित पेनल्टी नहीं होती। लेट फी लेते हैं तो अलग लेनदेन के रूप में दर्ज करें।"
+        },
       ]
-    }
-  }
+    },
+    smsReminders: {
+      title: "एसएमएस रिमाइंडर",
+      desc: "उधारियों को EMI देय होने से पहले स्वचालित एसएमएस रिमाइंडर भेजने के लिए सेट अप करें। मैन्युअल फॉलो-अप कम करें और भुगतान दर सुधारें।",
+      lessons: [
+        {
+          icon: "⚙️", title: "एसएमएस रिमाइंडर सेट करें",
+          steps: [
+            { label: "Settings → SMS Settings पर जाएं।", desc: "Communications सेक्शन तक स्क्रॉल करें।" },
+            { label: "'Due EMI Reminders' चालू करें।", desc: "सभी एक्टिव लोन के लिए स्वचालित रिमाइंडर भेजता है।" },
+            { label: "रिमाइंडर का समय सेट करें।", desc: "उदाहरण: सुबह 9:00 बजे।" },
+            { label: "कितने दिन पहले भेजें, चुनें।", desc: "देय होने से 1, 2, या 3 दिन पहले।" },
+            { label: "'Save Settings' पर टैप करें।", desc: "अब रिमाइंडर अपने आप भेजे जाएंगे।" },
+          ],
+          note: "एसएमएस आपके फोन की SIM से भेजा जाता है। कोई बाहरी SMS सर्विस नहीं — यह फ्री है।"
+        },
+        {
+          icon: "📝", title: "रिमाइंडर संदेश कस्टमाइज करें",
+          steps: [
+            { label: "Settings → SMS Settings पर जाएं।", desc: "Reminder Templates सेक्शन तक स्क्रॉल करें।" },
+            { label: "संदेश संपादित करें।", desc: "{name}, {amount}, {due_date}, {loan_id} प्लेसहोल्डर का उपयोग करें।" },
+            { label: "संदेश पूर्वावलोकन करें।", desc: "देखें कि संदेश कैसा दिखेगा।" },
+            { label: "'Save Template' पर टैप करें।", desc: "कस्टम संदेश भविष्य के सभी रिमाइंडर के लिए उपयोग किया जाएगा।" },
+          ],
+          note: "संदेश छोटे और फ्रेंडली रखें। डिफ़ॉल्ट: 'नमस्ते {name}, आपकी EMI ₹{amount} {due_date} को देय है।'"
+        },
+        {
+          icon: "📱", title: "मैन्युअल रिमाइंडर भेजें",
+          steps: [
+            { label: "Borrowers टैब पर जाएं।", desc: "जिस उधारी को रिमाइंडर भेजना है, उसे ढूंढें।" },
+            { label: "उधारी के नाम पर टैप करें।", desc: "प्रोफाइल पेज खुलेगा।" },
+            { label: "'Send Reminder' पर टैप करें।", desc: "SMS तुरंत भेज दी जाती है।" },
+          ],
+          note: "वन-ऑफ फॉलो-अप के लिए मैन्युअल रिमाइंडर का उपयोग करें।"
+        },
+        {
+          icon: "🔕", title: "विशिष्ट उधारियों के लिए ऑप्ट-आउट",
+          steps: [
+            { label: "उधारी की प्रोफाइल खोलें।", desc: "Borrowers → उधारी पर टैप करें।" },
+            { label: "'SMS Settings' पर टैप करें।", desc: "SMS रिमाइंडर का टॉगल दिखेगा।" },
+            { label: "इस उधारी के लिए SMS बंद करें।", desc: "स्वचालित रिमाइंडर प्राप्त नहीं करेंगे, लेकिन मैन्युअल भेज सकते हैं।" },
+          ],
+          note: "उधारियों की पसंद का सम्मान करें। रिमाइंडर नहीं चाहते तो SMS बंद कर दें।"
+        },
+      ]
+    },
+    portfolioInsights: {
+      title: "अपने पोर्टफोलियो को समझें",
+      desc: "आपका पोर्टफोलियो आपकी पूरी उधारिक गतिविधि का पूरा चित्र है। कुल दिया गया, बकाया, ब्याज कमाई और भुगतान दर — यह गाइड मुख्य संख्याओं को समझने में मदद करती है।",
+      lessons: [
+        {
+          icon: "🏦", title: "पोर्टफोलियो सारांश देखें",
+          steps: [
+            { label: "होम स्क्रीन से Portfolio टैब पर जाएं।", desc: "आपके उधारिक व्यवसाय का पूर्ण अवलोकन।" },
+            { label: "मुख्य संख्याएं जांचें।", desc: "कुल दिया गया, बकाया, कुल ब्याज कमाई और एक्टिव लोन ऊपर दिखाए गए हैं।" },
+            { label: "नीचे स्क्रॉल करें।", desc: "भुगतान दर, उधारी वर्गीकरण और मासिक रुझान दिखेंगे।" },
+          ],
+          note: "ये संख्याएं रीयल-टाइम अपडेट होती हैं। कोई मैन्युअल गणना नहीं।"
+        },
+        {
+          icon: "📊", title: "संख्याओं को समझें",
+          steps: [
+            { label: "कुल दिया गया (Total Lent)।", desc: "जितना कुल पैसा उधार दिया है — सभी लोन शामिल।" },
+            { label: "बकाया (Outstanding)।", desc: "अभी कितना पैसा बाकी है। भुगतान होने पर कम होता जाता है।" },
+            { label: "ब्याज कमाई (Interest Earned)।", desc: "अब तक कुल कितना ब्याज कमाया है। यह आपकी कमाई है।" },
+            { label: "भुगतान दर (Repayment Rate)।", desc: "उन EMIs का प्रतिशत जो समय पर चुकाए गए हैं। उच्च दर = विश्वसनीय उधारी।" },
+          ],
+          note: "भुगतान दर महीने के आधार पर ट्रैक करें — यह पोर्टफोलियो स्वास्थ का सबसे अच्छा संकेतक है।"
+        },
+        {
+          icon: "📈", title: "मासिक रुझान और रिपोर्ट",
+          steps: [
+            { label: "Portfolio टैब पर जाएं।", desc: "Trends सेक्शन तक स्क्रॉल करें।" },
+            { label: "मासिक चार्ट देखें।", desc: "उधारिक, भुगतान और ब्याज कमाई समय के साथ कैसे बदल रही है।" },
+            { label: "तारीख की सीमा द्वारा फिल्टर करें।", desc: "विशेष महीने या तिमाही के लिए चुनें।" },
+          ],
+          note: "मासिक रुझान से उधारिक की योजना बनाएं।"
+        },
+        {
+          icon: "🎯", title: "अपनी भुगतान दर सुधारें",
+          steps: [
+            { label: "स्लो पेयर्स की पहचान करें।", desc: "Portfolio टैब में बकाया EMI वाले उधारियों को ढूंढें।" },
+            { label: "जल्दी फॉलो-अप करें।", desc: "उधारियों को देय तारीख से पहले रिमाइंडर भेजें।" },
+            { label: "ऋण की शर्तों की समीक्षा करें।", desc: "कठिनाई हो तो EMI कम या टर्म बढ़ाएं।" },
+            { label: "रिश्ते बनाएं।", desc: "उधारियों को अच्छी तरह से जानें — संपर्क विवरण अपडेट रखें।" },
+          ],
+          note: "अच्छी भुगतान दर (85% से ऊपर) = स्वस्थ व्यवसाय। 70% से कम = समीक्षा जरूरी।"
+        },
+      ]
+    },
+  },
+
+  bn: {
+    common: {
+      allGuides: "সব নির্দেশিকা", backToHome: "হোম", documentation: "নথিপত্র (Docs)",
+      quickLinks: "দ্রুত লিঙ্কসমূহ", portalGuides: "গাইডসমূহ", watchVideo: "ভিডিও দেখুন",
+      openGuide: "গাইড খুলুন", stepsTitle: "ধাপে ধাপে নির্দেশিকা", lessons: "অধ্যায়",
+      portals: "গাইড", youtube: "ইউটিউব", selectPortal: "একটি গাইড বেছে নিন",
+      openGuideAction: "গাইড খুলুন", subscribe: "সাবস্ক্রাইব", popularGuides: "জনপ্রিয় গাইডসমূহ",
+      youtubeCtaTitle: "ভিডিও টিউটোরিয়াল উপলব্ধ",
+      youtubeCtaDesc: "প্রতিটি বিষয়ের জন্য বিস্তারিত ভিডিও টিউটোরিয়াল। সহজ ও সরল ধাপে ব্যাখ্যা করা হয়েছে। নতুন ভিডিওর আপডেট পেতে আমাদের ইউটিউব চ্যানেলটি সাবস্ক্রাইব করুন।",
+    },
+    home: {
+      title: "নথিপত্র", subtitle: "ভিডিও টিউটোরিয়াল সহ ধাপে ধাপে গাইড",
+      desc: "মাইক্রোফ্লো প্রো — স্বতন্ত্র টাকা ধার দানকারীর জন্য সাধারণ বহি-খাতা টুল। ঋণ দেওয়া, কিস্তি আদায় এবং সুদ কমানো ট্র্যাক করুন। এই গাইডগুলি প্রতিটি বৈশিষ্ট্য কভার করে।",
+      portals: {
+        admin: { title: "শুরু করুন", desc: "অ্যাকাউন্ট তৈরি করুন, প্রোফাইল সেট করুন এবং আপনার第一个 ধারক যোগ করুন।" },
+        manager: { title: "ধারকদের পরিচালনা", desc: "ধারকদের তথ্য যোগ করুন, যোগাযোগ বিবরণ এবং ঋণ ইতিহাস দেখুন।" },
+        agent: { title: "ঋণ নিবন্ধন", desc: "ধারকদের জন্য ঋণ তৈরি করুন, সুদের হার, সময়সীমা এবং পরিমাণ সেট করুন।" },
+        customer: { title: "কিস্তি ট্র্যাকিং", desc: "পেমেন্ট লগ করুন, বকেয়া দেখুন এবং আপনার সুদ আয় অকারণ করুন।" },
+      },
+      topics: [
+        { label: "📱 অ্যাপ ডাউনলোড ও লগইন", path: "/docs/getting-started" },
+        { label: "👤 আপনার প্রথম ধারক যোগ করুন", path: "/docs/managing-borrowers" },
+        { label: "💰 আপনার প্রথম ঋণ তৈরি করুন", path: "/docs/recording-loans" },
+        { label: "📊 কিস্তি পরিশোধ লগ করুন", path: "/docs/tracking-repayments" },
+        { label: "📨 এসএমএস রিমাইন্ডার সেট করুন", path: "/docs/sms-reminders" },
+        { label: "📈 আপনার পোর্টফোলিও বুঝুন", path: "/docs/portfolio-insights" },
+      ]
+    },
+    gettingStarted: {
+      title: "শুরু করুন",
+      desc: "মাইক্রোফ্লো প্রো-তে নতুন? এই গাইডটি আপনার অ্যাকাউন্ট সেটআপ, লেন্ডার প্রোফাইল তৈরি এবং প্রথম ধারক যোগ করার সবকিছু কভার করে। এতে প্রায় ৫ মিনিট লাগবে।",
+      lessons: [
+        {
+          icon: "📲", title: "অ্যাপ ডাউনলোড করুন",
+          steps: [
+            { label: "আপনার ফোনের অ্যাপ স্টোর খুলুন।", desc: "Google Play Store (Android) বা App Store (iOS)-এ 'MicroFlow Pro' সার্চ করুন।" },
+            { label: "'Install' এ ট্যাপ করুন।", desc: "অ্যাপটি প্রায় ৪৫ এমবি।" },
+            { label: "ডাউনলোড শেষ হলে অ্যাপ খুলুন।", desc: "ওয়েলকাম স্ক্রিনে 'Sign In' ও 'Create Account' দেখবেন।" },
+          ]
+        },
+        {
+          icon: "✍️", title: "অ্যাকাউন্ট তৈরি করুন",
+          steps: [
+            { label: "'Create Account' এ ট্যাপ করুন।", desc: "ফর্মে নাম, ফোন, ইমেইল, পাসওয়ার্ড চাওয়া হবে।" },
+            { label: "আপনার বিবরণ পূরণ করুন।", desc: "পূর্ণ নাম, ১০ অঙ্কের মোবাইল, বৈধ ইমেইল, পাসওয়ার্ড (৮+ অক্ষর)।" },
+            { label: "নিয়ম গৃহীত করুন।", desc: "Terms of Service ও Privacy Policy গৃহীত করুন।" },
+            { label: "'Create Account' চাপুন।", desc: "ভেরিফিকেশন ইমেইলের লিঙ্কে ক্লিক করুন, এরপর সাইন ইন করুন।" },
+          ],
+          note: "ইমেইল ভেরিফিকেশনের পরে অ্যাকাউন্ট প্রস্তুত। কোনো সংস্থা সেটআপ বা ট্রায়াল নেই — সরাসরি ঋণ দেওয়া শুরু করুন।"
+        },
+        {
+          icon: "👤", title: "আপনার প্রোফাইল সেট করুন",
+          steps: [
+            { label: "Settings-এ যান।", desc: "মেনু আইকন (উপর ডানদিকে) এ ট্যাপ করুন।" },
+            { label: "আপনার বিবরণ পূরণ করুন।", desc: "নাম, ফোন, ইমেইল এবং চাইলে প্রোফাইল ছবি।" },
+            { label: "পছন্দ সেট করুন।", desc: "ভাষা, ডার্ক মোড, বায়োমেট্রিক লগইন।" },
+          ],
+          note: "Settings থেকে যেকোনো সময় আপডেট করুন। প্রোফাইল গোপন — শুধুমাত্র আপনিই দেখতে পারবেন।"
+        },
+        {
+          icon: "🧑", title: "আপনার প্রথম ধারক যোগ করুন",
+          steps: [
+            { label: "'Borrowers' ট্যাবে যান।", desc: "হোম স্ক্রিন থেকে নিচে 'Borrowers' এ ট্যাপ করুন।" },
+            { label: "'+' বোতামে ট্যাপ করুন।", desc: "'Add Borrower' ফর্ম খুলবে।" },
+            { label: "ধারকের বিবরণ লিখুন।", desc: "পূর্ণ নাম, মোবাইল নম্বর, ঠিকানা, ঐচ্ছিক নোট।" },
+            { label: "'Save Borrower' চাপুন।", desc: "ধারকটি যোগ হয়ে যাবে। এখন ঋণ তৈরি করতে পারেন।" },
+          ],
+          note: "যত চান তত ধারক যোগ করুন — কোনো প্ল্যান সীমা নেই। মোবাইল নম্বর সঠিক হ contacting — এসএমএস রিমাইন্ডারের জন্য।"
+        },
+        {
+          icon: "🔔", title: "এসএমএস রিমাইন্ডার চালু করুন (ঐচ্ছিক)",
+          steps: [
+            { label: "Settings → SMS Settings-এ যান।", desc: "Communications সেকশন পর্যন্ত স্ক্রল করুন।" },
+            { label: "'Due EMI Reminders' চালু করুন।", desc: "স্বয়ংক্রিয় রিমাইন্ডার পাঠাবে।" },
+            { label: "সময় সেট করুন।", desc: "উদাহরণ: সকাল ৯:০০ ঘটিকা।" },
+          ],
+          note: "এসএমএস আপনার ফোনের SIM থেকে পাঠানো হয়। কোনো বহিঃস্থ সেবা বা খরচ নেই। SIM এ পর্যাপ্ত ব্যালেন্স রাখুন।"
+        },
+      ]
+    },
+    managingBorrowers: {
+      title: "ধারকদের পরিচালনা",
+      desc: "ধারকরা সেই লোকেরা যাদের থেকে আপনি টাকা ধার নেন। এই গাইডটি আপনাকে বলে কিভাবে ধারক প্রোফাইল যোগ, সম্পাদনা এবং পরিচালনা করতে হয় — যোগাযোগ বিবরণ, ঋণ ইতিহাস ও পরিশোধ রেকর্ড সহ।",
+      lessons: [
+        {
+          icon: "➕", title: "নতুন ধারক যোগ করুন",
+          steps: [
+            { label: "Borrowers ট্যাবে যান।", desc: "হোম স্ক্রিন থেকে 'Borrowers' এ ট্যাপ করুন।" },
+            { label: "'+' বোতামে ট্যাপ করুন।", desc: "'Add Borrower' ফর্ম খুলবে।" },
+            { label: "ধারকের পূর্ণ নাম লিখুন।", desc: "এই নাম সব ঋণ দলিল ও রসিদের উপর দৃশ্য হবে।" },
+            { label: "মোবাইল নম্বর লিখুন।", desc: "এসএমএস রিমাইন্ডার ও রসিদের জন্য ব্যবহৃত হয়।" },
+            { label: "ঠিকানা লিখুন (ঐচ্ছিক)।", desc: "আপনার নিজের রেকর্ডের জন্য।" },
+            { label: "নোট যোগ করুন (ঐচ্ছিক)।", desc: "যেমন: সম্পর্ক, পেশা।" },
+            { label: "'Save' চাপুন।", desc: "ধারকটি আপনার তালিকায় যোগ হয়ে যাবে।" },
+          ],
+          note: "এসএমএস পাঠানোর জন্য কেবল মোবাইল নম্বর প্রয়োজন। সঠিক নম্বর দিন।"
+        },
+        {
+          icon: "✏️", title: "ধারকের বিবরণ সম্পাদনা করুন",
+          steps: [
+            { label: "Borrowers ট্যাবে যান।", desc: "যে ধারককে সম্পাদনা করতে চান, তাকে খুঁজুন।" },
+            { label: "ধারকের নামে ট্যাপ করুন।", desc: "প্রোফাইল পেজ খুলবে।" },
+            { label: "'Edit' বোতামে ট্যাপ করুন।", desc: "নাম, মোবাইল, ঠিকানা ও নোট পরিবর্তন করুন।" },
+            { label: "'Save' চাপুন।", desc: "পরিবর্তনগুলি সংরক্ষিত হবে।" },
+          ],
+          note: "মোবাইল নম্বর পরিবর্তন করলে তার সব অ্যাক্টিভ লোন ও এসএমএস রিমাইন্ডারও আপডেট হয়ে যাবে।"
+        },
+        {
+          icon: "📋", title: "ধারকের ঋণ ইতিহাস দেখুন",
+          steps: [
+            { label: "Borrowers ট্যাবে যান।", desc: "যে ধারকের পরীক্ষা করতে চান, তাকে খুঁজুন এবং নামে ট্যাপ করুন।" },
+            { label: "নিচে স্ক্রল করে ঋণ ইতিহাস দেখুন।", desc: "সমস্ত ঋণ (সক্রিয়, সম্পূর্ণ, ডিফল্টেড) তালিকাভুক্ত আছে।" },
+            { label: "যে কোনো ঋণের ওপর ট্যাপ করুন।", desc: "EMI সময়সূচী, পরিশোধ, বকেয়া ব্যালেন্স ও সুদ দেখতে পারবেন।" },
+          ],
+          note: "নতুন ঋণ দানের আগে ইতিহাস দেখা ভাল অভ্যাস — এটি বলে যে তারা কতটা বিশ্বস্ত।"
+        },
+        {
+          icon: "🗑️", title: "ধারকটি সরান",
+          steps: [
+            { label: "ধারকের প্রোফাইল পেজে যান।", desc: "Borrowers-এ তাকে খুঁজুন।" },
+            { label: "'More' মেনু এ ট্যাপ করুন।", desc: "'Remove Borrower' বেছে নিন।" },
+            { label: "পূরণ করুন।", desc: "ডায়ালগে 'Remove' এ ট্যাপ করুন।" },
+          ],
+          note: "ধারকটি সরালে তার ঋণ ইতিহাস ম Asi আর নয় — সব রেকর্ড সুরক্ষিত থাকবে।"
+        },
+      ]
+    },
+    recordingLoans: {
+      title: "ঋণ নিবন্ধন",
+      desc: "ঋণ তৈরি করা মাইক্রোফ্লো প্রোর মূল কাজ। নতুন ঋণ সেট আপ, সুদের হার ও সময়সীমা কনফিগার এবং পরিশোধ ট্র্যাকিং শুরু করার গাইড।",
+      lessons: [
+        {
+          icon: "💰", title: "নতুন ঋণ তৈরি করুন",
+          steps: [
+            { label: "'Loans'-এ ট্যাপ করুন।", desc: "সব ঋণ দেখাবে — সক্রিয়, মুলতুবি, সম্পূর্ণ।" },
+            { label: "'+' বোতামে ট্যাপ করুন।", desc: "'New Loan' ফর্ম খুলবে।" },
+            { label: "ধারক বেছে নিন।", desc: "যদি ধারক না থাকে, প্রথমে 'Add New Borrower' এ ট্যাপ করুন।" },
+            { label: "ঋণের পরিমাণ লিখুন।", desc: "উদাহরণ: ₹১০,০০০।" },
+            { label: "সুদের হার সেট করুন।", desc: "বার্ষিক সুদ হার শতাংশে (উদাহরণ: ১২% প্রতি বছর)।" },
+            { label: "সুদের ধরন বেছে নিন।", desc: "ফ্ল্যাট: প্রতি মাসে সমান সুদ। রিডিউসিং: বাকি Somerset পর সুদ গণনা।" },
+            { label: "ঋণের সময়সীমা সেট করুন।", desc: "কত মাস চলবে (উদाहরণ: ১২ মাস)।" },
+            { label: "কালেকশনের frecuensy বেছে নিন।", desc: "দৈনিক, সাপ্তাহিক, বা মাসিক।" },
+            { label: "প্রথম EMI তারিখ সেট করুন।", desc: "তারিখ বেছে নিন যখন প্রথম পরিশোধ দেয়যোগ্য।" },
+            { label: "'Create Loan' চাপুন।", desc: "EMI সময়সূচী স্বয়ংক্রিয়ভাবে তৈরি হয়ে যাবে।" },
+          ],
+          note: "EMI সময়সূচী প্রতিটি কিস্তির সাথে দেয়যোগ্য তারিখ ও রাশি দেখায়। যেকোনো সময় দেখতে পারেন।"
+        },
+        {
+          icon: "🧮", title: "সুদের গণনা বুঝুন",
+          steps: [
+            { label: "সক্রিয় ঋণ খুলুন।", desc: "Loans → ঋণে ট্যাপ করুন।" },
+            { label: "EMI সময়সূচী দেখুন।", desc: "প্রতিটি সারিতে কিস্তি নম্বর, তারিখ, রাশি, মূলধন, সুদ এবং বাকি Somerset দেখায়।" },
+            { label: "ফ্ল্যাট বনাম রিডিউসিং তুলনা করুন।", desc: "ফ্ল্যাট: প্রতি মাসে সমান মোট সুদ। রিডিউসিং: সময়ের সাথে সুদ কমে।" },
+            { label: "মোট সুদ দেখুন।", desc: "সময়সূচীর নিচে মোট সুদ দেখতে পাবেন।" },
+          ],
+          note: "রিডিউসিং ব্যালেন্স সাধারণত ভাল (মোট সুদ কম)।"
+        },
+        {
+          icon: "✏️", title: "সক্রিয় ঋণ সম্পাদনা করুন",
+          steps: [
+            { label: "ঋণটি খুলুন।", desc: "Loans → ঋণে ট্যাপ করুন।" },
+            { label: "'Edit' এ ট্যাপ করুন।", desc: "সুদের হার, সময়সীমা বা frecuensy পরিবর্তন করুন।" },
+            { label: "'Save' চাপুন।", desc: "EMI সময়সূচী পুনরায় গণনা হবে।" },
+          ],
+          note: "ব্যয় দর/সময়সীমা পরিবর্তনের সময় সাবধান — ভবিষ্যতের EMIs পুনরায় গণনা হবে। পুরাতন পেমেন্ট প্রভাবিত হবে না।"
+        },
+        {
+          icon: "⏸️", title: "ঋণ বন্ধ করুন",
+          steps: [
+            { label: "ঋণটি খুলুন।", desc: "Loans → ঋণে ট্যাপ করুন।" },
+            { label: "'More' মেনু এ ট্যাপ করুন।", desc: "Pause, Resume, বা Close দেখাবে।" },
+            { label: "সম্পূর্ণ পরিশোধ হলে 'Close Loan' বেছে নিন।", desc: "ঋণ সম্পূর্ণভাবে চিহ্নিত হবে।" },
+          ],
+          note: "বন্ধ করা স্থায়ী। সব বকেয়া EMI পরিশোধ হলে বন্ধ করুন।"
+        },
+      ]
+    },
+    trackingRepayments: {
+      title: "কিস্তি ট্র্যাকিং",
+      desc: "পরিশোধ লগ করার মাধ্যমে আপনার বহি-খাতা সঠিক থাকে। গাইড shows you how to log payments, view outstanding balances, and track interest earnings.",
+      lessons: [
+        {
+          icon: "💵", title: "পরিশোধ লগ করুন",
+          steps: [
+            { label: "Loans ট্যাবে যান।", desc: "সক্রিয় ঋণ খুঁজুন।" },
+            { label: "ঋণের ওপর ট্যাপ করুন।", desc: "EMI সময়সূচী সহ বিবরণ পেজ খুলবে।" },
+            { label: "'Record Payment' এ ট্যাপ করুন।", desc: "পেমেন্ট ফর্ম খুলবে।" },
+            { label: "রাশি লিখুন।", desc: "সম্পূর্ণ EMI বা আংশিক পেমেন্ট।" },
+            { label: "মোড বেছে নিন।", desc: "নগদ, UPI, বা ব্যাংক ট্রান্সফার।" },
+            { label: "নোট যোগ করুন (ঐচ্ছিক)।", desc: "যেমন: '২ দিন দেরিতে'।" },
+            { label: "'Save' চাপুন।", desc: "পেমেন্ট লগ হয়ে যায়, বকেয়া স্বয়ংক্রিয়ভাবে আপডেট হয়।" },
+          ],
+          note: "এসএমএস রসিদ স্বয়ংক্রিয়ভাবে যায়। EMI সময়সূচী আপডেট হয়।"
+        },
+        {
+          icon: "📊", title: "বকেয়া ব্যালেন্স পরীক্ষা করুন",
+          steps: [
+            { label: "Loans ট্যাবে যান।", desc: "সব সক্রিয় ঋণ তালিকাভুক্ত।" },
+            { label: "'Outstanding' কলাম দেখুন।", desc: "ধারককে কত টাকা বাকি আছে।" },
+            { label: "ঋণের ওপর ট্যাপ করুন।", desc: "সম্পূর্ণ সময়সূচী, পরিশোধ, বাক Somerset দেখুন।" },
+          ],
+          note: "বকেয়া স্বয়ংক্রিয়ভাবে আপডেট হয়। কোনো ম্যানুয়াল গণনা নেই।"
+        },
+        {
+          icon: "📈", title: "সুদ আয় অকারণ করুন",
+          steps: [
+            { label: "সক্রিয় ঋণ খুলুন।", desc: "Loans → ঋণে ট্যাপ করুন।" },
+            { label: "EMI সময়সূচী দেখুন।", desc: "প্রতিটি কিস্তিতে সুদের অংশ — এটি আপনার আয়।" },
+            { label: "মোট সুদ দেখুন।", desc: "নিচে এতকালে মোট সুদ ও অনুমানিত মোট দৃশ্য।" },
+          ],
+          note: "সুদ স্বয়ংক্রিয়ভাবে গণনা হয়। ম্যানুয়াল গণনা প্রয়োজন নেই।"
+        },
+        {
+          icon: "⏰", title: "দেরি বা চূকালো भुগতान",
+          steps: [
+            { label: "বকায়া EMI খুঁজুন।", desc: "লাল রঙে হাইলাইটেড।" },
+            { label: "ধারকে संपर्क করুন।", desc: "মোবাইল নম্বর দিয়ে ফোলো-আপ।" },
+            { label: "পেমেন্ট মিললে লগ করুন।", desc: "দেরির পরও লগ করুন — অ্যাপ দেরি ট্র্যাক করে।" },
+            { label: "প্রয়োজনে রিস্ট্রাকচারিং।", desc: "য们 লগাতার চুকাতে পারে, তাদের EMI কম বা টার্ম বাঢ়ান।" },
+          ],
+          note: "অ্যাপে দেরিতে স্বয়ংক্রিয় পেনাল্টি নেই। লেট ফీ ল egal면 আলग লেনদেন হিসেবে লগ করুন।"
+        },
+      ]
+    },
+    smsReminders: {
+      title: "এসএমএস রিমাইন্ডার",
+      desc: "ঋণ দেয়ার আগে স্বয়ংক্রিয় এসএমএস রিমাইন্ডার পাঠান। ম্যানুয়াল ফোলো-আপ কমিয়ে ভুলTransaction Påmind।",
+      lessons: [
+        {
+          icon: "⚙️", title: "এসএমএস রিমাইন্ডার সেট করুন",
+          steps: [
+            { label: "Settings → SMS Settings এ যান।", desc: "Communications সেকশন পর্যন্ত স্ক্রল করুন।" },
+            { label: "'Due EMI Reminders' চালু করুন।", desc: "সব সক্রিয় লনের জন্য স্বয়ংক্রিয় রিমাইন্ডার পাঠাবে।" },
+            { label: "সময় সেট করুন।", desc: "উদাহরণ: সকাল ৯:০০ ঘটিকা।" },
+            { label: "কত দিন আগে পাঠাবে, বেছে নিন।", desc: "১, ২, বা ৩ দিন আগে।" },
+            { label: "'Save Settings' চাপুন।", desc: "রিমাইন্ডার স্বয়ংক্রিয়ভাবে পাঠানো হবে।" },
+          ],
+          note: "এসএমএস আপনার ফোনের SIM থেকে যায়। কোনো বাহির SMS সার্ভিস নেই — এটি মুক্ত।"
+        },
+        {
+          icon: "📝", title: "রিমাইন্ডার বার্তা কাস্টমাইজ করুন",
+          steps: [
+            { label: "Settings → SMS Settings এ যান।", desc: "Reminder Templates পর্যন্ত স্ক্রল করুন।" },
+            { label: "বার্তা সম্পাদনা করুন।", desc: "{name}, {amount}, {due_date}, {loan_id} ব্যবহার করুন।" },
+            { label: "পূর্বদৃশ্য দেখুন।", desc: "বার্তা কেমন দৃশ্য হবে তা দেখুন।" },
+            { label: "'Save Template' চাপুন।", desc: "কাস্টম বার্তা ভবিষ্যতের সব রিমাইন্ডারে ব্যবহৃত হবে।" },
+          ],
+          note: "বার্তা ছোট ও বন্ধুত্বপূর্ণ রাখুন। ডিফল্ট: 'নমস্কার {name}, আপনার EMI ₹{amount} {due_date} তারিখে দেয়যোগ্য।'"
+        },
+        {
+          icon: "📱", title: "ম্যানুয়াল রিমাইন্ডার পাঠান",
+          steps: [
+            { label: "Borrowers ট্যাবে যান।", desc: "ধারককে খুঁজুন।" },
+            { label: "নামে ট্যাপ করুন।", desc: "প্রোফাইল পেজ খুলবে।" },
+            { label: "'Send Reminder' চাপুন।", desc: "SMS তুরান্ত পাঠানো হয়।" },
+          ],
+          note: "ওয়ান-অফ ফোলো-আপের জন্য ম্যানুয়াল রিমাইন্ডার ব্যবহার করুন।"
+        },
+        {
+          icon: "🔕", title: "বিশেষ ধারকদের জন্য অপ্ট-আউট",
+          steps: [
+            { label: "ধারকের প্রোফাইল খুলুন।", desc: "Borrowers → ধারক।" },
+            { label: "'SMS Settings' এ ট্যাপ করুন।", desc: "রিমাইন্ডার টগল দৃশ্য হবে।" },
+            { label: "এই ধারকের জন্য SMS বন্ধ করুন।", desc: "স্বয়ংক্রিয় রিমাইন্ডার পাবেন না, কিন্তু ম্যানুয়াল পাঠাতে পারবেন।" },
+          ],
+          note: "ধারকদের পছন্দের সম্মান করুন। রিমাইন্ডার চান না ত면 SMS বন্ধ করুন।"
+        },
+      ]
+    },
+    portfolioInsights: {
+      title: "আপনার পোর্টফোলিও বুঝুন",
+      desc: "আপনার পোর্টফোলিও আপনার সম্পূর্ণ ঋণ কার্যক্রমের চিত্র। মোট দিয়agram Somerset, বকেয়া, সুদ আয় ও পরিশোধ হার — মূল সংখ্যা বুঝুন।",
+      lessons: [
+        {
+          icon: "🏦", title: "পোর্টফোলিও সারাংশ দেখুন",
+          steps: [
+            { label: "Portfolio ট্যাবে যান।", desc: "ঋণ ব্যবসার সম্পূর্ণ পরিদৃশ্য।" },
+            { label: "মূলসংখ্যা পরীক্ষা করুন।", desc: "মোট দিয়agram, বকেয়া, মোট সুদ আয় ও সক্রিয় ঋণ উপরে দৃশ্য।" },
+            { label: "নিচে স্ক্রল করুন।", desc: "পরিশোধ হার, ধারক বিভাজন ও মাসিক প্রবণতা দেখুন।" },
+          ],
+          note: "সংখ্যাগুলো রিয়েল-টাইম আপডেট হয়। কোনো ম্যানুয়াল গণনা নেই।"
+        },
+        {
+          icon: "📊", title: "সংখ্যাগুলো বুঝুন",
+          steps: [
+            { label: "মোট দিয় Somerset (Total Lent)।", desc: "মোট ঋণের পরিমাণ — সব ধরনের লোন Included।" },
+            { label: "বকেয়া (Outstanding)।", desc: "বর্তমানে আপনার কত টাকা বাকি আছে।" },
+            { label: "সুদ আয় (Interest Earned)।", desc: "অব দিয়ে মোট কত সুদ কমিয়েছেন।" },
+            { label: "পরিশোধ হার (Repayment Rate)।", desc: "সময় পর চুকানো EMI-এর শতাংশ। উচ্চ হার = বিশ্বস্ত ধারক।" },
+          ],
+          note: "পরিশোধ হার মাসিকভাবে ট্র্যাক করুন — এটি পোর্টফোলিও স্বাস্থ্যের সেরা সংকেতক।"
+        },
+        {
+          icon: "📈", title: "মাসিক প্রবণতা ও রিপোর্ট",
+          steps: [
+            { label: "Portfolio ট্যাবে যান।", desc: "Trends সেকশন পর্যন্ত স্ক্রল করুন।" },
+            { label: "মাসিক চার্ট দেখুন।", desc: "ঋণ, পরিশোধ ও সুদ আয় সময়ের সাথে কীভাবে বদলছে।" },
+            { label: "তারিখ সীমায় ফিল্টার করুন।", desc: "বিশেষ মাস বা ত্রিমাসীর জন্য বিস্তারিত সংখ্যা দেখুন।" },
+          ],
+          note: "মাসিক প্রবণতা দিয়ে ঋণ পরিকল্পনা করুন।"
+        },
+        {
+          icon: "🎯", title: "পরিশোধ হার উন্নত করুন",
+          steps: [
+            { label: "ধীর支付কারীদের চিহ্নিত করুন।", desc: "Portfolio ট্যাবে বকেয়া EMI ওয়ার দারকদের খুঁজুন।" },
+            { label: "শীঘ্রই ফোলো-আপ করুন।", desc: "দেয়ার তারিখের আগে এসএমএস রিমাইন্ডার পাঠান।" },
+            { label: "ঋণের শর্ত পর্যালোচনা করুন।", desc: "কঠিন হলে EMI কম বা টার্ম বাঢ়ান।" },
+            { label: "সম্পর্ক তৈরি করুন।", desc: "ধারকদের ভালভাবে জানুন — যোগাযোগ বিবরণ আপডেট রাখুন।" },
+          ],
+          note: "ভাল পরিশোধ হার (৮৫%+) = স্বাস্থ্যকর ঋণ ব্যবসা। ৭০% কম হলে পর্যালোচনা প্রয়োজন।"
+        },
+      ]
+    },
+  },
 };

@@ -1,0 +1,37 @@
+# MicroFlow Pro — Brand & Product Text
+
+## Product Name
+MicroFlow Pro
+
+## Tagline
+Apne borrowers, byaj, collection — sab ek app mein
+
+## Target Audience
+Individual money-lenders (sahukars) in India, age 28-40, semi-urban, WhatsApp/Facebook users, low tech comfort.
+
+## Key Pain Points
+1. Notebook mein borrowers ka record — mess, lost pages, no backup
+2. Byaj galat calculate ho jata hai — manual math, errors
+3. Collection miss ho jata hai — no reminder, no tracking
+4. Report nahi banta — kitna byaj kama rahe ho, kaunsa borrower pending — pata nahi
+
+## Key Features
+1. Borrower management — naam, phone, address sab ek jagah
+2. Loan recording — amount, byaj rate, tenure, EMI
+3. Interest calculation — automatic, no manual math
+4. Repayment tracking — kitna bacha hai, kab aayega
+5. Portfolio insights — kitna byaj kama rahe ho, report
+6. Offline mode — internet nahi chahiye, phone pe kaam karta hai
+7. SMS reminders — borrowers ko automatic reminder
+
+## Social Proof
+- "Trusted by 10,000+ money-lenders across India"
+- Future Microfinance customer (existing reference)
+
+## Pricing
+- Starter: ₹299/month (10 borrowers)
+- Professional: ₹599/month (50 borrowers)
+- Unlimited: ₹999/month (unlimited)
+
+## Call to Action
+"Free demo ke liye WhatsApp karo" — direct WhatsApp link

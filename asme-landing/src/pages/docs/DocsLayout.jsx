@@ -1,7 +1,7 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Link, Outlet, useLocation } from "react-router-dom";
 import {
   BookOpen, Shield, Users, UserCircle, Smartphone,
-  ChevronLeft, Play, Menu, X, Globe
+  ChevronLeft, Play, Menu, X, Globe, Wallet, BarChart3
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -20,10 +20,12 @@ export default function DocsLayout() {
 
   const portalsList = [
     { path: "/docs", label: t.common.allGuides, icon: BookOpen, end: true },
-    { path: "/docs/executive-admin", label: t.home.portals.admin.title, icon: Shield },
-    { path: "/docs/branch-manager", label: t.home.portals.manager.title, icon: Users },
-    { path: "/docs/collection-agent", label: t.home.portals.agent.title, icon: UserCircle },
-    { path: "/docs/customer", label: t.home.portals.customer.title, icon: Smartphone },
+    { path: "/docs/getting-started", label: t.home.portals.admin.title, icon: Shield },
+    { path: "/docs/managing-borrowers", label: t.home.portals.manager.title, icon: Users },
+    { path: "/docs/recording-loans", label: "Recording Loans", icon: Wallet },
+    { path: "/docs/tracking-repayments", label: "Tracking Repayments", icon: BarChart3 },
+    { path: "/docs/sms-reminders", label: "SMS Reminders", icon: UserCircle },
+    { path: "/docs/portfolio-insights", label: "Portfolio Insights", icon: Smartphone },
   ];
 
   return (
@@ -53,8 +55,8 @@ export default function DocsLayout() {
       </div>
 
       {/* ─── Docs Header ─── */}
-      <header className="relative z-40 fixed top-0 left-0 right-0 bg-black/60 backdrop-blur-2xl">
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
+      <header className="relative z-40 fixed top-0 left-0 right-0 frosted-header">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-500/15 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -63,12 +65,12 @@ export default function DocsLayout() {
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <NavLink to="/" className="flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors">
+            <NavLink to="/" className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">{t.common.backToHome}</span>
             </NavLink>
             <span className="text-white/8">/</span>
-            <span className="text-sm font-medium text-white/80 tracking-wide">{t.common.documentation}</span>
+            <span className="text-sm font-medium text-primary tracking-wide">{t.common.documentation}</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -127,8 +129,7 @@ export default function DocsLayout() {
         {/* Sidebar — glass with floating feel */}
         <aside className={`
           fixed top-14 left-0 z-30 h-[calc(100vh-3.5rem)]
-          w-64 bg-black/80 border-r border-white/[0.03] backdrop-blur-2xl
-          overflow-y-auto transition-transform duration-300
+          w-64 frosted-sidebar overflow-y-auto transition-transform duration-300
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}>
           <div className="absolute inset-0 z-0 dot-grid pointer-events-none" />
@@ -137,13 +138,13 @@ export default function DocsLayout() {
           <div className="relative z-10 p-4 space-y-1">
             {/* Logo section */}
             <div className="flex items-center gap-2.5 px-3 pb-4 pt-1">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/15 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500/15 to-violet-500/5 border border-indigo-500/10 flex items-center justify-center">
                 <BookOpen className="w-3.5 h-3.5 text-indigo-300" />
               </div>
-              <span className="text-sm font-semibold text-white/70">{t.common.portalGuides}</span>
+              <span className="text-sm font-semibold text-secondary">{t.common.portalGuides}</span>
             </div>
 
-            <div className="text-[10px] font-semibold text-white/20 uppercase tracking-[0.15em] px-3 pb-1.5">
+            <div className="text-[10px] font-semibold text-tertiary uppercase tracking-[0.15em] px-3 pb-1.5">
               {t.common.portals}
             </div>
             {portalsList.map((p) => (
@@ -154,8 +155,8 @@ export default function DocsLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-indigo-500/10 text-indigo-200 border border-indigo-500/15 shadow-[inset_0_1px_0_rgba(139,92,246,0.08)]'
-                      : 'text-white/40 hover:text-white/70 hover:bg-white/[0.02] border border-transparent'
+                      ? 'bg-indigo-500/8 text-primary border border-indigo-500/10'
+                      : 'text-secondary hover:text-white/70 hover:bg-white/[0.02] border border-transparent'
                   }`
                 }
               >
@@ -166,17 +167,20 @@ export default function DocsLayout() {
 
             <div className="doc-divider !my-4" />
 
-            <div className="text-[10px] font-semibold text-white/20 uppercase tracking-[0.15em] px-3 pb-1.5">
+            <div className="text-[10px] font-semibold text-tertiary uppercase tracking-[0.15em] px-3 pb-1.5">
               {t.common.quickLinks}
             </div>
-            <QuickLink href="/docs/collection-agent" icon={Play} label={t.common.watchVideo}>
-              {lang === "hi" ? "दैनिक संग्रह गाइड" : lang === "bn" ? "দৈনিক কালেকশন গাইড" : "Daily Collection"}
+            <QuickLink href="/docs/recording-loans" icon={Play} label={t.common.watchVideo}>
+              {lang === "hi" ? "पहला ऋण कैसे बनाएं" : lang === "bn" ? "প্রথম ঋণ তৈরি" : "Create a Loan"}
             </QuickLink>
-            <QuickLink href="/docs/executive-admin" icon={Play} label={t.common.watchVideo}>
-              {lang === "hi" ? "रिपोर्ट और डेटा विश्लेषण" : lang === "bn" ? "রিপোর্ট ও অ্যানালিটিক্স" : "Reports & Analytics"}
+            <QuickLink href="/docs/managing-borrowers" icon={Play} label={t.common.watchVideo}>
+              {lang === "hi" ? "उधारी कैसे जोड़ें" : lang === "bn" ? "ধারক যোগ করুন" : "Add a Borrower"}
             </QuickLink>
-            <QuickLink href="/docs/customer" icon={Play} label={t.common.watchVideo}>
-              {lang === "hi" ? "लोन स्टेटमेंट PDF" : lang === "bn" ? "লোন স্টেটমেন্ট PDF" : "Loan Statement PDF"}
+            <QuickLink href="/docs/tracking-repayments" icon={Play} label={t.common.watchVideo}>
+              {lang === "hi" ? "भुगतान कैसे दर्ज करें" : lang === "bn" ? "পেমেন্ট লগ করুন" : "Record a Repayment"}
+            </QuickLink>
+            <QuickLink href="/docs/portfolio-insights" icon={Play} label={t.common.watchVideo}>
+              {lang === "hi" ? "पोर्टफोलियो देखें" : lang === "bn" ? "পোর্টফোলিও দেখুন" : "View Portfolio"}
             </QuickLink>
           </div>
         </aside>
@@ -184,8 +188,8 @@ export default function DocsLayout() {
         {/* Main Content */}
         <main className="flex-1 min-w-0 md:ml-64">
           <div className="relative">
-            {/* Subtle top gradient */}
-            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-indigo-500/[0.02] to-transparent pointer-events-none" />
+            {/* Subtle top gradient — indigo glow */}
+            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-indigo-500/[0.03] via-indigo-500/[0.01] to-transparent pointer-events-none" />
 
             <div className="relative max-w-4xl mx-auto px-4 sm:px-8 lg:px-10 py-8 sm:py-12">
               {/* Pass the lang state to subpages via React context context flow */}
@@ -200,12 +204,12 @@ export default function DocsLayout() {
 
 function QuickLink({ href, icon: Icon, children }) {
   return (
-    <a
-      href={href}
+    <Link
+      to={href}
       className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-white/35 hover:text-indigo-300 hover:bg-indigo-500/5 transition-all duration-200"
     >
       <Icon className="w-3 h-3" />
       {children}
-    </a>
+    </Link>
   );
 }

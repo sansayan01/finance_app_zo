@@ -12,15 +12,15 @@
 
 | Reel # | Day & Date | Time Slot | Title | Core Emotion | Primary Hook Dialogue |
 |---|---|---|---|---|---|
-| **Reel 01** | Day 01 (Jul 27) | 🌅 08:30 AM | ₹12,500 vs ₹14,000 Dispute | Betrayal & Financial Disrespect | "১২,৫০০ টাকা বাকি আছিল! ১৪,০০০ কোত্থেকে আইল?!" |
-| **Reel 02** | Day 01 (Jul 27) | ☀️ 01:30 PM | Forgotten Interest Rate Math | Confusion & Lost Profits | "কথা আছিল ৩% সুদের! এখন ৪% চাইছেন কেন?!" |
-| **Reel 03** | Day 01 (Jul 27) | 🌙 07:30 PM | Torn Notebook Water Damage | Total Panic & Loss | "খাতায় জল পইড়া সব মুইছা গেছে দাদা!" |
-| **Reel 04** | Day 02 (Jul 28) | 🌅 08:30 AM | "Ami Toh Diyechi!" SMS Proof | False Accusation & Frustration | "গত পরশুই তো ১০০০ টাকা দিয়া গেলাম!" |
+| **Reel 01** | Day 01 (Jul 27) | 🌅 08:30 AM | ₹12,500 vs ₹14,000 Dispute | Betrayal & Financial Disrespect | "১২,৫০০ টাকা বাকি ছিল! ১৪,০০০ কোত্থেকে এলো?!" |
+| **Reel 02** | Day 01 (Jul 27) | ☀️ 01:30 PM | Forgotten Interest Rate Math | Confusion & Lost Profits | "কথা ছিল ৩% সুদের! এখন ৪% চাইছেন কেন?!" |
+| **Reel 03** | Day 01 (Jul 27) | 🌙 07:30 PM | Torn Notebook Water Damage | Total Panic & Loss | "খাতায় জল পড়ে সব মুছে গেছে দাদা!" |
+| **Reel 04** | Day 02 (Jul 28) | 🌅 08:30 AM | "Ami Toh Diyechi!" SMS Proof | False Accusation & Frustration | "গত পরশুই তো ১০০০ টাকা দিয়ে গেলাম!" |
 | **Reel 05** | Day 02 (Jul 28) | ☀️ 01:30 PM | Weekly vs Daily Collection | Mental Overload & Chaos | "দৈনিক সঞ্চয়ের টাকা কিস্তির সাথে মিলাইছেন কেন?!" |
-| **Reel 06** | Day 02 (Jul 28) | 🌙 07:30 PM | Cloud Backup vs Lost Diary | Vulnerability & Data Fear | "ডায়েরি তো দোকানে ভুইলা আইছি, এখন হিসাব করব কেমনে?!" |
+| **Reel 06** | Day 02 (Jul 28) | 🌙 07:30 PM | Cloud Backup vs Lost Diary | Vulnerability & Data Fear | "ডায়েরি তো দোকানে ভুলে আইছি, এখন হিসাব করব কেমনে?!" |
 | **Reel 07** | Day 03 (Jul 29) | 🌅 08:30 AM | Late Night Calculation Fatigue | Burnout & Sleep Deprivation | "রাত ১২টা বাজে, তাও সুদের হিসাব মিলতেছে না?!" |
-| **Reel 08** | Day 03 (Jul 29) | ☀️ 01:30 PM | Borrower Phone Number Lost | Helplessness & Impending Loss | "খাতায় নম্বরই নাই! গ্রাহক ফোন বন্ধ কইরা চইলা গেছে?!" |
-| **Reel 09** | Day 03 (Jul 29) | 🌙 07:30 PM | Instant PDF Statement Download | Authority & Professional Pride | "লিখিত স্টেটমেন্ট না দিলে এক টাকাও দিমু না!" |
+| **Reel 08** | Day 03 (Jul 29) | ☀️ 01:30 PM | Borrower Phone Number Lost | Helplessness & Impending Loss | "খাতায় নম্বরই নেই! গ্রাহক ফোন বন্ধ কইরা চইলা গেছে?!" |
+| **Reel 09** | Day 03 (Jul 29) | 🌙 07:30 PM | Instant PDF Statement Download | Authority & Professional Pride | "লিখিত স্টেটমেন্ট না দিলে এক টাকাও দেবো না!" |
 | **Reel 10** | Day 04 (Jul 30) | 🌅 08:30 AM | Advance Deposit Adjustment | Mistrust & Embarrassment | "আমার অ্যাডভান্স জমা টাকা কই গেল দাদা?!" |
 | **Reel 11** | Day 04 (Jul 30) | ☀️ 01:30 PM | Field Collector Cash Mismatch | Employee Suspicion & Stress | "কালেকশনের ২০০০ টাকা কম কেন ভাই?!" |
 | **Reel 12** | Day 04 (Jul 30) | 🌙 07:30 PM | 1-Click Loan Setup | Friction & Slow Operation | "নতুন ঋণের খাতা বানাইতে ১০ মিনিট লাগে?!" |
@@ -44,14 +44,14 @@
   - *Audio:* Ambient morning market noise, distant bicycle bell, ceiling fan hum.
 - **0.40s – 2.20s | The Accusation / Conflict Hook**
   - *Visual:* Customer's hand violently slams onto the ledger, shaking the tea cup. Camera jolts naturally.
-  - *Spoken Bengali:* "১২,৫০০ টাকা বাকি আছিল! ১৪,০০০ কোত্থেকে আইল?!" (*"12,500 taka baki achilo! 14,000 kottheke ailo?!"*)
-  - *Subtitle (One-Word-at-a-Time):* **১২,৫০০... টাকা... বাকি... আছিল!... ১৪,০০০... কোত্থেকে... আইল?!**
+  - *Spoken Bengali:* "১২,৫০০ টাকা বাকি ছিল! ১৪,০০০ কোত্থেকে এলো?!" (*"12,500 taka baki chilo! 14,000 kottheke elo?!"*)
+  - *Subtitle (One-Word-at-a-Time):* **১২,৫০০... টাকা... বাকি... ছিল!... ১৪,০০০... কোত্থেকে... এলো?!**
 - **2.20s – 4.50s | Escalation & Suspense**
   - *Visual:* Rapid punch-in zoom on money-lender's stunned face. He freezes, looking down at his handwritten ledger where numbers are scribbled and overwriten.
   - *Dialogue/Silence:* Money-lender stammers: "আরে... গত মাসের হিসাবটা..." (*Silence for 0.4s creates intense tension*).
 - **4.50s – 7.80s | The Proof / Evidence**
   - *Visual:* Money-lender calmly taps smartphone screen. MicroFlow Pro loan ledger opens instantly showing timestamped entry. Camera autofocuses on the crisp digital entry.
-  - *Spoken Bengali:* "এই দেখুন, গত মাসের ৪ তারিখ বাকি আছিল ঠিক ১৪,০০০ টাকা!"
+  - *Spoken Bengali:* "এই দেখুন, গত মাসের ৪ তারিখ বাকি ছিল ঠিক ১৪,০০০ টাকা!"
   - *On-Screen Highlights:* `✔ ৪ জুন` | `✔ রাত ৮:১৫` | `✔ বাকি ₹১৪,০০০`
 - **7.80s – 8.80s | Silence Wins**
   - *Visual:* Customer looks at screen, squints, drops his head in defeat. Total visual freeze.
@@ -109,8 +109,8 @@ Word-by-word Bengali pop-ins in bold bright yellow text with black stroke in the
   - *Audio:* Clock ticking wall sound, quiet afternoon store vibe.
 - **0.40s – 2.20s | The Accusation / Conflict Hook**
   - *Visual:* Borrower leaning over counter, pointing finger aggressively at the calculator.
-  - *Spoken Bengali:* "কথা আছিল ৩% সুদের! এখন ৪% চাইছেন কেন?!" (*"Kotha achilo 3% suder! Ekhon 4% chaishen ken?!"*)
-  - *Subtitle (One-Word-at-a-Time):* **কথা... আছিল... ৩%... সুদের!... ৪%... চাইছেন... কেন?!**
+  - *Spoken Bengali:* "কথা ছিল ৩% সুদের! এখন ৪% চাইছেন কেন?!" (*"Kotha chilo 3% suder! Ekhon 4% chaichen ken?!"*)
+  - *Subtitle (One-Word-at-a-Time):* **কথা... ছিল... ৩%... সুদের!... ৪%... চাইছেন... কেন?!**
 - **2.20s – 4.50s | Escalation & Suspense**
   - *Visual:* Money-lender flips notebook pages rapidly back and forth, unable to find the original loan agreement note. Sweat on forehead.
   - *Dialogue/Silence:* Money-lender: "দাঁড়ান... প্রথম পাতায় যেন কি লেখা ছিল..." (*Tense silence for 0.5s*).
@@ -173,8 +173,8 @@ Animated Pop-in (Scale 1.0 -> 1.2 on key words like **৩%** and **৪%**).
   - *Audio:* Heavy rain on tin roof, storm sounds.
 - **0.40s – 2.20s | The Accusation / Conflict Hook**
   - *Visual:* Tea mug gets knocked over! Dark liquid spills across customer name and collection column on paper.
-  - *Spoken Bengali:* "খাতায় জল পইড়া সব মুইছা গেছে দাদা!" (*"Khatay jol poira sob muicha geshe dada!"*)
-  - *Subtitle (One-Word-at-a-Time):* **খাতায়... জল... পইড়া... সব... মুইছা... গেছে!**
+  - *Spoken Bengali:* "খাতায় জল পড়ে সব মুছে গেছে দাদা!" (*"Khatay jol pore sob muche geshe dada!"*)
+  - *Subtitle (One-Word-at-a-Time):* **খাতায়... জল... পড়ে... সব... মুছে... গেছে!**
 - **2.20s – 4.50s | Escalation & Suspense**
   - *Visual:* Money-lender panics, trying to wipe ink with cloth. Ink smears completely making text illegible. He gasps for air.
   - *Dialogue/Silence:* Money-lender: "আমার ৩ লাখ টাকার পাওনা... সব শেষ?!" (*Heartbeat sound rate accelerates*).
@@ -237,8 +237,8 @@ Fiery Red text pop-in for spill, changing to Emerald Green on proof.
   - *Audio:* Cash counting paper flick sound.
 - **0.40s – 2.20s | The Accusation / Conflict Hook**
   - *Visual:* Customer walks up, arms crossed, speaking loudly.
-  - *Spoken Bengali:* "গত পরশুই তো ১০০০ টাকা দিয়া গেলাম!" (*"Goto poroshui toh 1000 taka diya gelam!"*)
-  - *Subtitle (One-Word-at-a-Time):* **গত... পরশুই... তো... ১০০০... টাকা... দিয়া... গেলাম!**
+  - *Spoken Bengali:* "গত পরশুই তো ১০০০ টাকা দিয়ে গেলাম!" (*"Goto poroshui toh 1000 taka diye gelam!"*)
+  - *Subtitle (One-Word-at-a-Time):* **গত... পরশুই... তো... ১০০০... টাকা... দিয়ে... গেলাম!**
 - **2.20s – 4.50s | Escalation & Suspense**
   - *Visual:* Collector checks receipt book, no counterfoil stub found. Tension mounts as crowd turns around to watch.
   - *Dialogue/Silence:* Collector: "কিন্তু খাতায় তো কোনো এন্ট্রি নাই দাদা..." (*Suspenseful pause*).
@@ -365,8 +365,8 @@ Dual Color strategy: Red for confusion words, Blue/Green for MicroFlow tabs.
   - *Audio:* Zipper opening sound, ambient home background noise.
 - **0.40s – 2.20s | The Accusation / Conflict Hook**
   - *Visual:* He gasps, pulling out empty hands from bag. Eyes wide with shock.
-  - *Spoken Bengali:* "ডায়েরি তো দোকানে ভুইলা আইছি, এখন হিসাব করব কেমনে?!" (*"Diary toh dokane bhuila aichi, ekhon hishab korbo kemne?!"*)
-  - *Subtitle (One-Word-at-a-Time):* **ডায়েরি... দোকানে... ভুইলা... আইছি!... এখন... হিসাব... করব... কেমনে?!**
+  - *Spoken Bengali:* "ডায়েরি তো দোকানে ভুলে আইছি, এখন হিসাব করব কেমনে?!" (*"Diary toh dokane bhole aichi, ekhon hishab korbo kemne?!"*)
+  - *Subtitle (One-Word-at-a-Time):* **ডায়েরি... দোকানে... ভুলে... আইছি!... এখন... হিসাব... করব... কেমনে?!**
 - **2.20s – 4.50s | Escalation & Suspense**
   - *Visual:* He looks at the clock showing 10:30 PM. Cannot return to shop now. Sweating profusely.
   - *Dialogue/Silence:* "কাল সকালে কাস্টমার এলে কি বলব?!" (*Tense 0.4s silence*).
@@ -493,7 +493,7 @@ Neon Red pop-in text for late night hook, transitioning to Bright Emerald Green 
   - *Audio:* Street traffic sound, phone dialing tone.
 - **0.40s – 2.20s | The Accusation / Conflict Hook**
   - *Visual:* He flips physical address notebook frantically, page torn where phone number was written.
-  - *Spoken Bengali:* "খাতায় নম্বরই নাই! গ্রাহক ফোন বন্ধ কইরা চইলা গেছে?!" (*"Khatay number-i nai! Grahok phone bondho koira choila geshe?!"*)
+  - *Spoken Bengali:* "খাতায় নম্বরই নেই! গ্রাহক ফোন বন্ধ কইরা চইলা গেছে?!" (*"Khatay number-i nai! Grahok phone bondho kore choila geshe?!"*)
   - *Subtitle (One-Word-at-a-Time):* **খাতায়... নম্বরই... নাই!... গ্রাহক... ফোন... বন্ধ... কইরা... চইলা... গেছে?!**
 - **2.20s – 4.50s | Escalation & Suspense**
   - *Visual:* Close-up on torn page edge. Dialing tone gives "Number does not exist". He panics.
@@ -557,8 +557,8 @@ Orange-red alert font popping up word by word.
   - *Audio:* Office fan hum, soft tea cup placement.
 - **0.40s – 2.20s | The Accusation / Conflict Hook**
   - *Visual:* Borrower folds arms arrogantly and challenges lender.
-  - *Spoken Bengali:* "লিখিত স্টেটমেন্ট না দিলে এক টাকাও দিমু না!" (*"Likhito statement na dile ek takao dimu na!"*)
-  - *Subtitle (One-Word-at-a-Time):* **লিখিত... স্টেটমেন্ট... না... দিলে... এক... টাকাও... দিমু... না!**
+  - *Spoken Bengali:* "লিখিত স্টেটমেন্ট না দিলে এক টাকাও দেবো না!" (*"Likhito statement na dile ek takao debo na!"*)
+  - *Subtitle (One-Word-at-a-Time):* **লিখিত... স্টেটমেন্ট... না... দিলে... এক... টাকাও... দেবো... না!**
 - **2.20s – 4.50s | Escalation & Suspense**
   - *Visual:* Money-lender looks at him calm and unbothered. Doesn't reach for paper or pen.
   - *Dialogue/Silence:* Money-lender: "স্টেটমেন্ট চান? এই নিন..." (*0.4s suspense pause*).

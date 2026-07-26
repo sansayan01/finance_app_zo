@@ -85,7 +85,7 @@ The audience should never feel they are watching an ad. They should feel they ar
 
 ## 8.80s–10.00s | Closing & CTA
 ### Visual
-- Money lender looks into the camera and smiles confidently.
+- Money lender looks directly into the camera and smiles confidently.
 
 ### Voiceover
 > "খাতা ভুলতে পারে... MicroFlow পারে না।"

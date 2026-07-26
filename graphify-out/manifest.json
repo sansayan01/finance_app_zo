@@ -14115,7 +14115,7 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1785068299.7599568,
+    "mtime": 1785093962.5334156,
     "ast_hash": "ca24773909c2d889f6c26402b1f7ce1d",
     "semantic_hash": ""
   },
@@ -14280,8 +14280,8 @@
     "semantic_hash": ""
   },
   "memory/MEMORY.md": {
-    "mtime": 1785077565.149675,
-    "ast_hash": "322f1270b874de191994834fe544685a",
+    "mtime": 1785094031.939512,
+    "ast_hash": "038c41a2261a172e83e120f364a76d91",
     "semantic_hash": ""
   },
   "memory/app_compliance_gaps.md": {
@@ -16430,83 +16430,38 @@
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-07-26-bengali-facebook-organic-strategy-design.md": {
-    "mtime": 1785069710.0412703,
-    "ast_hash": "b8725722ee095d50162716279991aec9",
+    "mtime": 1785093962.5354085,
+    "ast_hash": "070f775dd56a2a254225fc251857df07",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-26-bengali-facebook-content-creation.md": {
-    "mtime": 1785070688.27754,
-    "ast_hash": "4dddd890e639aa684f400aa20dff56e5",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/day-01-reel-script.md": {
-    "mtime": 1785078887.1359742,
-    "ast_hash": "a2c43b8774199a930e1f6faf6f938f2a",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/reel-scripts-20.md": {
-    "mtime": 1785070999.5487938,
-    "ast_hash": "9a8e28eb6a00ba881edd53ba1d0134de",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/captions-cta-dm-templates.md": {
-    "mtime": 1785070990.9852412,
-    "ast_hash": "a017814c10c8c70a1c77006a689710d6",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/posting-rules-and-metrics.md": {
-    "mtime": 1785071032.3498106,
-    "ast_hash": "4d16a385762d0b371ca7bd0f590fdd5d",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/content-calendar-30-days.md": {
-    "mtime": 1785071060.2201824,
-    "ast_hash": "81c005fc1c0ab442f5875bfbc7184498",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/master_ugc_scripts_10s.md": {
-    "mtime": 1785075521.4774742,
-    "ast_hash": "b79d2cd5f676240c8864cda8ee56dd63",
+    "mtime": 1785093962.534409,
+    "ast_hash": "1da9d4ca09e279ac799a434e600be289",
     "semantic_hash": ""
   },
   "marketing/bengali-facebook/30_day_master_plan/00_MONTH_MASTER_INDEX.md": {
-    "mtime": 1785076838.3247519,
-    "ast_hash": "0e98306e3c998d75dc7aade2992d50e8",
+    "mtime": 1785093962.6920106,
+    "ast_hash": "4e682dc9c80d4eeff613debbc40ef79a",
     "semantic_hash": ""
   },
-  "marketing/bengali-facebook/30_day_master_plan/week_1_scripts_day_01_to_07.md": {
-    "mtime": 1785077067.9104104,
-    "ast_hash": "a5446e4063b615adf6dbc3f7a9aedb4d",
+  "marketing/bengali-facebook/30_day_master_plan/week_1_master_scripts_day_01_to_07.md": {
+    "mtime": 1785093962.69401,
+    "ast_hash": "abed51c540e16f42e7bbfe22f97b0749",
     "semantic_hash": ""
   },
-  "marketing/bengali-facebook/30_day_master_plan/week_2_scripts_day_08_to_14.md": {
-    "mtime": 1785077125.551454,
-    "ast_hash": "ce7357f758582d6054640a3d6d9dc0d6",
+  "marketing/bengali-facebook/30_day_master_plan/week_2_master_scripts_day_08_to_14.md": {
+    "mtime": 1785093962.6950073,
+    "ast_hash": "44010cd1dbfd8b010020cc97fad640b7",
     "semantic_hash": ""
   },
-  "marketing/bengali-facebook/30_day_master_plan/week_3_scripts_day_15_to_21.md": {
-    "mtime": 1785080469.5479918,
-    "ast_hash": "e87737d11b786c1e76c7f4a6586c2530",
+  "marketing/bengali-facebook/30_day_master_plan/week_3_master_scripts_day_15_to_21.md": {
+    "mtime": 1785093962.6970088,
+    "ast_hash": "b33057db27e51707ab26b29553a1b7ca",
     "semantic_hash": ""
   },
-  "marketing/bengali-facebook/30_day_master_plan/week_4_scripts_day_22_to_30.md": {
-    "mtime": 1785077511.9933374,
-    "ast_hash": "55f8e0818ca8ff853f8038ce9e929ade",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/30_day_master_plan/week_1_part1_day_01_to_04.md": {
-    "mtime": 1785080469.9504166,
-    "ast_hash": "2882af80bfa4863ca9daa4668dd0f7b5",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/30_day_master_plan/week_2_part1_day_08_to_11.md": {
-    "mtime": 1785080470.8262105,
-    "ast_hash": "aa39950e121f7036f46269836b500fe8",
-    "semantic_hash": ""
-  },
-  "marketing/bengali-facebook/30_day_master_plan/week_4_part1_day_22_to_25.md": {
-    "mtime": 1785080471.0773916,
-    "ast_hash": "06c8ad6613d968c5c35ebb34b23e5789",
+  "marketing/bengali-facebook/30_day_master_plan/week_4_master_scripts_day_22_to_30.md": {
+    "mtime": 1785093962.6990063,
+    "ast_hash": "d32c90175876b7ff5e7b4915c0a49730",
     "semantic_hash": ""
   }
 }

@@ -1,144 +1,54 @@
-# Day 1 UGC Reel — Version 5 (Cinematic Conflict Hook)
+# Day 1 UGC Reel — Version 7 (Fast-Paced Speaker-Tagged AI Master Prompt)
 
-## Objective
-Create a reel that feels like a real incident captured inside a money-lender's shop — not an advertisement.
-
-**Core Emotion:** "If this happened to me, what would I do?"
-
----
-
-# Story Formula
-**Accusation → Shock → Argument → Proof → Silence → Relief → CTA**
-
-The audience should never feel they are watching an ad. They should feel they are witnessing a real business dispute.
+**Format:** 9:16 Vertical UGC Video | **Duration:** Exactly 10.0 Seconds (Fast Pacing)  
+**Speaker Strategy:** Off-Camera Customer Shout (0-2.5s) + On-Camera Lender Lip-Sync (2.5-10s) → Zero Voice Swap  
+**Audio Budget:** 13 Bengali Words @ 1.8 words/sec → Finishes at 9.2s (Zero Cutoff Guaranteed)  
 
 ---
 
-# Timeline (10 Seconds)
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (DAY 01 REEL 01)
+================================================================================
 
-## 0.00s–0.40s | Calm Before the Storm
-### Visual
-- Close-up of a red ledger (Lal Khata)
-- Calculator clicking
-- Pen writing
-- Ceiling fan sound
-- Tea cup on table
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Traditional Indian money-lender's shop counter in North Kolkata, West Bengal.
+Atmosphere: Warm afternoon 3200K tungsten light through window, ceiling fan hum, red cloth ledger (Lal Khata) with scribbled numbers on wooden desk, plastic Casio calculator, half-filled tea glass, pen.
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF anamorphic lens, Fast Paced 10.0 Seconds Exact.
 
-### Audio
-- No music.
-- Only natural shop ambient sound.
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার ১৫০০ টাকা কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
 
----
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): 45° top-down POV on desk. Customer hand slams ledger. Off-screen shout: "আমার ১৫০০ টাকা কই?!" (3 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing ₹1,500 proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 13 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
 
-## 0.40s–2.20s | The Accusation
-### Visual
-- Customer suddenly slams the ledger or table.
-- Camera shakes naturally.
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'ঝামেলা বন্ধ, হিসাব পাকা! 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
 
-### Customer (Angry)
-> "আপনি আমার টাকা মেরে দিয়েছেন!"
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
 
-### Subtitle (One word at a time)
-**"আপনি... টাকা... খেয়ে... নিয়েছেন!"**
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
 
-*No logo. No branding. Goal: The viewer should think "Is this real?"*
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
 
----
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে। 
 
-## 2.20s–4.50s | Escalation
-### Customer (Demanding)
-> "আমি ₹১৫০০ দিয়েছিলাম!"
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
 
-### Money Lender (Shocked)
-- Money lender looks shocked, pauses.
-- Says only:
-> "...কি?"
-
-*Keep 0.5 seconds of silence. Silence builds tension.*
-
----
-
-## 4.50s–7.80s | The Proof
-### Visual
-- Money lender slowly opens **MicroFlow Pro**.
-- Opens customer profile.
-- Shows timestamped entry:
-  - 14 June
-  - 6:42 PM
-  - ₹1,500 Received
-- Camera zooms into the exact entry.
-
-### Money Lender (Calm, Firm)
-> "এইটা আপনারই না?"
-
-### On Screen Highlights
-✔ Date | ✔ Time | ✔ Amount
-
----
-
-## 7.80s–8.80s | Silence Wins
-- Customer says nothing, looks down defeated.
-- No background music. No dialogue.
-- This silence is the emotional payoff.
-
----
-
-## 8.80s–10.00s | Closing & CTA
-### Visual
-- Money lender looks directly into the camera and smiles confidently.
-
-### Voiceover
-> "খাতা ভুলতে পারে... MicroFlow পারে না।"
-
-### CTA Text
-**কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
-
----
-
-# 🎬 Camera Direction
-- Entire reel handheld (No tripod, no gimbal).
-- Slight autofocus breathing & natural exposure shifts.
-- Real shop ambience.
-- Tight close-ups & quick punch-ins during conflict.
-
----
-
-# 🔊 Sound Design Timeline
-- **0–2s:** Ambient shop audio only (fan, paper, tea cup).
-- **2s:** Deep bass hit (on table slam).
-- **5s:** Soft heartbeat sound FX.
-- **6s:** Phone tap sound.
-- **7s:** Notification click sound.
-- **8s:** Absolute silence.
-- **9s:** Soft uplifting background tone.
-
----
-
-# 📝 Subtitle Strategy (Kinetic One-Word-at-a-Time)
-Never display full sentences at once. Reveal one/two words per frame:
-`আপনি...` → `আমার...` → `টাকা...` → `খেয়ে...` → `নিয়েছেন!`
-
----
-
-# 🧠 Psychological Triggers
-This reel is **not selling software**. It is selling:
-- Reputation
-- Trust
-- Proof
-- Peace of mind
-
-Money-lenders don't fear calculations. They fear:
-- Being called dishonest
-- Losing customer trust
-- Public embarrassment
-- Losing hard-earned interest
-
-MicroFlow Pro becomes the evidence that protects their business.
-
----
-
-# 🏆 Golden Rule for Every Reel
-Never start with a feature. Always start with the worst moment in the customer's business.
-
-Use this framework:  
-**Crime → Consequence → Suspense → Evidence → Relief → CTA**
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```

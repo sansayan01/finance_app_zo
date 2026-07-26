@@ -11,11 +11,70 @@ CTA Focus: Comment **"খাতা"** for automated DM demo & WhatsApp onboardin
 ## Day 08 — Monday
 
 # 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 22)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Busy Burrabazar wholesale market counter with stacked cloth rolls, wooden cash box, Casio calculator, and brass bell.
+Visual Entry Theme: Burrabazar Wholesale Counter
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Side-profile close-up at market counter. Hand frantically typing on plastic calculator next to cash box. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"আপনি ৫০,০০০ টাকা চুরি করেছেন!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "আপনি ৫০,০০০ টাকা চুরি করেছেন!"
 - **Core Emotion:** Shock & Rage Turning to Unshakeable Confidence
 - **Psychological Trigger:** Fear of losing market reputation and being publicly branded a fraud over disputed paper interest calculations.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -68,12 +127,73 @@ CTA Focus: Comment **"খাতা"** for automated DM demo & WhatsApp onboardin
 
 ---
 
+---
+
 # 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 23)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Howrah trading market counter with brass weighing scale, jute sacks in background, and open collection register.
+Visual Entry Theme: Howrah Wholesale Trading Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Macro shot of brass weighing scale and open ledger book. Finger tapping on handwritten due dates. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"গত মাসের কিস্তি তো আমি দিয়েই দিয়েছি!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "গত মাসের কিস্তি তো আমি দিয়েই দিয়েছি!"
 - **Core Emotion:** Frustration Turning to Definite Truth
 - **Psychological Trigger:** Fear of unrecorded cash collections and unprovable repayments in paper notebooks.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -125,12 +245,73 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
 
 ---
 
+---
+
 # 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 24)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Outdoor field collection scene in West Bengal town. Phone resting on a Honda Activa scooter seat next to a pocket diary and helmet.
+Visual Entry Theme: Field Collector Scooter Seat POV
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Over-the-shoulder POV standing next to scooter on a sunny street, holding pocket diary on bike seat. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"আপনার খাতাটা পুরো জাল!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "আপনার খাতাটা পুরো জাল!"
 - **Core Emotion:** Humiliation Threat Turning to Complete Legal Clarity
 - **Psychological Trigger:** Fear of borrowers accusing the lender of fake or altered handwritten ledger books during evening settlement.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -183,12 +364,73 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
 
 ## Day 09 — Tuesday
 
+---
+
 # 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 25)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Local roadside tea stall in Kolkata during monsoon rain. Raindrops trickling on glass window, warm tea glass smoking on wooden table.
+Visual Entry Theme: Rainy Tea Stall Corner
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Tight close-up of smoking tea glass and plastic-covered ledger notebook on wet wooden table. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"আমার সইটা নকল করেছেন আপনি!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "আমার সইটা নকল করেছেন আপনি!"
 - **Core Emotion:** Disbelief & High Stakes Defense
 - **Psychological Trigger:** Fear of borrowers claiming signature forgery on loan approval documents.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -239,12 +481,73 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
 
 ---
 
+---
+
 # 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 26)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Secure gold pawn shop counter with dark velvet tray, small brass balance scale, iron safe box, and open register.
+Visual Entry Theme: Gold & Pawn Shop Counter
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Eye-level close-up of dark velvet tray and safe box background. Hand writing loan interest figures. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"কত টাকা সুদে খাটাচ্ছেন পঞ্চায়েতে বলবো!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "কত টাকা সুদে খাটাচ্ছেন পঞ্চায়েতে বলবো!"
 - **Core Emotion:** Panic & Threat Neutralization
 - **Psychological Trigger:** Fear of borrowers threatening public harassment or political/panchayat exposure.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -295,12 +598,73 @@ MicroFlow Pro-তে আসল আর সুদের হিসাব আলা�
 
 ---
 
+---
+
 # 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 27)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Late night 11:30 PM home office desk with a single yellow desk lamp glowing in dark room, scattered bills, and calculator.
+Visual Entry Theme: Late-Night 11 PM Home Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Low-angle close-up under single yellow desk lamp. Tired lender in glasses rubbing eyes over calculator. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"মেয়ে জামাইয়ের কাছে খাতা ছিঁড়ে ফেললো!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "মেয়ে জামাইয়ের কাছে খাতা ছিঁড়ে ফেললো!"
 - **Core Emotion:** Despair Turned to Ultimate Safety
 - **Psychological Trigger:** Fear of physical damage, rain/fire, or deliberate tearing of paper notebooks.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -354,12 +718,73 @@ MicroFlow Pro-এর সাথে আপনার সমস্ত হিসা�
 
 ## Day 10 — Wednesday
 
+---
+
 # 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 28)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Gariahat saree & clothing shop counter with folded colorful silk sarees in background and wooden cash drawer.
+Visual Entry Theme: Gariahat Clothing Store Counter
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Overhead shot of saree shop counter. Measuring tape lying across open ledger book next to cash drawer. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"আপনার এজেন্ট সব টাকা মেরে পালিয়েছে!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "আপনার এজেন্ট সব টাকা মেরে পালিয়েছে!"
 - **Core Emotion:** Terror Turned to Operational Control
 - **Psychological Trigger:** Lender's anxiety of collection agents collecting cash from borrowers and pocketing it.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -411,12 +836,73 @@ MicroFlow Pro-এর এজেন্ট পোর্টাল দিয়ে �
 
 ---
 
+---
+
 # 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 29)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Local hardware store counter with metal measuring tape, paint cans on shelves, and large ledger register.
+Visual Entry Theme: Hardware & Contractor Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Macro shot of hardware store counter. Yellow measuring tape resting on ledger book pages. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"কোনো মেসেজ আসেনি, আমি এক টাকাও দেব না!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "কোনো মেসেজ আসেনি, আমি এক টাকাও দেব না!"
 - **Core Emotion:** Conflict Turned to Instant Receipt Validation
 - **Psychological Trigger:** Borrowers refusing to pay because they claimed they didn't receive proof of prior payment.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -467,12 +953,73 @@ MicroFlow Pro ব্যবহার করলে টাকা জমা হও�
 
 ---
 
+---
+
 # 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 30)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Suburban West Bengal grain depot with stacked jute rice bags, brass weights, and wooden counter desk.
+Visual Entry Theme: Suburban Grocery & Grain Depot
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Wide-to-tight zoom on wooden counter with rice bags background. Hand flipping ledger pages fast. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"আমার জমানো সঞ্চয় কোথায় গেল?" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "আমার জমানো সঞ্চয় কোথায় গেল?"
 - **Core Emotion:** Panic Over Missing Deposits Turned to Instant Ledger Trust
 - **Psychological Trigger:** Fear of borrowers claiming their daily/weekly savings deposits were improperly recorded or stolen.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -526,12 +1073,73 @@ MicroFlow Pro-এর স্পেশাল Savings Module-এ অটোমেট
 
 ## Day 11 — Thursday
 
+---
+
 # 🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 31)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Traditional money-lender desk in North Kolkata with red cloth Lal Khata ledger, brass coins, tungsten lamp, and half-filled tea glass.
+Visual Entry Theme: North Kolkata Money-Lender Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): 45° top-down POV on wooden desk. Pen hovering over ink-stained red ledger paper near crossed-out numbers. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"কোর্টে গেলে আপনার খাতা কেউ মানবে না!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "কোর্টে গেলে আপনার খাতা কেউ মানবে না!"
 - **Core Emotion:** Legal Vulnerability Dread Turned to Absolute Institutional Standing
 - **Psychological Trigger:** Fear of legal rejection of handwritten paper ledgers during loan default arbitration.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -583,12 +1191,73 @@ MicroFlow Pro আপনাকে দেয় ডিজিটাল পেমে
 
 ---
 
+---
+
 # 🎬 REEL 11: Day 04 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 32)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Busy Burrabazar wholesale market counter with stacked cloth rolls, wooden cash box, Casio calculator, and brass bell.
+Visual Entry Theme: Burrabazar Wholesale Counter
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Side-profile close-up at market counter. Hand frantically typing on plastic calculator next to cash box. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"আজকের মধ্যে ফুল রিপোর্ট না দিলে কেস করবো!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "আজকের মধ্যে ফুল রিপোর্ট না দিলে কেস করবো!"
 - **Core Emotion:** Deadline Stress Turned to Instant 1-Click Export Relief
 - **Psychological Trigger:** Fear of being unable to produce historical statement audit instantly during customer dispute.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -640,12 +1309,73 @@ MicroFlow Pro-তে নির্দিষ্ট তারিখ সিলেক
 
 ---
 
+---
+
 # 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 33)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Howrah trading market counter with brass weighing scale, jute sacks in background, and open collection register.
+Visual Entry Theme: Howrah Wholesale Trading Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Macro shot of brass weighing scale and open ledger book. Finger tapping on handwritten due dates. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> '"হিসাব মিলছে না, মানে আপনি টাকা মেরেছেন!" 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Title:** "হিসাব মিলছে না, মানে আপনি টাকা মেরেছেন!"
 - **Core Emotion:** Insult & Accusation Turned to Perfect Balance Validation
 - **Psychological Trigger:** Monthly closing mismatch accusations destroying personal relationship and trust between lender and client.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -707,13 +1437,74 @@ MicroFlow Pro দিয়ে আপনার লোন ও সঞ্চয়�
 
 ---
 
+---
+
 # 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)A (08:30 AM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 34)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Outdoor field collection scene in West Bengal town. Phone resting on a Honda Activa scooter seat next to a pocket diary and helmet.
+Visual Entry Theme: Field Collector Scooter Seat POV
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Over-the-shoulder POV standing next to scooter on a sunny street, holding pocket diary on bike seat. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 12, 08:30 AM IST
 - **Reel Title:** Agreed Interest Rate Denial (সুদের হার নিয়ে মিথ্যা অভিযোগ)
 - **Core Emotion:** Insult & Fear of Public Character Assassination ("আমার সততা নিয়ে প্রশ্ন তুলছে!")
 - **Psychological Trigger:** Borrowers denying agreed interest rates in public, risking the lender's market reputation and causing financial loss.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -774,13 +1565,74 @@ Kinetic pop-in text centered on screen with high contrast black backing:
 
 ---
 
+---
+
 # 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)B (01:30 PM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 35)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Local roadside tea stall in Kolkata during monsoon rain. Raindrops trickling on glass window, warm tea glass smoking on wooden table.
+Visual Entry Theme: Rainy Tea Stall Corner
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Tight close-up of smoking tea glass and plastic-covered ledger notebook on wet wooden table. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 12, 01:30 PM IST
 - **Reel Title:** The Lost Collection Receipt (টাকা দিয়েছি, খাতায় তোলেননি!)
 - **Core Emotion:** Dread of Fraud Allegation & Double Entry Dispute
 - **Psychological Trigger:** Customers claiming they already paid a collection installment that was missed in paper entries.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -840,13 +1692,74 @@ Kinetic pop-in text centered on screen with high contrast black backing:
 
 ---
 
+---
+
 # 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)C (07:30 PM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 36)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Secure gold pawn shop counter with dark velvet tray, small brass balance scale, iron safe box, and open register.
+Visual Entry Theme: Gold & Pawn Shop Counter
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Eye-level close-up of dark velvet tray and safe box background. Hand writing loan interest figures. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 12, 07:30 PM IST
 - **Reel Title:** Collection Agent Money Leak (কালেকশন এজেন্ট টাকার হিসাব দিচ্ছে না!)
 - **Core Emotion:** Suspicion & Panic of Internal Theft/Discrepancy
 - **Psychological Trigger:** Field collection staff or partners collecting money from clients but withholding or misreporting cash.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -909,13 +1822,74 @@ MicroFlow Pro-র সাথে প্রতিটি ফিল্ড এজে�
 
 ---
 
+---
+
 # 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)A (08:30 AM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 37)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Late night 11:30 PM home office desk with a single yellow desk lamp glowing in dark room, scattered bills, and calculator.
+Visual Entry Theme: Late-Night 11 PM Home Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Low-angle close-up under single yellow desk lamp. Tired lender in glasses rubbing eyes over calculator. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 13, 08:30 AM IST
 - **Reel Title:** Partial Repayment Calculation Dispute (আংশিক কিস্তির সুদের গোলমাল)
 - **Core Emotion:** Stress & Conflict over Interest Calculations on Partial Payments
 - **Psychological Trigger:** Borrowers making partial principal payments and demanding interest reductions that paper ledgers can't easily calculate.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -974,13 +1948,74 @@ MicroFlow Pro অ্যাপে যেকোনো আংশিক পেমে
 
 ---
 
+---
+
 # 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)B (01:30 PM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 38)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Gariahat saree & clothing shop counter with folded colorful silk sarees in background and wooden cash drawer.
+Visual Entry Theme: Gariahat Clothing Store Counter
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Overhead shot of saree shop counter. Measuring tape lying across open ledger book next to cash drawer. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 13, 01:30 PM IST
 - **Reel Title:** Guarantor Refuses Responsibility (জামিনদার হাত তুলে দিল!)
 - **Core Emotion:** Panic of Default & Unrecoverable Debt
 - **Psychological Trigger:** Primary borrower missing payments and the guarantor flatly denying they signed any guarantee document.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -1039,13 +2074,74 @@ MicroFlow Pro-তে প্রতিটা লোনের সাথে জা�
 
 ---
 
+---
+
 # 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)C (07:30 PM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 39)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Local hardware store counter with metal measuring tape, paint cans on shelves, and large ledger register.
+Visual Entry Theme: Hardware & Contractor Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Macro shot of hardware store counter. Yellow measuring tape resting on ledger book pages. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 13, 07:30 PM IST
 - **Reel Title:** Torn/Water-Damaged Red Ledger (খাতার পাতা ভিজলে হিসাব শেষ!)
 - **Core Emotion:** Horror & Utter Panic of Physical Destruction
 - **Psychological Trigger:** Water spill, ink blotch, or torn pages in physical registers destroying years of loan records.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -1108,13 +2204,74 @@ MicroFlow Pro-তে প্রতিটা লোনের সাথে জা�
 
 ---
 
+---
+
 # 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)A (08:30 AM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 40)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Suburban West Bengal grain depot with stacked jute rice bags, brass weights, and wooden counter desk.
+Visual Entry Theme: Suburban Grocery & Grain Depot
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Wide-to-tight zoom on wooden counter with rice bags background. Hand flipping ledger pages fast. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 14, 08:30 AM IST
 - **Reel Title:** Daily Penalty Charges Clash (ফাইনের টাকা দেব না!)
 - **Core Emotion:** Conflict & Hostility Over Overdue Penalties
 - **Psychological Trigger:** Defaulters refusing to pay agreed overdue penalty fees claiming they weren't informed.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -1173,13 +2330,74 @@ MicroFlow Pro-তে লোন দেওয়ার সময়ই পেন�
 
 ---
 
+---
+
 # 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)B (01:30 PM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 41)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Traditional money-lender desk in North Kolkata with red cloth Lal Khata ledger, brass coins, tungsten lamp, and half-filled tea glass.
+Visual Entry Theme: North Kolkata Money-Lender Desk
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): 45° top-down POV on wooden desk. Pen hovering over ink-stained red ledger paper near crossed-out numbers. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 14, 01:30 PM IST
 - **Reel Title:** Multiple Loan Account Mix-up (দুটো লোনের হিসাব গুলিয়ে গেছে!)
 - **Core Emotion:** Confusion & Embarrassment Over Swapped Accounts
 - **Psychological Trigger:** Customers taking multiple loans (e.g. personal loan + business loan) whose paper ledger pages get mixed up.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
@@ -1238,13 +2456,74 @@ MicroFlow Pro-তে একজন মেম্বারের একাধিক
 
 ---
 
+---
+
 # 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)C (07:30 PM IST)
+
+### 📦 1-Click Copyable All-In-One Master Prompt Box
+```text
+================================================================================
+MICROFLOW PRO — FAST-PACED 1-CLICK AI REEL PROMPT (REEL 42)
+================================================================================
+
+[ENVIRONMENT & ATMOSPHERE]
+Setting: Busy Burrabazar wholesale market counter with stacked cloth rolls, wooden cash box, Casio calculator, and brass bell.
+Visual Entry Theme: Burrabazar Wholesale Counter
+Resolution & Aspect: 9:16 Vertical Video, 24fps, Photorealistic 8K, ARRI Alexa Mini LF, 10.0 Seconds Exact.
+
+[SPEAKER ROLES & LIP-SYNC CHOREOGRAPHY]
+Off-Camera Background Voice (0.0s - 2.5s): Customer shouting angrily off-screen ("আমার টাকার হিসাব কই?!"). Lender face stays stunned on camera.
+On-Camera Lip-Sync Speaker (2.5s - 10.0s): Money-Lender (Sayan, 32yo male, navy linen shirt) lip-syncs clearly into camera ("এই দেখুন, তারিখ সমেত সেভ আছে। সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!").
+
+[FAST-PACED 10.0s TIMELINE & CINEMATOGRAPHY]
+0.0s - 2.5s (Hook Beat - Fast Cut): Side-profile close-up at market counter. Hand frantically typing on plastic calculator next to cash box. Off-screen shout: "আমার টাকার হিসাব কই?!" (4 words).
+2.5s - 6.5s (Proof Beat - Fast Tap): Rapid macro shift to smartphone screen. Left thumb taps MicroFlow Pro entry showing timestamped proof. On-camera voice: "এই দেখুন, তারিখ সমেত সেভ আছে।" (5 words).
+6.5s - 10.0s (CTA Beat - Snappy Finish): Quick tilt up to Lender smiling & gesturing down. On-camera voice: "সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'!" (5 words).
+*Total Audio: 14 Bengali Words @ 1.8 words/sec pace -> Finishes at 9.2s (Leaves 0.8s clean buffer, ZERO cutoff)*
+
+[ON-SCREEN KINETIC TEXT & VFX SPECIFICATION]
+0.0s - 2.5s: Bold Yellow Text Badge at Top-Center -> 'সুদের ব্যবসার হিসাব 😰'
+2.5s - 6.5s: Emerald Green Box at Middle-Center -> 'তারিখ ও সময় সমেত সেভ ✅'
+6.5s - 10.0s: White/Red Banner at Bottom-Center -> 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'
+
+[SOUND DESIGN & SFX TIMELINE]
+0.0s - 0.4s: Ambient shop noise (tea glass clink, ceiling fan hum).
+0.4s: Sharp wooden desk thud impact sound effect.
+2.5s: Soft glass app open chime.
+5.0s: UI selection click sound.
+7.5s - 8.5s: 100% Dead Silence (0dB emotional payoff).
+8.5s - 10.0s: Fast warm acoustic guitar sting.
+
+[STRICT HEAVY NEGATIVE PROMPT & EXCLUSION RULES]
+(bad lip sync:1.5), (incorrect speaker attribution:1.5), (customer speaking with lender voice:1.5), (lender speaking customer dialogue:1.5), dual heads speaking, multiple voices from single mouth, overlapping audio, dialogue cutoff at end, truncated audio, slow speech, sluggish pacing, (deformed mouth:1.4), (mutated hands:1.4), extra fingers, 3D render, cartoon, anime, blurry text, camera shake, floating objects, watermark, low resolution, audio stutter, frozen frame.
+
+[FACEBOOK POST CAPTION & HASHTAGS]
+Caption: আপনার সুদের ব্যবসার হিসাব কি প্রতি মাসে মিলতে চায় না? 😰📒
+
+এখন MicroFlow Pro ডিজিটাল খাতায় প্রতিটা লেনদেন তারিখ ও সময় সমেত সেভ থাকবে।
+
+👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। ইনবক্সে লিংক পাঠাচ্ছি! 📥
+
+Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 - **Day & Slot:** Day 14, 07:30 PM IST
 - **Reel Title:** Monthly Balance Statement Dispute (মাস শেষে মেম্বারের হিসেব মেলে না!)
 - **Core Emotion:** Anxiety over Loss of Member Trust in Savings & Collection Groups
 - **Psychological Trigger:** Savings group members demanding full audit reports at month-end and accusing lender of calculation mistakes.
 
 #
+
+### ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video)
+- **0.0s – 3.5s (Hook — 5 words):** *"১২,৫০০ ছিল! ১৪,০০০ কোত্থেকে এলো?!"*
+- **3.5s – 7.0s (Proof — 6 words):** *"এই দেখুন, ৪ তারিখের এন্ট্রি সেভ আছে।"*
+- **7.0s – 10.0s (CTA — 4 words):** *"সুদের ব্যবসায় কমেন্টে লিখুন 'খাতা'।"*
+- *Total Spoken Words: 15 Bengali Words (Fits 10.0s AI Video 100% without truncation)*
+
+
+
+
 ### 1.5. Character Breakdown
 - **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
 - **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।

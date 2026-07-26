@@ -1,16 +1,16 @@
 # Graph Report - finance_app_zo  (2026-07-27)
 
 ## Corpus Check
-- 2516 files · ~4,201,271 words
+- 2520 files · ~4,259,398 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 31045 nodes · 41081 edges · 2052 communities (1759 shown, 293 thin omitted)
+- 31330 nodes · 41363 edges · 2074 communities (1777 shown, 297 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 289 edges (avg confidence: 0.56)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `da1eb2bb`
+- Built from commit: `204a7de2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1036,6 +1036,7 @@
 - Community 1024
 - Community 1025
 - Community 1026
+- savings_installment_model.dart
 - Community 1028
 - Community 1029
 - Community 1030
@@ -1076,6 +1077,7 @@
 - Community 1065
 - Community 1066
 - Community 1067
+- gps_status_chip.dart
 - Community 1069
 - portfolio_statement_options_sheet.dart
 - app_icon_service.dart
@@ -1095,6 +1097,7 @@
 - Community 1085
 - Community 1086
 - Community 1087
+- upi_payment_repository.dart
 - Community 1089
 - Community 1090
 - Community 1091
@@ -1142,6 +1145,7 @@
 - Community 1133
 - Community 1134
 - Community 1135
+- premium_app_bar.dart
 - Community 1137
 - Community 1138
 - Community 1139
@@ -1165,6 +1169,7 @@
 - Community 1157
 - Rules Index
 - Community 1159
+- analytics_service.dart
 - Community 1161
 - Community 1162
 - Community 1163
@@ -1248,11 +1253,14 @@
 - Community 1243
 - Community 1244
 - Community 1246
+- paymentFilterProvider
 - Community 1248
 - Community 1249
 - Community 1250
 - Community 1251
+- whatsapp_service.dart
 - Community 1253
+- gamification_repository.dart
 - Community 1255
 - Community 1256
 - Community 1257
@@ -1323,6 +1331,7 @@
 - Community 1322
 - Community 1323
 - Community 1324
+- tts.spawn.test.mjs
 - Community 1326
 - Community 1327
 - Community 1328
@@ -1355,6 +1364,7 @@
 - Community 1355
 - Community 1356
 - Community 1357
+- Rules Index
 - Community 1359
 - Community 1360
 - Community 1361
@@ -1395,6 +1405,7 @@
 - Community 1396
 - Community 1397
 - Community 1398
+- loan_products_service.dart
 - Community 1400
 - Community 1401
 - Community 1402
@@ -1463,6 +1474,7 @@
 - Visual design — product-launch per-frame shot method
 - Community 1466
 - Community 1467
+- savings_products_service.dart
 - Community 1469
 - Community 1470
 - Community 1471
@@ -1528,6 +1540,7 @@
 - Community 1532
 - Community 1533
 - Community 1534
+- duty_repository.dart
 - Community 1536
 - Community 1537
 - Community 1538
@@ -1590,6 +1603,7 @@
 - Community 1596
 - Community 1597
 - Community 1598
+- haptic_service.dart
 - Community 1600
 - googleDriveServiceProvider
 - Community 1602
@@ -1934,16 +1948,20 @@
 - README.md
 - advanced-full-text-search.md
 - 1. Composition fundamentals
+- 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot)
 - _AdminOrgDetailPageState
 - googleDriveServiceProvider
 - SKILL.md
 - Brand System
+- 1.5. Character Breakdown
 - TicketClipper
+- 1.5. Character Breakdown
 - error_formatter.dart
 - upiServiceProvider
 - PaymentSortBy
 - AdminShell
 - AuthShell
+- RegisterGeneratedPlugins
 - _CustomerShellState
 - glass_button.dart
 - gps_status_chip.dart
@@ -1952,7 +1970,10 @@
 - enums.dart
 - invoices_page.dart
 - _showMoreMenu
+- 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)
+- AI Video Generation Master Blueprint — MicroFlow Pro Reels
 - whatsapp_service.dart
+- 1. THE THREE DIALS (Core Configuration)
 - json_normalize.dart
 - Text To Speech
 - Product Launch to HyperFrames
@@ -1978,6 +1999,7 @@
 - 📅 Day 23 — 01:30 PM | Daily Savings Ring Completion
 - 📅 Day 23 — 07:30 PM | 10-Second Loan Entry
 - 📅 Day 24 — 08:30 AM | Late Fee Calculation Hassle
+- Fast-Paced 1-Click Master AI Video Prompts — MicroFlow Pro Reels
 - 📅 Day 24 — 07:30 PM | Instant PDF Audit Report
 - 📅 Day 25 — 08:30 AM | Forgotten Borrowers List
 - 📅 Day 25 — 01:30 PM | Automatic Overdue Alert
@@ -2031,105 +2053,105 @@
 10. `30 Ground-Level Psychological & Operational Pain Points` - 31 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `resolveSpawnCommand()` --indirect_call--> `arg()`  [INFERRED]
-  .claude/skills/media-use/audio/scripts/lib/tts.mjs → .claude/skills/figma/scripts/verify-motion.mjs
-- `buildFramePackets()` --indirect_call--> `frame()`  [INFERRED]
-  .claude/skills/pr-to-video/scripts/frame-packets.mjs → .claude/skills/figma/scripts/verify-motion.mjs
 - `main()` --indirect_call--> `out()`  [INFERRED]
   .agents/skills/embedded-captions/scripts/make-cinematic.cjs → .agents/skills/motion-graphics/grounding/locate.mjs
 - `paradigmPlanktonrail()` --indirect_call--> `out()`  [INFERRED]
   .agents/skills/embedded-captions/scripts/make-theme.cjs → .agents/skills/motion-graphics/grounding/locate.mjs
 - `paradigmSheenrail()` --indirect_call--> `out()`  [INFERRED]
   .agents/skills/embedded-captions/scripts/make-theme.cjs → .agents/skills/motion-graphics/grounding/locate.mjs
+- `resolveSpawnCommand()` --indirect_call--> `arg()`  [INFERRED]
+  .agents/skills/media-use/audio/scripts/lib/tts.mjs → .agents/skills/figma/scripts/verify-motion.mjs
+- `buildFramePackets()` --indirect_call--> `frame()`  [INFERRED]
+  .agents/skills/pr-to-video/scripts/frame-packets.mjs → .agents/skills/figma/scripts/verify-motion.mjs
 
 ## Import Cycles
 - None detected.
 
-## Communities (2052 total, 293 thin omitted)
+## Communities (2074 total, 297 thin omitted)
 
 ### Community 0 - "SMS & Admin Core"
-Cohesion: 0.02
-Nodes (125): auth, branchStaffProvider, brandProvider, ../../../../core/providers/branding_provider.dart, core/services/auto_update_service.dart, ../../../../core/services/push_notification_provider.dart, core/theme/app_theme.dart, core/widgets/update_wrapper.dart (+117 more)
+Cohesion: 0.05
+Nodes (48): ../../data/providers/customer_biometric_providers.dart, ../../data/providers/customer_notification_preferences_provider.dart, customerBiometricAvailableProvider, customerBiometricEnabledProvider, customerBiometricLabelProvider, customerBiometricServiceProvider, customerBiometricToggleProvider, getBiometricLabel (+40 more)
 
 ### Community 1 - "Payments & Collection"
 Cohesion: 0.06
 Nodes (38): _applySavingsProduct, build, _buildBottomBar, _buildDatePicker, _buildDivider, _buildDropdown, _buildFormDetails, _buildKV (+30 more)
 
 ### Community 2 - "Member & Org Management"
-Cohesion: 0.11
-Nodes (18): customer_loan_breakdown_chart.dart, customer_savings_growth_chart.dart, animation, build, child, createState, CustomerDashboardCharts, _CustomerDashboardChartsState (+10 more)
+Cohesion: 0.04
+Nodes (48): Animation, customer_loan_breakdown_chart.dart, customer_payment_trend_chart.dart, customer_savings_growth_chart.dart, animation, build, child, createState (+40 more)
 
 ### Community 3 - "Branch Users & Tabs"
 Cohesion: 0.01
-Nodes (256): AnimatedWidget, ../../data/providers/branch_payment_providers.dart, IconData get, agentId, _applyAdvancedFilters, autoRefresh, branchPaymentAgentsProvider, BranchPaymentFilterNotifier (+248 more)
+Nodes (267): AnimatedWidget, AutomaticKeepAliveClientMixin, ../../data/providers/branch_payment_providers.dart, IconData get, agentId, _applyAdvancedFilters, autoRefresh, branchAutoRefreshTimerProvider (+259 more)
 
 ### Community 4 - "Location & Geofencing"
-Cohesion: 0.01
-Nodes (217): ../../../../core/widgets/premium_search_overlay.dart, ../../data/models/today_payment_model.dart, ../../data/providers/dashboard_providers.dart, ../../data/providers/payment_providers.dart, ../../data/services/auto_collection_service.dart, ../../data/utils/payment_export.dart, analyticsEngineResultProvider, AsyncValueSliver (+209 more)
+Cohesion: 0.02
+Nodes (108): ../../../branch_manager/data/providers/branch_scoped_providers.dart, branchMembersProvider, ../../data/providers/staff_branch_providers.dart, ../../../home/presentation/providers/staff_providers.dart, build, _buildMissionCard, staffTodayStatsProvider, branchAsync (+100 more)
 
 ### Community 5 - "Staff Today Payments"
-Cohesion: 0.04
-Nodes (50): image_compress_service.dart, _bucketName, _client, deleteAvatar, _maxFileSizeBytes, pickAndUploadAvatar, updateProfileAvatarUrl, _uploadBytes (+42 more)
+Cohesion: 0.08
+Nodes (23): archive, bucket, _client, delete, download, filePath, fileSizeBytes, format (+15 more)
 
 ### Community 6 - "UPI Payments & Installments"
-Cohesion: 0.01
-Nodes (188): Alignment, ../../../../core/utils/file_download.dart, ../../../../core/widgets/status_badge.dart, dart:io, ../../data/models/customer_emi_model.dart, ../../data/services/portfolio_savings_statement_pdf_service.dart, ../../data/services/portfolio_statement_pdf_service.dart, compressBytes (+180 more)
+Cohesion: 0.02
+Nodes (117): Alignment, ../../../../core/utils/file_download.dart, dart:io, ../../data/services/portfolio_savings_statement_pdf_service.dart, ../../data/services/portfolio_statement_pdf_service.dart, compressBytes, compressFile, compressToTempFile (+109 more)
 
 ### Community 7 - "Integrations & Email"
-Cohesion: 0.04
-Nodes (54): autofillHints, build, controller, GlassTextField, hintText, keyboardType, labelText, maxLines (+46 more)
+Cohesion: 0.03
+Nodes (79): ../../../../core/widgets/status_badge.dart, ../../data/models/customer_emi_model.dart, ../../data/models/customer_loan_model.dart, CustomerLoanModel, CustomerStatementService, downloadPdfBytes, downloadStatement, generateLoanStatement (+71 more)
 
 ### Community 8 - "User Details & Audit"
 Cohesion: 0.03
-Nodes (65): ActivityLogModel, ../../../../core/widgets/aurora_background.dart, ../../data/models/transaction_model.dart, ../../data/providers/activity_logs_provider.dart, ../../data/services/transaction_csv_service.dart, ../../data/services/transaction_excel_service.dart, ../../data/services/transaction_pdf_service.dart, activityLogsProvider (+57 more)
+Nodes (69): ../../data/providers/security_policies_providers.dart, securityPoliciesProvider, securityPoliciesServiceProvider, AuditRetentionPage, _AuditRetentionPageState, _autoArchive, build, _buildSaveButton (+61 more)
 
 ### Community 9 - "Auth & Branding"
-Cohesion: 0.02
-Nodes (119): dart:html, AutoRefreshMixin, blob, downloadFile, true, url, replaceUrl, _addressCtrl (+111 more)
+Cohesion: 0.01
+Nodes (184): ../../../../core/services/app_icon_service.dart, AutoRefreshMixin, autoRefreshProviders, didChangeDependencies, autofillHints, build, controller, GlassTextField (+176 more)
 
 ### Community 10 - "Staff Dashboard Core"
-Cohesion: 0.06
-Nodes (35): ../constants/app_colors.dart, AppTheme, b, interTextTheme, withInter, _applyDate, build, _buildBottomBar (+27 more)
+Cohesion: 0.07
+Nodes (30): _applyDate, build, _buildBottomBar, _buildCalendar, _ChevronButton, createState, didChangeDependencies, firstDate (+22 more)
 
 ### Community 11 - "Savings & Deposits"
-Cohesion: 0.03
-Nodes (65): ../../../../core/services/live_location_service.dart, ../../data/providers/duty_providers.dart, ../../data/providers/live_tracking_providers.dart, _buildGPSStatusChip, activeDutySessionProvider, onDutyProvider, applyRealtimeUpdate, _channel (+57 more)
+Cohesion: 0.06
+Nodes (30): ../../../../core/services/live_location_service.dart, applyRealtimeUpdate, _channel, client, dispose, _effectiveHeading, getAgentDailyStats, getDurationForFix (+22 more)
 
 ### Community 12 - "Loan Management"
 Cohesion: 0.01
-Nodes (180): branch_manager_providers.dart, branchStatsProvider, Color, ../../../../core/widgets/glass_button.dart, ../../../../core/widgets/shimmer_card.dart, ../../../../core/widgets/sparkline_chart.dart, ../../data/providers/branch_scoped_providers.dart, ../../../home/presentation/widgets/live_agents_map_card.dart (+172 more)
+Nodes (199): ActivityLogModel, branch_manager_providers.dart, branchStatsProvider, ../../../../core/widgets/aurora_background.dart, ../../../../core/widgets/glass_button.dart, ../../../../core/widgets/shimmer_card.dart, ../../../../core/widgets/sparkline_chart.dart, ../../data/providers/activity_logs_provider.dart (+191 more)
 
 ### Community 13 - "Supabase Client Config"
 Cohesion: 0.02
 Nodes (124): ../core/presentation/pages/sms_history_page.dart, ../core/presentation/pages/sms_settings_page.dart, ../core/providers/sms_outbox_provider.dart, ../core/services/sms_scheduler_service.dart, ../features/admin/presentation/pages/admin_org_dashboard_page.dart, ../features/admin/presentation/pages/admin_org_detail_page.dart, ../features/admin/presentation/pages/admin_org_settings_page.dart, ../features/analytics/presentation/pages/advanced_analytics_page.dart (+116 more)
 
 ### Community 14 - "Firebase & Notifications"
-Cohesion: 0.02
-Nodes (150): branchMembersProvider, _BranchTab get, ../../data/providers/branch_manager_providers.dart, currentUserBranchIdProvider, _activeFilter, _applyFilters, BranchMembersPage, _BranchMembersPageState (+142 more)
+Cohesion: 0.01
+Nodes (244): _BranchTab get, ../../data/models/today_payment_model.dart, ../../data/providers/payment_providers.dart, ../../data/services/auto_collection_service.dart, ../../data/utils/payment_export.dart, analyticsEngineResultProvider, AdvancedAnalyticsPage, _BranchCard (+236 more)
 
 ### Community 15 - "Push Notifications & FCM"
-Cohesion: 0.05
-Nodes (38): int?, createdAt, CustomerFeedbackModel, fromJson, id, isInReview, isNew, isResolved (+30 more)
+Cohesion: 0.08
+Nodes (23): avatarUrl, collectionsCount, currentUserRank, currentUserStaffId, endDate, entries, fromJson, LeaderboardEntry (+15 more)
 
 ### Community 16 - "Admin Portal Pages"
 Cohesion: 0.02
 Nodes (103): LatLng?, _activityColor, _activityFilter, _activityLabel, _addTrailSegment, agent, _AgentDetailSheet, _AgentDetailSheetState (+95 more)
 
 ### Community 17 - "Branch Collections"
-Cohesion: 0.05
-Nodes (47): ../../../branch_manager/data/providers/branch_scoped_providers.dart, ../../data/providers/staff_branch_providers.dart, ../../../home/presentation/providers/staff_providers.dart, _buildMissionCard, staffTodayStatsProvider, staffBranchIdProvider, staffCollectionHistoryProvider, _activeFilter (+39 more)
+Cohesion: 0.04
+Nodes (66): ../../data/models/customer_profile_model.dart, ../../data/providers/customer_connection_provider.dart, ../../data/providers/customer_member_provider.dart, ../../data/providers/customer_notifications_providers.dart, ../../data/providers/customer_profile_providers.dart, ../../data/providers/customer_realtime_providers.dart, customerDashboardProvider, currentCustomerIdProvider (+58 more)
 
 ### Community 18 - "Customer Profile & KYC"
 Cohesion: 0.02
 Nodes (99): Duration get, action, activeLoanCount, activeOrganizations, activeUsers, activityLogs, address, affectedServices (+91 more)
 
 ### Community 19 - "Analytics & Reports"
-Cohesion: 0.02
-Nodes (95): ../../../../../core/models/app_update.dart, errorFormatter, messenger, raw, showErrorSnackBar, showSuccessSnackBar, _client, CustomerProfileRepository (+87 more)
+Cohesion: 0.03
+Nodes (54): ../../../../../core/models/app_update.dart, errorFormatter, messenger, raw, showErrorSnackBar, showSuccessSnackBar, _client, CustomerProfileRepository (+46 more)
 
 ### Community 20 - "Staff Profile & Duty"
 Cohesion: 0.02
-Nodes (83): ../../data/models/upi_payment_request_model.dart, _advanceDate, _AdvancedFilterPanel, _applyFilters, batch, _buildFilterOption, _buildInstallmentRow, _buildShimmerLoading (+75 more)
+Nodes (81): ../../data/models/upi_payment_request_model.dart, _advanceDate, _AdvancedFilterPanel, _applyFilters, batch, _buildFilterOption, _buildInstallmentRow, _buildShimmerLoading (+73 more)
 
 ### Community 21 - "Branch Reports & Charts"
 Cohesion: 0.05
@@ -2137,27 +2159,27 @@ Nodes (41): customerEmiScheduleProvider, build, _buildBody, _applyQuickPay, _bor
 
 ### Community 22 - "SMS Templates & History"
 Cohesion: 0.05
-Nodes (37): Blueprints (the proven shapes), Motion coverage, Picking guidance, Role → blueprint menu, The 15 blueprints, Example, Frontmatter (global direction), Notes (+29 more)
+Nodes (35): ffmpeg requirement, HeyGen word-timestamp shape, Long scripts, Multilingual (Kokoro voice prefix → language), Provider chain, Self-contained HeyGen (no CLI) — `scripts/heygen-tts.mjs`, Speed, Text To Speech (+27 more)
 
 ### Community 23 - "App Update & Versioning"
 Cohesion: 0.03
-Nodes (69): CancelToken?, ../config/env_config.dart, Dio, DownloadProgress get, updateCheckProvider, AppUpdateService, appUpdateServiceProvider, cancelDownload (+61 more)
+Nodes (76): CancelToken?, ../config/env_config.dart, dart:async, Dio, DownloadProgress get, updateCheckProvider, AppUpdateService, appUpdateServiceProvider (+68 more)
 
 ### Community 24 - "Geofence & Location Service"
 Cohesion: 0.02
-Nodes (82): ?, ../../data/providers/integrations_providers.dart, ../../data/providers/payment_gateway_providers.dart, bg, build, _buildCommunicationsTab, _buildEmailCard, _buildGatewayConfigCard (+74 more)
+Nodes (80): ?, ../../data/providers/integrations_providers.dart, ../../data/providers/payment_gateway_providers.dart, bg, build, _buildCommunicationsTab, _buildEmailCard, _buildGatewayConfigCard (+72 more)
 
 ### Community 25 - "Billing & Subscriptions"
-Cohesion: 0.02
-Nodes (83): _aadharController, accent, _accountBadge, _ActionIslandButton, _addressController, _AdminCard, _auditColorFor, _auditRow (+75 more)
+Cohesion: 0.01
+Nodes (189): ../../../branches/data/providers/branch_providers.dart, ../../../branches/models/branch_model.dart, ../../../../core/services/avatar_upload_service.dart, ../../../../core/utils/kyc_validators.dart, ../../data/csv_utils.dart, FocusNode, Future, AvatarUploadService (+181 more)
 
 ### Community 26 - "Invoice & Export"
-Cohesion: 0.04
-Nodes (48): customer_savings_achievement_badge.dart, double get, IconData, subscriptionStatusProvider, build, color, icon, isAtLimit (+40 more)
+Cohesion: 0.01
+Nodes (139): Color, ../../../../core/services/offline_queue_service.dart, ../../../../core/utils/formatters.dart, customer_savings_achievement_badge.dart, dart:ui, ../../data/models/wallet_model.dart, double get, EdgeInsetsGeometry? (+131 more)
 
 ### Community 27 - "Branch Members Page"
-Cohesion: 0.02
-Nodes (116): ../../../customer_portal/data/providers/customer_savings_providers.dart, ../../data/services/savings_statement_csv_service.dart, ../../data/services/savings_statement_excel_service.dart, ../../data/services/savings_statement_models.dart, ../../data/services/savings_statement_pdf_service.dart, ../../../../features/transactions/data/models/transaction_model.dart, allSavingsProvider, client (+108 more)
+Cohesion: 0.01
+Nodes (184): ../../../customer_portal/data/providers/customer_savings_providers.dart, ../../data/models/transaction_model.dart, ../../data/services/savings_statement_csv_service.dart, ../../data/services/savings_statement_excel_service.dart, ../../data/services/savings_statement_models.dart, ../../data/services/savings_statement_pdf_service.dart, ../../data/services/transaction_csv_service.dart, ../../data/services/transaction_excel_service.dart (+176 more)
 
 ### Community 28 - "Widget System (Glass/Shimmer)"
 Cohesion: 0.03
@@ -2169,27 +2191,27 @@ Nodes (53): anchorT, bgExtra, bgHtml, body, CHARW, dna, esc(), { execFileSync } 
 
 ### Community 30 - "Staff Payments & Export"
 Cohesion: 0.03
-Nodes (65): core/config/env_config.dart, ../../../../core/utils/url_utils.dart, dart:convert, apiKey, baseUrl, EmailService, isConfigured, send (+57 more)
+Nodes (64): core/config/env_config.dart, ../../../../core/utils/url_utils.dart, dart:convert, google_drive_service.dart, decodeJsonField, map, newRecordNormalized, NormalizedPostgresChange (+56 more)
 
 ### Community 31 - "Branding Settings"
 Cohesion: 0.03
 Nodes (53): anchorT, bgExtra, bgHtml, body, CHARW, dna, esc(), { execFileSync } (+45 more)
 
 ### Community 32 - "Chatbot & AI Assistant"
-Cohesion: 0.04
-Nodes (48): ../../features/analytics/data/models/analytics_engine_models.dart, activationFunnelProvider, agentLeaderboardProvider, analyticsEngineProvider, branchComparisonProvider, cohortRetentionProvider, engine, fromRef (+40 more)
+Cohesion: 0.13
+Nodes (14): ../../features/analytics/data/models/analytics_engine_models.dart, activationFunnelProvider, agentLeaderboardProvider, analyticsEngineProvider, branchComparisonProvider, cohortRetentionProvider, engine, fromRef (+6 more)
 
 ### Community 33 - "Notification Preferences"
 Cohesion: 0.03
-Nodes (79): ../../data/providers/branch_providers.dart, ProfileModel, _resolveBranchName, branchesProvider, potentialManagersProvider, BranchModel, _addressCtrl, branch (+71 more)
+Nodes (83): ../../data/providers/branch_providers.dart, ProfileModel, _resolveBranchName, branchesProvider, branchNotifierProvider, potentialManagersProvider, BranchModel, _addressCtrl (+75 more)
 
 ### Community 34 - "Supabase Best Practices"
-Cohesion: 0.06
-Nodes (31): ../../../branches/presentation/pages/branch_management_page.dart, _accentColorCtrl, adminOrgSettingsProvider, _branchesCtrl, build, _buildActionTile, _buildBrandingSection, _buildField (+23 more)
+Cohesion: 0.05
+Nodes (38): int?, _client, _currentToken, deactivateToken, deleteToken, deleteTokens, initialize, _initialized (+30 more)
 
 ### Community 35 - "Flutter Widgets (Glass/Morph)"
 Cohesion: 0.03
-Nodes (68): ../../data/providers/backup_export_provider.dart, ../../data/providers/google_drive_provider.dart, ../../data/providers/restore_backup_provider.dart, ../../data/services/backup_export_service.dart, ../../data/services/google_drive_service.dart, _backupSummary, _buildAnalyticsSection, _buildAnalyticTile (+60 more)
+Nodes (72): ../../data/providers/backup_export_provider.dart, ../../data/providers/google_drive_provider.dart, ../../data/providers/restore_backup_provider.dart, ../../data/services/backup_export_service.dart, ../../data/services/google_drive_service.dart, googleDriveServiceProvider, _backupSummary, _buildAnalyticsSection (+64 more)
 
 ### Community 36 - "Branch Manager Dashboard"
 Cohesion: 0.03
@@ -2197,55 +2219,55 @@ Nodes (71): accent, accentCyan, accentDark, accentLight, AppColors, auroraGradie
 
 ### Community 37 - "Customer Transaction Flow"
 Cohesion: 0.03
-Nodes (70): CustomClipper, ../../data/services/customer_receipt_service.dart, amount, _animatedEntry, borderColor, build, _buildActionBar, _buildAppBar (+62 more)
+Nodes (72): CustomClipper, ../../data/services/customer_receipt_service.dart, amount, _animatedEntry, borderColor, build, _buildActionBar, _buildAppBar (+64 more)
 
 ### Community 38 - "Email & Marketing"
 Cohesion: 0.03
 Nodes (69): ../../data/repositories/loans_repository.dart, AmortizationRow, balanceAfter, borrowerId, _calculateEquivalentAPR, CollectionType, _computeLastPaymentDate, copyWith (+61 more)
 
 ### Community 39 - "Live Map & Tracker"
-Cohesion: 0.02
-Nodes (111): dart:ui, ../../data/models/customer_notification_model.dart, ../../data/models/customer_savings_model.dart, ../../data/models/customer_ticket_model.dart, EdgeInsets, EdgeInsetsGeometry?, kBottomNavBarHeight, kBottomNavInsets (+103 more)
+Cohesion: 0.10
+Nodes (19): amountCollected, build, CollectionSuccessDialog, _copyToClipboard, _currencyFormat, customerName, _dateFormat, generateReceiptNumber (+11 more)
 
 ### Community 40 - "Staff Collection Sheet"
 Cohesion: 0.03
-Nodes (75): customer_home_providers.dart, customer_notifications_providers.dart, customer_profile_providers.dart, customer_savings_providers.dart, customer_support_providers.dart, ../../data/providers/customer_support_providers.dart, currentProfileIdSyncProvider, channel (+67 more)
+Nodes (66): ../../data/providers/customer_support_providers.dart, currentProfileIdSyncProvider, realtimeTicketMessagesProvider, customerTicketMessagesProvider, customerTicketsProvider, _applyFilter, build, _buildDetailHeader (+58 more)
 
 ### Community 41 - "Branch Savings Page"
-Cohesion: 0.03
-Nodes (79): Equatable, AgentLeaderboardEntry, CohortRetention, FunnelMilestone, ParBucket, CustomReportModel, OrgMetricsModel, AnnouncementModel (+71 more)
+Cohesion: 0.02
+Nodes (92): Equatable, activeLoans, activeMembers, activeStreak, AgentLeaderboardEntry, amountCollected, amountExpected, BranchComparison (+84 more)
 
 ### Community 42 - "Branch Loans Page"
-Cohesion: 0.05
-Nodes (44): ../../../../core/utils/kyc_validators.dart, FocusNode, _aadharController, _AadharFormatter, _addressController, build, _buildBottomBar, _buildBranchDropdown (+36 more)
+Cohesion: 0.06
+Nodes (32): ../../../../core/constants/app_spacing.dart, ../../data/models/customer_notification_model.dart, ../../data/models/customer_transaction_model.dart, amount, CustomerTransactionModel, description, fromJson, id (+24 more)
 
 ### Community 43 - "Statement Generation"
 Cohesion: 0.03
-Nodes (57): allUsersProvider, apiUsageStatsProvider, atRiskOrgsCountProvider, auditLogsProvider, branchLocationsProvider, client, createAnnouncement, createMaintenanceWindow (+49 more)
+Nodes (64): activityFeedProvider, allOrganizationsProvider, allUsersProvider, apiUsageStatsProvider, atRiskOrgsCountProvider, auditLogsProvider, branchLocationsProvider, client (+56 more)
 
 ### Community 44 - "Duty & Shift Tracking"
-Cohesion: 0.05
-Nodes (41): ../../../../core/utils/statement_formatters.dart, dart:typed_data, downloadFile, false, allLoansProvider, getAllLoans, orgId, repository (+33 more)
+Cohesion: 0.04
+Nodes (63): ../../../../core/utils/statement_formatters.dart, dart:typed_data, downloadFile, false, CustomerCurrencyFormatter, format, formatCompact, formatWithDecimals (+55 more)
 
 ### Community 45 - "Org Settings & Config"
-Cohesion: 0.03
-Nodes (59): ../../data/services/transaction_export_options.dart, StatementFormat, amountMax, amountMin, copyWith, customEnd, customStart, format (+51 more)
+Cohesion: 0.05
+Nodes (42): ../../data/services/transaction_export_options.dart, _amountMax, _amountMaxController, _amountMin, _amountMinController, build, _buildAdvancedFilters, _buildAdvancedToggle (+34 more)
 
 ### Community 46 - "Branch Scoped State"
-Cohesion: 0.10
-Nodes (45): adoptExistingAssets(), AUDIO_EXT, IMAGE_EXT, VIDEO_EXT, cacheEntryDir(), cacheGet(), cacheGetByEntity(), cachePut() (+37 more)
+Cohesion: 0.16
+Nodes (40): adoptExistingAssets(), cacheEntryDir(), cacheGet(), cacheGetByEntity(), cachePut(), contentHash(), globalMediaDir(), importFromCache() (+32 more)
 
 ### Community 47 - "Permission & Access"
-Cohesion: 0.05
-Nodes (43): _ActionButton, _ActionButtonState, _buildActionRow, _buildContributionTile, _buildDetailsCard, _buildErrorState, _buildFormatCard, _buildGradientHeader (+35 more)
+Cohesion: 0.04
+Nodes (60): realtimeSavingsTransactionsProvider, client, customerSavingsProvider, customerSavingsRepositoryProvider, customerSavingsTransactionsProvider, getCustomerSavings, getSavingsById, getSavingsTransactions (+52 more)
 
 ### Community 48 - "Staff Payments UI"
-Cohesion: 0.07
-Nodes (39): bgmProvider, brandProvider, codexGeneratedDir(), codexImageGenerate(), codexRun(), codexUnavailableReason(), freshestGeneratedImage(), heygenSearch() (+31 more)
+Cohesion: 0.09
+Nodes (23): brandProvider, bundledSfxProvider, extensionForBundledSfxFile(), LIB_DIR, normalize(), score(), codexGeneratedDir(), codexImageGenerate() (+15 more)
 
 ### Community 49 - "Web Portal Components"
-Cohesion: 0.02
-Nodes (95): ../../data/models/customer_profile_model.dart, ../../data/providers/customer_connection_provider.dart, ../../data/providers/customer_member_provider.dart, ../../data/providers/customer_notifications_providers.dart, ../../data/providers/customer_realtime_providers.dart, customerProfileUpdateProvider, accentColor, _backgroundController (+87 more)
+Cohesion: 0.03
+Nodes (78): CustomPainter, _navigateToLoanDetails, _navigateToSavings, _GaugePainter, _AuroraPainter, _SparklinePainter, _RipplePainter, _TimelinePainter (+70 more)
 
 ### Community 50 - "Marketing Landing Site"
 Cohesion: 0.09
@@ -2257,11 +2279,11 @@ Nodes (59): blue50, blue700, gold100, gold300, gold50, gold500, gold700, green10
 
 ### Community 52 - "Supabase CLI Config"
 Cohesion: 0.03
-Nodes (58): activeMembers, activeSavingsAccounts, AnalyticsPeriod, AnalyticsPeriodLabel, analyticsProvider, AnalyticsStats, averageSavingsBalance, avgBalance (+50 more)
+Nodes (57): activeMembers, activeSavingsAccounts, analyticsProvider, AnalyticsStats, averageSavingsBalance, avgBalance, collectionChange, collectionEfficiency (+49 more)
 
 ### Community 53 - "CI/CD & GitHub Actions"
-Cohesion: 0.08
-Nodes (22): backgroundLocationServiceProvider, client, locationCleanupServiceProvider, locationServiceProvider, service, BackgroundLocationService, dispose, hasBackgroundPermission (+14 more)
+Cohesion: 0.07
+Nodes (28): clearAll, clearCollections, clearTransactions, _collectionsKey, dequeueCollection, dequeueTransaction, enqueueCollection, enqueueTransaction (+20 more)
 
 ### Community 54 - "SaaS Scale Architecture"
 Cohesion: 0.08
@@ -2272,12 +2294,12 @@ Cohesion: 0.03
 Nodes (57): activeLoans, amount, approvedBy, copyWith, createdAt, createdBy, customerId, customerName (+49 more)
 
 ### Community 56 - "Branch Analytics Charts"
-Cohesion: 0.02
-Nodes (95): ../../../branch_manager/data/providers/branch_payment_providers.dart, Color get, ../../../../core/constants/enums.dart, ../../data/models/emi_schedule_model.dart, ../../data/models/loan_model.dart, ../../data/providers/loan_providers.dart, ../../data/repositories/emi_repository.dart, ../../data/services/loan_statement_archive_service.dart (+87 more)
+Cohesion: 0.03
+Nodes (77): ../../../branch_manager/data/providers/branch_payment_providers.dart, Color get, ../../../../core/providers/branding_provider.dart, core/services/auto_update_service.dart, ../../../../core/services/push_notification_provider.dart, core/theme/app_theme.dart, core/widgets/update_wrapper.dart, emi_payment_selector.dart (+69 more)
 
 ### Community 57 - "Savings Withdrawal Flow"
 Cohesion: 0.05
-Nodes (43): client, customerLoanDetailProvider, customerLoansProvider, customerLoansRepositoryProvider, getCustomerLoans, getEmiSchedule, getLoanById, memberId (+35 more)
+Nodes (42): client, customerHomeRepositoryProvider, customerRecentTransactionsProvider, getDashboardData, getRecentTransactions, memberId, orgId, repository (+34 more)
 
 ### Community 58 - "Customer Feedback System"
 Cohesion: 0.04
@@ -2285,27 +2307,27 @@ Nodes (56): amount, _buildBody, buildCustomerStatement, _buildCustomerStatementI
 
 ### Community 59 - "Push Notification Token"
 Cohesion: 0.07
-Nodes (29): ../../../../core/widgets/progress_gauge.dart, customerSavingsProvider, ../../data/providers/customer_savings_providers.dart, build, _buildErrorState, _buildFilterChips, _buildGradientHeader, _buildLoadingState (+21 more)
+Nodes (28): ../../../../core/widgets/progress_gauge.dart, customerSavingsProvider, ../../data/providers/customer_savings_providers.dart, build, _buildErrorState, _buildFilterChips, _buildGradientHeader, _buildLoadingState (+20 more)
 
 ### Community 60 - "Branch Settings Page"
 Cohesion: 0.04
-Nodes (55): _buildBottomBar, _buildFacilityDetails, _buildTenureSlider, _populateFormFromLoan, _AmortizationPreviewSheet, _applyLoanProduct, build, _buildBottomBar (+47 more)
+Nodes (60): _buildBottomBar, _buildFacilityDetails, _buildTenureSlider, _populateFormFromLoan, _AmortizationPreviewSheet, _applyLoanProduct, build, _buildBottomBar (+52 more)
 
 ### Community 61 - "Admin Org Dashboard"
 Cohesion: 0.04
-Nodes (50): ../../../../core/utils/error_formatter.dart, ../../../../features/super_admin/data/models/super_admin_models.dart, ../../../../features/super_admin/data/providers/super_admin_providers.dart, _actColor, _actIcon, adminOrgDetailProvider, _buildActivityCard, _buildActivityTile (+42 more)
+Nodes (52): ../../../../core/utils/error_formatter.dart, ../../../../features/super_admin/data/models/super_admin_models.dart, ../../../../features/super_admin/data/providers/super_admin_providers.dart, _actColor, _actIcon, AdminOrgDetailPage, _AdminOrgDetailPageState, adminOrgDetailProvider (+44 more)
 
 ### Community 62 - "Branch Member Detail"
 Cohesion: 0.04
-Nodes (48): _AmortizationPreviewSheet, _buildDatePicker, _buildDivider, _buildDropdown, _buildFinancialSummary, _buildHeaderCell, _buildInterestModeTab, _buildKV (+40 more)
+Nodes (50): _AmortizationPreviewSheet, _buildDatePicker, _buildDivider, _buildDropdown, _buildFinancialSummary, _buildHeaderCell, _buildInterestModeTab, _buildKV (+42 more)
 
 ### Community 63 - "Branch Users List"
 Cohesion: 0.04
 Nodes (53): ../../data/models/savings_installment_model.dart, _applyQuickPay, _borderColor, build, _buildAllocationBreakdown, _buildBreakdownRow, _buildCompactHeader, _buildCounterButton (+45 more)
 
 ### Community 64 - "Collection History"
-Cohesion: 0.08
-Nodes (24): fcm_token_service.dart, FlutterLocalNotificationsPlugin, FcmTokenService, client, fcmTokenServiceProvider, navigationHandler, pushNotificationServiceProvider, _createNotificationChannel (+16 more)
+Cohesion: 0.06
+Nodes (36): fcm_token_service.dart, FlutterLocalNotificationsPlugin, GoRouter, FcmTokenService, handleNotificationData, _navigateStaff, _navigateToNotifications, _navigateToPaymentHistory (+28 more)
 
 ### Community 65 - "Payment Gateway Config"
 Cohesion: 0.04
@@ -2320,20 +2342,20 @@ Cohesion: 0.07
 Nodes (25): isOnlineProvider, _cleanupSyncedItems, clearQueue, _client, failed, getLastSyncTime, getPendingCount, getPendingOperations (+17 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.04
-Nodes (49): emi_repository.dart, AuthRepository, authStateChanges, _checkEmailInProfiles, _client, _createOrgAndProfile, getCurrentUser, _logRepo (+41 more)
+Cohesion: 0.06
+Nodes (32): AuthRepository, authStateChanges, _checkEmailInProfiles, _client, _createOrgAndProfile, getCurrentUser, _logRepo, _parseRole (+24 more)
 
 ### Community 69 - "Community 69"
 Cohesion: 0.06
-Nodes (34): _buildPermissionCard, createState, _infoTile, _pickSim, _sectionHeader, _switchTile, _testResult, _timePickerTile (+26 more)
+Nodes (35): ../constants/app_colors.dart, _buildPermissionCard, createState, _infoTile, _pickSim, _sectionHeader, _switchTile, _testResult (+27 more)
 
 ### Community 70 - "Community 70"
 Cohesion: 0.04
-Nodes (56): agentId, allPayments, _applyAdvancedFilters, autoRefresh, branchId, client, collectedPayments, copyWith (+48 more)
+Nodes (52): agentId, allPayments, _applyAdvancedFilters, autoRefresh, branchId, client, collectedPayments, copyWith (+44 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.03
-Nodes (63): Before you finish — checklist, Caption-band keep-out (plan side), Inventing the visual — diagrams, type, data-viz, Layout — named inline per Scene, Palette & type — from `frame.md`, never invented, Pick the shape — instantiate a blueprint, Portrait & square (non-16:9 canvases), The unit is a time-coded shot sequence (+55 more)
+Cohesion: 0.05
+Nodes (32): Example, `SCRIPT.md` — locked narration (optional), Shape, To TTS, Concurrency cap → batching rule (cap never changes scope), Primitive map, Subagent dispatch — harness adapter, The contract (identical on every harness) (+24 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.05
@@ -2341,7 +2363,7 @@ Nodes (34): Blueprints (the proven shapes), Motion coverage, Picking guidance, R
 
 ### Community 73 - "Community 73"
 Cohesion: 0.04
-Nodes (47): ../../data/providers/customer_home_providers.dart, amount, _applyFilters, _buildError, _buildFilterChips, _buildGroupedSlivers, _buildHeader, _buildInlineSearch (+39 more)
+Nodes (51): ../../data/providers/customer_home_providers.dart, customerAllTransactionsProvider, amount, _applyFilters, build, _buildError, _buildFilterChips, _buildGroupedSlivers (+43 more)
 
 ### Community 74 - "Community 74"
 Cohesion: 0.04
@@ -2353,15 +2375,15 @@ Nodes (49): activePlans, address, amount, closingBalance, collectedByName, colle
 
 ### Community 76 - "Community 76"
 Cohesion: 0.04
-Nodes (74): AsyncValue, BrandingNotifier, ThemeNotifier, ApiNotifier, BillingNotifier, BranchNotifier, BrandingNotifier, BiometricToggleNotifier (+66 more)
+Nodes (49): allUsers, branchId, bulkInsertMembers, changeRole, changeStatus, copyWith, customerListProvider, deleteUsers (+41 more)
 
 ### Community 77 - "Community 77"
 Cohesion: 0.04
 Nodes (48): _buildContent, _buildDecorativeDivider, _buildEnhancedSummary, _buildFilterSummary, _buildPdf, _buildPremiumFooter, _buildPremiumHeader, _buildSectionLabel (+40 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.05
-Nodes (43): CollectionType, ../../data/models/savings_model.dart, ../../data/providers/savings_providers.dart, _buildBottomBar, _buildDatePicker, _buildDivider, _buildDropdown, _buildFormDetails (+35 more)
+Cohesion: 0.04
+Nodes (47): CollectionType, ../../data/models/savings_model.dart, ../../data/providers/savings_providers.dart, savingDetailProvider, build, _buildBottomBar, _buildDatePicker, _buildDivider (+39 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.04
@@ -2389,7 +2411,7 @@ Nodes (23): aadharNumber, address, area, copyWith, CustomerProfileModel, dateOfB
 
 ### Community 85 - "Community 85"
 Cohesion: 0.04
-Nodes (45): CurvedAnimation, _animation, _buildEmptyState, _buildErrorState, _buildGradientHeader, _buildLoadingState, _buildSummaryCard, child (+37 more)
+Nodes (48): CurvedAnimation, _animation, _buildEmptyState, _buildErrorState, _buildGradientHeader, _buildLoadingState, _buildSummaryCard, child (+40 more)
 
 ### Community 86 - "Community 86"
 Cohesion: 0.04
@@ -2397,7 +2419,7 @@ Nodes (45): DateTime? get, alreadyPaidAmount, _calculateMaturityDate, Collection
 
 ### Community 87 - "Community 87"
 Cohesion: 0.02
-Nodes (91): ../../../../core/services/offline_queue_service.dart, _buildQuickActions, _buildDisbursementVsCollection, _buildPortfolioTrend, _buildRichLoanSummaryCard, activeLoansProvider, activeSavingsProvider, agenda (+83 more)
+Nodes (136): analyticsProvider, ../../../../core/widgets/premium_search_overlay.dart, ../../data/providers/dashboard_providers.dart, _buildQuickActions, amount, AnalyticsPage, build, _buildDelinquencyAnalysis (+128 more)
 
 ### Community 88 - "Community 88"
 Cohesion: 0.05
@@ -2409,19 +2431,19 @@ Nodes (45): action, ActivityAction, appBackgrounded, appOpened, appVersion, coll
 
 ### Community 90 - "Community 90"
 Cohesion: 0.04
-Nodes (64): _AuroraBackground, _CircleIconButton, _CountUp, Duration, _AuroraBackgroundState, PremiumSearchOverlay, _PremiumSearchOverlayState, animate (+56 more)
+Nodes (68): _ActionButton, _AuroraBackground, _CircleIconButton, _CountUp, _AuroraBackgroundState, borderRadius, build, color (+60 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.05
-Nodes (43): ../../data/services/loan_statement_pdf_service.dart, StatementVariant, build, createState, _customEnd, _customStart, description, label (+35 more)
+Cohesion: 0.08
+Nodes (24): ../../data/services/loan_statement_pdf_service.dart, StatementVariant, build, createState, _customEnd, _customStart, format, _formatIcon (+16 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.04
-Nodes (44): _buildChatPanel, _buildErrorState, _buildFloatingButton, _buildLiveMetrics, _buildLoadingIndicator, _buildMessageBubble, _buildMessageList, _buildMetricStat (+36 more)
+Nodes (53): chatProvider, build, _buildChatPanel, _buildErrorState, _buildFloatingButton, _buildHeader, _buildInputArea, _buildLiveMetrics (+45 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.05
-Nodes (40): ActivityType, action, ActivityLogModel, ActivityType, details, fromJson, id, timestamp (+32 more)
+Cohesion: 0.04
+Nodes (43): accuracy, ActivityType, altitude, batteryLevel, branchId, copyWith, createdAt, fromJson (+35 more)
 
 ### Community 94 - "Community 94"
 Cohesion: 0.05
@@ -2444,12 +2466,12 @@ Cohesion: 0.07
 Nodes (31): args, buildElementLifecycles(), captureSnapshots(), COMP_DIR, findLastBbox(), FPS, FRAMES, HEIGHT (+23 more)
 
 ### Community 99 - "Community 99"
-Cohesion: 0.05
-Nodes (47): ../../data/providers/staff_map_providers.dart, _buildMap, todayDutyMinutesProvider, agentBreadcrumbsProvider, todayDueCustomerLocationsProvider, _breadcrumbRefreshTimer, build, _buildBottomBar (+39 more)
+Cohesion: 0.03
+Nodes (83): ../../data/providers/duty_providers.dart, ../../data/providers/live_tracking_providers.dart, ../../data/providers/staff_map_providers.dart, _buildMap, _buildGPSStatusChip, activeDutySessionProvider, onDutyProvider, todayDutyMinutesProvider (+75 more)
 
 ### Community 100 - "Community 100"
 Cohesion: 0.05
-Nodes (41): ../../data/services/customer_emi_calculator_service.dart, _animatedEmi, _animatedTotalInterest, _animatedTotalPayment, build, _buildBreakdownChart, _buildGlassIconButton, _buildHeader (+33 more)
+Nodes (43): ../../data/services/customer_emi_calculator_service.dart, _animatedEmi, _animatedTotalInterest, _animatedTotalPayment, build, _buildBreakdownChart, _buildGlassIconButton, _buildHeader (+35 more)
 
 ### Community 101 - "Community 101"
 Cohesion: 0.07
@@ -2464,20 +2486,20 @@ Cohesion: 0.05
 Nodes (43): aadhar, AccountStatus, AccountStatusX, address, assignedZone, avatarUrl, branchId, branchName (+35 more)
 
 ### Community 104 - "Community 104"
-Cohesion: 0.05
-Nodes (40): app_update.dart, bool get, apkPath, AppUpdate, downloadUrl, fileSizeMb, firebaseAppId, fromJson (+32 more)
+Cohesion: 0.06
+Nodes (33): app_update.dart, bool get, apkPath, AppUpdate, downloadUrl, fileSizeMb, firebaseAppId, fromJson (+25 more)
 
 ### Community 105 - "Community 105"
-Cohesion: 0.07
-Nodes (30): build, _buildCelebrationBanner, _buildGoalReachedCard, _buildMiniStats, _buildProgressBar, color, createState, currentAmount (+22 more)
+Cohesion: 0.05
+Nodes (42): build, _buildCelebrationBanner, _buildGoalReachedCard, _buildMiniStats, _buildProgressBar, color, createState, currentAmount (+34 more)
 
 ### Community 106 - "Community 106"
 Cohesion: 0.05
-Nodes (41): ../../../../core/widgets/premium_calendar_sheet.dart, ../../data/models/transaction_filter.dart, _amountMaxController, _amountMinController, _applyAmountRange, _applyDatePreset, build, _buildActiveFiltersRow (+33 more)
+Nodes (43): ../../../../core/widgets/premium_calendar_sheet.dart, ../../data/models/transaction_filter.dart, _amountMaxController, _amountMinController, _applyAmountRange, _applyDatePreset, build, _buildActiveFiltersRow (+35 more)
 
 ### Community 107 - "Community 107"
-Cohesion: 0.05
-Nodes (44): build, _buildDivider, _buildDropdown, _buildInterestModeTab, _buildLabel, _buildLoanFields, _buildSavingsFields, _buildSlider (+36 more)
+Cohesion: 0.04
+Nodes (53): loanProductsServiceProvider, savingsProductsServiceProvider, _handleAction, LoanProductsPage, build, _buildDivider, _buildDropdown, _buildInterestModeTab (+45 more)
 
 ### Community 108 - "Community 108"
 Cohesion: 0.08
@@ -2488,8 +2510,8 @@ Cohesion: 0.08
 Nodes (33): annotateFrame(), args, buildOverlaySVG(), COMP_DIR, compositeOver(), FPS, HEIGHT, isLargeText() (+25 more)
 
 ### Community 110 - "Community 110"
-Cohesion: 0.10
-Nodes (38): freezeLocalFile(), isDirectMediaUrl(), RFC-1918, firstSemver(), isLibraryLutOfflineMiss(), recordMiss(), colorMiss(), commandText() (+30 more)
+Cohesion: 0.11
+Nodes (33): heygenAuthMethod(), firstSemver(), isLibraryLutOfflineMiss(), recordMiss(), providerMatches(), providerNamesFor(), colorMiss(), commandText() (+25 more)
 
 ### Community 111 - "Community 111"
 Cohesion: 0.07
@@ -2512,12 +2534,12 @@ Cohesion: 0.21
 Nodes (17): entityFrom(), FAVICON_DOMAINS, faviconDomainFor(), faviconSearch(), fetchJson(), GITHUB_ORGS, githubAvatarSearch(), githubOrgFor() (+9 more)
 
 ### Community 116 - "Community 116"
-Cohesion: 0.06
-Nodes (36): CustomPainter, ../../data/models/streak_model.dart, ../../data/models/target_model.dart, _GaugePainter, _SmokeyPainter, _AuroraPainter, _SparklinePainter, _RipplePainter (+28 more)
+Cohesion: 0.09
+Nodes (22): ../../data/models/streak_model.dart, ../../data/models/target_model.dart, TargetModel, _animation, backgroundColor, build, color, _controller (+14 more)
 
 ### Community 117 - "Community 117"
 Cohesion: 0.04
-Nodes (44): ../../data/models/customer_feedback_model.dart, ../../data/providers/customer_feedback_providers.dart, _animatingIndex, _bounceController, _buildComposeSection, _buildGradientHeader, _canSubmit, color (+36 more)
+Nodes (50): ../../data/models/customer_feedback_model.dart, ../../data/providers/customer_feedback_providers.dart, customerFeedbackProvider, _animatingIndex, _bounceController, build, _buildComposeSection, _buildGradientHeader (+42 more)
 
 ### Community 118 - "Community 118"
 Cohesion: 0.05
@@ -2529,7 +2551,7 @@ Nodes (40): active,
 
 ### Community 119 - "Community 119"
 Cohesion: 0.05
-Nodes (39): ../../../auth/data/models/user_model.dart, authState, branchCollectionsProvider, branchDailySummaryProvider, branchId, branchManagerDashboardProvider, branchOverdueLoansProvider, branchStaffProvider (+31 more)
+Nodes (42): authState, branchCollectionsProvider, branchDailySummaryProvider, branchId, branchManagerDashboardProvider, branchManagerRepositoryProvider, branchOverdueLoansProvider, branchStaffProvider (+34 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.05
@@ -2540,8 +2562,8 @@ Cohesion: 0.05
 Nodes (40): addPendingOperation, clearAll, clearCollections, clearCustomers, clearLoans, clearPendingOperations, _collections, _collectionsBox (+32 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.08
-Nodes (30): ../../data/providers/support_ticket_providers.dart, ../../data/repositories/support_ticket_repository.dart, client, getTicketMessages, getTicketsForUser, myTicketsProvider, orgId, service (+22 more)
+Cohesion: 0.04
+Nodes (55): ../../data/providers/support_ticket_providers.dart, ../../data/repositories/support_ticket_repository.dart, build, client, createState, res, _row, SmsHistoryPage (+47 more)
 
 ### Community 123 - "Community 123"
 Cohesion: 0.05
@@ -2564,8 +2586,8 @@ Cohesion: 0.05
 Nodes (32): argv, body, BOT_DENYLIST, botsFiltered, commitLines, consider(), diffByPath, diffSections (+24 more)
 
 ### Community 128 - "Community 128"
-Cohesion: 0.07
-Nodes (28): ../../../customer_portal/data/providers/customer_member_provider.dart, checkExistingPending, client, customerId, customerUpiRequestsProvider, getCustomerRequests, getOrgRequests, getPendingRequests (+20 more)
+Cohesion: 0.13
+Nodes (14): ../../../customer_portal/data/providers/customer_member_provider.dart, checkExistingPending, client, customerId, customerUpiRequestsProvider, getCustomerRequests, getOrgRequests, getPendingRequests (+6 more)
 
 ### Community 129 - "Community 129"
 Cohesion: 0.09
@@ -2592,8 +2614,8 @@ Cohesion: 0.08
 Nodes (32): argv, brandColors, brandColorStats, brandFonts, brandFontWeights, __dirname, framePath, hexToHsl() (+24 more)
 
 ### Community 135 - "Community 135"
-Cohesion: 0.06
-Nodes (37): analyticsProvider, amount, AnalyticsPage, build, _buildDelinquencyAnalysis, _buildErrorState, _buildExportButton, _buildHeader (+29 more)
+Cohesion: 0.07
+Nodes (28): assets, body, browserDownloadUrl, contentType, fromJson, GitHubRelease, GitHubReleaseAsset, isUniversalApk (+20 more)
 
 ### Community 136 - "Community 136"
 Cohesion: 0.05
@@ -2604,8 +2626,8 @@ Cohesion: 0.08
 Nodes (32): argv, brandColors, brandColorStats, brandFonts, brandFontWeights, __dirname, framePath, hexToHsl() (+24 more)
 
 ### Community 138 - "Community 138"
-Cohesion: 0.10
-Nodes (22): int get, userLoansProvider, userSavingsProvider, build, build, _buildAdminAuditTimeline, _buildAdminNotes, UserDetailsPage (+14 more)
+Cohesion: 0.12
+Nodes (16): int get, _buildAdminAuditTimeline, _buildAdminNotes, adminNotesProvider, authUserId, getAdminNotes, getAuditLogsForUser, hashCode (+8 more)
 
 ### Community 139 - "Community 139"
 Cohesion: 0.08
@@ -2646,7 +2668,7 @@ Nodes (14): ia(), Md(), Nd(), oa(), Od(), pa(), Pd(), qa() (+6 more)
 
 ### Community 148 - "Community 148"
 Cohesion: 0.02
-Nodes (102): ../../data/providers/setup_provider.dart, _buildHeader, _buildTopBar, _buildAppBar, accentColor, build, _buildActionButton, _buildCreateOrgButton (+94 more)
+Nodes (121): ../../data/models/org_invitation_model.dart, ../../data/providers/invitation_providers.dart, ../../data/providers/setup_provider.dart, _buildHeader, _buildTopBar, _buildAppBar, accentColor, build (+113 more)
 
 ### Community 149 - "Community 149"
 Cohesion: 0.08
@@ -2654,7 +2676,7 @@ Nodes (31): argv, brandColors, brandColorStats, brandFonts, brandFontWeights, __
 
 ### Community 150 - "Community 150"
 Cohesion: 0.10
-Nodes (24): SKILL, CAPABILITIES, describeModelLadder(), listModels(), meetsSpecs(), MODELS, rankedByPreference(), IMPORTANT: download the weights with a targeted include list first; (+16 more)
+Nodes (23): CAPABILITIES, describeModelLadder(), listModels(), meetsSpecs(), MODELS, rankedByPreference(), IMPORTANT: download the weights with a targeted include list first;, selectModel() (+15 more)
 
 ### Community 151 - "Community 151"
 Cohesion: 0.07
@@ -2669,8 +2691,8 @@ Cohesion: 0.07
 Nodes (14): ia(), Md(), Nd(), oa(), Od(), pa(), Pd(), qa() (+6 more)
 
 ### Community 154 - "Community 154"
-Cohesion: 0.03
-Nodes (62): ../../../../core/providers/sms_provider.dart, ../../../home/data/providers/dashboard_providers.dart, client, collectionHistoryProvider, customerDetailProvider, customerLoansProvider, customerSavingsProvider, customerSearchProvider (+54 more)
+Cohesion: 0.05
+Nodes (36): ../../../home/data/providers/dashboard_providers.dart, client, collectionHistoryProvider, customerDetailProvider, customerLoansProvider, customerSavingsProvider, customerSearchProvider, frequentCustomersProvider (+28 more)
 
 ### Community 155 - "Community 155"
 Cohesion: 0.08
@@ -2697,8 +2719,8 @@ Cohesion: 0.05
 Nodes (36): accent, accentLight, bg, bodyBottomPad, bodyPad, border, borderColor, card (+28 more)
 
 ### Community 161 - "Community 161"
-Cohesion: 0.08
-Nodes (23): _applyResolution, _client, ConflictRecord, ConflictResolutionService, ConflictStrategy, ConflictType, _defaultStrategies, detectConflicts (+15 more)
+Cohesion: 0.05
+Nodes (40): description, features, formattedMonthly, formattedYearly, fromJson, id, isActive, isEnterprise (+32 more)
 
 ### Community 162 - "Community 162"
 Cohesion: 0.09
@@ -2710,7 +2732,7 @@ Nodes (20): findGlobalBySha(), readGlobalManifest(), formatCandidates(), listCan
 
 ### Community 164 - "Community 164"
 Cohesion: 0.06
-Nodes (33): BackupAnalytics, BackupHealth, BackupHealthStatus, BackupProgress, BackupProgressState, backupsThisMonth, backupsThisWeek, copyWith (+25 more)
+Nodes (35): BackupAnalytics, BackupHealth, BackupHealthStatus, BackupProgress, BackupProgressState, backupsThisMonth, backupsThisWeek, copyWith (+27 more)
 
 ### Community 165 - "Community 165"
 Cohesion: 0.06
@@ -2746,7 +2768,7 @@ Nodes (34): 10. DEVICE MOCKUP FRAME RULE, 11. ONBOARDING FLOW RULE, 12. FIRST SC
 
 ### Community 173 - "Community 173"
 Cohesion: 0.11
-Nodes (29): CubeValidateError, DEFAULT_DOMAIN_MAX, DEFAULT_DOMAIN_MIN, isNumericDataLine(), main(), parseCube(), parseFiniteNumber(), parseSize() (+21 more)
+Nodes (28): CubeValidateError, DEFAULT_DOMAIN_MAX, DEFAULT_DOMAIN_MIN, isNumericDataLine(), main(), parseCube(), parseFiniteNumber(), parseSize() (+20 more)
 
 ### Community 174 - "Community 174"
 Cohesion: 0.06
@@ -2765,8 +2787,8 @@ Cohesion: 0.07
 Nodes (29): balance, build, _buildCustomerBlock, _buildFooter, _buildHeader, _buildLedgerTable, _buildPdf, _buildPlanSection (+21 more)
 
 ### Community 178 - "Community 178"
-Cohesion: 0.05
-Nodes (41): AsyncNotifier, copyWith, CustomerNotificationPreferences, defaults, emailEnabled, emiReminder1Day, emiReminder3Days, emiReminderOnDue (+33 more)
+Cohesion: 0.07
+Nodes (31): AsyncNotifier, customer_home_providers.dart, customer_member_provider.dart, customer_notifications_providers.dart, customer_profile_providers.dart, customer_savings_providers.dart, customer_support_providers.dart, CustomerNotificationPreferences (+23 more)
 
 ### Community 179 - "Community 179"
 Cohesion: 0.06
@@ -2793,8 +2815,8 @@ Cohesion: 0.11
 Nodes (24): mergeTokensToWords(), anonymousId(), __anonymousIdForTest(), heygenAccountDistinctId(), identifyAccount(), isTestOrCiContext(), legacyMediaAnonId(), optedOut() (+16 more)
 
 ### Community 185 - "Community 185"
-Cohesion: 0.05
-Nodes (40): dart:math, AuroraBackground, build, child, createState, _ctrl, dispose, initState (+32 more)
+Cohesion: 0.04
+Nodes (48): AnimationController, BorderRadius?, GradientTransform, AuroraBackground, build, child, createState, _ctrl (+40 more)
 
 ### Community 186 - "Community 186"
 Cohesion: 0.06
@@ -2810,11 +2832,11 @@ Nodes (34): 10. SVG / canvas / variable fonts (other authored techniques), 13. C
 
 ### Community 189 - "Community 189"
 Cohesion: 0.06
-Nodes (32): ../../../../core/constants/statement_colors.dart, ../../../../core/models/statement_org_info.dart, Font, _buildFooter, _buildHeader, _buildHeaderCell, _buildPaymentTable, _buildPdf (+24 more)
+Nodes (33): ../../../../core/constants/statement_colors.dart, ../../../../core/models/statement_org_info.dart, Font, _buildFooter, _buildHeader, _buildHeaderCell, _buildPaymentTable, _buildPdf (+25 more)
 
 ### Community 190 - "Community 190"
 Cohesion: 0.05
-Nodes (36): _anim, build, _buildBar, _buildResults, _cache, _close, color, createState (+28 more)
+Nodes (38): _anim, build, _buildBar, _buildResults, _cache, _close, color, createState (+30 more)
 
 ### Community 191 - "Community 191"
 Cohesion: 0.06
@@ -2874,7 +2896,7 @@ Nodes (29): anomalies, approvedVideoAttrs(), argv, attrPresent(), attrValue(), a
 
 ### Community 208 - "Community 208"
 Cohesion: 0.06
-Nodes (33): 10. SVG / canvas / variable fonts (other authored techniques), 12. Registry — 51 blocks + 4 components + 8 examples, 13. CLI — 25 commands, 14. Linter — 60+ rules, 17. Studio — in-browser NLE, 18. Determinism guarantees, 19. Variables / parameterization, 1. Composition fundamentals (+25 more)
+Nodes (34): 10. SVG / canvas / variable fonts (other authored techniques), 13. CLI — 25 commands, 14. Linter — 60+ rules, 17. Studio — in-browser NLE, 18. Determinism guarantees, 19. Variables / parameterization, 20. Sub-compositions, 21. Global runtime APIs (`window.*`) (+26 more)
 
 ### Community 209 - "Community 209"
 Cohesion: 0.06
@@ -2906,7 +2928,7 @@ Nodes (27): anomalies, argv, attrPresent(), attrValue(), audio, audioMetaPath, b
 
 ### Community 216 - "Community 216"
 Cohesion: 0.01
-Nodes (278): AutomaticKeepAliveClientMixin, ConsumerState, ConsumerStatefulWidget, ../../data/repositories/savings_repository.dart, ../../data/services/loan_statement_csv_service.dart, ../../data/services/loan_statement_excel_service.dart, ../../data/services/qr_png.dart, ../features/auth/presentation/providers/auth_provider.dart (+270 more)
+Nodes (220): brandProvider, ../../data/models/emi_schedule_model.dart, ../../data/models/loan_model.dart, ../../data/providers/loan_providers.dart, ../../data/repositories/emi_repository.dart, ../../data/repositories/savings_repository.dart, ../../data/services/loan_statement_archive_service.dart, ../../data/services/loan_statement_csv_service.dart (+212 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.08
@@ -2953,8 +2975,8 @@ Cohesion: 0.06
 Nodes (30): ../constants/sms_templates.dart, Exception, buildCollectionSms, buildLoanClosedSms, buildPartialPaymentSms, buildReminderSms, buildSavingsSms, carrierName (+22 more)
 
 ### Community 228 - "Community 228"
-Cohesion: 0.16
-Nodes (13): argv, dur, output, positional, HEYGEN_CLI_SOURCE_HEADERS, HEYGEN_CLIENT_SOURCE_HEADERS, heygenAuthHeaders(), heygenAuthMethod() (+5 more)
+Cohesion: 0.08
+Nodes (27): auth, _agreedToTerms, build, _buildForm, _buildLogo, _buildSignInLink, _buildSignUpButton, _buildTermsCheckbox (+19 more)
 
 ### Community 229 - "Community 229"
 Cohesion: 0.07
@@ -2981,8 +3003,8 @@ Cohesion: 0.06
 Nodes (30): Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria, Acceptance Criteria (+22 more)
 
 ### Community 235 - "Community 235"
-Cohesion: 0.05
-Nodes (43): AnimationController, class, customer_payment_trend_chart.dart, build, color, createState, CustomerSavingsAchievementBadge, _CustomerSavingsAchievementBadgeState (+35 more)
+Cohesion: 0.08
+Nodes (24): class, client, customerProfileRepositoryProvider, data, fromJson, memberId, orgId, repository (+16 more)
 
 ### Community 236 - "Community 236"
 Cohesion: 0.06
@@ -2997,12 +3019,12 @@ Cohesion: 0.10
 Nodes (17): Before you finish — checklist, Caption-band keep-out (plan side), Inventing the visual — diagrams, type, data-viz, Layout — named inline per Scene, Palette & type — from `frame.md`, never invented, Pick the shape — instantiate a blueprint, Portrait & square (non-16:9 canvases), The unit is a time-coded shot sequence (+9 more)
 
 ### Community 239 - "Community 239"
-Cohesion: 0.29
-Nodes (6): Code vocabulary — the `code-*` animation blocks, Install + use, PR beat → block cheat-sheet, Showing behavior — the mechanism beat (not a `code-*` block), The animation blocks, The `code-snippet-*` theme family (standalone, not palettes)
+Cohesion: 0.07
+Nodes (26): ../../../../core/providers/sms_provider.dart, client, copyWith, engine, error, failed, getLastSyncTime, getPendingCount (+18 more)
 
 ### Community 240 - "Community 240"
-Cohesion: 0.07
-Nodes (29): authenticateWithBiometrics, _autoLockKey, autoLockMinutes, availableBiometricsProvider, biometricAvailableProvider, biometricEnabled, _biometricEnabledKey, clearAllSecuritySettings (+21 more)
+Cohesion: 0.05
+Nodes (40): authenticate, false, getAvailableBiometrics, getBiometricLabel, isBiometricAvailable, isBiometricEnabled, _localAuth, _prefKey (+32 more)
 
 ### Community 241 - "Community 241"
 Cohesion: 0.07
@@ -3021,8 +3043,8 @@ Cohesion: 0.07
 Nodes (28): ../../data/models/chat_message.dart, ../../data/repositories/chatbot_repository.dart, FlutterTts, chatbotRepositoryProvider, ChatNotifier, ChatState, clearHistory, copyWith (+20 more)
 
 ### Community 245 - "Community 245"
-Cohesion: 0.03
-Nodes (66): backup_export_provider.dart, google_drive_provider.dart, google_drive_service.dart, _backupService, connection, DriveBackupResult, _driveService, driveUrl (+58 more)
+Cohesion: 0.07
+Nodes (28): google_drive_provider.dart, applyDependencies, backupCategoriesProvider, copyWith, createdTime, currentTable, error, fileId (+20 more)
 
 ### Community 246 - "Community 246"
 Cohesion: 0.07
@@ -3051,8 +3073,8 @@ Cohesion: 0.08
 Nodes (21): anomalies, argv, bgmFields, bgmModeOverride, HERE, hyperframesDir, langOverride, lyriaRecipe (+13 more)
 
 ### Community 252 - "Community 252"
-Cohesion: 0.11
-Nodes (16): dart:async, AppUpdateCheckResult, androidUpdateStatusProvider, _derive, repo, row, _api, AppUpdateRepository (+8 more)
+Cohesion: 0.22
+Nodes (8): _api, AppUpdateRepository, appUpdateRepositoryProvider, create, fetchActiveForAndroid, fetchLatestActiveForAndroid, package:microflow_pro/core/models/app_update.dart, package:microflow_pro/features/settings/data/datasources/app_update_api.dart
 
 ### Community 253 - "Community 253"
 Cohesion: 0.07
@@ -3115,8 +3137,8 @@ Cohesion: 0.07
 Nodes (26): 10. Render to MP4, 11. Report Results, 1. Check Environment, 2. Create a Work Directory, 3. Extract Audio and Metadata, 4. Transcribe, 5. Correct Transcript, 6. Draft a Lightweight Storyboard (in chat) (+18 more)
 
 ### Community 268 - "Community 268"
-Cohesion: 0.04
-Nodes (52): Battery, ../../../../core/utils/location_permission_helper.dart, ../../features/staff/data/models/staff_location_model.dart, ../../features/staff/data/services/offline_sync_engine.dart, _battery, _buildLocationModel, _client, _connectivitySub (+44 more)
+Cohesion: 0.03
+Nodes (60): Battery, ../../features/staff/data/models/staff_location_model.dart, ../../features/staff/data/services/offline_sync_engine.dart, backgroundLocationServiceProvider, client, locationCleanupServiceProvider, locationServiceProvider, service (+52 more)
 
 ### Community 269 - "Community 269"
 Cohesion: 0.08
@@ -3151,8 +3173,8 @@ Cohesion: 0.08
 Nodes (25): Execution Handoff, File Structure, Modified (Android), Modified (Flutter), New (Android), New (Flutter), New (SQL), New (Tests) (+17 more)
 
 ### Community 277 - "Community 277"
-Cohesion: 0.20
-Nodes (10): formatCandidates(), listCandidates(), meta(), rankScope(), shape(), MATCH_STOPWORDS, matchTokens(), tokenOverlap() (+2 more)
+Cohesion: 0.08
+Nodes (25): Duration, animate, _animation, animationDuration, backgroundColor, borderRadius, build, center (+17 more)
 
 ### Community 278 - "Community 278"
 Cohesion: 0.15
@@ -3176,7 +3198,7 @@ Nodes (23): Gradient, backgroundColor, borderColor, borderRadius, build, _buildG
 
 ### Community 283 - "Community 283"
 Cohesion: 0.05
-Nodes (42): assignManager, branchCountProvider, branchMembersProvider, branchNotifierProvider, branchProvider, branchRepositoryProvider, branchStaffProvider, branchStatsProvider (+34 more)
+Nodes (40): assignManager, branchCountProvider, branchMembersProvider, branchProvider, branchRepositoryProvider, branchStaffProvider, branchStatsProvider, client (+32 more)
 
 ### Community 284 - "Community 284"
 Cohesion: 0.09
@@ -3259,8 +3281,8 @@ Cohesion: 0.05
 Nodes (42): ../../../../core/providers/location_providers.dart, ../../data/models/member_model.dart, ../../data/repositories/members_repository.dart, MemberSummary, _client, createMember, getMembers, getMemberSummary (+34 more)
 
 ### Community 304 - "Community 304"
-Cohesion: 0.03
-Nodes (73): ../../../../core/providers/org_provider.dart, customer_member_provider.dart, build, _buildBanner, client, orgId, TrialBanner, trialInfoProvider (+65 more)
+Cohesion: 0.07
+Nodes (28): cleanupOldNotifications, client, customerId, customerNotificationServiceProvider, generateSmartNotifications, orgId, service, smartNotificationTriggerProvider (+20 more)
 
 ### Community 305 - "Community 305"
 Cohesion: 0.08
@@ -3295,12 +3317,12 @@ Cohesion: 0.08
 Nodes (24): 1 · Cover (identity · move: oversized serif · green · left), 2 · Topic Tiles (catalog · move: rotating-fill grid · cream · the dense frame), 3 · KPI Stat (data · move: oversized figure · green), 4 · Statement (quote · move: display serif · cream · left), 5 · Step Framework (process · move: 8px step tiles · cream/green), 6 · Chart (data · move: bars + meta · green), Approved Real Entities, Aspect-Ratio Behavior (+16 more)
 
 ### Community 313 - "Community 313"
-Cohesion: 0.05
-Nodes (36): createdAt, CustomerNotificationModel, data, fromJson, id, isRead, message, readAt (+28 more)
+Cohesion: 0.08
+Nodes (24): amount, confirmedAt, confirmedBy, createdAt, currency, customerId, emiScheduleId, fromJson (+16 more)
 
 ### Community 314 - "Community 314"
 Cohesion: 0.01
-Nodes (305): ../core/constants/app_colors.dart, ../../../../core/services/location_service.dart, ../../../../core/utils/formatters.dart, ../../../../core/widgets/branded_loading.dart, ../../../../core/widgets/glass_card.dart, ../../../../core/widgets/smokey_background.dart, ../../data/constants/legal_content.dart, ../../data/models/collection_model.dart (+297 more)
+Nodes (262): ConsumerState, ConsumerStatefulWidget, ../../../../core/services/location_service.dart, ../../../../core/widgets/smokey_background.dart, ../../data/models/collection_model.dart, ../../data/providers/collection_providers.dart, ../../data/providers/staff_providers.dart, AppTheme (+254 more)
 
 ### Community 315 - "Community 315"
 Cohesion: 0.08
@@ -3347,12 +3369,12 @@ Cohesion: 0.08
 Nodes (23): 1. Smooth beats bouncy — `power3` is the default, 2. Sequential reveal in the back ~50%, timed to the voiceover, 3. No lazy breathing, no bad pan/push — "no motion over bad motion", 4. Internal seams are velocity-matched cuts, Aliveness during a hold (use sparingly — see Part 2), Camera, Count-up / data, Emphasis / marker (+15 more)
 
 ### Community 326 - "Community 326"
-Cohesion: 0.06
-Nodes (30): app_links, battery_plus, Cocoa, connectivity_plus, file_picker, file_selector_macos, firebase_core, firebase_messaging (+22 more)
+Cohesion: 0.08
+Nodes (23): app_links, battery_plus, connectivity_plus, file_picker, file_selector_macos, firebase_core, firebase_messaging, flutter_image_compress_macos (+15 more)
 
 ### Community 327 - "Community 327"
-Cohesion: 0.13
-Nodes (14): build, _dateFmt, _dateTimeFmt, _escape, _isInflow, _money, _paymentModeLabel, _periodLabel (+6 more)
+Cohesion: 0.08
+Nodes (24): emi_repository.dart, allLoansProvider, getAllLoans, orgId, repository, _client, createLoan, createMigrationLoan (+16 more)
 
 ### Community 328 - "Community 328"
 Cohesion: 0.08
@@ -3387,8 +3409,8 @@ Cohesion: 0.08
 Nodes (24): 1 · Region-Split Cover (identity · move: hard region edge · left), 2 · Feature Stat (anchor · move: scale · coral environment · left), 3 · Quote Layout (quote · move: panel split · giant mark), 4 · Closing Plate (closer · move: cream field + coral band · centered), 5 · Three-Column Catalog (catalog · move: density — the dense frame · centered head), 6 · Timeline (process · move: horizontal rail · left), Approved Entities, Aspect-Ratio Behavior (+16 more)
 
 ### Community 336 - "Community 336"
-Cohesion: 0.17
-Nodes (18): elevenlabsAvailable(), ffmpegDurationFallback(), ffprobeDuration(), heygenAvailable(), parseFfmpegDurationBanner(), pickProvider(), relTo(), _resetNpxResolutionWarnForTests() (+10 more)
+Cohesion: 0.15
+Nodes (20): argv, dur, output, positional, heygenAuthHeaders(), heygenCredential(), heygenJSON(), elevenlabsAvailable() (+12 more)
 
 ### Community 337 - "Community 337"
 Cohesion: 0.08
@@ -3403,8 +3425,8 @@ Cohesion: 0.08
 Nodes (23): ../../data/providers/branding_providers.dart, _accentColorController, _buildColorField, _buildColorsCard, _buildCustomDomainCard, _buildFeaturesCard, _buildLoginPageCard, _buildLogoUploadCard (+15 more)
 
 ### Community 340 - "Community 340"
-Cohesion: 0.14
-Nodes (12): _batchSize, cleanupOldLocations, _client, LocationCleanupService, _retentionDays, canBackdate, CollectionBackdateRbac, computeDaysBack (+4 more)
+Cohesion: 0.08
+Nodes (21): image_compress_service.dart, _bucketName, _client, deleteAvatar, _maxFileSizeBytes, pickAndUploadAvatar, updateProfileAvatarUrl, _uploadBytes (+13 more)
 
 ### Community 341 - "Community 341"
 Cohesion: 0.08
@@ -3455,16 +3477,16 @@ Cohesion: 0.08
 Nodes (23): AppFormatters, convertToIST, _currencyFormat, currencySymbol, _dateFormat, _dateTimeFormat, formatCurrency, formatDate (+15 more)
 
 ### Community 353 - "Community 353"
-Cohesion: 0.03
-Nodes (64): @pragma, app.dart, core/config/firebase_options.dart, core/providers/storage_providers.dart, core/services/analytics_service.dart, core/services/background_handler.dart, core/services/notification_service.dart, core/services/sms_outbox_service.dart (+56 more)
+Cohesion: 0.05
+Nodes (41): @pragma, ../../../../core/constants/enums.dart, file_download_stub.dart, firebaseMessagingBackgroundHandler, downloadFile, downloadFileForWeb, _client, detectAndFreezeSkippedEMIs (+33 more)
 
 ### Community 354 - "Community 354"
-Cohesion: 0.05
-Nodes (40): date, _dateFmt, daysLabel, healthGrade, healthGradeLabel, isoDate, _isoDateFmt, isValidImage (+32 more)
+Cohesion: 0.09
+Nodes (22): archive, bucket, _client, delete, download, filePath, fileSizeBytes, format (+14 more)
 
 ### Community 355 - "Community 355"
-Cohesion: 0.12
-Nodes (15): description, features, formattedMonthly, formattedYearly, fromJson, id, isActive, isEnterprise (+7 more)
+Cohesion: 0.08
+Nodes (24): backup_export_provider.dart, _backupService, connection, DriveBackupResult, driveBackupsProvider, driveBackupTriggerProvider, _driveService, driveUrl (+16 more)
 
 ### Community 356 - "Community 356"
 Cohesion: 0.10
@@ -3547,8 +3569,8 @@ Cohesion: 0.09
 Nodes (23): Architecture Constraint: Each Beat is an Independent Composition, Asset Audit — REQUIRED before writing beats (non-skippable), BEAT 10 — ORBITAL LETTERS / CLOSE (example of a closing beat spec), BEAT 1 — LIGHT BALL OPENER (0:00–0:03), Brand Accents Pass (LAST creative decision — happens after beats are written), Brand defaults (nice-to-haves for most brand videos), Consider: Would Research Improve This Video?, Device Mockups: Use the Registry Block (+15 more)
 
 ### Community 376 - "Community 376"
-Cohesion: 0.05
-Nodes (39): ../../data/models/invoice_model.dart, ../../data/models/org_subscription_model.dart, ../../data/models/subscription_plan_model.dart, ../../data/providers/billing_providers.dart, InvoiceModel, billingNotifierProvider, currentSubscriptionProvider, orgInvoicesProvider (+31 more)
+Cohesion: 0.06
+Nodes (34): ../../data/models/invoice_model.dart, ../../data/models/org_subscription_model.dart, ../../data/models/subscription_plan_model.dart, ../../data/providers/billing_providers.dart, InvoiceModel, billingNotifierProvider, orgInvoicesProvider, badge (+26 more)
 
 ### Community 377 - "Community 377"
 Cohesion: 0.09
@@ -3596,15 +3618,15 @@ Nodes (22): amount, createdAt, currency, description, dueDate, formattedAmount, 
 
 ### Community 388 - "Community 388"
 Cohesion: 0.17
-Nodes (13): activeBranchesProvider, build, _refresh, _buildBranchAssignmentSection, _confirmAndChangeStatus, _EditProfileSheet, _EditProfileSheetState, _handleForceLogout (+5 more)
+Nodes (23): AsyncValue, BrandingNotifier, ApiNotifier, BillingNotifier, BranchNotifier, BrandingNotifier, BiometricToggleNotifier, CreateFeedbackNotifier (+15 more)
 
 ### Community 389 - "Community 389"
 Cohesion: 0.09
 Nodes (22): addMessage, AdminSupportTicket, AdminTicketMessage, assignedTo, _client, createdAt, createTicket, fromJson (+14 more)
 
 ### Community 390 - "Community 390"
-Cohesion: 0.17
-Nodes (11): ../../../../core/services/avatar_upload_service.dart, AvatarUploadService, _uploadAvatar, avatarUploadNotifierProvider, avatarUploadServiceProvider, _ref, removeAvatar, _service (+3 more)
+Cohesion: 0.11
+Nodes (9): freezeLocalFile(), freezeUrl(), isDirectMediaUrl(), RFC-1918, exitError(), ingest(), REPO_ROOT, RESOLVE_CLI (+1 more)
 
 ### Community 391 - "Community 391"
 Cohesion: 0.09
@@ -3691,8 +3713,8 @@ Cohesion: 0.16
 Nodes (14): BGM_PY_DEPS, bgmDefaultVolume(), generateBgmDetached(), inferBgmPrompt(), LYRIA_PY_DEPS, lyriaKey(), musicgenScript(), pipInstall() (+6 more)
 
 ### Community 412 - "Community 412"
-Cohesion: 0.04
-Nodes (55): customerLoansProvider, ../../data/models/customer_loan_model.dart, ../../data/providers/customer_loans_providers.dart, CustomerLoanModel, CustomerCurrencyFormatter, format, formatCompact, formatWithDecimals (+47 more)
+Cohesion: 0.06
+Nodes (34): customerLoansProvider, ../../data/providers/customer_loans_providers.dart, build, _buildContent, _buildErrorState, _buildFilterChips, _buildGradientHeader, _buildLoadingState (+26 more)
 
 ### Community 413 - "Community 413"
 Cohesion: 0.09
@@ -3723,16 +3745,16 @@ Cohesion: 0.21
 Nodes (17): entityFrom(), FAVICON_DOMAINS, faviconDomainFor(), faviconSearch(), fetchJson(), GITHUB_ORGS, githubAvatarSearch(), githubOrgFor() (+9 more)
 
 ### Community 420 - "Community 420"
-Cohesion: 0.04
-Nodes (44): assets, body, browserDownloadUrl, contentType, fromJson, GitHubRelease, GitHubReleaseAsset, isUniversalApk (+36 more)
+Cohesion: 0.09
+Nodes (21): acceptedAt, branchId, createdAt, email, expiresAt, fromJson, id, invitedBy (+13 more)
 
 ### Community 421 - "Community 421"
-Cohesion: 0.17
-Nodes (11): authenticate, false, getAvailableBiometrics, getBiometricLabel, isBiometricAvailable, isBiometricEnabled, _localAuth, _prefKey (+3 more)
+Cohesion: 0.21
+Nodes (17): entityFrom(), FAVICON_DOMAINS, faviconDomainFor(), faviconSearch(), fetchJson(), GITHUB_ORGS, githubAvatarSearch(), githubOrgFor() (+9 more)
 
 ### Community 422 - "Community 422"
-Cohesion: 0.06
-Nodes (37): action, _ActionTile, activeLoansCount, adminMyOrgProvider, AdminOrgDashboardPage, build, _buildOrgHeader, _buildOrgSettingsCard (+29 more)
+Cohesion: 0.02
+Nodes (108): ../../../branches/presentation/pages/branch_management_page.dart, ../../../../core/providers/org_provider.dart, ../../../../core/utils/json_normalize.dart, dart:html, blob, downloadFile, true, url (+100 more)
 
 ### Community 423 - "Community 423"
 Cohesion: 0.10
@@ -3810,8 +3832,8 @@ Cohesion: 0.10
 Nodes (19): Authentication, cloud — HeyGen-hosted rendering (zero-infra), Fire-and-forget and webhooks, Managing renders, Render options, Safe retries, Templates and variables, The render pipeline (+11 more)
 
 ### Community 441 - "Community 441"
-Cohesion: 0.16
-Nodes (11): missesPath(), readMisses(), buildStats(), diskBytes(), emptyReport(), increment(), inWindow(), normalizeIntent() (+3 more)
+Cohesion: 0.09
+Nodes (20): findGlobalBySha(), readGlobalManifest(), formatCandidates(), listCandidates(), meta(), rankScope(), shape(), typesMatch() (+12 more)
 
 ### Community 442 - "Community 442"
 Cohesion: 0.10
@@ -3870,12 +3892,12 @@ Cohesion: 0.10
 Nodes (20): 1. Zoom-Through (forward), 2. Inverse Zoom-Through (backward), 3. Cut the Curve (Scene Transitions), 4. Waterfall Cut (word-by-word cut-the-curve), Anti-Patterns, Blur Logic (applies to all Z-axis variants), Choosing a Variant, Cut catalog — within-frame seams (worker-built) (+12 more)
 
 ### Community 456 - "Community 456"
-Cohesion: 0.03
-Nodes (63): activity_log_repository_provider.dart, accentColor, BrandingConfig, _cachedLogoBytes, _cachedSplashBytes, clearCache, defaultConfig, displayName (+55 more)
+Cohesion: 0.08
+Nodes (25): accentColor, BrandingConfig, _cachedLogoBytes, _cachedSplashBytes, clearCache, defaultConfig, displayName, fromJson (+17 more)
 
 ### Community 457 - "Community 457"
 Cohesion: 0.09
-Nodes (22): allOrganizationsProvider, build, _buildEmptyState, _buildErrorState, _buildHeader, _buildLoadingState, _buildOrgCard, _buildSearchAndFilter (+14 more)
+Nodes (21): AnnouncementModel, category, content, createdAt, description, discountPercent, FeatureRequestModel, fromJson (+13 more)
 
 ### Community 458 - "Community 458"
 Cohesion: 0.10
@@ -3886,8 +3908,8 @@ Cohesion: 0.20
 Nodes (10): ffmpeg requirement, HeyGen word-timestamp shape, Long scripts, Multilingual (Kokoro voice prefix → language), Provider chain, Self-contained HeyGen (no CLI) — `scripts/heygen-tts.mjs`, Speed, Text To Speech (+2 more)
 
 ### Community 460 - "Community 460"
-Cohesion: 0.16
-Nodes (19): _buildQuickActions, _buildQuickActions, build, _onItemTapped, Route /branch, Route /branch/settings, Route /customer, Route /loans (+11 more)
+Cohesion: 0.13
+Nodes (23): _navigateToStaffDashboard, _buildQuickActions, _buildQuickActions, _buildAppBar, build, _onItemTapped, Route /branch, Route /branch/settings (+15 more)
 
 ### Community 461 - "Community 461"
 Cohesion: 0.20
@@ -3978,8 +4000,8 @@ Cohesion: 0.19
 Nodes (17): bareToken(), clampRanges(), cleanRange(), compileCutList(), durationFrom(), fillerRanges(), finalizeKept(), hasRemovalSource() (+9 more)
 
 ### Community 483 - "Community 483"
-Cohesion: 0.21
-Nodes (17): ACTIONABLE_MESSAGES, classifyHeygenError(), classifyHeygenErrorCode(), classifyHeygenErrorResult(), consumeHeygenRemediation(), flushHeygenFailureTracking(), heygenErrorDetail(), pendingFailureTracking (+9 more)
+Cohesion: 0.15
+Nodes (20): bgmProvider, ACTIONABLE_MESSAGES, classifyHeygenError(), classifyHeygenErrorCode(), classifyHeygenErrorResult(), consumeHeygenRemediation(), flushHeygenFailureTracking(), heygenErrorDetail() (+12 more)
 
 ### Community 484 - "Community 484"
 Cohesion: 0.10
@@ -3994,20 +4016,20 @@ Cohesion: 0.15
 Nodes (20): Ae(), Animation(), ce(), $d(), Da(), ee(), he(), ka() (+12 more)
 
 ### Community 487 - "Community 487"
-Cohesion: 0.12
-Nodes (19): ../../../../core/models/github_release.dart, core/providers/system_config_provider.dart, ../../../../core/services/github_release_service.dart, systemConfigProvider, AppUpdatePage, _AppUpdatePageState, build, _buildCurrentStatusCard (+11 more)
+Cohesion: 0.13
+Nodes (18): ../../../../core/models/github_release.dart, ../../../../core/services/github_release_service.dart, systemConfigProvider, AppUpdatePage, _AppUpdatePageState, build, _buildCurrentStatusCard, createState (+10 more)
 
 ### Community 488 - "Community 488"
-Cohesion: 0.22
-Nodes (10): allUpiRequestsProvider, upiRepositoryProvider, build, _confirmBatchWithDialog, _confirmSelected, _rejectBatch, _rejectPayment, UpiConfirmationsPage (+2 more)
+Cohesion: 0.25
+Nodes (8): allUpiRequestsProvider, upiRepositoryProvider, build, _confirmBatchWithDialog, _confirmSelected, _rejectBatch, _rejectPayment, _confirmPaid
 
 ### Community 489 - "Community 489"
 Cohesion: 0.10
 Nodes (21): activeIcon, build, _buildHUDItem, child, createState, currentIndex, dispose, _enterController (+13 more)
 
 ### Community 490 - "Community 490"
-Cohesion: 0.05
-Nodes (50): ../../data/providers/products_providers.dart, _buildProductSelector, client, getProducts, loanProductsProvider, loanProductsServiceProvider, orgId, savingsProductsServiceProvider (+42 more)
+Cohesion: 0.29
+Nodes (6): client, getProducts, orgId, service, ../services/loan_products_service.dart, ../services/savings_products_service.dart
 
 ### Community 491 - "Community 491"
 Cohesion: 0.10
@@ -4058,20 +4080,20 @@ Cohesion: 0.10
 Nodes (19): address, city, email, fallback, grievanceOfficer, grievancePhone, gstNumber, logoBytes (+11 more)
 
 ### Community 503 - "Community 503"
-Cohesion: 0.11
-Nodes (18): circleToPolygon, distanceToPolygonEdge, _earthRadiusMeters, GeofenceUtils, haversineDistance, isInsideCircle, isInsidePolygon, _pointToSegmentDistance (+10 more)
+Cohesion: 0.05
+Nodes (37): ../../../../core/utils/polyline_utils.dart, dart:math, circleToPolygon, distanceToPolygonEdge, _earthRadiusMeters, GeofenceUtils, haversineDistance, isInsideCircle (+29 more)
 
 ### Community 504 - "Community 504"
 Cohesion: 0.36
 Nodes (10): HWND, LPARAM, LRESULT, UINT, WPARAM, EnableFullDpiSupportIfAvailable(), GetHandle, GetThisFromHandle (+2 more)
 
 ### Community 505 - "Community 505"
-Cohesion: 0.03
-Nodes (59): Animation, BorderRadius?, ../../../../core/constants/app_spacing.dart, ../../data/models/customer_transaction_model.dart, GradientTransform, _animation, borderRadius, build (+51 more)
+Cohesion: 0.10
+Nodes (20): _animController, build, _buildLegendRow, _buildSections, color, createState, CustomerLoanBreakdownChart, _CustomerLoanBreakdownChartState (+12 more)
 
 ### Community 506 - "Community 506"
-Cohesion: 0.22
-Nodes (9): chatProvider, build, _buildHeader, _buildInputArea, _buildQuickActions, _buildSendButton, _buildVoiceButton, FloatingChatbot (+1 more)
+Cohesion: 0.10
+Nodes (18): activity_log_repository_provider.dart, BrandModel, copyWith, fromJson, iconPreset, name, toJson, repo (+10 more)
 
 ### Community 507 - "Community 507"
 Cohesion: 0.10
@@ -4107,7 +4129,7 @@ Nodes (19): Color-shift transition (no scale), Combinations, Critical Constraint
 
 ### Community 515 - "Community 515"
 Cohesion: 0.01
-Nodes (188): ../../../branches/data/providers/branch_providers.dart, ../../../branches/models/branch_model.dart, bulk_import_members_page.dart, ConsumerWidget, ../../data/csv_utils.dart, InheritedWidget, ../../../invitations/data/models/org_invitation_model.dart, ../../../invitations/data/providers/invitation_providers.dart (+180 more)
+Nodes (200): bulk_import_members_page.dart, ConsumerWidget, ../core/constants/layout.dart, InheritedWidget, ../../../invitations/data/models/org_invitation_model.dart, ../../../invitations/data/providers/invitation_providers.dart, brandingProvider, backgroundColor (+192 more)
 
 ### Community 516 - "Community 516"
 Cohesion: 0.20
@@ -4150,28 +4172,28 @@ Cohesion: 0.24
 Nodes (8): arg(), _resetNpxResolutionWarnForTests(), resolveNpxCliFromNpmExecPath(), resolveNpxCliPath(), resolveSpawnCommand(), envWithNpxCli, spawnP(), transcribeWav()
 
 ### Community 526 - "Community 526"
-Cohesion: 0.11
-Nodes (18): client, createFeedbackProvider, customerFeedbackProvider, customerFeedbackRepositoryProvider, customerId, getFeedbacks, orgId, _ref (+10 more)
+Cohesion: 0.12
+Nodes (16): client, createFeedbackProvider, customerFeedbackRepositoryProvider, customerId, getFeedbacks, orgId, _ref, repository (+8 more)
 
 ### Community 527 - "Community 527"
 Cohesion: 0.25
 Nodes (7): Frame constraints, Frame worker — PR-to-video per-frame composition author, Mostly invented — you build the visual (except code blocks + the credits avatars), PR code beats, mechanism beats + the credits close, Self-check before finishing (you do NOT run the CLI), Workflow, You do NOT decide
 
 ### Community 528 - "Community 528"
-Cohesion: 0.06
-Nodes (33): autoRefreshProviders, didChangeDependencies, activeLoansCount, branchAddress, branchId, branchName, BranchStats, fromJson (+25 more)
+Cohesion: 0.12
+Nodes (16): activeLoansCount, branchAddress, branchId, branchName, BranchStats, fromJson, isActive, outstandingAmount (+8 more)
 
 ### Community 529 - "Community 529"
-Cohesion: 0.25
-Nodes (7): checkIn, checkOut, ref, repository, visitCheckInProvider, StaffRepository, ../repositories/staff_repository.dart
+Cohesion: 0.22
+Nodes (8): checkIn, checkOut, ref, repository, visitCheckInProvider, StaffRepository, ../repositories/staff_repository.dart, staff_providers.dart
 
 ### Community 530 - "Community 530"
 Cohesion: 0.11
 Nodes (17): 10. burn-in, 1. typewriter, 2. word-fade-up (DEFAULT), 3. word-pop, 4. swipe-reveal, 5. drop-and-settle, 6. etch, 7. crosshair (+9 more)
 
 ### Community 531 - "Community 531"
-Cohesion: 0.06
-Nodes (33): appName, appVersion, debugInfo, EnvConfig, githubToken, googleIosClientId, googleRedirectUri, googleWebClientId (+25 more)
+Cohesion: 0.11
+Nodes (18): appName, appVersion, debugInfo, EnvConfig, githubToken, googleIosClientId, googleRedirectUri, googleWebClientId (+10 more)
 
 ### Community 532 - "Community 532"
 Cohesion: 0.11
@@ -4186,8 +4208,8 @@ Cohesion: 0.11
 Nodes (10): argv, audioMeta, audioMetaPath, base, hyperframesDir, intervalMs, outPath, started (+2 more)
 
 ### Community 535 - "Community 535"
-Cohesion: 0.38
-Nodes (5): bundledSfxProvider, extensionForBundledSfxFile(), LIB_DIR, normalize(), score()
+Cohesion: 0.10
+Nodes (20): apiKeysProvider, apiNotifierProvider, apiRepositoryProvider, client, createIntegration, createWebhook, deleteApiKey, deleteIntegration (+12 more)
 
 ### Community 536 - "Community 536"
 Cohesion: 0.11
@@ -4195,7 +4217,7 @@ Nodes (17): 10. burn-in, 1. typewriter, 2. word-fade-up (DEFAULT), 3. word-pop, 
 
 ### Community 537 - "Community 537"
 Cohesion: 0.01
-Nodes (228): ../../../auth/presentation/providers/auth_provider.dart, ../../../chatbot/presentation/providers/chat_config_provider.dart, ../../../../core/services/app_icon_service.dart, ../../../../core/services/haptic_service.dart, ../../../../core/theme/design_system.dart, ../../../../core/theme/theme_provider.dart, ../../../../core/widgets/glassmorphic_card.dart, ../core/widgets/hud_navigation.dart (+220 more)
+Nodes (258): ../../../auth/data/models/user_model.dart, ../../../auth/presentation/providers/auth_provider.dart, branchStaffProvider, ../../../chatbot/presentation/providers/chat_config_provider.dart, ../core/constants/app_colors.dart, ../../../../core/services/haptic_service.dart, ../../../../core/theme/design_system.dart, ../../../../core/theme/theme_provider.dart (+250 more)
 
 ### Community 538 - "Community 538"
 Cohesion: 0.11
@@ -4238,8 +4260,8 @@ Cohesion: 0.29
 Nodes (7): brandingNotifierProvider, BrandingSettingsPage, _BrandingSettingsPageState, build, _saveChanges, _toggleFeature, _verifyDomain
 
 ### Community 548 - "Community 548"
-Cohesion: 0.11
-Nodes (19): build, _controller, createState, dispose, _focusNode, _handleSubmit, initialReason, initState (+11 more)
+Cohesion: 0.10
+Nodes (20): copyWith, defaults, emailEnabled, emiReminder1Day, emiReminder3Days, emiReminderOnDue, fromJson, fromJsonString (+12 more)
 
 ### Community 549 - "Community 549"
 Cohesion: 0.40
@@ -4290,16 +4312,16 @@ Cohesion: 0.12
 Nodes (16): 1. Interim framing — why this exists, 2. The parent wrapper (`index.html` for deliverables, `demo.html` in examples), 3. Playhead-driven scene visibility, 4. Imperative entrances on slide-activate, 5. The scenes bootstrap postMessage, 6. Audio/SFX — built-in mute control via `<hyperframes-slideshow sound>`, 7. Three.js (optional), 8. Foot-gun checklist (+8 more)
 
 ### Community 561 - "Community 561"
-Cohesion: 0.05
-Nodes (47): ../core/constants/layout.dart, ../../data/models/org_invitation_model.dart, ../../data/providers/invitation_providers.dart, invitationByTokenProvider, invitationNotifierProvider, AcceptInvitationPage, _AcceptInvitationPageState, build (+39 more)
+Cohesion: 0.11
+Nodes (19): build, createState, _customEnd, _customStart, description, label, periodEnd, periodStart (+11 more)
 
 ### Community 562 - "Community 562"
 Cohesion: 0.18
 Nodes (7): Footer(), links, Navbar(), BlogPage(), HelpCenterPage(), topics, StatusPage()
 
 ### Community 563 - "Community 563"
-Cohesion: 0.12
-Nodes (13): arg(), crop, dims, dir, frame(), interval, min, minMotion (+5 more)
+Cohesion: 0.13
+Nodes (11): crop, dims, dir, interval, min, minMotion, refDur, reference (+3 more)
 
 ### Community 564 - "Community 564"
 Cohesion: 0.12
@@ -4314,16 +4336,16 @@ Cohesion: 0.12
 Nodes (16): 10. Velocity-Matched Transitions, 11. Audio-Reactive Animation, 12. Clip-Path Reveal Masks, 13. WebGL Fragment Shader Art, 1. SVG Path Drawing, 2. Canvas 2D Procedural Art, 3. CSS 3D Transforms, 4. Per-Word Kinetic Typography (+8 more)
 
 ### Community 567 - "Community 567"
-Cohesion: 0.14
-Nodes (14): 10. SECTION RHYTHM RULE, 12. DENSITY & SPACING DISCIPLINE, 14. IMAGE / MEDIA DIRECTION, 16. MULTI-IMAGE CONSISTENCY RULE, 17. CLARITY CHECK, 19. RESPONSE BEHAVIOR, 1. ACTIVE BASELINE CONFIGURATION, 21. FINAL GOAL (+6 more)
+Cohesion: 0.12
+Nodes (16): 10. SECTION RHYTHM RULE, 12. DENSITY & SPACING DISCIPLINE, 14. IMAGE / MEDIA DIRECTION, 16. MULTI-IMAGE CONSISTENCY RULE, 17. CLARITY CHECK, 19. RESPONSE BEHAVIOR, 1. ACTIVE BASELINE CONFIGURATION, 21. FINAL GOAL (+8 more)
 
 ### Community 568 - "Community 568"
 Cohesion: 0.12
 Nodes (16): 1. Skill Meta, 2.1 Swiss Industrial Print, 2.2 Tactical Telemetry & CRT Terminal, 2. Visual Archetypes, 3.1 Macro-Typography (Structural Headers), 3.2 Micro-Typography (Data & Telemetry), 3.3 Textural Contrast (Artistic Disruption), 3. Typographic Architecture (+8 more)
 
 ### Community 569 - "Community 569"
-Cohesion: 0.07
-Nodes (25): Before you finish — checklist, Caption-band keep-out (plan side), Layout — named inline per Scene, Palette & type — from `frame.md`, never invented, Pick the shape — instantiate a blueprint, The unit is a time-coded shot sequence, `## Video direction` — write the invariants ONCE, Visual design — product-launch per-frame shot method (+17 more)
+Cohesion: 0.05
+Nodes (37): Blueprints (the proven shapes), Motion coverage, Picking guidance, Role → blueprint menu, The 15 blueprints, Example, Frontmatter (global direction), Notes (+29 more)
 
 ### Community 570 - "Community 570"
 Cohesion: 0.19
@@ -4378,17 +4400,21 @@ Nodes (16): dependencies, react, react-dom, remotion, @remotion/cli, zod, react,
 Cohesion: 0.12
 Nodes (16): 1. Interim framing — why this exists, 2. The parent wrapper (`index.html` for deliverables, `demo.html` in examples), 3. Playhead-driven scene visibility, 4. Imperative entrances on slide-activate, 5. The scenes bootstrap postMessage, 6. Audio/SFX — built-in mute control via `<hyperframes-slideshow sound>`, 7. Three.js (optional), 8. Foot-gun checklist (+8 more)
 
+### Community 583 - "Community 583"
+Cohesion: 0.11
+Nodes (17): app.dart, core/config/firebase_options.dart, core/providers/storage_providers.dart, core/providers/system_config_provider.dart, core/services/analytics_service.dart, core/services/background_handler.dart, core/services/notification_service.dart, core/services/sms_outbox_service.dart (+9 more)
+
 ### Community 585 - "Community 585"
 Cohesion: 0.12
 Nodes (16): brandingAsync, brandingRepositoryProvider, client, featureEnabledProvider, getBranding, loadBranding, maybeWhen, orgBrandingProvider (+8 more)
 
 ### Community 588 - "Community 588"
-Cohesion: 0.09
-Nodes (22): LeaderboardModel, gamificationRepositoryProvider, getLeaderboard, getUserPoints, getUserRank, monthlyLeaderboardProvider, profile, repository (+14 more)
+Cohesion: 0.17
+Nodes (11): LeaderboardModel, gamificationRepositoryProvider, getLeaderboard, getUserPoints, getUserRank, monthlyLeaderboardProvider, profile, repository (+3 more)
 
 ### Community 589 - "Community 589"
-Cohesion: 0.05
-Nodes (35): Before you finish — checklist, Caption-band keep-out (plan side), Inventing the visual — diagrams, type, data-viz, Layout — named inline per Scene, Palette & type — from `frame.md`, never invented, Pick the shape — instantiate a blueprint, Portrait & square (non-16:9 canvases), The unit is a time-coded shot sequence (+27 more)
+Cohesion: 0.03
+Nodes (59): Before you finish — checklist, Caption-band keep-out (plan side), Inventing the visual — diagrams, type, data-viz, Layout — named inline per Scene, Palette & type — from `frame.md`, never invented, Pick the shape — instantiate a blueprint, Portrait & square (non-16:9 canvases), The unit is a time-coded shot sequence (+51 more)
 
 ### Community 590 - "Community 590"
 Cohesion: 0.12
@@ -4515,20 +4541,20 @@ Cohesion: 0.12
 Nodes (16): assignedTo, createdAt, CustomerTicketMessageModel, CustomerTicketModel, fromJson, id, isOpen, isResolved (+8 more)
 
 ### Community 621 - "Community 621"
-Cohesion: 0.15
-Nodes (12): App(), BackgroundVideo(), CTA(), proofs, partners, TrustMarquee(), DocsHome(), BorrowersGuide() (+4 more)
+Cohesion: 0.11
+Nodes (18): date, _dateFmt, daysLabel, healthGrade, healthGradeLabel, isoDate, _isoDateFmt, isValidImage (+10 more)
 
 ### Community 622 - "Community 622"
-Cohesion: 0.08
-Nodes (22): DateTime?, ChatMessage, copyWith, MessageRole, role, text, timestamp, toJson (+14 more)
+Cohesion: 0.06
+Nodes (29): ActivityType, DateTime?, ChatMessage, copyWith, MessageRole, role, text, timestamp (+21 more)
 
 ### Community 623 - "Community 623"
-Cohesion: 0.06
-Nodes (26): amount, dueDate, fetchPaidDates, generate, isFrozen, isPaid, number, SavingsInstallment (+18 more)
+Cohesion: 0.07
+Nodes (23): main, main, sharedPreferencesProvider, package:flutter_test/flutter_test.dart, package:integration_test/integration_test.dart, package:microflow_pro/app.dart, package:microflow_pro/core/providers/storage_providers.dart, package:microflow_pro/core/services/sms_service.dart (+15 more)
 
 ### Community 624 - "Community 624"
-Cohesion: 0.12
-Nodes (15): client, emailCommunicationsProvider, getCommunications, getTemplates, getWhatsAppConfig, orgId, svc, whatsAppConfigProvider (+7 more)
+Cohesion: 0.17
+Nodes (11): client, emailCommunicationsProvider, getCommunications, getTemplates, getWhatsAppConfig, orgId, svc, whatsAppConfigProvider (+3 more)
 
 ### Community 625 - "Community 625"
 Cohesion: 0.12
@@ -4539,8 +4565,8 @@ Cohesion: 0.12
 Nodes (15): 🎬 5-Act Continuous Master Scene Blueprint, ACT 1: THE HOOK & GENERIC APP LIMITATION (0.0s – 13.0s), ACT 2: THE PAIN CASCADE — INTEREST DISPUTES & CASH LEAKAGE (13.0s – 26.0s), ACT 3: THE HERO REVEAL & 30-SEC DEMO (26.0s – 39.0s), ACT 4: POWER & PRIVACY — GPS MAP, PAR ALERTS & DATA SAFETY (39.0s – 52.0s), ACT 5: THE GRAND CTA & WHATSAPP DEMO OFFER (52.0s – 65.0s), 🎵 Audio & Background Music (BGM) Sound Design Table, 🤖 Google Veo 3.1 Master Prompt for ACT 1 (0–13s): (+7 more)
 
 ### Community 627 - "Community 627"
-Cohesion: 0.13
-Nodes (15): 0.A Read these signals first, 0.B Output a one-line "Design Read" before generating, 0. BRIEF INFERENCE (Read the Room Before Anything Else), 0.C If the brief is ambiguous, ask one question, do not guess, 0.D Anti-Default Discipline, 13. OUT OF SCOPE, 14. FINAL PRE-FLIGHT CHECK, 1.A Dial Inference (design read → dial values) (+7 more)
+Cohesion: 0.18
+Nodes (11): 0.A Read these signals first, 0.B Output a one-line "Design Read" before generating, 0. BRIEF INFERENCE (Read the Room Before Anything Else), 0.C If the brief is ambiguous, ask one question, do not guess, 0.D Anti-Default Discipline, 13. OUT OF SCOPE, 14. FINAL PRE-FLIGHT CHECK, 2.A When to reach for a real design system (use official packages) (+3 more)
 
 ### Community 628 - "Community 628"
 Cohesion: 0.13
@@ -4788,7 +4814,7 @@ Nodes (14): Audio + motion verification — three paths, pick one, Critic Sub-Ag
 
 ### Community 690 - "Community 690"
 Cohesion: 0.13
-Nodes (14): Accessibility Design, Design Document, Diagrams, `.env.example`, Env Validator (`lib/env.ts`), Environment Variables, Error Handling, Lead Capture Sequence (+6 more)
+Nodes (14): Accessibility Design, Brand System, Design Document, Diagrams, Error Handling, Lead Capture Sequence, Overview, Performance Design (+6 more)
 
 ### Community 691 - "Community 691"
 Cohesion: 0.13
@@ -4943,8 +4969,8 @@ Cohesion: 0.14
 Nodes (13): Cut / trim: keep a slice, Ducking (declare in-composition / bake for export), Generate: images (local first, cloud upsell), Generate: video (local first, HeyGen avatar upsell), Image-to-video (animate any still into a talking clip), Media operations: agent guidance, Montage / stitch: join clips, Publish loudness (+5 more)
 
 ### Community 729 - "Community 729"
-Cohesion: 0.27
-Nodes (13): ANIMATION_DIR, buildFramePackets(), codeVocabularySection(), field(), flag(), frameId(), main(), resourceSections() (+5 more)
+Cohesion: 0.25
+Nodes (14): frame(), ANIMATION_DIR, buildFramePackets(), codeVocabularySection(), field(), flag(), frameId(), main() (+6 more)
 
 ### Community 730 - "Community 730"
 Cohesion: 0.14
@@ -5051,16 +5077,16 @@ Cohesion: 0.14
 Nodes (13): `## 1. Visual Theme (one paragraph)`, `## 2. Quick Reference`, Colors, Feature Highlight Card (gradient backdrop), Fonts, Ghost Button (text-only link), Glass Container (frosted overlay), Iteration Guide (+5 more)
 
 ### Community 756 - "Community 756"
-Cohesion: 0.12
-Nodes (16): borderRadius, build, color, createState, fontSize, GlassButton, _GlassButtonState, height (+8 more)
+Cohesion: 0.11
+Nodes (17): client, getPendingOrders, orgId, paymentGatewayRepositoryProvider, pendingGatewayPaymentsProvider, repo, _client, createOrder (+9 more)
 
 ### Community 757 - "Community 757"
 Cohesion: 0.14
 Nodes (13): 1. For Sayan (One-Paragraph Bottom Line), 2. Per-State Quick-Reference Table, 3. App Provider Liability Assessment, 4. Indian Contract Act — Validity of Informal Loans, 5. DPDP Act 2023 — Practical Risk, 6. Usurious Loans Act 1918 (Central Law), 7. Recommended Disclaimers & Safeguards, 8. "Consult a Lawyer" Flags (+5 more)
 
 ### Community 758 - "Community 758"
-Cohesion: 0.08
-Nodes (26): class _FakeFilterBuilder extends, class _FakeQueryBuilder extends, Directory, SmsService, package:hive/hive.dart, package:microflow_pro/core/providers/org_provider.dart, package:microflow_pro/core/providers/sms_outbox_provider.dart, package:microflow_pro/core/providers/sms_provider.dart (+18 more)
+Cohesion: 0.10
+Nodes (23): class _FakeFilterBuilder extends, class _FakeQueryBuilder extends, Directory, SmsService, package:hive/hive.dart, package:microflow_pro/core/providers/org_provider.dart, package:microflow_pro/core/providers/sms_outbox_provider.dart, package:microflow_pro/core/providers/sms_provider.dart (+15 more)
 
 ### Community 759 - "Community 759"
 Cohesion: 0.14
@@ -5123,8 +5149,8 @@ Cohesion: 0.15
 Nodes (13): Audition voices, Background music, Captions, Generate a test clip before full narration — calibrate timing first, Generate full narration, If Step 2 said "no narration", Map timestamps to beats, Save timing data for Step 5 (+5 more)
 
 ### Community 774 - "Community 774"
-Cohesion: 0.28
-Nodes (7): LegalPage(), LegalSection(), AboutPage(), ContactPage(), PrivacyPage(), SecurityPage(), TermsPage()
+Cohesion: 0.17
+Nodes (13): App(), BackgroundVideo(), CTA(), proofs, LegalPage(), LegalSection(), partners, TrustMarquee() (+5 more)
 
 ### Community 775 - "Community 775"
 Cohesion: 0.15
@@ -5147,8 +5173,8 @@ Cohesion: 0.19
 Nodes (12): countAssetFiles(), escapeHtml(), evalBlock(), generateReport(), outPath, REPO_ROOT, report, RESOLVE_SCRIPT (+4 more)
 
 ### Community 780 - "Community 780"
-Cohesion: 0.23
-Nodes (10): findExistingAsset(), inferType(), scanExistingAssets(), cleanup(), drop(), runTests(), setup(), walkDir() (+2 more)
+Cohesion: 0.17
+Nodes (16): AUDIO_EXT, findExistingAsset(), IMAGE_EXT, inferType(), scanExistingAssets(), cleanup(), drop(), runTests() (+8 more)
 
 ### Community 781 - "Community 781"
 Cohesion: 0.15
@@ -5188,7 +5214,7 @@ Nodes (13): Audition voices, Background music, Captions, Generate a test clip be
 
 ### Community 790 - "Community 790"
 Cohesion: 0.05
-Nodes (41): billingRepositoryProvider, cancelSubscription, checkLimit, client, createCheckout, deletePaymentMethod, getInvoices, getPaymentMethods (+33 more)
+Nodes (46): billingRepositoryProvider, cancelSubscription, checkLimit, client, createCheckout, currentSubscriptionProvider, deletePaymentMethod, getInvoices (+38 more)
 
 ### Community 791 - "Community 791"
 Cohesion: 0.15
@@ -5243,8 +5269,8 @@ Cohesion: 0.15
 Nodes (13): Audition voices, Background music, Captions, Generate a test clip before full narration — calibrate timing first, Generate full narration, If Step 2 said "no narration", Map timestamps to beats, Save timing data for Step 5 (+5 more)
 
 ### Community 804 - "Community 804"
-Cohesion: 0.12
-Nodes (16): Future, _buildEmpty, _colorFor, createState, _future, _iconFor, initState, isFirst (+8 more)
+Cohesion: 0.11
+Nodes (17): TransactionType, amountMax, amountMin, clearAll, copyWith, dateFrom, dateTo, empty (+9 more)
 
 ### Community 805 - "Community 805"
 Cohesion: 0.15
@@ -5311,8 +5337,8 @@ Cohesion: 0.17
 Nodes (12): Format, Quick Reference, Reference Files, Step 0: Capture & Understand the Brand, Step 1: Brand Identity, Step 2: Strategy & Messaging, Step 3: Storyboard + Script 💬, Step 4: VO, Timing + Captions 💬 (+4 more)
 
 ### Community 822 - "Community 822"
-Cohesion: 0.44
-Nodes (3): LessonCard(), docsContent, LoansGuide()
+Cohesion: 0.23
+Nodes (9): LessonCard(), docsContent, DocsHome(), BorrowersGuide(), GettingStartedGuide(), LoansGuide(), PortfolioInsightsGuide(), RepaymentsGuide() (+1 more)
 
 ### Community 823 - "Community 823"
 Cohesion: 0.17
@@ -5379,16 +5405,16 @@ Cohesion: 0.13
 Nodes (14): all, AppIconService, assetPreview, _channel, colorValue, description, getById, getCurrentIcon (+6 more)
 
 ### Community 840 - "Community 840"
-Cohesion: 0.13
-Nodes (14): Day 08 — Monday, Day 09 — Tuesday, 📅 Day 12 — August 07, 2026, 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 🎬 REEL 11: Day 04 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 📹 Technical Production Specs (+6 more)
+Cohesion: 0.18
+Nodes (10): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, Day 08 — Monday, 📅 Day 12 — August 07, 2026, 🎬 REEL 11: Day 04 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact) (+2 more)
 
 ### Community 841 - "Community 841"
 Cohesion: 0.17
 Nodes (11): Custom Mapbox Style Guide for MicroFlow Pro, How to Create Your Custom Style (10 minutes), Pro Tips, Quick Alternative: Use Navigation Night, Step 1: Open Mapbox Studio, Step 2: Create New Style, Step 3: Customize Colors, Step 4: Publish & Get Style URL (+3 more)
 
 ### Community 842 - "Community 842"
-Cohesion: 0.15
-Nodes (12): color, icon, id, keywords, route, search, SearchableSetting, _settings (+4 more)
+Cohesion: 0.11
+Nodes (17): StatementFormat, amountMax, amountMin, copyWith, customEnd, customStart, format, hasActiveFilters (+9 more)
 
 ### Community 843 - "Community 843"
 Cohesion: 0.24
@@ -5451,20 +5477,20 @@ Cohesion: 0.17
 Nodes (12): Format, Quick Reference, Reference Files, Step 0: Capture & Understand the Brand, Step 1: Brand Identity, Step 2: Strategy & Messaging, Step 3: Storyboard + Script 💬, Step 4: VO, Timing + Captions 💬 (+4 more)
 
 ### Community 859 - "Community 859"
-Cohesion: 0.15
-Nodes (13): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📆 DAY 20: 2026-08-20 (+5 more)
+Cohesion: 0.12
+Nodes (16): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+8 more)
 
 ### Community 860 - "Community 860"
-Cohesion: 0.15
-Nodes (13): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📆 DAY 21: 2026-08-21 (+5 more)
+Cohesion: 0.12
+Nodes (16): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+8 more)
 
 ### Community 861 - "Community 861"
-Cohesion: 0.17
-Nodes (11): 🎬 30-Day Master Plan: Week 3 Part 1 UGC Reel Scripts (Day 15 to Day 18), 🎬 30-Day Master Plan: Week 3 Part 2 UGC Reel Scripts (Day 19 to Day 21), 📹 Camera Direction, 📆 DAY 15: 2026-08-10, 📆 DAY 19: 2026-08-19, 📌 Index of Week 3 Part 1 Scripts, 📌 Index of Week 3 Part 2 Scripts, 🎬 REEL 47: Day 16 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 16 | 2026-08-11 (+3 more)
+Cohesion: 0.29
+Nodes (6): 🎬 30-Day Master Plan: Week 3 Part 1 UGC Reel Scripts (Day 15 to Day 18), 🎬 30-Day Master Plan: Week 3 Part 2 UGC Reel Scripts (Day 19 to Day 21), 📆 DAY 15: 2026-08-10, 📆 DAY 19: 2026-08-19, 📌 Index of Week 3 Part 1 Scripts, 📌 Index of Week 3 Part 2 Scripts
 
 ### Community 862 - "Community 862"
-Cohesion: 0.17
-Nodes (12): 2026-07-20 04:30 — MicroFlow FB Branding Prompts & Bengali Marketing Campaign, 2026-07-26 17:40 — Restarted Bengali Facebook organic strategy brainstorming, 2026-07-26 17:45 — Bengali Facebook audience direction chosen, 2026-07-26 17:50 — Recommended Bengali Facebook approach approved, 2026-07-26 17:55 — Bengali content strategy decision delegated, 2026-07-26 18:05 — Asked about automating Facebook content workflow, 2026-07-26 18:15 — Day 1 manual content start + Meta API issue, 2026-07-26 18:30 — Bengali Reel Scripts Created (+4 more)
+Cohesion: 0.12
+Nodes (16): 2026-07-20 04:30 — MicroFlow FB Branding Prompts & Bengali Marketing Campaign, 2026-07-26 17:40 — Restarted Bengali Facebook organic strategy brainstorming, 2026-07-26 17:45 — Bengali Facebook audience direction chosen, 2026-07-26 17:50 — Recommended Bengali Facebook approach approved, 2026-07-26 17:55 — Bengali content strategy decision delegated, 2026-07-26 18:05 — Asked about automating Facebook content workflow, 2026-07-26 18:15 — Day 1 manual content start + Meta API issue, 2026-07-26 18:30 — Bengali Reel Scripts Created (+8 more)
 
 ### Community 863 - "Community 863"
 Cohesion: 0.17
@@ -5487,8 +5513,8 @@ Cohesion: 0.25
 Nodes (9): audibleEnd(), cp, ensureSource(), fs, hfRoot(), main(), meanVolumeDb(), os (+1 more)
 
 ### Community 868 - "Community 868"
-Cohesion: 0.17
-Nodes (12): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📱 Full Bengali Post Caption & Hashtags (+4 more)
+Cohesion: 0.13
+Nodes (15): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+7 more)
 
 ### Community 869 - "Community 869"
 Cohesion: 0.18
@@ -5523,8 +5549,8 @@ Cohesion: 0.18
 Nodes (11): Beat & Easing, Combinations, Critical Constraints, CSS, GSAP Timeline, How It Works, How to Choose Values, HTML (+3 more)
 
 ### Community 877 - "Community 877"
-Cohesion: 0.17
-Nodes (12): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📱 Full Bengali Post Caption & Hashtags (+4 more)
+Cohesion: 0.13
+Nodes (15): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+7 more)
 
 ### Community 878 - "Community 878"
 Cohesion: 0.29
@@ -5583,8 +5609,8 @@ Cohesion: 0.24
 Nodes (11): _a(), Context(), Db(), Eb(), fb(), Gc(), Gw(), Hc() (+3 more)
 
 ### Community 892 - "Community 892"
-Cohesion: 0.13
-Nodes (15): 0.A Read these signals first, 0.B Output a one-line "Design Read" before generating, 0. BRIEF INFERENCE (Read the Room Before Anything Else), 0.C If the brief is ambiguous, ask one question, do not guess, 0.D Anti-Default Discipline, 13. OUT OF SCOPE, 14. FINAL PRE-FLIGHT CHECK, 1.A Dial Inference (design read → dial values) (+7 more)
+Cohesion: 0.18
+Nodes (11): 0.A Read these signals first, 0.B Output a one-line "Design Read" before generating, 0. BRIEF INFERENCE (Read the Room Before Anything Else), 0.C If the brief is ambiguous, ask one question, do not guess, 0.D Anti-Default Discipline, 13. OUT OF SCOPE, 14. FINAL PRE-FLIGHT CHECK, 2.A When to reach for a real design system (use official packages) (+3 more)
 
 ### Community 893 - "Community 893"
 Cohesion: 0.25
@@ -5628,7 +5654,7 @@ Nodes (11): Beat & Easing, Combinations, Critical Constraints, CSS, GSAP Timelin
 
 ### Community 903 - "Community 903"
 Cohesion: 0.05
-Nodes (40): ../constants/app_spacing.dart, double?, TransactionType, borderRadius, build, height, ShimmerCard, width (+32 more)
+Nodes (37): ../constants/app_spacing.dart, double?, borderRadius, build, height, ShimmerCard, width, amountPaid (+29 more)
 
 ### Community 904 - "Community 904"
 Cohesion: 0.29
@@ -5643,8 +5669,8 @@ Cohesion: 0.18
 Nodes (10): Background Removal, Canonical 3-layer template (plate + content + cutout), Compositing patterns — pick the right one, Device (`--device`), Layer separation (`--background-output`), Output Format, Quality (`--quality`), Text-behind-subject pattern (two non-obvious rules) (+2 more)
 
 ### Community 907 - "Community 907"
-Cohesion: 0.29
-Nodes (7): HERE, sfxLibDir, downloadTo(), searchSounds(), r3(), resolveSfx(), slug()
+Cohesion: 0.18
+Nodes (10): HERE, sfxLibDir, downloadTo(), HEYGEN_CLI_SOURCE_HEADERS, HEYGEN_CLIENT_SOURCE_HEADERS, loadEnvFromDir(), searchSounds(), r3() (+2 more)
 
 ### Community 908 - "Community 908"
 Cohesion: 0.20
@@ -5695,8 +5721,8 @@ Cohesion: 0.24
 Nodes (11): _a(), Context(), Db(), Eb(), fb(), Gc(), Gw(), Hc() (+3 more)
 
 ### Community 920 - "Community 920"
-Cohesion: 0.18
-Nodes (8): Flutter, FlutterSceneDelegate, SceneDelegate, RunnerTests, RunnerTests, UIKit, XCTest, XCTestCase
+Cohesion: 0.15
+Nodes (10): Cocoa, Flutter, FlutterMacOS, FlutterSceneDelegate, SceneDelegate, RunnerTests, RunnerTests, UIKit (+2 more)
 
 ### Community 921 - "Community 921"
 Cohesion: 0.18
@@ -5711,8 +5737,8 @@ Cohesion: 0.25
 Nodes (9): audibleEnd(), cp, ensureSource(), fs, hfRoot(), main(), meanVolumeDb(), os (+1 more)
 
 ### Community 924 - "Community 924"
-Cohesion: 0.17
-Nodes (12): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📱 Full Bengali Post Caption & Hashtags (+4 more)
+Cohesion: 0.13
+Nodes (15): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+7 more)
 
 ### Community 925 - "Community 925"
 Cohesion: 0.18
@@ -5867,8 +5893,8 @@ Cohesion: 0.20
 Nodes (9): Avoid, Basic Pattern, Composition Duration, Contract, Credits And References, Good Uses, Stagger Pattern, Validation (+1 more)
 
 ### Community 963 - "Community 963"
-Cohesion: 0.20
-Nodes (10): Camera & Viewport, Data & Stats, Effect Recipes (moved from hyperframes-creative), Idle & Ambient, Layout & Network, Rules Index, See Also, SVG & Icons (+2 more)
+Cohesion: 0.05
+Nodes (35): Before you finish — checklist, Caption-band keep-out (plan side), Inventing the visual — diagrams, type, data-viz, Layout — named inline per Scene, Palette & type — from `frame.md`, never invented, Pick the shape — instantiate a blueprint, Portrait & square (non-16:9 canvases), The unit is a time-coded shot sequence (+27 more)
 
 ### Community 964 - "Community 964"
 Cohesion: 0.20
@@ -5883,8 +5909,8 @@ Cohesion: 0.20
 Nodes (10): 22. STYLE VARIATION ENGINE, Decorative Asset Set, Image Art Direction Bias, Motion-Implied Language, Palette Logic, Signature Component Set, Structure Bias, Texture / Surface Treatment (+2 more)
 
 ### Community 967 - "Community 967"
-Cohesion: 0.06
-Nodes (30): currentVersionAndroid, currentVersionIos, fromJson, id, isUnderMaintenance, maintenanceMessage, minVersionAndroid, minVersionIos (+22 more)
+Cohesion: 0.12
+Nodes (16): AchievementModel, Achievements, category, copyWith, description, fromJson, icon, id (+8 more)
 
 ### Community 968 - "Community 968"
 Cohesion: 0.40
@@ -5903,12 +5929,12 @@ Cohesion: 0.20
 Nodes (10): PR to HyperFrames, Quick Reference, Step 0: Setup and Brief, Step 1: Ingest the PR (no capture), Step 2: Design System, Step 3.1: Audio, Step 3: Storyboard and Script, Step 4: Frame Visual Design (+2 more)
 
 ### Community 972 - "Community 972"
-Cohesion: 0.17
-Nodes (12): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📱 Full Bengali Post Caption & Hashtags (+4 more)
+Cohesion: 0.13
+Nodes (15): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+7 more)
 
 ### Community 973 - "Community 973"
-Cohesion: 0.17
-Nodes (12): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📱 Full Bengali Post Caption & Hashtags (+4 more)
+Cohesion: 0.13
+Nodes (15): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+7 more)
 
 ### Community 974 - "Community 974"
 Cohesion: 0.20
@@ -5995,8 +6021,8 @@ Cohesion: 0.20
 Nodes (10): 22. STYLE VARIATION ENGINE, Decorative Asset Set, Image Art Direction Bias, Motion-Implied Language, Palette Logic, Signature Component Set, Structure Bias, Texture / Surface Treatment (+2 more)
 
 ### Community 995 - "Community 995"
-Cohesion: 0.17
-Nodes (12): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📱 Full Bengali Post Caption & Hashtags (+4 more)
+Cohesion: 0.13
+Nodes (15): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+7 more)
 
 ### Community 996 - "Community 996"
 Cohesion: 0.40
@@ -6019,8 +6045,8 @@ Cohesion: 0.20
 Nodes (10): Before you finish — checklist, Caption-band keep-out (plan side), Layout — named inline per Scene, Palette & type — from `frame.md`, never invented, Pick the shape — instantiate a blueprint, The unit is a time-coded shot sequence, `## Video direction` — write the invariants ONCE, Visual design — product-launch per-frame shot method (+2 more)
 
 ### Community 1001 - "Community 1001"
-Cohesion: 0.17
-Nodes (12): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins, 8.80s – 10.00s | Relief & Closing Punchline & CTA, 📹 Camera Direction, 📱 Full Bengali Post Caption & Hashtags (+4 more)
+Cohesion: 0.13
+Nodes (15): 0.00s – 0.40s | Calm Before the Storm, 0.40s – 2.20s | The Accusation / Conflict Hook, ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 2.20s – 4.50s | Escalation & Suspense, 4.50s – 7.80s | The Proof / Evidence, 7.80s – 8.80s | Silence Wins (+7 more)
 
 ### Community 1002 - "Community 1002"
 Cohesion: 0.20
@@ -6118,9 +6144,13 @@ Nodes (9): 1. Query Performance (query), 2. Connection Management (conn), 3. Sec
 Cohesion: 0.27
 Nodes (10): _assertThisInitialized(), ic(), ta(), Timeline(), Tween(), w(), x(), xa() (+2 more)
 
+### Community 1027 - "savings_installment_model.dart"
+Cohesion: 0.12
+Nodes (13): amount, dueDate, fetchPaidDates, generate, isFrozen, isPaid, number, SavingsInstallment (+5 more)
+
 ### Community 1028 - "Community 1028"
-Cohesion: 0.15
-Nodes (19): backupAnalyticsProvider, backupHealthProvider, backupProgressProvider, backupServiceProvider, categoryCountsProvider, exportHistoryProvider, scheduleSettingsProvider, totalRecordCountProvider (+11 more)
+Cohesion: 0.17
+Nodes (19): backupAnalyticsProvider, backupHealthProvider, backupProgressProvider, backupServiceProvider, categoryCountsProvider, scheduleSettingsProvider, totalRecordCountProvider, driveClientIdConfiguredProvider (+11 more)
 
 ### Community 1029 - "Community 1029"
 Cohesion: 0.20
@@ -6203,7 +6233,7 @@ Cohesion: 0.22
 Nodes (8): Constraints you must obey when copying from these references, Decision guide (loose, not prescriptive), Layouts — how video and card share the canvas, Portrait sizing — bigger type for mobile, Source aspect ratio independence, Styles — the card's visual language, V—Take Visual Design Library, Video Frames — decoration around the video element
 
 ### Community 1049 - "Community 1049"
-Cohesion: 0.18
+Cohesion: 0.16
 Nodes (10): Any, FlutterAppDelegate, FlutterResult, AppDelegate, Bool, String, AppDelegate, Bool (+2 more)
 
 ### Community 1050 - "Community 1050"
@@ -6277,6 +6307,10 @@ Nodes (9): Conversion: frames → seconds, Custom count-up / number tweens, inte
 ### Community 1067 - "Community 1067"
 Cohesion: 0.22
 Nodes (8): Constraints you must obey when copying from these references, Decision guide (loose, not prescriptive), Layouts — how video and card share the canvas, Portrait sizing — bigger type for mobile, Source aspect ratio independence, Styles — the card's visual language, V—Take Visual Design Library, Video Frames — decoration around the video element
+
+### Community 1068 - "gps_status_chip.dart"
+Cohesion: 0.13
+Nodes (14): ../../../../core/utils/location_permission_helper.dart, accuracy, build, _buildPulsingDot, checkStatus, fromPosition, _getBackgroundColor, _getColor (+6 more)
 
 ### Community 1069 - "Community 1069"
 Cohesion: 0.22
@@ -6353,6 +6387,10 @@ Nodes (9): Blog, Components and Interfaces, Demo Booking, Forms, Layout & Chrome
 ### Community 1087 - "Community 1087"
 Cohesion: 0.24
 Nodes (8): arg(), _resetNpxResolutionWarnForTests(), resolveNpxCliFromNpmExecPath(), resolveNpxCliPath(), resolveSpawnCommand(), envWithNpxCli, spawnP(), transcribeWav()
+
+### Community 1088 - "upi_payment_repository.dart"
+Cohesion: 0.13
+Nodes (14): checkExistingPending, _client, confirmBatch, confirmPayment, createRequest, _formatDateOnly, getCustomerRequests, getOrgRequests (+6 more)
 
 ### Community 1089 - "Community 1089"
 Cohesion: 0.09
@@ -6435,8 +6473,8 @@ Cohesion: 0.25
 Nodes (7): Ambiguity — resolve BEFORE localizing, Degradation path (if locate.mjs itself is unavailable), locate — find "X" in an image (no detector API assumed), Notes, Routing — pick the cheapest path that's actually available, The grid loop (you read images between steps), Why this exists
 
 ### Community 1109 - "Community 1109"
-Cohesion: 0.18
-Nodes (10): Day 05 — Friday, Day 07 — Sunday, 📝 Full Bengali Post Caption & Hashtags, MicroFlow Pro — 30-Day Organic Facebook Master Plan, 📅 Part 1 Overview Table, 📹 Production Specifications, 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)Day 06 — Slot 3 (7:30 PM), 🎬 Timeline (10.0 Seconds Exact) (+2 more)
+Cohesion: 0.15
+Nodes (12): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, Day 05 — Friday, 📝 Full Bengali Post Caption & Hashtags, MicroFlow Pro — 30-Day Organic Facebook Master Plan, 📅 Part 1 Overview Table, 📹 Production Specifications (+4 more)
 
 ### Community 1111 - "Community 1111"
 Cohesion: 0.25
@@ -6534,6 +6572,10 @@ Nodes (7): [0.1.3](https://github.com/supabase/agent-skills/compare/v0.1.2...v0.
 Cohesion: 0.25
 Nodes (7): [1.2.0](https://github.com/supabase/agent-skills/compare/v1.1.1...v1.2.0) (2026-06-02), [1.3.0](https://github.com/supabase/agent-skills/compare/v1.2.0...v1.3.0) (2026-06-05), Bug Fixes, Bug Fixes, Changelog, Features, Features
 
+### Community 1136 - "premium_app_bar.dart"
+Cohesion: 0.14
+Nodes (13): actions, build, height, leading, onBackPressed, preferredSize, PremiumAppBar, showBack (+5 more)
+
 ### Community 1137 - "Community 1137"
 Cohesion: 0.25
 Nodes (7): Bengali Facebook Content Creation — Day 1 Implementation Plan, Global Constraints, Task 1: 30-Day Bengali Content Calendar, Task 2: 20 Bengali Reel Scripts (max 25 seconds each), Task 3: Bengali Caption & CTA Templates, Task 4: DM-to-WhatsApp Conversion Templates, Task 5 (Optional): n8n Workflow for Content Pipeline
@@ -6621,6 +6663,10 @@ Nodes (7): CHANGES LIST (what was wrong + what changed), Marketing Legal Pages �
 ### Community 1159 - "Community 1159"
 Cohesion: 0.25
 Nodes (7): Add "Today" Button to Quick Collect Calendar, Behavior, Changes, Context, Files to Modify, Implementation, Verification
+
+### Community 1160 - "analytics_service.dart"
+Cohesion: 0.15
+Nodes (12): analytics, flush, identify, init, _initialized, isInitialized, reset, screen (+4 more)
 
 ### Community 1161 - "Community 1161"
 Cohesion: 0.25
@@ -6843,8 +6889,8 @@ Cohesion: 0.29
 Nodes (7): 4. HERO MINIMALISM RULES, Absolute Hero Rules, Graphic Restraint, Headline Rule, Hero Composition Bias, Pre-output check, Typography Execution
 
 ### Community 1217 - "Community 1217"
-Cohesion: 0.20
-Nodes (9): 🎬 30-Day Master Plan: Week 4 Part 2 UGC Reel Scripts (Day 26 to Day 30), 📅 DAY 22: Monday, 17 August 2026, 📅 DAY 26: 2026-08-21, 🎬 Master Timeline (10.0 Seconds Exact), MicroFlow Pro — Bengali Facebook UGC Reels Master Plan (Week 4 Part 1: Day 22 - Day 25), 📝 Post Details, 🗓️ Posting Schedule Overview (Week 4 Part 2), 🎥 Production & Sound Specs (+1 more)
+Cohesion: 0.33
+Nodes (5): 🎬 30-Day Master Plan: Week 4 Part 2 UGC Reel Scripts (Day 26 to Day 30), 📅 DAY 22: Monday, 17 August 2026, 📅 DAY 26: 2026-08-21, MicroFlow Pro — Bengali Facebook UGC Reels Master Plan (Week 4 Part 1: Day 22 - Day 25), 🗓️ Posting Schedule Overview (Week 4 Part 2)
 
 ### Community 1218 - "Community 1218"
 Cohesion: 0.48
@@ -6879,8 +6925,8 @@ Cohesion: 0.29
 Nodes (7): The lint output already includes recommendations, The recommendation message, What the interop pattern actually does, When NOT to bow out: warnings only, When the source has BOTH blockers AND warnings, When to bow out: the runtime interop pattern, When to recommend interop
 
 ### Community 1227 - "Community 1227"
-Cohesion: 0.22
-Nodes (9): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 📌 Master Implementation & Production Notes for Week 1 Part 1 (+1 more)
+Cohesion: 0.17
+Nodes (12): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+4 more)
 
 ### Community 1228 - "Community 1228"
 Cohesion: 0.29
@@ -6954,6 +7000,10 @@ Nodes (6): Accent graphics (not text), Emphasis (in place, often on a beat), Ent
 Cohesion: 0.29
 Nodes (7): Asset treatments — weaving user media onto the beat spine, `beat_cut` — one clip per anchor (only on a `beat_cut` frame), `bg_under_text` — clip dimmed behind a template/free group, Deferred hook (not v1), `ken_burns` — slow push on one clip (fits a `phrase_flow` frame), Rules, The three treatments
 
+### Community 1247 - "paymentFilterProvider"
+Cohesion: 0.17
+Nodes (12): autoRefreshTimerProvider, paymentAgentsProvider, paymentBranchesProvider, paymentFilterProvider, todayPaymentsProvider, build, _clearSearch, _handlePdfExport (+4 more)
+
 ### Community 1248 - "Community 1248"
 Cohesion: 0.52
 Nodes (5): require_render_tier_tools(), run_lint_tier(), run_render_tier(), run.sh script, write_result()
@@ -6970,9 +7020,17 @@ Nodes (7): The lint output already includes recommendations, The recommendation 
 Cohesion: 0.22
 Nodes (8): Matcher, isIso8601Date, isNonNegative, isPositive, isValidAmount, isValidEmail, isValidPhone, isValidUUID
 
+### Community 1252 - "whatsapp_service.dart"
+Cohesion: 0.17
+Nodes (11): _client, createTemplate, deleteTemplate, deleteWhatsAppConfig, getTemplate, getTemplates, getWhatsAppConfig, _orgId (+3 more)
+
 ### Community 1253 - "Community 1253"
 Cohesion: 0.29
 Nodes (6): answer, category, FaqItem, kFaqCategories, kFaqItems, question
+
+### Community 1254 - "gamification_repository.dart"
+Cohesion: 0.17
+Nodes (11): addPoints, awardAchievement, checkAndAwardAchievements, _client, GamificationRepository, getLeaderboard, getUserAchievements, getUserPoints (+3 more)
 
 ### Community 1257 - "Community 1257"
 Cohesion: 0.29
@@ -7246,6 +7304,10 @@ Nodes (6): 11. Media: video, audio, TTS, Audio mixer, Background removal, Transc
 Cohesion: 0.33
 Nodes (6): 15. Player — `<hyperframes-player>` web component, Attributes, Events, Media mirror, Public API, Runtime auto-inject
 
+### Community 1325 - "tts.spawn.test.mjs"
+Cohesion: 0.24
+Nodes (8): arg(), _resetNpxResolutionWarnForTests(), resolveNpxCliFromNpmExecPath(), resolveNpxCliPath(), resolveSpawnCommand(), envWithNpxCli, spawnP(), transcribeWav()
+
 ### Community 1326 - "Community 1326"
 Cohesion: 0.33
 Nodes (5): Layout decisions, Plan.json shape, Slot assignment, Template: portrait-header, When to apply
@@ -7373,6 +7435,10 @@ Nodes (6): JSON-LD on Blog Posts, Open Graph Image, Per-route Metadata, Robots, 
 ### Community 1357 - "Community 1357"
 Cohesion: 0.33
 Nodes (5): Implementation Plan: Marketing Landing Site, Notes, Overview, Task Dependency Graph, Tasks
+
+### Community 1358 - "Rules Index"
+Cohesion: 0.20
+Nodes (10): Camera & Viewport, Data & Stats, Effect Recipes (moved from hyperframes-creative), Idle & Ambient, Layout & Network, Rules Index, See Also, SVG & Icons (+2 more)
 
 ### Community 1359 - "Community 1359"
 Cohesion: 0.33
@@ -7515,7 +7581,7 @@ Cohesion: 0.40
 Nodes (5): kb(), ob(), ra(), rb(), Za()
 
 ### Community 1395 - "Community 1395"
-Cohesion: 0.40
+Cohesion: 0.50
 Nodes (4): chime, description, duration, file
 
 ### Community 1396 - "Community 1396"
@@ -7527,8 +7593,12 @@ Cohesion: 0.40
 Nodes (5): 5. Visual effects + textures, Glow, Grain / noise, Light / film, Marker/emphasis patterns (css-patterns.md)
 
 ### Community 1398 - "Community 1398"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)Day 01 — Slot 1 (8:30 AM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
+
+### Community 1399 - "loan_products_service.dart"
+Cohesion: 0.20
+Nodes (9): _client, createProduct, deleteProduct, getProduct, getProducts, LoanProductsService, _orgId, toggleActive (+1 more)
 
 ### Community 1401 - "Community 1401"
 Cohesion: 0.40
@@ -7579,7 +7649,7 @@ Cohesion: 0.40
 Nodes (5): 21. MOBILE ANTI-AI-TELLS RULE, Copy AI tells, Layout AI tells, UI clutter tells, Visual AI tells
 
 ### Community 1413 - "Community 1413"
-Cohesion: 0.40
+Cohesion: 0.50
 Nodes (4): chime, description, duration, file
 
 ### Community 1414 - "Community 1414"
@@ -7651,7 +7721,7 @@ Cohesion: 0.40
 Nodes (5): kb(), ob(), ra(), rb(), Za()
 
 ### Community 1432 - "Community 1432"
-Cohesion: 0.50
+Cohesion: 0.40
 Nodes (4): chime, description, duration, file
 
 ### Community 1433 - "Visual design — product-launch per-frame shot method"
@@ -7783,12 +7853,16 @@ Cohesion: 0.40
 Nodes (5): 6. Caption techniques, Animation styles, Audio sources for caption timing, Per-word styling triggers, Positioning helpers
 
 ### Community 1466 - "Community 1466"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)Day 01 — Slot 3 (7:30 PM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1467 - "Community 1467"
 Cohesion: 0.40
 Nodes (5): Architecture, Component Architecture, High-Level Architecture, MDX Choice: `@next/mdx`, Rendering Strategy
+
+### Community 1468 - "savings_products_service.dart"
+Cohesion: 0.20
+Nodes (9): _client, createProduct, deleteProduct, getProduct, getProducts, _orgId, SavingsProductsService, toggleActive (+1 more)
 
 ### Community 1469 - "Community 1469"
 Cohesion: 0.40
@@ -7871,7 +7945,7 @@ Cohesion: 0.50
 Nodes (3): Files, License, SFX Credits
 
 ### Community 1489 - "Community 1489"
-Cohesion: 0.50
+Cohesion: 0.40
 Nodes (4): chime, description, duration, file
 
 ### Community 1490 - "Community 1490"
@@ -7891,7 +7965,7 @@ Cohesion: 0.50
 Nodes (4): glitch-2, description, duration, file
 
 ### Community 1494 - "Community 1494"
-Cohesion: 0.40
+Cohesion: 0.50
 Nodes (4): glitch-3, description, duration, file
 
 ### Community 1495 - "Visual design — faceless-explainer per-frame shot method"
@@ -7971,7 +8045,7 @@ Cohesion: 0.50
 Nodes (4): click, description, duration, file
 
 ### Community 1518 - "Community 1518"
-Cohesion: 0.50
+Cohesion: 0.40
 Nodes (4): click-soft, description, duration, file
 
 ### Community 1519 - "Community 1519"
@@ -8038,13 +8112,17 @@ Nodes (4): whoosh-cinematic, description, duration, file
 Cohesion: 0.50
 Nodes (4): whoosh-short, description, duration, file
 
+### Community 1535 - "duty_repository.dart"
+Cohesion: 0.20
+Nodes (9): _client, DutyRepository, endDuty, getActiveDutySession, getTodayDutyMinutes, getTodayDutySessions, isOnDuty, orgId (+1 more)
+
 ### Community 1536 - "Community 1536"
 Cohesion: 0.50
 Nodes (3): Expanding the ESLint configuration, React Compiler, React + Vite
 
 ### Community 1538 - "Community 1538"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)Day 02 — Slot 1 (8:30 AM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1539 - "Community 1539"
 Cohesion: 0.50
@@ -8123,7 +8201,7 @@ Cohesion: 0.50
 Nodes (4): glitch-2, description, duration, file
 
 ### Community 1558 - "Community 1558"
-Cohesion: 0.50
+Cohesion: 0.40
 Nodes (4): glitch-3, description, duration, file
 
 ### Community 1559 - "Community 1559"
@@ -8203,7 +8281,7 @@ Cohesion: 0.50
 Nodes (4): click, description, duration, file
 
 ### Community 1582 - "Community 1582"
-Cohesion: 0.40
+Cohesion: 0.50
 Nodes (4): click-soft, description, duration, file
 
 ### Community 1583 - "Community 1583"
@@ -8270,9 +8348,13 @@ Nodes (4): whoosh-cinematic, description, duration, file
 Cohesion: 0.50
 Nodes (4): whoosh-short, description, duration, file
 
+### Community 1599 - "haptic_service.dart"
+Cohesion: 0.25
+Nodes (7): error, HapticService, heavy, light, medium, selection, success
+
 ### Community 1600 - "Community 1600"
-Cohesion: 0.15
-Nodes (14): GoRouter, handleNotificationData, _navigateStaff, _navigateToPaymentHistory, _navigateToStaffDashboard, _navigateToVisitCheckin, NotificationNavigationHandler, _router (+6 more)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, Day 07 — Sunday, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)Day 06 — Slot 3 (7:30 PM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 1601 - "googleDriveServiceProvider"
 Cohesion: 0.50
@@ -8475,8 +8557,8 @@ Cohesion: 0.50
 Nodes (4): whoosh-short, description, duration, file
 
 ### Community 1655 - "Community 1655"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)Day 02 — Slot 2 (1:30 PM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1656 - "Community 1656"
 Cohesion: 0.50
@@ -8487,8 +8569,8 @@ Cohesion: 0.50
 Nodes (4): Contact Form Data Flow, Sequence, Server Action, Supabase Schema and RLS
 
 ### Community 1658 - "../../../../core/providers/sms_provider.dart"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)Day 02 — Slot 3 (7:30 PM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1659 - "Community 1659"
 Cohesion: 0.50
@@ -8507,32 +8589,32 @@ Cohesion: 0.67
 Nodes (3): bgSkeleton(), fgSkeleton(), fontCssFor()
 
 ### Community 1666 - "Community 1666"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)Day 03 — Slot 1 (8:30 AM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1675 - "Community 1675"
 Cohesion: 0.67
 Nodes (3): bgSkeleton(), fgSkeleton(), fontCssFor()
 
 ### Community 1676 - "Community 1676"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)Day 03 — Slot 2 (1:30 PM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1685 - "Community 1685"
 Cohesion: 0.67
 Nodes (3): bgSkeleton(), fgSkeleton(), fontCssFor()
 
 ### Community 1686 - "Community 1686"
-Cohesion: 0.24
-Nodes (10): build, client, createState, res, _row, SmsHistoryPage, _SmsHistoryPageState, smsHistoryProvider (+2 more)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 47: Day 16 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 16 | 2026-08-11, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 1695 - "Community 1695"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)Day 03 — Slot 3 (7:30 PM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1696 - "Community 1696"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)Day 04 — Slot 1 (8:30 AM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1699 - "Community 1699"
 Cohesion: 0.67
@@ -8559,60 +8641,76 @@ Cohesion: 0.67
 Nodes (3): ⏱️ 9. SCHEDULED JOBS & DATABASE VIEWS, Cron Jobs *(run automatically on Supabase)*, Database Views *(pre-computed queries)*
 
 ### Community 1936 - "conn-limits.md"
-Cohesion: 0.05
-Nodes (32): Example, `SCRIPT.md` — locked narration (optional), Shape, To TTS, Concurrency cap → batching rule (cap never changes scope), Primitive map, Subagent dispatch — harness adapter, The contract (identical on every harness) (+24 more)
+Cohesion: 0.29
+Nodes (6): EdgeInsets, kBottomNavBarHeight, kBottomNavInsets, kBottomNavSafeArea, kFabSafeAreaPadding, package:flutter/widgets.dart
 
 ### Community 1982 - "1. Composition fundamentals"
 Cohesion: 0.50
 Nodes (4): 1. Composition fundamentals, Data attributes recognized by the runtime, Resolution presets, Timeline contract
 
+### Community 1983 - "🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot)"
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, Day 09 — Tuesday, 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+
 ### Community 1984 - "_AdminOrgDetailPageState"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 11: Day 04 — Slot 2 (☀️ 01:30 PM IST)Day 04 — Slot 2 (1:30 PM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1985 - "googleDriveServiceProvider"
-Cohesion: 0.25
-Nodes (8): 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline, 6. Subtitle Strategy, 7. Full Bengali Post Caption & Hashtags, 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)Day 01 — Slot 2 (1:30 PM IST)
+Cohesion: 0.18
+Nodes (11): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 1. Metadata, 2. Psychological Trigger, 3. 🎬 Timeline (10.0 Seconds Exact), 4. Camera Direction, 5. Sound Design Timeline (+3 more)
 
 ### Community 1986 - "SKILL.md"
-Cohesion: 0.29
-Nodes (7): 🎥 Camera Direction, 📅 Day 13 — August 08, 2026, 💬 Post Caption & Hashtags, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)C (07:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.20
+Nodes (10): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 📅 Day 13 — August 08, 2026, 💬 Post Caption & Hashtags, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)C (07:30 PM IST), 🔊 Sound Design Timeline (+2 more)
 
 ### Community 1987 - "Brand System"
+Cohesion: 0.20
+Nodes (10): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 📅 Day 14 — August 09, 2026, 💬 Post Caption & Hashtags, 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)C (07:30 PM IST), 🔊 Sound Design Timeline (+2 more)
+
+### Community 1988 - "1.5. Character Breakdown"
 Cohesion: 0.29
-Nodes (7): 🎥 Camera Direction, 📅 Day 14 — August 09, 2026, 💬 Post Caption & Hashtags, 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)C (07:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 82: Day 28 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Borrowers Demanding Slips
 
 ### Community 1989 - "TicketClipper"
-Cohesion: 0.33
-Nodes (6): 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)A (08:30 AM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)A (08:30 AM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
+
+### Community 1990 - "1.5. Character Breakdown"
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 88: Day 30 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Final Month Ledger Review
 
 ### Community 1991 - "error_formatter.dart"
-Cohesion: 0.33
-Nodes (6): 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)A (08:30 AM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)A (08:30 AM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
 
 ### Community 1992 - "upiServiceProvider"
-Cohesion: 0.33
-Nodes (6): 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)B (01:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)B (01:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
 
 ### Community 1993 - "PaymentSortBy"
-Cohesion: 0.33
-Nodes (6): 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)C (07:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 14: Day 05 — Slot 2 (☀️ 01:30 PM IST)C (07:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
 
 ### Community 1994 - "AdminShell"
 Cohesion: 0.67
 Nodes (3): paradigmRansomrail(), ransomChipCss(), setpieceRansomnote()
 
 ### Community 1995 - "AuthShell"
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)B (01:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
+
+### Community 1996 - "RegisterGeneratedPlugins"
 Cohesion: 0.33
-Nodes (6): 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)B (01:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Nodes (5): FlutterPluginRegistry, FlutterViewController, RegisterGeneratedPlugins(), MainFlutterWindow, NSWindow
 
 ### Community 1997 - "_CustomerShellState"
-Cohesion: 0.14
-Nodes (14): _loadUpiConfig, upiServiceProvider, _loadVpa, emailSettingsServiceProvider, paymentGatewayServiceProvider, IntegrationsSettingsPage, _IntegrationsSettingsPageState, _loadEmailConfig (+6 more)
+Cohesion: 0.50
+Nodes (4): emailSettingsServiceProvider, _loadEmailConfig, _saveEmail, _sendTestEmail
 
 ### Community 1998 - "glass_button.dart"
-Cohesion: 0.33
-Nodes (6): 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)A (08:30 AM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)A (08:30 AM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
 
 ### Community 1999 - "gps_status_chip.dart"
 Cohesion: 0.67
@@ -8623,44 +8721,56 @@ Cohesion: 0.11
 Nodes (18): badges, copyWith, createdAt, currentStreak, fromJson, hasActiveStreak, id, isNewRecord (+10 more)
 
 ### Community 2001 - "sync_status_bar.dart"
-Cohesion: 0.33
-Nodes (6): 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)B (01:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎥 Camera Direction, 💬 Post Caption & Hashtags, 🎬 REEL 13: Day 05 — Slot 1 (🌅 08:30 AM IST)B (01:30 PM IST), 🔊 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
 
 ### Community 2002 - "enums.dart"
-Cohesion: 0.33
-Nodes (6): 📹 Camera Direction, 📆 DAY 16: 2026-08-11, 🎬 REEL 45: Day 15 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 15 | 2026-08-10, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 📆 DAY 16: 2026-08-11, 🎬 REEL 45: Day 15 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 15 | 2026-08-10, 🎵 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
 
 ### Community 2003 - "invoices_page.dart"
-Cohesion: 0.33
-Nodes (6): 📹 Camera Direction, 📆 DAY 17: 2026-08-12, 🎬 REEL 48: Day 16 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 16 | 2026-08-11, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 📆 DAY 17: 2026-08-12, 🎬 REEL 48: Day 16 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 16 | 2026-08-11, 🎵 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
 
 ### Community 2004 - "_showMoreMenu"
+Cohesion: 0.22
+Nodes (9): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 📆 DAY 18: 2026-08-13, 🎬 REEL 51: Day 17 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 17 | 2026-08-12, 🎵 Sound Design Timeline, 📝 Subtitle Strategy (+1 more)
+
+### Community 2005 - "🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)"
 Cohesion: 0.33
-Nodes (6): 📹 Camera Direction, 📆 DAY 18: 2026-08-13, 🎬 REEL 51: Day 17 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 17 | 2026-08-12, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+
+### Community 2006 - "AI Video Generation Master Blueprint — MicroFlow Pro Reels"
+Cohesion: 0.33
+Nodes (5): AI Video Generation Master Blueprint — MicroFlow Pro Reels, 🎬 Master 2-Shot Workflow for Every Reel, 🛠️ Post-Production Checklist (CapCut / InShot — 30 Seconds), SHOT A: Customer Conflict Clip (0.0s – 3.5s), SHOT B: Lender Solution & CTA Clip (3.5s – 10.0s)
 
 ### Community 2007 - "whatsapp_service.dart"
 Cohesion: 0.67
 Nodes (3): paradigmRansomrail(), ransomChipCss(), setpieceRansomnote()
+
+### Community 2008 - "1. THE THREE DIALS (Core Configuration)"
+Cohesion: 0.50
+Nodes (4): 1.A Dial Inference (design read → dial values), 1.B Use-Case Presets, 1.C How the Dials Drive Output, 1. THE THREE DIALS (Core Configuration)
 
 ### Community 2009 - "json_normalize.dart"
 Cohesion: 0.14
 Nodes (13): BranchStatus, CollectionFrequency, CustomerStatus, EMIStatus, InterestType, KYCStatus, LoanStatus, PaymentMode (+5 more)
 
 ### Community 2010 - "Text To Speech"
-Cohesion: 0.40
-Nodes (5): 7. Audio-reactive animation, Banned in audio-reactive, Data shape, Extraction, Mappings documented
+Cohesion: 0.50
+Nodes (4): 1.A Dial Inference (design read → dial values), 1.B Use-Case Presets, 1.C How the Dials Drive Output, 1. THE THREE DIALS (Core Configuration)
 
 ### Community 2011 - "Product Launch to HyperFrames"
-Cohesion: 0.15
-Nodes (15): _navigateToLoanDetails, _navigateToSavings, _buildDashboard, _buildPremiumHeader, _buildPremiumQuickActions, _buildYourLoans, _showMoreMenu, Route /customer/account-settings (+7 more)
+Cohesion: 0.50
+Nodes (4): 12. Registry — 51 blocks + 4 components + 8 examples, Blocks by category, Components (4 reusable snippets), Examples (8 starter projects)
 
 ### Community 2012 - "matchers.dart"
-Cohesion: 0.47
-Nodes (6): driveConnectionProvider, restoreBackupServiceProvider, _loadMetadata, _onCompareTap, _SelectiveRestoreDialog, _SelectiveRestoreDialogState
+Cohesion: 0.50
+Nodes (4): 1. Composition fundamentals, Data attributes recognized by the runtime, Resolution presets, Timeline contract
 
 ### Community 2013 - "Frame worker — PR-to-video per-frame composition author"
-Cohesion: 0.60
-Nodes (5): activityFeedProvider, platformMetricsProvider, revenueSummaryProvider, build, SuperAdminDashboard
+Cohesion: 0.50
+Nodes (4): whatsAppServiceProvider, _loadWhatsAppConfig, _saveWhatsApp, _sendWaTest
 
 ### Community 2014 - "haptic_service.dart"
 Cohesion: 0.50
@@ -8671,248 +8781,232 @@ Cohesion: 0.50
 Nodes (4): 1. Composition fundamentals, Data attributes recognized by the runtime, Resolution presets, Timeline contract
 
 ### Community 2016 - "📅 Day 22 — 08:30 AM | Notebook Out of Pages Panic"
-Cohesion: 0.40
-Nodes (5): Day 06 — Saturday, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)Day 05 — Slot 3 (7:30 PM), 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, Day 06 — Saturday, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)Day 05 — Slot 3 (7:30 PM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2017 - "Demo Booking Flow"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 43: Day 15 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 15 | 2026-08-10, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 43: Day 15 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 15 | 2026-08-10, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2018 - "week_1_part1_day_01_to_04.md"
-Cohesion: 0.50
-Nodes (4): AdminOrgDetailPage, _AdminOrgDetailPageState, build, orgDetailFullProvider
+Cohesion: 0.67
+Nodes (3): `.env.example`, Env Validator (`lib/env.ts`), Environment Variables
 
 ### Community 2019 - "AnalyticsPeriod"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 46: Day 16 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 16 | 2026-08-11, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 46: Day 16 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 16 | 2026-08-11, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2020 - "ransomChipCss"
-Cohesion: 0.50
-Nodes (4): googleDriveServiceProvider, _checkForRedirect, _connectDrive, _disconnectDrive
+Cohesion: 0.67
+Nodes (3): paymentGatewayServiceProvider, _loadGatewayConfig, _saveGatewayConfig
 
 ### Community 2021 - "ransomChipCss"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 49: Day 17 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 17 | 2026-08-12, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 49: Day 17 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 17 | 2026-08-12, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2022 - "Demo Booking Flow"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 50: Day 17 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 17 | 2026-08-12, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 50: Day 17 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 17 | 2026-08-12, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2023 - "📅 Day 22 — 01:30 PM | Auto Interest Re-Calculation"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 52: Day 18 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 18 | 2026-08-13, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 52: Day 18 — Slot 1 (🌅 08:30 AM IST)**Day & Date:** Day 18 | 2026-08-13, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2024 - "📅 Day 29 — 01:30 PM | Multi-Tier User Permissions"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 53: Day 18 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 18 | 2026-08-13, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 53: Day 18 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 18 | 2026-08-13, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2025 - "📅 Day 29 — 07:30 PM | 30-Day Results Recap"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 54: Day 18 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 18 | 2026-08-13, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 54: Day 18 — Slot 3 (🌙 07:30 PM IST)**Day & Date:** Day 18 | 2026-08-13, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2026 - "📅 Day 30 — 08:30 AM | Final Month Ledger Review"
-Cohesion: 0.40
-Nodes (5): 📹 Camera Direction, 🎬 REEL 44: Day 15 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 15 | 2026-08-10, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📹 Camera Direction, 🎬 REEL 44: Day 15 — Slot 2 (☀️ 01:30 PM IST)**Day & Date:** Day 15 | 2026-08-10, 🎵 Sound Design Timeline, 📝 Subtitle Strategy, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2027 - "📅 Day 30 — 01:30 PM | Full Year Collection Audit"
-Cohesion: 0.40
-Nodes (5): 📅 DAY 23: Tuesday, 18 August 2026, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)7:30 PM | App Security Shield Proof
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📅 DAY 23: Tuesday, 18 August 2026, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)7:30 PM | App Security Shield Proof
 
 ### Community 2028 - "📅 Day 30 — 07:30 PM | Join 50+ WB Lenders CTA"
-Cohesion: 0.40
-Nodes (5): 📅 DAY 24: Wednesday, 19 August 2026, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)7:30 PM | 10-Second Loan Entry
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📅 DAY 24: Wednesday, 19 August 2026, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)7:30 PM | 10-Second Loan Entry
 
 ### Community 2029 - "📅 Day 22 — 07:30 PM | App Security Shield Proof"
-Cohesion: 0.40
-Nodes (5): 📅 DAY 25: Thursday, 20 August 2026, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)7:30 PM | Instant PDF Audit Report
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📅 DAY 25: Thursday, 20 August 2026, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)7:30 PM | Instant PDF Audit Report
 
 ### Community 2030 - "📅 Day 23 — 08:30 AM | Borrower Arguing Last Payment"
-Cohesion: 0.40
-Nodes (5): 📅 DAY 27: 2026-08-22, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 78: Day 26 — Slot 3 (🌙 07:30 PM IST)07:30 PM | Privacy & Legal Compliance
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📅 DAY 27: 2026-08-22, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 78: Day 26 — Slot 3 (🌙 07:30 PM IST)07:30 PM | Privacy & Legal Compliance
 
 ### Community 2031 - "📅 Day 23 — 01:30 PM | Daily Savings Ring Completion"
-Cohesion: 0.40
-Nodes (5): 📅 DAY 28: 2026-08-23, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 81: Day 27 — Slot 3 (🌙 07:30 PM IST)07:30 PM | Customer Mobile View
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📅 DAY 28: 2026-08-23, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 81: Day 27 — Slot 3 (🌙 07:30 PM IST)07:30 PM | Customer Mobile View
 
 ### Community 2032 - "📅 Day 23 — 07:30 PM | 10-Second Loan Entry"
-Cohesion: 0.40
-Nodes (5): 📅 DAY 29: 2026-08-24, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 84: Day 28 — Slot 3 (🌙 07:30 PM IST)07:30 PM | 1-Click WhatsApp Lead Demo
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📅 DAY 29: 2026-08-24, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 84: Day 28 — Slot 3 (🌙 07:30 PM IST)07:30 PM | 1-Click WhatsApp Lead Demo
 
 ### Community 2033 - "📅 Day 24 — 08:30 AM | Late Fee Calculation Hassle"
-Cohesion: 0.40
-Nodes (5): 📅 DAY 30: 2026-08-25, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 87: Day 29 — Slot 3 (🌙 07:30 PM IST)07:30 PM | 30-Day Results Recap
-
-### Community 2035 - "📅 Day 24 — 07:30 PM | Instant PDF Audit Report"
-Cohesion: 0.50
-Nodes (4): 8. HTML-in-canvas, Available patterns, Capability, Experimental VFX blocks using this
+Cohesion: 0.25
+Nodes (8): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📅 DAY 30: 2026-08-25, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 87: Day 29 — Slot 3 (🌙 07:30 PM IST)07:30 PM | 30-Day Results Recap
 
 ### Community 2036 - "📅 Day 25 — 08:30 AM | Forgotten Borrowers List"
-Cohesion: 0.50
-Nodes (4): 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)Day 05 — Slot 1 (8:30 AM), 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)Day 05 — Slot 1 (8:30 AM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2037 - "📅 Day 25 — 01:30 PM | Automatic Overdue Alert"
-Cohesion: 0.50
-Nodes (4): 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)Day 06 — Slot 1 (8:30 AM), 🎬 Timeline (10.0 Seconds Exact)
-
-### Community 2038 - "📅 Day 25 — 07:30 PM | Multi-Device Access"
-Cohesion: 0.50
-Nodes (4): 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)Day 06 — Slot 2 (1:30 PM), 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)Day 06 — Slot 1 (8:30 AM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2039 - "📅 Day 26 — 08:30 AM | High Volume Interest Panic"
-Cohesion: 0.50
-Nodes (4): 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)Day 07 — Slot 1 (8:30 AM), 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)Day 07 — Slot 1 (8:30 AM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2040 - "📅 Day 26 — 01:30 PM | Collector Route Efficiency"
-Cohesion: 0.50
-Nodes (4): 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)Day 07 — Slot 2 (1:30 PM), 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)Day 07 — Slot 2 (1:30 PM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2041 - "📅 Day 26 — 07:30 PM | Privacy & Legal Compliance"
-Cohesion: 0.50
-Nodes (4): 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)Day 07 — Slot 3 (7:30 PM), 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)Day 07 — Slot 3 (7:30 PM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2042 - "📅 Day 27 — 08:30 AM | Ink Stain Ruined Month Page"
-Cohesion: 0.50
-Nodes (4): 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)Day 05 — Slot 2 (1:30 PM), 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 📝 Full Bengali Post Caption & Hashtags, 📹 Production Specifications, 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)Day 05 — Slot 2 (1:30 PM), 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2043 - "build"
-Cohesion: 0.50
-Nodes (4): Day 10 — Wednesday, 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, Day 10 — Wednesday, 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2044 - "7. Audio-reactive animation"
-Cohesion: 0.50
-Nodes (4): Day 11 — Thursday, 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, Day 11 — Thursday, 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2045 - "SuperAdminDashboard"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Notebook Out of Pages Panic
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Notebook Out of Pages Panic
 
 ### Community 2046 - "🎬 Shot-by-Shot Master Timeline (0.0s - 10.0s)"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 88: Day 30 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Final Month Ledger Review
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 11: Day 04 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Automatic Overdue Alert
 
 ### Community 2047 - "1. THE THREE DIALS (Core Configuration)"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 89: Day 30 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Full Year Collection Audit
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 89: Day 30 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Full Year Collection Audit
 
 ### Community 2048 - "8. HTML-in-canvas"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 90: Day 30 — Slot 3 (🌙 07:30 PM IST)07:30 PM | Join 50+ WB Lenders CTA
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 90: Day 30 — Slot 3 (🌙 07:30 PM IST)07:30 PM | Join 50+ WB Lenders CTA
 
 ### Community 2049 - "_AdminOrgDetailPageState"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Borrower Arguing Last Payment
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Borrower Arguing Last Payment
 
 ### Community 2050 - "week_1_part1_day_01_to_04.md"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Daily Savings Ring Completion
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Daily Savings Ring Completion
 
 ### Community 2051 - "Week 4 UGC Reel Scripts — Day 22 to Day 30 (27 Complete Director's Cut Scripts)"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Late Fee Calculation Hassle
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Late Fee Calculation Hassle
 
 ### Community 2052 - "AnalyticsPeriod"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Real-Time Cash Collection Log
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Real-Time Cash Collection Log
 
 ### Community 2053 - "norm"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Forgotten Borrowers List
-
-### Community 2054 - "TicketClipper"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 11: Day 04 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Automatic Overdue Alert
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)8:30 AM | Forgotten Borrowers List
 
 ### Community 2055 - "_GradientActionButton"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)7:30 PM | Multi-Device Access
-
-### Community 2056 - "BranchManagerShell"
-Cohesion: 0.67
-Nodes (3): Brand System, Tailwind Theme Tokens, Typography (next/font)
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)7:30 PM | Multi-Device Access
 
 ### Community 2057 - "Week 4 UGC Reel Scripts — Day 22 to Day 30 (27 Complete Director's Cut Scripts)"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 76: Day 26 — Slot 1 (🌅 08:30 AM IST)08:30 AM | High Volume Interest Panic
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 76: Day 26 — Slot 1 (🌅 08:30 AM IST)08:30 AM | High Volume Interest Panic
 
 ### Community 2058 - "_TonalActionButton"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 77: Day 26 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Collector Route Efficiency
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 77: Day 26 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Collector Route Efficiency
 
 ### Community 2059 - "SavingsPaymentSelector"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Auto Interest Re-Calculation
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact):, 📝 Post Details:, 📹 Production Specs:, 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)1:30 PM | Auto Interest Re-Calculation
 
 ### Community 2060 - "🎬 REEL 79: Day 27 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Ink Stain Ruined Month Page"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 79: Day 27 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Ink Stain Ruined Month Page
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 79: Day 27 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Ink Stain Ruined Month Page
 
 ### Community 2061 - "🎬 REEL 80: Day 27 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Instant Loan Renewal"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 80: Day 27 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Instant Loan Renewal
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 80: Day 27 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Instant Loan Renewal
 
 ### Community 2062 - "🎬 REEL 83: Day 28 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Automated Daily Backup"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 83: Day 28 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Automated Daily Backup
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 83: Day 28 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Automated Daily Backup
 
 ### Community 2063 - "🎬 REEL 85: Day 29 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Monthly Profit Miscalculation"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 85: Day 29 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Monthly Profit Miscalculation
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 85: Day 29 — Slot 1 (🌅 08:30 AM IST)08:30 AM | Monthly Profit Miscalculation
 
 ### Community 2064 - "🎬 REEL 86: Day 29 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Multi-Tier User Permissions"
-Cohesion: 0.50
-Nodes (4): 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 86: Day 29 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Multi-Tier User Permissions
+Cohesion: 0.29
+Nodes (7): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 Master Timeline (10.0 Seconds Exact), 📝 Post Details, 🎥 Production & Sound Specs, 🎬 REEL 86: Day 29 — Slot 2 (☀️ 01:30 PM IST)01:30 PM | Multi-Tier User Permissions
 
 ### Community 2065 - "ransomChipCss"
 Cohesion: 0.67
 Nodes (3): paradigmRansomrail(), ransomChipCss(), setpieceRansomnote()
 
 ### Community 2066 - "🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot)"
-Cohesion: 0.67
-Nodes (3): 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.33
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2067 - "🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)"
-Cohesion: 0.67
-Nodes (3): 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.33
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2068 - "🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot)"
-Cohesion: 0.67
-Nodes (3): 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.33
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2069 - "🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)"
-Cohesion: 0.67
-Nodes (3): 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.33
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2070 - "🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot)"
-Cohesion: 0.67
-Nodes (3): 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.33
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)1:30 PM (Afternoon Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2071 - "🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot)"
-Cohesion: 0.67
-Nodes (3): 🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.33
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)8:30 AM (Morning Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ### Community 2072 - "🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot)"
-Cohesion: 0.67
-Nodes (3): 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
+Cohesion: 0.33
+Nodes (6): ⚡ 10-Second Spoken Audio Fit (14-16 Words Max for AI Video), 1.5. Character Breakdown, 📦 1-Click Copyable All-In-One Master Prompt Box, 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)7:30 PM (Evening Slot), 📹 Technical Production Specs, 🎬 Timeline (10.0 Seconds Exact)
 
 ## Knowledge Gaps
-- **19979 isolated node(s):** `fs`, `content`, `normalizedContent`, `fs`, `path` (+19974 more)
+- **20180 isolated node(s):** `fs`, `content`, `normalizedContent`, `fs`, `path` (+20175 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **293 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **297 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `track()` connect `Community 184` to `Community 96`, `Community 162`, `Community 199`, `Community 968`, `Community 169`, `Community 271`, `Community 510`?**
   _High betweenness centrality (0.001) - this node is a cross-community bridge._
-- **Why does `track()` connect `Community 187` to `Community 483`, `Community 996`, `Community 516`, `Community 203`, `Community 110`, `Community 277`?**
+- **Why does `track()` connect `Community 187` to `Community 483`, `Community 516`, `Community 996`, `Community 203`, `Branch Scoped State`, `Community 110`, `Community 441`?**
   _High betweenness centrality (0.001) - this node is a cross-community bridge._
 - **Why does `out()` connect `Community 955` to `Community 968`, `workflow-guardrails.test.mjs`, `Community 1171`?**
   _High betweenness centrality (0.001) - this node is a cross-community bridge._
 - **What connects `fs`, `content`, `normalizedContent` to the rest of the system?**
-  _19979 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _20180 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SMS & Admin Core` be split into smaller, more focused modules?**
-  _Cohesion score 0.01932021466905188 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0473469387755102 - nodes in this community are weakly interconnected._
 - **Should `Payments & Collection` be split into smaller, more focused modules?**
   _Cohesion score 0.06072874493927125 - nodes in this community are weakly interconnected._
 - **Should `Member & Org Management` be split into smaller, more focused modules?**
-  _Cohesion score 0.1111111111111111 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.042352941176470586 - nodes in this community are weakly interconnected._

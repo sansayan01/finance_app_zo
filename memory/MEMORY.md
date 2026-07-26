@@ -76,5 +76,16 @@
 - **Files created/modified:** `memory/MEMORY.md`, `.git/config`
 - **Next steps:** Execution mode — Sayan to shoot daily reels per masterplan index.
 
+## 2026-07-27 01:15 — Added Character Breakdowns & Mandatory 'সুদের ব্যবসা' Keyword to All 90 Reels
+- **Summary:** Per Sayan's instructions, updated all 90 UGC reel scripts across all 4 master weekly files to explicitly include: (1) Detailed `Character Breakdown` sections (Character 1: Money-Lender/Sayan, Character 2: Borrower/Client/Agent with age, attire, mood, role); and (2) Explicit target keyword **"সুদের ব্যবসা"** / **"সুদের ব্যবসায়"** (Suder Bebsha / Interest-Lending Business) in spoken voiceovers & punchlines for 100% of the 90 reels. Node.js audit script verified 90/90 (100%) reels compliant. Pushed to `development` and merged to `main`.
+- **Files created/modified:**
+  - `marketing/bengali-facebook/30_day_master_plan/week_1_master_scripts_day_01_to_07.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_2_master_scripts_day_08_to_14.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_3_master_scripts_day_15_to_21.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_4_master_scripts_day_22_to_30.md` (27 Reels)
+  - `memory/MEMORY.md`
+- **Next steps:** Shoot daily reels following the masterplan.
+
+
 
 

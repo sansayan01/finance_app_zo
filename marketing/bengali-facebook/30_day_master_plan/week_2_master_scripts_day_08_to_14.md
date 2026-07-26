@@ -15,7 +15,12 @@ CTA Focus: Comment **"খাতা"** for automated DM demo & WhatsApp onboardin
 - **Core Emotion:** Shock & Rage Turning to Unshakeable Confidence
 - **Psychological Trigger:** Fear of losing market reputation and being publicly branded a fraud over disputed paper interest calculations.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Quiet morning tea stall in Swarupnagar market. Lender sipping tea from a clay cup (*kulhar*).
   - *Ambient Audio:* Distant birds chirping, low street rumble, hot tea pouring sound.
@@ -68,7 +73,12 @@ CTA Focus: Comment **"খাতা"** for automated DM demo & WhatsApp onboardin
 - **Core Emotion:** Frustration Turning to Definite Truth
 - **Psychological Trigger:** Fear of unrecorded cash collections and unprovable repayments in paper notebooks.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Lender sitting at shop counter counting cash notes under bright afternoon light.
   - *Ambient Audio:* Fan whirring, counting paper notes (*thump-thump*).
@@ -89,7 +99,7 @@ CTA Focus: Comment **"খাতা"** for automated DM demo & WhatsApp onboardin
   - *Audio:* Absolute dead silence. Drop all background sound.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender shuts paper notebook with a crisp click, points at MicroFlow app.
-  - *Spoken Bengali Punchline:* "মুখে মুখে তর্ক বন্ধ, ডিজিটাল প্রমাণের জয়! কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় মুখে মুখে তর্ক বন্ধ, ডিজিটাল প্রমাণের জয়! কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **ডিজিটাল... প্রমাণের... জয়!... কমেন্টে... লিখুন... 'খাতা'**
 
 #### 📹 Technical Production Specs
@@ -120,7 +130,12 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
 - **Core Emotion:** Humiliation Threat Turning to Complete Legal Clarity
 - **Psychological Trigger:** Fear of borrowers accusing the lender of fake or altered handwritten ledger books during evening settlement.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Evening office setting, warm yellow desk lamp lighting, lender sorting files.
   - *Ambient Audio:* Clock ticking rhythmically (*tick-tock*).
@@ -141,7 +156,7 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
   - *Audio:* Complete mute for 1 full second.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender winks, locks phone safely, holds banner graphic.
-  - *Spoken Bengali Punchline:* "হিসাব থাকবে কাচের মতো পরিষ্কার। আজই কমেন্টে লিখুন 'খাতা'!"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় হিসাব থাকবে কাচের মতো পরিষ্কার। আজই কমেন্টে লিখুন 'খাতা'!"
   - *Subtitle Strategy:* **হিসাব... থাকবে... কাচের... মতো... পরিষ্কার!**
 
 #### 📹 Technical Production Specs
@@ -173,7 +188,12 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
 - **Core Emotion:** Disbelief & High Stakes Defense
 - **Psychological Trigger:** Fear of borrowers claiming signature forgery on loan approval documents.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Morning sunlight streaming onto lender's desk, cup of coffee steaming.
   - *Ambient Audio:* Gentle breeze, morning ambiance.
@@ -194,7 +214,7 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
   - *Audio:* Absolute dead silence (0.0dB).
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender smiles confidently, closes desk drawer.
-  - *Spoken Bengali Punchline:* "জালিয়াতি রুখবে ডিজিটাল খাতা! কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় জালিয়াতি রুখবে ডিজিটাল খাতা! কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **জালিয়াতি... রুখবে... MicroFlow... কমেন্টে... লিখুন... 'খাতা'**
 
 #### 📹 Technical Production Specs
@@ -224,7 +244,12 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
 - **Core Emotion:** Panic & Threat Neutralization
 - **Psychological Trigger:** Fear of borrowers threatening public harassment or political/panchayat exposure.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Lender reviewing daily collection sheet in shop veranda.
   - *Ambient Audio:* Distant village street background sound.
@@ -245,7 +270,7 @@ MicroFlow Pro ব্যবহারে প্রতিটি কিস্তি 
   - *Audio:* 1 second absolute silence.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender taps phone screen, smiles calmly at camera.
-  - *Spoken Bengali Punchline:* "সচ্ছ হিসাব থাকলে ভয় কিসের? কমেন্টে লিখুন 'খাতা'!"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় সচ্ছ হিসাব থাকলে ভয় কিসের? কমেন্টে লিখুন 'খাতা'!"
   - *Subtitle Strategy:* **সচ্ছ... হিসাব... থাকলে... ভয়... কিসের?**
 
 #### 📹 Technical Production Specs
@@ -275,7 +300,12 @@ MicroFlow Pro-তে আসল আর সুদের হিসাব আলা�
 - **Core Emotion:** Despair Turned to Ultimate Safety
 - **Psychological Trigger:** Fear of physical damage, rain/fire, or deliberate tearing of paper notebooks.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Rainy evening outside office, lender organizing desk.
   - *Ambient Audio:* Rain falling sound on tin roof (*pat-pat-pat*).
@@ -296,7 +326,7 @@ MicroFlow Pro-তে আসল আর সুদের হিসাব আলা�
   - *Audio:* 1 second drop in all rain sound / BGM — total silence.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender pats phone, gives warm confident smile.
-  - *Spoken Bengali Punchline:* "কাগজ নষ্ট হতে পারে, MicroFlow ব্যাকআপ নয়! কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় কাগজ নষ্ট হতে পারে, MicroFlow ব্যাকআপ নয়! কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **কাগজ... নষ্ট... হতে... পারে... MicroFlow... নয়!**
 
 #### 📹 Technical Production Specs
@@ -329,7 +359,12 @@ MicroFlow Pro-এর সাথে আপনার সমস্ত হিসা�
 - **Core Emotion:** Terror Turned to Operational Control
 - **Psychological Trigger:** Lender's anxiety of collection agents collecting cash from borrowers and pocketing it.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Lender reviewing agent route map early morning over tea.
   - *Ambient Audio:* Early morning quiet ambiance.
@@ -350,7 +385,7 @@ MicroFlow Pro-এর সাথে আপনার সমস্ত হিসা�
   - *Audio:* Absolute dead silence for 1 second.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender taps agent profile, chuckles softly.
-  - *Spoken Bengali Punchline:* "এজেন্ট চালাকি করতে পারবে না, যদি থাকে MicroFlow Pro! কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় এজেন্ট চালাকি করতে পারবে না, যদি থাকে MicroFlow Pro! কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **এজেন্ট... চালাকি... বন্ধ!... কমেন্টে... লিখুন... 'খাতা'**
 
 #### 📹 Technical Production Specs
@@ -381,7 +416,12 @@ MicroFlow Pro-এর এজেন্ট পোর্টাল দিয়ে �
 - **Core Emotion:** Conflict Turned to Instant Receipt Validation
 - **Psychological Trigger:** Borrowers refusing to pay because they claimed they didn't receive proof of prior payment.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Lender making calls at market office during midday.
   - *Ambient Audio:* Busy afternoon marketplace chatter background.
@@ -402,7 +442,7 @@ MicroFlow Pro-এর এজেন্ট পোর্টাল দিয়ে �
   - *Audio:* 1 second complete mute.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender takes collection cash with a satisfied smile.
-  - *Spoken Bengali Punchline:* "গ্রাহকের ভরসা আর আপনার ব্যাকআপ — MicroFlow Pro। কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় গ্রাহকের ভরসা আর আপনার ব্যাকআপ — MicroFlow Pro। কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **ভরসা... আর... ব্যাকআপ... MicroFlow!**
 
 #### 📹 Technical Production Specs
@@ -432,7 +472,12 @@ MicroFlow Pro ব্যবহার করলে টাকা জমা হও�
 - **Core Emotion:** Panic Over Missing Deposits Turned to Instant Ledger Trust
 - **Psychological Trigger:** Fear of borrowers claiming their daily/weekly savings deposits were improperly recorded or stolen.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Evening savings collection desk, stacks of passbooks.
   - *Ambient Audio:* Desk lamp humming, soft ceiling fan sound.
@@ -453,7 +498,7 @@ MicroFlow Pro ব্যবহার করলে টাকা জমা হও�
   - *Audio:* Complete silence (0.0dB) for 1 second.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender hands back passbook along with digital PDF printout link.
-  - *Spoken Bengali Punchline:* "সঞ্চয় হোক বা ঋণ, নিখুঁত হিসাবের এক নাম MicroFlow Pro! কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় সঞ্চয় হোক বা ঋণ, নিখুঁত হিসাবের এক নাম MicroFlow Pro! কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **নিখুঁত... হিসাবের... এক... নাম... MicroFlow!**
 
 #### 📹 Technical Production Specs
@@ -486,7 +531,12 @@ MicroFlow Pro-এর স্পেশাল Savings Module-এ অটোমেট
 - **Core Emotion:** Legal Vulnerability Dread Turned to Absolute Institutional Standing
 - **Psychological Trigger:** Fear of legal rejection of handwritten paper ledgers during loan default arbitration.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Financier reading morning paper with tea in home office.
   - *Ambient Audio:* Clock ticking, paper rustling.
@@ -507,7 +557,7 @@ MicroFlow Pro-এর স্পেশাল Savings Module-এ অটোমেট
   - *Audio:* Absolute dead silence (0.0dB).
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender closes file folder smoothly, looking directly into lens.
-  - *Spoken Bengali Punchline:* "ব্যবসা ছোট হোক বা বড়, হিসাব রাখুন শক্ত প্রমাণের সাথে! কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় ব্যবসা ছোট হোক বা বড়, হিসাব রাখুন শক্ত প্রমাণের সাথে! কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **হিসাব... রাখুন... শক্ত... প্রমাণের... সাথে!**
 
 #### 📹 Technical Production Specs
@@ -538,7 +588,12 @@ MicroFlow Pro আপনাকে দেয় ডিজিটাল পেমে
 - **Core Emotion:** Deadline Stress Turned to Instant 1-Click Export Relief
 - **Psychological Trigger:** Fear of being unable to produce historical statement audit instantly during customer dispute.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Lender reviewing ledgers after lunch in busy office.
   - *Ambient Audio:* Ceiling fan background hum.
@@ -559,7 +614,7 @@ MicroFlow Pro আপনাকে দেয় ডিজিটাল পেমে
   - *Audio:* 1 second dead silence.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender sips water comfortably, points to screen.
-  - *Spoken Bengali Punchline:* "ঘণ্টার কাজ হবে সেকেন্ডে! আজই কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় ঘণ্টার কাজ হবে সেকেন্ডে! আজই কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **ঘণ্টার... কাজ... হবে... সেকেন্ডে!**
 
 #### 📹 Technical Production Specs
@@ -590,7 +645,12 @@ MicroFlow Pro-তে নির্দিষ্ট তারিখ সিলেক
 - **Core Emotion:** Insult & Accusation Turned to Perfect Balance Validation
 - **Psychological Trigger:** Monthly closing mismatch accusations destroying personal relationship and trust between lender and client.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s-0.40s | Calm Before the Storm:**
   - *Visual:* Late evening office closure, counting daily cash ledger.
   - *Ambient Audio:* Evening crickets background sound, distant vehicle horn.
@@ -611,7 +671,7 @@ MicroFlow Pro-তে নির্দিষ্ট তারিখ সিলেক
   - *Audio:* 1 second absolute silence.
 - **8.80s-10.00s | Closing Punchline & CTA:**
   - *Visual:* Lender smiles, puts arm around friend's shoulder, holds MicroFlow phone logo.
-  - *Spoken Bengali Punchline:* "সম্পর্ক আর ব্যবসা — দুটোই বাঁচাবে MicroFlow Pro! কমেন্টে লিখুন 'খাতা'।"
+  - *Spoken Bengali Punchline:* "সুদের ব্যবসায় সম্পর্ক আর ব্যবসা — দুটোই বাঁচাবে MicroFlow Pro! কমেন্টে লিখুন 'খাতা'।"
   - *Subtitle Strategy:* **সম্পর্ক... আর... ব্যবসা... দুটোই... বাঁচাবে... MicroFlow!**
 
 #### 📹 Technical Production Specs
@@ -653,7 +713,12 @@ MicroFlow Pro দিয়ে আপনার লোন ও সঞ্চয়�
 - **Core Emotion:** Insult & Fear of Public Character Assassination ("আমার সততা নিয়ে প্রশ্ন তুলছে!")
 - **Psychological Trigger:** Borrowers denying agreed interest rates in public, risking the lender's market reputation and causing financial loss.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Close-up of a lender putting down a brass brass-ringed pen on a wooden desk next to a half-full glass of tea.
   - **Audio:** Natural shop ambient sound (ticking wall clock, street chatter). No background music.
@@ -679,7 +744,7 @@ MicroFlow Pro দিয়ে আপনার লোন ও সঞ্চয়�
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Lender looks into camera with calm authority and a reassuring nod.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -715,7 +780,12 @@ Kinetic pop-in text centered on screen with high contrast black backing:
 - **Core Emotion:** Dread of Fraud Allegation & Double Entry Dispute
 - **Psychological Trigger:** Customers claiming they already paid a collection installment that was missed in paper entries.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Money lender counting currency notes under a warm table lamp.
   - **Audio:** Paper bill rustling sounds, calm room atmosphere.
@@ -741,7 +811,7 @@ Kinetic pop-in text centered on screen with high contrast black backing:
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Lender closes phone screen cleanly and smiles with absolute poise.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -776,7 +846,12 @@ Kinetic pop-in text centered on screen with high contrast black backing:
 - **Core Emotion:** Suspicion & Panic of Internal Theft/Discrepancy
 - **Psychological Trigger:** Field collection staff or partners collecting money from clients but withholding or misreporting cash.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Shop owner leaning back on wooden chair at dusk, sipping tea while field agent enters.
   - **Audio:** Evening crickets outside shop, ceiling fan hum.
@@ -802,7 +877,7 @@ Kinetic pop-in text centered on screen with high contrast black backing:
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Owner locks cash in drawer, confident nod to camera.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -840,7 +915,12 @@ MicroFlow Pro-র সাথে প্রতিটি ফিল্ড এজে�
 - **Core Emotion:** Stress & Conflict over Interest Calculations on Partial Payments
 - **Psychological Trigger:** Borrowers making partial principal payments and demanding interest reductions that paper ledgers can't easily calculate.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Lender using a mechanical calculator, scratching pencil behind ear in morning light.
   - **Audio:** Calculator button clacks, pencil scribbling sound.
@@ -866,7 +946,7 @@ MicroFlow Pro-র সাথে প্রতিটি ফিল্ড এজে�
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Lender slides calculator away and smiles directly into lens.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -900,7 +980,12 @@ MicroFlow Pro অ্যাপে যেকোনো আংশিক পেমে
 - **Core Emotion:** Panic of Default & Unrecoverable Debt
 - **Psychological Trigger:** Primary borrower missing payments and the guarantor flatly denying they signed any guarantee document.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Lender looking at a loan document on clip board in afternoon light.
   - **Audio:** Ceiling fan squeak, quiet office atmosphere.
@@ -926,7 +1011,7 @@ MicroFlow Pro অ্যাপে যেকোনো আংশিক পেমে
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Lender locks phone screen calmly, gestures directly to viewer.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -960,7 +1045,12 @@ MicroFlow Pro-তে প্রতিটা লোনের সাথে জা�
 - **Core Emotion:** Horror & Utter Panic of Physical Destruction
 - **Psychological Trigger:** Water spill, ink blotch, or torn pages in physical registers destroying years of loan records.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Red ledger open beside a hot cup of tea at evening desk.
   - **Audio:** Tea pouring sound, rain outside window.
@@ -986,7 +1076,7 @@ MicroFlow Pro-তে প্রতিটা লোনের সাথে জা�
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Direct lens eye contact with confident smile.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -1024,7 +1114,12 @@ MicroFlow Pro-তে প্রতিটা লোনের সাথে জা�
 - **Core Emotion:** Conflict & Hostility Over Overdue Penalties
 - **Psychological Trigger:** Defaulters refusing to pay agreed overdue penalty fees claiming they weren't informed.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Lender sorting client files in morning sunlight.
   - **Audio:** File folder opening sound, birds chirping ambient.
@@ -1050,7 +1145,7 @@ MicroFlow Pro-তে প্রতিটা লোনের সাথে জা�
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Lender nods softly, tapping MicroFlow receipt button.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -1084,7 +1179,12 @@ MicroFlow Pro-তে লোন দেওয়ার সময়ই পেন�
 - **Core Emotion:** Confusion & Embarrassment Over Swapped Accounts
 - **Psychological Trigger:** Customers taking multiple loans (e.g. personal loan + business loan) whose paper ledger pages get mixed up.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Lender looking at two different exercise notebooks open on desk.
   - **Audio:** Page turning sound, wall clock ticking.
@@ -1110,7 +1210,7 @@ MicroFlow Pro-তে লোন দেওয়ার সময়ই পেন�
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Lender taps clean entry confirmation with smile.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction
@@ -1144,7 +1244,12 @@ MicroFlow Pro-তে একজন মেম্বারের একাধিক
 - **Core Emotion:** Anxiety over Loss of Member Trust in Savings & Collection Groups
 - **Psychological Trigger:** Savings group members demanding full audit reports at month-end and accusing lender of calculation mistakes.
 
-#### 🎬 Timeline (10.0 Seconds Exact)
+#
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
+### 🎬 Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm**
   - **Visual:** Group meeting room at dusk, lender holding ledger surrounded by 2 members.
   - **Audio:** Low murmur of group meeting, night ambient sound.
@@ -1170,7 +1275,7 @@ MicroFlow Pro-তে একজন মেম্বারের একাধিক
 
 - **8.80s–10.00s | Closing Punchline & CTA**
   - **Visual:** Lender closes laptop/phone with triumphant, peaceful smile.
-  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... MicroFlow পারে না।"
+  - **Spoken Bengali Dialogue:** "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow ভুল করে না।"
   - **CTA Text & Voiceover:** **কমেন্টে লিখুন "খাতা" (ফ্রি ডেমোর জন্য)**
 
 #### 🎥 Camera Direction

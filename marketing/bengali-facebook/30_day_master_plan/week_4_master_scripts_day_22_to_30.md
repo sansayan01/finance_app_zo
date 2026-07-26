@@ -18,13 +18,18 @@
 **Core Emotion:** Sudden Panic / Operational Helplessness  
 **Psychological Trigger:** Fear of losing track of pending payments and customer history when a physical red notebook fills up mid-transaction.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Close-up of red ledger book on wooden desk. Quiet morning shop atmosphere with soft ceiling fan hum.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Lender turns the page frantically to write an entry, only to hit the blank back cover. Spoken Dialogue (Bengali): *"আরে দাদা! খাতার শেষ পাতাও ভর্তি হয়ে গেছে?!"* Subtitles (Word-by-word pop-in): **আরে... দাদা!... খাতার... শেষ... পাতাও... ভর্তি!**
 * **2.20s - 4.50s | Escalation & Suspense:** Borrower waiting outside. Lender searches under desk for new notebook, sweating. Spoken Dialogue (Bengali): *"নতুন খাতা না পেলে আজকের ৫ হাজার টাকার হিসাব রাখবো কোথায়?!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Camera rapidly pans to smartphone on table. Taps MicroFlow Pro app. Screen highlights unlimited entries & lifetime digital khata. Spoken Dialogue (Bengali): *"MicroFlow Pro অ্যাপে খাতা কোনোদিন ফুরায় না! আনলিমিটেড কাস্টমার এন্ট্রি এক জায়গায়।"*
+* **4.50s - 7.80s | The Proof / Evidence:** Camera rapidly pans to smartphone on table. Taps সুদের ব্যবসায় MicroFlow Pro app. Screen highlights unlimited entries & lifetime digital khata. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro অ্যাপে খাতা কোনোদিন ফুরায় না! আনলিমিটেড কাস্টমার এন্ট্রি এক জায়গায়।"*
 * **7.80s - 8.80s | Silence Wins:** Total audio vacuum cutoff. Screen shows bright green badge: *"অনন্ত পাতা • ১০০% ডিজিটাল খাতা"*. Lender sighs in total relief.
-* **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"খাতার পাতা ফুরাবে... কিন্তু MicroFlow Pro থামবে না! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
+* **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"খাতার পাতা ফুরাবে... কিন্তু সুদের ব্যবসায় MicroFlow Pro থামবে না! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
 #### 📹 Production Specs:
 * **Camera Direction:** 45° Top-Down handheld shot → Quick punch-in at 2.20s on blank back cover → Sharp autofocus breathing transition onto smartphone screen at 4.50s.
@@ -40,9 +45,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  খাতার শেষ পাতা ভর্তি হয়ে গেলে পুরোনো হিসেব নিয়ে টানাটানি? আর লাল খাতা বদলানোর ঝামেলা সহ্য করবেন না! MicroFlow Pro অ্যাপে পান আনলিমিটেড ডিজিটাল খাতা, যেখানে কোনো হিসেব কোনোদিন হারায় না। আজই ডিজিটাল হোন। ফ্রি ডেমোর জন্য কমেন্টে লিখুন "খাতা"।
+  খাতার শেষ পাতা ভর্তি হয়ে গেলে পুরোনো হিসেব নিয়ে টানাটানি? আর লাল খাতা বদলানোর ঝামেলা সহ্য করবেন না! সুদের ব্যবসায় MicroFlow Pro অ্যাপে পান আনলিমিটেড ডিজিটাল খাতা, যেখানে কোনো হিসেব কোনোদিন হারায় না। আজই ডিজিটাল হোন। ফ্রি ডেমোর জন্য কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #সুদেরখাতা #ডিজিটালখাতা #MoneyLender #WestBengal #BusinessHacks #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #সুদেরখাতা #ডিজিটালখাতা #MoneyLender #WestBengal #BusinessHacks #খাতা
 
 ---
 
@@ -51,13 +56,18 @@
 **Core Emotion:** Confusion & Escalating Anger  
 **Psychological Trigger:** Fear of losing profits or ruining customer relationships due to manual compound interest and recalculation errors.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Mid-day shop desk, calculator sitting next to handwritten interest slip. Distant street noise.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Borrower slaps paper slip on table. Spoken Dialogue (Bengali): *"আপনি সুদের হিসাব ভুল তুলেছেন! গত মাসের সুদের ওপর আবার সুদ ধরলেন কীভাবে?!"* Subtitles: **আপনি... সুদের... হিসাব... ভুল... তুলেছেন!**
 * **2.20s - 4.50s | Escalation & Suspense:** Lender presses calculator keys rapidly, getting two different totals. Frustration builds up. Spoken Dialogue (Bengali): *"হিসাব মেলাতে মেলাতে মাথা গরম! কাস্টমারও চটে যাচ্ছে!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Lender opens MicroFlow Pro, inputs principal & rate. Screen instantly calculates interest breakdown with clear visual split. Spoken Dialogue (Bengali): *"MicroFlow Pro অ্যাপে আসল আর সুদের হিসাব অটোমেটিক রিক্যালকুলেট হয় ১ সেকেন্ডে!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Lender opens সুদের ব্যবসায় MicroFlow Pro, inputs principal & rate. Screen instantly calculates interest breakdown with clear visual split. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro অ্যাপে আসল আর সুদের হিসাব অটোমেটিক রিক্যালকুলেট হয় ১ সেকেন্ডে!"*
 * **7.80s - 8.80s | Silence Wins:** Complete audio silence. Screen displays green verification badge: *"সঠিক সুদের হিসাব • 0% ভুল"*. Both lender and borrower look satisfied.
-* **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"ক্যালকুলেটর ভুল করতে পারে... MicroFlow পারে না! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
+* **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"ক্যালকুলেটর ভুল করতে পারে... সুদের ব্যবসায় MicroFlow পারে না! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
 #### 📹 Production Specs:
 * **Camera Direction:** Over-the-shoulder POV shot → Rapid zoom-in at 2.20s on calculator error screen → Smooth pan to phone screen at 4.50s with macro focus.
@@ -73,9 +83,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  সুদের হিসাব মেলাতে গিয়ে কাস্টমারের সাথে ভুল বোঝাবুঝি হচ্ছে? MicroFlow Pro অ্যাপ ব্যবহার করুন— যেখানে আসল ও সুদের হিসাব হবে ১০০% নিখুঁত ও অটোমেটিক। ১ ক্লিকেই সমাধান। ফ্রি ডেমো পেতে এখনই কমেন্টে লিখুন "খাতা"।
+  সুদের হিসাব মেলাতে গিয়ে কাস্টমারের সাথে ভুল বোঝাবুঝি হচ্ছে? সুদের ব্যবসায় MicroFlow Pro অ্যাপ ব্যবহার করুন— যেখানে আসল ও সুদের হিসাব হবে ১০০% নিখুঁত ও অটোমেটিক। ১ ক্লিকেই সমাধান। ফ্রি ডেমো পেতে এখনই কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #সুদেরহিসাব #DigitalLedger #BusinessGrowth #KolkataBusiness #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #সুদেরহিসাব #DigitalLedger #BusinessGrowth #KolkataBusiness #খাতা
 
 ---
 
@@ -83,6 +93,11 @@
 **Title:** ফোনের মধ্যে খাতা? চুরি বা ডেটা ফাঁসের ভয়?  
 **Core Emotion:** Skepticism & Data Privacy Anxiety  
 **Psychological Trigger:** Fear that digital mobile apps will leak sensitive money-lending balances or customer financial records to third parties.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Soft evening desk lamp lighting. Lender sitting comfortably holding phone, looking doubtful.
@@ -121,11 +136,16 @@
 **Core Emotion:** Direct Conflict & Vulnerability to Loss  
 **Psychological Trigger:** Fear of losing money because a borrower falsely claims to have paid a weekly installment without paper proof.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Field collection scene or shop counter. Morning sunlight. Borrower sitting across desk.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Borrower waves hands aggressively. Spoken Dialogue (Bengali): *"দাদা গত মঙ্গলবারই তো আপনাকে ২০০০ টাকা দিয়েছিলাম! আবার চাচ্ছেন কেন?!"* Subtitles: **গত... মঙ্গলবারই... তো... টাকা... দিয়েছিলাম!**
 * **2.20s - 4.50s | Escalation & Suspense:** Lender turns paper pages confusedly. No entry found on Tuesday. Spoken Dialogue (Bengali): *"খাতায় তো লেখা নেই! এখন কাকে বিশ্বাস করবো?!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Lender pulls out phone, opens MicroFlow Pro history log. Taps SMS proof & exact timestamp: *"Aug 11, 10:15 AM - Unpaid"*. Spoken Dialogue (Bengali): *"MicroFlow Pro-তে প্রতিটা লেনেদেনের লাইভ ডেট ও টাইমস্ট্যাম্প প্রুফ থাকে!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Lender pulls out phone, opens সুদের ব্যবসায় MicroFlow Pro history log. Taps SMS proof & exact timestamp: *"Aug 11, 10:15 AM - Unpaid"*. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro-তে প্রতিটা লেনেদেনের লাইভ ডেট ও টাইমস্ট্যাম্প প্রুফ থাকে!"*
 * **7.80s - 8.80s | Silence Wins:** Total silence. Screen flashes green digital receipt showing clear due status. Borrower shuts mouth.
 * **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"মুখে তর্ক নয়... ডিজিটাল প্রমাণে কথা বলুন! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
@@ -143,9 +163,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  "টাকা তো আগেই দিয়েছি"— কাস্টমারের এই তর্কে আর ক্ষতি সহ্য করবেন না! MicroFlow Pro অ্যাপে প্রতিটি কিস্তির এন্ট্রি থাকে অটোমেটিক তারিখ ও সময়সহ। ভুলের কোনো সুযোগ নেই। ফ্রি ট্রায়াল পেতে কমেন্টে লিখুন "খাতা"।
+  "টাকা তো আগেই দিয়েছি"— কাস্টমারের এই তর্কে আর ক্ষতি সহ্য করবেন না! সুদের ব্যবসায় MicroFlow Pro অ্যাপে প্রতিটি কিস্তির এন্ট্রি থাকে অটোমেটিক তারিখ ও সময়সহ। ভুলের কোনো সুযোগ নেই। ফ্রি ট্রায়াল পেতে কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #কিস্তিরহিসাব #PaymentProof #MoneyLendersBengal #DigitalKhata #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #কিস্তিরহিসাব #PaymentProof #MoneyLendersBengal #DigitalKhata #খাতা
 
 ---
 
@@ -154,11 +174,16 @@
 **Core Emotion:** Overwhelm & Administrative Fatigue  
 **Psychological Trigger:** Misplacing or confusing daily micro-savings collected from dozens of small vendors in paper registries.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Desk filled with small cash notes (₹50, ₹100) and messy collection grids. Afternoon sunbeam.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Collector counts money, matches grid, gasps. Spoken Dialogue (Bengali): *"৫০ জন দোকানদারের দৈনিক সঞ্চয়ের হিসেব মেলাতে মেলাতে বেলা শেষ?!"* Subtitles: **৫০ জন... দোকানদারের... দৈনিক... সঞ্চয়... মেলাতে... বেলা... শেষ?!**
 * **2.20s - 4.50s | Escalation & Suspense:** Pencil tip breaks on paper grid. Calculator shows mismatch of ₹150. Tension rises. Spoken Dialogue (Bengali): *"একটা ঘরে ভুল টিক পড়লেই পুরো মাসের সঞ্চয় বরবাদ!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Collector switches to MicroFlow Pro Savings Module. Taps customer profiles—visual progress ring fills green automatically. Spoken Dialogue (Bengali): *"MicroFlow Pro-র সেভিংস রিং ট্র্যাকার ১ ট্যাপেই ১০০% দৈনিক সঞ্চয় হিসাব কমপ্লিট করে!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Collector switches to সুদের ব্যবসায় MicroFlow Pro Savings Module. Taps customer profiles—visual progress ring fills green automatically. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro-র সেভিংস রিং ট্র্যাকার ১ ট্যাপেই ১০০% দৈনিক সঞ্চয় হিসাব কমপ্লিট করে!"*
 * **7.80s - 8.80s | Silence Wins:** Zero audio output. Phone screen displays animated ring completion: *"আজকের সঞ্চয় আদায় ১০০% সফল"*.
 * **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"সঞ্চয়ের হিসাব রাখুন হাসিমুখে! এখনই কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
@@ -176,9 +201,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  প্রতিদিন ছোট ছোট দোকানদারদের সঞ্চয় কালেকশন মেলাতে ঘণ্টার পর ঘণ্টা নষ্ট? MicroFlow Pro-র অটোমেটিক সেভিংস মডিউলে ১ ক্লিকেই সব সঞ্চয় এন্ট্রি কমপ্লিট। আজই আপনার কাজ সহজ করুন। ফ্রি ডেমোর জন্য কমেন্টে লিখুন "খাতা"।
+  প্রতিদিন ছোট ছোট দোকানদারদের সঞ্চয় কালেকশন মেলাতে ঘণ্টার পর ঘণ্টা নষ্ট? সুদের ব্যবসায় MicroFlow Pro-র অটোমেটিক সেভিংস মডিউলে ১ ক্লিকেই সব সঞ্চয় এন্ট্রি কমপ্লিট। আজই আপনার কাজ সহজ করুন। ফ্রি ডেমোর জন্য কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #ক্ষুদ্রসঞ্চয় #DailySavings #MicrofinanceApp #WestBengalBusiness #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #ক্ষুদ্রসঞ্চয় #DailySavings #MicrofinanceApp #WestBengalBusiness #খাতা
 
 ---
 
@@ -187,11 +212,16 @@
 **Core Emotion:** Friction & Impatience  
 **Psychological Trigger:** Fear of appearing slow or unprofessional to new loan customers due to laborious paper document entry.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Night-time desk scene. Lamp light glowing. New customer waiting while lender opens thick new register.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Customer sighs looking at watch. Spoken Dialogue (Bengali): *"একটা নতুন ঋণের খাতা খুলতে আধা ঘণ্টা সময় নষ্ট করবেন দাদা?!"* Subtitles: **নতুন... ঋণ... খুলতে... আধা... ঘণ্টা... নষ্ট?!**
 * **2.20s - 4.50s | Escalation & Suspense:** Lender filling long columns manually—name, address, rate, tenure, EMI dates. Hand cramping. Spoken Dialogue (Bengali): *"কতো নিয়ম, কতো ঘর তৈরি করতে হয় খাতায়!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Lender opens MicroFlow Pro "Add New Loan", inputs amount & duration. App automatically sets tenure, rate, and schedule. Spoken Dialogue (Bengali): *"MicroFlow Pro অ্যাপে মাত্র ১০ সেকেন্ডে নতুন লোন প্রোফাইল ও কিস্তির সিডিউল রেডি!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Lender opens সুদের ব্যবসায় MicroFlow Pro "Add New Loan", inputs amount & duration. App automatically sets tenure, rate, and schedule. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro অ্যাপে মাত্র ১০ সেকেন্ডে নতুন লোন প্রোফাইল ও কিস্তির সিডিউল রেডি!"*
 * **7.80s - 8.80s | Silence Wins:** Audio snaps to dead quiet. Screen displays green check card: *"নতুন ঋণ সফলভাবে তৈরি হলো (১০ সে:)"*.
 * **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"সময় বাঁচান, ব্যবসা বাড়ান! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
@@ -209,9 +239,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  নতুন গ্রাহকের ঋণের এন্ট্রি করতে খাতার পাতায় লাইন টানতে টানতে ক্লান্ত? MicroFlow Pro অ্যাপে মাত্র ১০ সেকেন্ডে খুলুন নতুন লোন অ্যাকাউন্ট ও ইএমআই সিডিউল। সময় বাঁচান সহজেই। অ্যাপের ফ্রি ডেমো দেখতে কমেন্টে লিখুন "খাতা"।
+  নতুন গ্রাহকের ঋণের এন্ট্রি করতে খাতার পাতায় লাইন টানতে টানতে ক্লান্ত? সুদের ব্যবসায় MicroFlow Pro অ্যাপে মাত্র ১০ সেকেন্ডে খুলুন নতুন লোন অ্যাকাউন্ট ও ইএমআই সিডিউল। সময় বাঁচান সহজেই। অ্যাপের ফ্রি ডেমো দেখতে কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #QuickLoanEntry #ডিজিটালখাতা #MoneyLendingSoftware #Kolkata #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #QuickLoanEntry #ডিজিটালখাতা #MoneyLendingSoftware #Kolkata #খাতা
 
 ---
 
@@ -224,11 +254,16 @@
 **Core Emotion:** Embarrassment & Profit Leakage  
 **Psychological Trigger:** Fear of losing late charges or getting into embarrassing arguments because paper ledgers lack clear penalty rules.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Early morning store front. Customer standing across table holding cash.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Customer raises voice. Spoken Dialogue (Bengali): *"৩ দিন দেরি হয়েছে বলে ৫০ টাকা পেনাল্টি?! খাতায় তো আগে বলা ছিল না!"* Subtitles: **৩ দিন... দেরির... জন্য... পেনাল্টি... দেওয়া... যাবে না!**
 * **2.20s - 4.50s | Escalation & Suspense:** Lender struggles to show written rules in smudged notebook margins. Arguments increase. Spoken Dialogue (Bengali): *"মুখে বললে কাস্টমার বিশ্বাস করে না, খাতা দেখালেও চটে যায়!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Lender shows MicroFlow Pro automated invoice on phone. System displays pre-set auto late penalty calculation transparently. Spoken Dialogue (Bengali): *"MicroFlow Pro-তে লেট ফি এবং পেনাল্টি চার্জ অটোমেটিক এবং স্বচ্ছভাবে হিসেব হয়!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Lender shows সুদের ব্যবসায় MicroFlow Pro automated invoice on phone. System displays pre-set auto late penalty calculation transparently. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro-তে লেট ফি এবং পেনাল্টি চার্জ অটোমেটিক এবং স্বচ্ছভাবে হিসেব হয়!"*
 * **7.80s - 8.80s | Silence Wins:** Complete audio silence. Screen displays transparent breakdown badge: *"স্বচ্ছ পেনাল্টি হিসাব • ১০০% স্পষ্ট"*. Customer drops opposition.
 * **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"ঝামেলা ছাড়া সঠিক পাওনা আদায় করুন! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
@@ -246,9 +281,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  কিস্তি দেরিতে দিলে পেনাল্টি হিসাব নিয়ে কাস্টমারের সাথে কথা কাটাকাটি? MicroFlow Pro অ্যাপে লেট ফি অটোমেটিক ও পরিষ্কারভাবে হিসেব হয়, যা কেউ অস্বীকার করতে পারে না। আজই ট্রায়াল দেখুন। কমেন্টে লিখুন "খাতা"।
+  কিস্তি দেরিতে দিলে পেনাল্টি হিসাব নিয়ে কাস্টমারের সাথে কথা কাটাকাটি? সুদের ব্যবসায় MicroFlow Pro অ্যাপে লেট ফি অটোমেটিক ও পরিষ্কারভাবে হিসেব হয়, যা কেউ অস্বীকার করতে পারে না। আজই ট্রায়াল দেখুন। কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #পেনাল্টিহিসাব #LateFeeAutomation #MoneyLenderApp #WestBengal #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #পেনাল্টিহিসাব #LateFeeAutomation #MoneyLenderApp #WestBengal #খাতা
 
 ---
 
@@ -257,11 +292,16 @@
 **Core Emotion:** Misplace & Employee Distrust  
 **Psychological Trigger:** Fear of field collection staff pocketing cash, misreporting collections, or delaying daily cash handovers.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Afternoon office desk. Manager looking at empty cash tray waiting for field collector.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Manager hits desk gently. Spoken Dialogue (Bengali): *"কালেক্টর ফিল্ড থেকে ১০ হাজার তুললো, কিন্তু অফিসে জমা দিল মাত্র ৭ হাজার?!"* Subtitles: **১০ হাজার... তুললো... জমা... দিলো... ৭ হাজার?!**
 * **2.20s - 4.50s | Escalation & Suspense:** Collector hands over paper collection slip with manual scratch-outs. Manager narrows eyes. Spoken Dialogue (Bengali): *"খাতার কালেকশন স্লিপে কোনটা সত্যি আর কোনটা ভুল বোঝা দায়!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Manager opens MicroFlow Pro Live Agent Dashboard. Real-time entries show exact collection timestamp & live field total. Spoken Dialogue (Bengali): *"MicroFlow Pro-তে কালেকটর টাকা নেওয়া মাত্রই ম্যানেজারের স্ক্রিনে লাইভ এন্ট্রি চলে আসে!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Manager opens সুদের ব্যবসায় MicroFlow Pro Live Agent Dashboard. Real-time entries show exact collection timestamp & live field total. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro-তে কালেকটর টাকা নেওয়া মাত্রই ম্যানেজারের স্ক্রিনে লাইভ এন্ট্রি চলে আসে!"*
 * **7.80s - 8.80s | Silence Wins:** Complete audio vacuum drop. Screen highlights green status banner: *"লাইভ কালেকশন সিঙ্ক • ১০,০০০ টাকা সঠিক"*.
 * **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"মাঠের প্রতি টাকার হিসাব রাখুন নিজের হাতের মুঠোয়! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
@@ -279,9 +319,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  ফিল্ড কালেকটর মাঠে কত টাকা তুললো আর অফিসে কত জমা দিল— এই নিয়ে চিন্তায় থাকেন? MicroFlow Pro অ্যাপে কালেকটর এন্ট্রি মারলেই ম্যানেজারের ফোনে সাথে সাথে লাইভ সিঙ্ক হয়ে যায়। স্বচ্ছ ব্যবসা গড়ুন। ফ্রি ডেমো পেতে কমেন্টে লিখুন "খাতা"।
+  ফিল্ড কালেকটর মাঠে কত টাকা তুললো আর অফিসে কত জমা দিল— এই নিয়ে চিন্তায় থাকেন? সুদের ব্যবসায় MicroFlow Pro অ্যাপে কালেকটর এন্ট্রি মারলেই ম্যানেজারের ফোনে সাথে সাথে লাইভ সিঙ্ক হয়ে যায়। স্বচ্ছ ব্যবসা গড়ুন। ফ্রি ডেমো পেতে কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #FieldCollection #LiveTracking #StaffManagement #WestBengal #DigitalKhata #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #FieldCollection #LiveTracking #StaffManagement #WestBengal #DigitalKhata #খাতা
 
 ---
 
@@ -290,11 +330,16 @@
 **Core Emotion:** Exhaustion & Loss of Precious Time  
 **Psychological Trigger:** Spending late evenings manually copying handwritten pages to generate customer account statements or audit reports.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Evening home office setup. Stack of 4 red ledgers on desk next to smartphone.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Lender flips pages furiously in exhaustion. Spoken Dialogue (Bengali): *"গ্রাহক গত ৩ মাসের স্টেটমেন্ট চাইছে... আর আমি ৩টি খাতা উল্টে মরছি?!"* Subtitles: **৩ মাসের... স্টেটমেন্ট... পেতে... ৩টি... খাতা... খোঁজা?!**
 * **2.20s - 4.50s | Escalation & Suspense:** Pen drops from hand onto paper. Clock on wall shows 8:45 PM. Spoken Dialogue (Bengali): *"এক একটা হিসাব যোগ করতে গিয়ে রাত ৯টা বেজে গেল!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Lender opens MicroFlow Pro, taps "Export Customer PDF Report". Clean formatted PDF generates instantly with WhatsApp share button. Spoken Dialogue (Bengali): *"MicroFlow Pro-তে ১ ক্লিকে পুরো মাসের স্টেটমেন্ট PDF হয়ে হোয়াটসঅ্যাপে চলে যায়!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Lender opens সুদের ব্যবসায় MicroFlow Pro, taps "Export Customer PDF Report". Clean formatted PDF generates instantly with WhatsApp share button. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro-তে ১ ক্লিকে পুরো মাসের স্টেটমেন্ট PDF হয়ে হোয়াটসঅ্যাপে চলে যায়!"*
 * **7.80s - 8.80s | Silence Wins:** Audio cuts out completely. Screen shows PDF document sent with double green checkmark.
 * **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"ঘণ্টার কাজ হবে ১ সেকেন্ডে! আজই কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
@@ -312,9 +357,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  কাস্টমার বা ব্যাংকের জন্য ৩ মাসের স্টেটমেন্ট বের করতে লাল খাতার পাতা ওলটাতে ওলটাতে রাত কাবার? MicroFlow Pro অ্যাপে ১ ক্লিকে ডাউনলোড করুন প্রফেশনাল PDF স্টেটমেন্ট এবং সরাসরি হোয়াটসঅ্যাপে শেয়ার করুন। ফ্রি ডেমোর জন্য কমেন্টে লিখুন "খাতা"।
+  কাস্টমার বা ব্যাংকের জন্য ৩ মাসের স্টেটমেন্ট বের করতে লাল খাতার পাতা ওলটাতে ওলটাতে রাত কাবার? সুদের ব্যবসায় MicroFlow Pro অ্যাপে ১ ক্লিকে ডাউনলোড করুন প্রফেশনাল PDF স্টেটমেন্ট এবং সরাসরি হোয়াটসঅ্যাপে শেয়ার করুন। ফ্রি ডেমোর জন্য কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #PDFReport #WhatsAppStatement #BusinessAutomation #WestBengal #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #PDFReport #WhatsAppStatement #BusinessAutomation #WestBengal #খাতা
 
 ---
 
@@ -327,13 +372,18 @@
 **Core Emotion:** Fear of Revenue Leakage & Forgetfulness  
 **Psychological Trigger:** Missing due dates and losing interest recovery because loan repayment schedules are buried in paper pages.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Quiet morning shop setup. Coffee cup on table, closed red notebook lying still.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Lender slaps forehead in sudden realization. Spoken Dialogue (Bengali): *"আরে বাস! অমল বাবুর ৫০০০ টাকার কিস্তি দেওয়ার তারিখ তোগতকালই ছিল?!"* Subtitles: **অমল বাবুর... কিস্তির... তারিখ...গতকাল... ছিল?!**
 * **2.20s - 4.50s | Escalation & Suspense:** Lender frantically searches diary pages. No reminder flagged anywhere. Spoken Dialogue (Bengali): *"ভুলে গেলে কিস্তির টাকা ঝুলে থাকবে, সুদের লোকসান কে দেবে?!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Lender checks MicroFlow Pro Daily Overdue Dashboard. App highlights pending collections list with 1-tap call/SMS buttons. Spoken Dialogue (Bengali): *"MicroFlow Pro অ্যাপ প্রতিদিন সকালে অটোমেটিক জানিয়ে দেয় কার কার আজকের কিস্তির তারিখ!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Lender checks সুদের ব্যবসায় MicroFlow Pro Daily Overdue Dashboard. App highlights pending collections list with 1-tap call/SMS buttons. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro অ্যাপ প্রতিদিন সকালে অটোমেটিক জানিয়ে দেয় কার কার আজকের কিস্তির তারিখ!"*
 * **7.80s - 8.80s | Silence Wins:** Audio drops into absolute silence. Screen shows green list pill: *"আজকের কালেকশন লিস্ট রেডি • ০ ভুল"*.
-* **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"খাতা ভুলতে পারে... MicroFlow পারে না! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
+* **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow পারে না! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
 #### 📹 Production Specs:
 * **Camera Direction:** Medium selfie shot → Dynamic punch-in at 2.20s on lender's shocked face → Macro screen recording zoom on Overdue Alert List at 4.50s.
@@ -349,9 +399,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  কার কিস্তির তারিখ কবে ছিল ভুলে গিয়ে কিস্তির টাকা আটকে থাকছে? MicroFlow Pro অ্যাপে প্রতিদিন সকালে পান অটোমেটিক কালেকশন রিমাইন্ডার লিস্ট। কোনো টাকা আর আটকে থাকবে না। আজই ডিজিটাল হন। ফ্রি ডেমো দেখতে কমেন্টে লিখুন "খাতা"।
+  কার কিস্তির তারিখ কবে ছিল ভুলে গিয়ে কিস্তির টাকা আটকে থাকছে? সুদের ব্যবসায় MicroFlow Pro অ্যাপে প্রতিদিন সকালে পান অটোমেটিক কালেকশন রিমাইন্ডার লিস্ট। কোনো টাকা আর আটকে থাকবে না। আজই ডিজিটাল হন। ফ্রি ডেমো দেখতে কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #কিস্তিররিমাইন্ডার #CollectionAlert #MoneyLenderBengal #DigitalKhata #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #কিস্তিররিমাইন্ডার #CollectionAlert #MoneyLenderBengal #DigitalKhata #খাতা
 
 ---
 
@@ -360,11 +410,16 @@
 **Core Emotion:** Social Reluctance & Awkwardness  
 **Psychological Trigger:** Feeling awkward or uncomfortable personally calling borrowers repeatedly to ask for overdue loan installments.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Afternoon shop setting. Lender holding phone near ear, hesitating to dial borrower.
 * **0.40s - 2.20s | The Accusation / Conflict Hook:** Lender puts phone down, sighing nervously. Spoken Dialogue (Bengali): *"বারবার ফোন করে কিস্তির টাকা চাইতে নিজেরই লজ্জা লাগছে?!"* Subtitles: **বারবার... ফোন করে... টাকা চাইতে... লজ্জা... লাগছে?!**
 * **2.20s - 4.50s | Escalation & Suspense:** Paper ledger lies open with "OVERDUE" written in pencil. Relationship at risk. Spoken Dialogue (Bengali): *"নিজের টাকা চাইতে গিয়ে সম্পর্ক নষ্ট করার কোনো দরকার নেই!"*
-* **4.50s - 7.80s | The Proof / Evidence:** Lender taps MicroFlow Pro "Send Auto SMS Reminder". Professional Bengali SMS sent automatically to borrower's phone. Spoken Dialogue (Bengali): *"MicroFlow Pro অ্যাপ অটোমেটিক কাস্টমারের ফোনে প্রফেশনাল SMS তাগাদা পাঠিয়ে দেয়!"*
+* **4.50s - 7.80s | The Proof / Evidence:** Lender taps সুদের ব্যবসায় MicroFlow Pro "Send Auto SMS Reminder". Professional Bengali SMS sent automatically to borrower's phone. Spoken Dialogue (Bengali): *"সুদের ব্যবসায় MicroFlow Pro অ্যাপ অটোমেটিক কাস্টমারের ফোনে প্রফেশনাল SMS তাগাদা পাঠিয়ে দেয়!"*
 * **7.80s - 8.80s | Silence Wins:** Complete audio silence. Screen displays sent message log: *"SMS Reminder Sent • ১০-সেকেন্ডে তাগাদা"*.
 * **8.80s - 10.00s | Relief & Closing Punchline & CTA:** Spoken Dialogue (Bengali): *"লজ্জা নয়... অটোমেটিক তাগাদায় টাকা তুলুন! কমেন্টে লিখুন 'খাতা'।"* On-screen CTA: **কমেন্টে লিখুন 'খাতা' 👇**
 
@@ -382,9 +437,9 @@
 
 #### 📝 Post Details:
 * **Caption (Bengali):**  
-  নিজের পাওনা টাকা বারবার মুখে চাইতে লজ্জা পাচ্ছেন? MicroFlow Pro অ্যাপ ব্যবহার করুন— যা কাস্টমারকে সময়মতো অটোমেটিক প্রফেশনাল SMS তাগাদা পাঠায়। সম্পর্ক থাকবে বজায়, টাকা আসবে সময়মতো। ফ্রি ডেমো পেতে কমেন্টে লিখুন "খাতা"।
+  নিজের পাওনা টাকা বারবার মুখে চাইতে লজ্জা পাচ্ছেন? সুদের ব্যবসায় MicroFlow Pro অ্যাপ ব্যবহার করুন— যা কাস্টমারকে সময়মতো অটোমেটিক প্রফেশনাল SMS তাগাদা পাঠায়। সম্পর্ক থাকবে বজায়, টাকা আসবে সময়মতো। ফ্রি ডেমো পেতে কমেন্টে লিখুন "খাতা"।
 * **Hashtags:**  
-  #MicroFlowPro #AutoSMS #তাগাদাএসএমএস #SmartCollection #WestBengalBusiness #খাতা
+  #সুদের ব্যবসায় MicroFlowPro #AutoSMS #তাগাদাএসএমএস #SmartCollection #WestBengalBusiness #খাতা
 
 ---
 
@@ -392,6 +447,11 @@
 **Title:** মোবাইল চুরি বা খারাপ হলে খাতার কী হবে?  
 **Core Emotion:** Extreme Loss Aversion & Device Dependency Fear  
 **Psychological Trigger:** Fear that changing or losing a smartphone will wipe out all digital financial entries forever.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact):
 * **0.00s - 0.40s | Calm Before the Storm:** Night-time desk scene. Broken phone screen lying on desk next to fresh phone.
@@ -449,6 +509,11 @@
 - **Core Emotion:** Panic & Overwhelm (আতঙ্ক ও গোলমাল)
 - **Psychological Trigger:** Fear of losing money and making miscalculations when managing 100+ active borrowers manually in red registers.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
   - *Visual:* Extreme close-up of tea cup on desk; calm room atmosphere.  
@@ -461,14 +526,14 @@
   - *Visual:* Money lender desperately turns 4 overlapping paper ledgers; pen drops. Tension builds rapidly.  
   - *Audio:* Heartbeat thudding accelerates, paper tearing sound.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* Macro view of MicroFlow Pro dashboard displaying 100+ active borrower loan profiles with auto-calculated total active capital and monthly interest yield.  
-  - *Spoken Bengali Dialogue:* "MicroFlow Pro অ্যাপে ৫০০ কাস্টমার থাকলেও এক ক্লিকে সুদের নিট হিসেব তৈরি!"  
+  - *Visual:* Macro view of সুদের ব্যবসায় MicroFlow Pro dashboard displaying 100+ active borrower loan profiles with auto-calculated total active capital and monthly interest yield.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow Pro অ্যাপে ৫০০ কাস্টমার থাকলেও এক ক্লিকে সুদের নিট হিসেব তৈরি!"  
   - *On-screen Highlights:* `৫০০+ কাস্টমার — ১০০% অটোমেটিক সুদের হিসেব ⚡`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Money lender looks up from phone with complete relief; total stillness.  
   - *Audio:* Total silence (0.0dB, no audio).
 - **8.80s–10.00s | Closing Punchline & CTA:**  
-  - *Spoken Bengali Dialogue:* "খাতা ভুলতে পারে... MicroFlow পারে না। আজই কমেন্টে লিখুন 'খাতা'!"  
+  - *Spoken Bengali Dialogue:* "খাতা ভুলতে পারে... সুদের ব্যবসায় MicroFlow পারে না। আজই কমেন্টে লিখুন 'খাতা'!"  
   - *On-screen CTA Overlay:* `ফ্রি ডেমো পেতে কমেন্টে লিখুন 'খাতা' 👇`
 
 #### 🎥 Production & Sound Specs
@@ -490,7 +555,7 @@
   মাইক্রোফ্লো প্রফিতে ১০০ বা ৫০০ কাস্টমার যাই থাকুক, ১ সেকেন্ডে পেয়ে যান আসল ও সুদের নিখুঁত ডিজিটাল হিসাব।  
   
   বিনামূল্যে ডেমো পেতে এখনই কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #সুদেরহিসাব #Sahukar #ডিজিটালখাতা #WestBengalBusiness #KolkataLenders #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #সুদেরহিসাব #Sahukar #ডিজিটালখাতা #WestBengalBusiness #KolkataLenders #খাতা`
 
 ---
 
@@ -500,6 +565,11 @@
 - **Reel Title:** Collector Route Efficiency (এজেন্টের তেল ও সময় নষ্ট)
 - **Core Emotion:** Frustration at Resource Drain (বিরক্তি ও লোকসান)
 - **Psychological Trigger:** Fear of field agents wasting fuel, cheating on collection routes, and delaying daily cash handover.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -513,8 +583,8 @@
   - *Visual:* Map outline drawn on paper with red crosses; fuel indicator flickering on zero. Heavy atmosphere.  
   - *Audio:* Motorcycle engine stutter sound followed by tense bass drop.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro Route-Wise Collection List interface showing area-wise grouped borrowers and live collector location status.  
-  - *Spoken Bengali Dialogue:* "MicroFlow অ্যাপে এরিয়া ভিত্তিক কালেকশন লিস্ট দেখে সবচেয়ে শর্ট রুটে টাকা তুলুন!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro Route-Wise Collection List interface showing area-wise grouped borrowers and live collector location status.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow অ্যাপে এরিয়া ভিত্তিক কালেকশন লিস্ট দেখে সবচেয়ে শর্ট রুটে টাকা তুলুন!"  
   - *On-screen Highlights:* `স্মার্ট রুট কালেকশন — সময় ও পেট্রোল সঞ্চয় 📍🛵`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Agent nods with phone in hand, thumb up; complete quiet payoff.  
@@ -542,7 +612,7 @@
   মাইক্রোফ্লো প্রফির স্মার্ট রুট ট্র্যাকার ও এরিয়া কালেকশন লিস্ট ব্যবহার করে কালেকশন খরচ কমান ৫০%।  
   
   ফ্রি ডেমোর জন্য কমেন্টে টাইপ করুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #FieldCollection #Sahukar #ডিজিটালখাতা #WestBengal #কালেকশনঅ্যাপ #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #FieldCollection #Sahukar #ডিজিটালখাতা #WestBengal #কালেকশনঅ্যাপ #খাতা`
 
 ---
 
@@ -552,6 +622,11 @@
 - **Reel Title:** Privacy & Legal Compliance (খাতার গোপন তথ্য ফাঁস)
 - **Core Emotion:** Suspicion & Threat to Security (সন্দেহ ও ভয়)
 - **Psychological Trigger:** Fear of strangers, competitors, or outsiders reading financial registers kept openly on shop counters.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -565,8 +640,8 @@
   - *Visual:* Shop owner snatches ledger back, looking around nervously. High tension camera shake.  
   - *Audio:* Suspenseful riser string sound.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro Security Screen with Biometric Lock & 256-bit encryption shield badge active.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে পিন লক আর এনক্রিপশনে আপনার হিসেব ১০০% গোপন ও সেফ!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro Security Screen with Biometric Lock & 256-bit encryption shield badge active.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে পিন লক আর এনক্রিপশনে আপনার হিসেব ১০০% গোপন ও সেফ!"  
   - *On-screen Highlights:* `১০০% বায়োমেট্রিক লক ও প্রাইভেসি প্রটেকশন 🔒🛡️`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Lock icon turns vibrant green with green checkmark; owner smiles calmly.  
@@ -594,7 +669,7 @@
   মাইক্রোফ্লো প্রফিতে আপনার সমস্ত কাস্টমার ও লোনের তথ্য থাকবে ফিঙ্গারপ্রিন্ট লকে ১০০% প্রাইভেট ও সুরক্ষিত।  
   
   নিজের ব্যবসা নিরাপদ করতে কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #DataSecurity #Sahukar #ডিজিটালখাতা #WestBengal #প্রাইভেসি #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #DataSecurity #Sahukar #ডিজিটালখাতা #WestBengal #প্রাইভেসি #খাতা`
 
 ---
 
@@ -606,6 +681,11 @@
 - **Reel Title:** Ink Stain Ruined Month Page (কালির দাগে খাতা নষ্ট)
 - **Core Emotion:** Disaster & Helplessness (দুর্ঘটনা ও ক্ষতি)
 - **Psychological Trigger:** Fear of physical damage to paper ledgers from ink spills, tea accidents, or water ruining months of hard work.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -619,14 +699,14 @@
   - *Visual:* Hands desperately rubbing cloth over paper, smudging numbers into unreadable blue blur. Shock face.  
   - *Audio:* High-pitched metallic screeching sound.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* Smartphone displaying pristine MicroFlow Pro digital ledger interface with crystal-clear history and cloud backup badge.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে কোনো কালির দাগ নেই! সব হিসেব থাকবে চিরকাল নতুন।"  
+  - *Visual:* Smartphone displaying pristine সুদের ব্যবসায় MicroFlow Pro digital ledger interface with crystal-clear history and cloud backup badge.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে কোনো কালির দাগ নেই! সব হিসেব থাকবে চিরকাল নতুন।"  
   - *On-screen Highlights:* `আজীবন দাগমুক্ত ও স্থায়ী ডিজিটাল হিসেব 📱✨`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Owner wiping desk clean, looking satisfied holding smartphone.  
   - *Audio:* Absolute silence.
 - **8.80s–10.00s | Closing Punchline & CTA:**  
-  - *Spoken Bengali Dialogue:* "কাগজ নষ্ট হতে পারে... MicroFlow নয়। কমেন্টে লিখুন 'খাতা'!"  
+  - *Spoken Bengali Dialogue:* "কাগজ নষ্ট হতে পারে... সুদের ব্যবসায় MicroFlow নয়। কমেন্টে লিখুন 'খাতা'!"  
   - *On-screen CTA Overlay:* `কমেন্টে টাইপ করুন 'খাতা' 👇`
 
 #### 🎥 Production & Sound Specs
@@ -648,7 +728,7 @@
   মাইক্রোফ্লো প্রফিতে আপনার ব্যবসার সমস্ত হিসাব থাকবে ক্লাউডে নিরাপদ ও চিরকাল দাগমুক্ত।  
   
   ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #ডিজিটালহিসাব #Sahukar #ডিজিটালখাতা #WestBengal #কালিমুক্তখাতা #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #ডিজিটালহিসাব #Sahukar #ডিজিটালখাতা #WestBengal #কালিমুক্তখাতা #খাতা`
 
 ---
 
@@ -658,6 +738,11 @@
 - **Reel Title:** Instant Loan Renewal (লোন রিনিউয়ালের ঝক্কি)
 - **Core Emotion:** Exhaustion & Friction (ক্লান্তি ও সময় নষ্ট)
 - **Psychological Trigger:** Pain of re-writing full borrower details, address, interest formulas, and agreement notes from scratch during loan rollover.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -671,8 +756,8 @@
   - *Visual:* Clock hand spinning fast; pile of renewal papers accumulating. Frustrated breath.  
   - *Audio:* Clock ticking accelerating rapidly into tense drone.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro screen tapping 'Renew / Roll Over Loan' button; interest & new maturity date auto-populate instantly.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে মাত্র ১ ক্লিকে লোন রিনিউ করুন, পুরনো হিস্ট্রি রেখে!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro screen tapping 'Renew / Roll Over Loan' button; interest & new maturity date auto-populate instantly.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে মাত্র ১ ক্লিকে লোন রিনিউ করুন, পুরনো হিস্ট্রি রেখে!"  
   - *On-screen Highlights:* `১-ক্লিকে অটোমেটিক লোন রিনিউয়াল 🔄⚡`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Screen flashes green 'Renewal Successful'; writer puts pen down peacefully.  
@@ -700,7 +785,7 @@
   মাইক্রোফ্লো প্রফি দিয়ে মাত্র এক ক্লিকে পুরোনো লোন রিনিউ করুন এবং সমস্ত লেনদেনের হিস্ট্রি বজায় রাখুন।  
   
   ফ্রি ডেমো দেখতে কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #LoanRenewal #Sahukar #ডিজিটালখাতা #WestBengal #স্মার্টলোন #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #LoanRenewal #Sahukar #ডিজিটালখাতা #WestBengal #স্মার্টলোন #খাতা`
 
 ---
 
@@ -710,6 +795,11 @@
 - **Reel Title:** Customer Mobile View (কাস্টমারের বারবার তাগাদা)
 - **Core Emotion:** Irritation & Distraction (বিরক্তি ও সময় অপচয়)
 - **Psychological Trigger:** Constant interruption from borrowers visiting shop or calling repeatedly just to ask "dada, total how much balance left?".
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -723,8 +813,8 @@
   - *Visual:* Lender looking annoyed while searching through 10 pages in ledger. Heavy breath.  
   - *Audio:* Phone ringing noise overlapping desk knocking. Tense buildup.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro screen sending instant Digital Passbook link via WhatsApp to borrower's phone; borrower opens passbook on their own mobile.  
-  - *Spoken Bengali Dialogue:* "MicroFlow থেকে ১ ক্লিকে কাস্টমারের মোবাইলে ডিজিটাল পাসবুক স্টেটমেন্ট পাঠান!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro screen sending instant Digital Passbook link via WhatsApp to borrower's phone; borrower opens passbook on their own mobile.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow থেকে ১ ক্লিকে কাস্টমারের মোবাইলে ডিজিটাল পাসবুক স্টেটমেন্ট পাঠান!"  
   - *On-screen Highlights:* `কাস্টমারের মোবাইলে ১-ক্লিক ডিজিটাল পাসবুক 📲📜`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Borrower smiles seeing passbook on phone and leaves quietly; lender resumes work calmly.  
@@ -752,7 +842,7 @@
   মাইক্রোফ্লো প্রফিতে ১ ক্লিকে কাস্টমারের হোয়াটসঅ্যাপে পাঠিয়ে দিন সম্পূর্ণ ডিজিটাল পাসবুক স্টেটমেন্ট।  
   
   বিনামূল্যে ডেমো পেতে কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #DigitalPassbook #Sahukar #ডিজিটালখাতা #WestBengal #স্মার্টসার্ভিস #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #DigitalPassbook #Sahukar #ডিজিটালখাতা #WestBengal #স্মার্টসার্ভিস #খাতা`
 
 ---
 
@@ -764,6 +854,11 @@
 - **Reel Title:** Borrowers Demanding Slips (কাঁচা রসিদ লেখার ঝামেলা)
 - **Core Emotion:** Friction & Loss of Trust (অবিশ্বাস ও ঝগড়া)
 - **Psychological Trigger:** Stress of writing paper receipt slips by hand while borrower stands waiting suspiciously for proof.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -777,8 +872,8 @@
   - *Visual:* Faded carbon paper tearing, pen running out of ink while borrower watches with suspicion.  
   - *Audio:* Tense string bass rise, paper tearing noise.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro screen tapping 'Collect Payment'; instant automated SMS receipt sent notification pops up.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে কালেকশন মারলেই কাস্টমারের মোবাইলে অটোমেটিক SMS রসিদ!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro screen tapping 'Collect Payment'; instant automated SMS receipt sent notification pops up.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে কালেকশন মারলেই কাস্টমারের মোবাইলে অটোমেটিক SMS রসিদ!"  
   - *On-screen Highlights:* `কালেকশনের সাথে সাথে অটোমেটিক SMS রসিদ 📩⚡`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Borrower checks SMS on their phone and smiles in satisfaction; total calm.  
@@ -806,7 +901,7 @@
   মাইক্রোফ্লো প্রফি অ্যাপে কালেকশন এন্ট্রি করার সাথে সাথেই কাস্টমারের ফোনে চলে যায় অটোমেটিক এসএমএস স্লিপ।  
   
   ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #SMSSlip #Sahukar #ডিজিটালখাতা #WestBengal #ডিজিটালরসিদ #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #SMSSlip #Sahukar #ডিজিটালখাতা #WestBengal #ডিজিটালরসিদ #খাতা`
 
 ---
 
@@ -816,6 +911,11 @@
 - **Reel Title:** Automated Daily Backup (রাতের ব্যাকআপ দুশ্চিন্তা)
 - **Core Emotion:** Anxiety & Constant Worry (দুশ্চিন্তা ও ভয়)
 - **Psychological Trigger:** Fear of day's financial transaction data being lost forever before closing shop at night.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -829,14 +929,14 @@
   - *Visual:* Shadowy figure near shop window in imagination; lender sitting up in bed panicked.  
   - *Audio:* Heartbeat pulse accelerating.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* Smartphone displaying MicroFlow Pro app alert: 'Midnight Auto Cloud Backup Complete — 100% Encrypted'.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফি প্রতিদিন মধ্যরাতে সয়ংক্রিয়ভাবে ক্লাউডে ব্যাকআপ নিয়ে নেয়!"  
+  - *Visual:* Smartphone displaying সুদের ব্যবসায় MicroFlow Pro app alert: 'Midnight Auto Cloud Backup Complete — 100% Encrypted'.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফি প্রতিদিন মধ্যরাতে সয়ংক্রিয়ভাবে ক্লাউডে ব্যাকআপ নিয়ে নেয়!"  
   - *On-screen Highlights:* `প্রতিদিন স্বয়ংক্রিয় ক্লাউড ব্যাকআপ সুরক্ষা ☁️🛡️`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Lender puts phone on nightstand and sleeps peacefully; utter serenity.  
   - *Audio:* Total silence.
 - **8.80s–10.00s | Closing Punchline & CTA:**  
-  - *Spoken Bengali Dialogue:* "নিশ্চিন্তে ঘুমান, ব্যবসা সামলাবে MicroFlow। কমেন্টে লিখুন 'খাতা'!"  
+  - *Spoken Bengali Dialogue:* "নিশ্চিন্তে ঘুমান, ব্যবসা সামলাবে সুদের ব্যবসায় MicroFlow। কমেন্টে লিখুন 'খাতা'!"  
   - *On-screen CTA Overlay:* `কমেন্টে টাইপ করুন 'খাতা' 👇`
 
 #### 🎥 Production & Sound Specs
@@ -858,7 +958,7 @@
   মাইক্রোফ্লো প্রফি প্রতিদিন রাতে স্বয়ংক্রিয়ভাবে আপনার খাতার ব্যাকআপ নিয়ে নেয় ক্লাউডে, যাতে ডাটা থাকে চিরকাল ১০০% সুরক্ষিত।  
   
   ফ্রি ডেমো পেতে কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #AutoBackup #Sahukar #ডিজিটালখাতা #Kolkata #নিরাপদহিসাব #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #AutoBackup #Sahukar #ডিজিটালখাতা #Kolkata #নিরাপদহিসাব #খাতা`
 
 ---
 
@@ -868,6 +968,11 @@
 - **Reel Title:** 1-Click WhatsApp Lead Demo (অ্যাপ চালানো কি কঠিন?)
 - **Core Emotion:** Doubt & Hesitation (সন্দেহ ও দ্বিধা)
 - **Psychological Trigger:** Fear of modern software being too complicated to learn for traditional non-tech money lenders.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -910,7 +1015,7 @@
   একদম নয়! কমেন্টে শুধু টাইপ করুন 'খাতা', আমাদের অটোমেটেড সিস্টেম এখনই আপনার হোয়াটসঅ্যাপে ফ্রি ভিডিও ডেমো পাঠিয়ে দেবে।  
   
   আজই দেখুন কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #FreeDemo #Sahukar #ডিজিটালখাতা #WestBengal #হোয়াটসঅ্যাপডেমো #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #FreeDemo #Sahukar #ডিজিটালখাতা #WestBengal #হোয়াটসঅ্যাপডেমো #খাতা`
 
 ---
 
@@ -922,6 +1027,11 @@
 - **Reel Title:** Monthly Profit Miscalculation (আসল ক্যাশ ও নিট লাভের গোলমাল)
 - **Core Emotion:** Confusion & Profit Uncertainty (বিভ্রান্তি ও ক্ষতির আশঙ্কা)
 - **Psychological Trigger:** Fear of confusing cash inflow with actual net interest profit, leading to wrong financial decisions.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -935,8 +1045,8 @@
   - *Visual:* Pen striking out incorrect profit figures on notebook; money lender rubbing temples in stress.  
   - *Audio:* Heavy heartbeat pulse with low frequency synth drop.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro Financial Analytics Dashboard separating Principal Outstanding, Collected Interest, and Net Monthly Profit visually in green charts.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে রিয়েল-টাইমে দেখুন আপনার খাস সুদের নিট মুনাফা কত!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro Financial Analytics Dashboard separating Principal Outstanding, Collected Interest, and Net Monthly Profit visually in green charts.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে রিয়েল-টাইমে দেখুন আপনার খাস সুদের নিট মুনাফা কত!"  
   - *On-screen Highlights:* `আসল ও সুদের নিট লাভের স্পষ্ট ডিজিটাল হিসাব 📊💰`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Money lender puts down calculator, smiling softly at the clean graph.  
@@ -964,7 +1074,7 @@
   মাইক্রোফ্লো প্রফি অ্যাপ আপনাকে রিয়েল-টাইমে দেখায় মোট খাটানো মূলধন এবং খাস সুদের আসল লাভ।  
   
   ফ্রি ডেমো পেতে কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #ProfitTracking #Sahukar #ডিজিটালখাতা #WestBengal #লাভেরহিসাব #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #ProfitTracking #Sahukar #ডিজিটালখাতা #WestBengal #লাভেরহিসাব #খাতা`
 
 ---
 
@@ -974,6 +1084,11 @@
 - **Reel Title:** Multi-Tier User Permissions (মালিক ও এজেন্টের সিকিউরিটি ভিউ)
 - **Core Emotion:** Fear of Data Leak to Staff (অবিশ্বাস ও গোপনীয়তা)
 - **Psychological Trigger:** Fear that hired collectors will see owner's overall investment capital, total monthly profit, or other borrowers' sensitive details.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -988,7 +1103,7 @@
   - *Audio:* Tense violin screech sound rising.
 - **4.50s–7.80s | The Proof / Evidence:**  
   - *Visual:* Comparison shot — Owner App shows full ₹10 Lakhs capital; Agent App shows only today's ₹4,000 assigned collection list with zero profit metrics visible.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে এজেন্ট শুধু তার কালেকশন দেখবে — আপনার আসল লাভ থাকবে হিডেন!"  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে এজেন্ট শুধু তার কালেকশন দেখবে — আপনার আসল লাভ থাকবে হিডেন!"  
   - *On-screen Highlights:* `মালিক ও এজেন্টের আলাদা সিকিউর পারমিশন ভিউ 🛡️📱`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Owner hands agent phone comfortably without worry; peaceful nod.  
@@ -1016,7 +1131,7 @@
   মাইক্রোফ্লো প্রফিতে এজেন্টের জন্য থাকবে আলাদা সীমাবদ্ধ ভিউ, যেখানে সে শুধু তার নিজের দিনের কালেকশন দেখতে পাবে — মোট লাভ থাকবে গোপন!  
   
   ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #RoleControl #Sahukar #ডিজিটালখাতা #WestBengal #ব্যবসাবিন্যাস #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #RoleControl #Sahukar #ডিজিটালখাতা #WestBengal #ব্যবসাবিন্যাস #খাতা`
 
 ---
 
@@ -1026,6 +1141,11 @@
 - **Reel Title:** 30-Day Results Recap (৩০ দিনের ডিজিটাল অভিজ্ঞতা)
 - **Core Emotion:** Inspiration & FOMO (অনুপ্রেরণা ও পরিবর্তনের ইচ্ছা)
 - **Psychological Trigger:** Fear of being left behind using obsolete paper books while peer money-lenders in West Bengal double their efficiency.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -1081,6 +1201,11 @@
 - **Core Emotion:** Relief & Victory (স্বস্তি ও জয়)
 - **Psychological Trigger:** Relieving the recurring monthly nightmare of staying up all night on the 30th matching ledger figures manually.
 
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
+
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
   - *Visual:* Money lender drinking tea at desk on month-end morning peacefully.  
@@ -1093,8 +1218,8 @@
   - *Visual:* Old memory flash of staying awake at midnight scratching ledgers; cuts back to calm morning face.  
   - *Audio:* Heartbeat slows down to steady calm rhythm.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro Month-End Summary Screen displaying all customer balances reconciled with 100% green checkmarks.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে মাসের সমস্ত লেনদেন অটোমেটিক মিলে তৈরি রেডি রিপোর্ট!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro Month-End Summary Screen displaying all customer balances reconciled with 100% green checkmarks.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে মাসের সমস্ত লেনদেন অটোমেটিক মিলে তৈরি রেডি রিপোর্ট!"  
   - *On-screen Highlights:* `মাসের শেষে ১-ক্লিকে অটোমেটিক সম্পূর্ণ রেডি হিসাব 📊✅`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Money lender takes another sip of tea with complete peace of mind; absolute stillness.  
@@ -1122,7 +1247,7 @@
   মাইক্রোফ্লো প্রফিতে মাসের শেষ দিনে কোনো চাপ নেই — সমস্ত হিসাব নিজে থেকেই নিখুঁতভাবে রেডি হয়ে যায়!  
   
   বিনামূল্যে ডেমো পেতে কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #MonthEndBalance #Sahukar #ডিজিটালখাতা #WestBengal #টেনশনমুক্ত #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #MonthEndBalance #Sahukar #ডিজিটালখাতা #WestBengal #টেনশনমুক্ত #খাতা`
 
 ---
 
@@ -1132,6 +1257,11 @@
 - **Reel Title:** Full Year Collection Audit (৩ বছর আগের হিসেব বের করা)
 - **Core Emotion:** Mastery & Instant Control (নিয়ন্ত্রণ ও সুবিধা)
 - **Psychological Trigger:** Pain of dusting off heavy 3-year-old stacked registers when audit, court, or client disputes demand old transaction records.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -1145,8 +1275,8 @@
   - *Visual:* Flipping 500 yellowed pages in dark ledger searching for missing entry; sneezing. Tense atmosphere.  
   - *Audio:* Coughing sound and fast clockwork tick buildup.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* MicroFlow Pro search bar typing borrower name or year '2024'; entire 3-year audit trail appears instantly in 1 second.  
-  - *Spoken Bengali Dialogue:* "MicroFlow প্রফিতে ৩ বছর আগের হিসেবও মাত্র ১ সেকেন্ডে স্ক্রিনে হাজির!"  
+  - *Visual:* সুদের ব্যবসায় MicroFlow Pro search bar typing borrower name or year '2024'; entire 3-year audit trail appears instantly in 1 second.  
+  - *Spoken Bengali Dialogue:* "সুদের ব্যবসায় MicroFlow প্রফিতে ৩ বছর আগের হিসেবও মাত্র ১ সেকেন্ডে স্ক্রিনে হাজির!"  
   - *On-screen Highlights:* `যেকোনো বছরের হিসেব ১ সেকেন্ডে লাইভ সার্চ! 🔍⚡`
 - **7.80s–8.80s | Silence Wins:**  
   - *Visual:* Money lender taps 'Export PDF', wiping hands clean calmly; total stillness.  
@@ -1174,7 +1304,7 @@
   মাইক্রোফ্লো প্রফি অ্যাপে ১ সেকেন্ডে সার্চ করে বের করুন যেকোনো বছরের যেকোনো কাস্টমারের সম্পূণ ইতিহাস।  
   
   ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
-- **Hashtags:** `#MicroFlowPro #YearlyAudit #Sahukar #ডিজিটালখাতা #Kolkata #আজীবনহিসাব #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #YearlyAudit #Sahukar #ডিজিটালখাতা #Kolkata #আজীবনহিসাব #খাতা`
 
 ---
 
@@ -1184,6 +1314,11 @@
 - **Reel Title:** Join 50+ WB Lenders CTA (পশ্চিমবঙ্গের ৫০+ মহাজনের আস্থা)
 - **Core Emotion:** Ultimate Community Trust & Action (আস্থা ও চূড়ান্ত আহ্বান)
 - **Psychological Trigger:** Harnessing peer social proof — 50+ West Bengal lenders already modernized, inviting them to step into the future today.
+
+
+### 1.5. Character Breakdown
+- **Character 1 (মহাজন / Money-Lender — Sayan):** বয়স ৩০-৩৫ বছর, স্মার্ট ও পরিপাটি পোশাকে (সুতি শার্ট/পাঞ্জাবি)। ধীর-স্থির, পেশাদার ও আত্মবিশ্বাসী।
+- **Character 2 (গ্রাহক / Borrower / এজেন্ট):** বয়স ৩৫-৪৫ বছর, স্থানীয় ব্যবসায়ী/দোকানদার (সাধারণ শার্ট/গেঞ্জি)। শুরুতে উত্তেজিত বা বিভ্রান্ত, শেষে আশ্বস্ত।
 
 #### 🎬 Master Timeline (10.0 Seconds Exact)
 - **0.00s–0.40s | Calm Before the Storm:**  
@@ -1197,7 +1332,7 @@
   - *Visual:* Quick 0.5s visual montage of green checkmarks, SMS slips, and 100% encrypted badges.  
   - *Audio:* Rising celebratory synth chord with heartbeat pulse.
 - **4.50s–7.80s | The Proof / Evidence:**  
-  - *Visual:* Smartphone displaying MicroFlow Pro App home screen with zero pending disputes, full security, and clean modern Bengali UI.  
+  - *Visual:* Smartphone displaying সুদের ব্যবসায় MicroFlow Pro App home screen with zero pending disputes, full security, and clean modern Bengali UI.  
   - *Spoken Bengali Dialogue:* "আজই আপনার ব্যবসাকে ডিজিটাল আর ১০০% টেনশনমুক্ত করুন সম্পূর্ণ ফ্রিতে!"  
   - *On-screen Highlights:* `আজই আপনার ব্যবসাকে ১০০% ডিজিটাল করুন 📱🌟`
 - **7.80s–8.80s | Silence Wins:**  
@@ -1226,7 +1361,7 @@
   আপনিও আপনার ব্যবসাকে ১০০% ডিজিটাল, নিরাপদ ও টেনশনমুক্ত করতে চান?  
   
   এখনই কমেন্টে লিখুন 'খাতা' — আমরা ইনস্ট্যান্ট ফ্রি ডেমো লিংক পাঠিয়ে দিচ্ছি আপনার হোয়াটসঅ্যাপে। 📥✨
-- **Hashtags:** `#MicroFlowPro #WestBengalLenders #Sahukar #ডিজিটালখাতা #MicrofinancePro #খাতা`
+- **Hashtags:** `#সুদের ব্যবসায় MicroFlowPro #WestBengalLenders #Sahukar #ডিজিটালখাতা #MicrofinancePro #খাতা`
 
 ---
 

@@ -339,16 +339,16 @@ Our pricing is built for Indian sahukars who want affordable, simple tools witho
 
 ---
 
-## 💰 Annual Pricing (Save 33%)
+## 💰 Annual Pricing (Save 10%)
 
 | Tier | Monthly | Annual | You Save |
 |---|---|---|---|
 | 🆓 Free Forever | ₹0 | ₹0 | — |
-| 🥉 Bronze | ₹299 | ₹2,392/yr | ₹1,194/year |
-| 🥈 Silver | ₹499 | ₹3,992/yr | ₹2,000/year |
+| 🥉 Bronze | ₹299 | ₹3,229/yr | ₹359/year |
+| 🥈 Silver | ₹499 | ₹5,389/yr | ₹599/year |
 | 🏢 Enterprise | Custom | Custom | Custom |
 
-*Annual billing saves ₹1,194/year on Bronze and ~₹2,000/year on Silver.*
+*Annual billing saves 10% on both Bronze and Silver plans.*
 
 ---
 

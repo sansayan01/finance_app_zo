@@ -12,45 +12,65 @@ const tiers = [
     color: "slate",
     desc: "Start managing your lending book — zero cost, forever.",
     features: [
-      "10 Borrowers max",
-      "Basic Loan Records",
-      "Flat Interest Only",
-      "1 Active Loan per Person",
-      "1 Savings per Person",
-      "Last 10 Transactions",
-      "Basic Theme & Icon",
+      "Up to 10 Borrowers",
+      "1 Loan per borrower only",
+      "1 Savings account per borrower",
+      "Simple interest only",
+      "Record repayments",
+      "Change theme and app icon",
+      "Email support (48 hours)",
     ],
     missing: [
-      "Offline Mode", "SMS Reminders", "Biometric Lock",
-      "Portfolio Dashboard", "Statement Export", "UPI Payments",
+      "SMS reminders", "Compound interest",
+      "PDF slip print", "Online UPI payments",
+      "PIN lock", "Growth dashboard",
+      "Staff and branch tools",
     ],
     popular: false,
     trial: false,
-    cta: "Get Started Free",
+    cta: "Start Free",
   },
   {
     name: "Bronze",
     monthly: "₹299",
-    annual: "₹2,392",
+    annual: "₹3,229",
     period: "/mo",
     color: "indigo",
-    desc: "Solid toolkit for growing lenders. Track up to 50 borrowers.",
+    desc: "Full toolkit for growing lenders. Manage up to 40 borrowers with all essential tools.",
     features: [
-      "50 Borrowers",
-      "Flat + Compound Interest",
-      "Multiple Loans per Person",
-      "Multiple Savings per Person",
-      "Offline Mode",
-      "SMS Reminders (10/mo)",
-      "PIN Lock",
-      "Basic Portfolio Dashboard",
-      "Monthly Trends Chart",
-      "Bluetooth Receipt Print",
-      "Payment Mode (Cash/UPI/Bank)",
+      "Up to 40 Borrowers",
+      "Simple and compound interest",
+      "Set your own interest rates",
+      "Up to 3 loans per borrower",
+      "Multiple savings accounts per borrower",
+      "Print or save loan slips as PDF",
+      "Print or save savings slips as PDF",
+      "SMS reminders (100 per month)",
+      "PIN lock and fingerprint lock",
+      "Growth dashboard — see how your business is doing",
+      "Collect EMI online with UPI",
+      "All payment types — Cash, UPI, Bank, Cheque",
+      "Print receipts with Bluetooth printer",
+      "Google Drive backup — your data is safe",
+      "Full transaction history with edit or delete",
+      "Lock your books — prevent unwanted changes",
+      "3 Branches, 3 Managers, 6 Agents",
+      "Set staff targets and track performance",
+      "Reward staff with streaks and leaderboard",
+      "Track staff live location — where are they today",
+      "Live map — see all staff on one screen",
+      "Withdraw request and approval system",
+      "Your own branding — logo, name, theme",
+      "GST, PAN, Currency, Language, Timezone setup",
+      "AI assistant that speaks Hindi",
+      "Email support (24 hours)",
     ],
     missing: [
-      "Biometric Auth", "Unlimited SMS", "PAR Analytics",
-      "Statement Export", "Date Freeze", "Location Tracking",
+      "More than 40 borrowers", "Unlimited SMS reminders",
+      "PAR default reports", "Full security shield",
+      "WhatsApp notifications", "Custom email setup",
+      "Razorpay and PhonePe gateway", "API access",
+      "Dedicated account manager", "SLA guarantee",
     ],
     popular: false,
     trial: false,
@@ -58,39 +78,40 @@ const tiers = [
   },
   {
     name: "Silver",
-    monthly: "₹599",
-    annual: "₹4,792",
+    monthly: "₹499",
+    annual: "₹5,389",
     period: "/mo",
     color: "emerald",
-    desc: "Everything a serious lender needs. 2 months FREE — then ₹599/mo.",
+    desc: "Full control for serious lenders. Up to 100 borrowers and powerful analytics. 2 months FREE trial.",
     features: [
-      "200 Borrowers",
-      "All Interest Types + Custom",
-      "Multi-Frequency Schedules",
-      "Loan Product Config",
-      "Unlimited SMS Reminders",
-      "Biometric + PIN Lock",
-      "Advanced Portfolio Analytics",
-      "PAR 30/60/90 Delinquency Tracking",
-      "Transaction Export CSV/PDF",
-      "Date Freeze (Admin)",
-      "Agent GPS Location Tracking",
-      "UPI Verification",
-      "AI Hindi Assistant",
-      "Full Quick Collect (Multi-Pay, Backdate)",
-      "Savings Withdraw Request Workflow",
-      "Security Shield & Activity Logs",
-      "Google Drive Backup",
-      "Staff Gamification & Streaks",
-      "Multi-Branch Support",
+      "Up to 100 Borrowers",
+      "All Bronze features included",
+      "Daily, weekly or monthly EMI schedules",
+      "Create your own loan products",
+      "Unlimited SMS reminders",
+      "Portfolio dashboard — full overview at a glance",
+      "PAR 30/60/90 report — see who is late",
+      "Cash flow report — money in, money out, what is left",
+      "Branch and staff reports",
+      "Activity log — who changed what, full tracking",
+      "Auto-logout — app locks after being idle",
+      "Google Drive auto backup every day",
+      "Email setup — send emails using your own SMTP or Resend",
+      "WhatsApp Business — send notifications to customers",
+      "Razorpay and PhonePe — online payment gateway",
+      "Connect your own software — API and webhooks",
+      "Export all data — download your books as CSV or PDF",
+      "Priority chat support",
+      "Email support (12 hours)",
     ],
     missing: [
-      "Unlimited Borrowers", "API Access",
-      "White-Label Branding", "On-Premise",
+      "More than 100 borrowers", "Full two-factor authentication",
+      "Custom payment gateway", "Run on your own server",
+      "Dedicated account manager", "SLA guarantee",
     ],
     popular: true,
     trial: true,
-    trialDuration: "2 months FREE",
+    trialDuration: "2 Months FREE",
     cta: "Start Free Trial",
   },
   {
@@ -99,20 +120,18 @@ const tiers = [
     annual: "Custom",
     period: "",
     color: "blue",
-    desc: "For NBFCs and multi-branch lenders. Tailored to your needs.",
+    desc: "For large NBFCs and multi-city lending operations. Fully customized for your needs.",
     features: [
-      "Unlimited Borrowers",
-      "Everything in Silver",
-      "API Access & Integrations",
-      "White-Label Branding",
-      "Dedicated Account Manager",
-      "Custom Integrations",
-      "On-Premise Option",
-      "Razorpay / PhonePe Gateways",
-      "Two-Factor Authentication (2FA)",
-      "IP Whitelisting",
-      "Custom Report Generation",
-      "SLA Guarantee",
+      "Unlimited Borrowers, Branches, Managers, Agents",
+      "All Silver features included",
+      "Complete security lock — two-factor auth and IP lock",
+      "Custom reports — build any report you need",
+      "White label — your brand, your name everywhere",
+      "Run on your own server (on-premise)",
+      "Dedicated account manager — your own person",
+      "SLA guarantee — we reply within 4 hours",
+      "Full API access — connect any software",
+      "Custom integration — connect any tool you use",
     ],
     missing: [],
     popular: false,
@@ -128,129 +147,106 @@ const accentMap = {
   blue: { from: "from-blue-500", to: "to-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/25", text: "text-blue-400", glow: "59,130,246" },
 };
 
-// ─── FULL COMPARISON DATA (110 features in one table) ────────────────
+// ─── FULL COMPARISON TABLE (simple English, zero jargon) ──────────────
+// Every row answers: "can I do this?" — plain yes / no / how many.
 const comparisonData = [
-  { cat: "BORROWER MANAGEMENT", rows: [
-    { f: "Max Borrowers", free: "10", bronze: "50", silver: "200", ent: "Unlimited" },
-    { f: "Add / Edit / Remove Borrower", free: "✅", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Borrower Loan History", free: "Current only", bronze: "All", silver: "All", ent: "All + Export" },
-    { f: "Borrower Profile Photo", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Bulk CSV Import", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Search & Filter Borrowers", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
+  { cat: "BORROWERS & LOANS", rows: [
+    { f: "How many borrowers can you manage",
+      free: "10", bronze: "40", silver: "100", ent: "Unlimited" },
+    { f: "Add, edit or remove borrowers",
+      free: "Yes", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Interest type (simple and compound)",
+      free: "Simple only", bronze: "Both", silver: "Both", ent: "Both" },
+    { f: "How many loans per borrower",
+      free: "1", bronze: "3", silver: "6", ent: "As needed" },
+    { f: "Set your own custom interest rates",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Print or save loan slips as PDF",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Lock your books from changes",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "SMS reminders for EMI due dates",
+      free: "No", bronze: "Yes (100/mo)", silver: "Yes Unlimited", ent: "Yes" },
   ]},
-  { cat: "LOAN MANAGEMENT", rows: [
-    { f: "Active Loans per Person", free: "1", bronze: "Multiple", silver: "Multiple", ent: "Multiple" },
-    { f: "Flat Interest", free: "✅", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Reducing / Compound Interest", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Custom Interest Rates", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Collection Frequency", free: "Basic", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Multi-Frequency Schedules", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Loan Product Config", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Pause / Resume Loan", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Early Settlement (Pro-rated)", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Loan Statement Generate", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Portfolio Statement Generate", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Date Freeze (Admin Lock)", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "SMS Notification on Loan", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Payment Delete/Edit History", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
+  { cat: "SAVINGS & WITHDRAWALS", rows: [
+    { f: "Savings accounts per borrower",
+      free: "1", bronze: "Multiple", silver: "Multiple", ent: "Unlimited" },
+    { f: "Daily bachat and recurring deposits",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Print or save savings slips as PDF",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Withdrawal request and approval system",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
   ]},
-  { cat: "SAVINGS MANAGEMENT", rows: [
-    { f: "Savings Accounts per Person", free: "1", bronze: "Multiple", silver: "Multiple", ent: "Unlimited" },
-    { f: "Daily Bachat Vault", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Recurring Savings (RD)", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Savings Statement Generate", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Withdraw Request Workflow", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Withdrawal Approval Queue", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Savings Product Config", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Savings SMS Notification", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Deposit Delete/Edit History", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-  ]},
-  { cat: "COLLECTIONS & PAYMENTS", rows: [
-    { f: "Record Repayment", free: "✅", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Today's Payment Page", free: "Basic", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Today's PDF Export", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Transaction History", free: "Last 10", bronze: "Full", silver: "Full", ent: "Full + Export" },
-    { f: "Transaction Export CSV/PDF", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Transaction Delete/Edit", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Quick Collect — Single Payment", free: "✅", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Quick Collect — Multi-Payment", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Quick Collect — Backdate", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Quick Collect — Date Picker", free: "❌", bronze: "Limited", silver: "Full", ent: "Full" },
-    { f: "UPI Payment Collection", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "UPI Verification", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Bluetooth Receipt Print", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Payment Modes (Cash/UPI/Bank)", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
+  { cat: "COLLECTION & PAYMENT", rows: [
+    { f: "Record EMI payments",
+      free: "Yes", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Record multiple EMIs at once",
+      free: "Basic", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Collect EMI online via UPI (PhonePe, GPay)",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Payment types (Cash, UPI, Bank, Cheque)",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Print receipts with Bluetooth printer",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Full history of edits and deletes",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
   ]},
   { cat: "STAFF & BRANCH", rows: [
-    { f: "Branches", free: "1", bronze: "Multiple", silver: "Multiple", ent: "Unlimited" },
-    { f: "Branch Managers", free: "1", bronze: "Multiple", silver: "Multiple", ent: "Unlimited" },
-    { f: "Collection Agents", free: "1", bronze: "Multiple", silver: "Multiple", ent: "Unlimited" },
-    { f: "Staff Target Progress", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Staff Streaks & Gamification", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Staff Cash Deposit Submission", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Agent GPS Location Tracking", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Live Staff Map", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Staff Permissions (RBAC)", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Multi-Level Approval Workflow", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
+    { f: "Branches, managers and agents you can add",
+      free: "1 / 1 / 1", bronze: "3 / 3 / 6", silver: "6 / 6 / 12", ent: "As needed" },
+    { f: "Set staff targets and see performance",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Reward staff with streaks and leaderboard",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Track staff live location — where are they today",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "See all staff on a live map",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Give each staff member different access levels",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
   ]},
-  { cat: "ORGANIZATION SETTINGS", rows: [
-    { f: "Screen Icon Change", free: "✅", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Basic Theme / Preset Colors", free: "✅", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Legal / Display Name", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "GST / PAN Number", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "NBFC / License Registration", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "Address & Contact Info", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Currency Selection", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Language / Locale", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Timezone", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Financial Year Start", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Custom Branding / Logo", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "White-Label Branding", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
+  { cat: "SECURITY & BACKUP", rows: [
+    { f: "PIN lock to open the app",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Fingerprint lock (biometric)",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Backup your books to Google Drive",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "See who changed what (activity log)",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
+    { f: "App locks itself after some time (auto-logout)",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
   ]},
-  { cat: "INTEGRATIONS & APIs", rows: [
-    { f: "Local SMS — Auto-send", free: "❌", bronze: "10/mo", silver: "Unlimited", ent: "Unlimited" },
-    { f: "Local SMS — SIM Selection", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "SMTP / Resend Email Config", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "WhatsApp Business API", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "UPI Direct Payments (VPA)", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Razorpay / PhonePe Gateway", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "Payment Links", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Webhook URL Setup", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "Custom API Endpoints", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "Data Export API", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-  ]},
-  { cat: "SECURITY & COMPLIANCE", rows: [
-    { f: "Password Login", free: "✅", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "PIN Lock", free: "❌", bronze: "✅", silver: "✅", ent: "✅" },
-    { f: "Biometric Authentication", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "System Activity Logs", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Login Audit Trail", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Session Management", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Auto-Logout & Session Locks", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Two-Factor Authentication (2FA)", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "IP Whitelisting", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "Immutable Activity Logs", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Audit Log Retention (7yr)", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "Google Drive Backup", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Export Audit Report", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-  ]},
-  { cat: "REPORTS & ANALYTICS", rows: [
-    { f: "Portfolio Summary Dashboard", free: "❌", bronze: "Basic", silver: "✅", ent: "✅" },
-    { f: "Advanced Analytics", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "PAR 30/60/90 Delinquency", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Repayment Rate Tracking", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Monthly Trends Chart", free: "❌", bronze: "Basic", silver: "Detailed", ent: "Custom" },
-    { f: "Cash Flow Trends", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Staff & Branch Reports", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Custom Report Generation", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "AI Hindi Assistant", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
+  { cat: "SETTINGS & INTEGRATIONS", rows: [
+    { f: "Your own brand — logo, theme and name",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "GST, PAN, currency, language, timezone setup",
+      free: "No", bronze: "Yes", silver: "Yes", ent: "Yes" },
+    { f: "Growth dashboard — see how your business is running",
+      free: "No", bronze: "Basic", silver: "Detailed", ent: "Custom" },
+    { f: "PAR report — how many borrowers are late (30, 60, 90 days)",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
+    { f: "Cash flow report — money in, money out, what is left",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
+    { f: "Send notifications via WhatsApp Business",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
+    { f: "Send emails using your own email (SMTP or Resend)",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
+    { f: "Online payment gateway (Razorpay, PhonePe)",
+      free: "No", bronze: "No", silver: "No", ent: "Yes" },
+    { f: "Connect your own software (API and webhooks)",
+      free: "No", bronze: "No", silver: "No", ent: "Yes" },
+    { f: "AI assistant that speaks Hindi for help",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
   ]},
   { cat: "SUPPORT", rows: [
-    { f: "Email Support", free: "48h", bronze: "24h", silver: "12h", ent: "4h" },
-    { f: "Priority Chat Support", free: "❌", bronze: "❌", silver: "✅", ent: "✅" },
-    { f: "Dedicated Account Manager", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "SLA Guarantee", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
-    { f: "On-Premise Deployment", free: "❌", bronze: "❌", bronze: "❌", ent: "✅" },
+    { f: "Email support — how fast we reply",
+      free: "48 hours", bronze: "24 hours", silver: "12 hours", ent: "4 hours" },
+    { f: "Chat support and your own manager",
+      free: "No", bronze: "No", silver: "Yes", ent: "Yes" },
+    { f: "2 months free trial (Silver plan only)",
+      free: "No", bronze: "No", silver: "Yes", ent: "No" },
   ]},
 ];
 
@@ -290,9 +286,7 @@ function TierCard({ t, i, annual, isMobile }) {
 
       {/* Annual save badge */}
       {annual && t.monthly !== "Custom" && t.monthly !== "₹0" && (
-        <div className="text-emerald-400/60 text-[10px] mb-2">
-          Save {Math.round(1 - parseInt(t.annual.replace(/[₹,]/g, "")) / (parseInt(t.monthly.replace(/[₹,]/g, "")) * 12) * 100)}% with annual
-        </div>
+        <div className="text-emerald-400/60 text-[10px] mb-2">Save 10% with annual billing</div>
       )}
 
       {/* Price */}
@@ -321,8 +315,8 @@ function TierCard({ t, i, annual, isMobile }) {
       {/* Included features */}
       <ul className="space-y-2 mb-3 flex-1">
         {t.features.map((f, j) => (
-          <li key={j} className="flex items-center gap-2 text-[12px] md:text-[13px] text-white/70">
-            <span className="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0">
+          <li key={j} className="flex items-start gap-2 text-[12px] md:text-[13px] text-white/70">
+            <span className="w-5 h-5 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 mt-0.5">
               <Check className="w-3 h-3 text-indigo-400" />
             </span>
             {f}
@@ -387,7 +381,6 @@ function ComparisonTable() {
               </tr>
               {/* Feature rows */}
               {section.rows.map((row, ri) => {
-                const isBestFree = row.free === "✅" || row.free.includes("Basic");
                 const cells = [
                   { key: 'free', val: row.free, accent: false },
                   { key: 'bronze', val: row.bronze, accent: false },
@@ -396,13 +389,13 @@ function ComparisonTable() {
                 ];
                 return (
                   <tr key={ri} className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors">
-                    <td className="py-2.5 pr-4 text-white/60 sticky left-0 z-10 whitespace-nowrap" style={{ background: "var(--background)" }}>
+                    <td className="py-2.5 pr-4 text-white/60 sticky left-0 z-10" style={{ background: "var(--background)" }}>
                       {row.f}
                     </td>
                     {cells.map((c, ci) => {
-                      let cls = "px-3 py-2.5 text-center whitespace-nowrap";
-                      if (c.val === "✅") cls += " text-emerald-400";
-                      else if (c.val === "❌") cls += " text-white/20";
+                      let cls = "px-3 py-2.5 text-center";
+                      if (c.val === "Yes") cls += " text-emerald-400";
+                      else if (c.val === "No") cls += " text-white/20";
                       else if (c.accent) cls += " text-emerald-300/80";
                       else cls += " text-white/50";
                       return <td key={ci} className={cls}>{c.val}</td>;
@@ -483,7 +476,7 @@ export default function Pricing() {
               <span className={"absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-all duration-300 shadow-sm " + (annual ? "left-7" : "left-1")} />
             </button>
             <span className={"transition-colors duration-300 " + (annual ? "text-white/85" : "text-white/40")}>
-              Annual <span className="text-emerald-400/70 text-[10px]">(-33%)</span>
+              Annual <span className="text-emerald-400/70 text-[10px]">(-10%)</span>
             </span>
           </motion.div>
         </div>
@@ -573,7 +566,7 @@ export default function Pricing() {
             onClick={() => setShowTable(!showTable)}
             className="flex items-center justify-center gap-2 mx-auto text-white/50 hover:text-white/80 transition-all duration-300 group mb-6"
           >
-            <span className="text-[13px] font-semibold">{showTable ? "Hide" : "Compare All 110 Features"} — Full Breakdown</span>
+            <span className="text-[13px] font-semibold">{showTable ? "Hide" : "Compare All Features"} — Full Breakdown</span>
             <motion.span animate={{ rotate: showTable ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-4 h-4" />
             </motion.span>
@@ -590,7 +583,7 @@ export default function Pricing() {
               >
                 <div className="rounded-2xl border border-white/[0.04] bg-white/[0.01] p-4 md:p-6">
                   <div className="text-white/40 text-[11px] font-medium text-center mb-4">
-                    10 categories · 110 features · See what each plan includes
+                    7 categories · 36 features · See what each plan includes
                   </div>
                   <ComparisonTable />
                 </div>

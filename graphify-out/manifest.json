@@ -4125,8 +4125,8 @@
     "semantic_hash": ""
   },
   "asme-landing/src/components/Pricing.jsx": {
-    "mtime": 1785233422.5356631,
-    "ast_hash": "2788aa0df77e69d215d48859d183bb6c",
+    "mtime": 1785244001.7740571,
+    "ast_hash": "66d5cf7e510318a9905511bfc109c8f2",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Stats.jsx": {
@@ -16480,8 +16480,8 @@
     "semantic_hash": ""
   },
   "pricing.md": {
-    "mtime": 1785239782.285355,
-    "ast_hash": "b5716a4d8d7974d83535689737673a6d",
+    "mtime": 1785243338.1266494,
+    "ast_hash": "f619005113cc8d77716a5852a71898a6",
     "semantic_hash": ""
   }
 }

@@ -64,7 +64,7 @@ export default function CTA() {
               } <span className="gradient-brand">Digital Ledger</span>?
             </h2>
             <p className="text-white/70 text-sm md:text-base max-w-md mx-auto mb-6 leading-relaxed">
-              Join thousands of money-lenders who've replaced their notebooks with MicroFlow Pro. No credit card required.
+              Join thousands of money-lenders who've replaced their notebooks with MicroFlow Pro. Start with 2 months Silver FREE — no credit card required.
             </p>
             <div className="h-5 mb-8 flex items-center justify-center">
               <AnimatePresence mode="wait">

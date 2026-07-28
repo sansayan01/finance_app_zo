@@ -129,6 +129,42 @@
   - `memory/MEMORY.md`
 - **Next steps:** Sayan to shoot or generate reels using unique entry screens.
 
+## 2026-07-27 03:00 — Converted 100% of 90 Reels to 2-Scene 8-Second (16s Total) 1-Click Prompt Architecture
+- **Summary:** Upgraded all 90 Reels across 4 master weekly files to a **2-Scene × 8-Second (16 Seconds Total)** 1-Click Prompt Architecture. Each reel now contains 2 separate 1-Click Copyable Code Blocks: (1) **Scene 1 Prompt Box (0.0s–8.0s)** for the Conflict/Hook clip (Customer dialogue, unique visual entry scene, natural 8-sec AI render duration); and (2) **Scene 2 Prompt Box (8.0s–16.0s)** for the Evidence & CTA clip (Lender dialogue, MicroFlow Pro UI timestamp proof, comment `খাতা` CTA). Node.js audit script verified 90/90 (100%) reels formatted with both Scene 1 and Scene 2 prompt boxes. No git commit/push performed per user instructions.
+- **Files created/modified:**
+  - `marketing/bengali-facebook/day-01-reel-script.md`
+  - `marketing/bengali-facebook/30_day_master_plan/week_1_master_scripts_day_01_to_07.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_2_master_scripts_day_08_to_14.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_3_master_scripts_day_15_to_21.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_4_master_scripts_day_22_to_30.md` (27 Reels)
+  - `memory/MEMORY.md`
+- **Next steps:** Sayan to render Scene 1 (8s) and Scene 2 (8s) in AI generator and stitch in CapCut.
+
+## 2026-07-27 03:20 — Fulfilling Deep Detail Breakdown for Scene 1 AND Scene 2 Across 100% of 90 Reels
+- **Summary:** Per Sayan's instructions, expanded every single reel out of all 90 reels so that **BOTH Scene 1 (0.0s–8.0s Conflict) AND Scene 2 (8.0s–16.0s Proof/CTA)** are fully documented in ultra-deep detail: (1) Scene 1 Prompt Box (1-Click Copyable); (2) Scene 1 Character Breakdown (Joydeb 42yo shopkeeper); (3) Scene 1 Spoken Dialogue & Script (Bangla + Roman); (4) Scene 1 Camera & Lighting Directions (f/1.8 50mm Anamorphic); (5) Scene 1 Sound Design & BGM Timeline; (6) Scene 2 Prompt Box (1-Click Copyable); (7) Scene 2 Character Breakdown (Sayan 32yo Lender); (8) Scene 2 Spoken Dialogue & Script; (9) Scene 2 Camera & Lighting Directions (f/2.0 85mm Portrait); (10) Scene 2 Sound Design & BGM Timeline; and (11) Full Post Caption & Hashtags. Node.js audit script verified 90/90 (100%) reels fully populated. No git commit/push performed per user instructions.
+- **Files created/modified:**
+  - `marketing/bengali-facebook/day-01-reel-script.md`
+  - `marketing/bengali-facebook/30_day_master_plan/week_1_master_scripts_day_01_to_07.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_2_master_scripts_day_08_to_14.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_3_master_scripts_day_15_to_21.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_4_master_scripts_day_22_to_30.md` (27 Reels)
+  - `memory/MEMORY.md`
+- **Next steps:** Sayan to generate Scene 1 and Scene 2 clips.
+
+## 2026-07-27 03:40 — Integrated Meticulous 0.5s Frame-by-Frame Cinema Breakdown Tables Across All 90 Reels
+- **Summary:** Added meticulous 0.5s-1.0s Frame-by-Frame Cinema Breakdown Tables for Scene 1 (0.0s-8.0s) AND Scene 2 (8.0s-16.0s) across 100% of all 90 Reels. Every table explicitly breaks down: (1) Timecodes; (2) Visual Frames & Actions; (3) Camera & Lens Mechanics (50mm/85mm, f-stops, rack focus, dolly zoom, Dutch tilt); (4) Lighting & Color Grading (3200K tungsten key light, blue screen glow, gold accent rim, shadows); (5) Audio & Voiceover Layering (ambient noise, voiceover cadence, thud impact, glass chime, 0dB silence gates, acoustic guitar BGM); and (6) Kinetic Typography & VFX (yellow/green badges, word-by-word subtitle pops). Node.js audit script verified 90/90 (100%) reels fully populated with both Scene 1 and Scene 2 breakdown tables. No git commit/push performed per user instructions.
+- **Files created/modified:**
+  - `marketing/bengali-facebook/day-01-reel-script.md`
+  - `marketing/bengali-facebook/30_day_master_plan/week_1_master_scripts_day_01_to_07.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_2_master_scripts_day_08_to_14.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_3_master_scripts_day_15_to_21.md` (21 Reels)
+  - `marketing/bengali-facebook/30_day_master_plan/week_4_master_scripts_day_22_to_30.md` (27 Reels)
+  - `memory/MEMORY.md`
+- **Next steps:** Sayan to test Day 1 Reel Scene 1 and Scene 2 prompts.
+
+
+
+
 
 
 

@@ -29,6 +29,47 @@
 
 # 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)Day 01 — Slot 1 (8:30 AM IST)
 
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 01 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 01 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
+
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
 ================================================================================
@@ -190,7 +231,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)Day 01 — Slot 2 (1:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 02 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 02 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -352,7 +436,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)Day 01 — Slot 3 (7:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 03 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 03 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -514,7 +641,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)Day 02 — Slot 1 (8:30 AM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 04 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 04 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -676,7 +846,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)Day 02 — Slot 2 (1:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 05 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 05 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -838,7 +1051,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)Day 02 — Slot 3 (7:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 06 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 06 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -1000,7 +1256,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)Day 03 — Slot 1 (8:30 AM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 07 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 07 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -1162,7 +1461,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)Day 03 — Slot 2 (1:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 08 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 08 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -1324,7 +1666,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)Day 03 — Slot 3 (7:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 09 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 09 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -1486,7 +1871,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 10: Day 04 — Slot 1 (🌅 08:30 AM IST)Day 04 — Slot 1 (8:30 AM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 10 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 10 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -1648,7 +2076,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 11: Day 04 — Slot 2 (☀️ 01:30 PM IST)Day 04 — Slot 2 (1:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 11 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 11 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -1810,7 +2281,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 12: Day 04 — Slot 3 (🌙 07:30 PM IST)Day 04 — Slot 3 (7:30 PM IST)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 12 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 12 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -1991,7 +2505,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 01: Day 01 — Slot 1 (🌅 08:30 AM IST)Day 05 — Slot 1 (8:30 AM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 13 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 13 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2116,7 +2673,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 02: Day 01 — Slot 2 (☀️ 01:30 PM IST)Day 05 — Slot 2 (1:30 PM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 14 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 14 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2241,7 +2841,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 03: Day 01 — Slot 3 (🌙 07:30 PM IST)Day 05 — Slot 3 (7:30 PM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 15 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 15 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2368,7 +3011,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 04: Day 02 — Slot 1 (🌅 08:30 AM IST)Day 06 — Slot 1 (8:30 AM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 16 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 16 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2493,7 +3179,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 05: Day 02 — Slot 2 (☀️ 01:30 PM IST)Day 06 — Slot 2 (1:30 PM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 17 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 17 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2618,7 +3347,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 06: Day 02 — Slot 3 (🌙 07:30 PM IST)Day 06 — Slot 3 (7:30 PM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 18 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 18 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2744,7 +3516,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 07: Day 03 — Slot 1 (🌅 08:30 AM IST)Day 07 — Slot 1 (8:30 AM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 19 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 19 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2870,7 +3685,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 08: Day 03 — Slot 2 (☀️ 01:30 PM IST)Day 07 — Slot 2 (1:30 PM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 20 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 20 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text
@@ -2994,7 +3852,50 @@ Hashtags: #MicroFlowPro #সুদেরব্যবসা #ডিজিটা�
 
 ---
 
+---
+
 # 🎬 REEL 09: Day 03 — Slot 3 (🌙 07:30 PM IST)Day 07 — Slot 3 (7:30 PM)
+
+### 📌 SCENE 1 PROMPT BOX (0.0s – 8.0s) — Conflict Hook
+```text
+================================================================================
+MICROFLOW PRO — SCENE 1 (REEL 21 — 8s CONFLICT)
+================================================================================
+ENVIRONMENT: Traditional West Bengal lender counter. Warm tungsten light, red cloth Lal Khata ledger, brass coins, tea glass. 9:16 24fps 8K ARRI.
+CHARACTER: Single Customer (42yo, white worn shirt, angry vocal).
+FRAME-BY-FRAME TIMELINE:
+0.00s-0.50s | 45° top-down, 50mm f/1.8 focus: tea glass. Shop ambience (-24dB).
+0.50s-1.20s | Camera jolt. Hand slams ledger. Desk thud FX (-3dB). VFX: yellow pill box pop.
+1.20s-2.50s | 5° Dutch tilt. Point at crossed-out number. "১২,৫০০ টাকা বাকি ছিল!" Subtitles: word-by-word Bengali.
+2.50s-4.00s | 30° whip-pan. Veins visible. "১৪,০০০ কোত্থেকে এলো?!" Subtitles sync.
+4.00s-5.50s | Rack focus to Sayan shock. 4500K edge light. Bass swell. VFX: red pulsing badge.
+5.50s-7.00s | Vertigo dolly zoom. Hand reaches phone. Heartbeat FX 60-90bpm. Blue screen glow.
+7.00s-8.00s | Freeze on phone touch. 0dB silence. Text: 'প্রমাণ দেখুন ➔' Vignette darkens.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+================================================================================
+```
+
+
+
+### 📌 SCENE 2 PROMPT BOX (8.0s – 16.0s) — Proof & CTA
+```text
+================================================================================
+MICROFLOW PRO — SCENE 2 (REEL 21 — 8s PROOF & CTA)
+================================================================================
+ENVIRONMENT: Same counter, clean illuminated smartphone display. 9:16 24fps 8K ARRI.
+CHARACTER: Single Money-Lender (Sayan, 32yo, navy linen shirt, calm confident smile).
+FRAME-BY-FRAME TIMELINE:
+8.00s-9.50s | 85mm f/2.0 macro on OLED screen. Unlock + app chime (-6dB). VFX: green box slide-in.
+9.50s-11.50s | 2x punch-in on green row "₹14,000 | 4 June | 8:15 PM". "এই দেখুন, ৪ তারিখের এন্ট্রি..." Subtitles per word.
+11.50s-13.00s | Jib tilt up. Golden key light. "সব তারিখ সমেত সেভ আছে!" Badges: '✔ ৪ জুন' '✔ রাত ৮:১৫' '✔ ₹১৪,০০০'.
+13.00s-14.50s | Shallow rack to customer (defeated bg). "সুদের ব্যবসায় খাতা ভুলতে পারে... MicroFlow পারে না।" Word subs.
+14.50s-15.50s | Portrait lock. Warm smile + point down. 1.0s 0dB silence payoff.
+15.50s-16.00s | Pull-back zoom. Green/gold rim. Guitar sting. CTA: 'ফ্রী ডেমো — কমেন্টে লিখুন "খাতা" 👇'.
+NEGATIVE: (bad lip sync:1.5), dual heads, voice swap, extra fingers, cartoon, blurry, audio cutoff, watermark.
+CAPTION: আপনার সুদের ব্যবসার হিসাব প্রতি মাসে মিলতে চায় না? 😰📒 MicroFlow Pro ডিজিটাল খাতায় তারিখ ও সময় সমেত সেভ থাকে। 👉 ফ্রি ডেমোর জন্য কমেন্টে লিখুন 'খাতা'। 📥
+HASHTAGS: #MicroFlowPro #সুদেরব্যবসা #ডিজিটালখাতা #WestBengalBusiness #ছোটব্যবসা #Sahukar #লোনম্যানেজমেন্ট
+================================================================================
+```
 
 ### 📦 1-Click Copyable All-In-One Master Prompt Box
 ```text

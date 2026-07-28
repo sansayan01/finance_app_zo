@@ -4080,8 +4080,8 @@
     "semantic_hash": ""
   },
   "asme-landing/src/components/CTA.jsx": {
-    "mtime": 1785063389.9095707,
-    "ast_hash": "19fa8ee9f305e14143c8f57dd8a66351",
+    "mtime": 1785233434.6590607,
+    "ast_hash": "12fe4202142b55f25a18ffbb01862d44",
     "semantic_hash": ""
   },
   "asme-landing/src/components/DocsBackground.jsx": {
@@ -4125,8 +4125,8 @@
     "semantic_hash": ""
   },
   "asme-landing/src/components/Pricing.jsx": {
-    "mtime": 1785063389.9176621,
-    "ast_hash": "aeea9484123f28d772790f5579c671d6",
+    "mtime": 1785233422.5356631,
+    "ast_hash": "2788aa0df77e69d215d48859d183bb6c",
     "semantic_hash": ""
   },
   "asme-landing/src/components/Stats.jsx": {
@@ -14280,8 +14280,8 @@
     "semantic_hash": ""
   },
   "memory/MEMORY.md": {
-    "mtime": 1785097952.079752,
-    "ast_hash": "24aa5c5b5bde8227e9d3a5b6c3fe1ed7",
+    "mtime": 1785098924.6371846,
+    "ast_hash": "c8d898f45da63772af6fd2c7b11391e8",
     "semantic_hash": ""
   },
   "memory/app_compliance_gaps.md": {
@@ -16445,23 +16445,23 @@
     "semantic_hash": ""
   },
   "marketing/bengali-facebook/30_day_master_plan/week_1_master_scripts_day_01_to_07.md": {
-    "mtime": 1785097908.1725416,
-    "ast_hash": "4553f6625dcef158810ae90fe94e79e0",
+    "mtime": 1785099233.8448174,
+    "ast_hash": "7b3dfabc228a26d1d261ed646572e73e",
     "semantic_hash": ""
   },
   "marketing/bengali-facebook/30_day_master_plan/week_2_master_scripts_day_08_to_14.md": {
-    "mtime": 1785097908.1785376,
-    "ast_hash": "63e4b2bf33c339fe85cae4fd47e303e2",
+    "mtime": 1785099233.8538172,
+    "ast_hash": "c017fc832e77576d4fc73c1f1541c287",
     "semantic_hash": ""
   },
   "marketing/bengali-facebook/30_day_master_plan/week_3_master_scripts_day_15_to_21.md": {
-    "mtime": 1785097908.1825392,
-    "ast_hash": "4c74726fd7ba5189912f84f2110cf3a6",
+    "mtime": 1785099233.8568175,
+    "ast_hash": "ffb64d969b220cc500d9b022ab1d6889",
     "semantic_hash": ""
   },
   "marketing/bengali-facebook/30_day_master_plan/week_4_master_scripts_day_22_to_30.md": {
-    "mtime": 1785097908.1865368,
-    "ast_hash": "2f8741a11d2ee5cb03d6068222f10ec5",
+    "mtime": 1785099233.8608148,
+    "ast_hash": "e87fed07e262c47cbe99eb1094d356c6",
     "semantic_hash": ""
   },
   "marketing/bengali-facebook/AI_VIDEO_GENERATION_GUIDE.md": {
@@ -16475,8 +16475,13 @@
     "semantic_hash": ""
   },
   "marketing/bengali-facebook/day-01-reel-script.md": {
-    "mtime": 1785097348.8137467,
-    "ast_hash": "8e049bcec370397723c341cc5aa25785",
+    "mtime": 1785099183.940233,
+    "ast_hash": "8a93e033a4ac53604ee9b5b49f311a4b",
+    "semantic_hash": ""
+  },
+  "pricing.md": {
+    "mtime": 1785239782.285355,
+    "ast_hash": "b5716a4d8d7974d83535689737673a6d",
     "semantic_hash": ""
   }
 }

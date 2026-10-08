@@ -33,6 +33,23 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Deep link: email confirmation opens the app directly -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="tccwdpsnuudzfyxfoohk.supabase.co"
+                    android:pathPrefix="/auth/v1/verify" />
+            </intent-filter>
+            <!-- Custom scheme fallback (works without domain verification) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.microflow.pro" />
+            </intent-filter>
             <!-- The real .MainActivity intentionally has NO <LAUNCHER/> intent-filter.
                  At runtime, MainActivity.setIcon() enables exactly one activity-alias
                  (e.g. .MainActivityDefault) and disables the others + this activity, so

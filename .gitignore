@@ -119,3 +119,6 @@ supabase_auth_dump.sql
 # Android build artifacts
 android/build/
 android/app/build/
+
+# Kotlin compiler session artifacts
+android/.kotlin/

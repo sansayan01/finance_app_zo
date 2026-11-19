@@ -427,6 +427,8 @@ class SavingsStatementPdfService {
                     color: StatementColors.red700),
               _metricBox('Current Balance', _moneyInt(p.closingBalance),
                   color: StatementColors.navy900),
+              _metricBox('Interest Promised', _moneyInt(p.interestEarned),
+                  color: StatementColors.green700),
             ],
           ),
           pw.SizedBox(height: 6),
@@ -561,6 +563,8 @@ class SavingsStatementPdfService {
                   _planMetric('Installment', '${_moneyInt(plan.monthlyDeposit)} / $collectionLabel'),
                   _planMetric('Current Balance', _moneyInt(plan.closingBalance),
                       color: StatementColors.green700),
+                  _planMetric('Interest', _moneyInt(plan.promisedInterest),
+                      color: StatementColors.green700),
                 ],
               ),
               pw.SizedBox(height: 8),
@@ -585,6 +589,27 @@ class SavingsStatementPdfService {
                           : 'Matured'),
                 ],
               ),
+              if (plan.interestPaid > 0 || plan.promisedInterest > 0) ...[
+                pw.SizedBox(height: 6),
+                pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(
+                      horizontal: 6, vertical: 4),
+                  decoration: pw.BoxDecoration(
+                    color: StatementColors.green50,
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Row(
+                    children: [
+                      _planMetric('Interest Earned So Far',
+                          _moneyInt(plan.interestAccrued), color: StatementColors.green700),
+                      _planMetric('Interest Paid',
+                          _moneyInt(plan.interestPaid), color: StatementColors.green700),
+                      _planMetric('Interest Remaining',
+                          _moneyInt(plan.interestRemaining), color: StatementColors.navy900),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -902,6 +902,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                 description: t.description ?? '${t.type.name} transaction',
                 paymentMode: t.paymentMode?.name,
                 collectedByName: t.collectedByName,
+                interestAmount: t.interestAmount,
               );
               if (t.type == TransactionType.savingsDeposit) {
                 deposits.add(stx);
@@ -929,6 +930,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
           openingBalance: openingBalance,
           closingBalance: planClosingBalance,
           interestRate: p.interestRate,
+          interestAmount: p.interestAmount,
           maturityDate: p.maturityDate,
           collectionType: p.collectionType,
           monthlyDeposit: p.monthlyDeposit,
@@ -1292,6 +1294,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   void _showWithdrawDialog(SavingsModel saving) {
     final amountController = TextEditingController();
     final penaltyController = TextEditingController();
+    final interestController = TextEditingController();
     String paymentMode = 'cash';
     final isPremature = DateTime.now().isBefore(saving.maturityDate);
     final penaltyPercent = saving.prematurePenalty;
@@ -1306,7 +1309,11 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             final amount = double.tryParse(amountController.text) ?? 0;
             final penaltyAmount =
                 double.tryParse(penaltyController.text) ?? 0;
-            final netAmount = amount - penaltyAmount;
+            // Interest the operator chooses to hand back along with principal.
+            // Defaults to 0 — no interest on a premature exit unless chosen.
+            final interestAmount =
+                double.tryParse(interestController.text) ?? 0;
+            final netAmount = amount - penaltyAmount + interestAmount;
             final isValid = amount > 0 && amount <= saving.currentAmount;
 
             return Container(
@@ -1460,6 +1467,43 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                       const SizedBox(height: 12),
                     ],
 
+                    // Interest to give (optional)
+                    Text(
+                      'Interest to Give (optional)',
+                      style: Theme.of(ctx)
+                          .textTheme
+                          .labelMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: interestController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Interest Amount',
+                        prefixText: '₹ ',
+                        hintText: '0',
+                        helperText: saving.interestRemaining > 0
+                            ? 'Promised interest for this vault: ₹${saving.interestRemaining.toStringAsFixed(0)}'
+                            : null,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onChanged: (_) => setModalState(() {}),
+                    ),
+                    if (interestAmount > 0 &&
+                        saving.interestRemaining > 0 &&
+                        interestAmount > saving.interestRemaining) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'You are giving ₹${(interestAmount - saving.interestRemaining).toStringAsFixed(0)} more than the promised interest. Please confirm this is intentional.',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(ctx).colorScheme.error),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+
                     // Net amount summary
                     if (amount > 0) ...[
                       Container(
@@ -1483,6 +1527,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                               _buildPenaltyRow(
                                   ctx, 'Penalty', '-₹${penaltyAmount.toStringAsFixed(0)}',
                                   isNegative: true),
+                            if (interestAmount > 0)
+                              _buildPenaltyRow(ctx, 'Interest Given',
+                                  '+₹${interestAmount.toStringAsFixed(0)}'),
                             Divider(
                                 height: 16,
                                 color: Theme.of(ctx)
@@ -1523,6 +1570,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                                   amount,
                                   paymentMode,
                                   penaltyAmount,
+                                  interestAmount,
                                 );
                               }
                             : null,
@@ -1620,8 +1668,9 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     );
   }
 
-  Future<void> _submitWithdrawalRequest(
-      SavingsModel saving, double amount, String paymentMode, double penaltyAmount) async {
+  Future<void> _submitWithdrawalRequest(SavingsModel saving, double amount,
+      String paymentMode, double penaltyAmount,
+      [double interestAmount = 0]) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final user = ref.read(currentUserProvider);
@@ -1635,6 +1684,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
         paymentMode: paymentMode,
         memberId: saving.memberId,
         requestedById: user.id,
+        interestAmount: interestAmount,
       );
 
       if (!mounted) return;
@@ -2081,11 +2131,229 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     }
   }
 
+  Widget _buildMaturityPayoutCard(SavingsModel saving, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.verified_rounded,
+              color: AppColors.success, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Matured - payout pending',
+                    style: theme.textTheme.labelLarge
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(
+                  'Principal \u20b9${saving.currentAmount.toStringAsFixed(0)}'
+                  '${saving.interestRemaining > 0 ? ' + interest \u20b9${saving.interestRemaining.toStringAsFixed(0)}' : ''}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => _showMaturityPayoutDialog(saving),
+            child: const Text('Pay Out',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMaturityPayoutDialog(SavingsModel saving) {
+    String paymentMode = 'cash';
+    final principal = saving.currentAmount;
+    final interest = saving.interestRemaining;
+    final total = principal + interest;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(ctx).colorScheme.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                  24,
+                  12,
+                  24,
+                  MediaQuery.of(ctx).viewInsets.bottom +
+                      MediaQuery.of(ctx).padding.bottom +
+                      24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(ctx).dividerColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Pay Maturity Payout',
+                        style: Theme.of(ctx)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Principal plus the remaining promised interest will be handed back, then the vault closes.',
+                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(ctx)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.5)),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(ctx)
+                            .colorScheme
+                            .surface
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: Theme.of(ctx)
+                                .dividerColor
+                                .withValues(alpha: 0.15)),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildPenaltyRow(ctx, 'Principal Returned',
+                              '\u20b9${principal.toStringAsFixed(0)}'),
+                          _buildPenaltyRow(ctx, 'Interest Returned',
+                              '\u20b9${interest.toStringAsFixed(0)}'),
+                          Divider(
+                              height: 16,
+                              color: Theme.of(ctx)
+                                  .dividerColor
+                                  .withValues(alpha: 0.3)),
+                          _buildPenaltyRow(
+                              ctx,
+                              'Total To Customer',
+                              '\u20b9${total.toStringAsFixed(0)}',
+                              isBold: true),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _buildPaymentModeChip(ctx, 'Cash', Icons.payments_rounded,
+                            paymentMode == 'cash', () {
+                          setModalState(() => paymentMode = 'cash');
+                        }),
+                        const SizedBox(width: 8),
+                        _buildPaymentModeChip(
+                            ctx, 'UPI', Icons.qr_code_rounded,
+                            paymentMode == 'upi', () {
+                          setModalState(() => paymentMode = 'upi');
+                        }),
+                        const SizedBox(width: 8),
+                        _buildPaymentModeChip(
+                            ctx, 'Bank', Icons.account_balance_rounded,
+                            paymentMode == 'bank_transfer', () {
+                          setModalState(() => paymentMode = 'bank_transfer');
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await _payoutMaturity(saving, paymentMode);
+                        },
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Pay Out & Close Vault',
+                            style: TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _payoutMaturity(SavingsModel saving, String paymentMode) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final result = await ref
+          .read(savingsRepositoryProvider)
+          .payoutMaturity(saving.id, paymentMode: paymentMode);
+
+      if (!mounted) return;
+      ref.invalidate(savingDetailProvider(widget.savingId));
+      ref.invalidate(allSavingsProvider);
+      ref.invalidate(savingsSummaryProvider);
+
+      messenger.showSnackBar(SnackBar(
+        content: Text(
+            'Paid \u20b9${result.principal.toStringAsFixed(0)} principal + \u20b9${result.interest.toStringAsFixed(0)} interest. Vault closed.'),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text('Payout failed: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    }
+  }
+
   Widget _buildPrimaryActionRow(SavingsModel saving, ThemeData theme) {
     final isPaused = saving.status.toLowerCase() == 'paused';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Row(
+      child: Column(
+        children: [
+          if (saving.isMatured) ...[
+            _buildMaturityPayoutCard(saving, theme),
+            const SizedBox(height: 16),
+          ],
+          Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildActionButton(
@@ -2125,6 +2393,8 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
             isPaused ? AppColors.success : Colors.orange,
             () => _setStatus(saving, isPaused ? 'active' : 'paused'),
+          ),
+            ],
           ),
         ],
       ),
@@ -2214,8 +2484,7 @@ Widget _buildIntelligenceCard(SavingsModel saving, ThemeData theme) {
           const SizedBox(height: 12),
           _buildInfoRow(
               'Interest Earned',
-              AppFormatters.formatCurrency(
-                  saving.currentAmount * saving.interestRate / 100),
+              AppFormatters.formatCurrency(saving.interestAmount),
               theme,
               valueColor: AppColors.success),
           const SizedBox(height: 12),

@@ -46,7 +46,8 @@ class SavingsPage extends ConsumerStatefulWidget {
 }
 
 class _SavingsPageState extends ConsumerState<SavingsPage> {
-  int _activeFilter = 0;
+  // 0 = All Vaults, 1 = Active (default), 2 = Matured
+  int _activeFilter = 1;
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
@@ -610,9 +611,9 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        _buildFilterChip('All Vaults', 0, theme),
-                        const SizedBox(width: 8),
                         _buildFilterChip('Active', 1, theme),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('All Vaults', 0, theme),
                         const SizedBox(width: 8),
                         _buildFilterChip('Matured', 2, theme),
                       ],
@@ -827,11 +828,18 @@ class _PremiumSavingCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(AppFormatters.formatCurrency(saving.currentAmount), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, letterSpacing: -0.3, color: statusColor)),
+                      if (saving.interestAmount > 0) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '+${AppFormatters.formatCurrency(saving.interestAmount)} interest',
+                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withOpacity(0.45)),
+                        ),
+                      ],
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(6), border: Border.all(color: statusBorder, width: 0.5)),
-                        child: Text(isActive ? 'ACTIVE' : 'MATURED', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: statusColor, letterSpacing: 0.5)),
+                        child: Text(isActive && saving.isMatured ? 'MATURED' : (isActive ? 'ACTIVE' : 'MATURED'), style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: statusColor, letterSpacing: 0.5)),
                       ),
                     ],
                   ),

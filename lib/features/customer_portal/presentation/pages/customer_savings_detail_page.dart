@@ -486,6 +486,7 @@ class _CustomerSavingsDetailPageState
                                       collectionType: savings.collectionType,
                                       monthlyDeposit: savings.monthlyDeposit,
                                       maturityAmount: savings.targetAmount,
+                                      interestAmount: savings.interestAmount,
                                       deposits: deposits,
                                       withdrawals: withdrawals,
                                     );
@@ -495,7 +496,7 @@ class _CustomerSavingsDetailPageState
                                       openingBalance: openingBalance,
                                       totalDeposits: periodDeposits,
                                       totalWithdrawals: periodWithdrawals,
-                                      interestEarned: 0,
+                                      interestEarned: savings.interestAmount,
                                       closingBalance: closingBalance,
                                       activePlans: savings.status == 'active' ? 1 : 0,
                                       totalPlans: 1,
@@ -1382,9 +1383,14 @@ class _CustomerSavingsDetailPageState
             value: _formatCurrency(savings.monthlyDeposit),
           ),
           _DetailRow(
-            label: 'Interest Rate',
-            value: '${savings.interestRate.toStringAsFixed(1)}%',
+            label: 'Interest',
+            value: _formatCurrency(savings.interestAmount),
           ),
+          if (savings.interestPaid > 0)
+            _DetailRow(
+              label: 'Interest Paid',
+              value: _formatCurrency(savings.interestPaid),
+            ),
           if (savings.tenureLabel.isNotEmpty)
             _DetailRow(
               label: 'Tenure',

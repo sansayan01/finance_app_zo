@@ -102,6 +102,17 @@ class CustomerSavingsCard extends StatelessWidget {
                               fontSize: 11,
                             ),
                           ),
+                          if (savings.interestAmount > 0) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              '+\u20b9${savings.interestAmount.toStringAsFixed(0)} interest',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.success,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

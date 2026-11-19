@@ -27,11 +27,11 @@ class BranchSavingsPage extends ConsumerStatefulWidget {
 class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  int _activeFilter = 0; // 0: All, 1: Active, 2: Matured, 3: Closed
+  int _activeFilter = 0; // 0: Active (default), 1: All, 2: Matured, 3: Closed
 
   final List<Map<String, dynamic>> _filters = [
-    {'label': 'All', 'icon': Icons.savings_rounded},
     {'label': 'Active', 'icon': Icons.bolt_rounded},
+    {'label': 'All', 'icon': Icons.savings_rounded},
     {'label': 'Matured', 'icon': Icons.verified_rounded},
     {'label': 'Closed', 'icon': Icons.pause_circle_rounded},
   ];
@@ -584,7 +584,11 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
           ),
           const SizedBox(height: 20),
           Text(
-            _searchQuery.isNotEmpty ? 'No savings match your search' : 'No savings plans yet',
+            _searchQuery.isNotEmpty
+                ? 'No savings match your search'
+                : _activeFilter != 1
+                    ? 'No ${_filters[_activeFilter]['label']} savings'
+                    : 'No savings plans yet',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: isDark ? Colors.white54 : Colors.black54,
@@ -594,7 +598,9 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
           Text(
             _searchQuery.isNotEmpty
                 ? 'Try a different search term'
-                : 'Savings plans for your branch will appear here',
+                : _activeFilter != 1
+                    ? 'Try the All filter to see every savings plan'
+                    : 'Savings plans for your branch will appear here',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: isDark ? Colors.white38 : Colors.black38,
             ),
@@ -610,8 +616,10 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
 
     // Status filter
     switch (_activeFilter) {
-      case 1: // Active
+      case 0: // Active
         filtered = filtered.where((s) => s.status == 'active').toList();
+        break;
+      case 1: // All - no status filter
         break;
       case 2: // Matured
         filtered = filtered.where((s) => s.status == 'matured').toList();

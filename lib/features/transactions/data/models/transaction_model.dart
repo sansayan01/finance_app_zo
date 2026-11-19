@@ -6,6 +6,9 @@ class TransactionModel {
   final String memberName;
   final TransactionType type;
   final double amount;
+  /// For savings payouts: how much of [amount] was principal vs interest.
+  final double principalAmount;
+  final double interestAmount;
   final String? loanId;
   final String? savingsId;
   final DateTime createdAt;
@@ -24,6 +27,8 @@ class TransactionModel {
     required this.memberName,
     required this.type,
     required this.amount,
+    this.principalAmount = 0,
+    this.interestAmount = 0,
     this.loanId,
     this.savingsId,
     required this.createdAt,
@@ -49,6 +54,8 @@ class TransactionModel {
         orElse: () => TransactionType.other,
       ),
       amount: _parseAmount(json['amount']),
+      principalAmount: _parseAmount(json['principal_amount']),
+      interestAmount: _parseAmount(json['interest_amount']),
       loanId: json['loan_id']?.toString(),
       savingsId: json['savings_id']?.toString(),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??

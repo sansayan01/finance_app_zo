@@ -346,6 +346,7 @@ class NewRecurringSavingNotifier
           tenureUnit: state.tenureUnit.name,
           openingBalance: state.initialBalance,
           totalReturnAmount: state.alreadyPaidAmount,
+          interestAmount: state.estimatedInterest,
           freezeEnabled: state.freezeEnabled,
         );
       }

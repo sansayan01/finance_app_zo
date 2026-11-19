@@ -11,6 +11,18 @@ class CustomerSavingsModel {
   final String collectionType;
   final List<String> frozenDates;
 
+  /// Interest promised for this vault (maturity amount - capital).
+  final double interestAmount;
+
+  /// Interest already paid back on this vault.
+  final double interestPaid;
+
+  /// Interest still owed to the customer.
+  double get interestRemaining {
+    final remaining = interestAmount - interestPaid;
+    return remaining > 0 ? remaining : 0;
+  }
+
   CustomerSavingsModel({
     required this.id,
     this.planName,
@@ -23,6 +35,8 @@ class CustomerSavingsModel {
     required this.status,
     this.collectionType = 'monthly',
     this.frozenDates = const [],
+    this.interestAmount = 0,
+    this.interestPaid = 0,
   });
 
   factory CustomerSavingsModel.fromJson(Map<String, dynamic> json) {
@@ -43,6 +57,18 @@ class CustomerSavingsModel {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
+      interestAmount: () {
+        final stored = (json['interest_amount'] as num?)?.toDouble() ?? 0;
+        if (stored > 0) return stored;
+        // Fallback for vaults created before interest was persisted.
+        final maturity = (json['maturity_amount'] as num?)?.toDouble() ?? 0;
+        final opening = (json['opening_balance'] as num?)?.toDouble() ?? 0;
+        final installment = (json['monthly_deposit'] as num?)?.toDouble() ?? 0;
+        final total = (json['total_installments'] as num?)?.toInt() ?? 0;
+        final computed = maturity - (opening + (installment * total));
+        return computed > 0 ? computed : 0.0;
+      }(),
+      interestPaid: (json['interest_paid'] as num?)?.toDouble() ?? 0,
     );
   }
 

@@ -22,6 +22,13 @@ class SavingsModel {
   final DateTime? updatedAt;
   final double openingBalance;
   final double totalReturnAmount;
+
+  /// Interest amount persisted in `savings_plans.interest_amount`.
+  /// Older rows have 0 here, so [interestAmount] falls back to a computed value.
+  final double storedInterestAmount;
+
+  /// Cumulative interest already handed back to the customer on this vault.
+  final double interestPaid;
   final int installmentsPaid;
   final DateTime? lastPaymentDate;
   final String? memberPhotoUrl;
@@ -34,10 +41,32 @@ class SavingsModel {
   // SMS notifications
   final bool smsEnabled;
 
-  /// Computed: total return minus total capital invested (opening + installments * amount).
-  double get interestAmount => totalReturnAmount > 0
-      ? totalReturnAmount - (openingBalance + (monthlyDeposit * totalInstallments))
-      : 0;
+  /// Interest promised on this plan: maturity amount minus total capital
+  /// invested (opening balance + installments × installment amount).
+  ///
+  /// `interest_amount` is preferred when present; older rows fall back to the
+  /// computed value so the number is never silently 0.
+  double get interestAmount {
+    if (storedInterestAmount > 0) return storedInterestAmount;
+    final capital = openingBalance + (monthlyDeposit * totalInstallments);
+    final computed = maturityAmount - capital;
+    return computed > 0 ? computed : 0;
+  }
+
+  /// Promised interest still owed to the customer (promised minus already paid).
+  double get interestRemaining {
+    final remaining = interestAmount - interestPaid;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  /// True when the maturity date has passed and the vault is still running.
+  bool get isMatured {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final mat = DateTime(
+        maturityDate.year, maturityDate.month, maturityDate.day);
+    return mat.isBefore(today) && (status == 'active' || status == 'matured');
+  }
 
   SavingsModel({
     required this.id,
@@ -63,6 +92,8 @@ class SavingsModel {
     this.updatedAt,
     this.openingBalance = 0,
     this.totalReturnAmount = 0,
+    this.storedInterestAmount = 0,
+    this.interestPaid = 0,
     this.installmentsPaid = 0,
     this.lastPaymentDate,
     this.memberPhotoUrl,
@@ -105,6 +136,8 @@ class SavingsModel {
           : null,
       openingBalance: (json['opening_balance'] as num?)?.toDouble() ?? 0,
       totalReturnAmount: (json['total_return_amount'] as num?)?.toDouble() ?? 0,
+      storedInterestAmount: (json['interest_amount'] as num?)?.toDouble() ?? 0,
+      interestPaid: (json['interest_paid'] as num?)?.toDouble() ?? 0,
       installmentsPaid: (json['installments_paid'] as num?)?.toInt() ?? 0,
       lastPaymentDate: json['last_payment_date'] != null
           ? DateTime.tryParse(json['last_payment_date'] as String)
@@ -152,6 +185,7 @@ class SavingsModel {
       if (orgId != null) 'org_id': orgId,
       'opening_balance': openingBalance,
       'total_return_amount': totalReturnAmount,
+      'interest_amount': storedInterestAmount,
       'installments_paid': installmentsPaid,
       if (lastPaymentDate != null) 'last_payment_date': lastPaymentDate!.toIso8601String().split('T')[0],
       'freeze_enabled': freezeEnabled,
@@ -185,6 +219,8 @@ class SavingsModel {
     DateTime? updatedAt,
     double? openingBalance,
     double? totalReturnAmount,
+    double? storedInterestAmount,
+    double? interestPaid,
     int? installmentsPaid,
     DateTime? lastPaymentDate,
     bool? freezeEnabled,
@@ -216,6 +252,8 @@ class SavingsModel {
       updatedAt: updatedAt ?? this.updatedAt,
       openingBalance: openingBalance ?? this.openingBalance,
       totalReturnAmount: totalReturnAmount ?? this.totalReturnAmount,
+      storedInterestAmount: storedInterestAmount ?? this.storedInterestAmount,
+      interestPaid: interestPaid ?? this.interestPaid,
       installmentsPaid: installmentsPaid ?? this.installmentsPaid,
       lastPaymentDate: lastPaymentDate ?? this.lastPaymentDate,
       freezeEnabled: freezeEnabled ?? this.freezeEnabled,

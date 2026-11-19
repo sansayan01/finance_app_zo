@@ -24,6 +24,7 @@ class SavingsRepository {
     String? tenureUnit,
     double openingBalance = 0,
     double totalReturnAmount = 0,
+    double interestAmount = 0,
     bool freezeEnabled = false,
   }) async {
     // Use provided start date or default to today
@@ -77,6 +78,8 @@ class SavingsRepository {
       'opening_balance': openingBalance,
       'current_amount': openingBalance,
       'total_return_amount': totalReturnAmount,
+      // Persist the promised interest so it survives outside the create form.
+      'interest_amount': interestAmount,
       'freeze_enabled': freezeEnabled,
       if (productId != null) 'product_id': productId,
     };
@@ -356,6 +359,11 @@ class SavingsRepository {
     final double targetAmount =
         openingBalance + (installmentAmount * totalInstallments);
 
+    // Persist the promised interest (maturity minus capital), same rule as the
+    // create-plan form: interest = maturity amount - total capital invested.
+    final double interestAmount =
+        (maturityAmount - targetAmount) > 0 ? maturityAmount - targetAmount : 0;
+
     // NOTE: Don't pre-compute current_amount from installmentsPaid here.
     // The DB trigger `trg_update_savings_plan_on_collection` auto-adds each
     // backdated savings_collections row's amount_collected to current_amount.
@@ -411,6 +419,7 @@ class SavingsRepository {
       'current_amount': currentAmount,
       // Migration-specific fields
       'total_return_amount': totalReturnAmount,
+      'interest_amount': interestAmount,
       'installments_paid': installmentsPaid,
       'last_payment_date': lastPaymentDate.toIso8601String().split('T')[0],
       'freeze_enabled': freezeEnabled,
@@ -1155,6 +1164,7 @@ class SavingsRepository {
     required String memberId,
     required String requestedById,
     String? notes,
+    double interestAmount = 0,
   }) async {
     // Fetch plan details
     final plan = await _client
@@ -1200,6 +1210,9 @@ class SavingsRepository {
       'amount': amount,
       'payment_mode': paymentMode,
       'penalty_amount': penaltyAmount,
+      // Interest the operator chose to hand back along with the principal.
+      // Kept after `amount` so the notes parser picks the plain `amount` first.
+      'interest_amount': interestAmount,
       'is_premature': isPremature,
       'current_balance': currentBalance,
     };
@@ -1233,11 +1246,24 @@ class SavingsRepository {
         .maybeSingle();
     if (approval == null) throw Exception('Approval record not found');
 
-    // Update approval status
-    await _client.from('pending_approvals').update({
-      'status': approve ? 'approved' : 'rejected',
-      if (rejectionReason != null) 'notes': rejectionReason,
-    }).eq('id', approvalId);
+    // Atomically claim the request: only a still-pending row can be claimed.
+    // This blocks double-taps, two approvers acting together, retries after a
+    // timeout, and offline replays from creating a second withdrawal
+    // transaction for the same request.
+    final claimed = await _client
+        .from('pending_approvals')
+        .update({
+          'status': approve ? 'approved' : 'rejected',
+          if (rejectionReason != null) 'notes': rejectionReason,
+        })
+        .eq('id', approvalId)
+        .eq('status', 'pending')
+        .select('id');
+
+    if ((claimed as List).isEmpty) {
+      throw Exception(
+          'This withdrawal request was already processed. Refresh and try again.');
+    }
 
     if (!approve) return;
 
@@ -1247,9 +1273,27 @@ class SavingsRepository {
     final savingsPlanId = _extractFromNotes(notesStr, 'savings_plan_id');
     final amount = _extractDoubleFromNotes(notesStr, 'amount');
     final paymentMode = _extractFromNotes(notesStr, 'payment_mode');
+    final interestAmount = _extractDoubleFromNotes(notesStr, 'interest_amount') ?? 0;
 
     if (savingsPlanId == null || amount == null || amount <= 0) {
       throw Exception('Invalid withdrawal metadata');
+    }
+
+    // Re-check the live balance at approval time. The balance can change between
+    // the request and the approval (other withdrawals, deletions), so the
+    // request-time check alone is not enough.
+    final livePlan = await _client
+        .from('savings_plans')
+        .select('current_amount, status')
+        .eq('id', savingsPlanId)
+        .maybeSingle();
+    if (livePlan == null) {
+      throw Exception('Savings plan no longer exists');
+    }
+    final liveBalance = (livePlan['current_amount'] as num?)?.toDouble() ?? 0;
+    if (amount > liveBalance + 0.01) {
+      throw Exception(
+          'Insufficient balance. Available now: ₹${liveBalance.toStringAsFixed(0)}');
     }
 
     // Look up the approver's profile info
@@ -1259,7 +1303,9 @@ class SavingsRepository {
         .eq('user_id', reviewedById)
         .maybeSingle();
 
-    // Create the withdrawal transaction
+    // Create the withdrawal transaction. `amount` stays the principal that
+    // reduces the vault balance; the interest handed over is recorded in its
+    // own column so "how much principal vs interest did we pay back" is exact.
     await _client.from('transactions').insert({
       'savings_id': savingsPlanId,
       'amount': amount,
@@ -1267,8 +1313,12 @@ class SavingsRepository {
       'payment_mode': paymentMode ?? 'cash',
       'member_id': approval['member_id'],
       'org_id': _orgId,
-      'description': 'Savings withdrawal (approved)',
+      'description': interestAmount > 0
+          ? 'Savings withdrawal (approved) - includes ₹${interestAmount.toStringAsFixed(0)} interest'
+          : 'Savings withdrawal (approved)',
       'transaction_date': DateTime.now().toIso8601String(),
+      'principal_amount': amount,
+      'interest_amount': interestAmount,
       if (approverProfile != null) ...{
         'collected_by_user_id': approverProfile['id'],
         'collected_by_name': approverProfile['full_name'],
@@ -1276,15 +1326,89 @@ class SavingsRepository {
       },
     });
 
+    // Remember the interest already handed back so maturity never pays it twice.
+    if (interestAmount > 0) {
+      await _addInterestPaid(savingsPlanId, interestAmount);
+    }
+
     // Recalculate plan balance
     await recalculateBalance(savingsPlanId);
 
     debugPrint('processWithdrawalApproval: ₹$amount withdrawn from $savingsPlanId');
   }
 
+  /// Adds [amount] to the vault's cumulative interest-paid counter so the same
+  /// interest is never handed back twice.
+  Future<void> _addInterestPaid(String savingsPlanId, double amount) async {
+    final row = await _client
+        .from('savings_plans')
+        .select('interest_paid')
+        .eq('id', savingsPlanId)
+        .maybeSingle();
+    final paidSoFar = (row?['interest_paid'] as num?)?.toDouble() ?? 0;
+    await _client.from('savings_plans').update(
+        {'interest_paid': paidSoFar + amount}).eq('id', savingsPlanId);
+  }
+
+  /// Pays out a matured vault: full principal plus the interest still owed.
+  ///
+  /// Records the principal/interest split on the transaction and closes the
+  /// vault, so the books show exactly how much was handed back.
+  Future<({double principal, double interest})> payoutMaturity(
+    String savingsId, {
+    String paymentMode = 'cash',
+  }) async {
+    final plan = await _client
+        .from('savings_plans')
+        .select('id, member_id, status, current_amount, maturity_amount, '
+            'monthly_deposit, total_installments, opening_balance, interest_paid')
+        .eq('id', savingsId)
+        .maybeSingle();
+    if (plan == null) throw Exception('Savings plan not found');
+    if (plan['status'] == 'closed') {
+      throw Exception('This vault is already closed');
+    }
+
+    final principal = (plan['current_amount'] as num?)?.toDouble() ?? 0;
+    if (principal <= 0) throw Exception('Nothing left to pay out');
+
+    final maturityAmount = (plan['maturity_amount'] as num?)?.toDouble() ?? 0;
+    final capital = ((plan['opening_balance'] as num?)?.toDouble() ?? 0) +
+        (((plan['monthly_deposit'] as num?)?.toDouble() ?? 0) *
+            ((plan['total_installments'] as num?)?.toInt() ?? 0));
+    final interestPaidSoFar = (plan['interest_paid'] as num?)?.toDouble() ?? 0;
+    final remainingInterest = (maturityAmount - capital) - interestPaidSoFar;
+    final interest = remainingInterest > 0 ? remainingInterest : 0.0;
+
+    await _client.from('transactions').insert({
+      'savings_id': savingsId,
+      'amount': principal,
+      'type': 'savingsWithdrawal',
+      'payment_mode': paymentMode,
+      'org_id': _orgId,
+      if (plan['member_id'] != null) 'member_id': plan['member_id'],
+      'description': interest > 0
+          ? 'Maturity payout - principal ₹${principal.toStringAsFixed(0)} + interest ₹${interest.toStringAsFixed(0)}'
+          : 'Maturity payout - principal ₹${principal.toStringAsFixed(0)}',
+      'transaction_date': DateTime.now().toIso8601String(),
+      'principal_amount': principal,
+      'interest_amount': interest,
+    });
+
+    await _client.from('savings_plans').update({
+      'current_amount': 0,
+      'interest_paid': interestPaidSoFar + interest,
+      'status': 'closed',
+    }).eq('id', savingsId);
+
+    return (principal: principal, interest: interest);
+  }
+
   String? _extractFromNotes(String notes, String key) {
-    // Simple key extraction from "Map {key: value}" format
-    final regex = RegExp('$key:\\s*([^,}]+)');
+    // Simple key extraction from "Map {key: value}" format. The leading
+    // boundary stops `amount` from matching inside `penalty_amount`.
+    final regex = RegExp(
+        '(?:^|[{,\\s])${RegExp.escape(key)}:\\s*([^,}]+)');
     final match = regex.firstMatch(notes);
     return match?.group(1)?.trim();
   }

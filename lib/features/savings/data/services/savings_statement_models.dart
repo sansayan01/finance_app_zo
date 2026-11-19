@@ -23,6 +23,8 @@ class SavingsStatementPlanBlock {
   final double openingBalance;
   final double closingBalance;
   final double interestRate;
+  /// Interest promised for the whole plan (maturity amount - capital).
+  final double interestAmount;
   final DateTime maturityDate;
   final String collectionType;
   final double monthlyDeposit;
@@ -42,6 +44,7 @@ class SavingsStatementPlanBlock {
     required this.openingBalance,
     required this.closingBalance,
     required this.interestRate,
+    this.interestAmount = 0,
     required this.maturityDate,
     required this.collectionType,
     required this.monthlyDeposit,
@@ -57,20 +60,33 @@ class SavingsStatementPlanBlock {
       deposits.fold(0.0, (sum, t) => sum + t.amount);
   double get totalWithdrawn =>
       withdrawals.fold(0.0, (sum, t) => sum + t.amount);
-  /// Recurring Deposit interest earned so far.
+
+  /// Interest promised for the whole plan, straight from the plan record.
+  double get promisedInterest => interestAmount > 0 ? interestAmount : 0;
+
+  /// Interest already handed back to the customer on this plan.
+  double get interestPaid =>
+      withdrawals.fold(0.0, (sum, t) => sum + t.interestAmount);
+
+  /// Interest earned so far, proportional to the installments paid.
   ///
-  /// Uses the standard RD formula:
-  ///   Interest = P × n(n+1)/2 × r / (12 × 100)
-  /// where P = monthly installment, n = paid installments, r = annual rate %.
-  /// Falls back to simple balance-based estimate if installment counts are missing.
+  /// Uses the promised interest (maturity - capital) as the source of truth.
+  /// The old rate-based RD formula is gone because `interest_rate` is not
+  /// populated on savings plans, so it always produced 0.
   double get interestAccrued {
+    final promised = promisedInterest;
+    if (promised <= 0) return 0;
+    final total = totalInstallments ?? 0;
+    if (total <= 0) return promised;
     final paid = paidInstallments ?? 0;
-    if (paid > 0 && monthlyDeposit > 0) {
-      // Standard RD accrued interest (simple interest approximation)
-      return monthlyDeposit * paid * (paid + 1) * interestRate / (12 * 100);
-    }
-    // Fallback: simple interest on closing balance
-    return closingBalance * interestRate / 100;
+    final ratio = paid / total;
+    return promised * (ratio > 1 ? 1 : ratio);
+  }
+
+  /// Interest promised but not yet handed back.
+  double get interestRemaining {
+    final remaining = promisedInterest - interestPaid;
+    return remaining > 0 ? remaining : 0;
   }
   double get progressPercent =>
       targetAmount > 0 ? (currentAmount / targetAmount * 100).clamp(0, 100) : 0;
@@ -84,6 +100,8 @@ class SavingsStatementTx {
   final String description;
   final String? paymentMode;
   final String? collectedByName;
+  /// For payouts: the interest portion included in [amount].
+  final double interestAmount;
 
   const SavingsStatementTx({
     required this.date,
@@ -91,6 +109,7 @@ class SavingsStatementTx {
     required this.description,
     this.paymentMode,
     this.collectedByName,
+    this.interestAmount = 0,
   });
 }
 

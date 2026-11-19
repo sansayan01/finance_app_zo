@@ -359,6 +359,15 @@ class _EditSavingsVaultPageState extends ConsumerState<EditSavingsVaultPage> {
                           'premature_penalty': _prematurePenalty,
                           'total_installments': _calculatedTotalInstallments,
                           'current_amount': _currentBalance,
+                          // Keep the promised interest in sync with the edited
+                          // maturity amount (interest = maturity - capital).
+                          'interest_amount': (() {
+                            final capital = saving.openingBalance +
+                                (_installmentAmount *
+                                    _calculatedTotalInstallments);
+                            final interest = _maturityAmount - capital;
+                            return interest > 0 ? interest : 0.0;
+                          })(),
                           'freeze_enabled': saving.freezeEnabled,
                         });
 

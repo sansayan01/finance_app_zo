@@ -90,6 +90,11 @@ void main() {
       expect(plan.isMatured, isTrue);
     });
 
+    test('maturity today still counts as active, not matured', () {
+      final plan = buildPlan(maturityDate: DateTime.now());
+      expect(plan.isMatured, isFalse);
+    });
+
     test('false for a closed vault', () {
       final plan = buildPlan(
         maturityDate: DateTime.now().subtract(const Duration(days: 5)),

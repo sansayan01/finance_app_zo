@@ -614,15 +614,21 @@ class _BranchSavingsPageState extends ConsumerState<BranchSavingsPage> {
   List<SavingsModel> _applyFilters(List<SavingsModel> savings) {
     var filtered = savings;
 
-    // Status filter
+    // Status filter. Maturity is derived from the date because nothing flips
+    // `status` to 'matured' when the date passes, so a vault that has matured
+    // would otherwise sit in the Active tab forever.
     switch (_activeFilter) {
       case 0: // Active
-        filtered = filtered.where((s) => s.status == 'active').toList();
+        filtered = filtered
+            .where((s) => s.status == 'active' && !s.isMatured)
+            .toList();
         break;
       case 1: // All - no status filter
         break;
       case 2: // Matured
-        filtered = filtered.where((s) => s.status == 'matured').toList();
+        filtered = filtered
+            .where((s) => s.isMatured || s.status == 'matured')
+            .toList();
         break;
       case 3: // Closed
         filtered = filtered.where((s) {

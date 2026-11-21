@@ -659,7 +659,22 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
     return savingsAsync.when(
       data: (savings) {
         final filtered = savings.where((s) {
-          final matchesFilter = (_activeFilter == 0) || (_activeFilter == 1 && s.status == 'active') || (_activeFilter == 2 && s.status == 'completed');
+          // A vault whose maturity date has passed is "matured" even though the
+          // database still says `active` (nothing flips that column at maturity
+          // time), so the tabs have to derive it from the date instead of
+          // trusting `status` alone. The old code looked for a 'completed'
+          // status that never exists, which is why the Matured tab was empty.
+          final bool matchesFilter;
+          switch (_activeFilter) {
+            case 1: // Active
+              matchesFilter = s.status == 'active' && !s.isMatured;
+              break;
+            case 2: // Matured
+              matchesFilter = s.isMatured || s.status == 'matured';
+              break;
+            default: // All Vaults
+              matchesFilter = true;
+          }
           final matchesSearch = s.memberName.toLowerCase().contains(_searchQuery.toLowerCase());
           return matchesFilter && matchesSearch;
         }).toList();
@@ -749,6 +764,18 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
   }
 
   Widget _buildEmptyState(ThemeData theme) {
+    final isMaturedTab = _activeFilter == 2;
+    final isActiveTab = _activeFilter == 1;
+    final title = isMaturedTab
+        ? 'No Matured Vaults'
+        : isActiveTab
+            ? 'No Active Vaults'
+            : 'No Savings Found';
+    final subtitle = isMaturedTab
+        ? 'Vaults whose maturity date has passed will appear here.'
+        : isActiveTab
+            ? 'Every vault of yours has matured or closed. Check the Matured tab.'
+            : 'Your financial future starts with a single deposit.';
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -759,9 +786,9 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
             child: Icon(Icons.savings_outlined, size: 56, color: theme.colorScheme.primary),
           ),
           const SizedBox(height: 16),
-          Text('No Savings Found', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
           const SizedBox(height: 6),
-          Text('Your financial future starts with a single deposit.', textAlign: TextAlign.center, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5))),
+          Text(subtitle, textAlign: TextAlign.center, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5))),
         ],
       ),
     );

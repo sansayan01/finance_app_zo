@@ -534,7 +534,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _buildStatusBadge(saving.status, theme),
+                _buildStatusBadge(saving.status, theme, isMatured: saving.isMatured),
               ],
             ),
             leading: IconButton(
@@ -654,8 +654,13 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     );
   }
 
-  Widget _buildStatusBadge(String status, ThemeData theme) {
-    final s = status.toLowerCase();
+  Widget _buildStatusBadge(String status, ThemeData theme,
+      {bool isMatured = false}) {
+    // `status` stays 'active' after the maturity date passes because nothing
+    // updates that column automatically, so show MATURED when the date says so.
+    final s = (isMatured && status.toLowerCase() == 'active')
+        ? 'matured'
+        : status.toLowerCase();
     late final Color color;
     late final String label;
     switch (s) {

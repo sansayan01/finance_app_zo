@@ -2329,6 +2329,7 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
       ref.invalidate(savingDetailProvider(widget.savingId));
       ref.invalidate(allSavingsProvider);
       ref.invalidate(savingsSummaryProvider);
+      ref.invalidate(savingsPayoutTotalsProvider);
 
       messenger.showSnackBar(SnackBar(
         content: Text(

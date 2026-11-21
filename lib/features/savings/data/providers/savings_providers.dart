@@ -28,6 +28,15 @@ final savingsSummaryProvider = FutureProvider.autoDispose<SavingsSummary>((ref) 
   return repository.getSavingsSummary();
 });
 
+/// Money paid back to customers (principal + interest), for the Savings Hub
+/// summary. Kept separate from [savingsSummaryProvider] because it reads the
+/// transaction ledger rather than the vault balances.
+final savingsPayoutTotalsProvider =
+    FutureProvider.autoDispose<SavingsPayoutTotals>((ref) async {
+  final repository = ref.watch(savingsRepositoryProvider);
+  return repository.getPayoutTotals();
+});
+
 // Alias for backward compatibility if needed by other pages
 final savingsProvider = allSavingsProvider;
 

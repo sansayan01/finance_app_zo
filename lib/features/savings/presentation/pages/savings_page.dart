@@ -413,6 +413,9 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
         final totalTarget = savings.fold(0.0, (sum, s) => sum + s.targetAmount);
         final progress = (totalTarget > 0 ? totalSaved / totalTarget : 0.0).clamp(0.0, 1.0);
         final avgRate = savings.isEmpty ? 0.0 : (savings.fold(0.0, (sum, s) => sum + s.interestRate) / savings.length);
+        final payoutTotals =
+            ref.watch(savingsPayoutTotalsProvider).valueOrNull ??
+                const SavingsPayoutTotals();
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
@@ -499,6 +502,52 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
                                     Container(width: 1, height: 8, color: Colors.white.withOpacity(0.1)),
                                     const SizedBox(width: 8),
                                     _buildMiniMeta('${avgRate.toStringAsFixed(1)}% yield', Colors.white.withOpacity(0.35)),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Container(height: 1, color: Colors.white.withOpacity(0.08)),
+                                const SizedBox(height: 8),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'RETURNED TO CUSTOMERS',
+                                            style: TextStyle(
+                                              fontSize: 8.5,
+                                              letterSpacing: 1.0,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white.withOpacity(0.35),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            AppFormatters.formatCurrency(payoutTotals.totalReturned),
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -0.3,
+                                              color: Colors.white.withOpacity(0.9),
+                                              height: 1.0,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            payoutTotals.isEmpty
+                                                ? 'No payouts yet'
+                                                : 'principal ${AppFormatters.formatCurrency(payoutTotals.principalReturned)} \u00b7 interest ${AppFormatters.formatCurrency(payoutTotals.interestReturned)}',
+                                            style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white.withOpacity(0.4),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],

@@ -176,6 +176,24 @@ void main() {
     });
   });
 
+  group('SavingsPayoutTotals', () {
+    test('totalReturned adds principal and interest', () {
+      const totals = SavingsPayoutTotals(
+        principalReturned: 1000,
+        interestReturned: 100,
+        payoutCount: 2,
+      );
+      expect(totals.totalReturned, 1100);
+      expect(totals.isEmpty, isFalse);
+    });
+
+    test('isEmpty when nothing was ever paid out', () {
+      const totals = SavingsPayoutTotals();
+      expect(totals.totalReturned, 0);
+      expect(totals.isEmpty, isTrue);
+    });
+  });
+
   group('CustomerSavingsModel interest', () {
     test('reads the stored interest amount', () {
       final model = CustomerSavingsModel.fromJson({

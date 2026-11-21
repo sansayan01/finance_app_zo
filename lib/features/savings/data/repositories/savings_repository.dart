@@ -230,6 +230,48 @@ class SavingsRepository {
     }
   }
 
+  /// Total money handed back to customers, split into principal and interest.
+  ///
+  /// Reads `savingsWithdrawal` / `withdrawal` transactions. Rows created before
+  /// the payout split have `principal_amount = amount` and `interest_amount = 0`
+  /// (backfilled), so an old payout is counted as principal — which is correct:
+  /// we simply never recorded the interest part back then.
+  Future<SavingsPayoutTotals> getPayoutTotals({DateTime? from, DateTime? to}) async {
+    try {
+      var query = _client
+          .from('transactions')
+          .select('amount, principal_amount, interest_amount, transaction_date')
+          .eq('org_id', _orgId)
+          .inFilter('type', ['savingsWithdrawal', 'withdrawal']);
+
+      if (from != null) {
+        query = query.gte('transaction_date', from.toIso8601String());
+      }
+      if (to != null) {
+        query = query.lte('transaction_date', to.toIso8601String());
+      }
+
+      final rows = await query;
+
+      double principal = 0;
+      double interest = 0;
+      for (final row in rows as List) {
+        final map = row as Map<String, dynamic>;
+        final amount = (map['amount'] as num?)?.toDouble() ?? 0;
+        principal += (map['principal_amount'] as num?)?.toDouble() ?? amount;
+        interest += (map['interest_amount'] as num?)?.toDouble() ?? 0;
+      }
+
+      return SavingsPayoutTotals(
+        principalReturned: principal,
+        interestReturned: interest,
+        payoutCount: (rows as List).length,
+      );
+    } catch (_) {
+      return const SavingsPayoutTotals();
+    }
+  }
+
   Future<SavingsSummary> getSavingsSummary() async {
     try {
       final plans = await getActiveSavingsPlans();

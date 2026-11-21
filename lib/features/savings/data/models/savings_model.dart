@@ -286,3 +286,24 @@ class SavingsSummary {
     );
   }
 }
+
+/// How much money has gone BACK to customers, split by what it was.
+///
+/// `principalReturned` is the customer's own money, `interestReturned` is what
+/// the institution paid on top of it. Before the payout split these were never
+/// recorded separately, so old payouts count as principal only.
+class SavingsPayoutTotals {
+  final double principalReturned;
+  final double interestReturned;
+  final int payoutCount;
+
+  const SavingsPayoutTotals({
+    this.principalReturned = 0,
+    this.interestReturned = 0,
+    this.payoutCount = 0,
+  });
+
+  double get totalReturned => principalReturned + interestReturned;
+
+  bool get isEmpty => payoutCount == 0;
+}

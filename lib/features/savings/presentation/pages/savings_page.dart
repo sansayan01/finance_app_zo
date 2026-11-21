@@ -412,7 +412,6 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
         final totalSaved = savings.fold(0.0, (sum, s) => sum + s.currentAmount);
         final totalTarget = savings.fold(0.0, (sum, s) => sum + s.targetAmount);
         final progress = (totalTarget > 0 ? totalSaved / totalTarget : 0.0).clamp(0.0, 1.0);
-        final avgRate = savings.isEmpty ? 0.0 : (savings.fold(0.0, (sum, s) => sum + s.interestRate) / savings.length);
         final payoutTotals =
             ref.watch(savingsPayoutTotalsProvider).valueOrNull ??
                 const SavingsPayoutTotals();
@@ -465,120 +464,126 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
                           ),
                         ),
                       ),
-                      // Content
-                      Row(
+                      // Content — money still inside vs money already handed back,
+                      // then the principal / interest split of what went back.
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(5),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primaryLight.withOpacity(isDark ? 0.1 : 0.12),
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      child: Icon(Icons.savings_rounded, color: AppColors.primaryLight.withOpacity(isDark ? 0.8 : 0.9), size: 14),
-                                    ),
-                                    const SizedBox(width: 7),
                                     Text(
-                                      'TOTAL SAVED',
-                                      style: TextStyle(fontSize: 9, letterSpacing: 1.2, fontWeight: FontWeight.w800, color: Colors.white.withOpacity(0.4)),
+                                      'IN VAULTS',
+                                      style: TextStyle(fontSize: 8.5, letterSpacing: 1.1, fontWeight: FontWeight.w800, color: Colors.white.withOpacity(0.38)),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      AppFormatters.formatCurrency(totalSaved),
+                                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.9, color: Colors.white.withOpacity(0.96), height: 1.0),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${savings.length} plan${savings.length == 1 ? '' : 's'} \u00b7 ${(progress * 100).toInt()}% of goal',
+                                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.42)),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  AppFormatters.formatCurrency(totalSaved),
-                                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.8, color: Colors.white.withOpacity(0.95), height: 1.0),
-                                ),
-                                const SizedBox(height: 5),
-                                Row(
-                                  children: [
-                                    _buildMiniMeta('${savings.length} plan${savings.length == 1 ? '' : 's'}', Colors.white.withOpacity(0.35)),
-                                    const SizedBox(width: 8),
-                                    Container(width: 1, height: 8, color: Colors.white.withOpacity(0.1)),
-                                    const SizedBox(width: 8),
-                                    _buildMiniMeta('${avgRate.toStringAsFixed(1)}% yield', Colors.white.withOpacity(0.35)),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Container(height: 1, color: Colors.white.withOpacity(0.08)),
-                                const SizedBox(height: 8),
-                                Row(
+                              ),
+                              Container(
+                                width: 1,
+                                height: 52,
+                                margin: const EdgeInsets.symmetric(horizontal: 12),
+                                color: Colors.white.withOpacity(0.08),
+                              ),
+                              Expanded(
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'RETURNED TO CUSTOMERS',
-                                            style: TextStyle(
-                                              fontSize: 8.5,
-                                              letterSpacing: 1.0,
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.white.withOpacity(0.35),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 3),
-                                          Text(
-                                            AppFormatters.formatCurrency(payoutTotals.totalReturned),
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w800,
-                                              letterSpacing: -0.3,
-                                              color: Colors.white.withOpacity(0.9),
-                                              height: 1.0,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            payoutTotals.isEmpty
-                                                ? 'No payouts yet'
-                                                : 'principal ${AppFormatters.formatCurrency(payoutTotals.principalReturned)} \u00b7 interest ${AppFormatters.formatCurrency(payoutTotals.interestReturned)}',
-                                            style: TextStyle(
-                                              fontSize: 9.5,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white.withOpacity(0.4),
-                                            ),
-                                          ),
-                                        ],
+                                    Text(
+                                      'TOTAL RETURNED',
+                                      style: TextStyle(fontSize: 8.5, letterSpacing: 1.1, fontWeight: FontWeight.w800, color: Colors.white.withOpacity(0.38)),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      AppFormatters.formatCurrency(payoutTotals.totalReturned),
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: -0.9,
+                                        height: 1.0,
+                                        color: payoutTotals.isEmpty
+                                            ? Colors.white.withOpacity(0.5)
+                                            : (isDark ? const Color(0xFF52D1A4) : const Color(0xFF059669)),
                                       ),
                                     ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      payoutTotals.isEmpty
+                                          ? 'No payouts yet'
+                                          : '${payoutTotals.payoutCount} payout${payoutTotals.payoutCount == 1 ? '' : 's'}',
+                                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.42)),
+                                    ),
                                   ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Principal vs interest breakdown
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.04),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.white.withOpacity(0.06), width: 0.5),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('PRINCIPAL', style: TextStyle(fontSize: 7.5, letterSpacing: 0.9, fontWeight: FontWeight.w800, color: Colors.white.withOpacity(0.38))),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        AppFormatters.formatCurrency(payoutTotals.principalReturned),
+                                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Colors.white.withOpacity(0.9), height: 1.0),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(width: 1, height: 24, color: Colors.white.withOpacity(0.06)),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('INTEREST', style: TextStyle(fontSize: 7.5, letterSpacing: 0.9, fontWeight: FontWeight.w800, color: Colors.white.withOpacity(0.38))),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        AppFormatters.formatCurrency(payoutTotals.interestReturned),
+                                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.primaryLight.withOpacity(isDark ? 0.85 : 0.95), height: 1.0),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          SizedBox(
-                            width: 52, height: 52,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 52, height: 52,
-                                  child: CircularProgressIndicator(
-                                    value: progress,
-                                    strokeWidth: 3.5,
-                                    backgroundColor: Colors.white.withOpacity(0.06),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.primaryLight.withOpacity(isDark ? 0.7 : 0.85),
-                                    ),
-                                    strokeCap: StrokeCap.round,
-                                  ),
-                                ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('${(progress * 100).toInt()}%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white.withOpacity(0.9), height: 1.0)),
-                                    Text('goal', style: TextStyle(fontSize: 7, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.3), height: 1.0)),
-                                  ],
-                                ),
-                              ],
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 3,
+                              backgroundColor: Colors.white.withOpacity(0.06),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primaryLight.withOpacity(isDark ? 0.7 : 0.85),
+                              ),
                             ),
                           ),
                         ],
@@ -587,7 +592,6 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
                   ),
                 ),
               ),
-
             ],
           ),
         );
@@ -595,10 +599,6 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
       loading: () => const Padding(padding: EdgeInsets.fromLTRB(20, 8, 20, 8), child: ShimmerCard(height: 100)),
       error: (_, __) => const SizedBox(),
     );
-  }
-
-  Widget _buildMiniMeta(String text, Color color) {
-    return Text(text, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: color));
   }
 
   Widget _buildFilters(ThemeData theme, bool isDark) {

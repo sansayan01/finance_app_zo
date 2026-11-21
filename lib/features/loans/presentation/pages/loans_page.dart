@@ -762,76 +762,185 @@ class _LoansPageState extends ConsumerState<LoansPage>
     final collectedPct = summary.totalDisbursed > 0
         ? (summary.totalCollected / summary.totalDisbursed) * 100
         : 0.0;
-    final dividerColor = theme.dividerColor.withValues(alpha: 0.12);
+    final pctLabel = collectedPct > 0 && collectedPct < 1
+        ? '<1%'
+        : '${collectedPct.toStringAsFixed(0)}%';
+    // Keep a sliver of green visible even when almost nothing is collected, so
+    // the bar never looks empty.
+    final barFactor = collectedPct <= 0
+        ? 0.0
+        : (collectedPct / 100).clamp(0.02, 1.0).toDouble();
+
+    final muted = theme.textTheme.bodySmall?.color?.withValues(alpha: 0.62);
+    final cardColor = isDark ? const Color(0xFF16161C) : Colors.white;
+    final trackColor =
+        isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEEECF6);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 11),
+        padding: const EdgeInsets.fromLTRB(16, 15, 16, 15),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.fillDark : AppColors.fillLight,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: dividerColor, width: 1),
+          color: cardColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+              color: theme.dividerColor.withValues(alpha: 0.10), width: 1),
         ),
         child: Column(
           children: [
-            // The two numbers that matter day to day: what is still owed to us
-            // and what has actually come back. Portfolio-at-risk used to sit
-            // here as a third hero figure and made the header hard to read.
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _buildLoanHeaderMetric(
-                    label: 'TOTAL OUTSTANDING',
-                    value: AppFormatters.formatCurrency(summary.totalOutstanding),
-                    subtitle:
-                        '${summary.activeLoans} active loan${summary.activeLoans == 1 ? '' : 's'}',
-                    color: AppColors.warning,
-                    theme: theme,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'TOTAL OUTSTANDING',
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.85,
+                          color: muted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          AppFormatters.formatCurrency(summary.totalOutstanding),
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.9,
+                            height: 1.0,
+                            color: AppColors.warning,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Container(width: 1, height: 44, color: dividerColor),
-                Expanded(
-                  child: _buildLoanHeaderMetric(
-                    label: 'COLLECTED',
-                    value: AppFormatters.formatCurrency(summary.totalCollected),
-                    subtitle: summary.totalDisbursed > 0
-                        ? '${collectedPct.toStringAsFixed(0)}% of disbursed'
-                        : 'Nothing collected yet',
-                    color: AppColors.success,
-                    theme: theme,
-                    alignEnd: true,
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'COLLECTED',
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.85,
+                        color: muted,
+                      ),
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      AppFormatters.formatCurrency(summary.totalCollected),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                        height: 1.0,
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Recovery bar: how much of the disbursed book has actually come
+            // back, so the two numbers above read as one story.
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: 7,
+                color: trackColor,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: barFactor,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF0FA958), Color(0xFF39C878)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 7),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$pctLabel recovered',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: muted,
+                  ),
+                ),
+                Text(
+                  // The bar is a share of disbursed capital, so name the
+                  // denominator instead of repeating the outstanding figure
+                  // that is already the headline.
+                  'of ${AppFormatters.formatCurrency(summary.totalDisbursed)} disbursed',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: muted,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 9),
-            Container(height: 1, color: dividerColor),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Wrap(
-                spacing: 32,
-                runSpacing: 6,
-                children: [
-                _buildLoanHeaderMini(
-                  label: 'CAPITAL DEPLOYED',
-                  value: AppFormatters.formatCurrency(summary.totalDisbursed),
-                  color: primary,
-                  theme: theme,
+            const SizedBox(height: 13),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildBentoTile(
+                    label: 'CAPITAL DEPLOYED',
+                    value: AppFormatters.formatCurrency(summary.totalDisbursed),
+                    color: isDark ? Colors.white70 : primary,
+                    labelColor: muted ?? Colors.grey,
+                    sub: 'across ${summary.totalLoans} loan${summary.totalLoans == 1 ? '' : 's'}',
+                    background: isDark
+                        ? Colors.white.withValues(alpha: 0.04)
+                        : const Color(0xFFF7F6FC),
+                    border: theme.dividerColor.withValues(alpha: 0.10),
+                  ),
                 ),
-                _buildLoanHeaderMini(
-                  label: 'OVERDUE',
-                  value: AppFormatters.formatCurrency(summary.overdueAmount),
-                  color: summary.overdueAmount > 0
-                      ? AppColors.error
-                      : theme.textTheme.bodySmall?.color ??
-                          theme.colorScheme.onSurface,
-                  theme: theme,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildBentoTile(
+                    label: 'OVERDUE',
+                    value: AppFormatters.formatCurrency(summary.overdueAmount),
+                    color: summary.overdueAmount > 0
+                        ? (isDark ? AppColors.error : const Color(0xFFB3253A))
+                        : theme.textTheme.bodySmall?.color ??
+                            theme.colorScheme.onSurface,
+                    labelColor: muted ?? Colors.grey,
+                    sub: summary.overdueAmount > 0
+                        ? 'on ${summary.overdueLoans} loan${summary.overdueLoans == 1 ? '' : 's'}'
+                        : 'nothing late',
+                    background: summary.overdueAmount > 0
+                        ? AppColors.error.withValues(alpha: 0.08)
+                        : (isDark
+                            ? Colors.white.withValues(alpha: 0.04)
+                            : const Color(0xFFF7F6FC)),
+                    border: summary.overdueAmount > 0
+                        ? AppColors.error.withValues(alpha: 0.18)
+                        : theme.dividerColor.withValues(alpha: 0.10),
+                  ),
                 ),
-                ],
-              ),
+              ],
             ),
           ],
         ),
@@ -839,92 +948,66 @@ class _LoansPageState extends ConsumerState<LoansPage>
     );
   }
 
-  Widget _buildLoanHeaderMetric({
+  Widget _buildBentoTile({
     required String label,
     required String value,
-    required String subtitle,
     required Color color,
-    required ThemeData theme,
-    bool alignEnd = false,
+    required Color labelColor,
+    required Color background,
+    required Color border,
+    String? sub,
   }) {
-    return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 8.5,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.7,
-            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 3),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: alignEnd ? Alignment.centerRight : Alignment.centerLeft,
-          child: Text(
-            value,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 8,
               fontWeight: FontWeight.w900,
-              letterSpacing: -0.7,
-              height: 1.0,
-              color: color,
+              letterSpacing: 0.8,
+              color: labelColor,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.3,
+                height: 1.0,
+                color: color,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 9.5,
-            fontWeight: FontWeight.w600,
-            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoanHeaderMini({
-    required String label,
-    required String value,
-    required Color color,
-    required ThemeData theme,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 7.5,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.6,
-            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.55),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.2,
-            color: color,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+          if (sub != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              sub,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: labelColor.withValues(alpha: 0.85),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
     );
   }
   Widget _buildSmartSearchBar(bool isDark, ThemeData theme) {

@@ -25,12 +25,14 @@ Future<ProcessResult> _run(
   String command, {
   String? workingDirectory,
   bool showOutput = true,
+  Map<String, String>? environment,
 }) async {
   final result = await Process.run(
     _shellExe,
     _shellArgs(command),
     workingDirectory: workingDirectory,
     runInShell: false,
+    environment: environment,
   );
   if (showOutput) {
     if (result.stdout.toString().isNotEmpty) {
@@ -115,23 +117,46 @@ Future<void> main(List<String> args) async {
   // ── Step 2: Database migration ───────────────────────────────────────────
   _info('Pushing database migrations...');
 
+  // Supabase CLI v3 changed the default target of `db push`: it now talks to
+  // the LOCAL docker stack (127.0.0.1:54322) unless `--remote` is passed. On v2
+  // the linked project was the default, so the old command died with
+  // ECONNREFUSED. `--yes` keeps hosted changes non-interactive.
+  const pushCmd = 'supabase db push --remote --yes';
+  const pushAllCmd = 'supabase db push --remote --yes --include-all';
+
   if (isDryRun) {
-    _ok('Would run: supabase db push');
+    _ok('Would run: $pushCmd');
   } else {
+    // The remote push needs the database password. Hand it to the child
+    // process through the environment so it never lands in argv or logs.
+    var dbPassword = Platform.environment['SUPABASE_DB_PASSWORD']?.trim() ?? '';
+    if (dbPassword.isEmpty) {
+      stdout.write(' Database password (blank to use the CLI keyring): ');
+      dbPassword = stdin.readLineSync()?.trim() ?? '';
+      stdout.writeln();
+    }
+    final childEnv = dbPassword.isEmpty
+        ? null
+        : <String, String>{'SUPABASE_DB_PASSWORD': dbPassword};
+
     var pushResult = await _run(
-      'supabase db push',
+      pushCmd,
       workingDirectory: projectDir,
+      environment: childEnv,
     );
 
     if (pushResult.exitCode != 0) {
       _warn('First push attempt failed. Trying with --include-all...');
       pushResult = await _run(
-        'supabase db push --include-all',
+        pushAllCmd,
         workingDirectory: projectDir,
+        environment: childEnv,
       );
 
       if (pushResult.exitCode != 0) {
         _fail('Database migration failed!');
+        _info('If it mentions 127.0.0.1:54322 the CLI targeted the local stack — this tool now passes --remote.');
+        _info('If it asked for a database password, set SUPABASE_DB_PASSWORD and retry.');
         _info('Please fix the error above and try again.');
         exit(1);
       }

@@ -25,6 +25,11 @@
 
 ---
 
+> **🚀 Releasing a new build?** → jump to **Section 17 — CI/CD & Deployment**.
+> One command: `.\microflow.bat` (Windows) or `./microflow` (bash) — full runbook + troubleshooting wahin hai.
+
+---
+
 ## 🗺️ Navigation Map
 
 ```
@@ -51,7 +56,7 @@
 │  🔐  SECURITY          →  Section 20                               │
 │  📱  OFFLINE MODE      →  Section 21                               │
 │  🧪  TESTING           →  Section 22                               │
-│  📦  CI/CD & DEPLOY    →  Section 23                               │
+│  📦  RELEASE & CI/CD   →  Section 17                               │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1184,27 +1189,163 @@ integration_test/
 
 ## 📦 17. CI/CD & DEPLOYMENT
 
-### GitHub Actions
+### 🚀 One-Command Production Release (`microflow`)
 
-| Workflow | 🔑 What it does |
-|----------|----------------|
-| `analyze` | Runs `flutter analyze` for static analysis |
-| `test` | Runs all unit + widget tests |
-| `build_web` | Builds Flutter web build |
-| `build_android` | Builds Android APK/AAB |
-| `release` | Full release pipeline (tag, build, deploy) |
+Ye project ka **single-command release tool** hai. Ek command se:
+
+- DB migrations production pe push hoti hain
+- `pubspec.yaml` ka version bump hota hai (build number **auto +1**)
+- changes `development` → `main` merge + push hote hain
+- `vX.Y.Z` tag push hota hai
+- GitHub Actions **signed APK + AAB + web deploy** karke GitHub Release publish karta hai
+
+| OS | Command |
+|----|---------|
+| **Windows** (PowerShell / cmd) | `.\microflow.bat` |
+| **Git Bash / WSL / macOS / Linux** | `./microflow` |
+| Direct (koi bhi OS) | `dart run tool/release.dart` |
+
+**Flags:**
+
+| Flag | Kya karta hai |
+|------|---------------|
+| *(none)* | Full production release |
+| `--dry-run` | Sirf steps dikhata hai — kuch push/tag nahi karta |
+| `--staging` | DB push staging project pe (`mirdnsifontxoccjwgak`) — ⚠️ git tag/push phir bhi hota hai, isliye normal release me use **na** karo |
+
+---
+
+#### ✅ One-time setup (naya machine)
+
+```powershell
+# 1. Tools
+flutter --version          # Flutter 3.44.x
+dart --version
+supabase --version         # CLI v3+ (v3 me db push ko --remote chahiye)
+
+# 2. Supabase login (ek hi baar)
+supabase login             # browser khulega → Authorize
+supabase projects list     # dono projects dikhne chahiye:
+                           #   tccwdpsnuudzfyxfoohk  → production
+                           #   mirdnsifontxoccjwgak  → staging
+
+# 3. Local development branch (release isi branch se hota hai)
+git checkout development   # na ho to:  git checkout -B development main
+git status                 # clean hona chahiye (0 changed files)
+```
+
+Optional — agar DB password prompt aaye:
+
+```powershell
+$env:SUPABASE_DB_PASSWORD = "<Supabase Dashboard → Project Settings → Database>"
+```
+
+---
+
+#### 📋 Har release ka flow
+
+```powershell
+git checkout development        # ⚠️ development se hi release hota hai, main se nahi
+.\microflow.bat
+```
+
+Tool interactively poochhega:
+
+```
+ Current version: 1.0.2+2039
+ New version: 1.0.4              ← sirf x.y.z likho (build number khud +1 hota hai)
+```
+
+Phir automatic:
+
+| Step | Kya hota hai |
+|:----:|--------------|
+| 1 | Supabase CLI check → login → `supabase link --project-ref tccwdpsnuudzfyxfoohk` |
+| 2 | `supabase db push --remote --yes` → production DB migrations |
+| 3 | Version bump → `pubspec.yaml` (`1.0.4+2040`) |
+| 4 | `git add .` → commit `chore: release v1.0.4` → push `development` |
+| 5 | `origin/development` → `main` merge + push (conflict auto-resolve: `graphify-out/`, `pubspec.yaml`) |
+| 6 | `git tag v1.0.4` → push tag |
+| 7 | ✅ GitHub Actions **Production Release** start |
+
+**Kahan dekhna hai:** GitHub → **Actions** → `Production Release` (15–25 min lagta hai).
+
+---
+
+#### 📦 Release ke baad kya milta hai
+
+GitHub Release → `https://github.com/sansayan01/finance_app_zo/releases`
+
+| Asset | Kiske liye |
+|-------|-----------|
+| `app-release.apk` | Universal APK — sab devices |
+| `app-arm64-v8a-release.apk` | Modern phones (~60 MB) — **ye share karo** |
+| `app-armeabi-v7a-release.apk` | Purane phones |
+| `app-x86_64-release.apk` | Emulators |
+| `app-release.aab` | Play Store upload |
+
+Saath me **web app** bhi deploy hoti hai → `https://microflow-442f8.web.app`
+
+---
+
+#### 🔢 Version rules
+
+- Format: `MAJOR.MINOR.PATCH` (jaise `1.0.4`) — `+build` **mat** likho
+- Build number **auto** = current + 1 (Play Store ke liye must)
+- Tag pehle se exist karta ho to tool use **delete karke force-move** karta hai → isliye hamesha naya number do
+- `release.yml` verify karta hai ki tag version = `pubspec.yaml` version, warna release fail
+
+---
+
+#### 🛠️ Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| `ECONNREFUSED 127.0.0.1:54322` | Supabase CLI v3 ka issue — `db push` ko `--remote` chahiye. Ye tool ab pass karta hai (commit `eea61eb`) |
+| `Access token not provided` | `supabase login` dobara karo |
+| `permission denied` / `cannot find project ref` | Galat account — dono projects ka access wala account use karo |
+| `Database password` prompt | Blank Enter dabao (CLI keyring) ya `SUPABASE_DB_PASSWORD` set karo |
+| `Tag version does not match pubspec.yaml` | Naya version number do (tag force-move), ya pubspec match karo |
+| `✅ Pushed to development` par remote update nahi hua | Local `development` branch missing thi → `git checkout -B development main` karke dobara chalao |
+| Release publish hua par APK nahi | Actions → `build-android` job ka log dekho (keystore secrets) |
+| Sirf web deploy hua, APK nahi | `build-android` fail hua — `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEY_PROPERTIES` secrets check karo |
+| `Deploy Web (Production)` fail (par APK release pass) | `FIREBASE_TOKEN` secret missing/expired hai. `firebase login:ci` se naya token banao → GitHub → Settings → Secrets → `FIREBASE_TOKEN` update karo. Ye job har release me fail ho raha hai to yahi wajah hai |
+| `merge-to-main` job fail | `main` pe branch protection ya merge conflict — manually merge karke dobara tag karo |
+
+---
+
+#### ⚠️ Gotchas
+
+- Tool `git add .` karta hai → release se pehle unrelated WIP **commit ya stash** kar do
+- `--dry-run` bhi Supabase login check karta hai (login na ho to browser khul sakta hai)
+- Tag `development` branch pe banta hai, `main` pe merge commit alag hota hai — ye normal hai
+- `--staging` se production release trigger ho jayega (flag sirf DB target badalta hai)
+- Local `development` branch hona **zaroori** hai, warna push silently fail hota hai
+
+---
+
+### GitHub Actions (actual workflows)
+
+| File | Trigger | Jobs |
+|------|---------|------|
+| `.github/workflows/ci.yml` | push / PR on `main`, `development` | `analyze` → `test` → `build-check` (debug APK artifact) |
+| `.github/workflows/staging.yml` | push on `development`, manual | `test` → `build-android` (staging APK) → Slack notify |
+| `.github/workflows/release.yml` | tag `v*`, manual | `merge-to-main` → `validate-tag` → `test` → `build-android` (APK + AAB) + `deploy-web` (Firebase live) → `publish-github-release` |
 
 ### Scripts
 
 | Script | 🔑 Purpose |
 |--------|-----------|
-| `scripts/bump-version.sh` | Version bump automation |
-| `scripts/dev.sh` / `scripts/dev.ps1` | Development environment setup |
+| `microflow` / `microflow.bat` | 🚀 One-command production release (ye section) |
+| `tool/release.dart` | Release tool ka actual logic |
+| `scripts/bump-version.sh` | Manual version bump (release tool ye khud karta hai) |
+| `scripts/dev.sh` / `scripts/dev.ps1` | Dev run (Edge default) |
+| `scripts/dev-watch.ps1` | Auto hot-restart on file save |
 | `scripts/run_tests.bat` / `scripts/run_unit_tests.sh` | Test execution |
-| `scripts/switch-env.bat` / `scripts/switch-env.sh` | Environment switching (dev/staging/prod) |
+| `scripts/switch-env.bat` / `scripts/switch-env.sh` | Environment switching (staging/production) |
 | `scripts/setup-staging.ps1` | Staging environment setup |
 | `scripts/setup-github-secrets.sh` | CI secret configuration |
-| `tool/release.dart` | Release tooling |
+| `scripts/adb-wifi.sh` | Wireless ADB helper (phone testing) |
 
 ---
 

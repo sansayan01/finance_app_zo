@@ -1005,6 +1005,31 @@ class _CollectionSheetState extends ConsumerState<CollectionSheet> {
     final now = DateTime.now();
     final amount = _totalAmount;
 
+    // Refuse to collect into a vault that is closed, paused or already matured.
+    // The collection sheet can stay open while the vault is settled elsewhere,
+    // so the status is re-checked from the live row before any money is written.
+    final livePlan = await client
+        .from('savings_plans')
+        .select('status, maturity_date')
+        .eq('id', plan.id)
+        .maybeSingle();
+    final liveStatus =
+        (livePlan?['status'] as String?)?.toLowerCase() ?? plan.status;
+    final maturity = livePlan?['maturity_date'] != null
+        ? DateTime.tryParse(livePlan!['maturity_date'].toString())
+        : null;
+    final today = DateTime(now.year, now.month, now.day);
+    final hasMatured = maturity != null &&
+        DateTime(maturity.year, maturity.month, maturity.day).isBefore(today);
+    if (liveStatus != 'active') {
+      throw Exception(
+          'This vault is $liveStatus and cannot accept collections.');
+    }
+    if (hasMatured) {
+      throw Exception(
+          'This vault has matured. Pay it out instead of collecting more.');
+    }
+
     // 1. Create transaction
     final txResult = await client.from('transactions').insert({
       'member_id': plan.memberId,

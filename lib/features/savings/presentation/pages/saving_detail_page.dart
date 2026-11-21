@@ -2350,7 +2350,14 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Widget _buildPrimaryActionRow(SavingsModel saving, ThemeData theme) {
-    final isPaused = saving.status.toLowerCase() == 'paused';
+    final status = saving.status.toLowerCase();
+    final isPaused = status == 'paused';
+    final isClosed = const {'closed', 'withdrawn', 'cancelled', 'completed'}
+        .contains(status);
+    // A settled or matured vault must not accept new money: doing so silently
+    // changes a balance that was already paid out. The database enforces this
+    // as well, but the button should never offer it in the first place.
+    final canDeposit = status == 'active' && !saving.isMatured;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
@@ -2366,14 +2373,16 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
             'Deposit',
             Icons.add_rounded,
             AppColors.success,
-            isPaused
-                ? () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text(
-                              'Vault is paused. Resume it to make deposits.')),
-                    )
-                : () => _showDepositDialog(saving),
-            disabled: isPaused,
+            canDeposit
+                ? () => _showDepositDialog(saving)
+                : () => ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(isClosed
+                            ? 'This vault is closed. Reopen it before adding money.'
+                            : 'This vault has matured. Pay it out to close it.'),
+                      ),
+                    ),
+            disabled: !canDeposit,
           ),
           _buildActionButton(
             'Share',

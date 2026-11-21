@@ -312,6 +312,16 @@ class SavingsRepository {
     final saving = await getSavingPlanById(savingId);
     if (saving == null) return;
 
+    // Never accept money into a vault that is already settled, otherwise the
+    // balance we just paid out starts moving again. The database enforces this
+    // too, but failing here gives the user a readable message.
+    final status = saving.status.toLowerCase();
+    if (status != 'active' || saving.isMatured) {
+      throw Exception(status == 'active'
+          ? 'This vault has matured. Pay it out instead of depositing.'
+          : 'This vault is $status and cannot accept deposits.');
+    }
+
     final now = DateTime.now();
     final today = now.toIso8601String().split('T').first;
 

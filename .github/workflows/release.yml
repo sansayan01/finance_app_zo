@@ -7,7 +7,9 @@ on:
 
 concurrency:
   group: production-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a production release halfway: a half-finished run can leave the
+  # web app deployed while the GitHub release and APKs never appear.
+  cancel-in-progress: false
 
 env:
   FLUTTER_VERSION: '3.44.x'
@@ -16,6 +18,9 @@ env:
 jobs:
   merge-to-main:
     name: Merge Development → Main
+    # Only on a real tag push. On a manual run the branch is already the source
+    # of truth and this merge used to fail for no reason.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -37,6 +42,7 @@ jobs:
   validate-tag:
     name: Validate Tag
     needs: merge-to-main
+    if: always() && (needs.merge-to-main.result == 'success' || needs.merge-to-main.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.extract.outputs.version }}
@@ -46,24 +52,49 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Extract version from tag
+      - name: Extract version from tag and pubspec
         id: extract
         run: |
-          TAG="${GITHUB_REF#refs/tags/v}"
-          echo "version=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Build version: $TAG"
-          if [[ "$TAG" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
-            echo "build_number=${BASH_REMATCH[4]}" >> "$GITHUB_OUTPUT"
-            echo "Build number: ${BASH_REMATCH[4]}"
-          else
-            echo "WARNING: Tag doesn't match version+build format (x.y.z+N)"
+          set -euo pipefail
+
+          # pubspec is the source of truth for the build number, because the
+          # release tool bumps it there. A tag like v1.0.5 carries no +N, and
+          # falling back to github.run_number produced a LOWER versionCode than
+          # the previous release, which the Play Store rejects.
+          PUBSPEC_FULL=$(grep -E '^version:' pubspec.yaml | head -1 | sed 's/version:[[:space:]]*//' | tr -d '\r')
+          PUB_VER="${PUBSPEC_FULL%%+*}"
+          PUB_BUILD="${PUBSPEC_FULL##*+}"
+          if [ "$PUB_BUILD" = "$PUBSPEC_FULL" ] || [ -z "$PUB_BUILD" ]; then
+            PUB_BUILD=1
           fi
+          echo "pubspec_version=$PUB_VER" >> "$GITHUB_OUTPUT"
+
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            # workflow_dispatch: no tag exists yet, release what pubspec says.
+            TAG="v${PUB_VER}"
+            echo "::notice::Manual run, using pubspec version ${PUB_VER}"
+          fi
+          TAG="${TAG#v}"
+
+          VERSION="${TAG%%+*}"
+          BUILD="${TAG##*+}"
+          if [ "$BUILD" = "$VERSION" ] || [ -z "$BUILD" ]; then
+            BUILD="$PUB_BUILD"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION (build $BUILD)"
       - name: Verify version matches pubspec.yaml
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          PUBSPEC_VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d+ -f1)
+          set -euo pipefail
+          TAG_VERSION="${{ steps.extract.outputs.version }}"
+          PUBSPEC_VERSION=$(grep -E '^version:' pubspec.yaml | head -1 | sed 's/version:[[:space:]]*//' | cut -d+ -f1 | tr -d '\r')
           if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
             echo "ERROR: Tag version ($TAG_VERSION) does not match pubspec.yaml version ($PUBSPEC_VERSION)"
+            echo "Bump the version in pubspec.yaml (or re-tag) so the store sees the right build."
             exit 1
           fi
           echo "Version match confirmed: $TAG_VERSION"
@@ -71,6 +102,7 @@ jobs:
   test:
     name: Test
     needs: merge-to-main
+    if: always() && (needs.merge-to-main.result == 'success' || needs.merge-to-main.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -138,7 +170,7 @@ jobs:
       - name: Build Signed APK (Universal)
         run: |
           flutter build apk --release \
-            --build-number=${{ needs.validate-tag.outputs.build_number || github.run_number }} \
+            --build-number=${{ needs.validate-tag.outputs.build_number }} \
             --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
             --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
@@ -150,7 +182,7 @@ jobs:
       - name: Build Split APKs (per architecture)
         run: |
           flutter build apk --release --split-per-abi \
-            --build-number=${{ needs.validate-tag.outputs.build_number || github.run_number }} \
+            --build-number=${{ needs.validate-tag.outputs.build_number }} \
             --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
             --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
@@ -162,7 +194,7 @@ jobs:
       - name: Build Signed AAB
         run: |
           flutter build appbundle --release \
-            --build-number=${{ needs.validate-tag.outputs.build_number || github.run_number }} \
+            --build-number=${{ needs.validate-tag.outputs.build_number }} \
             --dart-define=SUPABASE_URL="${{ secrets.PROD_SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.PROD_SUPABASE_ANON_KEY }}" \
             --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
@@ -236,27 +268,57 @@ jobs:
           entryPoint: ./
 
   db-migration:
-    name: Database Migration Check
+    name: Migration Reminder
     needs: validate-tag
     runs-on: ubuntu-latest
-    if: always()
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Check for pending migrations
+          fetch-depth: 0
+      # Migrations are applied by hand in the Supabase SQL editor, so this job
+      # cannot verify them. It used to only print two echo lines, which gave
+      # false confidence. Now it lists the migration files that shipped since
+      # the previous tag and puts them in the run summary, so nothing is
+      # forgotten before the APK goes out.
+      - name: List migrations shipped in this release
         run: |
-          echo "Verify no pending SQL migration files in supabase/migrations/"
-          echo "Run manually: supabase db push --project-id YOUR_PROJECT_ID"
-          echo "Or apply SQL files in Supabase SQL Editor before tagging release."
+          set -euo pipefail
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${GITHUB_REF_NAME}$" | head -1 || true)
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+            echo "No previous tag, listing every migration file."
+          else
+            RANGE="$PREV_TAG..HEAD"
+            echo "Comparing against $PREV_TAG"
+          fi
+
+          FILES=$(git log --pretty=format: --name-only $RANGE -- 'supabase/migrations/*.sql' 'supabase/*.sql' | sort -u | grep -v '^$' || true)
+          {
+            echo "### Migrations added in this release"
+            echo
+            if [ -z "$FILES" ]; then
+              echo "None."
+            else
+              echo 'Apply these in the Supabase SQL editor BEFORE shipping:'
+              echo '```'
+              echo "$FILES"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$FILES"
 
   publish-github-release:
     name: Create GitHub Release
-    needs: [build-android]
+    needs: [validate-tag, build-android]
     if: always() && (needs.build-android.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      # On a tag push this equals the pushed tag; on a manual run it is built
+      # from the pubspec version, because github.ref_name would be 'main'.
+      RELEASE_TAG: v${{ needs.validate-tag.outputs.version }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -265,8 +327,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: "Release ${{ env.RELEASE_TAG }}"
           generate_release_notes: true
           make_latest: true
           files: |
@@ -279,7 +341,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.ref_name }}"
+          TAG="${RELEASE_TAG}"
           RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/$TAG --jq '.id')
           if [ -n "$RELEASE_ID" ]; then
             ASSETS=$(gh api repos/${{ github.repository }}/releases/$RELEASE_ID/assets --jq '.[] | select(.name | test("\\.(zip|tar\\.gz)$")) | .id')

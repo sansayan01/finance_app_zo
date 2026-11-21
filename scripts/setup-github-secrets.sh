@@ -24,9 +24,24 @@ KEYPROPS_B64=$(base64 -w 0 android/key.properties)
 echo "Set ANDROID_KEY_PROPERTIES"
 
 # 3. Individual signing secrets (also needed by the workflow)
-"$GH" secret set ANDROID_KEY_PASSWORD --body "microflow2026" -R "$REPO"
-"$GH" secret set ANDROID_KEY_ALIAS --body "upload" -R "$REPO"
-"$GH" secret set ANDROID_STORE_PASSWORD --body "microflow2026" -R "$REPO"
+#    Passwords are NOT stored in this file any more — they are in the repo
+#    history, so treat them as known. Export them before running:
+#      export ANDROID_KEY_PASSWORD='...'
+#      export ANDROID_STORE_PASSWORD='...'
+KEY_PASS="${ANDROID_KEY_PASSWORD:-}"
+STORE_PASS="${ANDROID_STORE_PASSWORD:-}"
+KEY_ALIAS_VAL="${ANDROID_KEY_ALIAS:-upload}"
+
+if [ -z "$KEY_PASS" ] || [ -z "$STORE_PASS" ]; then
+  echo "ERROR: export ANDROID_KEY_PASSWORD and ANDROID_STORE_PASSWORD first."
+  echo "       (They must match android/key.properties; this script no longer"
+  echo "        hardcodes them because that file is committed to git.)"
+  exit 1
+fi
+
+"$GH" secret set ANDROID_KEY_PASSWORD --body "$KEY_PASS" -R "$REPO"
+"$GH" secret set ANDROID_KEY_ALIAS --body "$KEY_ALIAS_VAL" -R "$REPO"
+"$GH" secret set ANDROID_STORE_PASSWORD --body "$STORE_PASS" -R "$REPO"
 echo "Set ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_STORE_PASSWORD"
 
 # 4. Supabase Production

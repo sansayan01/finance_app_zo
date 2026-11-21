@@ -83,6 +83,13 @@ jobs:
           key: pub-${{ hashFiles('pubspec.lock') }}
           restore-keys: pub-
       - run: flutter pub get
+      # Pin the JDK. Without this the runner's default JDK (25.x on current
+      # ubuntu images) is used, which Gradle 8.14 cannot parse: the build dies
+      # with a bare "* What went wrong: 25.0.5" before compiling anything.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
       - name: Increase Gradle heap for CI
         run: sed -i 's/-Xmx[0-9]*G/-Xmx6G/' android/gradle.properties
       - run: flutter build apk --debug

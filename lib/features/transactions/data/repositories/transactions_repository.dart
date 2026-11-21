@@ -296,7 +296,7 @@ class TransactionsRepository {
     try {
       final response = await _client
           .from('transactions')
-          .select('id, type, amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
+          .select('id, type, amount, principal_amount, interest_amount, description, created_at, member_id, member_name, loan_id, savings_id, payment_mode')
           .eq('org_id', _orgId)
           .eq('savings_id', savingsId)
           .order('created_at', ascending: false)

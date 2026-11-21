@@ -2493,10 +2493,28 @@ Widget _buildIntelligenceCard(SavingsModel saving, ThemeData theme) {
               AppFormatters.formatCurrency(saving.interestAmount),
               theme,
               valueColor: AppColors.success),
+          if (saving.interestPaid > 0) ...[
+            const SizedBox(height: 12),
+            _buildInfoRow(
+                'Interest Paid Back',
+                AppFormatters.formatCurrency(saving.interestPaid),
+                theme,
+                valueColor: theme.colorScheme.primary),
+          ],
+          if (saving.interestPaid > 0 && saving.interestRemaining > 0) ...[
+            const SizedBox(height: 12),
+            _buildInfoRow(
+                'Interest Still Due',
+                AppFormatters.formatCurrency(saving.interestRemaining),
+                theme,
+                valueColor: Colors.orange),
+          ],
           const SizedBox(height: 12),
           _buildInfoRow('Maturity Date',
               AppFormatters.formatDate(saving.maturityDate), theme),
-          if (saving.nextDueDate != null) ...[
+          // A closed vault has nothing left to collect, so "Next Installment"
+          // and a positive "Days Remaining" would both be misleading.
+          if (saving.nextDueDate != null && saving.status == 'active') ...[
             const SizedBox(height: 12),
             _buildInfoRow(
                 'Next Installment',
@@ -2512,11 +2530,18 @@ Widget _buildIntelligenceCard(SavingsModel saving, ThemeData theme) {
           const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Divider(height: 1)),
-          _buildInfoRow(
-              'Days Remaining',
-              '${saving.maturityDate.difference(today).inDays} Days',
-              theme,
-              isBold: true),
+          if (saving.status == 'active')
+            _buildInfoRow(
+                'Days Remaining',
+                saving.isMatured
+                    ? 'Matured'
+                    : '${saving.maturityDate.difference(today).inDays} Days',
+                theme,
+                valueColor: saving.isMatured ? AppColors.success : null,
+                isBold: true)
+          else
+            _buildInfoRow('Vault Status', saving.status.toUpperCase(), theme,
+                isBold: true),
         ],
       ),
     );
@@ -2886,6 +2911,13 @@ Widget _buildTransactionItem(TransactionModel tx, ThemeData theme, bool isDark, 
   final date = tx.createdAt;
   final paymentMode = tx.paymentMode?.name ?? 'cash';
 
+  // A withdrawal can also hand back interest on top of the principal. `amount`
+  // only carries the principal, so the interest has to be shown separately or
+  // the money the institution paid out of its own pocket disappears from the
+  // history.
+  final interestPaid = !isCredit ? tx.interestAmount : 0.0;
+  final totalHandedOver = tx.amount + interestPaid;
+
   // Compute "deposited up to" date from linked savings collections
   DateTime? depositedUpTo;
   if (isCredit && collectionDates.isNotEmpty) {
@@ -2938,6 +2970,19 @@ Widget _buildTransactionItem(TransactionModel tx, ThemeData theme, bool isDark, 
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (interestPaid > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'Principal ${AppFormatters.formatCurrency(tx.amount)} + interest ${AppFormatters.formatCurrency(interestPaid)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                      maxLines: 2,
+                    ),
+                  ),
                 if (!isCredit && collectorName != null && collectorName.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
@@ -2976,7 +3021,7 @@ Widget _buildTransactionItem(TransactionModel tx, ThemeData theme, bool isDark, 
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${isCredit ? '+' : '-'}${AppFormatters.formatCurrency(tx.amount)}',
+                '${isCredit ? '+' : '-'}${AppFormatters.formatCurrency(interestPaid > 0 ? totalHandedOver : tx.amount)}',
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w800,

@@ -171,6 +171,12 @@ class SavingsRepository {
         tenure: (json['tenure'] as num?)?.toInt() ?? 12,
         openingBalance: (json['opening_balance'] as num?)?.toDouble() ?? 0,
         totalReturnAmount: (json['total_return_amount'] as num?)?.toDouble() ?? 0,
+        // Both of these drive the interest accounting shown on the detail page
+        // and in the payout flow, so they must be mapped here as well as in
+        // fromJson. Leaving them out made the pledged interest fall back to the
+        // computed value and reset the "already paid" counter to zero.
+        storedInterestAmount: (json['interest_amount'] as num?)?.toDouble() ?? 0,
+        interestPaid: (json['interest_paid'] as num?)?.toDouble() ?? 0,
         installmentsPaid: (json['installments_paid'] as num?)?.toInt() ?? 0,
         lastPaymentDate: json['last_payment_date'] != null
             ? DateTime.tryParse(json['last_payment_date'].toString())

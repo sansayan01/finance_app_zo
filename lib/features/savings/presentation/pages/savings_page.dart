@@ -613,9 +613,11 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
                       children: [
                         _buildFilterChip('Active', 1, theme),
                         const SizedBox(width: 8),
-                        _buildFilterChip('All Vaults', 0, theme),
-                        const SizedBox(width: 8),
                         _buildFilterChip('Matured', 2, theme),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Closed', 3, theme),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('All Vaults', 0, theme),
                       ],
                     ),
                   ),
@@ -671,6 +673,10 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
               break;
             case 2: // Matured
               matchesFilter = s.isMatured || s.status == 'matured';
+              break;
+            case 3: // Closed
+              matchesFilter = const {'closed', 'withdrawn', 'cancelled', 'completed'}
+                  .contains(s.status);
               break;
             default: // All Vaults
               matchesFilter = true;
@@ -766,16 +772,21 @@ class _SavingsPageState extends ConsumerState<SavingsPage> {
   Widget _buildEmptyState(ThemeData theme) {
     final isMaturedTab = _activeFilter == 2;
     final isActiveTab = _activeFilter == 1;
+    final isClosedTab = _activeFilter == 3;
     final title = isMaturedTab
         ? 'No Matured Vaults'
         : isActiveTab
             ? 'No Active Vaults'
-            : 'No Savings Found';
+            : isClosedTab
+                ? 'No Closed Vaults'
+                : 'No Savings Found';
     final subtitle = isMaturedTab
         ? 'Vaults whose maturity date has passed will appear here.'
         : isActiveTab
             ? 'Every vault of yours has matured or closed. Check the Matured tab.'
-            : 'Your financial future starts with a single deposit.';
+            : isClosedTab
+                ? 'Vaults paid out and closed will appear here.'
+                : 'Your financial future starts with a single deposit.';
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -801,6 +812,19 @@ class _PremiumSavingCard extends StatelessWidget {
   final SavingsModel saving;
   const _PremiumSavingCard({required this.saving});
 
+  /// Badge text. A closed vault must never look matured, and a vault whose
+  /// date passed but is still running must not look active.
+  static String _statusLabel(SavingsModel saving) {
+    final status = saving.status.toLowerCase();
+    if (const {'closed', 'withdrawn', 'cancelled', 'completed'}
+        .contains(status)) {
+      return 'CLOSED';
+    }
+    if (status == 'paused') return 'PAUSED';
+    if (saving.isMatured) return 'MATURED';
+    return 'ACTIVE';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -808,8 +832,15 @@ class _PremiumSavingCard extends StatelessWidget {
     final primary = theme.colorScheme.primary;
     final progress = (saving.targetAmount > 0) ? (saving.currentAmount / saving.targetAmount).clamp(0.0, 1.0) : 0.0;
     final initial = saving.memberName.trim().isNotEmpty ? saving.memberName.trim()[0].toUpperCase() : '?';
-    final isActive = saving.status == 'active';
-    final statusColor = isActive ? theme.colorScheme.primary : (isDark ? const Color(0xFF52D1A4) : const Color(0xFF059669));
+
+    /// Badge text. A closed vault must never look matured, and a vault whose
+    /// date passed but is still running must not look active.
+    final badgeLabel = _statusLabel(saving);
+    final statusColor = badgeLabel == 'ACTIVE'
+        ? theme.colorScheme.primary
+        : badgeLabel == 'CLOSED' || badgeLabel == 'PAUSED'
+            ? (isDark ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280))
+            : (isDark ? const Color(0xFF52D1A4) : const Color(0xFF059669));
     final statusBg = statusColor.withOpacity(isDark ? 0.12 : 0.08);
     final statusBorder = statusColor.withOpacity(isDark ? 0.2 : 0.15);
 
@@ -866,7 +897,7 @@ class _PremiumSavingCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(6), border: Border.all(color: statusBorder, width: 0.5)),
-                        child: Text(isActive && saving.isMatured ? 'MATURED' : (isActive ? 'ACTIVE' : 'MATURED'), style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: statusColor, letterSpacing: 0.5)),
+                        child: Text(badgeLabel, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: statusColor, letterSpacing: 0.5)),
                       ),
                     ],
                   ),

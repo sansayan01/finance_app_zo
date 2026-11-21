@@ -374,6 +374,11 @@ class LoanSummary {
   final double overdueAmount;
   final double parPercentage;
 
+  /// How many loans have at least one unpaid, past-due instalment. Used by the
+  /// At Risk filter, where loan.status is not enough because nothing ever
+  /// marks a loan as defaulted.
+  final int overdueLoans;
+
   LoanSummary({
     required this.totalLoans,
     required this.activeLoans,
@@ -383,6 +388,7 @@ class LoanSummary {
     required this.totalCollected,
     required this.overdueAmount,
     required this.parPercentage,
+    this.overdueLoans = 0,
   });
 
   factory LoanSummary.fromJson(Map<String, dynamic> json) {
@@ -394,6 +400,7 @@ class LoanSummary {
       totalDisbursed: (json['total_disbursed'] as num?)?.toDouble() ?? 0,
       totalCollected: (json['total_collected'] as num?)?.toDouble() ?? 0,
       overdueAmount: (json['overdue_amount'] as num?)?.toDouble() ?? 0,
+      overdueLoans: json['overdue_loans'] as int? ?? 0,
       parPercentage: (json['par_percentage'] as num?)?.toDouble() ?? 0,
     );
   }

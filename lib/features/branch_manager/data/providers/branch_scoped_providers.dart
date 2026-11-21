@@ -41,7 +41,7 @@ final branchLoanSummaryProvider =
   try {
     final response = await client
         .from('loans')
-        .select('amount, outstanding_amount, status')
+        .select('id, amount, outstanding_amount, status')
         .eq('org_id', orgId)
         .eq('branch_id', branchId);
     final list = response as List<dynamic>;
@@ -56,10 +56,44 @@ final branchLoanSummaryProvider =
         0,
         (sum, l) =>
             sum + ((l['outstanding_amount'] as num?)?.toDouble() ?? 0));
-    final overdueAmount = defaultLoans.fold<double>(
-        0,
-        (sum, l) =>
-            sum + ((l['outstanding_amount'] as num?)?.toDouble() ?? 0));
+
+    // Overdue is derived from EMI due dates. loan.status is never flipped to
+    // 'defaulted', so the old status-based sum always came back as 0.
+    final branchLoanIds = list
+        .map((l) => l['id']?.toString())
+        .whereType<String>()
+        .toSet();
+    final closedLoanIds = list
+        .where((l) => l['status'] == 'closed')
+        .map((l) => l['id']?.toString())
+        .whereType<String>()
+        .toSet();
+    final overdueByLoan = <String, double>{};
+    if (branchLoanIds.isNotEmpty) {
+      final today = DateTime.now().toIso8601String().split('T').first;
+      final overdueRows = await client
+          .from('emi_schedule')
+          .select('loan_id, emi, emi_amount')
+          .eq('org_id', orgId)
+          .eq('is_paid', false)
+          .lt('due_date', today);
+      for (final row in overdueRows as List) {
+        final loanId = row['loan_id']?.toString();
+        if (loanId == null || !branchLoanIds.contains(loanId)) continue;
+        final amount = (row['emi'] as num?)?.toDouble() ??
+            (row['emi_amount'] as num?)?.toDouble() ??
+            0.0;
+        overdueByLoan[loanId] = (overdueByLoan[loanId] ?? 0) + amount;
+      }
+    }
+    var overdueAmount = 0.0;
+    final overdueLoanIds = <String>{};
+    overdueByLoan.forEach((loanId, amount) {
+      if (closedLoanIds.contains(loanId)) return;
+      overdueAmount += amount;
+      overdueLoanIds.add(loanId);
+    });
+
     final parPercentage =
         totalOutstanding > 0 ? (overdueAmount / totalOutstanding * 100) : 0.0;
     return LoanSummary(
@@ -70,6 +104,7 @@ final branchLoanSummaryProvider =
       totalDisbursed: totalDisbursed,
       totalCollected: 0,
       overdueAmount: overdueAmount,
+      overdueLoans: overdueLoanIds.length,
       parPercentage: parPercentage,
     );
   } catch (e) {

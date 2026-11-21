@@ -97,6 +97,34 @@ class LoansRepository {
     }
   }
 
+  /// EMIs that are still unpaid and already past their due date, grouped by
+  /// loan id.
+  ///
+  /// This is the only definition of "overdue" the app should trust. The
+  /// emi_schedule.is_overdue flag is never maintained (it is false on every
+  /// row), and loan.status is never flipped to 'defaulted', so overdue has to
+  /// be derived from due dates.
+  Future<Map<String, double>> getOverdueByLoan() async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+    final rows = await _client
+        .from('emi_schedule')
+        .select('loan_id, emi, emi_amount')
+        .eq('org_id', _orgId)
+        .eq('is_paid', false)
+        .lt('due_date', today);
+
+    final overdue = <String, double>{};
+    for (final row in rows as List) {
+      final loanId = row['loan_id']?.toString();
+      if (loanId == null || loanId.isEmpty) continue;
+      final amount = (row['emi'] as num?)?.toDouble() ??
+          (row['emi_amount'] as num?)?.toDouble() ??
+          0.0;
+      overdue[loanId] = (overdue[loanId] ?? 0) + amount;
+    }
+    return overdue;
+  }
+
   Future<LoanSummary> getLoanSummary() async {
     try {
       // Use SQL aggregation instead of fetching all records
@@ -104,6 +132,7 @@ class LoansRepository {
 
       // Get loan counts and totals in a single query
       final response = await _client.from('loans').select('''
+            id,
             status,
             outstanding_amount,
             amount
@@ -117,6 +146,8 @@ class LoansRepository {
       double totalOutstanding = 0.0;
       double totalDisbursed = 0.0;
       double overdueAmount = 0.0;
+      int overdueLoans = 0;
+      final closedLoanIds = <String>{};
 
       for (final loan in loans) {
         final status = loan['status'] as String?;
@@ -130,11 +161,29 @@ class LoansRepository {
           totalDisbursed += amount;
         } else if (status == 'defaulted') {
           defaultLoans++;
-          overdueAmount += outstanding;
           totalOutstanding += outstanding;
         } else if (status == 'closed') {
+          closedLoanIds.add(loan['id']?.toString() ?? '');
           totalDisbursed += amount;
         }
+      }
+
+      // Overdue = unpaid EMIs whose due date has passed. Counting loans with
+      // status 'defaulted' (the old approach) always produced 0 because nothing
+      // in the app ever sets that status, so months of missed EMIs showed as
+      // nothing owed. Closed loans are skipped so a paid-off loan with a stale
+      // schedule row cannot inflate the number.
+      try {
+        final overdueByLoan = await getOverdueByLoan();
+        final loansWithOverdue = <String>{};
+        overdueByLoan.forEach((loanId, amount) {
+          if (closedLoanIds.contains(loanId)) return;
+          overdueAmount += amount;
+          loansWithOverdue.add(loanId);
+        });
+        overdueLoans = loansWithOverdue.length;
+      } catch (e) {
+        debugPrint('⚠️ overdue EMI lookup failed: $e');
       }
 
       // Query total collected from transactions table
@@ -158,6 +207,7 @@ class LoansRepository {
         totalDisbursed: totalDisbursed,
         totalCollected: totalCollected,
         overdueAmount: overdueAmount,
+        overdueLoans: overdueLoans,
         parPercentage: totalLoans == 0 ? 0 : (defaultLoans / totalLoans) * 100,
       );
     } catch (e, st) {

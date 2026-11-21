@@ -65,19 +65,34 @@ class _LoansPageState extends ConsumerState<LoansPage>
   String _cachedSearchQuery = '';
   String _cachedSortBy = 'recent';
   bool _cachedSortAscending = false;
+  Set<String>? _cachedOverdueIds;
 
-  List<LoanModel> _getFilteredList(List<LoanModel> loans) {
+  List<LoanModel> _getFilteredList(List<LoanModel> loans,
+      [Set<String> overdueLoanIds = const {}]) {
+    final overdueChanged = _cachedOverdueIds == null ||
+        _cachedOverdueIds!.length != overdueLoanIds.length ||
+        !_cachedOverdueIds!.containsAll(overdueLoanIds);
+
     if (_cachedSource == loans &&
         _cachedFilterStatus == _filterStatus &&
         _cachedSearchQuery == _searchQuery &&
         _cachedSortBy == _sortBy &&
         _cachedSortAscending == _sortAscending &&
+        !overdueChanged &&
         _cachedFiltered != null) {
       return _cachedFiltered!;
     }
 
     var filtered = loans.where((l) {
-      if (_filterStatus != null && l.status != _filterStatus) return false;
+      if (_filterStatus == LoanStatus.defaultStatus) {
+        // 'At Risk' means money is actually late: the loan is flagged defaulted
+        // OR it has an unpaid instalment past its due date. Nothing in the app
+        // ever sets the defaulted status, so the second half is what matters.
+        final isDefaulted = l.status == LoanStatus.defaultStatus;
+        if (!isDefaulted && !overdueLoanIds.contains(l.id)) return false;
+      } else if (_filterStatus != null && l.status != _filterStatus) {
+        return false;
+      }
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
         return (l.customerName?.toLowerCase().contains(q) ?? false) ||
@@ -112,6 +127,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
     _cachedSearchQuery = _searchQuery;
     _cachedSortBy = _sortBy;
     _cachedSortAscending = _sortAscending;
+    _cachedOverdueIds = overdueLoanIds;
     _cachedFiltered = filtered;
     return filtered;
   }
@@ -141,6 +157,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
     Future.microtask(() {
       ref.invalidate(loansProvider);
       ref.invalidate(loanSummaryProvider);
+      ref.invalidate(overdueByLoanProvider);
     });
   }
 
@@ -153,6 +170,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
   Future<void> _onRefresh() async {
     ref.invalidate(loansProvider);
     ref.invalidate(loanSummaryProvider);
+    ref.invalidate(overdueByLoanProvider);
     return await ref.read(loansProvider.future).then((_) => null);
   }
 
@@ -169,6 +187,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
     ).then((_) {
       ref.invalidate(loansProvider);
       ref.invalidate(loanSummaryProvider);
+      ref.invalidate(overdueByLoanProvider);
     });
   }
 
@@ -446,6 +465,13 @@ class _LoansPageState extends ConsumerState<LoansPage>
   Widget build(BuildContext context) {
     final loansAsync = ref.watch(loansProvider);
     final summaryAsync = ref.watch(loanSummaryProvider);
+    // Loan ids with genuinely late instalments, used by the At Risk chip.
+    final overdueLoanIds =
+        (ref.watch(overdueByLoanProvider).valueOrNull ?? const <String, double>{})
+            .keys
+            .toSet();
+    final overdueByLoan =
+        ref.watch(overdueByLoanProvider).valueOrNull ?? const <String, double>{};
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
@@ -619,7 +645,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
                 // Dynamic Loan List
                 loansAsync.when(
                   data: (loans) {
-                    final filtered = _getFilteredList(loans);
+                    final filtered = _getFilteredList(loans, overdueLoanIds);
 
                     if (filtered.isEmpty) {
                       return SliverFillRemaining(
@@ -643,6 +669,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
                               padding: const EdgeInsets.only(bottom: 12),
                               child: _PremiumLoanCard(
                                 loan: loan,
+                                overdueAmount: overdueByLoan[loan.id] ?? 0,
                                 onTap: widget.onLoanTap != null
                                     ? () => widget.onLoanTap!(loan.id)
                                     : null,
@@ -782,29 +809,29 @@ class _LoansPageState extends ConsumerState<LoansPage>
             const SizedBox(height: 9),
             Container(height: 1, color: dividerColor),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildLoanHeaderMini(
-                    label: 'CAPITAL DEPLOYED',
-                    value: AppFormatters.formatCurrency(summary.totalDisbursed),
-                    color: primary,
-                    theme: theme,
-                  ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 32,
+                runSpacing: 6,
+                children: [
+                _buildLoanHeaderMini(
+                  label: 'CAPITAL DEPLOYED',
+                  value: AppFormatters.formatCurrency(summary.totalDisbursed),
+                  color: primary,
+                  theme: theme,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildLoanHeaderMini(
-                    label: 'OVERDUE',
-                    value: AppFormatters.formatCurrency(summary.overdueAmount),
-                    color: summary.overdueAmount > 0
-                        ? AppColors.error
-                        : theme.textTheme.bodySmall?.color ??
-                            theme.colorScheme.onSurface,
-                    theme: theme,
-                  ),
+                _buildLoanHeaderMini(
+                  label: 'OVERDUE',
+                  value: AppFormatters.formatCurrency(summary.overdueAmount),
+                  color: summary.overdueAmount > 0
+                      ? AppColors.error
+                      : theme.textTheme.bodySmall?.color ??
+                          theme.colorScheme.onSurface,
+                  theme: theme,
                 ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -1062,6 +1089,7 @@ class _LoansPageState extends ConsumerState<LoansPage>
   }
 
   Widget _buildEmptyState(ThemeData theme, Color primary) {
+    final isAtRisk = _filterStatus == LoanStatus.defaultStatus;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1072,15 +1100,23 @@ class _LoansPageState extends ConsumerState<LoansPage>
               color: primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.account_balance_rounded,
-                size: 72, color: primary.withValues(alpha: 0.2)),
+            child: Icon(
+                isAtRisk
+                    ? Icons.verified_rounded
+                    : Icons.account_balance_rounded,
+                size: 72,
+                color: primary.withValues(alpha: 0.2)),
           ),
           const SizedBox(height: 24),
-          Text('No Loans Found',
+          Text(isAtRisk ? 'Nothing At Risk' : 'No Loans Found',
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w900, fontSize: 24)),
           const SizedBox(height: 8),
-          Text('Adjust your filters or deploy new capital.',
+          Text(
+              isAtRisk
+                  ? 'Every instalment is paid or not due yet.'
+                  : 'Adjust your filters or deploy new capital.',
+              textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium),
           const SizedBox(height: 24),
           GlassButton(
@@ -1097,7 +1133,15 @@ class _LoansPageState extends ConsumerState<LoansPage>
 class _PremiumLoanCard extends StatelessWidget {
   final LoanModel loan;
   final VoidCallback? onTap;
-  const _PremiumLoanCard({required this.loan, this.onTap});
+
+  /// Unpaid instalments that are already past their due date, for this loan.
+  final double overdueAmount;
+
+  const _PremiumLoanCard({
+    required this.loan,
+    this.onTap,
+    this.overdueAmount = 0,
+  });
 
   DateTime _computeNextDueDate(LoanModel loan) {
     final firstEmi = loan.firstEmiDate ?? loan.createdAt.add(const Duration(days: 30));
@@ -1309,29 +1353,60 @@ class _PremiumLoanCard extends StatelessWidget {
           // Footer: Next EMI & Actions
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                      color: primary.withValues(alpha: 0.15), width: 0.8),
+              if (overdueAmount > 0)
+                // A loan with late instalments must not look like a healthy
+                // one: say how much is late, not just when the next EMI is.
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.35),
+                        width: 0.8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          size: 12, color: AppColors.error),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Overdue: ${AppFormatters.formatCurrency(overdueAmount)}',
+                        style: const TextStyle(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 10,
+                            letterSpacing: -0.1),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: primary.withValues(alpha: 0.15), width: 0.8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.event_repeat_rounded, size: 12, color: primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Next Due: ${AppFormatters.formatDate(loan.nextDueDate ?? _computeNextDueDate(loan))}',
+                        style: TextStyle(
+                            color: primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                            letterSpacing: -0.1),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.event_repeat_rounded, size: 12, color: primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Next Due: ${AppFormatters.formatDate(loan.nextDueDate ?? _computeNextDueDate(loan))}',
-                      style: TextStyle(
-                          color: primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 10,
-                          letterSpacing: -0.1),
-                    ),
-                  ],
-                ),
-              ),
               const Spacer(),
               if (loan.customerPhone != null) ...[
                 _ActionButton(

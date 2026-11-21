@@ -197,6 +197,7 @@ class SavingsRepository {
           return null;
         }(),
         freezeEnabled: json['freeze_enabled'] as bool? ?? false,
+        smsEnabled: json['sms_enabled'] as bool? ?? true,
         frozenCount: (json['frozen_count'] as num?)?.toInt() ?? 0,
         frozenDates: (json['frozen_dates'] as List<dynamic>?)
                 ?.map((e) => e.toString())
@@ -306,6 +307,17 @@ class SavingsRepository {
   Future<List<SavingsModel>> getPendingDeposits({int limit = 10}) async {
     // For now, return same as active since we don't have a separate table for collection schedule
     return getActiveSavingsPlans(limit: limit);
+  }
+
+  /// Turns SMS reminders on/off for a single vault.
+  ///
+  /// Stored in `savings_plans.sms_enabled` so the setting survives an app
+  /// restart, follows the vault across devices and can be read by the job that
+  /// actually sends the reminders.
+  Future<void> setSavingsSmsEnabled(String savingId, bool enabled) async {
+    await _client
+        .from('savings_plans')
+        .update({'sms_enabled': enabled}).eq('id', savingId);
   }
 
   Future<void> recordDeposit(String savingId, double amount) async {

@@ -75,9 +75,12 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
   }
 
   Future<void> _loadMemberSmsEnabled() async {
-    // Savings SMS preference stored locally (independent from member-level loan SMS).
+    // Cached value first so the switch does not flicker, then the database
+    // value takes over as soon as the vault loads (see the listener below).
     final prefs = await SharedPreferences.getInstance();
-    _memberSmsEnabled.value = prefs.getBool('savings_sms_${widget.savingId}') ?? true;
+    final cached =
+        prefs.getBool('savings_sms_${widget.savingId}');
+    if (cached != null) _memberSmsEnabled.value = cached;
   }
 
   @override
@@ -95,7 +98,10 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
     ref.listen<AsyncValue<SavingsModel?>>(
       savingDetailProvider(widget.savingId),
       (_, next) {
-        if (next.hasValue && next.value != null) _loadMemberSmsEnabled();
+        if (next.hasValue && next.value != null) {
+          // The vault row is the source of truth for this switch.
+          _memberSmsEnabled.value = next.value!.smsEnabled;
+        }
       },
     );
     final savingAsync = ref.watch(savingDetailProvider(widget.savingId));
@@ -2117,18 +2123,37 @@ class _SavingDetailPageState extends ConsumerState<SavingDetailPage> {
 
   Future<void> _toggleSms(SavingsModel saving, bool enabled) async {
     HapticFeedback.lightImpact();
-    // Savings SMS stored locally — independent from member-level loan SMS.
+    final previous = _memberSmsEnabled.value;
+    _memberSmsEnabled.value = enabled; // instant feedback
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('savings_sms_${widget.savingId}', enabled);
-    _memberSmsEnabled.value = enabled;
-    ref.invalidate(savingDetailProvider(widget.savingId));
-    ref.invalidate(allSavingsProvider);
-    if (mounted) {
+
+    try {
+      await ref
+          .read(savingsRepositoryProvider)
+          .setSavingsSmsEnabled(saving.id, enabled);
+      ref.invalidate(savingDetailProvider(widget.savingId));
+      ref.invalidate(allSavingsProvider);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(enabled
               ? 'SMS reminders enabled for this savings plan'
               : 'SMS reminders disabled for this savings plan'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    } catch (e) {
+      // Put the switch back where it was; the save did not happen.
+      _memberSmsEnabled.value = previous;
+      await prefs.setBool('savings_sms_${widget.savingId}', previous);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not update SMS setting: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),

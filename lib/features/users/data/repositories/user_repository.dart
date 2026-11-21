@@ -258,21 +258,102 @@ class UserRepository {
   /// by org_id here because that would silently no-op for profiles with a
   /// NULL org_id (orphan self-registered users), making the update appear
   /// to succeed while changing nothing.
+  /// Members-table columns we are willing to mirror from a profile edit.
+  /// Anything else (employee_id, assigned_zone, role, ...) only exists on
+  /// profiles and would make the update fail.
+  static const _memberColumnWhitelist = {
+    'full_name',
+    'father_name',
+    'phone',
+    'email',
+    'address',
+    'city',
+    'state',
+    'pincode',
+    'branch_id',
+    'aadhar',
+    'pan',
+  };
+
+  Map<String, dynamic> _memberDataFrom(Map<String, dynamic> data) {
+    return {
+      for (final entry in data.entries)
+        if (_memberColumnWhitelist.contains(entry.key)) entry.key: entry.value,
+    };
+  }
+
   Future<void> updateProfile(String id, Map<String, dynamic> data) async {
     data.remove('id');
     data.remove('org_id');
     data['updated_at'] = DateTime.now().toIso8601String();
-    final rows = await _client
+
+    // The id arriving here is a profiles.id for staff, but the users list also
+    // renders customer rows taken straight from the members table, whose id is
+    // a members.id. Updating profiles by that id matched nothing, which used to
+    // look like 'no row updated / no permission' for every such customer.
+    var targetProfileId = id;
+    var rows = await _client
         .from('profiles')
         .update(data)
-        .eq('id', id)
+        .eq('id', targetProfileId)
         .select('id');
+
+    var memberRowId = id;
+    var updatedMemberOnly = false;
+
     if (rows.isEmpty) {
-      throw Exception(
-        'No profile was updated. The profile may belong to a different '
-        'organization, have a missing org_id, or you may lack permission.',
-      );
+      final member = await _client
+          .from('members')
+          .select('id, profile_id')
+          .eq('id', id)
+          .maybeSingle();
+
+      if (member == null) {
+        throw Exception(
+          'No profile was updated. This record no longer exists, belongs to a '
+          'different organization, or you do not have permission to edit it.',
+        );
+      }
+
+      memberRowId = member['id'].toString();
+      final linkedProfileId = member['profile_id']?.toString();
+
+      if (linkedProfileId != null && linkedProfileId.isNotEmpty) {
+        targetProfileId = linkedProfileId;
+        rows = await _client
+            .from('profiles')
+            .update(data)
+            .eq('id', targetProfileId)
+            .select('id');
+      }
+
+      if (rows.isEmpty) {
+        // Imported customers can exist only in the members table. Save there so
+        // the edit is not silently lost.
+        final memberOnly = _memberDataFrom(data)
+          ..remove('updated_at');
+        if (memberOnly.isEmpty) {
+          throw Exception(
+            'No profile was updated. You do not have permission to edit this '
+            'record.',
+          );
+        }
+        final updated = await _client
+            .from('members')
+            .update(memberOnly)
+            .eq('id', memberRowId)
+            .select('id');
+        if (updated.isEmpty) {
+          throw Exception(
+            'No profile was updated. You do not have permission to edit this '
+            'record.',
+          );
+        }
+        updatedMemberOnly = true;
+      }
     }
+
+    if (updatedMemberOnly) return;
 
     // Sync branch_id to members table if it was changed
     if (data.containsKey('branch_id')) {
@@ -280,7 +361,7 @@ class UserRepository {
         await _client
             .from('members')
             .update({'branch_id': data['branch_id']})
-            .eq('profile_id', id);
+            .eq('profile_id', targetProfileId);
       } catch (_) {
         // Member record may not exist — that's fine
       }
@@ -290,7 +371,7 @@ class UserRepository {
         final member = await _client
             .from('members')
             .select('id')
-            .eq('profile_id', id)
+            .eq('profile_id', targetProfileId)
             .maybeSingle();
         if (member != null) {
           final memberId = member['id'] as String;
@@ -312,17 +393,14 @@ class UserRepository {
       }
     }
 
-    // Sync full_name / phone / email to members table
-    final memberSync = <String, dynamic>{};
-    if (data.containsKey('full_name')) memberSync['full_name'] = data['full_name'];
-    if (data.containsKey('phone')) memberSync['phone'] = data['phone'];
-    if (data.containsKey('email')) memberSync['email'] = data['email'];
+    // Sync full_name / phone / email / father_name to members table
+    final memberSync = _memberDataFrom(data)..remove('updated_at');
     if (memberSync.isNotEmpty) {
       try {
         await _client
             .from('members')
             .update(memberSync)
-            .eq('profile_id', id);
+            .eq('profile_id', targetProfileId);
       } catch (_) {
         // Member record may not exist — that's fine
       }

@@ -2623,6 +2623,12 @@ class UserDetailsPage extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
+              _buildKYCItem(
+                  'FATHER / HUSBAND NAME',
+                  user.fatherName ?? 'Not provided',
+                  Icons.family_restroom_rounded,
+                  theme),
+              const Divider(height: 24, thickness: 0.5),
               _buildKYCItem('AADHAR CARD', user.aadhar ?? 'Not provided',
                   Icons.badge_rounded, theme),
               const Divider(height: 24, thickness: 0.5),
@@ -3386,8 +3392,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                             primary: primary,
                           ),
                           second: _buildInputField(
-                            label: 'FATHER\'S NAME',
-                            hint: 'Enter father\'s name',
+                            label: 'FATHER / HUSBAND NAME',
+                            hint: 'Enter father\'s or husband\'s name',
                             controller: _fatherNameController,
                             theme: theme,
                             isDark: isDark,

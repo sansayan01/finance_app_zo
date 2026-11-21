@@ -102,7 +102,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     setState(() => _isSaving = true);
 
-    final success = await ref.read(authProvider.notifier).updateProfile(
+    final outcome = await ref.read(authProvider.notifier).updateProfile(
           fullName: _nameController.text.trim(),
           fatherName: _fatherNameController.text.trim().isNotEmpty
               ? _fatherNameController.text.trim()
@@ -128,12 +128,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     if (mounted) {
       setState(() => _isSaving = false);
-      if (success) {
+      if (outcome.saved) {
         ref.invalidate(userProfileProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Profile updated successfully'),
-              backgroundColor: AppColors.success),
+          SnackBar(
+              content: Text(outcome.notice ?? 'Profile updated successfully'),
+              backgroundColor: AppColors.success,
+              duration: Duration(seconds: outcome.notice == null ? 4 : 8)),
+        );
+      } else {
+        // Before this, a failed save showed nothing at all and the form looked
+        // like it had worked.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(outcome.error ?? 'Could not update your profile'),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 6)),
         );
       }
     }
@@ -444,7 +454,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   ),
                                   const SizedBox(height: 16),
                                   _ProfileTextField(
-                                    label: "Father's Name",
+                                    label: "Father / Husband Name",
                                     controller: _fatherNameController,
                                     icon: Icons.people_outline_rounded,
                                     isDark: isDark,

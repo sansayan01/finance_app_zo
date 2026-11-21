@@ -545,8 +545,8 @@ class _NewUserPageState extends ConsumerState<NewUserPage> {
                   isDark: isDark,
                 ),
                 second: _buildInputField(
-                  label: 'FATHER\'S NAME',
-                  hint: 'Enter father\'s name',
+                  label: 'FATHER / HUSBAND NAME',
+                  hint: 'Enter father\'s or husband\'s name',
                   controller: _fatherNameController,
                   textCapitalization: TextCapitalization.words,
                   onChanged: (val) =>

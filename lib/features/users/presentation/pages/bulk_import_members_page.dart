@@ -18,7 +18,7 @@ import '../providers/user_list_provider.dart';
 /// Bulk import customers (members) from a CSV file.
 ///
 /// Expected columns (header row, case-insensitive):
-///   full_name, phone, email, address, city, state, pincode, member_id
+///   full_name, father_name, phone, email, address, city, state, pincode, member_id
 /// `full_name` is required. Everything else is optional.
 class BulkImportMembersPage extends ConsumerStatefulWidget {
   const BulkImportMembersPage({super.key});
@@ -37,6 +37,9 @@ class _BulkImportMembersPageState extends ConsumerState<BulkImportMembersPage> {
 
   static const List<String> _knownHeaders = [
     'full_name',
+    // Father's name for men, husband's name for married women. Same column
+    // either way, so one header is enough.
+    'father_name',
     'phone',
     'email',
     'address',

@@ -430,7 +430,18 @@ class AuthRepository {
     );
   }
 
-  Future<void> updateProfile({
+  /// Saves the signed-in user's own profile.
+  ///
+  /// The `profiles` row is written first and must be confirmed: before this,
+  /// any failure (permission, stale record, network) was swallowed by a bare
+  /// `catch` and the screen still said "Profile updated successfully", which
+  /// is why users saw a change revert after reopening the page.
+  ///
+  /// Only the fields that were actually supplied are written, so saving the
+  /// form cannot blank out a phone number or father name that was not retyped.
+  /// On success returns an optional notice to show to the user (for example,
+  /// "check your inbox to confirm the new email"); null means a plain success.
+  Future<String?> updateProfile({
     required String fullName,
     String? fatherName,
     String? phone,
@@ -441,57 +452,93 @@ class AuthRepository {
     String? employeeId,
     String? assignedZone,
   }) async {
-    final attributes = UserAttributes(
-      email: email,
-      data: {
-        'full_name': fullName,
-        'phone': phone,
-      },
-    );
-    await _client.auth.updateUser(attributes);
-
-    try {
-      final updates = <String, dynamic>{
-        'full_name': fullName,
-        'phone': phone,
-      };
-      if (fatherName != null) updates['father_name'] = fatherName;
-      if (address != null) updates['address'] = address;
-      if (pan != null) updates['pan'] = pan;
-      if (aadhar != null) updates['aadhar'] = aadhar;
-      if (employeeId != null) updates['employee_id'] = employeeId;
-      if (assignedZone != null) updates['assigned_zone'] = assignedZone;
-
-      await _client
-          .from('profiles')
-          .update(updates)
-          .eq('user_id', _client.auth.currentUser!.id);
-
-      // Sync full_name to members table so loan/savings searches stay current
-      try {
-        final profile = await _client
-            .from('profiles')
-            .select('id')
-            .eq('user_id', _client.auth.currentUser!.id)
-            .maybeSingle();
-        if (profile != null) {
-          await _client
-              .from('members')
-              .update({'full_name': fullName})
-              .eq('profile_id', profile['id']);
-        }
-      } catch (_) {
-        // Member record may not exist — that's fine
-      }
-
-      await _logRepo?.log(
-        action: 'Profile Updated',
-        details: 'User updated their personal information',
-        type: ActivityType.userAction,
-      );
-    } catch (e) {
-      // Ignore if table doesn't exist
+    final currentUser = _client.auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('You are not signed in. Please sign in again.');
     }
+
+    final trimmedName = fullName.trim();
+    if (trimmedName.isEmpty) {
+      throw Exception('Name cannot be empty.');
+    }
+
+    // ---- 1. The profile row (the thing the app actually reads) -------------
+    final updates = <String, dynamic>{
+      'full_name': trimmedName,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (phone != null) updates['phone'] = phone.trim();
+    if (fatherName != null) updates['father_name'] = fatherName.trim();
+    if (address != null) updates['address'] = address.trim();
+    if (pan != null) updates['pan'] = pan.trim();
+    if (aadhar != null) updates['aadhar'] = aadhar.trim();
+    if (employeeId != null) updates['employee_id'] = employeeId.trim();
+    if (assignedZone != null) updates['assigned_zone'] = assignedZone.trim();
+
+    final savedRows = await _client
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', currentUser.id)
+        .select('id');
+
+    if (savedRows.isEmpty) {
+      throw Exception(
+        'Your profile was not saved. No profile record is linked to this '
+        'account, or you do not have permission to edit it. Please contact '
+        'your administrator.',
+      );
+    }
+
+    // ---- 2. Members mirror, so loan/savings lists show the same name --------
+    try {
+      final memberSync = <String, dynamic>{'full_name': trimmedName};
+      if (phone != null) memberSync['phone'] = phone.trim();
+      if (fatherName != null) memberSync['father_name'] = fatherName.trim();
+      await _client
+          .from('members')
+          .update(memberSync)
+          .eq('profile_id', savedRows.first['id']);
+    } catch (_) {
+      // Staff profiles have no members row — nothing to mirror.
+    }
+
+    // ---- 3. Auth account: name/phone metadata, and email if it changed ------
+    // This is best effort. A failure here must not make the whole save look
+    // failed, because the profile row above is already saved.
+    try {
+      final metadata = <String, dynamic>{'full_name': trimmedName};
+      if (phone != null) metadata['phone'] = phone.trim();
+
+      final newEmail = (email ?? '').trim();
+      final emailChanged = newEmail.isNotEmpty &&
+          newEmail.toLowerCase() != (currentUser.email ?? '').toLowerCase();
+
+      await _client.auth.updateUser(
+        UserAttributes(
+          email: emailChanged ? newEmail : null,
+          data: metadata,
+        ),
+      );
+
+      if (emailChanged) {
+        // Supabase only switches the login email after it is confirmed, so say
+        // so instead of showing a plain success message.
+        return 'Profile saved. To finish changing your email, open the '
+            'confirmation link we sent to $newEmail. Until then you keep signing '
+            'in with your old email.';
+      }
+    } catch (e) {
+      debugPrint('Auth metadata update failed (profile row already saved): $e');
+      return 'Profile saved. Your login details could not be updated: $e';
+    }
+
+    await _logRepo?.log(
+      action: 'Profile Updated',
+      details: 'User updated their personal information',
+      type: ActivityType.userAction,
+    );
+
+    return null;
   }
 
   Future<void> verifyPassword(String currentPassword) async {

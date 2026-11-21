@@ -299,7 +299,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> updateProfile({
+  Future<ProfileUpdateOutcome> updateProfile({
     required String fullName,
     String? fatherName,
     String? phone,
@@ -310,9 +310,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? employeeId,
     String? assignedZone,
   }) async {
-    if (_repository == null) return false;
+    if (_repository == null) {
+      return const ProfileUpdateOutcome(
+          saved: false, error: 'Not signed in. Please sign in again.');
+    }
     try {
-      await _repository.updateProfile(
+      final notice = await _repository.updateProfile(
         fullName: fullName,
         fatherName: fatherName,
         phone: phone,
@@ -324,14 +327,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         assignedZone: assignedZone,
       );
       await _checkSession();
-      return true;
+      return ProfileUpdateOutcome(saved: true, notice: notice);
     } catch (e) {
       final errorInfo = _getErrorMessage(e);
       state = state.copyWith(
           status: AuthStatus.error,
           errorMessage: errorInfo.message,
           errorType: errorInfo.type);
-      return false;
+      return ProfileUpdateOutcome(saved: false, error: errorInfo.message);
     }
   }
 
@@ -421,3 +424,16 @@ final Provider<UserModel?> currentUserProvider = Provider<UserModel?>((ref) {
   final authState = ref.watch(authProvider);
   return authState.user;
 });
+
+/// Result of saving a profile from the settings screen.
+///
+/// [saved] is the important bit: whether the profile row really changed.
+/// [notice] carries an extra message on success (e.g. an email confirmation is
+/// pending) so the UI does not have to claim plain success when it is not true.
+class ProfileUpdateOutcome {
+  final bool saved;
+  final String? notice;
+  final String? error;
+
+  const ProfileUpdateOutcome({required this.saved, this.notice, this.error});
+}
